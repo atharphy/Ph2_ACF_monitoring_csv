@@ -1,10 +1,10 @@
 #include "tools/OTMPAtoCICecv.h"
+#include "HWInterface/D19cFWInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
-#include "HWInterface/D19cFWInterface.h"
-#include <bitset>
-#include <algorithm>
 #include "Utils/GenericDataArray.h"
+#include <algorithm>
+#include <bitset>
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -21,18 +21,15 @@ void OTMPAtoCICecv::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fNumberOfIterations   = findValueInSettings<double>("OTMPAtoCICecv_NumberOfIterations", 1000);
+    fNumberOfIterations = findValueInSettings<double>("OTMPAtoCICecv_NumberOfIterations", 1000);
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTMPAtoCICecv.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 }
 
-void OTMPAtoCICecv::ConfigureCalibration()
-{
-
-}
+void OTMPAtoCICecv::ConfigureCalibration() {}
 
 void OTMPAtoCICecv::Running()
 {
@@ -47,30 +44,20 @@ void OTMPAtoCICecv::Running()
 void OTMPAtoCICecv::Stop(void)
 {
     LOG(INFO) << "Stopping OTMPAtoCICecv measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTMPAtoCICecv.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTMPAtoCICecv.process();
+#endif
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTMPAtoCICecv stopped.";
 }
 
-void OTMPAtoCICecv::Pause()
-{
+void OTMPAtoCICecv::Pause() {}
 
-}
+void OTMPAtoCICecv::Resume() {}
 
-
-void OTMPAtoCICecv::Resume()
-{
-
-}
-
-void OTMPAtoCICecv::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTMPAtoCICecv::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTMPAtoCICecv::setMPAshiftRegister()
 {
@@ -88,16 +75,15 @@ void OTMPAtoCICecv::setMPAshiftRegister()
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                for(auto theMPA: *theHybrid) 
+                for(auto theMPA: *theHybrid)
                 {
-                    thePSinterface->WriteChipRegBits(theMPA, "Control_1", 0x2, "Mask", 0x03);  // Enable shift register
+                    thePSinterface->WriteChipRegBits(theMPA, "Control_1", 0x2, "Mask", 0x03); // Enable shift register
                 }
             }
         }
     }
     fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
 }
-
 
 void OTMPAtoCICecv::runElectricChainValidation()
 {
@@ -113,7 +99,7 @@ void OTMPAtoCICecv::runElectricChainValidation()
         LOG(INFO) << BOLDGREEN << "    Measuring phase " << +phase << RESET;
         DetectorDataContainer theMatchingEfficiencyContainer;
         ContainerFactory::copyAndInitChip<GenericDataArray<float, 6>>(*fDetectorContainer, theMatchingEfficiencyContainer);
-        
+
         for(auto theBoard: *fDetectorContainer)
         {
             for(auto theOpticalGroup: *theBoard)
@@ -123,7 +109,7 @@ void OTMPAtoCICecv::runElectricChainValidation()
                 {
                     auto theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Hybrid " << +theHybrid->getId() << std::endl;
-                    
+
                     std::vector<std::pair<std::string, uint16_t>> phaseRegisterVector;
                     for(uint8_t phyPortPair = 0; phyPortPair < 6; ++phyPortPair)
                     {
@@ -136,21 +122,22 @@ void OTMPAtoCICecv::runElectricChainValidation()
                     }
                     fCicInterface->WriteChipMultReg(theCic, phaseRegisterVector);
 
-                    for(uint8_t phyPort=0; phyPort<12; ++phyPort)
+                    for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
                     {
                         // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] phyPort " << +phyPort << std::endl;
                         auto phyPortDataVector = readCICbypassOutput(theHybrid, theFWinterface, phyPort, numberOfBytesInSinglePacket);
                         for(size_t line = 0; line < 4; ++line)
                         {
                             float matchingEfficiency = countMatchingBits(phyPortDataVector[line]);
-                            auto chipIdAndLine = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
+                            auto  chipIdAndLine      = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
                             // if(matchingEfficiency<1)
                             // {
                             //     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Chip " << +chipIdAndLine.first << " line " << +chipIdAndLine.second << std::hex;
                             //     for(auto word: phyPortDataVector[line]) std::cout << " " << word;
                             //     std::cout << std::dec << std::endl;
                             // }
-                            theMatchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first + 8)->getSummary<GenericDataArray<float, 6>>()[chipIdAndLine.second] = matchingEfficiency;
+                            theMatchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first + 8)
+                                ->getSummary<GenericDataArray<float, 6>>()[chipIdAndLine.second] = matchingEfficiency;
                         }
                     }
                 }
@@ -160,13 +147,12 @@ void OTMPAtoCICecv::runElectricChainValidation()
 #ifdef __USE_ROOT__
         fDQMHistogramOTMPAtoCICecv.fillPhaseScanMatchingEfficiency(theMatchingEfficiencyContainer, phase);
 #else
-    if(fDQMStreamerEnabled)
-    {
-        ContainerSerialization thePhaseScanMatchingEfficiencySerialization("OTMPAtoCICecvPhaseScanMatchingEfficiency");
-        thePhaseScanMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, theMatchingEfficiencyContainer, phase);
-    }
+        if(fDQMStreamerEnabled)
+        {
+            ContainerSerialization thePhaseScanMatchingEfficiencySerialization("OTMPAtoCICecvPhaseScanMatchingEfficiency");
+            thePhaseScanMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, theMatchingEfficiencyContainer, phase);
+        }
 #endif
-
     }
 
     fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
@@ -174,7 +160,7 @@ void OTMPAtoCICecv::runElectricChainValidation()
 
 std::vector<std::vector<uint32_t>> OTMPAtoCICecv::readCICbypassOutput(Hybrid* theHybrid, D19cFWInterface* theFWinterface, uint8_t phyPort, uint8_t numberOfBytesInSinglePacket)
 {
-    size_t cNlines          = 4;
+    size_t                             cNlines = 4;
     std::vector<std::vector<uint32_t>> phyPortDataVector(cNlines);
 
     auto theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
@@ -186,11 +172,8 @@ std::vector<std::vector<uint32_t>> OTMPAtoCICecv::readCICbypassOutput(Hybrid* th
 
     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
     {
-        auto   lineOutputVector = theFWinterface->StubDebug(true, 4, false);
-        for(size_t line = 0; line < cNlines; ++line)
-        {
-            phyPortDataVector[line].insert(phyPortDataVector[line].end(), lineOutputVector[line].begin(), lineOutputVector[line].end());
-        }
+        auto lineOutputVector = theFWinterface->StubDebug(true, 4, false);
+        for(size_t line = 0; line < cNlines; ++line) { phyPortDataVector[line].insert(phyPortDataVector[line].end(), lineOutputVector[line].begin(), lineOutputVector[line].end()); }
     }
 
     return phyPortDataVector;
@@ -198,7 +181,7 @@ std::vector<std::vector<uint32_t>> OTMPAtoCICecv::readCICbypassOutput(Hybrid* th
 
 float OTMPAtoCICecv::countMatchingBits(std::vector<uint32_t> incomingData)
 {
-    uint32_t expectedPattern = fShiftRegisterPattern | fShiftRegisterPattern<<8 | fShiftRegisterPattern<<16 | fShiftRegisterPattern<<24;
+    uint32_t expectedPattern         = fShiftRegisterPattern | fShiftRegisterPattern << 8 | fShiftRegisterPattern << 16 | fShiftRegisterPattern << 24;
     uint32_t invertedExpectedPattern = ~expectedPattern;
 
     float matchingEfficiency = 0;
@@ -206,16 +189,14 @@ float OTMPAtoCICecv::countMatchingBits(std::vector<uint32_t> incomingData)
     for(auto word: incomingData)
     {
         std::bitset<32> bitsetWord(word);
-        auto expectedPatternXOR = word ^ expectedPattern;
+        auto            expectedPatternXOR = word ^ expectedPattern;
         std::bitset<32> expectedPatternXORbitset(expectedPatternXOR);
-        auto invertedExpectedPatternXOR = word ^ invertedExpectedPattern;
+        auto            invertedExpectedPatternXOR = word ^ invertedExpectedPattern;
         std::bitset<32> invertedExpectedPatternXORbitset(invertedExpectedPatternXOR);
         matchingEfficiency += std::max(expectedPatternXORbitset.count(), invertedExpectedPatternXORbitset.count());
     }
 
-    matchingEfficiency/=32*incomingData.size();
+    matchingEfficiency /= 32 * incomingData.size();
 
     return matchingEfficiency;
 }
-
-

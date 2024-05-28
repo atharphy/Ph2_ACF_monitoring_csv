@@ -19,12 +19,12 @@
 
 namespace Ph2_HwDescription
 {
-    class Hybrid;
+class Hybrid;
 }
 
 namespace Ph2_HwInterface
 {
-    class D19cFWInterface;
+class D19cFWInterface;
 }
 
 class OTMPAtoCICecv : public Tool
@@ -44,16 +44,17 @@ class OTMPAtoCICecv : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
     void setMPAshiftRegister();
     void runElectricChainValidation();
-    std::vector<std::vector<uint32_t>> readCICbypassOutput(Ph2_HwDescription::Hybrid* theHybrid, Ph2_HwInterface::D19cFWInterface* theFWinterface, uint8_t phyPort, uint8_t numberOfBytesInSinglePacket);
+    std::vector<std::vector<uint32_t>>
+          readCICbypassOutput(Ph2_HwDescription::Hybrid* theHybrid, Ph2_HwInterface::D19cFWInterface* theFWinterface, uint8_t phyPort, uint8_t numberOfBytesInSinglePacket);
     float countMatchingBits(std::vector<uint32_t> incomingData);
 
-    uint8_t fShiftRegisterPattern {0xAA};
-    uint32_t fNumberOfIterations {1000};
-    
+    uint8_t  fShiftRegisterPattern{0xAA};
+    uint32_t fNumberOfIterations{1000};
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTMPAtoCICecv fDQMHistogramOTMPAtoCICecv;

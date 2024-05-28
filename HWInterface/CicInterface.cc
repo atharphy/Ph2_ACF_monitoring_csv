@@ -1124,20 +1124,16 @@ std::pair<uint8_t, uint8_t> CicInterface::fromPhyPortAndChanneltoChipIdAndLine(P
 {
     if(phyPort < 10)
     {
-        uint16_t cumulativeNumberOfStubPort = phyPort*4 + channel;
-        return std::make_pair(fromCICFEidToChipId(pChip, cumulativeNumberOfStubPort/5), cumulativeNumberOfStubPort % 5 + 1);
+        uint16_t cumulativeNumberOfStubPort = phyPort * 4 + channel;
+        return std::make_pair(fromCICFEidToChipId(pChip, cumulativeNumberOfStubPort / 5), cumulativeNumberOfStubPort % 5 + 1);
     }
-    else
-    {
-        return std::make_pair(fromCICFEidToChipId(pChip, channel + 4*(phyPort%10)), 0);
-    }
-
+    else { return std::make_pair(fromCICFEidToChipId(pChip, channel + 4 * (phyPort % 10)), 0); }
 }
 
 uint8_t CicInterface::fromChipIdToCICFEid(Ph2_HwDescription::Chip* pChip, uint8_t chipId)
 {
     auto cicFEmapping = getMapping(pChip);
-    return cicFEmapping[chipId%8];
+    return cicFEmapping[chipId % 8];
 }
 
 uint8_t CicInterface::fromCICFEidToChipId(Ph2_HwDescription::Chip* pChip, uint8_t cicFEid)

@@ -1,10 +1,10 @@
 #include "DQMUtils/DQMHistogramOTMPAtoCICecv.h"
+#include "HWDescription/ReadoutChip.h"
 #include "RootUtils/RootContainerFactory.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
-#include "HWDescription/ReadoutChip.h"
 
 #include "TFile.h"
 #include "TH2F.h"
@@ -31,25 +31,27 @@ void DQMHistogramOTMPAtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
     std::string theMPAqueryFunctionString = "MPAqueryFunction";
     fDetectorContainer->addReadoutChipQueryFunction(MPAqueryFunction, theMPAqueryFunctionString);
 
-    uint8_t numberOfMPA = 8;
+    uint8_t numberOfMPA         = 8;
     uint8_t numberOfLinesPerMPA = 6;
 
     auto setYaxisBinLable = [numberOfMPA, numberOfLinesPerMPA](TH2F* theHistogram)
     {
         auto theAxis = theHistogram->GetYaxis();
-        for(uint8_t mpaId = 0; mpaId<numberOfMPA; ++mpaId)
+        for(uint8_t mpaId = 0; mpaId < numberOfMPA; ++mpaId)
         {
-            for(uint8_t lineId = 0; lineId<numberOfLinesPerMPA; ++lineId)
+            for(uint8_t lineId = 0; lineId < numberOfLinesPerMPA; ++lineId)
             {
-                std::string binLabel = Form("MPA%d_", mpaId+8);
-                if(lineId == 0) binLabel += "L1";
-                else binLabel += Form("Stub%d", lineId - 1);
-                theAxis->SetBinLabel(mpaId*numberOfLinesPerMPA + lineId + 1, binLabel.c_str());
+                std::string binLabel = Form("MPA%d_", mpaId + 8);
+                if(lineId == 0)
+                    binLabel += "L1";
+                else
+                    binLabel += Form("Stub%d", lineId - 1);
+                theAxis->SetBinLabel(mpaId * numberOfLinesPerMPA + lineId + 1, binLabel.c_str());
             }
         }
     };
 
-    HistContainer<TH2F> phaseScanMatchingEfficiency("MPAtoCICPhaseScan", "MPA to CIC Phase Scan", 15, -0.5, 14.5, numberOfMPA*numberOfLinesPerMPA,  - 0.5, numberOfMPA*numberOfLinesPerMPA - 0.5);
+    HistContainer<TH2F> phaseScanMatchingEfficiency("MPAtoCICPhaseScan", "MPA to CIC Phase Scan", 15, -0.5, 14.5, numberOfMPA * numberOfLinesPerMPA, -0.5, numberOfMPA * numberOfLinesPerMPA - 0.5);
     phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("phase");
     setYaxisBinLable(phaseScanMatchingEfficiency.fTheHistogram);
     phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
@@ -65,7 +67,6 @@ void DQMHistogramOTMPAtoCICecv::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================
@@ -83,21 +84,18 @@ void DQMHistogramOTMPAtoCICecv::fillPhaseScanMatchingEfficiency(DetectorDataCont
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto thePhaseMatchingEfficiencyPlot = fPhaseScanMatchingEfficiencies.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                auto thePhaseMatchingEfficiencyPlot =
+                    fPhaseScanMatchingEfficiencies.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
                 for(auto theChip: *theHybrid)
                 {
                     if(!theChip->hasSummary()) continue;
                     auto theChipLineMatchingEfficiency = theChip->getSummary<GenericDataArray<float, 6>>();
-                    for(int line = 0; line <6; ++line)
-                    {
-                        thePhaseMatchingEfficiencyPlot->SetBinContent(phase+1, theChip->getId()%8 * 6 + line + 1, theChipLineMatchingEfficiency[line]);
-                    }
+                    for(int line = 0; line < 6; ++line) { thePhaseMatchingEfficiencyPlot->SetBinContent(phase + 1, theChip->getId() % 8 * 6 + line + 1, theChipLineMatchingEfficiency[line]); }
                 }
             }
         }
     }
-
 }
 
 //========================================================================================================================
@@ -110,7 +108,8 @@ bool DQMHistogramOTMPAtoCICecv::fill(std::string& inputStream)
     {
         std::cout << "Matched OTMPAtoCICecv PhaseScanMatchingEfficiency!!!!!\n";
         uint8_t               phase;
-        DetectorDataContainer theDetectorData = thePhaseScanMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(fDetectorContainer, phase);
+        DetectorDataContainer theDetectorData =
+            thePhaseScanMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(fDetectorContainer, phase);
         fillPhaseScanMatchingEfficiency(theDetectorData, phase);
         return true;
     }

@@ -10,6 +10,7 @@
 #include "DQMUtils/DQMHistogramOTCICwordAlignment.h"
 #include "DQMUtils/DQMHistogramOTCMNoise.h"
 #include "DQMUtils/DQMHistogramOTCicBypassTest.h"
+#include "DQMUtils/DQMHistogramOTMPAtoCICecv.h"
 #include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
 #include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
 #include "DQMUtils/DQMHistogramOTalignBoardDataWord.h"
@@ -39,7 +40,6 @@
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
 #include "DQMUtils/RD53VoltageTuningHistograms.h"
-#include "DQMUtils/DQMHistogramOTMPAtoCICecv.h"
 
 using namespace MessageUtils;
 
@@ -188,9 +188,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMMetadataOT, PSPhysicsHistograms>("psphysics");
     Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
 
-    Register<DQMMetadataOT,
-             DQMHistogramOTalignLpGBTinputs,
-             DQMHistogramOTMPAtoCICecv>("MPAtoCICecv");
+    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTMPAtoCICecv>("MPAtoCICecv");
 
     // ###################
     // # IT calibrations #

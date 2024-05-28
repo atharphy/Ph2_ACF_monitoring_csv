@@ -15,6 +15,7 @@
 #include "tools/OTCICwordAlignment.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTCicBypassTest.h"
+#include "tools/OTMPAtoCICecv.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
 #include "tools/OTTemperature.h"
@@ -44,7 +45,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/OTMPAtoCICecv.h"
 
 using namespace MessageUtils;
 
@@ -176,7 +176,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
-            //  OTCICphaseAlignmentForBypass,
+             //  OTCICphaseAlignmentForBypass,
              OTMPAtoCICecv>("PS Module", "MPAtoCICecv");
 
     // 2S specific calibrations
