@@ -59,6 +59,11 @@ void OTverifyECVlpGBTCIC::runECV()
     {
         for(auto theOpticalGroup: *theBoard)
         {
+
+            uint8_t numberOfBytesInSinglePacket = getNumberOfBytesInSinglePacket(theOpticalGroup);
+            if(fIsKickoff && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
+                LOG(INFO) << BOLDYELLOW << "Attention! ignoring failures on right hybrid CIC line 4 due to bug in kickoff SEH!" << RESET;
+            size_t cNlines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
             for(auto cHybrid: *theOpticalGroup)
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
@@ -78,36 +83,73 @@ void OTverifyECVlpGBTCIC::runECV()
                 flpGBTInterface->ConfigureAllRxPhase(clpGBT, phase, theGroupsAndChannels);
 
 
-
-                runStubIntegrityTest(theBoard, theFWInterface);
-                runL1IntegrityTest(theBoard, theFWInterface);
-                for(auto cHybrid: *theOpticalGroup)
+                for(auto theHybrid: *theOpticalGroup)
                 {
-                    for(auto& theNumberOfMatches: fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<std::vector<float>>())
+                    
+                    
+                    auto& theHybridPatternMatchingEfficiency =
+                    fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
+                    LOG(INFO) << BOLDMAGENTA << "Running runStubIntegrityTest" << RESET;
+                    prepareHybridForStubIntegrityTest(theHybrid);
+                
+                    for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
                     {
-                        std::cout << " the number of matches "<<  theNumberOfMatches << " fNumberOfIterations " << fNumberOfIterations << std::endl;
+                        auto lineOutputVector = theFWInterface->StubDebug(true, cNlines, false);
+                        for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
+                        {
+                            std::cout << " line " << lineIndex << std::endl;
+                            for( auto pattern : stubPatterns)
+                            {    
+                                uint8_t flagCharacter = pattern.first;
+                                uint8_t idleCharacter = pattern.second;
+                                std::cout << " patterns " <<  std::hex << +flagCharacter << " " << +idleCharacter << std::endl;
+                                if(isStubPatternMatched(lineOutputVector[lineIndex], numberOfBytesInSinglePacket, flagCharacter, idleCharacter))
+                                {
+                                    std::cout << " pattern matched " << std::endl;
+                                    ++theHybridPatternMatchingEfficiency[lineIndex + 1];
+                                    break;
+                                }
+                                else if(!(fIsKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)))
+                                    LOG(DEBUG) << BOLDRED << "Error on stub line " << lineIndex + 1 << " occurred in iteration number " << +iteration << RESET;
+                            }
+                        }
+                    }
 
+                    LOG(INFO) << BOLDMAGENTA << "Running L1StubIntegrityTest" << RESET;
+                    prepareFWForL1IntegrityTest(theBoard);
+                    prepareHybridForL1IntegrityTest(theHybrid);
+                
+                    for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+                    {
+                        auto lineOutputVector = theFWInterface->L1ADebug(1, false);
+
+                        for( auto pattern : L1Patterns)
+                            {    
+                                uint32_t header = pattern;
+                                std::cout << " header " <<  std::hex << header << std::endl;
+
+                                if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket, header, headerMask))
+                                {
+                                    ++theHybridPatternMatchingEfficiency[0];
+                                    std::cout << " header matched " << std::endl;
+                                    break;
+                                }
+                                else { LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET; }
+                            }
+                    }
+
+
+                    for(auto& theNumberOfMatches: fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>())
+                    {
                         theNumberOfMatches /= fNumberOfIterations;
                         std::cout << " the number of matches/fNumberOfIterations "<<  theNumberOfMatches << std::endl;
+                        // reset the number of matches!!
+                        theNumberOfMatches = 0;
                     }
                 }
-            }
-        }
 
-    // // normalize
-    // for(auto theBoard: fPatternMatchingEfficiencyContainer)
-    // {
-    //     for(auto theOpticalGroup: *theBoard)
-    //     {
-    //         for(auto theHybrid: *theOpticalGroup)
-    //         {
-    //             for(auto& theNumberOfMatches: theHybrid->getSummary<std::vector<float>>())
-    //             {
-    //                 theNumberOfMatches /= fNumberOfIterations;
-    //                 std::cout << " the number of matches "<<  theNumberOfMatches << std::endl;
-    //             }
-    //         }
-    //     }
+            } // hybrid loop
+        } // optical group loop
     }
 
 }

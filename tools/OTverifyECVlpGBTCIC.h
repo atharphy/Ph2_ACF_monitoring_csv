@@ -38,6 +38,20 @@ class OTverifyECVlpGBTCIC : public OTverifyBoardDataWord
     
   private:
     void runECV();
+    std::vector<std::pair<uint8_t,uint8_t>> stubPatterns{
+      std::make_pair(0xea,0xaa), // default
+      std::make_pair(0x75,0x55), // shift 1 -> patterns
+      std::make_pair(0xba,0xaa), // shift 2 ->  or <- patterns
+      std::make_pair(0xD5,0x55)  // shift 1 <- patterns
+    };
+
+    std::vector<uint32_t> L1Patterns{
+      0x0ffffffe, // default
+      0x07ffffff, // shift 1 -> patterns
+      0x03ffffff, // shift 2 -> patterns
+      0x1ffffffc, // shift 1 <- patterns
+      0x3ffffffe  // shift 2 <- patterns
+    };
     
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
