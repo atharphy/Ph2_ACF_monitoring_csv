@@ -1152,7 +1152,7 @@ void D19cFWInterface::ChipTrigger() { fFastCommandInterface->SendGlobalL1A(); }
 // bool D19cFWInterface::Bx0Alignment(uint16_t pLinkId)
 bool D19cFWInterface::Bx0Alignment()
 {
-    bool cSuccess = false;
+    bool     cSuccess   = false;
     uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
     if(cStubDebug)
     {

@@ -86,10 +86,7 @@ void OTCICwordAlignment::Reset()
                 auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                 fCicInterface->WriteChipReg(cCic, "FE_ENABLE", 0);
                 std::vector<uint8_t> listOfEnabledChips;
-                for(auto theChip: *theHybrid)
-                {
-                    listOfEnabledChips.push_back(theChip->getId()%8);
-                }
+                for(auto theChip: *theHybrid) { listOfEnabledChips.push_back(theChip->getId() % 8); }
                 fCicInterface->EnableFEs(cCic, listOfEnabledChips, true);
             }
         }

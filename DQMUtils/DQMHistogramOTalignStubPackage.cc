@@ -30,7 +30,6 @@ void DQMHistogramOTalignStubPackage::book(TFile* theOutputFile, DetectorContaine
     bestStubPackageDelayHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "FEHR");
     bestStubPackageDelayHistogram.fTheHistogram->GetYaxis()->SetBinLabel(2, "FEHL");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBestStubPackageDelayHistogramContainer, bestStubPackageDelayHistogram);
-
 }
 
 //========================================================================================================================
@@ -53,14 +52,15 @@ void DQMHistogramOTalignStubPackage::fillBestStubPackageDelay(DetectorDataContai
     {
         for(auto theOpticalGroup: *theBoard)
         {
-            auto theBestStubPackageDelayHystogram = fBestStubPackageDelayHistogramContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH2I>>().fTheHistogram;
+            auto theBestStubPackageDelayHystogram =
+                fBestStubPackageDelayHistogramContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH2I>>().fTheHistogram;
             for(auto theHybrid: *theOpticalGroup)
             {
                 if(!theHybrid->hasSummary()) continue;
-                auto theBestStubPackageDelayVector =  theHybrid->getSummary<std::vector<bool>>();
-                for(size_t packageDelay = 0; packageDelay<8; ++packageDelay)
+                auto theBestStubPackageDelayVector = theHybrid->getSummary<std::vector<bool>>();
+                for(size_t packageDelay = 0; packageDelay < 8; ++packageDelay)
                 {
-                    theBestStubPackageDelayHystogram->SetBinContent(packageDelay+1, theHybrid->getId() % 2 +1, theBestStubPackageDelayVector[packageDelay] ? 1 : 0);
+                    theBestStubPackageDelayHystogram->SetBinContent(packageDelay + 1, theHybrid->getId() % 2 + 1, theBestStubPackageDelayVector[packageDelay] ? 1 : 0);
                 }
             }
         }

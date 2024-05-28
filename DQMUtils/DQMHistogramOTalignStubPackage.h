@@ -58,8 +58,7 @@ class DQMHistogramOTalignStubPackage : public DQMHistogramBase
     void fillBestStubPackageDelay(DetectorDataContainer& theBestStubPackageDelayContainer);
 
   private:
-    DetectorContainer*     fDetectorContainer;
-    DetectorDataContainer  fBestStubPackageDelayHistogramContainer;
-
+    DetectorContainer*    fDetectorContainer;
+    DetectorDataContainer fBestStubPackageDelayHistogramContainer;
 };
 #endif
