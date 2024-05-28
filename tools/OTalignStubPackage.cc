@@ -78,6 +78,8 @@ void OTalignStubPackage::AlignStubPackage()
         abort();
     }
 
+    uint16_t numberOfEventsToSkip = 1; // Ignore first events, bug with resync in FW?
+
     std::vector<uint16_t> emptyBunchCrossingId(numberOfEvents, 0xFFFF);
     DetectorDataContainer theBunchCrossingIdContainer;
     ContainerFactory::copyAndInitHybrid<std::vector<uint16_t>>(*fDetectorContainer, theBunchCrossingIdContainer, emptyBunchCrossingId);
@@ -86,7 +88,7 @@ void OTalignStubPackage::AlignStubPackage()
     DetectorDataContainer theBestPackageDelayContainer;
     ContainerFactory::copyAndInitHybrid<std::vector<bool>>(*fDetectorContainer, theBestPackageDelayContainer, emptyBestPackageDelay);
 
-    std::vector<uint16_t> emptyBunchCrossingIdDifference(numberOfEvents-1, 0x7FFF);
+    std::vector<uint16_t> emptyBunchCrossingIdDifference(numberOfEvents-1-numberOfEventsToSkip, 0x7FFF);
     DetectorDataContainer theBunchCrossingIdDifferenceContainer;
     ContainerFactory::copyAndInitHybrid<std::vector<uint16_t>>(*fDetectorContainer, theBunchCrossingIdDifferenceContainer, emptyBunchCrossingIdDifference);
 
@@ -150,10 +152,10 @@ void OTalignStubPackage::AlignStubPackage()
                     {
                         auto& eventBxIdVector = theBunchCrossingIdContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<uint16_t>>();
                         eventBxIdVector[eventNumber] = theEvent->BxId(theHybrid->getId());
-                        if(eventNumber > 0)
+                        if(eventNumber > numberOfEventsToSkip)
                         {
                             auto& bxIdDifferenceVector = theBunchCrossingIdDifferenceContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<int16_t>>();
-                            bxIdDifferenceVector[eventNumber-1] = eventBxIdVector[eventNumber] - eventBxIdVector[eventNumber-1];
+                            bxIdDifferenceVector[eventNumber-1-numberOfEventsToSkip] = eventBxIdVector[eventNumber] - eventBxIdVector[eventNumber-1];
                         }
                     }
                 }
