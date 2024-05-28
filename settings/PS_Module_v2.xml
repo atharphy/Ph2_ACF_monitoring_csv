@@ -263,6 +263,8 @@
     <Setting name="OTinjectionOccupancyScan_ListOfInjectedPulses"> 0, 0.25, 0.5, 1., 2.</Setting> <!-- MIP units -->
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithoutInjection"> 1000000</Setting>
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithInjection"> 1000</Setting>
+
+    <Setting name="OTMPAtoCICecv_NumberOfIterations">1000</Setting>
 </Settings>
 
 

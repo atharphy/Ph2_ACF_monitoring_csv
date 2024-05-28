@@ -39,6 +39,7 @@
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
 #include "DQMUtils/RD53VoltageTuningHistograms.h"
+#include "DQMUtils/DQMHistogramOTMPAtoCICecv.h"
 
 using namespace MessageUtils;
 
@@ -186,6 +187,10 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCMNoise>("cmNoise");
     Register<DQMMetadataOT, PSPhysicsHistograms>("psphysics");
     Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTMPAtoCICecv>("MPAtoCICecv");
 
     // ###################
     // # IT calibrations #

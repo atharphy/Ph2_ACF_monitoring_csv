@@ -44,6 +44,7 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
+#include "tools/OTMPAtoCICecv.h"
 
 using namespace MessageUtils;
 
@@ -172,6 +173,11 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              TuneLpGBTVref,
              OTCMNoise,
              OTTemperature>("Outer Tracker", "cmNoise");
+
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+            //  OTCICphaseAlignmentForBypass,
+             OTMPAtoCICecv>("PS Module", "MPAtoCICecv");
 
     // 2S specific calibrations
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(

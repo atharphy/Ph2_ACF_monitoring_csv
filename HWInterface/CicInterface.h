@@ -76,6 +76,10 @@ class CicInterface : public ChipInterface
     bool                        SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pPhaseTap);
     std::pair<uint8_t, uint8_t> fromChipL1ToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId);
     std::pair<uint8_t, uint8_t> fromChipStubToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId, uint8_t stubLine);
+    std::pair<uint8_t, uint8_t> fromPhyPortAndChanneltoChipIdAndLine(Ph2_HwDescription::Chip* pChip, uint8_t phyPort, uint8_t channel);
+    uint8_t                     fromChipIdToCICFEid(Ph2_HwDescription::Chip* pChip, uint8_t chipId);
+    uint8_t                     fromCICFEidToChipId(Ph2_HwDescription::Chip* pChip, uint8_t cicFEid);
+
     GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> getAllOptimalTaps(Ph2_HwDescription::Chip* pChip);
     GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>    getLineLocked(Ph2_HwDescription::Chip* pChip);
     bool                        writeAllTaps(Ph2_HwDescription::Chip* pChip, GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> cicInputTaps);
