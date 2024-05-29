@@ -97,10 +97,9 @@ void OTverifyBoardDataWord::runIntegrityTest()
 #endif
 }
 
-void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface, uint8_t flagCharacter, uint8_t idleCharacter)
+void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface)
 {
-    LOG(INFO) << BOLDMAGENTA << "Running runStubIntegrityTest with pattern flagCharacter 0x" << std::hex << +flagCharacter << std::dec << " idleCharacter 0x" << std::hex << +idleCharacter << std::dec
-              << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Running runStubIntegrityTest" << RESET;
 
     for(auto theOpticalGroup: *theBoard)
     {
@@ -233,7 +232,7 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
     return true;
 }
 
-void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface, uint32_t header, uint32_t headerMask)
+void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface)
 {
     LOG(INFO) << BOLDMAGENTA << "Running runL1IntegrityTest" << RESET;
     prepareFWForL1IntegrityTest(theBoard);
