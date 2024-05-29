@@ -1398,7 +1398,7 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
     // # LpgbtCalibrationWarning: If loading fCalibration data failed
     // # FileNotFoundError: If the file does not exis
 
-    LOG(INFO) << GREEN << "Loading Calibration data for LpGBT on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup " << BOLDYELLOW << +pChip->getOpticalGroupId()
+    LOG(INFO) << GREEN << "Loading calibration data for LpGBT on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup " << BOLDYELLOW << +pChip->getOpticalGroupId()
               << RESET << GREEN << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
 
     bool                                  cCalibrationLoaded = false;
