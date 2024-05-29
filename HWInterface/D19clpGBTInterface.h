@@ -123,6 +123,7 @@ class D19clpGBTInterface : public lpGBTInterface
     void hybridClock(Ph2_HwDescription::Chip* pChip, lpGBTClockConfig pClkCnfg, uint8_t pSide = 0) { configureClockSettings(pChip, (pSide == 0) ? fClock_RHS_Hybrid : fClock_LHS_Hybrid, pClkCnfg); }
     void updateCICinputClockToMatchPSrate(Ph2_HwDescription::Chip* pChip);
     void setCICClockPolarityAndStrength(Ph2_HwDescription::Chip* pChip, uint8_t pPolarity, uint8_t pStrength, Ph2_HwDescription::OpticalGroup* theOpticalGroup);
+
     void                 setFrontEndType(FrontEndType pType) { fFeType = pType; }
     FrontEndType         getFrontEndType() { return fFeType; }
     std::vector<uint8_t> getPSResetGPIOs() { return {fReset_LHS_CIC, fReset_LHS_MPA, fReset_LHS_SSA, fReset_RHS_CIC, fReset_RHS_MPA, fReset_RHS_SSA}; }

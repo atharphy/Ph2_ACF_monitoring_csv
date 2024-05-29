@@ -24,7 +24,7 @@ void DQMHistogramOTverifyECVlpGBTCIC::book(TFile* theOutputFile, DetectorContain
 
     // x-axis is line:clock strenghts and y-axis is LpGBT phase:CIC strenght
     HistContainer<TH2F> ECVEfficiencyPolarity0Histogram("Efficiency_CIC_Clock_Polarity_0", "Polarity 0", 49, 0, 49, 75, 0, 75);
-    auto EfficiencyPolarity0Hist = ECVEfficiencyPolarity0Histogram.fTheHistogram;
+    auto                EfficiencyPolarity0Hist = ECVEfficiencyPolarity0Histogram.fTheHistogram;
     EfficiencyPolarity0Hist->GetXaxis()->SetTitle("Line : Clock strenghts");
     EfficiencyPolarity0Hist->GetYaxis()->SetTitle("lpGBT Phase : CIC Strength");
     EfficiencyPolarity0Hist->SetStats(false);
@@ -32,7 +32,7 @@ void DQMHistogramOTverifyECVlpGBTCIC::book(TFile* theOutputFile, DetectorContain
     EfficiencyPolarity0Hist->GetXaxis()->SetLabelSize(0.02);
 
     HistContainer<TH2F> ECVEfficiencyPolarity1Histogram("Efficiency_CIC_Clock_Polarity_1", "Polarity 1", 49, 0, 49, 75, 0, 75);
-    auto EfficiencyPolarity1Hist = ECVEfficiencyPolarity1Histogram.fTheHistogram;
+    auto                EfficiencyPolarity1Hist = ECVEfficiencyPolarity1Histogram.fTheHistogram;
     EfficiencyPolarity1Hist->GetXaxis()->SetTitle("Line : Clock strenghts");
     EfficiencyPolarity1Hist->GetYaxis()->SetTitle("lpGBT Phase : CIC Strength");
     EfficiencyPolarity1Hist->SetStats(false);
@@ -56,8 +56,8 @@ void DQMHistogramOTverifyECVlpGBTCIC::book(TFile* theOutputFile, DetectorContain
     {
         for(uint32_t hybridClockStrength = 1; hybridClockStrength <= 7; hybridClockStrength++)
         {
-            std::string prefix = channel == 1 ? "L1" : "Stub"+convertToString(channel-1);
-            std::string s =  prefix + ":" + convertToString(hybridClockStrength);
+            std::string prefix = channel == 1 ? "L1" : "Stub" + convertToString(channel - 1);
+            std::string s      = prefix + ":" + convertToString(hybridClockStrength);
             EfficiencyPolarity0Hist->GetXaxis()->SetBinLabel(binNumber, s.c_str());
             EfficiencyPolarity1Hist->GetXaxis()->SetBinLabel(binNumber, s.c_str());
             binNumber++;
@@ -70,7 +70,6 @@ void DQMHistogramOTverifyECVlpGBTCIC::book(TFile* theOutputFile, DetectorContain
     EfficiencyPolarity1Hist->LabelsOption("v", "X");
     EfficiencyPolarity1Hist->DrawCopy("text");
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fEfficiencyPolarity1, ECVEfficiencyPolarity1Histogram);
-
 }
 
 //========================================================================================================================
@@ -78,7 +77,6 @@ void DQMHistogramOTverifyECVlpGBTCIC::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================
@@ -95,29 +93,25 @@ bool DQMHistogramOTverifyECVlpGBTCIC::fill(std::string& inputStream)
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
     // As example, I'm expecting to receive a data stream from an uint32_t contained from calibration "OTverifyECVlpGBTCIC"
-
-
-
-    // start Irene
     ContainerSerialization theECVlpGBTCICContainerSerialization("OTverifyECVlpGBTCICEfficiencyHistogram");
-    
+
     if(theECVlpGBTCICContainerSerialization.attachDeserializer(inputStream))
     {
         // It matched! Decoding data
         std::cout << "Matched OTverifyECVlpGBTCIC!!!!!\n";
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
-        uint8_t pClockPolarity, pClockStrength, pCicStrength, pPhase;
-        DetectorDataContainer theDetectorData = theECVlpGBTCICContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, float, EmptyContainer>(fDetectorContainer, pClockPolarity, pClockStrength, pCicStrength, pPhase);
-        
+        uint8_t               pClockPolarity, pClockStrength, pCicStrength, pPhase;
+        DetectorDataContainer theDetectorData = theECVlpGBTCICContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, float, EmptyContainer>(
+            fDetectorContainer, pClockPolarity, pClockStrength, pCicStrength, pPhase);
+
         // Filling the histograms
         fillEfficiency(pClockPolarity, pClockStrength, pCicStrength, pPhase, theDetectorData);
         return true;
     }
-    /// end Irene
 
 
-    //the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
-    // for this stream)
+    // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
+    //  for this stream)
     return false;
     // SoC utilities only - END
 }
@@ -128,16 +122,18 @@ void DQMHistogramOTverifyECVlpGBTCIC::fillEfficiency(uint8_t pClockPolarity, uin
     {
         for(auto opticalGroup: *board)
         {
-            for( auto theHybrid: * opticalGroup)
+            for(auto theHybrid: *opticalGroup)
             {
-                auto efficiencies = theEfficiencyContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
+                auto  efficiencies = theEfficiencyContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
                 TH2F* theEfficiencyHistogram;
                 if(pClockPolarity == 0)
-                    theEfficiencyHistogram = fEfficiencyPolarity0.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    theEfficiencyHistogram =
+                        fEfficiencyPolarity0.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 else
-                    theEfficiencyHistogram = fEfficiencyPolarity1.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                uint8_t lineCounter = 0;    
-                for (auto efficiency: efficiencies)
+                    theEfficiencyHistogram =
+                        fEfficiencyPolarity1.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                uint8_t lineCounter = 0;
+                for(auto efficiency: efficiencies)
                 {
                     theEfficiencyHistogram->SetBinContent(lineCounter * 7 + pClockStrength, pPhase * 5 + pCicStrength, efficiency);
                     lineCounter++;

@@ -46,7 +46,6 @@ class DQMHistogramOTverifyECVlpGBTCIC : public DQMHistogramBase
     bool fill(std::string& inputStream) override;
     void fillEfficiency(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, DetectorDataContainer& theEfficiencyContainer);
 
-
     /*!
      * \brief process : do something with the histogram like colors, fit, drawing canvases, etc
      */

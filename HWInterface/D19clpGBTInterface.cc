@@ -636,7 +636,6 @@ void D19clpGBTInterface::setCICClockPolarityAndStrength(Ph2_HwDescription::Chip*
         cicClockLeftRegisterName  = "EPCLK" + std::to_string(fClock_LHS_Hybrid) + "ChnCntrH";
     }
 
-
     auto updateClockFunction = [this, pChip](std::string registerName, uint8_t pPolarity, uint8_t pStrength)
     {
         auto theCurrentRegisterValue = this->ReadChipReg(pChip, registerName);
@@ -652,7 +651,5 @@ void D19clpGBTInterface::setCICClockPolarityAndStrength(Ph2_HwDescription::Chip*
     updateClockFunction(cicClockRightRegisterName, pPolarity, pStrength);
     updateClockFunction(cicClockLeftRegisterName, pPolarity, pStrength);
 }
-
-
 
 } // namespace Ph2_HwInterface

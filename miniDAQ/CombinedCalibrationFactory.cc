@@ -73,8 +73,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
-            //  OTverifyCICdataWord,
-            //  OTverifyMPASSAdataWord,
+             //  OTverifyCICdataWord,
+             //  OTverifyMPASSAdataWord,
              OTverifyECVlpGBTCIC>("Outer Tracker", "OTecv");
     Register<OTalignLpGBTinputs>("Outer Tracker", "OTalignLpGBTinputs");
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");

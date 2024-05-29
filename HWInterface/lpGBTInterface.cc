@@ -437,10 +437,7 @@ void lpGBTInterface::ConfigureAllRxPhase(Chip* pChip, uint8_t pPhase, std::map<u
 {
     for(const auto& groupAndChannels: theGroupsAndChannels)
     {
-        for(const auto channel: groupAndChannels.second)
-        {    
-            this->ConfigureRxPhase(pChip, groupAndChannels.first, channel, pPhase); 
-        }
+        for(const auto channel: groupAndChannels.second) { this->ConfigureRxPhase(pChip, groupAndChannels.first, channel, pPhase); }
     }
 }
 

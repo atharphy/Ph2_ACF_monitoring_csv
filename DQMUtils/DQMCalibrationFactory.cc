@@ -74,9 +74,9 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTalignStubPackage,
              DQMHistogramOTCICphaseAlignment,
              DQMHistogramOTCICwordAlignment,
-            //  DQMHistogramOTCICBX0Alignment,
-            //  DQMHistogramOTverifyCICdataWord,
-            //  DQMHistogramOTverifyMPASSAdataWord
+             //  DQMHistogramOTCICBX0Alignment,
+             //  DQMHistogramOTverifyCICdataWord,
+             //  DQMHistogramOTverifyMPASSAdataWord
              DQMHistogramOTverifyECVlpGBTCIC>("OTecv");
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTinjectionDelayOptimization>("injectionDelayOptimization");
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTPSADCCalibration>("ADCBiasCalibration");
