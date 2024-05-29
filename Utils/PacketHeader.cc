@@ -4,10 +4,10 @@
 PacketHeader::PacketHeader()
 {
     for(uint8_t i = 0; i < SIZE; ++i) fPacketSize[i] = 0u;
-};
+}
 
 //========================================================================================================================
-PacketHeader::~PacketHeader(){};
+PacketHeader::~PacketHeader() {}
 
 //========================================================================================================================
 uint8_t PacketHeader::getPacketHeaderSize() { return SIZE; }
