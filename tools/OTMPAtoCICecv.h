@@ -48,9 +48,9 @@ class OTMPAtoCICecv : public Tool
   private:
     void setMPAshiftRegister();
     void runElectricChainValidation();
-    std::vector<std::vector<uint32_t>>
-          readCICbypassOutput(Ph2_HwDescription::Hybrid* theHybrid, Ph2_HwInterface::D19cFWInterface* theFWinterface, uint8_t phyPort, uint8_t numberOfBytesInSinglePacket);
-    float countMatchingBits(std::vector<uint32_t> incomingData);
+    std::vector<std::vector<uint32_t>> readCICbypassOutput(Ph2_HwDescription::Hybrid* theHybrid, Ph2_HwInterface::D19cFWInterface* theFWinterface, uint8_t phyPort);
+    float countMatchingBits(const std::vector<uint32_t>& incomingData, const std::vector<uint32_t>& possiblePatternList);
+    std::vector<uint32_t> getPossiblePatterns(bool is10Gmodule);
 
     uint8_t  fShiftRegisterPattern{0xAA};
     uint32_t fNumberOfIterations{1000};

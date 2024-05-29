@@ -51,13 +51,16 @@ void DQMHistogramOTMPAtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
         }
     };
 
-    HistContainer<TH2F> phaseScanMatchingEfficiency("MPAtoCICPhaseScan", "MPA to CIC Phase Scan", 15, -0.5, 14.5, numberOfMPA * numberOfLinesPerMPA, -0.5, numberOfMPA * numberOfLinesPerMPA - 0.5);
-    phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("phase");
-    setYaxisBinLable(phaseScanMatchingEfficiency.fTheHistogram);
-    phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
-    phaseScanMatchingEfficiency.fTheHistogram->SetMaximum(1);
-    phaseScanMatchingEfficiency.fTheHistogram->SetStats(false);
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanMatchingEfficiencies, phaseScanMatchingEfficiency);
+    for(uint8_t slvsCurrent = 1; slvsCurrent < 8; ++slvsCurrent)
+    {
+        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("MPAtoCICPhaseScan_SLVScurrent_%d", slvsCurrent), Form("MPA to CIC Phase Scan Matching efficiency - SLVScurrent = %d", slvsCurrent), 15, -0.5, 14.5, numberOfMPA * numberOfLinesPerMPA, -0.5, numberOfMPA * numberOfLinesPerMPA - 0.5);
+        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("phase");
+        setYaxisBinLable(phaseScanMatchingEfficiency.fTheHistogram);
+        phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
+        phaseScanMatchingEfficiency.fTheHistogram->SetMaximum(1);
+        phaseScanMatchingEfficiency.fTheHistogram->SetStats(false);
+        RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanMatchingEfficiencies[slvsCurrent], phaseScanMatchingEfficiency);
+    }
 
     fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
 }
@@ -76,7 +79,7 @@ void DQMHistogramOTMPAtoCICecv::reset(void)
 }
 
 //========================================================================================================================
-void DQMHistogramOTMPAtoCICecv::fillPhaseScanMatchingEfficiency(DetectorDataContainer& thePhaseMatchingEfficiency, uint8_t phase)
+void DQMHistogramOTMPAtoCICecv::fillPhaseScanMatchingEfficiency(DetectorDataContainer& thePhaseMatchingEfficiency, uint8_t phase, uint8_t slvsCurrent)
 {
     for(auto theBoard: thePhaseMatchingEfficiency)
     {
@@ -85,7 +88,7 @@ void DQMHistogramOTMPAtoCICecv::fillPhaseScanMatchingEfficiency(DetectorDataCont
             for(auto theHybrid: *theOpticalGroup)
             {
                 auto thePhaseMatchingEfficiencyPlot =
-                    fPhaseScanMatchingEfficiencies.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    fPhaseScanMatchingEfficiencies[slvsCurrent].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
                 for(auto theChip: *theHybrid)
                 {
@@ -107,10 +110,10 @@ bool DQMHistogramOTMPAtoCICecv::fill(std::string& inputStream)
     if(thePhaseScanMatchingEfficiencySerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched OTMPAtoCICecv PhaseScanMatchingEfficiency!!!!!\n";
-        uint8_t               phase;
+        uint8_t               phase, slvsCurrent;
         DetectorDataContainer theDetectorData =
-            thePhaseScanMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(fDetectorContainer, phase);
-        fillPhaseScanMatchingEfficiency(theDetectorData, phase);
+            thePhaseScanMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(fDetectorContainer, phase, slvsCurrent);
+        fillPhaseScanMatchingEfficiency(theDetectorData, phase, slvsCurrent);
         return true;
     }
     return false;

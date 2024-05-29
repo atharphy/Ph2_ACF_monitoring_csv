@@ -93,7 +93,7 @@ void OTCicBypassTest::runCICbypassTest()
                     fCicInterface->WriteChipReg(cCic, "MUX_CTRL", registerValue);
                     for(size_t iteration = 0; iteration < fNumberOfIterations; ++iteration)
                     {
-                        auto   lineOutputVector = theFWinterface->StubDebug(false, 4, false);
+                        auto   lineOutputVector = theFWinterface->StubDebug(true, 4, false);
                         size_t cNlines          = 4;
                         for(size_t line = 0; line < cNlines; ++line)
                         {
@@ -123,19 +123,22 @@ void OTCicBypassTest::injectStubs2S(Ph2_HwDescription::ReadoutChip* theCBC)
     fReadoutChipInterface->WriteChipMultReg(theCBC, theRegisterVector);
 
     // inject stubs on CBC to CIC stub lines 0 (first stub address) lines 1 (second stub address), line 3 (first and second stub bend)
-    // std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector{{0x0A, 0}, {0xA0, 2}, {0xAA, 4}};
-    std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector{};
+    std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector{{0x0A, 0}, {0xA0, 2}, {0xAA, 4}};
+    // std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector{};
     static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theCBC, stubSeedAndBendingVector);
 }
 
 void OTCicBypassTest::injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA)
 {
-    fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 2); // Use pixel mode to exclude possible SSA communication issues
-    fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 31);
-    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM10", 0x0); // bendind = 0 will ouput 0
+    fReadoutChipInterface->WriteChipReg(theMPA, "LFSR_data", 0xAA);
+    static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface->WriteChipRegBits(theMPA, "Control_1", 0x2, "Mask", 0x03);
 
-    // col, row, cluster size
+    // fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 2); // Use pixel mode to exclude possible SSA communication issues
+    // fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 31);
+    // fReadoutChipInterface->WriteChipReg(theMPA, "CodeM10", 0x0); // bending = 0 will ouput 0
+
+    // // col, row, cluster size
     // std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 1)};
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{};
-    static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, theClusterList);
+    // // std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{};
+    // static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, theClusterList);
 }
