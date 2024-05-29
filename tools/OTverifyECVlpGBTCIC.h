@@ -2,7 +2,8 @@
  *
  * \file OTverifyECVlpGBTCIC.h
  * \brief OTverifyECVlpGBTCIC class
- * \author Irene Zoi
+ * \author Irene Zoi, built on Fabio Ravera's OTverifyBoardDataWord and inspired by Stefan Maier's ECVLinkAlignmentOT
+ * 
  * \date 23/05/24
  *
  */

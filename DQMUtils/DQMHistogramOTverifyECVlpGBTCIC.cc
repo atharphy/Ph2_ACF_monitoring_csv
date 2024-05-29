@@ -29,6 +29,7 @@ void DQMHistogramOTverifyECVlpGBTCIC::book(TFile* theOutputFile, DetectorContain
     EfficiencyPolarity0Hist->GetYaxis()->SetTitle("lpGBT Phase : CIC Strength");
     EfficiencyPolarity0Hist->SetStats(false);
     EfficiencyPolarity0Hist->GetYaxis()->SetLabelSize(0.02);
+    EfficiencyPolarity0Hist->GetXaxis()->SetLabelSize(0.02);
 
     HistContainer<TH2F> ECVEfficiencyPolarity1Histogram("Efficiency_CIC_Clock_Polarity_1", "Polarity 1", 49, 0, 49, 75, 0, 75);
     auto EfficiencyPolarity1Hist = ECVEfficiencyPolarity1Histogram.fTheHistogram;
@@ -105,11 +106,11 @@ bool DQMHistogramOTverifyECVlpGBTCIC::fill(std::string& inputStream)
         // It matched! Decoding data
         std::cout << "Matched OTverifyECVlpGBTCIC!!!!!\n";
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
-        uint8_t pClockPolarity, pClockStrength, pCicStrength, pPhase, pLine;
-        DetectorDataContainer theDetectorData = theECVlpGBTCICContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, float, EmptyContainer>(fDetectorContainer, pClockPolarity, pClockStrength, pCicStrength, pPhase, pLine);
+        uint8_t pClockPolarity, pClockStrength, pCicStrength, pPhase;
+        DetectorDataContainer theDetectorData = theECVlpGBTCICContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, float, EmptyContainer>(fDetectorContainer, pClockPolarity, pClockStrength, pCicStrength, pPhase);
         
         // Filling the histograms
-        fillEfficiency(pClockPolarity, pClockStrength, pCicStrength, pPhase, pLine, theDetectorData);
+        fillEfficiency(pClockPolarity, pClockStrength, pCicStrength, pPhase, theDetectorData);
         return true;
     }
     /// end Irene
@@ -121,7 +122,7 @@ bool DQMHistogramOTverifyECVlpGBTCIC::fill(std::string& inputStream)
     // SoC utilities only - END
 }
 
-void DQMHistogramOTverifyECVlpGBTCIC::fillEfficiency(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, uint8_t pLine, DetectorDataContainer& theEfficiencyContainer)
+void DQMHistogramOTverifyECVlpGBTCIC::fillEfficiency(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, DetectorDataContainer& theEfficiencyContainer)
 {
     for(auto board: theEfficiencyContainer)
     {
@@ -129,14 +130,18 @@ void DQMHistogramOTverifyECVlpGBTCIC::fillEfficiency(uint8_t pClockPolarity, uin
         {
             for( auto theHybrid: * opticalGroup)
             {
-                float efficiency = theEfficiencyContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(theHybrid->getId())->getSummary<float>();
+                auto efficiencies = theEfficiencyContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
                 TH2F* theEfficiencyHistogram;
                 if(pClockPolarity == 0)
                     theEfficiencyHistogram = fEfficiencyPolarity0.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 else
                     theEfficiencyHistogram = fEfficiencyPolarity1.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-
-                theEfficiencyHistogram->SetBinContent(pLine * 7 + pClockStrength, pPhase * 5 + pCicStrength, efficiency);
+                uint8_t lineCounter = 0;    
+                for (auto efficiency: efficiencies)
+                {
+                    theEfficiencyHistogram->SetBinContent(lineCounter * 7 + pClockStrength, pPhase * 5 + pCicStrength, efficiency);
+                    lineCounter++;
+                }
             }
         }
     }
