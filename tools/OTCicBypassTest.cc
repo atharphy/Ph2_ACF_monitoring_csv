@@ -65,7 +65,6 @@ void OTCicBypassTest::runCICbypassTest()
         {
             // bool isA2Smodule = theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S;
             uint8_t numberOfBytesInSinglePacket = (static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10) ? 2 : 1;
-            ;
             for(auto theHybrid: *theOpticalGroup)
             {
                 std::map<uint8_t, std::map<uint8_t, std::pair<uint8_t, uint8_t>>> phyPortAndChannelToChipAndLine;
@@ -88,13 +87,13 @@ void OTCicBypassTest::runCICbypassTest()
                 fCicInterface->SelectOutput(cCic, false);
                 fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
                 fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-                for(uint phyPort = 0; phyPort < 10; ++phyPort)
+                for(uint phyPort = 0; phyPort < 12; ++phyPort)
                 {
                     uint8_t registerValue = 0x10 + phyPort;
                     fCicInterface->WriteChipReg(cCic, "MUX_CTRL", registerValue);
-                    for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+                    for(size_t iteration = 0; iteration < fNumberOfIterations; ++iteration)
                     {
-                        auto   lineOutputVector = theFWinterface->StubDebug(true, 4, false);
+                        auto   lineOutputVector = theFWinterface->StubDebug(false, 4, false);
                         size_t cNlines          = 4;
                         for(size_t line = 0; line < cNlines; ++line)
                         {

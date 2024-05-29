@@ -15,6 +15,7 @@
 #include "tools/OTCICwordAlignment.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTCicBypassTest.h"
+#include "tools/OTMPAtoCICecv.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
 #include "tools/OTTemperature.h"
@@ -172,6 +173,11 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              TuneLpGBTVref,
              OTCMNoise,
              OTTemperature>("Outer Tracker", "cmNoise");
+
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             //  OTCICphaseAlignmentForBypass,
+             OTMPAtoCICecv>("PS Module", "MPAtoCICecv");
 
     // 2S specific calibrations
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(
