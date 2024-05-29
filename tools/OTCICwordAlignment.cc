@@ -79,14 +79,15 @@ void OTCICwordAlignment::Reset()
         bool cSparsified = theBoard->getSparsification();
         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
 
-        size_t cIndx = 0;
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
                 auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                fCicInterface->WriteChipReg(cCic, "FE_ENABLE", fFeEnableRegs[cIndx]);
-                cIndx++;
+                fCicInterface->WriteChipReg(cCic, "FE_ENABLE", 0);
+                std::vector<uint8_t> listOfEnabledChips;
+                for(auto theChip: *theHybrid) { listOfEnabledChips.push_back(theChip->getId() % 8); }
+                fCicInterface->EnableFEs(cCic, listOfEnabledChips, true);
             }
         }
 
