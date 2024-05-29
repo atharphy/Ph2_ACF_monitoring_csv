@@ -21,7 +21,7 @@ void OTMPAtoCICecv::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fNumberOfIterations = findValueInSettings<double>("OTMPAtoCICecv_NumberOfIterations", 1000);
+    fNumberOfIterations   = findValueInSettings<double>("OTMPAtoCICecv_NumberOfIterations", 1000);
     fShiftRegisterPattern = findValueInSettings<double>("OTMPAtoCICecv_ShiftRegisterPattern", 0xAA);
 
 #ifdef __USE_ROOT__
@@ -153,9 +153,9 @@ void OTMPAtoCICecv::runElectricChainValidation()
                                 auto  chipIdAndLine      = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
                                 // if(matchingEfficiency<1)
                                 // {
-                                    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Chip " << +chipIdAndLine.first << " line " << +chipIdAndLine.second << std::hex;
-                                    // for(auto word: phyPortDataVector[line]) std::cout << " " << word;
-                                    // std::cout << std::dec << std::endl;
+                                // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Chip " << +chipIdAndLine.first << " line " << +chipIdAndLine.second << std::hex;
+                                // for(auto word: phyPortDataVector[line]) std::cout << " " << word;
+                                // std::cout << std::dec << std::endl;
                                 // }
                                 theMatchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first + 8)
                                     ->getSummary<GenericDataArray<float, 6>>()[chipIdAndLine.second] = matchingEfficiency;
@@ -209,7 +209,7 @@ float OTMPAtoCICecv::countMatchingBits(const std::vector<uint32_t>& incomingData
         float currentEfficiency = 0;
         for(auto word: incomingData)
         {
-            auto possiblePatternXOR = word ^ possiblePattern;
+            auto            possiblePatternXOR = word ^ possiblePattern;
             std::bitset<32> possiblePatternXORbitset(possiblePatternXOR);
             currentEfficiency += possiblePatternXORbitset.count();
         }
@@ -219,39 +219,29 @@ float OTMPAtoCICecv::countMatchingBits(const std::vector<uint32_t>& incomingData
     return maximumMatchingEfficiency / (incomingData.size() * 32);
 }
 
-
 std::vector<uint32_t> OTMPAtoCICecv::getPossiblePatterns(bool is10Gmodule)
 {
     uint64_t fullPattern = 0;
     if(is10Gmodule)
     {
         uint16_t doubleDigitShiftRegisterPattern = 0;
-        for(uint8_t bit=0; bit<8; ++bit)
+        for(uint8_t bit = 0; bit < 8; ++bit)
         {
             uint16_t singleBit = (fShiftRegisterPattern >> bit) & 0x1;
-            doubleDigitShiftRegisterPattern |= ((singleBit << (2*bit)) | singleBit << (2*bit+1));
+            doubleDigitShiftRegisterPattern |= ((singleBit << (2 * bit)) | singleBit << (2 * bit + 1));
         }
-        for(uint8_t bitShift=0; bitShift<4; ++bitShift)
-        {
-            fullPattern |= (uint64_t(doubleDigitShiftRegisterPattern) << (16 * bitShift));
-        }
+        for(uint8_t bitShift = 0; bitShift < 4; ++bitShift) { fullPattern |= (uint64_t(doubleDigitShiftRegisterPattern) << (16 * bitShift)); }
     }
     else
     {
-        for(uint8_t bitShift=0; bitShift<8; ++bitShift)
-        {
-            fullPattern |= (uint64_t(fShiftRegisterPattern) << (8 * bitShift));
-        }
+        for(uint8_t bitShift = 0; bitShift < 8; ++bitShift) { fullPattern |= (uint64_t(fShiftRegisterPattern) << (8 * bitShift)); }
     }
 
     std::vector<uint32_t> possiblePatternList;
-    for(uint8_t bitShift=0; bitShift<32; ++bitShift)
-    {
-        possiblePatternList.push_back((fullPattern >> bitShift) & 0xFFFFFFFF);
-    }
+    for(uint8_t bitShift = 0; bitShift < 32; ++bitShift) { possiblePatternList.push_back((fullPattern >> bitShift) & 0xFFFFFFFF); }
 
     // remove duplicates
-    sort(possiblePatternList.begin(), possiblePatternList.end() );
+    sort(possiblePatternList.begin(), possiblePatternList.end());
     possiblePatternList.erase(unique(possiblePatternList.begin(), possiblePatternList.end()), possiblePatternList.end());
 
     // for(auto pattern: possiblePatternList) std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pattern = " << std::hex << pattern << std::dec << std::endl;

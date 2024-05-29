@@ -58,7 +58,7 @@ class DQMHistogramOTMPAtoCICecv : public DQMHistogramBase
     void fillPhaseScanMatchingEfficiency(DetectorDataContainer& thePhaseMatchingEfficiency, uint8_t phase, uint8_t slvsCurrent);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer*                       fDetectorContainer;
     std::map<uint8_t, DetectorDataContainer> fPhaseScanMatchingEfficiencies;
 };
 #endif

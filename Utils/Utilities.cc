@@ -144,7 +144,7 @@ double convertAnyDouble(const char* pRegValue)
     if(myRegValue.find("0x") != std::string::npos)
     {
         baseType = 16;
-        unsigned int x;   
+        unsigned int      x;
         std::stringstream ss;
         ss << std::hex << pRegValue;
         ss >> x;
