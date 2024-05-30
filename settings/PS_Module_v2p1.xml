@@ -257,6 +257,7 @@
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithInjection"> 1000</Setting>
 
     <Setting name="OTMPAtoCICecv_NumberOfIterations">1000</Setting>
+    <Setting name="OTMPAtoCICecv_ShiftRegisterPattern">0xAA</Setting>
 </Settings>
 
 
