@@ -513,8 +513,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 LOG(INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
 
                 if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
-                if(resetTDAC >= 0)
-                    static_cast<RD53*>(cChip)->resetTDAC(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->nTDACvalues / 2);
+                if(resetTDAC >= 0) static_cast<RD53*>(cChip)->resetTDAC(resetTDAC);
                 static_cast<RD53*>(cChip)->copyMaskToDefault();
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
 
