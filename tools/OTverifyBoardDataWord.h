@@ -61,7 +61,7 @@ class OTverifyBoardDataWord : public Tool
     bool    isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t header = 0x0ffffffe, uint32_t headerMask = 0xffffffff);
     void    prepareHybridForStubIntegrityTest(Ph2_HwDescription::Hybrid* theHybrid);
     void    prepareHybridForL1IntegrityTest(Ph2_HwDescription::Hybrid* theHybrid);
-    void    prepareFWForL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard);
+    void    prepareFWForL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, uint32_t theTriggerFrequency = 100);
     uint8_t getNumberOfBytesInSinglePacket(Ph2_HwDescription::OpticalGroup* cOpticalGroup) const;
 
     bool                  fIsKickoff{false};
