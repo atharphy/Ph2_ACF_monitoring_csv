@@ -79,6 +79,8 @@ void OTMPAtoCICecv::setMPAshiftRegister()
                 for(auto theMPA: *theHybrid)
                 {
                     thePSinterface->WriteChipRegBits(theMPA, "Control_1", 0x2, "Mask", 0x03); // Enable shift register
+                    // if(theMPA->getId() == 8) thePSinterface->WriteChipReg(theMPA, "LFSR_data", fShiftRegisterPattern);
+                    // else thePSinterface->WriteChipReg(theMPA, "LFSR_data", 0);
                 }
             }
         }
@@ -109,6 +111,8 @@ void OTMPAtoCICecv::runElectricChainValidation()
                     for(auto theMPA: *theHybrid)
                     {
                         thePSinterface->WriteChipRegBits(theMPA, "ConfSLVS", slvsCurrent, "Mask", 0x07); // Enable shift register
+                        // if(theMPA->getId() == 8) thePSinterface->WriteChipRegBits(theMPA, "ConfSLVS", slvsCurrent, "Mask", 0x07); // Enable shift register
+                        // else thePSinterface->WriteChipRegBits(theMPA, "ConfSLVS", 0, "Mask", 0x07);
                     }
                 }
             }
@@ -218,6 +222,7 @@ float OTMPAtoCICecv::countMatchingBits(const std::vector<uint32_t>& incomingData
         {
             auto            possiblePatternXOR = word ^ possiblePattern;
             std::bitset<32> possiblePatternXORbitset(possiblePatternXOR);
+            possiblePatternXORbitset.flip();
             currentEfficiency += possiblePatternXORbitset.count();
         }
         if(currentEfficiency > maximumMatchingEfficiency) maximumMatchingEfficiency = currentEfficiency;
