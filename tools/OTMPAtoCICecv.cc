@@ -157,8 +157,15 @@ void OTMPAtoCICecv::runElectricChainValidation()
                                 // for(auto word: phyPortDataVector[line]) std::cout << " " << word;
                                 // std::cout << std::dec << std::endl;
                                 // }
-                                theMatchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first + 8)
-                                    ->getSummary<GenericDataArray<float, 6>>()[chipIdAndLine.second] = matchingEfficiency;
+                                try // Handle disable chip
+                                {
+                                    theMatchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first + 8)
+                                        ->getSummary<GenericDataArray<float, 6>>()[chipIdAndLine.second] = matchingEfficiency;
+                                }
+                                catch(const std::exception& e)
+                                {
+                                    continue;
+                                }
                             }
                         }
                     }
