@@ -238,4 +238,7 @@ std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector,
 
 uint16_t linearizeRowAndCols(uint16_t row, uint16_t col, uint16_t numberOfCols);
 
+float                 countMatchingBits(const std::vector<uint32_t>& incomingData, const std::vector<uint32_t>& possiblePatternList);
+std::vector<uint32_t> getPossiblePatterns(uint8_t injectedPattern, bool is10Gmodule);
+
 #endif

@@ -27,10 +27,6 @@ void DQMHistogramOTMPAtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    auto        MPAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
-    std::string theMPAqueryFunctionString = "MPAqueryFunction";
-    fDetectorContainer->addReadoutChipQueryFunction(MPAqueryFunction, theMPAqueryFunctionString);
-
     uint8_t numberOfMPA         = 8;
     uint8_t numberOfLinesPerMPA = 6;
 
@@ -68,8 +64,6 @@ void DQMHistogramOTMPAtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
         phaseScanMatchingEfficiency.fTheHistogram->SetStats(false);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanMatchingEfficiencies[slvsCurrent], phaseScanMatchingEfficiency);
     }
-
-    fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
 }
 
 //========================================================================================================================
