@@ -1592,16 +1592,16 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
         const uint8_t masterLane = laneConfigNode.attribute("masterLane").as_uint(0);
 
         const std::string outputLanesConfig = laneConfigNode.attribute("outputLanes").as_string("0001");
-        if(outputLanesConfig.size() != 4) throw std::runtime_error("The \"outputLanes\" attribute of LaneConfig should contain 4 characters ('0' up to '4').");
-        auto outputLanesEnabled = parseString<uint8_t, 4>(outputLanesConfig);
+        if(outputLanesConfig.size() != NCHIPLANES) throw std::runtime_error("The \"outputLanes\" attribute of LaneConfig should contain 4 characters ('0' up to '4').");
+        auto outputLanesEnabled = parseString<uint8_t, NCHIPLANES>(outputLanesConfig);
 
         const std::string singleChannelInputsConfig = laneConfigNode.attribute("singleChannelInputs").as_string("0000");
-        if(singleChannelInputsConfig.size() != 4) throw std::runtime_error("The \"singleChannelInputs\" attribute of LaneConfig should contain 4 characters ('0' or '1').");
-        auto singleChannelInputs = parseString<bool, 4>(singleChannelInputsConfig);
+        if(singleChannelInputsConfig.size() != NCHIPLANES) throw std::runtime_error("The \"singleChannelInputs\" attribute of LaneConfig should contain 4 characters ('0' or '1').");
+        auto singleChannelInputs = parseString<bool, NCHIPLANES>(singleChannelInputsConfig);
 
         const std::string dualChannelInputConfig = laneConfigNode.attribute("dualChannelInput").as_string("0000");
-        if(dualChannelInputConfig.size() != 4) throw std::runtime_error("The \"dualChannelInput\" attribute of LaneConfig should contain 4 characters ('0' or '1').");
-        auto dualChannelInput = parseString<bool, 4>(dualChannelInputConfig);
+        if(dualChannelInputConfig.size() != NCHIPLANES) throw std::runtime_error("The \"dualChannelInput\" attribute of LaneConfig should contain 4 characters ('0' or '1').");
+        auto dualChannelInput = parseString<bool, NCHIPLANES>(dualChannelInputConfig);
 
         static_cast<RD53*>(theChip)->laneConfig = LaneConfig(isPrimary, masterLane, outputLanesEnabled, singleChannelInputs, dualChannelInput);
 
