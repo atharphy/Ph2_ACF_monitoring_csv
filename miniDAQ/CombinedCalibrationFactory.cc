@@ -22,6 +22,7 @@
 #include "tools/OTVTRXLightOff.h"
 #include "tools/OTalignBoardDataWord.h"
 #include "tools/OTalignLpGBTinputs.h"
+#include "tools/OTalignLpGBTinputsForBypass.h"
 #include "tools/OTalignStubPackage.h"
 #include "tools/OTinjectionDelayOptimization.h"
 #include "tools/OTinjectionOccupancyScan.h"
@@ -45,7 +46,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/OTalignLpGBTinputsForBypass.h"
 
 using namespace MessageUtils;
 

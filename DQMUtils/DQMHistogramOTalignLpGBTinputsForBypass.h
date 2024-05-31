@@ -58,9 +58,8 @@ class DQMHistogramOTalignLpGBTinputsForBypass : public DQMHistogramBase
     void fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort);
     void fillBestPhase(DetectorDataContainer& bestPhaseContainer, uint8_t phyPort);
 
-
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer*                       fDetectorContainer;
     std::map<uint8_t, DetectorDataContainer> fPhaseScanMatchingEfficiencies;
     std::map<uint8_t, DetectorDataContainer> fBestPhase;
 };

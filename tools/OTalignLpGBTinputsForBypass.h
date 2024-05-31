@@ -34,16 +34,16 @@ class OTalignLpGBTinputsForBypass : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
-    void AlignLpGBTinputs();
-    void prepareForLoGBTalignmentPS(uint8_t phyPort);
-    void prepareForLoGBTalignment2S(uint8_t phyPort);
+    void    AlignLpGBTinputs();
+    void    prepareForLoGBTalignmentPS(uint8_t phyPort);
+    void    prepareForLoGBTalignment2S(uint8_t phyPort);
     uint8_t getBestPhase(const GenericDataArray<float, 15>& thePhaseEfficiencyList, Ph2_HwDescription::Hybrid* theHybrid, uint8_t line);
 
-    uint32_t fNumberOfIterations {1000};
-    uint8_t fShiftRegisterPattern{0xAA};
-    
+    uint32_t fNumberOfIterations{1000};
+    uint8_t  fShiftRegisterPattern{0xAA};
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTalignLpGBTinputsForBypass fDQMHistogramOTalignLpGBTinputsForBypass;

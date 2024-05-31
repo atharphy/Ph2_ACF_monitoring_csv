@@ -473,7 +473,6 @@ std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector,
 
 uint16_t linearizeRowAndCols(uint16_t row, uint16_t col, uint16_t numberOfCols) { return col + row * numberOfCols; }
 
-
 float countMatchingBits(const std::vector<uint32_t>& incomingData, const std::vector<uint32_t>& possiblePatternList)
 {
     float maximumMatchingEfficiency = -1;

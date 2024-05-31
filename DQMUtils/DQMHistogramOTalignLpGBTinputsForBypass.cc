@@ -6,8 +6,8 @@
 #include "Utils/GenericDataArray.h"
 
 #include "TFile.h"
-#include "TH2F.h"
 #include "TH1I.h"
+#include "TH2F.h"
 
 //========================================================================================================================
 DQMHistogramOTalignLpGBTinputsForBypass::DQMHistogramOTalignLpGBTinputsForBypass() {}
@@ -26,29 +26,29 @@ void DQMHistogramOTalignLpGBTinputsForBypass::book(TFile* theOutputFile, Detecto
     // SoC utilities only - END
 
     uint8_t numberOfLines = 4;
-    for(uint8_t phyPort=0; phyPort<12; ++phyPort)
+    for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
     {
-        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("LpGBTforCICbypassPhaseScan_phyPort%d",phyPort), Form("LpGBT for CIC Bypass Phase Scan Matching Efficiency - phyPort %d",phyPort), 15, -0.5, 14.5,
-                                                            numberOfLines,
-                                                            -0.5,
-                                                            numberOfLines -0.5);
+        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("LpGBTforCICbypassPhaseScan_phyPort%d", phyPort),
+                                                        Form("LpGBT for CIC Bypass Phase Scan Matching Efficiency - phyPort %d", phyPort),
+                                                        15,
+                                                        -0.5,
+                                                        14.5,
+                                                        numberOfLines,
+                                                        -0.5,
+                                                        numberOfLines - 0.5);
         phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("phase");
-        for(uint8_t line=0; line<numberOfLines; ++line) phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel(line+1, Form("Stub%d", line));
+        for(uint8_t line = 0; line < numberOfLines; ++line) phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel(line + 1, Form("Stub%d", line));
         phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
         phaseScanMatchingEfficiency.fTheHistogram->SetMaximum(1);
         phaseScanMatchingEfficiency.fTheHistogram->SetStats(false);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanMatchingEfficiencies[phyPort], phaseScanMatchingEfficiency);
-        
-        HistContainer<TH1I> bestPhase(Form("LpGBTforCICbypassBestPhase_phyPort%d",phyPort), Form("LpGBT for CIC Bypass best phase - phyPort %d",phyPort),
-                                                            numberOfLines,
-                                                            -0.5,
-                                                            numberOfLines -0.5);
+
+        HistContainer<TH1I> bestPhase(Form("LpGBTforCICbypassBestPhase_phyPort%d", phyPort), Form("LpGBT for CIC Bypass best phase - phyPort %d", phyPort), numberOfLines, -0.5, numberOfLines - 0.5);
         bestPhase.fTheHistogram->GetXaxis()->SetTitle("line");
-        for(uint8_t line=0; line<numberOfLines; ++line) bestPhase.fTheHistogram->GetXaxis()->SetBinLabel(line+1, Form("Stub%d", line));
+        for(uint8_t line = 0; line < numberOfLines; ++line) bestPhase.fTheHistogram->GetXaxis()->SetBinLabel(line + 1, Form("Stub%d", line));
         bestPhase.fTheHistogram->SetStats(false);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBestPhase[phyPort], bestPhase);
     }
-
 }
 
 //========================================================================================================================
@@ -61,20 +61,17 @@ void DQMHistogramOTalignLpGBTinputsForBypass::fillMatchingEfficiency(DetectorDat
             for(auto theHybrid: *theOpticalGroup)
             {
                 if(!theHybrid->hasSummary()) continue;
-                auto thePhaseScanHistogram = fPhaseScanMatchingEfficiencies[phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                auto thePhaseScanHistogram =
+                    fPhaseScanMatchingEfficiencies[phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 auto theEfficiencyArray = theHybrid->getSummary<GenericDataArray<float, 4, 15>>();
-                for(uint8_t lpgbtPhase=0; lpgbtPhase <15; ++lpgbtPhase)
+                for(uint8_t lpgbtPhase = 0; lpgbtPhase < 15; ++lpgbtPhase)
                 {
-                    for(size_t line=0; line<4; ++line)
-                    {
-                        thePhaseScanHistogram->SetBinContent(lpgbtPhase+1, line+1, theEfficiencyArray[line][lpgbtPhase]);
-                    }
+                    for(size_t line = 0; line < 4; ++line) { thePhaseScanHistogram->SetBinContent(lpgbtPhase + 1, line + 1, theEfficiencyArray[line][lpgbtPhase]); }
                 }
             }
         }
     }
 }
-
 
 //========================================================================================================================
 void DQMHistogramOTalignLpGBTinputsForBypass::fillBestPhase(DetectorDataContainer& bestPhaseContainer, uint8_t phyPort)
@@ -87,11 +84,8 @@ void DQMHistogramOTalignLpGBTinputsForBypass::fillBestPhase(DetectorDataContaine
             {
                 if(!theHybrid->hasSummary()) continue;
                 auto theBestPhaseHistogram = fBestPhase[phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                auto theBestPhaseArray = theHybrid->getSummary<GenericDataArray<uint8_t, 4>>();
-                for(size_t line=0; line<4; ++line)
-                {
-                    theBestPhaseHistogram->SetBinContent(line+1, theBestPhaseArray[line]);
-                }
+                auto theBestPhaseArray     = theHybrid->getSummary<GenericDataArray<uint8_t, 4>>();
+                for(size_t line = 0; line < 4; ++line) { theBestPhaseHistogram->SetBinContent(line + 1, theBestPhaseArray[line]); }
             }
         }
     }
@@ -102,7 +96,6 @@ void DQMHistogramOTalignLpGBTinputsForBypass::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================
@@ -130,8 +123,7 @@ bool DQMHistogramOTalignLpGBTinputsForBypass::fill(std::string& inputStream)
     if(theBestPhaseSerialization.attachDeserializer(inputStream))
     {
         uint8_t               phyPort;
-        DetectorDataContainer theDetectorData =
-            theBestPhaseSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint8_t, 4>>(fDetectorContainer, phyPort);
+        DetectorDataContainer theDetectorData = theBestPhaseSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint8_t, 4>>(fDetectorContainer, phyPort);
         fillBestPhase(theDetectorData, phyPort);
         return true;
     }
