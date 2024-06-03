@@ -265,7 +265,7 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
                     {
                         for(auto theHybrid: *pOpticalGroup)
                         {
-                            if(theHybrid->getId() % 2 ==0 )
+                            if(theHybrid->getId() % 2 == 0)
                             {
                                 if(it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 6, it->second);
                                 if(it->first == "Group4Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 0, it->second);
@@ -283,13 +283,13 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
                                 if(it->first == "Group2Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 4, it->second);
                                 if(it->first == "Group3Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 6, it->second);
                             }
-                        }    
+                        }
                     }
                     if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
                     {
                         for(auto theHybrid: *pOpticalGroup)
                         {
-                            if(theHybrid->getId() % 2 ==0 )
+                            if(theHybrid->getId() % 2 == 0)
                             {
                                 if(it->first == "Group4Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 6, it->second);
                                 if(it->first == "Group4Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 5, it->second);

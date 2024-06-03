@@ -130,7 +130,7 @@ void OTverifyECVlpGBTCIC::runECV()
                                 theFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
                                 theFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
                                 LOG(DEBUG) << BOLDBLUE << "Started triggers ...." << RESET;
-                                uint8_t pWait_ms = 1;
+                                uint8_t  pWait_ms             = 1;
                                 uint32_t previousNTriggersRxd = 0;
                                 for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
                                 {
@@ -138,13 +138,15 @@ void OTverifyECVlpGBTCIC::runECV()
                                     auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
                                     auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
                                     do {
-                                        cEndTime        = std::chrono::high_resolution_clock::now();
-                                        cDuration       = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
+                                        cEndTime      = std::chrono::high_resolution_clock::now();
+                                        cDuration     = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
                                         cNTriggersRxd = theFWInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-                                        LOG(DEBUG) << BOLDMAGENTA << "Previous trigger "<< previousNTriggersRxd << " Trigger in counter is " << cNTriggersRxd << " waited for " << cDuration << " us so far" << RESET;
-                                    } while( (previousNTriggersRxd==cNTriggersRxd) && cDuration < pWait_ms * 1e3);
+                                        LOG(DEBUG) << BOLDMAGENTA << "Previous trigger " << previousNTriggersRxd << " Trigger in counter is " << cNTriggersRxd << " waited for " << cDuration
+                                                   << " us so far" << RESET;
+                                    } while((previousNTriggersRxd == cNTriggersRxd) && cDuration < pWait_ms * 1e3);
                                     previousNTriggersRxd = cNTriggersRxd;
-                                    // LOG(DEBUG) << BOLDMAGENTA << "First header found after " << theFWInterface->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
+                                    // LOG(DEBUG) << BOLDMAGENTA << "First header found after " << theFWInterface->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << "
+                                    // clock cycles." << RESET;
                                     auto lineOutputVector = theFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
                                     LOG(DEBUG) << BOLDBLUE << getPatternPrintout(lineOutputVector, numberOfBytesInSinglePacket, true) << RESET;
 

@@ -109,7 +109,6 @@ bool DQMHistogramOTverifyECVlpGBTCIC::fill(std::string& inputStream)
         return true;
     }
 
-
     // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
     //  for this stream)
     return false;
