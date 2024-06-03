@@ -34,10 +34,10 @@ void OTverifyECVlpGBTCIC::ConfigureCalibration() {}
 
 void OTverifyECVlpGBTCIC::Running()
 {
-    LOG(INFO) << "Starting OTverifyECVlpGBTCIC measurement.";
+    LOG(INFO) << BOLDMAGENTA << "Starting OTverifyECVlpGBTCIC measurement." << RESET;
     Initialise();
     runECV();
-    LOG(INFO) << "Done with OTverifyECVlpGBTCIC.";
+    LOG(INFO) << BOLDGREEN << "Done with OTverifyECVlpGBTCIC." << RESET;
     Reset();
 }
 
@@ -114,12 +114,39 @@ void OTverifyECVlpGBTCIC::runECV()
                                 }
 
                                 LOG(INFO) << BOLDMAGENTA << "Running L1StubIntegrityTeston Hybrid " << +theHybrid->getId() << RESET;
-                                prepareFWForL1IntegrityTest(theBoard);
+                                uint32_t theTriggerFrequency = 10; // higher rate reduces L1 efficiency
+                                prepareFWForL1IntegrityTest(theBoard, theTriggerFrequency);
                                 prepareHybridForL1IntegrityTest(theHybrid);
 
+                                LOG(DEBUG) << BOLDBLUE << "D19cDebugFWInterface::L1ADebug ...." << RESET;
+                                // enable initial fast reset
+                                theFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", 1);
+                                // disable back-pressure
+                                theFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
+                                theFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
+                                // reset trigger
+                                theFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
+                                // load new trigger configuration
+                                theFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
+                                theFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+                                LOG(DEBUG) << BOLDBLUE << "Started triggers ...." << RESET;
+                                uint8_t pWait_ms = 1;
+                                uint32_t previousNTriggersRxd = 0;
                                 for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
                                 {
-                                    auto lineOutputVector = theFWInterface->L1ADebug(1, false);
+                                    auto cNTriggersRxd = theFWInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+                                    auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
+                                    auto cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
+                                    do {
+                                        cEndTime        = std::chrono::high_resolution_clock::now();
+                                        cDuration       = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
+                                        cNTriggersRxd = theFWInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+                                        LOG(DEBUG) << BOLDMAGENTA << "Previous trigger "<< previousNTriggersRxd << " Trigger in counter is " << cNTriggersRxd << " waited for " << cDuration << " us so far" << RESET;
+                                    } while( (previousNTriggersRxd==cNTriggersRxd) && cDuration < pWait_ms * 1e3);
+                                    previousNTriggersRxd = cNTriggersRxd;
+                                    // LOG(DEBUG) << BOLDMAGENTA << "First header found after " << theFWInterface->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
+                                    auto lineOutputVector = theFWInterface->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
+                                    LOG(DEBUG) << BOLDBLUE << getPatternPrintout(lineOutputVector, numberOfBytesInSinglePacket, true) << RESET;
 
                                     for(auto pattern: L1Patterns)
                                     {
@@ -133,7 +160,8 @@ void OTverifyECVlpGBTCIC::runECV()
                                         else { LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET; }
                                     }
                                 }
-
+                                // stop triggers
+                                theFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
                                 for(auto& theNumberOfMatches: fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())
                                                                   ->getObject(theOpticalGroup->getId())
                                                                   ->getObject(theHybrid->getId())
