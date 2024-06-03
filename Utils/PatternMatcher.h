@@ -32,9 +32,16 @@ class PatternMatcher
     /*!
      * \brief returns true if the pattern matches with the theWordVector vector provided
      * \param theWordVector: the data to match
-     * \return is the patttern matched
+     * \return is the pattern matched
      */
     bool isMatched(const std::vector<uint32_t>& theWordVector);
+
+    /*!
+     * \brief returns the numberOfBits of the pattern that matches with the theWordVector vector provided
+     * \param theWordVector: the data to match
+     * \return number of bits matchad by the pattern
+     */
+    uint32_t countMatchingBits(const std::vector<uint32_t>& theWordVector) const;
 
     /*!
      * \brief get the number of bits composing the pattern
@@ -58,6 +65,17 @@ class PatternMatcher
      * \brief temporary function to ignore bug on stub line 4 for 2S kickoff FEHR
      */
     void maskStubFor2Skickoff();
+
+    /*!
+     * \brief get number of unmasked bits
+     * \returns number of unmasked bits
+     */
+    uint32_t getNumberOfMaskedBits();
+
+    /*!
+     * @brief clear all data members
+     */
+    void clear();
 
   private:
     size_t                                     fPatternNumberOfBits{0};
