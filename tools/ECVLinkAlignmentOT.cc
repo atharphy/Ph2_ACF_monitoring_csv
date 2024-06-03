@@ -263,36 +263,53 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
                 {
                     if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
                     {
-                        if(it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 6, it->second);
-                        if(it->first == "Group4Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 0, it->second);
-                        if(it->first == "Group4Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 1, it->second);
-                        if(it->first == "Group5Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 2, it->second);
-                        if(it->first == "Group5Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 3, it->second);
-                        if(it->first == "Group6Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 4, it->second);
-                        if(it->first == "Group0Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 0, it->second);
-                        if(it->first == "Group1Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 1, it->second);
-                        if(it->first == "Group1Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 2, it->second);
-                        if(it->first == "Group2Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 3, it->second);
-                        if(it->first == "Group2Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 4, it->second);
-                        if(it->first == "Group3Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 6, it->second);
+                        for(auto theHybrid: *pOpticalGroup)
+                        {
+                            if(theHybrid->getId() % 2 ==0 )
+                            {
+                                if(it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 6, it->second);
+                                if(it->first == "Group4Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 0, it->second);
+                                if(it->first == "Group4Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 1, it->second);
+                                if(it->first == "Group5Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 2, it->second);
+                                if(it->first == "Group5Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 3, it->second);
+                                if(it->first == "Group6Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 4, it->second);
+                            }
+                            else
+                            {
+                                if(it->first == "Group0Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 0, it->second);
+                                if(it->first == "Group1Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 1, it->second);
+                                if(it->first == "Group1Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 2, it->second);
+                                if(it->first == "Group2Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 3, it->second);
+                                if(it->first == "Group2Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 4, it->second);
+                                if(it->first == "Group3Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 6, it->second);
+                            }
+                        }    
                     }
                     if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
                     {
-                        if(it->first == "Group4Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 6, it->second);
-                        if(it->first == "Group4Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 5, it->second);
-                        if(it->first == "Group5Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 3, it->second);
-                        if(it->first == "Group5Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 4, it->second);
-                        if(it->first == "Group6Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 1, it->second);
-                        if(it->first == "Group6Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 2, it->second);
-                        if(it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 0, it->second);
-
-                        if(it->first == "Group0Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 5, it->second);
-                        if(it->first == "Group1Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 6, it->second);
-                        if(it->first == "Group1Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 4, it->second);
-                        if(it->first == "Group2Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 3, it->second);
-                        if(it->first == "Group2Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 2, it->second);
-                        if(it->first == "Group3Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 1, it->second);
-                        if(it->first == "Group3Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 0, it->second);
+                        for(auto theHybrid: *pOpticalGroup)
+                        {
+                            if(theHybrid->getId() % 2 ==0 )
+                            {
+                                if(it->first == "Group4Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 6, it->second);
+                                if(it->first == "Group4Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 5, it->second);
+                                if(it->first == "Group5Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 3, it->second);
+                                if(it->first == "Group5Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 4, it->second);
+                                if(it->first == "Group6Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 1, it->second);
+                                if(it->first == "Group6Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 2, it->second);
+                                if(it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 0, it->second);
+                            }
+                            else
+                            {
+                                if(it->first == "Group0Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 5, it->second);
+                                if(it->first == "Group1Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 6, it->second);
+                                if(it->first == "Group1Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 4, it->second);
+                                if(it->first == "Group2Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 3, it->second);
+                                if(it->first == "Group2Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 2, it->second);
+                                if(it->first == "Group3Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 1, it->second);
+                                if(it->first == "Group3Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, theHybrid->getId(), 0, it->second);
+                            }
+                        }
                     }
                 }
                 // StoreChosenPhase(clockPolarity, clockStrength, cicStrength, chosenPhase);
@@ -418,8 +435,8 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>> ECVLinkAlignmentOT::Ch
     LOG(INFO) << BOLDMAGENTA << "ECVLinkAlignmentOT::WordAlignBEdata ... word alignment on L1 lines from CIC.." << RESET;
     bool cAligned0 = L1WordAlignment(pOpticalGroup, fL1Debug, 2); // If one line is not aligned it is false for both lines
     bool cAligned1 = L1WordAlignment(pOpticalGroup, fL1Debug, 1); // If one line is not aligned it is false for both lines
-    ret.push_back(std::make_pair(0, std::make_pair(6, cAligned0)));
-    ret.push_back(std::make_pair(1, std::make_pair(6, cAligned1)));
+    // ret.push_back(std::make_pair(0, std::make_pair(6, cAligned0)));
+    // ret.push_back(std::make_pair(1, std::make_pair(6, cAligned1)));
     int hybridCount = 0;
     for(auto cHybrid: *pOpticalGroup)
     {
