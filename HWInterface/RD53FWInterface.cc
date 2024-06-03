@@ -498,15 +498,12 @@ uint32_t RD53FWInterface::GetBoardEnabledChips(const BeBoard* pBoard, bool prima
             if(this->singleChip == true)
                 chips_en = 1 << hybrid_id;
             else
-            {
                 for(const auto cChip: *cHybrid)
                     if((primariesOnly == false) || (static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.isPrimary == true))
                     {
-                        uint32_t chip_lane = hybrid_id;
-                        if(this->singleChip != true) chip_lane = (RD53FWconstants::NLANE_HYBRID * hybrid_id) + static_cast<RD53*>(cChip)->getChipLane();
+                        const uint32_t chip_lane = (RD53FWconstants::NLANE_HYBRID * hybrid_id) + static_cast<RD53*>(cChip)->getChipLane();
                         chips_en |= 1 << chip_lane;
                     }
-            }
 
             theChipsEn |= chips_en;
         }
