@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <vector>
+#include <bitset>
 
 /*!
  * \class PatternMatcher
@@ -77,8 +78,45 @@ class PatternMatcher
      */
     void clear();
 
+    /*!
+     * @brief get maximum number of bit matching the pattern by considering all possible bitshifts
+     * @tparam N number of bits in the pattern
+     * @param inputDataVector data to match
+     * @return maximum number of matching bits
+     */
+    template<size_t N>
+    uint32_t getNumberOfMatchingBitsForAllBitshifts(const std::vector<uint32_t>& inputDataVector)
+    {
+        std::bitset<N> maskBitset(0xFFFFFFFF);
+        std::bitset<N> theInputDataBiset;
+        for(size_t index=0; index<inputDataVector.size(); ++index)
+        {
+            std::bitset<N> tmpDataset(inputDataVector[index]);
+            theInputDataBiset |= (tmpDataset << (N - 32*(index + 1)));
+        }
+        
+        uint32_t maximumEfficiency = 0;
+        
+        for(size_t bitShift=0; bitShift<N; ++bitShift)
+        {
+            std::vector<uint32_t> rolledInputDataVector(inputDataVector.size());
+            for(size_t index=0; index<rolledInputDataVector.size(); ++index)
+            {
+                rolledInputDataVector[index] = ((theInputDataBiset >> (N - 32*(index + 1))) & maskBitset).to_ulong();
+            }
+            uint32_t currentEfficiency = countMatchingBits(rolledInputDataVector);
+            if(currentEfficiency > maximumEfficiency) maximumEfficiency = currentEfficiency;
+            if(maximumEfficiency == getNumberOfMaskedBits()) break;
+            int lowestBit = theInputDataBiset[N - 1];
+            theInputDataBiset =  (theInputDataBiset << 1);
+            theInputDataBiset[0] = lowestBit;
+        }
+        return maximumEfficiency;
+    }
+
   private:
     size_t                                     fPatternNumberOfBits{0};
+    size_t                                     fPatternNumberOfMaskedBits{0};
     std::vector<std::pair<uint32_t, uint32_t>> fPatternAndMaskVector;
 };
 

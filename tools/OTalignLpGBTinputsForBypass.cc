@@ -68,8 +68,7 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
     uint8_t numberOfLines = 4;
 
     if(isPS)
-        prepareForLoGBTalignmentPS();
-
+        prepareForLpGBTalignmentPS();
     for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
     {
         LOG(INFO) << BOLDGREEN << "    Measuring phyPort " << +phyPort << RESET;
@@ -79,9 +78,9 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
         if(!isPS)
         {
             if(phyPort<10)
-                prepareForLoGBTalignment2Sstubs();
+                prepareForLpGBTalignment2Sstubs();
             else
-                prepareForLoGBTalignment2SL1();
+                prepareForLpGBTalignment2SL1();
         }
 
         DetectorDataContainer matchingEfficiencyContainer;
@@ -137,7 +136,6 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                             auto lineOutputVector = theFWinterface->StubDebug(true, numberOfLines, false);
                             for(uint8_t line = 0; line < numberOfLines; ++line)
                             {
-                                // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << getPatternPrintout(lineOutputVector[line], 1, true) << std::endl;
                                 phyPortDataVector[line].insert(phyPortDataVector[line].end(), lineOutputVector[line].begin(), lineOutputVector[line].end());
                             }
                         }
@@ -179,7 +177,6 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                     {
                         theHybrid->getSummary<GenericDataArray<uint8_t, 4>>()[line] =
                             getBestPhase(phyPortEfficiencyScanList[line], fDetectorContainer->getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId()), line);
-                        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line = " << +line << " best phase " << theHybrid->getSummary<GenericDataArray<uint8_t, 4>>()[line] << std::endl;
                     }
                 }
             }
@@ -201,7 +198,7 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
     }
 }
 
-void OTalignLpGBTinputsForBypass::prepareForLoGBTalignmentPS()
+void OTalignLpGBTinputsForBypass::prepareForLpGBTalignmentPS()
 {
     auto        MPAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
     std::string theMPAqueryFunctionString = "MPAqueryFunction";
@@ -231,7 +228,6 @@ void OTalignLpGBTinputsForBypass::prepareForLoGBTalignmentPS()
                         phaseRegisterVector.push_back({phaseRegisterName.str(), phase | phase << 4});
                     }
                 }
-                // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] phaseRegisterVector " << std::hex << phaseRegisterVector[0].second << std::dec << std::endl;
                 fCicInterface->WriteChipMultReg(theCic, phaseRegisterVector);
             }
         }
@@ -240,7 +236,7 @@ void OTalignLpGBTinputsForBypass::prepareForLoGBTalignmentPS()
     fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
 }
 
-void OTalignLpGBTinputsForBypass::prepareForLoGBTalignment2Sstubs()
+void OTalignLpGBTinputsForBypass::prepareForLpGBTalignment2Sstubs()
 {
     auto theCbcInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
     for(auto theBoard: *fDetectorContainer)
@@ -266,7 +262,6 @@ void OTalignLpGBTinputsForBypass::prepareForLoGBTalignment2Sstubs()
                     theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
                     fReadoutChipInterface->WriteChipMultReg(theChip, theRegisterVector);
 
-                    // LOG(DEBUG) << BOLDBLUE << "Injecting on stub lines 1,2,3 and 4 on CBC#" << +theChip->getId() << " on hybrid#" << +theChip->getHybridId() << RESET;
                     std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{fStubPattern2S[0], 0}, {fStubPattern2S[1], 0}, {fStubPattern2S[2], 2}};
                     theCbcInterface->injectStubs(theChip, stubSeedAndBend);
                 }
@@ -275,7 +270,7 @@ void OTalignLpGBTinputsForBypass::prepareForLoGBTalignment2Sstubs()
     }
 }
 
-void OTalignLpGBTinputsForBypass::prepareForLoGBTalignment2SL1()
+void OTalignLpGBTinputsForBypass::prepareForLpGBTalignment2SL1()
 {
     uint32_t triggerFrequency = 1000; // do not change or it will not match padding 0s
     uint8_t fakeHeaderChannelNumber = 24;
@@ -319,7 +314,8 @@ void OTalignLpGBTinputsForBypass::prepareForLoGBTalignment2SL1()
             {
                 for(auto theChip: *theHybrid)
                 {
-                    
+                    fReadoutChipInterface->WriteChipReg(theChip, "ClusterCut", 4);
+                    fReadoutChipInterface->WriteChipReg(theChip, "VCth", 1023);
                     theCbcInterface->selectLogicMode(static_cast<ReadoutChip*>(theChip), "Sampled", true, true);
 
                     auto cChannelMask = std::make_shared<ChannelGroup<1, NCHANNELS>>();
@@ -422,10 +418,6 @@ uint8_t OTalignLpGBTinputsForBypass::getBestPhase(const GenericDataArray<float, 
 
 float OTalignLpGBTinputsForBypass::getMatchingEfficiency2SL1(std::vector<uint32_t> inputDataVector)
 {
-    auto numberOfUnmaskedBits = fPattern2SL1.getNumberOfMaskedBits();
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Pattern = " << getPatternPrintout(fPattern2SL1.getPattern(), 1, false) << std::endl;
-    
-    
     float totalEfficiency = 0;
     uint8_t numberOfWordsPerAcquisition = 10; // 10 32-bit-words per acquisition;
     float numberOfAcquisitions = inputDataVector.size() / numberOfWordsPerAcquisition; 
@@ -434,40 +426,11 @@ float OTalignLpGBTinputsForBypass::getMatchingEfficiency2SL1(std::vector<uint32_
         size_t firstIndex = acquisitionNumber*numberOfWordsPerAcquisition;
         size_t lastIndex    = firstIndex + numberOfWordsPerAcquisition;
         std::vector<uint32_t> singleAcquisitionInputDataVector(inputDataVector.begin() + firstIndex, inputDataVector.begin() + lastIndex);
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]  singleAcquisitionInputDataVector.size() = " << singleAcquisitionInputDataVector.size() << std::endl;
-
-        std::bitset<320> maskBitset(0xFFFFFFFF);
-        std::bitset<320> theInputDataBiset;
-        for(size_t index=0; index<singleAcquisitionInputDataVector.size(); ++index)
-        {
-            std::bitset<320> tmpDataset(singleAcquisitionInputDataVector[index]);
-            theInputDataBiset |= (tmpDataset << (32*index));
-        }
-        uint32_t maximumEfficiency = 0;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        
-        for(size_t bitShift=0; bitShift<320; ++bitShift)
-        {
-            std::vector<uint32_t> rolledInputDataVector(singleAcquisitionInputDataVector.size());
-            for(size_t index=0; index<rolledInputDataVector.size(); ++index)
-            {
-                rolledInputDataVector[index] = ((theInputDataBiset >> (32 * index)) & maskBitset).to_ulong();
-            }
-            auto     orderedRolledInputDataVector = reorderPattern(rolledInputDataVector, 1);
-            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pattern = " << getPatternPrintout(orderedRolledInputDataVector, 1, false) << std::endl;
-            uint32_t currentEfficiency = fPattern2SL1.countMatchingBits(orderedRolledInputDataVector);
-            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] currentEfficiency = " << currentEfficiency << std::endl;
-            if(currentEfficiency > maximumEfficiency) maximumEfficiency = currentEfficiency;
-            if(maximumEfficiency == numberOfUnmaskedBits) break;
-            int lowestBit = theInputDataBiset[319];
-            theInputDataBiset =  (theInputDataBiset << 1);
-            theInputDataBiset[0] = lowestBit;
-        }
-
-        // abort();
-
-        totalEfficiency+=maximumEfficiency;
+        auto reorderedSingleAcquisitionInputDataVector = reorderPattern(singleAcquisitionInputDataVector, 1);
+        auto maximumEfficiency = fPattern2SL1.getNumberOfMatchingBitsForAllBitshifts<320>(reorderedSingleAcquisitionInputDataVector);
+        totalEfficiency += maximumEfficiency;
     }
 
+    auto numberOfUnmaskedBits = fPattern2SL1.getNumberOfMaskedBits();
     return totalEfficiency / (numberOfAcquisitions * numberOfUnmaskedBits);
 }

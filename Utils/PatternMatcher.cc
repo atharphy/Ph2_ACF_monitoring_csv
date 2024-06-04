@@ -8,6 +8,7 @@ PatternMatcher::~PatternMatcher() {}
 
 void PatternMatcher::addToPattern(uint32_t thePattern, uint32_t thePatternMask, uint8_t thePatternBitLenght)
 {
+    fPatternNumberOfMaskedBits = 0;
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << std::hex << thePattern << " " << thePatternMask << std::dec << " " << +thePatternBitLenght << std::endl;
 
     uint8_t numberOfBitsInWord = (sizeof(uint32_t)) * 8;
@@ -117,14 +118,15 @@ void PatternMatcher::maskStubFor2Skickoff()
 
 uint32_t PatternMatcher::getNumberOfMaskedBits()
 {
-    uint32_t numberOfUnmaskedBits = 0;
+    if(fPatternNumberOfMaskedBits !=0) return fPatternNumberOfMaskedBits;
+
     for(auto thePatterAndMask: fPatternAndMaskVector)
     {
         std::bitset<32> theMaskBitset(thePatterAndMask.second);
-        numberOfUnmaskedBits += theMaskBitset.count();
+        fPatternNumberOfMaskedBits += theMaskBitset.count();
     }
 
-    return numberOfUnmaskedBits;
+    return fPatternNumberOfMaskedBits;
 }
 
 void PatternMatcher::clear()

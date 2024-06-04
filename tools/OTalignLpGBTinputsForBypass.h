@@ -38,9 +38,9 @@ class OTalignLpGBTinputsForBypass : public Tool
 
   private:
     void    AlignLpGBTinputs();
-    void    prepareForLoGBTalignmentPS();
-    void    prepareForLoGBTalignment2Sstubs();
-    void    prepareForLoGBTalignment2SL1();
+    void    prepareForLpGBTalignmentPS();
+    void    prepareForLpGBTalignment2Sstubs();
+    void    prepareForLpGBTalignment2SL1();
     void    setCICBypass(uint8_t phyPort);
     uint8_t getBestPhase(const GenericDataArray<float, 15>& thePhaseEfficiencyList, Ph2_HwDescription::Hybrid* theHybrid, uint8_t line);
     float   getMatchingEfficiency2SL1(std::vector<uint32_t> inputDataVector);
