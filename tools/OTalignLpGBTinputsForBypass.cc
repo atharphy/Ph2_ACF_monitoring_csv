@@ -21,6 +21,7 @@ void OTalignLpGBTinputsForBypass::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
+    fNumberOfIterations   = findValueInSettings<double>("OTalignLpGBTinputsForBypass_NumberOfIterations", 1000);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -59,7 +60,7 @@ void OTalignLpGBTinputsForBypass::Reset() { fRegisterHelper->restoreSnapshot(); 
 
 void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
 {
-    LOG(INFO) << BOLDYELLOW << "OTalignLpGBTinputsForBypass::AlignLpGBTinputs ... start LpGBT phase scan with CIC in bypass moe" << RESET;
+    LOG(INFO) << BOLDYELLOW << "OTalignLpGBTinputsForBypass::AlignLpGBTinputs ... start LpGBT phase scan with CIC in bypass mode" << RESET;
 
     auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
@@ -69,6 +70,7 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
 
     if(isPS)
         prepareForLpGBTalignmentPS();
+
     for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
     {
         LOG(INFO) << BOLDGREEN << "    Measuring phyPort " << +phyPort << RESET;
@@ -212,23 +214,11 @@ void OTalignLpGBTinputsForBypass::prepareForLpGBTalignmentPS()
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto& theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                 for(auto theMPA: *theHybrid)
                 {
                     thePSinterface->WriteChipRegBits(theMPA, "Control_1", 0x2, "Mask", 0x03); // Enable shift register
                     thePSinterface->WriteChipRegBits(theMPA, "ConfSLVS", 7, "Mask", 0x07);    // set slvs current to the maximum
                 }
-                uint8_t                                       phase = 9; // close enough to the best phase to make the procedure work
-                std::vector<std::pair<std::string, uint16_t>> phaseRegisterVector;
-                for(uint8_t phyPortPair = 0; phyPortPair < 6; ++phyPortPair)
-                {
-                    for(uint8_t channel = 0; channel < 4; ++channel)
-                    {
-                        std::stringstream phaseRegisterName;
-                        phaseRegisterVector.push_back({phaseRegisterName.str(), phase | phase << 4});
-                    }
-                }
-                fCicInterface->WriteChipMultReg(theCic, phaseRegisterVector);
             }
         }
     }
@@ -248,7 +238,7 @@ void OTalignLpGBTinputsForBypass::prepareForLpGBTalignment2Sstubs()
                 for(auto theChip: *theHybrid)
                 {
                     // switch on HitOr
-                    fReadoutChipInterface->WriteChipReg(theChip, "HitOr", 0);
+                    fReadoutChipInterface->WriteChipReg(theChip, "HitOr", 1);
                     // set PtCut to maximum
                     fReadoutChipInterface->WriteChipReg(theChip, "PtCut", 14);
                     // disable cluster cut
@@ -257,12 +247,12 @@ void OTalignLpGBTinputsForBypass::prepareForLpGBTalignment2Sstubs()
 
                     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
                     theRegisterVector.push_back({"Bend7", 0x0A});              // forcing Bend7 (bending = 0) to ouput 0xA
-                    theRegisterVector.push_back({"Bend8", 0x0C});              // forcing Bend8 (bending = 1) to ouput 0xC
+                    // theRegisterVector.push_back({"Bend8", 0x0C});              // forcing Bend8 (bending = 1) to ouput 0xC
                     theRegisterVector.push_back({"CoincWind&Offset12", 0x00}); // set stub window offset to 0
                     theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
                     fReadoutChipInterface->WriteChipMultReg(theChip, theRegisterVector);
 
-                    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{fStubPattern2S[0], 0}, {fStubPattern2S[1], 0}, {fStubPattern2S[2], 2}};
+                    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{fStubPattern2S[0], 0}, {fStubPattern2S[1], 0}, {fStubPattern2S[2], 0}};
                     theCbcInterface->injectStubs(theChip, stubSeedAndBend);
                 }
             }

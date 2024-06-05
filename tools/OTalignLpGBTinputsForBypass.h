@@ -47,7 +47,7 @@ class OTalignLpGBTinputsForBypass : public Tool
 
     uint32_t fNumberOfIterations{1000};
     uint8_t  fShiftRegisterPatternMPA{0xAA};
-    std::vector<uint8_t> fStubPattern2S{0x33, 0x55, 0xAA, 0xAA, 0xCC}; // last two bytes cannot be changed here
+    std::vector<uint8_t> fStubPattern2S{0x33, 0x55, 0xAA, 0xAA, 0xAA}; // last two bytes cannot be changed here
 
     PatternMatcher fPattern2SL1;
 

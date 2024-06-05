@@ -133,7 +133,7 @@ bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const 
         auto cIterator = cRegMap.find(cReq.first);
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
+            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
             continue;
         }
 
@@ -154,7 +154,7 @@ std::vector<std::pair<std::string, uint16_t>> D19clpGBTInterface::ReadChipMultRe
         auto cIterator = cRegMap.find(cReq);
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq << RESET;
             abort();
         }
 

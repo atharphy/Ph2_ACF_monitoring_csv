@@ -429,7 +429,7 @@ bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
         auto cIterator = cRegMap.find(dacName.str());
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "SSA2Interaface::WriteChipAllLocalReg trtying to write to a register that doesn't exist in the map : " << dacName.str() << RESET;
+            LOG(ERROR) << BOLDRED << "SSA2Interaface::WriteChipAllLocalReg trying to write to a register that doesn't exist in the map : " << dacName.str() << RESET;
             continue;
         }
         ChipRegItem cItem = cIterator->second;
@@ -464,7 +464,7 @@ bool SSA2Interface::WriteChipMultReg(Chip* pSSA2, const std::vector<std::pair<st
         auto cIterator = cRegMap.find(cReq.first);
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "SSA2Interaface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
+            LOG(ERROR) << BOLDRED << "SSA2Interaface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
             continue;
         }
 
@@ -985,7 +985,7 @@ std::vector<std::pair<std::string, uint16_t>> SSA2Interface::ReadChipMultReg(Ph2
         auto cIterator = cRegMap.find(cReq);
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "SSA2Interface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            LOG(ERROR) << BOLDRED << "SSA2Interface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq << RESET;
             abort();
         }
 
