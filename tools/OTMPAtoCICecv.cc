@@ -79,8 +79,6 @@ void OTMPAtoCICecv::setMPAshiftRegister()
                 for(auto theMPA: *theHybrid)
                 {
                     thePSinterface->WriteChipRegBits(theMPA, "Control_1", 0x2, "Mask", 0x03); // Enable shift register
-                    // if(theMPA->getId() == 8) thePSinterface->WriteChipReg(theMPA, "LFSR_data", fShiftRegisterPattern);
-                    // else thePSinterface->WriteChipReg(theMPA, "LFSR_data", 0);
                 }
             }
         }
@@ -99,7 +97,7 @@ void OTMPAtoCICecv::runElectricChainValidation()
 
     auto thePSinterface = static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface;
 
-    for(uint8_t slvsCurrent = 7; slvsCurrent < 8; ++slvsCurrent)
+    for(uint8_t slvsCurrent = 1; slvsCurrent < 8; ++slvsCurrent)
     {
         LOG(INFO) << BOLDGREEN << "    Measuring slvs current " << +slvsCurrent << RESET;
         for(auto theBoard: *fDetectorContainer)
@@ -111,8 +109,6 @@ void OTMPAtoCICecv::runElectricChainValidation()
                     for(auto theMPA: *theHybrid)
                     {
                         thePSinterface->WriteChipRegBits(theMPA, "ConfSLVS", slvsCurrent, "Mask", 0x07); // set slvs current
-                        // if(theMPA->getId() == 8) thePSinterface->WriteChipRegBits(theMPA, "ConfSLVS", slvsCurrent, "Mask", 0x07); // set slvs current
-                        // else thePSinterface->WriteChipRegBits(theMPA, "ConfSLVS", 0, "Mask", 0x07);
                     }
                 }
             }
@@ -120,6 +116,7 @@ void OTMPAtoCICecv::runElectricChainValidation()
 
         for(uint8_t phase = 0; phase < 15; ++phase)
         {
+            if(phase == 2 || phase == 3) continue;
             LOG(INFO) << BOLDGREEN << "        Measuring phase " << +phase << RESET;
             DetectorDataContainer theMatchingEfficiencyContainer;
             ContainerFactory::copyAndInitChip<GenericDataArray<float, 6>>(*fDetectorContainer, theMatchingEfficiencyContainer);
@@ -132,7 +129,6 @@ void OTMPAtoCICecv::runElectricChainValidation()
                     for(auto theHybrid: *theOpticalGroup)
                     {
                         auto theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Hybrid " << +theHybrid->getId() << std::endl;
 
                         std::vector<std::pair<std::string, uint16_t>> phaseRegisterVector;
                         for(uint8_t phyPortPair = 0; phyPortPair < 6; ++phyPortPair)
@@ -144,12 +140,16 @@ void OTMPAtoCICecv::runElectricChainValidation()
                                 phaseRegisterVector.push_back({phaseRegisterName.str(), phase | phase << 4});
                             }
                         }
-                        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] phaseRegisterVector " << std::hex << phaseRegisterVector[0].second << std::dec << std::endl;
                         fCicInterface->WriteChipMultReg(theCic, phaseRegisterVector);
 
                         for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
                         {
-                            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] phyPort " << +phyPort << std::endl;
+                            for(uint8_t line = 0; line < 4; ++line)
+                            {
+                                auto bestPhase = theCic->getLpGBTphaseForCICbypass(phyPort, line);
+                                auto groupAndChannel = theOpticalGroup->getGroupAndChannel(theHybrid->getId(), line+1); // stub lines start from 1, line 0 is L1
+                                flpGBTInterface->ConfigureRxPhase(theOpticalGroup->flpGBT, groupAndChannel.first, groupAndChannel.second, bestPhase);
+                            }
                             auto phyPortDataVector = readCICbypassOutput(theHybrid, theFWinterface, phyPort);
                             for(size_t line = 0; line < 4; ++line)
                             {
@@ -157,7 +157,6 @@ void OTMPAtoCICecv::runElectricChainValidation()
                                 auto  chipIdAndLine      = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
                                 // if(matchingEfficiency<1)
                                 // {
-                                // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Chip " << +chipIdAndLine.first << " line " << +chipIdAndLine.second << std::hex;
                                 // for(auto word: phyPortDataVector[line]) std::cout << " " << word;
                                 // std::cout << std::dec << std::endl;
                                 // }

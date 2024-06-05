@@ -172,10 +172,13 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                 {
                     auto phyPortEfficiencyScanList =
                         matchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 15>>();
+                    auto theOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(fDetectorContainer->getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId()));
+                    auto theCic = theOuterTrackerHybrid->fCic;
                     for(uint8_t line = 0; line < numberOfLines; ++line)
                     {
-                        theHybrid->getSummary<GenericDataArray<uint8_t, 4>>()[line] =
-                            getBestPhase(phyPortEfficiencyScanList[line], fDetectorContainer->getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId()), line);
+                        auto theBestPhase = getBestPhase(phyPortEfficiencyScanList[line], theOuterTrackerHybrid, line);
+                        theHybrid->getSummary<GenericDataArray<uint8_t, 4>>()[line] = theBestPhase;
+                        theCic->setLpGBTphaseForCICbypass(phyPort, line, theBestPhase);
                     }
                 }
             }

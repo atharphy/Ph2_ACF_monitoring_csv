@@ -63,8 +63,13 @@ class Cic : public Chip
     void setDriveStrength(uint8_t pDriveStrength);
     void setEdgeSelect(uint8_t pEdgeSel);
 
+    void setLpGBTphaseForCICbypass(uint8_t phyPort, uint8_t stubLine, uint8_t lpgbtPhase);
+    uint8_t getLpGBTphaseForCICbypass(uint8_t phyPort, uint8_t stubLine) const;
+
   private:
+    void initializeLpGBTphasesForCICbypassMap();
     static std::map<uint8_t, uint8_t> fTxDriveStrength;
+    std::map<uint8_t, std::map<uint8_t, uint8_t>> fLpGBTphasesForCICbypassMap;
 };
 } // namespace Ph2_HwDescription
 

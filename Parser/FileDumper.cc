@@ -204,6 +204,24 @@ void FileDumper::dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Hybri
     if(cWithSSA) appendReadoutChipConfigFilePath(SSA2_NODE_NAME);
 
     for(auto chip: *theHybrid) { dumpChipConfigurationFile(theHybridNode, chip); }
+    
+    dumpLpGBTphasesForBypass(theHybridNode, theHybrid);
+}
+
+void FileDumper::dumpLpGBTphasesForBypass(pugi::xml_node theMotherNode, Ph2_HwDescription::Hybrid* theHybridContainer)
+{
+    auto theCic = static_cast<OuterTrackerHybrid*>(theHybridContainer)->fCic;
+    pugi::xml_node theLpGBTphaseMainNode = theMotherNode.append_child(LPGBT_PHASES_FOR_CIC_BYPASS_MAIN_NODE_NAME);
+    for(uint8_t phyPort = 0; phyPort<12; ++phyPort)
+    {
+        std::string thePhyPortNodeName = std::string(LPGBT_PHASES_FOR_CIC_BYPASS_PHYPORT_NODE_NAME) + std::to_string(phyPort);
+        pugi::xml_node thePhyPortNode = theLpGBTphaseMainNode.append_child(thePhyPortNodeName.c_str());
+        for(uint8_t stubLine = 0; stubLine<4; ++stubLine)
+        {
+            std::string theStubAttributeName = std::string(LPGBT_PHASES_FOR_CIC_BYPASS_LINE_ATTRIBUTE_NAME) + std::to_string(stubLine);
+            thePhyPortNode.append_attribute(theStubAttributeName.c_str()) =  std::to_string(+theCic->getLpGBTphaseForCICbypass(phyPort, stubLine)).c_str();
+        }
+    }
 }
 
 void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, ReadoutChip* theReadoutChip)

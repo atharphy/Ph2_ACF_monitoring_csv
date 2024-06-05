@@ -102,17 +102,20 @@ bool RegManager::WriteStackReg(const std::vector<std::pair<std::string, uint32_t
         fTheBoardPointer->setReg(v.first, v.second);
     }
 
+    
     try
     {
         fBoard->dispatch();
     }
-    catch(...)
+    catch(const std::exception& e)
     {
         std::cerr << "Error while writing the following parameters: ";
 
         for(auto const& v: pVecReg) std::cerr << v.first << ", ";
 
         std::cerr << std::endl;
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Exception caught from controlhub: " << e.what() << std::endl;
+        std::cerr << "Please contact Fabio Ravera\n";
         throw;
     }
 
@@ -149,7 +152,16 @@ bool RegManager::WriteBlockReg(const std::string& pRegNode, const std::vector<ui
     if(mode == Mode::Replay) return true;
 
     fBoard->getNode(pRegNode).writeBlock(pValues);
-    fBoard->dispatch();
+    try
+    {
+        fBoard->dispatch();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Exception caught from controlhub: " << e.what() << std::endl;
+        std::cerr << "Please contact Fabio Ravera\n";
+        throw;
+    }
 
     bool cWriteCorr = true;
 
@@ -183,7 +195,16 @@ bool RegManager::WriteBlockAtAddress(uint32_t uAddr, const std::vector<uint32_t>
     if(mode == Mode::Replay) return true;
 
     fBoard->getClient().writeBlock(uAddr, pValues, bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL);
-    fBoard->dispatch();
+    try
+    {
+        fBoard->dispatch();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Exception caught from controlhub: " << e.what() << std::endl;
+        std::cerr << "Please contact Fabio Ravera\n";
+        throw;
+    }
 
     bool cWriteCorr = true;
 
@@ -217,7 +238,16 @@ uint32_t RegManager::ReadReg(const std::string& pRegNode)
     if(mode == Mode::Replay) return replayRead();
 
     uhal::ValWord<uint32_t> cValRead = fBoard->getNode(pRegNode).read();
-    fBoard->dispatch();
+    try
+    {
+        fBoard->dispatch();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Exception caught from controlhub: " << e.what() << std::endl;
+        std::cerr << "Please contact Fabio Ravera\n";
+        throw;
+    }
 
     if(DEV_FLAG)
     {
@@ -238,7 +268,16 @@ uint32_t RegManager::ReadAtAddress(uint32_t uAddr, uint32_t uMask)
     if(mode == Mode::Replay) return replayRead();
 
     uhal::ValWord<uint32_t> cValRead = fBoard->getClient().read(uAddr, uMask);
-    fBoard->dispatch();
+    try
+    {
+        fBoard->dispatch();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Exception caught from controlhub: " << e.what() << std::endl;
+        std::cerr << "Please contact Fabio Ravera\n";
+        throw;
+    }
 
     if(DEV_FLAG)
     {
@@ -257,7 +296,16 @@ std::vector<uint32_t> RegManager::ReadBlockReg(const std::string& pRegNode, cons
     if(mode == Mode::Replay) return replayBlockRead(pBlockSize);
 
     uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode(pRegNode).readBlock(pBlockSize);
-    fBoard->dispatch();
+    try
+    {
+        fBoard->dispatch();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Exception caught from controlhub: " << e.what() << std::endl;
+        std::cerr << "Please contact Fabio Ravera\n";
+        throw;
+    }
 
     if(DEV_FLAG)
     {
@@ -281,7 +329,16 @@ std::vector<uint32_t> RegManager::ReadBlockRegOffset(const std::string& pRegNode
     if(mode == Mode::Replay) return replayBlockRead(pBlocksize);
 
     uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode(pRegNode).readBlockOffset(pBlocksize, pBlockOffset);
-    fBoard->dispatch();
+    try
+    {
+        fBoard->dispatch();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Exception caught from controlhub: " << e.what() << std::endl;
+        std::cerr << "Please contact Fabio Ravera\n";
+        throw;
+    }
 
     if(DEV_FLAG)
     {

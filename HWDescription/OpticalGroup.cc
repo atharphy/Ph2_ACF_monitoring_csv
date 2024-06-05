@@ -40,48 +40,26 @@ std::map<uint8_t, std::vector<uint8_t>> OpticalGroup::getLpGBTrxGroupsAndChannel
     return groupsAndChannels;
 }
 
-std::map<std::pair<uint8_t, uint8_t>, std::string> OpticalGroup::getLpGBTrxGroupsAndChannelsPerHybrid() const
+std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OpticalGroup::getLpGBTrxGroupsAndChannelsPerHybrid() const
 {
-    std::map<std::pair<uint8_t, uint8_t>, std::string> hybridsAndGroupsAndChannels;
-
-    if(getFrontEndType() == FrontEndType::OuterTracker2S)
-    {
-        // Right CIC
-        hybridsAndGroupsAndChannels[std::make_pair(0, 0)] = "FEHR_L1";
-        hybridsAndGroupsAndChannels[std::make_pair(4, 0)] = "FEHR_Stub0";
-        hybridsAndGroupsAndChannels[std::make_pair(4, 2)] = "FEHR_Stub1";
-        hybridsAndGroupsAndChannels[std::make_pair(5, 0)] = "FEHR_Stub2";
-        hybridsAndGroupsAndChannels[std::make_pair(5, 2)] = "FEHR_Stub3";
-        hybridsAndGroupsAndChannels[std::make_pair(6, 0)] = "FEHR_Stub4";
-        // Left CIC
-        hybridsAndGroupsAndChannels[std::make_pair(0, 2)] = "FEHL_Stub0";
-        hybridsAndGroupsAndChannels[std::make_pair(1, 0)] = "FEHL_Stub1";
-        hybridsAndGroupsAndChannels[std::make_pair(1, 2)] = "FEHL_Stub2";
-        hybridsAndGroupsAndChannels[std::make_pair(2, 0)] = "FEHL_Stub3";
-        hybridsAndGroupsAndChannels[std::make_pair(2, 2)] = "FEHL_Stub4";
-        hybridsAndGroupsAndChannels[std::make_pair(3, 2)] = "FEHL_L1";
-    }
-    else
-    {
-        // Right CIC
-        hybridsAndGroupsAndChannels[std::make_pair(0, 0)] = "FEHR_Stub0";
-        hybridsAndGroupsAndChannels[std::make_pair(4, 0)] = "FEHR_Stub5";
-        hybridsAndGroupsAndChannels[std::make_pair(4, 2)] = "FEHR_L1";
-        hybridsAndGroupsAndChannels[std::make_pair(5, 0)] = "FEHR_Stub4";
-        hybridsAndGroupsAndChannels[std::make_pair(5, 2)] = "FEHR_Stub3";
-        hybridsAndGroupsAndChannels[std::make_pair(6, 0)] = "FEHR_Stub2";
-        hybridsAndGroupsAndChannels[std::make_pair(6, 2)] = "FEHR_Stub1";
-
-        // Left CIC
-        hybridsAndGroupsAndChannels[std::make_pair(0, 2)] = "FEHL_Stub5";
-        hybridsAndGroupsAndChannels[std::make_pair(1, 0)] = "FEHL_L1";
-        hybridsAndGroupsAndChannels[std::make_pair(1, 2)] = "FEHL_Stub4";
-        hybridsAndGroupsAndChannels[std::make_pair(2, 0)] = "FEHL_Stub3";
-        hybridsAndGroupsAndChannels[std::make_pair(2, 2)] = "FEHL_Stub2";
-        hybridsAndGroupsAndChannels[std::make_pair(3, 0)] = "FEHL_Stub1";
-        hybridsAndGroupsAndChannels[std::make_pair(3, 2)] = "FEHL_Stub0";
-    }
-    return hybridsAndGroupsAndChannels;
+    if(getFrontEndType() == FrontEndType::OuterTracker2S) return f2SgroupsAndChannelToCIClineMap;
+    else return fPSgroupsAndChannelToCIClineMap;
 }
+
+std::pair<uint8_t, uint8_t> OpticalGroup::getGroupAndChannel(uint8_t hybridId, uint8_t line) const
+{
+    const auto& groupsAndChannelToCIClineMap = getLpGBTrxGroupsAndChannelsPerHybrid(); 
+    auto hybridIdAndLine = std::make_pair(uint8_t(hybridId%2), line);
+    for(auto groupsAndChannelToCICline: groupsAndChannelToCIClineMap)
+    {
+        if(groupsAndChannelToCICline.second == hybridIdAndLine) return groupsAndChannelToCICline.first;
+    }
+    std::cerr<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] ERROR: No group and channel found" << std::endl;
+    abort();
+}
+
+
+std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OpticalGroup::f2SgroupsAndChannelToCIClineMap {{{0, 0}, {0, 0}}, {{4, 0}, {0, 1}}, {{4, 2}, {0, 2}}, {{5, 0}, {0, 3}}, {{5, 2}, {0, 4}}, {{6, 0}, {0, 5}}, {{0, 2}, {1, 1}}, {{1, 0}, {1, 2}}, {{1, 2}, {1, 3}}, {{2, 0}, {1, 4}}, {{2, 2}, {1, 5}}, {{3, 2}, {1, 0}}};
+std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OpticalGroup::fPSgroupsAndChannelToCIClineMap {{{0, 0},{0, 1}}, {{4, 0},{0, 6}}, {{4, 2},{0, 0}}, {{5, 0},{0, 5}}, {{5, 2},{0, 4}}, {{6, 0},{0, 3}}, {{6, 2},{0, 2}}, {{0, 2},{1, 6}}, {{1, 0},{1, 0}}, {{1, 2},{1, 5}}, {{2, 0},{1, 4}}, {{2, 2},{1, 3}}, {{3, 0},{1, 2}}, {{3, 2},{1, 1}}};
 
 } // namespace Ph2_HwDescription

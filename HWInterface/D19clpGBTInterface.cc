@@ -476,11 +476,8 @@ bool D19clpGBTInterface::didAlignmentSucceded(LpGBTalignmentResult& theOpticalGr
             // Check if the group and channel belong to a disabled hybrid
             for(auto cHybrid: *theOpticalGroup)
             {
-                auto        theHybridId = cHybrid->getId();
-                std::string sideToMatch = (theHybridId % 2 == 0) ? "R" : "L";
-                std::string theSide     = theGroupsAndChannelsPerHybrid[std::make_pair(theGoupAlignmenResult.first, theChannelAlignmentResult.first)];
-                std::size_t found       = theSide.find("FEH" + sideToMatch);
-                if(found == std::string::npos && theOpticalGroup->size() != 2) { skipGroupAndChannel = true; }
+                auto hybridAndChannel   = theGroupsAndChannelsPerHybrid[std::make_pair(theGoupAlignmenResult.first, theChannelAlignmentResult.first)];
+                if(hybridAndChannel.first != (cHybrid->getId() % 2) && theOpticalGroup->size() != 2) { skipGroupAndChannel = true; }
             }
 
             float   alignmentSuccessRate = std::get<0>(theChannelAlignmentResult.second);
