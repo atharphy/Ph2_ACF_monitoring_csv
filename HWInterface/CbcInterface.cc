@@ -526,7 +526,7 @@ std::vector<std::pair<std::string, uint16_t>> CbcInterface::ReadChipMultReg(Ph2_
         auto cIterator = cRegMap.find(cReq);
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "CbcInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            LOG(ERROR) << BOLDRED << "CbcInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq << RESET;
             abort();
         }
 
@@ -640,7 +640,7 @@ bool CbcInterface::WriteChipMultReg(Chip* pCbc, const std::vector<std::pair<std:
         auto cIterator = cRegMap.find(cReq.first);
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "CbcInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
+            LOG(ERROR) << BOLDRED << "CbcInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
             continue;
         }
         if(cIterator->first.find("Fuse") != std::string::npos)

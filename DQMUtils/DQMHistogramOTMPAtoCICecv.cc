@@ -27,10 +27,6 @@ void DQMHistogramOTMPAtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    auto        MPAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
-    std::string theMPAqueryFunctionString = "MPAqueryFunction";
-    fDetectorContainer->addReadoutChipQueryFunction(MPAqueryFunction, theMPAqueryFunctionString);
-
     uint8_t numberOfMPA         = 8;
     uint8_t numberOfLinesPerMPA = 6;
 
@@ -68,8 +64,6 @@ void DQMHistogramOTMPAtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
         phaseScanMatchingEfficiency.fTheHistogram->SetStats(false);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanMatchingEfficiencies[slvsCurrent], phaseScanMatchingEfficiency);
     }
-
-    fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
 }
 
 //========================================================================================================================
@@ -116,7 +110,6 @@ bool DQMHistogramOTMPAtoCICecv::fill(std::string& inputStream)
 
     if(thePhaseScanMatchingEfficiencySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched OTMPAtoCICecv PhaseScanMatchingEfficiency!!!!!\n";
         uint8_t               phase, slvsCurrent;
         DetectorDataContainer theDetectorData =
             thePhaseScanMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(fDetectorContainer, phase, slvsCurrent);
