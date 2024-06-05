@@ -45,8 +45,8 @@ class OTalignLpGBTinputsForBypass : public Tool
     uint8_t getBestPhase(const GenericDataArray<float, 15>& thePhaseEfficiencyList, Ph2_HwDescription::Hybrid* theHybrid, uint8_t line);
     float   getMatchingEfficiency2SL1(std::vector<uint32_t> inputDataVector);
 
-    uint32_t fNumberOfIterations{1000};
-    uint8_t  fShiftRegisterPatternMPA{0xAA};
+    uint32_t             fNumberOfIterations{1000};
+    uint8_t              fShiftRegisterPatternMPA{0xAA};
     std::vector<uint8_t> fStubPattern2S{0x33, 0x55, 0xAA, 0xAA, 0xAA}; // last two bytes cannot be changed here
 
     PatternMatcher fPattern2SL1;

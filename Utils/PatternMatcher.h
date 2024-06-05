@@ -1,10 +1,10 @@
 #ifndef __PATTERN_MATCHER_H__
 #define __PATTERN_MATCHER_H__
 
+#include <bitset>
 #include <cstddef>
 #include <cstdint>
 #include <vector>
-#include <bitset>
 
 /*!
  * \class PatternMatcher
@@ -84,31 +84,28 @@ class PatternMatcher
      * @param inputDataVector data to match
      * @return maximum number of matching bits
      */
-    template<size_t N>
+    template <size_t N>
     uint32_t getNumberOfMatchingBitsForAllBitshifts(const std::vector<uint32_t>& inputDataVector)
     {
         std::bitset<N> maskBitset(0xFFFFFFFF);
         std::bitset<N> theInputDataBiset;
-        for(size_t index=0; index<inputDataVector.size(); ++index)
+        for(size_t index = 0; index < inputDataVector.size(); ++index)
         {
             std::bitset<N> tmpDataset(inputDataVector[index]);
-            theInputDataBiset |= (tmpDataset << (N - 32*(index + 1)));
+            theInputDataBiset |= (tmpDataset << (N - 32 * (index + 1)));
         }
-        
+
         uint32_t maximumEfficiency = 0;
-        
-        for(size_t bitShift=0; bitShift<N; ++bitShift)
+
+        for(size_t bitShift = 0; bitShift < N; ++bitShift)
         {
             std::vector<uint32_t> rolledInputDataVector(inputDataVector.size());
-            for(size_t index=0; index<rolledInputDataVector.size(); ++index)
-            {
-                rolledInputDataVector[index] = ((theInputDataBiset >> (N - 32*(index + 1))) & maskBitset).to_ulong();
-            }
+            for(size_t index = 0; index < rolledInputDataVector.size(); ++index) { rolledInputDataVector[index] = ((theInputDataBiset >> (N - 32 * (index + 1))) & maskBitset).to_ulong(); }
             uint32_t currentEfficiency = countMatchingBits(rolledInputDataVector);
             if(currentEfficiency > maximumEfficiency) maximumEfficiency = currentEfficiency;
             if(maximumEfficiency == getNumberOfMaskedBits()) break;
-            int lowestBit = theInputDataBiset[N - 1];
-            theInputDataBiset =  (theInputDataBiset << 1);
+            int lowestBit        = theInputDataBiset[N - 1];
+            theInputDataBiset    = (theInputDataBiset << 1);
             theInputDataBiset[0] = lowestBit;
         }
         return maximumEfficiency;

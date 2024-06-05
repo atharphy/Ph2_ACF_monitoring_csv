@@ -1,6 +1,6 @@
 #include "tools/OTalignLpGBTinputsForBypass.h"
-#include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/CbcInterface.h"
+#include "HWInterface/D19cFWInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
@@ -21,7 +21,7 @@ void OTalignLpGBTinputsForBypass::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
-    fNumberOfIterations   = findValueInSettings<double>("OTalignLpGBTinputsForBypass_NumberOfIterations", 1000);
+    fNumberOfIterations = findValueInSettings<double>("OTalignLpGBTinputsForBypass_NumberOfIterations", 1000);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -68,8 +68,7 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
     bool    isPS          = firstModule->getFrontEndType() == FrontEndType::OuterTrackerPS;
     uint8_t numberOfLines = 4;
 
-    if(isPS)
-        prepareForLpGBTalignmentPS();
+    if(isPS) prepareForLpGBTalignmentPS();
 
     for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
     {
@@ -79,7 +78,7 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
 
         if(!isPS)
         {
-            if(phyPort<10)
+            if(phyPort < 10)
                 prepareForLpGBTalignment2Sstubs();
             else
                 prepareForLpGBTalignment2SL1();
@@ -127,13 +126,12 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
 
                         for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
                         {
-                            if(!isPS && phyPort >=10)
+                            if(!isPS && phyPort >= 10)
                             {
                                 fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
                                 usleep(10);
                                 fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
                             }
-
 
                             auto lineOutputVector = theFWinterface->StubDebug(true, numberOfLines, false);
                             for(uint8_t line = 0; line < numberOfLines; ++line)
@@ -144,21 +142,20 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
 
                         for(uint8_t line = 0; line < numberOfLines; ++line)
                         {
-                            auto& matchingEfficiency = matchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 15>>()[line][lpgbtPhase];
-                            if(!isPS && phyPort >=10) // L1 for 2S case
+                            auto& matchingEfficiency =
+                                matchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 15>>()[line][lpgbtPhase];
+                            if(!isPS && phyPort >= 10) // L1 for 2S case
                             {
                                 matchingEfficiency = getMatchingEfficiency2SL1(phyPortDataVector[line]);
                             }
                             else
                             {
                                 uint8_t thePattern;
-                                if(isPS) thePattern = fShiftRegisterPatternMPA;
-                                else
-                                {
-                                    thePattern = fStubPattern2S[(phyPort * 4 + line) % 5];
-                                }
+                                if(isPS)
+                                    thePattern = fShiftRegisterPatternMPA;
+                                else { thePattern = fStubPattern2S[(phyPort * 4 + line) % 5]; }
                                 auto possiblePatternList = getPossiblePatterns(thePattern, static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10);
-                                matchingEfficiency = countMatchingBits(phyPortDataVector[line], possiblePatternList);
+                                matchingEfficiency       = countMatchingBits(phyPortDataVector[line], possiblePatternList);
                             }
                         }
                     }
@@ -246,7 +243,7 @@ void OTalignLpGBTinputsForBypass::prepareForLpGBTalignment2Sstubs()
                     theCbcInterface->selectLogicMode(theChip, "Sampled", true, true);
 
                     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
-                    theRegisterVector.push_back({"Bend7", 0x0A});              // forcing Bend7 (bending = 0) to ouput 0xA
+                    theRegisterVector.push_back({"Bend7", 0x0A}); // forcing Bend7 (bending = 0) to ouput 0xA
                     // theRegisterVector.push_back({"Bend8", 0x0C});              // forcing Bend8 (bending = 1) to ouput 0xC
                     theRegisterVector.push_back({"CoincWind&Offset12", 0x00}); // set stub window offset to 0
                     theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
@@ -262,27 +259,27 @@ void OTalignLpGBTinputsForBypass::prepareForLpGBTalignment2Sstubs()
 
 void OTalignLpGBTinputsForBypass::prepareForLpGBTalignment2SL1()
 {
-    uint32_t triggerFrequency = 1000; // do not change or it will not match padding 0s
-    uint8_t fakeHeaderChannelNumber = 24;
+    uint32_t triggerFrequency        = 1000; // do not change or it will not match padding 0s
+    uint8_t  fakeHeaderChannelNumber = 24;
     fPattern2SL1.clear();
     fPattern2SL1.addToPattern(0x3, 0x3, 2); // CBC header
     fPattern2SL1.addToPattern(0x0, 0x0, 2); // error flags
     fPattern2SL1.addToPattern(0x0, 0x0, 9); // pipe address
     fPattern2SL1.addToPattern(0x0, 0x0, 9); // L1 counter
 
-    for(uint8_t fakeHeaderChannel = 0; fakeHeaderChannel<fakeHeaderChannelNumber; ++fakeHeaderChannel)
+    for(uint8_t fakeHeaderChannel = 0; fakeHeaderChannel < fakeHeaderChannelNumber; ++fakeHeaderChannel)
     {
         fPattern2SL1.addToPattern(0x1, 0x1, 1); // fake channel header
     }
 
-    for(uint8_t alternatedChannels = fakeHeaderChannelNumber; alternatedChannels<NCHANNELS; ++alternatedChannels)
+    for(uint8_t alternatedChannels = fakeHeaderChannelNumber; alternatedChannels < NCHANNELS; ++alternatedChannels)
     {
-        fPattern2SL1.addToPattern((alternatedChannels +1)%2, 0x1, 1); // enable even numbers
+        fPattern2SL1.addToPattern((alternatedChannels + 1) % 2, 0x1, 1); // enable even numbers
     }
 
     uint32_t bitsBetweenConsecutiveTriggers = 40000 / triggerFrequency * 8;
 
-    for(uint16_t paddingZeros = fPattern2SL1.getNumberOfPatternBits(); paddingZeros<bitsBetweenConsecutiveTriggers; ++paddingZeros)
+    for(uint16_t paddingZeros = fPattern2SL1.getNumberOfPatternBits(); paddingZeros < bitsBetweenConsecutiveTriggers; ++paddingZeros)
     {
         fPattern2SL1.addToPattern(0, 0x1, 1); // padding zeros
     }
@@ -311,7 +308,8 @@ void OTalignLpGBTinputsForBypass::prepareForLpGBTalignment2SL1()
                     auto cChannelMask = std::make_shared<ChannelGroup<1, NCHANNELS>>();
                     cChannelMask->disableAllChannels();
                     for(uint8_t cChannel = 0; cChannel < NCHANNELS; cChannel += 2) cChannelMask->enableChannel(0, cChannel); // generate a hit in every Nth channel
-                    for(uint8_t cChannel = 0; cChannel < fakeHeaderChannelNumber; ++cChannel) cChannelMask->enableChannel(0, cChannel); // generate a hit in the first 32 channels to create a sort of fake header
+                    for(uint8_t cChannel = 0; cChannel < fakeHeaderChannelNumber; ++cChannel)
+                        cChannelMask->enableChannel(0, cChannel); // generate a hit in the first 32 channels to create a sort of fake header
                     fReadoutChipInterface->maskChannelGroup(static_cast<ReadoutChip*>(theChip), cChannelMask);
                 }
             }
@@ -342,7 +340,7 @@ uint8_t OTalignLpGBTinputsForBypass::getBestPhase(const GenericDataArray<float, 
     uint8_t locationOfLastOne      = 15;
     float   maximumEfficiency      = -1;
     uint8_t maximumEfficiencyPhase = 15;
-    float   minimumEfficiency      =  1;
+    float   minimumEfficiency      = 1;
     uint8_t minimumEfficiencyPhase = 15;
 
     for(uint8_t lpgbtPhase = 0; lpgbtPhase < 15; ++lpgbtPhase)
@@ -378,19 +376,21 @@ uint8_t OTalignLpGBTinputsForBypass::getBestPhase(const GenericDataArray<float, 
     {
         uint8_t defaultPhase = 10;
         LOG(WARNING) << BOLDYELLOW << "OTalignLpGBTinputsForBypass::getBestPhase - WARNING: all phases work for Board " << +theHybrid->getBeBoardId() << " OpticalGroup "
-                   << +theHybrid->getOpticalGroupId() << " Hybrid " << +theHybrid->getId() << " line " << +line << ", using phase default phase " << +defaultPhase << RESET;
+                     << +theHybrid->getOpticalGroupId() << " Hybrid " << +theHybrid->getId() << " line " << +line << ", using phase default phase " << +defaultPhase << RESET;
         return defaultPhase;
     }
     if(firstMinimumFound && locationOfLastOne == 15) // just one minimum found
     {
         uint8_t phaseShift = 4;
-        if(minimumEfficiencyPhase + phaseShift < 15) return minimumEfficiencyPhase + phaseShift;
-        else return minimumEfficiencyPhase - phaseShift;
+        if(minimumEfficiencyPhase + phaseShift < 15)
+            return minimumEfficiencyPhase + phaseShift;
+        else
+            return minimumEfficiencyPhase - phaseShift;
     }
     if(maximumEfficiency < 1)
     {
         LOG(WARNING) << BOLDYELLOW << "OTalignLpGBTinputsForBypass::getBestPhase - WARNING: no 100% efficiency found for Board " << +theHybrid->getBeBoardId() << " OpticalGroup "
-                   << +theHybrid->getOpticalGroupId() << " Hybrid " << +theHybrid->getId() << " line " << +line << ", using phase with maximum efficiency" << RESET;
+                     << +theHybrid->getOpticalGroupId() << " Hybrid " << +theHybrid->getId() << " line " << +line << ", using phase with maximum efficiency" << RESET;
         return maximumEfficiencyPhase;
     }
 
@@ -408,16 +408,16 @@ uint8_t OTalignLpGBTinputsForBypass::getBestPhase(const GenericDataArray<float, 
 
 float OTalignLpGBTinputsForBypass::getMatchingEfficiency2SL1(std::vector<uint32_t> inputDataVector)
 {
-    float totalEfficiency = 0;
+    float   totalEfficiency             = 0;
     uint8_t numberOfWordsPerAcquisition = 10; // 10 32-bit-words per acquisition;
-    float numberOfAcquisitions = inputDataVector.size() / numberOfWordsPerAcquisition; 
-    for(size_t acquisitionNumber = 0; acquisitionNumber<numberOfAcquisitions; ++acquisitionNumber)
+    float   numberOfAcquisitions        = inputDataVector.size() / numberOfWordsPerAcquisition;
+    for(size_t acquisitionNumber = 0; acquisitionNumber < numberOfAcquisitions; ++acquisitionNumber)
     {
-        size_t firstIndex = acquisitionNumber*numberOfWordsPerAcquisition;
-        size_t lastIndex    = firstIndex + numberOfWordsPerAcquisition;
+        size_t                firstIndex = acquisitionNumber * numberOfWordsPerAcquisition;
+        size_t                lastIndex  = firstIndex + numberOfWordsPerAcquisition;
         std::vector<uint32_t> singleAcquisitionInputDataVector(inputDataVector.begin() + firstIndex, inputDataVector.begin() + lastIndex);
-        auto reorderedSingleAcquisitionInputDataVector = reorderPattern(singleAcquisitionInputDataVector, 1);
-        auto maximumEfficiency = fPattern2SL1.getNumberOfMatchingBitsForAllBitshifts<320>(reorderedSingleAcquisitionInputDataVector);
+        auto                  reorderedSingleAcquisitionInputDataVector = reorderPattern(singleAcquisitionInputDataVector, 1);
+        auto                  maximumEfficiency                         = fPattern2SL1.getNumberOfMatchingBitsForAllBitshifts<320>(reorderedSingleAcquisitionInputDataVector);
         totalEfficiency += maximumEfficiency;
     }
 

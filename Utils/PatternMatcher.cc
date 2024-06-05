@@ -1,6 +1,6 @@
 #include "Utils/PatternMatcher.h"
-#include <iostream>
 #include <bitset>
+#include <iostream>
 
 PatternMatcher::PatternMatcher() {}
 
@@ -65,11 +65,11 @@ bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector)
 uint32_t PatternMatcher::countMatchingBits(const std::vector<uint32_t>& theWordVector) const
 {
     uint32_t numberOfMatchingBits = 0;
-    
-    for(size_t index = 0; index<=fPatternAndMaskVector.size(); ++index)
+
+    for(size_t index = 0; index <= fPatternAndMaskVector.size(); ++index)
     {
         if(index >= theWordVector.size()) break;
-        uint32_t patternAndWordXOR = theWordVector[index] ^ fPatternAndMaskVector[index].first;
+        uint32_t        patternAndWordXOR = theWordVector[index] ^ fPatternAndMaskVector[index].first;
         std::bitset<32> patternAndWordXORBitset(patternAndWordXOR);
         std::bitset<32> maskBitset(fPatternAndMaskVector[index].second);
         patternAndWordXORBitset.flip();
@@ -118,7 +118,7 @@ void PatternMatcher::maskStubFor2Skickoff()
 
 uint32_t PatternMatcher::getNumberOfMaskedBits()
 {
-    if(fPatternNumberOfMaskedBits !=0) return fPatternNumberOfMaskedBits;
+    if(fPatternNumberOfMaskedBits != 0) return fPatternNumberOfMaskedBits;
 
     for(auto thePatterAndMask: fPatternAndMaskVector)
     {
