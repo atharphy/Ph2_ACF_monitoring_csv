@@ -110,7 +110,6 @@ bool DQMHistogramOTMPAtoCICecv::fill(std::string& inputStream)
 
     if(thePhaseScanMatchingEfficiencySerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched OTMPAtoCICecv PhaseScanMatchingEfficiency!!!!!\n";
         uint8_t               phase, slvsCurrent;
         DetectorDataContainer theDetectorData =
             thePhaseScanMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(fDetectorContainer, phase, slvsCurrent);
