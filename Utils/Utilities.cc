@@ -472,3 +472,52 @@ std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector,
 }
 
 uint16_t linearizeRowAndCols(uint16_t row, uint16_t col, uint16_t numberOfCols) { return col + row * numberOfCols; }
+
+float countMatchingBits(const std::vector<uint32_t>& incomingData, const std::vector<uint32_t>& possiblePatternList)
+{
+    float maximumMatchingEfficiency = -1;
+    for(auto possiblePattern: possiblePatternList)
+    {
+        float currentEfficiency = 0;
+        for(auto word: incomingData)
+        {
+            auto            possiblePatternXOR = word ^ possiblePattern;
+            std::bitset<32> possiblePatternXORbitset(possiblePatternXOR);
+            possiblePatternXORbitset.flip();
+            currentEfficiency += possiblePatternXORbitset.count();
+        }
+        if(currentEfficiency > maximumMatchingEfficiency) maximumMatchingEfficiency = currentEfficiency;
+    }
+
+    return maximumMatchingEfficiency / (incomingData.size() * 32);
+}
+
+std::vector<uint32_t> getPossiblePatterns(uint8_t injectedPattern, bool is10Gmodule)
+{
+    uint64_t fullPattern = 0;
+    if(is10Gmodule)
+    {
+        uint16_t doubleDigitShiftRegisterPattern = 0;
+        for(uint8_t bit = 0; bit < 8; ++bit)
+        {
+            uint16_t singleBit = (injectedPattern >> bit) & 0x1;
+            doubleDigitShiftRegisterPattern |= ((singleBit << (2 * bit)) | singleBit << (2 * bit + 1));
+        }
+        for(uint8_t bitShift = 0; bitShift < 4; ++bitShift) { fullPattern |= (uint64_t(doubleDigitShiftRegisterPattern) << (16 * bitShift)); }
+    }
+    else
+    {
+        for(uint8_t bitShift = 0; bitShift < 8; ++bitShift) { fullPattern |= (uint64_t(injectedPattern) << (8 * bitShift)); }
+    }
+
+    std::vector<uint32_t> possiblePatternList;
+    for(uint8_t bitShift = 0; bitShift < 32; ++bitShift) { possiblePatternList.push_back((fullPattern >> bitShift) & 0xFFFFFFFF); }
+
+    // remove duplicates
+    sort(possiblePatternList.begin(), possiblePatternList.end());
+    possiblePatternList.erase(unique(possiblePatternList.begin(), possiblePatternList.end()), possiblePatternList.end());
+
+    // for(auto pattern: possiblePatternList) std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pattern = " << std::hex << pattern << std::dec << std::endl;
+
+    return possiblePatternList;
+}

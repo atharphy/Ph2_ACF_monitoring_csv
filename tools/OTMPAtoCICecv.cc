@@ -79,8 +79,6 @@ void OTMPAtoCICecv::setMPAshiftRegister()
                 for(auto theMPA: *theHybrid)
                 {
                     thePSinterface->WriteChipRegBits(theMPA, "Control_1", 0x2, "Mask", 0x03); // Enable shift register
-                    // if(theMPA->getId() == 8) thePSinterface->WriteChipReg(theMPA, "LFSR_data", fShiftRegisterPattern);
-                    // else thePSinterface->WriteChipReg(theMPA, "LFSR_data", 0);
                 }
             }
         }
@@ -110,9 +108,7 @@ void OTMPAtoCICecv::runElectricChainValidation()
                 {
                     for(auto theMPA: *theHybrid)
                     {
-                        thePSinterface->WriteChipRegBits(theMPA, "ConfSLVS", slvsCurrent, "Mask", 0x07); // Enable shift register
-                        // if(theMPA->getId() == 8) thePSinterface->WriteChipRegBits(theMPA, "ConfSLVS", slvsCurrent, "Mask", 0x07); // Enable shift register
-                        // else thePSinterface->WriteChipRegBits(theMPA, "ConfSLVS", 0, "Mask", 0x07);
+                        thePSinterface->WriteChipRegBits(theMPA, "ConfSLVS", slvsCurrent, "Mask", 0x07); // set slvs current
                     }
                 }
             }
@@ -120,6 +116,7 @@ void OTMPAtoCICecv::runElectricChainValidation()
 
         for(uint8_t phase = 0; phase < 15; ++phase)
         {
+            if(phase == 2 || phase == 3) continue;
             LOG(INFO) << BOLDGREEN << "        Measuring phase " << +phase << RESET;
             DetectorDataContainer theMatchingEfficiencyContainer;
             ContainerFactory::copyAndInitChip<GenericDataArray<float, 6>>(*fDetectorContainer, theMatchingEfficiencyContainer);
@@ -128,11 +125,10 @@ void OTMPAtoCICecv::runElectricChainValidation()
             {
                 for(auto theOpticalGroup: *theBoard)
                 {
-                    auto possiblePatternList = getPossiblePatterns(static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10);
+                    auto possiblePatternList = getPossiblePatterns(fShiftRegisterPattern, static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10);
                     for(auto theHybrid: *theOpticalGroup)
                     {
                         auto theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Hybrid " << +theHybrid->getId() << std::endl;
 
                         std::vector<std::pair<std::string, uint16_t>> phaseRegisterVector;
                         for(uint8_t phyPortPair = 0; phyPortPair < 6; ++phyPortPair)
@@ -144,12 +140,16 @@ void OTMPAtoCICecv::runElectricChainValidation()
                                 phaseRegisterVector.push_back({phaseRegisterName.str(), phase | phase << 4});
                             }
                         }
-                        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] phaseRegisterVector " << std::hex << phaseRegisterVector[0].second << std::dec << std::endl;
                         fCicInterface->WriteChipMultReg(theCic, phaseRegisterVector);
 
                         for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
                         {
-                            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] phyPort " << +phyPort << std::endl;
+                            for(uint8_t line = 0; line < 4; ++line)
+                            {
+                                auto bestPhase       = theCic->getLpGBTphaseForCICbypass(phyPort, line);
+                                auto groupAndChannel = theOpticalGroup->getGroupAndChannel(theHybrid->getId(), line + 1); // stub lines start from 1, line 0 is L1
+                                flpGBTInterface->ConfigureRxPhase(theOpticalGroup->flpGBT, groupAndChannel.first, groupAndChannel.second, bestPhase);
+                            }
                             auto phyPortDataVector = readCICbypassOutput(theHybrid, theFWinterface, phyPort);
                             for(size_t line = 0; line < 4; ++line)
                             {
@@ -157,7 +157,6 @@ void OTMPAtoCICecv::runElectricChainValidation()
                                 auto  chipIdAndLine      = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
                                 // if(matchingEfficiency<1)
                                 // {
-                                // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Chip " << +chipIdAndLine.first << " line " << +chipIdAndLine.second << std::hex;
                                 // for(auto word: phyPortDataVector[line]) std::cout << " " << word;
                                 // std::cout << std::dec << std::endl;
                                 // }
@@ -205,58 +204,9 @@ std::vector<std::vector<uint32_t>> OTMPAtoCICecv::readCICbypassOutput(Hybrid* th
 
     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
     {
-        auto lineOutputVector = theFWinterface->StubDebug(true, 4, false);
+        auto lineOutputVector = theFWinterface->StubDebug(true, cNlines, false);
         for(size_t line = 0; line < cNlines; ++line) { phyPortDataVector[line].insert(phyPortDataVector[line].end(), lineOutputVector[line].begin(), lineOutputVector[line].end()); }
     }
 
     return phyPortDataVector;
-}
-
-float OTMPAtoCICecv::countMatchingBits(const std::vector<uint32_t>& incomingData, const std::vector<uint32_t>& possiblePatternList)
-{
-    float maximumMatchingEfficiency = -1;
-    for(auto possiblePattern: possiblePatternList)
-    {
-        float currentEfficiency = 0;
-        for(auto word: incomingData)
-        {
-            auto            possiblePatternXOR = word ^ possiblePattern;
-            std::bitset<32> possiblePatternXORbitset(possiblePatternXOR);
-            possiblePatternXORbitset.flip();
-            currentEfficiency += possiblePatternXORbitset.count();
-        }
-        if(currentEfficiency > maximumMatchingEfficiency) maximumMatchingEfficiency = currentEfficiency;
-    }
-
-    return maximumMatchingEfficiency / (incomingData.size() * 32);
-}
-
-std::vector<uint32_t> OTMPAtoCICecv::getPossiblePatterns(bool is10Gmodule)
-{
-    uint64_t fullPattern = 0;
-    if(is10Gmodule)
-    {
-        uint16_t doubleDigitShiftRegisterPattern = 0;
-        for(uint8_t bit = 0; bit < 8; ++bit)
-        {
-            uint16_t singleBit = (fShiftRegisterPattern >> bit) & 0x1;
-            doubleDigitShiftRegisterPattern |= ((singleBit << (2 * bit)) | singleBit << (2 * bit + 1));
-        }
-        for(uint8_t bitShift = 0; bitShift < 4; ++bitShift) { fullPattern |= (uint64_t(doubleDigitShiftRegisterPattern) << (16 * bitShift)); }
-    }
-    else
-    {
-        for(uint8_t bitShift = 0; bitShift < 8; ++bitShift) { fullPattern |= (uint64_t(fShiftRegisterPattern) << (8 * bitShift)); }
-    }
-
-    std::vector<uint32_t> possiblePatternList;
-    for(uint8_t bitShift = 0; bitShift < 32; ++bitShift) { possiblePatternList.push_back((fullPattern >> bitShift) & 0xFFFFFFFF); }
-
-    // remove duplicates
-    sort(possiblePatternList.begin(), possiblePatternList.end());
-    possiblePatternList.erase(unique(possiblePatternList.begin(), possiblePatternList.end()), possiblePatternList.end());
-
-    // for(auto pattern: possiblePatternList) std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pattern = " << std::hex << pattern << std::dec << std::endl;
-
-    return possiblePatternList;
 }

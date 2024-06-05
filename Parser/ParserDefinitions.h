@@ -27,6 +27,8 @@
 #define RD53A_NODE_NAME "RD53A"
 #define RD53Bv1_NODE_NAME "RD53Bv1"
 #define RD53Bv2_NODE_NAME "RD53Bv2"
+#define LPGBT_PHASES_FOR_CIC_BYPASS_MAIN_NODE_NAME "LpGBTphaseForCICbypass"
+#define LPGBT_PHASES_FOR_CIC_BYPASS_PHYPORT_NODE_NAME "LpGBTphaseForCICbypassPhyPort"
 
 #define SETTINGS_NODE_NAME "Settings"
 #define SETTING_NODE_NAME "Setting"
@@ -86,6 +88,9 @@
 
 // Hybrid attributes
 #define HYBRID_ENABLE_ATTRIBUTE_NAME "enable"
+
+// LpGBT phases for CIC bypassPort
+#define LPGBT_PHASES_FOR_CIC_BYPASS_LINE_ATTRIBUTE_NAME "LpGBTphaseForCICbypassPhyPort"
 
 // Chip attibutes
 #define CHIP_NOISE_ATTRIBUTE_NAME "noise"
