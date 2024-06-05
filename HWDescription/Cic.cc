@@ -47,12 +47,9 @@ Cic::Cic(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
 
 void Cic::initializeLpGBTphasesForCICbypassMap()
 {
-    for(uint8_t phyPort = 0; phyPort<12; ++phyPort)
+    for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
     {
-        for(uint8_t stubLine=0; stubLine<4; ++stubLine)
-        {
-            fLpGBTphasesForCICbypassMap[phyPort][stubLine] = 8;
-        }
+        for(uint8_t stubLine = 0; stubLine < 4; ++stubLine) { fLpGBTphasesForCICbypassMap[phyPort][stubLine] = 8; }
     }
 }
 
@@ -66,10 +63,7 @@ void Cic::setLpGBTphaseForCICbypass(uint8_t phyPort, uint8_t stubLine, uint8_t l
     fLpGBTphasesForCICbypassMap[phyPort][stubLine] = lpgbtPhase;
 }
 
-uint8_t Cic::getLpGBTphaseForCICbypass(uint8_t phyPort, uint8_t stubLine) const
-{
-    return fLpGBTphasesForCICbypassMap.at(phyPort).at(stubLine);
-}
+uint8_t Cic::getLpGBTphaseForCICbypass(uint8_t phyPort, uint8_t stubLine) const { return fLpGBTphasesForCICbypassMap.at(phyPort).at(stubLine); }
 
 void Cic::initializeFreeRegisters()
 {

@@ -146,8 +146,8 @@ void OTMPAtoCICecv::runElectricChainValidation()
                         {
                             for(uint8_t line = 0; line < 4; ++line)
                             {
-                                auto bestPhase = theCic->getLpGBTphaseForCICbypass(phyPort, line);
-                                auto groupAndChannel = theOpticalGroup->getGroupAndChannel(theHybrid->getId(), line+1); // stub lines start from 1, line 0 is L1
+                                auto bestPhase       = theCic->getLpGBTphaseForCICbypass(phyPort, line);
+                                auto groupAndChannel = theOpticalGroup->getGroupAndChannel(theHybrid->getId(), line + 1); // stub lines start from 1, line 0 is L1
                                 flpGBTInterface->ConfigureRxPhase(theOpticalGroup->flpGBT, groupAndChannel.first, groupAndChannel.second, bestPhase);
                             }
                             auto phyPortDataVector = readCICbypassOutput(theHybrid, theFWinterface, phyPort);

@@ -73,9 +73,9 @@ class OpticalGroup
 
     std::map<std::string, std::pair<std::string, std::string>> fNTCMap;
 
-    std::map<uint8_t, std::vector<uint8_t>>            getLpGBTrxGroupsAndChannels() const;
+    std::map<uint8_t, std::vector<uint8_t>>                            getLpGBTrxGroupsAndChannels() const;
     std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> getLpGBTrxGroupsAndChannelsPerHybrid() const;
-    std::pair<uint8_t, uint8_t> getGroupAndChannel(uint8_t hybridId, uint8_t line) const;
+    std::pair<uint8_t, uint8_t>                                        getGroupAndChannel(uint8_t hybridId, uint8_t line) const;
 
   protected:
     uint8_t  fStubPackageDelay{0};

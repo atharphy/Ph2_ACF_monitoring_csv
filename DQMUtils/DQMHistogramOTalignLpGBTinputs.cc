@@ -46,11 +46,13 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
         {
             for(const auto& channelAndBin: group.second)
             {
-                auto hybridAndLine = theHybridGroupsAndChannels.at(std::make_pair(group.first, channelAndBin.first));
-                std::string label = "FEH";
+                auto        hybridAndLine = theHybridGroupsAndChannels.at(std::make_pair(group.first, channelAndBin.first));
+                std::string label         = "FEH";
                 label += hybridAndLine.first == 0 ? "R" : "L";
-                if(hybridAndLine.second == 0) label += "_L1";
-                else label += Form("_Stub%d", hybridAndLine.second-1);
+                if(hybridAndLine.second == 0)
+                    label += "_L1";
+                else
+                    label += Form("_Stub%d", hybridAndLine.second - 1);
                 theHistogram->SetBinLabel(channelAndBin.second, label.c_str());
             }
         }

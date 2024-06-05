@@ -42,24 +42,49 @@ std::map<uint8_t, std::vector<uint8_t>> OpticalGroup::getLpGBTrxGroupsAndChannel
 
 std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OpticalGroup::getLpGBTrxGroupsAndChannelsPerHybrid() const
 {
-    if(getFrontEndType() == FrontEndType::OuterTracker2S) return f2SgroupsAndChannelToCIClineMap;
-    else return fPSgroupsAndChannelToCIClineMap;
+    if(getFrontEndType() == FrontEndType::OuterTracker2S)
+        return f2SgroupsAndChannelToCIClineMap;
+    else
+        return fPSgroupsAndChannelToCIClineMap;
 }
 
 std::pair<uint8_t, uint8_t> OpticalGroup::getGroupAndChannel(uint8_t hybridId, uint8_t line) const
 {
-    const auto& groupsAndChannelToCIClineMap = getLpGBTrxGroupsAndChannelsPerHybrid(); 
-    auto hybridIdAndLine = std::make_pair(uint8_t(hybridId%2), line);
+    const auto& groupsAndChannelToCIClineMap = getLpGBTrxGroupsAndChannelsPerHybrid();
+    auto        hybridIdAndLine              = std::make_pair(uint8_t(hybridId % 2), line);
     for(auto groupsAndChannelToCICline: groupsAndChannelToCIClineMap)
     {
         if(groupsAndChannelToCICline.second == hybridIdAndLine) return groupsAndChannelToCICline.first;
     }
-    std::cerr<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] ERROR: No group and channel found" << std::endl;
+    std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] ERROR: No group and channel found" << std::endl;
     abort();
 }
 
-
-std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OpticalGroup::f2SgroupsAndChannelToCIClineMap {{{0, 0}, {0, 0}}, {{4, 0}, {0, 1}}, {{4, 2}, {0, 2}}, {{5, 0}, {0, 3}}, {{5, 2}, {0, 4}}, {{6, 0}, {0, 5}}, {{0, 2}, {1, 1}}, {{1, 0}, {1, 2}}, {{1, 2}, {1, 3}}, {{2, 0}, {1, 4}}, {{2, 2}, {1, 5}}, {{3, 2}, {1, 0}}};
-std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OpticalGroup::fPSgroupsAndChannelToCIClineMap {{{0, 0},{0, 1}}, {{4, 0},{0, 6}}, {{4, 2},{0, 0}}, {{5, 0},{0, 5}}, {{5, 2},{0, 4}}, {{6, 0},{0, 3}}, {{6, 2},{0, 2}}, {{0, 2},{1, 6}}, {{1, 0},{1, 0}}, {{1, 2},{1, 5}}, {{2, 0},{1, 4}}, {{2, 2},{1, 3}}, {{3, 0},{1, 2}}, {{3, 2},{1, 1}}};
+std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OpticalGroup::f2SgroupsAndChannelToCIClineMap{{{0, 0}, {0, 0}},
+                                                                                                                 {{4, 0}, {0, 1}},
+                                                                                                                 {{4, 2}, {0, 2}},
+                                                                                                                 {{5, 0}, {0, 3}},
+                                                                                                                 {{5, 2}, {0, 4}},
+                                                                                                                 {{6, 0}, {0, 5}},
+                                                                                                                 {{0, 2}, {1, 1}},
+                                                                                                                 {{1, 0}, {1, 2}},
+                                                                                                                 {{1, 2}, {1, 3}},
+                                                                                                                 {{2, 0}, {1, 4}},
+                                                                                                                 {{2, 2}, {1, 5}},
+                                                                                                                 {{3, 2}, {1, 0}}};
+std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OpticalGroup::fPSgroupsAndChannelToCIClineMap{{{0, 0}, {0, 1}},
+                                                                                                                 {{4, 0}, {0, 6}},
+                                                                                                                 {{4, 2}, {0, 0}},
+                                                                                                                 {{5, 0}, {0, 5}},
+                                                                                                                 {{5, 2}, {0, 4}},
+                                                                                                                 {{6, 0}, {0, 3}},
+                                                                                                                 {{6, 2}, {0, 2}},
+                                                                                                                 {{0, 2}, {1, 6}},
+                                                                                                                 {{1, 0}, {1, 0}},
+                                                                                                                 {{1, 2}, {1, 5}},
+                                                                                                                 {{2, 0}, {1, 4}},
+                                                                                                                 {{2, 2}, {1, 3}},
+                                                                                                                 {{3, 0}, {1, 2}},
+                                                                                                                 {{3, 2}, {1, 1}}};
 
 } // namespace Ph2_HwDescription
