@@ -27,8 +27,8 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
 
-    bool     status      = true;
-    uint16_t actualValue = 0;
+    bool    status      = true;
+    int32_t actualValue = 0;
     if(pVerify == true)
     {
         if(regName == "PIX_PORTAL")
@@ -77,28 +77,33 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
 }
 
-uint16_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
+int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
 {
     this->setBoard(pChip->getBeBoardId());
+    auto pRD53 = static_cast<RD53*>(pChip);
 
     for(auto attempt = 0; attempt < RD53Shared::MAXATTEMPTS; attempt++)
     {
-        auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
+        auto regReadback = ReadRD53Reg(pRD53, regName);
         if(regReadback.size() == 0)
+        {
             LOG(WARNING) << BLUE << "Empty register readback from chip id " << BOLDYELLOW << pChip->getId() << BLUE << ", attempt n. " << BOLDYELLOW << attempt + 1 << BLUE << "/" << BOLDYELLOW
                          << +RD53Shared::MAXATTEMPTS << RESET;
+            SendRD53Clear(pRD53);
+            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+        }
         else
             return regReadback[0].second;
     }
 
     LOG(ERROR) << BOLDRED << "Empty register (" << BOLDYELLOW << regName << BOLDRED << ") readback FIFO after " << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED " attempts" << RESET;
 
-    return 0;
+    return -1;
 }
 
 bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerify, uint32_t pBlockSize)
 {
-    RD53* pRD53 = static_cast<RD53*>(pChip);
+    auto pRD53 = static_cast<RD53*>(pChip);
 
     WriteRD53Mask(pRD53, false, true);
 
@@ -107,7 +112,7 @@ bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerify, 
 
 bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerify)
 {
-    RD53* pRD53 = static_cast<RD53*>(pChip);
+    auto pRD53 = static_cast<RD53*>(pChip);
 
     if(mask == true)
         pRD53->disableAllPixels();
@@ -121,7 +126,7 @@ bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerify)
 
 bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify)
 {
-    RD53* pRD53          = static_cast<RD53*>(pChip);
+    auto  pRD53          = static_cast<RD53*>(pChip);
     auto& pixMaskDefault = pRD53->getPixelsMaskDefault();
     auto& pixMask        = pRD53->getPixelsMask();
     auto  pRD53group     = std::static_pointer_cast<RD53ChannelGroup>(group);
@@ -227,7 +232,7 @@ void RD53Interface::StopPRBSpattern(const BeBoard* pBoard) { RD53Interface::Writ
 
 bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, const ChipContainer& pValue, bool pVerify)
 {
-    RD53* pRD53 = static_cast<RD53*>(pChip);
+    auto pRD53 = static_cast<RD53*>(pChip);
 
     for(auto col = 0u; col < pRD53->getNCols(); col++)
         for(auto row = 0u; row < pRD53->getNRows(); row++) pRD53->setTDAC(row, col, pValue.getChannel<uint16_t>(row, col));
@@ -239,7 +244,7 @@ bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
 
 void RD53Interface::ReadChipAllLocalReg(ReadoutChip* pChip, const std::string& regName, ChipContainer& pValue)
 {
-    RD53* pRD53 = static_cast<RD53*>(pChip);
+    auto pRD53 = static_cast<RD53*>(pChip);
     for(auto col = 0u; col < pRD53->getNCols(); col++)
         for(auto row = 0u; row < pRD53->getNRows(); row++) pValue.getChannel<uint16_t>(row, col) = static_cast<RD53*>(pChip)->getTDAC(row, col);
 }

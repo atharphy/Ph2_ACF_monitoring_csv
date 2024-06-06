@@ -220,7 +220,7 @@ class Summary : public SummaryBase
     {
         theArchive.template register_type<Summary<S, C>>();
         theArchive& boost::serialization::base_object<SummaryBase>(*this);
-        theArchive& theSummary_;
+        theArchive & theSummary_;
     }
 };
 
@@ -331,7 +331,7 @@ class BaseDataContainer
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive& summary_;
+        theArchive & summary_;
     }
 };
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(BaseDataContainer)
@@ -593,11 +593,11 @@ class ChipDataContainer
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive& id_;
-        theArchive& nOfRows_;
-        theArchive& nOfCols_;
+        theArchive & id_;
+        theArchive & nOfRows_;
+        theArchive & nOfCols_;
         theArchive& boost::serialization::base_object<BaseDataContainer>(*this);
-        theArchive& container_;
+        theArchive & container_;
     }
 };
 

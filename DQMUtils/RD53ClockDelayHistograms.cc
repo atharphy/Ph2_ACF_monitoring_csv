@@ -28,10 +28,10 @@ void ClockDelayHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     title << "Clock Delay (" << unitTime << " ns)";
 
     auto hClockDelay = CanvasContainer<TH1F>("ClockDelay", "Clock Delay", stopValue - startValue + 1, startValue, stopValue + 1);
-    bookImplementer(theOutputFile, theDetectorStructure, ClockDelay, hClockDelay, title.str().c_str(), "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, ClockDelay, hClockDelay, title.str().c_str(), "Entries");
 
     auto hOcc1D = CanvasContainer<TH1F>("ClkDelayScan", "Clock Delay scan", stopValue - startValue + 1, startValue, stopValue + 1);
-    bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, title.str().c_str(), "Efficiency");
+    bookChipImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, title.str().c_str(), "Efficiency");
 
     AreHistoBooked = true;
 }

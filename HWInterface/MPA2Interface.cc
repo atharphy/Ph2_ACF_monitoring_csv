@@ -25,7 +25,7 @@ namespace Ph2_HwInterface
 MPA2Interface::MPA2Interface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap) {}
 MPA2Interface::~MPA2Interface() {}
 
-uint16_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
+int32_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
 {
     setBoard(pMPA2->getBeBoardId());
     if(pRegNode == "StubMode" || pRegNode == "LayerSwap") // should work with MPA2 address table
@@ -79,6 +79,27 @@ void MPA2Interface::produceWordAlignmentPattern(ReadoutChip* pChip)
     std::vector<uint8_t>     cRegValues{0x2, fWordAlignmentPatterns[0]};
     std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
     for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++) { this->WriteChipReg(pChip, cRegNames[cIndex], cRegValues[cIndex]); } // loop over registers
+}
+
+void MPA2Interface::produceBX0AlignmentPattern(ReadoutChip* pChip)
+{
+    // use sync bit only
+    // this->MaskAllChannels(pChip, true, false );
+    // auto masked =     this->ReadChipReg(pChip, "ENFLAGS_ALL");
+    // std::cout << " read back masking MPAs 0x" << std::hex <<  masked << std::dec << std::endl;
+
+    // use stubs
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 1)};
+    this->injectNoiseClusters(pChip, theClusterList);
+    this->WriteChipReg(pChip, "StubMode", 2); // Use pixel mode to exclude possible SSA communication issues
+    this->WriteChipReg(pChip, "StubWindow", 31);
+    this->WriteChipReg(pChip, "CodeM10", 0x0); // bendind = 0 will ouput 0
+
+    LOG(INFO) << GREEN << "Producing BX0 alignment pattern on MPA#" << +pChip->getId() << RESET;
+    std::vector<uint8_t>     cRegValues{0x0};          //, fBX0AlignmentPatterns[0]};
+    std::vector<std::string> cRegNames{"ReadoutMode"}; //, "LFSR_data"};
+    // std::vector<uint8_t>     cRegValues{0x2, fWordAlignmentPatterns[0]};
+    // std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};}
 }
 
 void MPA2Interface::digiInjection(ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern)
@@ -199,7 +220,8 @@ bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr
     uint32_t totalNumberOfChannels   = NSSACHANNELS * NMPAROWS;
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
-    theRegisterVector.push_back({"Mask_ALL", 0x40});
+    // theRegisterVector.push_back({"Mask_ALL", 0x20}); // digital injection
+    theRegisterVector.push_back({"Mask_ALL", 0x40});        // analog injection
     if(numberOfEnabledChannels < totalNumberOfChannels / 2) // faster to write injected channels
     {
         theRegisterVector.push_back({"ENFLAGS_ALL", 0x00});
@@ -207,13 +229,18 @@ bool MPA2Interface::setInjectionSchema(ReadoutChip* cChip, const std::shared_ptr
         {
             for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
             {
-                if(group->isChannelEnabled(row, col)) theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x40});
+                if(group->isChannelEnabled(row, col))
+                {
+                    // theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x20}); // digital injection
+                    theRegisterVector.push_back({MPA2::getPixelRegisterName("ENFLAGS", row, col), 0x40}); // analog injection
+                }
             }
         }
     }
     else // faster to write not injected channels
     {
-        theRegisterVector.push_back({"ENFLAGS_ALL", 0x40});
+        // theRegisterVector.push_back({"ENFLAGS_ALL", 0x20}); // digital injection
+        theRegisterVector.push_back({"ENFLAGS_ALL", 0x40}); // analog injection
         for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
         {
             for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
@@ -764,7 +791,7 @@ uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
     if(theRegister == ADC_CONTROL_TABLE.end())
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << "not found for this chip type - aborting." << RESET;
-        std::runtime_error(std::string("MPA2Interface::ReadADC: Error, register not found for this chip type. Abort."));
+        abort();
     }
     LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA2  register " << pRegName << " block " << +theRegister->second.first << " shift " << +theRegister->second.second << RESET;
     this->selectBlock(static_cast<ReadoutChip*>(pChip), theRegister->second.first, theRegister->second.second);
@@ -836,7 +863,18 @@ float MPA2Interface::calculateADCLSB(ReadoutChip* pMPA2, float theVrefValue)
     return theVrefValue / (4095.0 - offset);
 }
 
-bool MPA2Interface::selectBlock(Chip* pMPA2, uint8_t block, uint8_t testPoint, uint8_t swEn) { return this->WriteChipReg(pMPA2, "ADC_TEST_selection", ((swEn << 7) + (testPoint << 4) + block), true); }
+bool MPA2Interface::selectBlock(Chip* pMPA2, uint8_t block, uint8_t testPoint, uint8_t swEn)
+{
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    auto                                  theCurrentMask = this->ReadChipReg(pMPA2, "Mask");
+
+    std::vector<std::pair<std::string, uint16_t>> registerList;
+    registerList.push_back({"Mask", 0xFF});
+    registerList.push_back({"ADC_TEST_selection", ((swEn << 7) + (testPoint << 4) + block)});
+    registerList.push_back({"Mask", theCurrentMask});
+
+    return this->WriteChipMultReg(pMPA2, registerList, true);
+}
 
 uint32_t MPA2Interface::measureGround(ReadoutChip* pMPA2)
 {

@@ -23,15 +23,24 @@ void DQMHistogramOTalignBoardDataWord::book(TFile* theOutputFile, DetectorContai
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    size_t              numberOfLines = (theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
+    size_t numberOfLines = (theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
+
+    auto setBitLabel = [numberOfLines](TH1I* theHistogram)
+    {
+        theHistogram->GetXaxis()->SetBinLabel(1, "L1");
+        for(size_t stubLine = 0; stubLine < numberOfLines - 1; ++stubLine) theHistogram->GetXaxis()->SetBinLabel(stubLine + 2, Form("Stub%d", int(stubLine)));
+    };
+
     HistContainer<TH1I> bitSlipHistogram("BitSlipValues", "Bit slip values", numberOfLines, -0.5, numberOfLines - 0.5);
     bitSlipHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     bitSlipHistogram.fTheHistogram->GetYaxis()->SetTitle("Bitslip value");
+    setBitLabel(bitSlipHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBitSlipHistogramContainer, bitSlipHistogram);
 
     HistContainer<TH1I> alignmentRetryHistogram("WordAlignmentRetryNumbers", "Word alignment retry numbers", numberOfLines, -0.5, numberOfLines - 0.5);
     alignmentRetryHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     alignmentRetryHistogram.fTheHistogram->GetYaxis()->SetTitle("Retry number");
+    setBitLabel(alignmentRetryHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fAlignmentRetryHistogramContainer, alignmentRetryHistogram);
 }
 
@@ -96,7 +105,7 @@ bool DQMHistogramOTalignBoardDataWord::fill(std::string& inputStream)
 
     if(theBitSlipContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched OTalignBoardDataWord BitSlip!!!!\n";
+        // std::cout << "Matched OTalignBoardDataWord BitSlip!!!!\n";
         DetectorDataContainer theDetectorData =
             theBitSlipContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<uint8_t>, EmptyContainer>(fDetectorContainer);
         fillBitSlipValues(theDetectorData);
@@ -104,7 +113,7 @@ bool DQMHistogramOTalignBoardDataWord::fill(std::string& inputStream)
     }
     if(theAlignmentRetryContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched OTalignBoardDataWord AlignmentRetry!!!!!\n";
+        // std::cout << "Matched OTalignBoardDataWord AlignmentRetry!!!!!\n";
         DetectorDataContainer theDetectorData =
             theAlignmentRetryContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<uint8_t>, EmptyContainer>(fDetectorContainer);
         fillAlignmentRetryNumber(theDetectorData);

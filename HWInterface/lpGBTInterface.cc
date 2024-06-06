@@ -89,13 +89,13 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     return cSuccess;
 }
 
-uint16_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
+int32_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
 {
     this->setBoard(pChip->getBeBoardId());
-    auto cBoardType = fBoardFW->getBoardType();
+    const auto cBoardType = fBoardFW->getBoardType();
 
-    auto     cAddress = pChip->getRegItem(pDacName).fAddress;
-    uint16_t cValue   = 0x00;
+    const auto cAddress = pChip->getRegItem(pDacName).fAddress;
+    uint16_t   cValue   = 0x0;
 
     if((cBoardType != BoardType::RD53) && (pChip->isOptical() == true))
     {
@@ -174,12 +174,12 @@ uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t vers
             LOG(DEBUG) << GREEN << "No redundant LpGBT ID, only use first register" << RESET;
             cChipID = cChipID_0;
         }
-        LOG(INFO) << GREEN << "FuseID from LpGBT optical group #" << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET
+        LOG(INFO) << GREEN << "FuseID from LpGBT optical group " << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET
                   << GREEN << ": 0x" << BOLDYELLOW << std::hex << +cChipID << std::dec << RESET;
         return cChipID;
     }
 
-    LOG(INFO) << GREEN << "No FuseID for version 0 LpGBT optical group #" << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board " << BOLDYELLOW << +pChip->getBeBoardId()
+    LOG(INFO) << GREEN << "No FuseID for version 0 LpGBT optical group " << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board " << BOLDYELLOW << +pChip->getBeBoardId()
               << RESET;
     return 0;
 }
@@ -955,6 +955,7 @@ float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
 
 uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     // ########################################################
     // # Read differential (converted) data on two ADC inputs #
     // ########################################################
@@ -1001,8 +1002,8 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     {
         LOG(WARNING) << BOLDRED << "LpGBT ADC conversion timed out on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
                      << RESET;
-        LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
-        ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
+        // LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
+        // ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return 0;
     }
 
@@ -1397,7 +1398,7 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
     // # LpgbtCalibrationWarning: If loading fCalibration data failed
     // # FileNotFoundError: If the file does not exis
 
-    LOG(INFO) << GREEN << "Loading Calibration data for LpGBT on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup " << BOLDYELLOW << +pChip->getOpticalGroupId()
+    LOG(INFO) << GREEN << "Loading calibration data for LpGBT on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup " << BOLDYELLOW << +pChip->getOpticalGroupId()
               << RESET << GREEN << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
 
     bool                                  cCalibrationLoaded = false;
@@ -1455,6 +1456,9 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
                          << +pChip->getOpticalGroupId() << BOLDRED << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
             LOG(WARNING) << BOLDBLUE << "\t--> Proceeding without LpGBT ADC calibrations" << RESET;
         }
+        else
+            LOG(WARNING) << GREEN << "Calibration data available for LpGBT on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup ID " << BOLDYELLOW
+                         << +pChip->getOpticalGroupId() << RESET << GREEN << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
     }
     else
     {
@@ -1830,7 +1834,7 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
             VREF should be tuned to 1V
 
         Side effects:
-            ADC settings.
+            ADC settings
 
         Arguments:
             pSamples: Number of ADC samples to average during the measurement
@@ -1850,6 +1854,7 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
         // ######################################
         WriteChipReg(pChip, "ADCMon", (1 << 4 | cVal));
         std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+
         // #######################################
         // # Disable reset on temperature sensor #
         // #######################################
@@ -1857,8 +1862,8 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
     }
 
     float cAdcVal = AdcGetVin(pChip, "TEMP", "VREF/2", 0, pSamples);
+    float cTemp   = (cAdcVal * pChip->getADCCalibrationData()["TEMPERATURE_SLOPE"] + pChip->getADCCalibrationData()["TEMPERATURE_OFFSET"]);
 
-    float cTemp = (cAdcVal * pChip->getADCCalibrationData()["TEMPERATURE_SLOPE"] + pChip->getADCCalibrationData()["TEMPERATURE_OFFSET"]);
     return cTemp;
 }
 
@@ -1886,21 +1891,49 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip,
     """ */
     if(!(pPowerSupply != "VDDTX" or pPowerSupply != "VDDRX" or pPowerSupply != "VDD" or pPowerSupply != "VDDA"))
     {
-        LOG(ERROR) << BOLDRED << "lpGBTInterface::MeasurePowerSupplyVoltage: Invalid pPowerSupply" << RESET;
+        LOG(ERROR) << BOLDRED << "[lpGBTInterface::MeasurePowerSupplyVoltage] Invalid pPowerSupply" << RESET;
         throw std::runtime_error(std::string("Invalid pPowerSupply"));
     }
 
-    // Enable VDD monitor
+    // ######################
+    // # Enable VDD monitor #
+    // ######################
     ConfigureInternalMonitoring(pChip, true);
-    // Perform conversion
-    float cVadc = AdcGetVin(pChip, pPowerSupply, "VREF/2", 0, pSamples);
 
+    // ######################
+    // # Perform conversion #
+    // ######################
+    float cVadc = AdcGetVin(pChip, pPowerSupply, "VREF/2", 0, pSamples);
     float cVsup = cVadc * (pChip->getADCCalibrationData()["VDDMON_SLOPE"] + pChip->getTemperature() * pChip->getADCCalibrationData()["VDDMON_SLOPE_TEMP"]);
 
-    // Disable VDD monitor (if requested)
-    if(pDisableMonitorAfterMeasurement) { ConfigureInternalMonitoring(pChip, false); }
-    LOG(DEBUG) << GREEN << "[lpGBTInterface::MeasurePowerSupplyVoltage] " << BOLDYELLOW << pPowerSupply << " " << cVsup << RESET << GREEN << " V" << RESET;
+    // ######################################
+    // # Disable VDD monitor (if requested) #
+    // ######################################
+    if(pDisableMonitorAfterMeasurement) ConfigureInternalMonitoring(pChip, false);
 
     return cVsup;
+}
+
+float lpGBTInterface::ReadChipMonitor(Ph2_HwDescription::lpGBT* pChip, const std::string& registerName, bool silentRunning)
+{
+    float value;
+
+    if(registerName.find("TEMP") != std::string::npos)
+    {
+        value = lpGBTInterface::MeasureTemperature(pChip);
+        if(silentRunning == false) LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement: " BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
+    }
+    else if((registerName.find("VDDTX") != std::string::npos) || (registerName.find("VDDRX") != std::string::npos) || (registerName.find("VDD") != std::string::npos) ||
+            (registerName.find("VDDA") != std::string::npos))
+    {
+        value = lpGBTInterface::MeasurePowerSupplyVoltage(pChip, registerName);
+        if(silentRunning == false)
+            LOG(INFO) << BOLDBLUE << "\t--> LpGBT voltage measurement from power supply " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE
+                      << " V" << std::setprecision(-13) << RESET;
+    }
+    else
+        value = lpGBTInterface::ReadADC(pChip, registerName);
+
+    return value;
 }
 } // namespace Ph2_HwInterface

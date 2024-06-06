@@ -41,8 +41,8 @@ const RD53::FrontEnd  RD53B::RD53Bv1 = {"RD53Bv1",
                                          {"RstCmdDecoder", 0x0002},
                                          {"RstGlbConf", 0x0004},
                                          {"RstServiceData", 0x0008},
-                                         {"RstAurora", 0x0010},
-                                         {"RstSerializer", 0x0020},
+                                         {"RstAuroraV1", 0x0010},
+                                         {"RstSerializerV1", 0x0020},
                                          {"RstADC", 0x0040},
                                          {"RstDataMerging", 0x0080},
                                          {"RstEfuses", 0x0100},
@@ -74,12 +74,12 @@ const RD53::FrontEnd  RD53B::RD53Bv2 = {"RD53Bv2",
                                         {{"RstChnSync", 0x0001},
                                          {"RstCmdDecoder", 0x0002},
                                          {"RstGlbConf", 0x0004},
-                                         {"RstAurora", 0x0008},
+                                         {"RstAuroraV2", 0x0008},
                                          {"RstDataPath", 0x0010},
                                          {"SendClearRstAurora", 0x0020},
                                          {"RstBCIDCnt", 0x0040},       // Reset also L1ID and, Trigger counters
                                          {"SendClearRstBCID", 0x0080}, // Reset also Trigger counter
-                                         {"RstSerializer", 0x0100},
+                                         {"RstSerializerV2", 0x0100},
                                          {"RstADC", 0x0200},
                                          {"RstEfuses", 0x0400},
                                          {"SendCalReset", 0x0800},
@@ -131,7 +131,11 @@ std::map<std::string, RD53::SpecialRegInfo> RD53B::specialRegMap = {{"CDR_CONFIG
                                                                     {"SelfTriggerEn", {"SelfTriggerConfig_1", 5}},
 
                                                                     {"ServiceFrameSkip", {"ServiceDataConf", 0}},
-                                                                    {"EnServiceData", {"ServiceDataConf", 8}}};
+                                                                    {"EnServiceData", {"ServiceDataConf", 8}},
+
+                                                                    {"ManualChoice", {"PhaseDetectorConfig", 0}},
+                                                                    {"ManualMode", {"PhaseDetectorConfig", 1}},
+                                                                    {"FixedMode", {"PhaseDetectorConfig", 5}}};
 
 RD53B::RD53B(const FrontEndType& frontEndType,
              uint8_t             pBeId,

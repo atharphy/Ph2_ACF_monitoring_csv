@@ -58,7 +58,7 @@ bool PSInterface::maskChannelGroup(ReadoutChip* pPS, const std::shared_ptr<Chann
 bool PSInterface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop, uint32_t pBlockSize) { return getInterface(pChip)->ConfigureChipOriginalMask(pChip, pVerifLoop, pBlockSize); }
 
 // To generalize
-uint16_t PSInterface::ReadChipReg(Chip* pPS, const std::string& pRegName) { return getInterface(pPS)->ReadChipReg(pPS, pRegName); }
+int32_t  PSInterface::ReadChipReg(Chip* pPS, const std::string& pRegName) { return getInterface(pPS)->ReadChipReg(pPS, pRegName); }
 uint32_t PSInterface::ReadChipFuseID(Chip* pPS) { return getInterface(pPS)->ReadChipFuseID(pPS); }
 
 std::vector<std::pair<std::string, uint16_t>> PSInterface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
@@ -93,6 +93,12 @@ void PSInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {
     if(pChip->getFrontEndType() == FrontEndType::MPA2) { fTheMPA2Interface->produceWordAlignmentPattern(pChip); }
     else { LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET; }
+}
+
+void PSInterface::produceBX0AlignmentPattern(ReadoutChip* pChip)
+{
+    if(pChip->getFrontEndType() == FrontEndType::MPA2) { fTheMPA2Interface->produceBX0AlignmentPattern(pChip); }
+    else if(pChip->getFrontEndType() == FrontEndType::SSA2) { LOG(INFO) << BOLDMAGENTA << "No need to generate word alignment pattern on SSA#" << +pChip->getId() << " when on a PS module" << RESET; }
 }
 
 bool PSInterface::enableInjection(ReadoutChip* pPS, bool inject, bool pVerifLoop)

@@ -73,10 +73,10 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
     if(titleY.str() == "") titleY << regNameDAC2;
 
     auto hGenericDac1 = CanvasContainer<TH1F>("GenericDac1", "Generic Dac1", (stopValueDAC1 - startValueDAC1) / stepDAC1 + 1, startValueDAC1, stopValueDAC1 + stepDAC1);
-    bookImplementer(theOutputFile, theDetectorStructure, GenericDac1, hGenericDac1, regNameDAC1.c_str(), "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, GenericDac1, hGenericDac1, regNameDAC1.c_str(), "Entries");
 
     auto hGenericDac2 = CanvasContainer<TH1F>("GenericDac2", "Generic Dac2", (stopValueDAC2 - startValueDAC2) / stepDAC2 + 1, startValueDAC2, stopValueDAC2 + stepDAC2);
-    bookImplementer(theOutputFile, theDetectorStructure, GenericDac2, hGenericDac2, regNameDAC2.c_str(), "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, GenericDac2, hGenericDac2, regNameDAC2.c_str(), "Entries");
 
     auto hOcc2D = CanvasContainer<TH2F>("GenericDacDacScanScan",
                                         "Generic DAC-DAC Scan",
@@ -86,7 +86,7 @@ void GenericDacDacScanHistograms::book(TFile* theOutputFile, DetectorContainer& 
                                         (stopValueDAC2 - startValueDAC2) / stepDAC2 + 1,
                                         startValueY,
                                         stopValueY);
-    bookImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, titleX.str().c_str(), titleY.str().c_str());
+    bookChipImplementer(theOutputFile, theDetectorStructure, Occupancy2D, hOcc2D, titleX.str().c_str(), titleY.str().c_str());
 
     AreHistoBooked = true;
 }

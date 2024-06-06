@@ -40,7 +40,8 @@ class PSInterface : public ReadoutChipInterface
     bool                 fRetryI2C              = true;
     uint8_t              fMaxI2CAttempts        = 20;
     std::vector<uint8_t> fWordAlignmentPatterns = {0x7A, 0x7A, 0x7A, 0x7A, 0x7A};
-
+    std::vector<uint8_t> fBX0AlignmentPatterns  = {0x92, 0x48, 0x12, 0x48, 0xD8};
+    // std::vector<uint8_t> fBX0AlignmentPatterns  = {0x80, 0x00, 0x00, 0x00, 0x00};
   public:
     PSInterface(const BeBoardFWMap& pBoardMap);
     ~PSInterface();
@@ -58,17 +59,18 @@ class PSInterface : public ReadoutChipInterface
     bool                                          WriteChipReg(Ph2_HwDescription::Chip* pPS, const std::string& pRegName, uint16_t pValue, bool pVerifLoop = true) override;
     bool                                          WriteChipMultReg(Ph2_HwDescription::Chip* pPS, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerifLoop = true) override;
     bool                                          WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pPS, const std::string& dacName, const ChipContainer& pValue, bool pVerifLoop = true) override;
-    uint16_t                                      ReadChipReg(Ph2_HwDescription::Chip* pPS, const std::string& pRegName) override;
+    int32_t                                       ReadChipReg(Ph2_HwDescription::Chip* pPS, const std::string& pRegName) override;
     std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
     uint32_t                                      ReadChipFuseID(Ph2_HwDescription::Chip* pPS) override;
 
     void                 producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
     void                 produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+    void                 produceBX0AlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
     std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
-
-    void             digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0x01);
-    std::vector<int> decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
-    bool             enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true);
+    std::vector<uint8_t> getBX0AlignmentPatterns() override { return fBX0AlignmentPatterns; }
+    void                 digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0x01);
+    std::vector<int>     decodeBendCode(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pBendCode);
+    bool                 enableInjection(Ph2_HwDescription::ReadoutChip* pChip, bool inject, bool pVerifLoop = true);
 
     bool maskChannelGroup(Ph2_HwDescription::ReadoutChip* pPS, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop);
 

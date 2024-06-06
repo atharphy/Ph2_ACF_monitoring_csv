@@ -21,6 +21,8 @@ void OTverifyMPASSAdataWord::Initialise(void)
     // free the registers in case any
     fNumberOfIterations = findValueInSettings<double>("OTverifyMPASSAdataWord_NumberOfIterations", 1000);
 
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyMPASSAdataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -90,7 +92,7 @@ void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCI
     auto& theL1Efficiency = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
                                 ->getObject(theMPA->getOpticalGroupId())
                                 ->getObject(theMPA->getHybridId())
-                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>()[theMPA->getId() % 8][0];
+                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()[theMPA->getId() % 8][0];
 
     // std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList{};
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 2)};
@@ -170,6 +172,8 @@ void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCI
 
 void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdForCIC, D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket)
 {
+    size_t numberOfSSAstubClusterLines = 8;
+
     ReadoutChip* theSSA = nullptr;
     try
     {
@@ -185,84 +189,103 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
 
     size_t numberOfLines = 6;
 
-    auto& theStubEfficiency = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
-                                  ->getObject(theMPA->getOpticalGroupId())
-                                  ->getObject(theMPA->getHybridId())
-                                  ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>()[theMPA->getId() % 8][1];
+    auto& theLineEfficiencyArray = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
+                                       ->getObject(theMPA->getOpticalGroupId())
+                                       ->getObject(theMPA->getHybridId())
+                                       ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()[theMPA->getId() % 8];
 
     uint8_t bendingCode = 0x05;
     fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 0); // Use normal stub mode
-    fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 32);
-    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM10", bendingCode); // bendind = 0 will ouput 101
+    fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 4);
+    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM10", bendingCode); // bendind = 0 will output 101
 
-    // stubs need to be ordered by bending code (remember that the CIC orders them based on the Code[MP]XX values)
-    std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector{{0x0A, 0xAA, 0}};
-    static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseStubs(theMPA, theSSA, theStubVector);
-
-    size_t numberOfStubs     = 8 * theStubVector.size();
-    size_t maximumStubNumber = (numberOfBytesInSinglePacket == 1) ? 16 : 35; // 16 if a 5G, 35 if a 10G
-    if(numberOfStubs > maximumStubNumber)                                    // CIC aligns stubs by bending, but in pixel-pixel mode bending is 0 and it is not possible to know what the CIC will drop
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theStripClusterList;
+    for(size_t stripIt = 0; stripIt < numberOfSSAstubClusterLines; ++stripIt) // injecting 8 clusters of size 1 15 strips spaced
     {
-        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] PS stube injected using pixel-pixel mode, more stubs than the maximum allowed!" << std::endl;
-        abort();
+        theStripClusterList.push_back({0, 5 + 15 * stripIt, 1});
     }
+    static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theSSA, theStripClusterList);
 
-    PatternMatcher thePattern;
-    thePattern.addToPattern(0x1, 0x1, 1);      // is PS flag
-    thePattern.addToPattern(0x0, 0x1FF, 9);    // status bits
-    thePattern.addToPattern(0x000, 0x000, 12); // Bx ID
-    thePattern.addToPattern(numberOfStubs, 0x3F, 6);
-
-    uint8_t stubSize = 21;
-    // reading 120 bytes from the FPGA FIFO, stub packet is 48 (96) bytes for 5G (10G), but not possible to know when the packet will be recorded
-    // -> 5G packet will always fit, 10G packet can contain only 120 - 96 = 34 relevant bytes
-    size_t maximumNumberOfBitsToMatch = (120 - 48 * numberOfBytesInSinglePacket) * 8; // 120 bytes is the maximum read from the register, max allowed matching = 120/2
-    for(uint8_t bxOffset = 0; bxOffset < 8; ++bxOffset)
+    size_t stripClusterLine = 0;
+    for(auto stripCluster: theStripClusterList)
     {
-        for(auto theStub: theStubVector)
+        auto& theStubEfficiency = theLineEfficiencyArray[stripClusterLine + 1];
+        LOG(INFO) << BOLDBLUE << "                injecting stub for strip cluster line #" << stripClusterLine << RESET;
+        uint8_t rowCoordinate = 0x0A;
+        uint8_t colCoordinate = std::get<1>(stripCluster);
+
+        std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList;
+        thePixelClusterList.push_back({rowCoordinate, colCoordinate, 1});
+        static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, thePixelClusterList);
+
+        // stubs need to be ordered by bending code (remember that the CIC orders them based on the Code[MP]XX values)
+        std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector{{rowCoordinate, colCoordinate * 2, 0}};
+
+        size_t numberOfStubs     = 8 * theStubVector.size();
+        size_t maximumStubNumber = (numberOfBytesInSinglePacket == 1) ? 16 : 35; // 16 if a 5G, 35 if a 10G
+        if(numberOfStubs > maximumStubNumber) // CIC aligns stubs by bending, but in pixel-pixel mode bending is 0 and it is not possible to know what the CIC will drop
         {
-            if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 3) break;
-            thePattern.addToPattern(0x0, 0x0, 3); // BX offset
-            if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 3) break;
-            thePattern.addToPattern(chipIdForCIC, 0x7, 3); // Chip ID
-            if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 8) break;
-            thePattern.addToPattern(std::get<1>(theStub) + 2, 0xFF, 8); // seed
-            if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 3) break;
-            thePattern.addToPattern(bendingCode, 0x7, 3); // bending
-            if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 4) break;
-            thePattern.addToPattern(std::get<0>(theStub), 0xF, 4); // z
+            std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] PS stube injected using pixel-pixel mode, more stubs than the maximum allowed!" << std::endl;
+            abort();
         }
-    }
 
-    for(uint8_t emptyStubCounter = 0; emptyStubCounter < maximumStubNumber - numberOfStubs; ++emptyStubCounter)
-    {
-        if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - stubSize) break;
-        thePattern.addToPattern(0x0, 0x1FFFFF, stubSize); // empty stubs
-    }
+        PatternMatcher thePattern;
+        thePattern.addToPattern(0x1, 0x1, 1);      // is PS flag
+        thePattern.addToPattern(0x0, 0x1FF, 9);    // status bits
+        thePattern.addToPattern(0x000, 0x000, 12); // Bx ID
+        thePattern.addToPattern(numberOfStubs, 0x3F, 6);
 
-    // padding 0s
-    if(numberOfBytesInSinglePacket == 1) thePattern.addToPattern(0x0, 0xFFFFF, 20); // 5G case only
-
-    for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
-    {
-        auto                  lineOutputVector        = theFWInterface->StubDebug(true, numberOfLines, false);
-        std::vector<uint32_t> concatenatedStubPackage = mergeCICStubOuput(lineOutputVector, numberOfBytesInSinglePacket);
-        if(matchStubPattern(concatenatedStubPackage, thePattern, numberOfBytesInSinglePacket, numberOfLines))
+        uint8_t stubSize = 21;
+        // reading 120 bytes from the FPGA FIFO, stub packet is 48 (96) bytes for 5G (10G), but not possible to know when the packet will be recorded
+        // -> 5G packet will always fit, 10G packet can contain only 120 - 96 = 34 relevant bytes
+        size_t maximumNumberOfBitsToMatch = (120 - 48 * numberOfBytesInSinglePacket) * 8; // 120 bytes is the maximum read from the register, max allowed matching = 120/2
+        for(uint8_t bxOffset = 0; bxOffset < 8; ++bxOffset)
         {
-            ++theStubEfficiency;
-            // LOG(INFO) << GREEN << "Stub pattern received " << getPatternPrintout(concatenatedStubPackage, numberOfBytesInSinglePacket) << RESET;
+            for(auto theStub: theStubVector)
+            {
+                if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 3) break;
+                thePattern.addToPattern(0x0, 0x0, 3); // BX offset
+                if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 3) break;
+                thePattern.addToPattern(chipIdForCIC, 0x7, 3); // Chip ID
+                if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 8) break;
+                thePattern.addToPattern(std::get<1>(theStub) + 2, 0xFF, 8); // seed
+                if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 3) break;
+                thePattern.addToPattern(bendingCode, 0x7, 3); // bending
+                if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - 4) break;
+                thePattern.addToPattern(std::get<0>(theStub), 0xF, 4); // z
+            }
         }
-        else
-        {
-            LOG(DEBUG) << BOLDRED << "OTverifyMPASSAdataWord::injectStubsPS - Error, expected stub pattern not found for Board " << +theMPA->getBeBoardId() << " OpticalGroup "
-                       << +theMPA->getOpticalGroupId() << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
-            LOG(DEBUG) << BOLDRED << "Stub data received    " << getPatternPrintout(concatenatedStubPackage, numberOfBytesInSinglePacket) << RESET;
-            LOG(DEBUG) << BOLDRED << "Stub pattern expected " << getPatternPrintout(thePattern.getPattern(), numberOfBytesInSinglePacket) << RESET;
-            LOG(DEBUG) << BOLDRED << "Stub pattern mask     " << getPatternPrintout(thePattern.getMask(), numberOfBytesInSinglePacket) << RESET;
-        }
-        // for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
-        // { LOG(INFO) << BOLDRED << "Line " << lineIndex << " -> " << getPatternPrintout(lineOutputVector[lineIndex], numberOfBytesInSinglePacket) << RESET; }
-    }
 
-    theStubEfficiency /= fNumberOfIterations;
+        for(uint8_t emptyStubCounter = 0; emptyStubCounter < maximumStubNumber - numberOfStubs; ++emptyStubCounter)
+        {
+            if(thePattern.getNumberOfPatternBits() >= maximumNumberOfBitsToMatch - stubSize) break;
+            thePattern.addToPattern(0x0, 0x1FFFFF, stubSize); // empty stubs
+        }
+
+        // padding 0s
+        if(numberOfBytesInSinglePacket == 1) thePattern.addToPattern(0x0, 0xFFFFF, 20); // 5G case only
+
+        for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+        {
+            auto                  lineOutputVector        = theFWInterface->StubDebug(true, numberOfLines, false);
+            std::vector<uint32_t> concatenatedStubPackage = mergeCICStubOuput(lineOutputVector, numberOfBytesInSinglePacket);
+            if(matchStubPattern(concatenatedStubPackage, thePattern, numberOfBytesInSinglePacket, numberOfLines))
+            {
+                ++theStubEfficiency;
+                // LOG(INFO) << GREEN << "Stub pattern received " << getPatternPrintout(concatenatedStubPackage, numberOfBytesInSinglePacket) << RESET;
+            }
+            else
+            {
+                LOG(DEBUG) << BOLDRED << "OTverifyMPASSAdataWord::injectStubsPS - Error, expected stub pattern not found for Board " << +theMPA->getBeBoardId() << " OpticalGroup "
+                           << +theMPA->getOpticalGroupId() << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
+                LOG(DEBUG) << BOLDRED << "Stub data received    " << getPatternPrintout(concatenatedStubPackage, numberOfBytesInSinglePacket) << RESET;
+                LOG(DEBUG) << BOLDRED << "Stub pattern expected " << getPatternPrintout(thePattern.getPattern(), numberOfBytesInSinglePacket) << RESET;
+                LOG(DEBUG) << BOLDRED << "Stub pattern mask     " << getPatternPrintout(thePattern.getMask(), numberOfBytesInSinglePacket) << RESET;
+            }
+            // for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
+            // { LOG(INFO) << BOLDRED << "Line " << lineIndex << " -> " << getPatternPrintout(lineOutputVector[lineIndex], numberOfBytesInSinglePacket) << RESET; }
+        }
+        ++stripClusterLine;
+        theStubEfficiency /= fNumberOfIterations;
+    }
 }

@@ -78,7 +78,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         endif()
     endif()
 
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils)
     if(NoDataShipping)
         set(LIBS ${LIBS} Ph2_MonitorDQM)
     endif()
@@ -121,18 +121,10 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}MONITOR UTILS${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/MonitorUtils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    include_directories(${UHAL_DIR}/uhal/include)
-    include_directories(${UHAL_DIR}/log/include)
-    include_directories(${UHAL_DIR}/grammars/include)
-
-    cet_set_compiler_flags(
-        EXTRA_FLAGS -Wno-reorder -Wl,--undefined
-    )
-
     cet_make(LIBRARY_NAME Ph2_MonitorUtils
-            LIBRARIES
-            pthread
-            ${Boost_SYSTEM_LIBRARY}
+             LIBRARIES
+             pthread
+             ${Boost_SYSTEM_LIBRARY}
     )
 
     install_headers()

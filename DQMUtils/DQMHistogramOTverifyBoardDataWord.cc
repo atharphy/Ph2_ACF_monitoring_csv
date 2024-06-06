@@ -23,10 +23,18 @@ void DQMHistogramOTverifyBoardDataWord::book(TFile* theOutputFile, DetectorConta
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    size_t              numberOfLines = (theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
+    size_t numberOfLines = (theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
+
+    auto setBitLabel = [numberOfLines](TH1F* theHistogram)
+    {
+        theHistogram->GetXaxis()->SetBinLabel(1, "L1");
+        for(size_t stubLine = 0; stubLine < numberOfLines - 1; ++stubLine) theHistogram->GetXaxis()->SetBinLabel(stubLine + 2, Form("Stub%d", int(stubLine)));
+    };
+
     HistContainer<TH1F> bitSlipHistogram("PatternMatchingEfficiency", "Pattern Matching Efficiency", numberOfLines, -0.5, numberOfLines - 0.5);
     bitSlipHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     bitSlipHistogram.fTheHistogram->GetYaxis()->SetTitle("Efficiency");
+    setBitLabel(bitSlipHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fMatchingEfficiencyHistogramContainer, bitSlipHistogram);
 }
 
@@ -74,7 +82,7 @@ bool DQMHistogramOTverifyBoardDataWord::fill(std::string& inputStream)
 
     if(theMatchingEfficiencyContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched OTverifyBoardDataWord MatchingEfficiency!!!!\n";
+        // std::cout << "Matched OTverifyBoardDataWord MatchingEfficiency!!!!\n";
         DetectorDataContainer theDetectorData =
             theMatchingEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<float>, EmptyContainer>(fDetectorContainer);
         fillPatternMatchingEfficiency(theDetectorData);

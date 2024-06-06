@@ -214,7 +214,7 @@ bool DQMHistogramOTCICphaseAlignment::fill(std::string& inputStream)
 
     if(thePhaseHistogramContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched OTCICphaseAlignment PhaseHistogram!!!!\n";
+        // std::cout << "Matched OTCICphaseAlignment PhaseHistogram!!!!\n";
         DetectorDataContainer theDetectorData =
             thePhaseHistogramContainerSerialization
                 .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>, EmptyContainer>(fDetectorContainer);
@@ -223,7 +223,7 @@ bool DQMHistogramOTCICphaseAlignment::fill(std::string& inputStream)
     }
     if(theBestPhaseContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched OTCICphaseAlignment BestPhase!!!!\n";
+        // std::cout << "Matched OTCICphaseAlignment BestPhase!!!!\n";
         DetectorDataContainer theDetectorData =
             theBestPhaseContainerSerialization
                 .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>, EmptyContainer>(fDetectorContainer);
@@ -232,7 +232,7 @@ bool DQMHistogramOTCICphaseAlignment::fill(std::string& inputStream)
     }
     if(theLockingEfficiencyContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched OTCICphaseAlignment LockingEfficiency!!!!\n";
+        // std::cout << "Matched OTCICphaseAlignment LockingEfficiency!!!!\n";
         DetectorDataContainer theDetectorData =
             theLockingEfficiencyContainerSerialization
                 .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>, EmptyContainer>(fDetectorContainer);

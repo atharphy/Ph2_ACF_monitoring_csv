@@ -28,6 +28,22 @@ void DQMHistogramOTMeasureOccupancy::book(TFile* theOutputFile, DetectorContaine
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
+    double theNumberOfEvents    = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_NumberOfEvents", 10000);
+    float  theCBCtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_CBCtestPulseValue", 1.);
+    float  theSSAtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_SSAtestPulseValue", 1.);
+    float  theMPAtestPulseValue = findValueInSettings<double>(pSettingsMap, "OTMeasureOccupancy_MPAtestPulseValue", 1.);
+    bookPlotsForInjection(theOutputFile, theNumberOfEvents, theCBCtestPulseValue, theSSAtestPulseValue, theMPAtestPulseValue);
+}
+
+//========================================================================================================================
+
+void DQMHistogramOTMeasureOccupancy::bookPlotsForInjection(TFile* theOutputFile,
+                                                           double theNumberOfEvents,
+                                                           float  theCBCtestPulseValue,
+                                                           float  theSSAtestPulseValue,
+                                                           float  theMPAtestPulseValue,
+                                                           int    iteration)
+{
     auto        selectCBCfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::CBC3); };
     std::string selectCBCfunctionName = "SelectCBCfunction";
 
@@ -38,32 +54,47 @@ void DQMHistogramOTMeasureOccupancy::book(TFile* theOutputFile, DetectorContaine
     std::string selectMPAfunctionName = "SelectMPAfunction";
 
     fDetectorContainer->addReadoutChipQueryFunction(selectCBCfunction, selectCBCfunctionName);
-    HistContainer<TH1F> theCBCoccupancyHistogram("ChannelOccupancy", "Channel Occupancy", NCHANNELS, -0.5, NCHANNELS - 0.5);
+    HistContainer<TH1F> theCBCoccupancyHistogram(
+        Form("ChannelOccupancy_injection_%.3f_MIP", theCBCtestPulseValue), Form("Channel Occupancy - injection = %.3f MIP", theCBCtestPulseValue), NCHANNELS, -0.5, NCHANNELS - 0.5);
     theCBCoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("channel");
     theCBCoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("occupancy");
+    theCBCoccupancyHistogram.fTheHistogram->SetMaximum(1.2);
+    theCBCoccupancyHistogram.fTheHistogram->SetMinimum(theCBCtestPulseValue > 0 ? 0. : 0.5 / theNumberOfEvents); // to allow go into log mode
     theCBCoccupancyHistogram.fTheHistogram->SetStats(false);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fOccupancyHistogramContainer, theCBCoccupancyHistogram);
+    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, *fDetectorContainer, fOccupancyHistogramContainer[iteration], theCBCoccupancyHistogram);
     fDetectorContainer->removeReadoutChipQueryFunction(selectCBCfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
-    HistContainer<TH1F> theSSAoccupancyHistogram("ChannelOccupancy", "Channel Occupancy", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
+    HistContainer<TH1F> theSSAoccupancyHistogram(
+        Form("ChannelOccupancy_injection_%.3f_MIP", theSSAtestPulseValue), Form("Channel Occupancy - injection = %.3f MIP", theSSAtestPulseValue), NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
     theSSAoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("channel");
     theSSAoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("occupancy");
+    theSSAoccupancyHistogram.fTheHistogram->SetMaximum(1.2);
+    theSSAoccupancyHistogram.fTheHistogram->SetMinimum(theSSAtestPulseValue > 0 ? 0. : 0.5 / theNumberOfEvents); // to allow go into log mode
     theSSAoccupancyHistogram.fTheHistogram->SetStats(false);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fOccupancyHistogramContainer, theSSAoccupancyHistogram);
+    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, *fDetectorContainer, fOccupancyHistogramContainer[iteration], theSSAoccupancyHistogram);
     fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
-    HistContainer<TH2F> theMPAoccupancyHistogram("ChannelOccupancy", "Channel Occupancy", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
+    HistContainer<TH2F> theMPAoccupancyHistogram(Form("ChannelOccupancy_injection_%.3f_MIP", theMPAtestPulseValue),
+                                                 Form("Channel Occupancy - injection = %.3f MIP", theMPAtestPulseValue),
+                                                 NSSACHANNELS,
+                                                 -0.5,
+                                                 NSSACHANNELS - 0.5,
+                                                 NMPAROWS,
+                                                 -0.5,
+                                                 NMPAROWS - 0.5);
     theMPAoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("col");
     theMPAoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("row");
+    theMPAoccupancyHistogram.fTheHistogram->SetMaximum(1.);
+    theMPAoccupancyHistogram.fTheHistogram->SetMinimum(theMPAtestPulseValue > 0 ? 0. : 0.5 / theNumberOfEvents); // to allow go into log mode
     theMPAoccupancyHistogram.fTheHistogram->SetStats(false);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fOccupancyHistogramContainer, theMPAoccupancyHistogram);
+    RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, *fDetectorContainer, fOccupancyHistogramContainer[iteration], theMPAoccupancyHistogram);
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
 }
 
 //========================================================================================================================
-void DQMHistogramOTMeasureOccupancy::fillOccupancy(const DetectorDataContainer& theOccupancyContainer)
+void DQMHistogramOTMeasureOccupancy::fillOccupancy(const DetectorDataContainer& theOccupancyContainer, size_t iteration)
 {
     for(auto theBoard: theOccupancyContainer)
     {
@@ -75,7 +106,7 @@ void DQMHistogramOTMeasureOccupancy::fillOccupancy(const DetectorDataContainer& 
                 {
                     if(!theChip->hasChannelContainer()) continue;
                     ReadoutChip* theReadoutChip = fDetectorContainer->getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getObject(theChip->getId());
-                    const ChipDataContainer* theChipContainer = fOccupancyHistogramContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId());
+                    const ChipDataContainer* theChipContainer = fOccupancyHistogramContainer.at(iteration).getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId());
                     // using TH1F and TH2F inheritance from TH1
                     TH1* theOccupancyHistogram;
                     if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
@@ -120,8 +151,9 @@ bool DQMHistogramOTMeasureOccupancy::fill(std::string& inputStream)
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched OTMeasureOccupancy Occupancy!!!!!\n";
-        DetectorDataContainer theDetectorData = theOccupancySerialization.deserializeChipContainer<Occupancy, Occupancy>(fDetectorContainer);
-        fillOccupancy(theDetectorData);
+        size_t                iteration;
+        DetectorDataContainer theDetectorData = theOccupancySerialization.deserializeChipContainer<Occupancy, Occupancy>(fDetectorContainer, iteration);
+        fillOccupancy(theDetectorData, iteration);
         return true;
     }
     return false;

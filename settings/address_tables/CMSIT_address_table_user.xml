@@ -287,7 +287,6 @@
       <node id="Hybrid_type"           mask="0x00000007"      permission="r"       description="" />
       <node id="Nb_of_modules"         mask="0x00000078"      permission="r"       description="" />
       <node id="speed"                 mask="0x00000080"      permission="r"       description="" />
-      <node id="lane_up"               mask="0x0FFFFF00"      permission="r"       description="" />
     </node>
 
     <node id="aurora_rx_channel_up" address="0x00000007"      permission="r"       description=""> </node>
@@ -310,7 +309,7 @@
       <node id="trig_data_buf_empty"   mask="0x02000000"      permission="r"       description="Data payload fifo empty flag (all fifos combined) " />
     </node>
 
-    <node id="rate_measurement_bx_counter" address="0x0000000D" permission="r"     description=""> </node>
+    <node id="aurora_rx_lane_up"    address="0x0000000D"      permission="r"       description=""> </node>
 
     <node id="ddr3_num_errors"      address="0x0000000E"      permission="r"       description="Number of errors during DDR3 self-check"> </node>
     <node id="ddr3_num_words"       address="0x0000000F"      permission="r"       description="Nb of words readout during DDR3 self-check"> </node>

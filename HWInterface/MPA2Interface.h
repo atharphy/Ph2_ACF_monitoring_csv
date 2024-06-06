@@ -55,12 +55,13 @@ class MPA2Interface : public ReadoutChipInterface
     bool WriteChipMultReg(Ph2_HwDescription::Chip* pMPA, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = false) override;
     bool WriteChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pMPA, const std::string& dacName, const ChipContainer& pValue, bool pVerify = false) override;
 
-    uint16_t                                      ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName) override;
+    int32_t                                       ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName) override;
     std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
     uint32_t                                      ReadChipFuseID(Ph2_HwDescription::Chip* pMPA2) override;
 
     void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
     void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
+    void produceBX0AlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;
 
     // void                  Activate_async(Ph2_HwDescription::Chip* pMPA);
     // void                  Activate_sync(Ph2_HwDescription::Chip* pMPA);
@@ -110,6 +111,7 @@ class MPA2Interface : public ReadoutChipInterface
     // bool selectTestPadsOutput(Ph2_HwDescription::ReadoutChip* pMPA2, std::string theRegisterName);
 
     std::vector<uint8_t> getWordAlignmentPatterns() override { return fWordAlignmentPatterns; }
+    std::vector<uint8_t> getBX0AlignmentPatterns() override { return fBX0AlignmentPatterns; }
     void                 Cleardata();
     //
     void                 digiInjection(Ph2_HwDescription::ReadoutChip* pChip, std::vector<Injection> pInjections, uint8_t pPattern = 0xFF);
@@ -220,6 +222,8 @@ class MPA2Interface : public ReadoutChipInterface
     const std::map<std::string, uint8_t> PIXEL_CONFIG_TABLE = {{"ENFLAGS", 0}, {"TrimDAC", 1}, {"DigiPattern", 2}, {"ACCounter_LSB", 4}, {"ACCounter_MSB", 5}};
     std::map<uint16_t, std::string>      fMap;
     std::vector<uint8_t>                 fWordAlignmentPatterns = {0x7A, 0x7A, 0x7A, 0x7A, 0x7A, 0x7A};
+    std::vector<uint8_t>                 fBX0AlignmentPatterns  = {0x92, 0x48, 0x12, 0x48, 0xD8}; // stubs
+    // std::vector<uint8_t>                 fBX0AlignmentPatterns  = {0x80, 0x00, 0x00, 0x00, 0x00}; // sync bit
 
     bool                WriteChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode, uint16_t pValue, bool pVerify = false);
     uint16_t            ReadChipSingleReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegNode);

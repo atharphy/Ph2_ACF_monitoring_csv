@@ -85,6 +85,7 @@ void OTCICphaseAlignment::phaseAlignment()
 
     for(auto theBoard: *fDetectorContainer)
     {
+        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 100); // too low trigger rate does not work
         // all modules must be of the same type
         bool isPSmodule = theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
         // generate alignment pattern on all stub lines

@@ -4,6 +4,7 @@
 #include "DQMUtils/DQMHistogramCalibrationExample.h"
 #include "DQMUtils/DQMHistogramKira.h"
 #include "DQMUtils/DQMHistogramLatencyScan.h"
+#include "DQMUtils/DQMHistogramOTCICBX0Alignment.h"
 #include "DQMUtils/DQMHistogramOTCICphaseAlignment.h"
 #include "DQMUtils/DQMHistogramOTCICphaseAlignmentForBypass.h"
 #include "DQMUtils/DQMHistogramOTCICwordAlignment.h"
@@ -15,6 +16,7 @@
 #include "DQMUtils/DQMHistogramOTalignLpGBTinputs.h"
 #include "DQMUtils/DQMHistogramOTalignStubPackage.h"
 #include "DQMUtils/DQMHistogramOTinjectionDelayOptimization.h"
+#include "DQMUtils/DQMHistogramOTinjectionOccupancyScan.h"
 #include "DQMUtils/DQMHistogramOTverifyBoardDataWord.h"
 #include "DQMUtils/DQMHistogramOTverifyCICdataWord.h"
 #include "DQMUtils/DQMHistogramOTverifyMPASSAdataWord.h"
@@ -60,11 +62,13 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTalignStubPackage,
              DQMHistogramOTCICphaseAlignment,
              DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTCICBX0Alignment,
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord>("alignment");
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTinjectionDelayOptimization>("injectionDelayOptimization");
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTPSADCCalibration>("ADCBiasCalibration");
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTMeasureOccupancy>("measureOccupancy");
+    Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTinjectionOccupancyScan>("injectionOccupancyScan");
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,

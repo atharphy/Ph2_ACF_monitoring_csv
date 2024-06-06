@@ -732,9 +732,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     if(pBoard->isOptical())
     {
         LOG(INFO) << BOLDBLUE << "D19cFWInterface::ConfigureBoard for optical readout" << RESET;
-        LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 3 bits for bitslop " << RESET;
+        LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 3 bits for bitslip " << RESET;
     }
-    else { LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 4 bits for bitslop " << RESET; }
+    else { LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 4 bits for bitslip " << RESET; }
     fOptical = pBoard->isOptical() && !cWithlpGBT;
     // if optical readout .. then configure links
     if(pBoard->isOptical() && cWithlpGBT)
@@ -1152,12 +1152,7 @@ void D19cFWInterface::ChipTrigger() { fFastCommandInterface->SendGlobalL1A(); }
 // bool D19cFWInterface::Bx0Alignment(uint16_t pLinkId)
 bool D19cFWInterface::Bx0Alignment()
 {
-    bool cSuccess = false;
-    // auto     cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
-    // uint32_t cPkgDelay;
-    // if (pLinkId < 10) cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9");
-    // else cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11");
-    uint32_t cPkgDelay  = this->ReadReg("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9");
+    bool     cSuccess   = false;
     uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
     if(cStubDebug)
     {
@@ -1172,7 +1167,7 @@ bool D19cFWInterface::Bx0Alignment()
     // this->ResetReadout();
     // reset decoder
     size_t cMaxAttempts = 20;
-    size_t cWaitTime    = fWait_us * 100; // was 100
+    size_t cWaitTime    = fWait_us;
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
     this->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x0);
     // number of triggers to accept
@@ -1187,19 +1182,8 @@ bool D19cFWInterface::Bx0Alignment()
         uint32_t cValue = this->ReadReg("fc7_daq_stat.physical_interface_block.cic_decoder.bx0_alignment_state");
         if(cValue == 8)
         {
-            LOG(DEBUG) << BOLDBLUE << "Resetting decoder in back-end " << BOLDGREEN << " SUCCEEDED!"
-                       << "\t... Stub package delay set to : " << +cPkgDelay << RESET;
+            LOG(DEBUG) << BOLDBLUE << "Resetting decoder in back-end " << BOLDGREEN << " SUCCEEDED!" << RESET;
             cSuccess = true;
-
-            // // definitely works with
-            // // figure out which one of these is needed
-            // // resync after bx0 alignment worked
-            // this->ChipReSync();
-            // if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
-
-            // // reset the readout as well
-            // this->ResetReadout();
-            // if(cWait) std::this_thread::sleep_for(std::chrono::microseconds(cWaitTime));
         }
         else
         {

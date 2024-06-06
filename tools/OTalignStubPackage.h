@@ -40,13 +40,11 @@ class OTalignStubPackage : public Tool
 
     static std::string fCalibrationDescription;
 
-    void AlignStubPackageSingleHybrid(Ph2_HwDescription::BeBoard* pBoard);
-    void AlignStubPackage(Ph2_HwDescription::BeBoard* pBoard);
+    void AlignStubPackageOld(Ph2_HwDescription::BeBoard* pBoard);
+    void AlignStubPackage(Ph2_HwDescription::BeBoard* theBoard);
     void AlignStubPackage();
 
   private:
-    //
-
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTalignStubPackage fDQMHistogramOTalignStubPackage;

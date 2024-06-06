@@ -2,7 +2,7 @@
 <HwDescription>
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="1">
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.6:50001" address_table="file://settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.6:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <configuration file_name="${PH2ACF_BASE_DIR}/settings/BeBoardFiles/uDTC_registers_PS.xml"/>
     <CDCE configure="0" clockRate="320"/>
         
@@ -152,10 +152,6 @@
     <Setting name="TestPulsePotentiometer">0x50</Setting>
     <Setting name="SyncDebug">0</Setting>
 
-
-    <Setting name="FullScan">1</Setting>
-    <Setting name="PedestalEqualization_MaskUntrimmed">1</Setting>
-
     <!--Full search settings (pedestal) MPA
     <Setting name="PedestalEqualization_FullScanStart">170</Setting>
     <Setting name="Nevents">500</Setting>
@@ -182,6 +178,7 @@
     <Setting name="PedeNoise_MinThreshold">40</Setting>
     <Setting name="PedeNoise_MaxThreshold">240</Setting> -->
     <Setting name="FullScan">0</Setting>
+    <Setting name="PedestalEqualization_MaskUntrimmed">0</Setting>
     <Setting name="PedestalEqualization_PulseAmplitude">70</Setting>
     <Setting name="PedeNoise_PulseAmplitude">70</Setting>
     <Setting name="PedestalEqualization_PulseAmplitudePix">70</Setting>
@@ -237,21 +234,27 @@
     <Setting name="OTalignLpGBTinputs_MinAlignmentSuccessRate">0.99</Setting>
 
     <Setting name="OTCICphaseAlignment_NumberOfAlignmentIterations">100</Setting>
-    <Setting name="OTCICphaseAlignment_MinLockingSuccessRate">0.95</Setting>
+    <Setting name="OTCICphaseAlignment_MinLockingSuccessRate">0.90</Setting>
     <Setting name="OTverifyCICdataWord_NumberOfIterations">1000</Setting>
     <Setting name="OTverifyMPASSAdataWord_NumberOfIterations">1000</Setting>
     
     <Setting name="OTinjectionDelayOptimization_NumberOfEvents">100</Setting>
     <Setting name="OTinjectionDelayOptimization_MaximumDelay">150</Setting>
     <Setting name="OTinjectionDelayOptimization_DelayStep">1</Setting>
-    <Setting name="OTinjectionDelayOptimization_SSAtestPulseValue">45</Setting> <!-- 45 roughly correspond to 1/2 MIP in 290um silicon-->
-    <Setting name="OTinjectionDelayOptimization_MPAtestPulseValue">50</Setting> <!-- 50 roughly correspond to 1/2 MIP in 290um silicon-->
+    <Setting name="OTinjectionDelayOptimization_SSAtestPulseValue">0.5</Setting> <!-- MIP units -->
+    <Setting name="OTinjectionDelayOptimization_MPAtestPulseValue">0.5</Setting> <!-- MIP units -->
     <Setting name="OTinjectionDelayOptimization_SSAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
     <Setting name="OTinjectionDelayOptimization_MPAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
 
-    <Setting name="OTMeasureOccupancy_NumberOfEvents">100000</Setting>
-    <Setting name="OTMeasureOccupancy_SSAtestPulseValue">90</Setting>
-    <Setting name="OTMeasureOccupancy_MPAtestPulseValue">100</Setting>
+    <Setting name="OTMeasureOccupancy_NumberOfEvents">10000</Setting>
+    <Setting name="OTMeasureOccupancy_SSAtestPulseValue">1.</Setting> <!-- MIP units -->
+    <Setting name="OTMeasureOccupancy_MPAtestPulseValue">1.</Setting> <!-- MIP units -->
+    <Setting name="OTMeasureOccupancy_ForceChannelGroup">0</Setting>
+    <Setting name="OTMeasureOccupancy_ThresholdOffset">0</Setting>
+
+    <Setting name="OTinjectionOccupancyScan_ListOfInjectedPulses"> 0, 0.25, 0.5, 1., 2.</Setting> <!-- MIP units -->
+    <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithoutInjection"> 1000000</Setting>
+    <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithInjection"> 1000</Setting>
 </Settings>
 
 

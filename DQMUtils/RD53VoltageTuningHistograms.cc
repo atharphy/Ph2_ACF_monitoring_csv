@@ -20,8 +20,8 @@ void VoltageTuningHistograms::book(TFile* theOutputFile, DetectorContainer& theD
     auto hVoltageDig = CanvasContainer<TH1F>("VoltageDig", "Digital Voltage", NBINS_V, 0, NBINS_V);
     auto hVoltageAna = CanvasContainer<TH1F>("VoltageAna", "Analog Voltage", NBINS_V, 0, NBINS_V);
 
-    bookImplementer(theOutputFile, theDetectorStructure, VoltageDig, hVoltageDig, "VoltageDig", "Entries");
-    bookImplementer(theOutputFile, theDetectorStructure, VoltageAna, hVoltageAna, "VoltageAna", "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, VoltageDig, hVoltageDig, "VoltageDig", "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, VoltageAna, hVoltageAna, "VoltageAna", "Entries");
 
     AreHistoBooked = true;
 }

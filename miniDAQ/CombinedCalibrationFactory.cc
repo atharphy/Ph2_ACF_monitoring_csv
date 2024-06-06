@@ -9,6 +9,7 @@
 #include "tools/ECVLinkAlignmentOT.h"
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
+#include "tools/OTCICBX0Alignment.h"
 #include "tools/OTCICphaseAlignment.h"
 #include "tools/OTCICphaseAlignmentForBypass.h"
 #include "tools/OTCICwordAlignment.h"
@@ -22,6 +23,7 @@
 #include "tools/OTalignLpGBTinputs.h"
 #include "tools/OTalignStubPackage.h"
 #include "tools/OTinjectionDelayOptimization.h"
+#include "tools/OTinjectionOccupancyScan.h"
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/OTverifyCICdataWord.h"
 #include "tools/OTverifyMPASSAdataWord.h"
@@ -65,14 +67,22 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              ECVLinkAlignmentOT>("Outer Tracker", "ecv");
     Register<OTalignLpGBTinputs>("Outer Tracker", "OTalignLpGBTinputs");
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
-    Register<OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");
-    Register<OTalignStubPackage>("Outer Tracker", "OTalignStubPackage");
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord>("Outer Tracker",
-                                                                                                                                                                                        "alignment");
+    Register<OTalignBoardDataWord, OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");
+    Register<OTalignBoardDataWord, OTalignStubPackage>("Outer Tracker", "OTalignStubPackage");
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             //  OTCICBX0Alignment,
+             OTverifyCICdataWord,
+             OTverifyMPASSAdataWord>("Outer Tracker", "alignment");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignmentForBypass, OTCicBypassTest>("Outer Tracker", "testCICbypass");
 
     Register<OTalignBoardDataWord, OTinjectionDelayOptimization>("Outer Tracker", "injectionDelayOptimization");
     Register<OTalignBoardDataWord, OTMeasureOccupancy>("Outer Tracker", "measureOccupancy");
+    Register<OTalignBoardDataWord, OTinjectionOccupancyScan>("Outer Tracker", "injectionOccupancyScan");
 
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
