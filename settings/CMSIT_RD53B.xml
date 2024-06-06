@@ -167,6 +167,8 @@
         </Register>
 
         <Register name="reset_reg">
+          <Register name="nb_of_pll_words"> 2 </Register>
+          <Register name="nb_of_sync_words"> 2 </Register>
           <Register name="ext_clk_en"> 0 </Register>
         </Register>
 
@@ -184,8 +186,8 @@
         </Register>
 
         <Register name="cnf_cmd_ctrl">
-          <Register name="nb_slow_cmd_before_sync"> 250 </Register>
-          <Register name="nb_slow_cmd_before_pll"> 250 </Register>
+          <Register name="nb_slow_cmd_before_sync"> 0 </Register>
+          <Register name="nb_slow_cmd_before_pll"> 0 </Register>
         </Register>
 
       </Register>

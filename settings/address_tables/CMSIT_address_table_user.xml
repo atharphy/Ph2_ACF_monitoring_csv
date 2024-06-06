@@ -225,9 +225,9 @@
       <node id="cmd_strobe"            mask="0x00100000"      permission="rw"      description="Start Procedure to set GTX polarity" />
     </node>
 
-    <node id="cnf_cmd_ctrl"            address="0x00000001B"      permission="rw"      description="FIX">
-      <node id="nb_slow_cmd_before_sync"   mask="0x000003FF"      permission="rw"      description="FIX" />
-      <node id="nb_slow_cmd_before_pll"   mask="0x000FFC00"      permission="rw"      description="FIX" />
+    <node id="cnf_cmd_ctrl"            address="0x00000001B"      permission="rw"      description="Additional configurations for CMD Controller">
+      <node id="nb_slow_cmd_before_sync"   mask="0x000003FF"      permission="rw"      description="Number of slow commands before sending sync words" />
+      <node id="nb_slow_cmd_before_pll"   mask="0x000FFC00"      permission="rw"      description="Number of slow commands before sending pll words" />
     </node>
   
   </node>
