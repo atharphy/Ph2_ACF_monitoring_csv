@@ -51,8 +51,8 @@ void DQMHistogramOTMPAtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
 
     for(auto slvsCurrent : listOfMPAslvsCurrents)
     {
-        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("MPAtoCICPhaseScan_SLVScurrent_%d", slvsCurrent),
-                                                        Form("MPA to CIC Phase Scan Matching efficiency - SLVScurrent = %d", slvsCurrent),
+        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("MPAtoCICPhaseScan_SLVScurrent_%d", int(slvsCurrent)),
+                                                        Form("MPA to CIC Phase Scan Matching efficiency - SLVScurrent = %d", int(slvsCurrent)),
                                                         15,
                                                         -0.5,
                                                         14.5,

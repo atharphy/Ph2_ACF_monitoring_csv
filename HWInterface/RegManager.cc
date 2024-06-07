@@ -245,7 +245,9 @@ uint32_t RegManager::ReadReg(const std::string& pRegNode)
     {
         std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Exception caught from controlhub: " << e.what() << std::endl;
         std::cerr << "Please contact Fabio Ravera\n";
-        throw;
+        // throw;
+        usleep(1000000);
+        ReadReg(pRegNode);
     }
 
     if(DEV_FLAG)
