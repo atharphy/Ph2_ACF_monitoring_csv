@@ -119,6 +119,8 @@ void OTverifyECVlpGBTCIC::runECV()
                                 prepareHybridForL1IntegrityTest(theHybrid);
 
                                 LOG(DEBUG) << BOLDBLUE << "D19cDebugFWInterface::L1ADebug ...." << RESET;
+
+                                // Procedure to start the L1 triggers, outside the iteration loop to speed up the procedure
                                 // enable initial fast reset
                                 theFWInterface->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", 1);
                                 // disable back-pressure
