@@ -261,7 +261,7 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
                 // map<char, int>::iterator it;
                 for(auto it = trainedPhases.begin(); it != trainedPhases.end(); ++it)
                 {
-                    //FIXME this does not work if you are not on optical group 0!
+                    // FIXME this does not work if you are not on optical group 0!
                     if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
                     {
                         if(it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 6, it->second);
