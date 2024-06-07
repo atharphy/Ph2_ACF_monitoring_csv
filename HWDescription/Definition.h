@@ -40,23 +40,41 @@
 #define D19C_EVENT_HEADER1_SIZE_32_CBC3 4
 #define D19C_EVENT_SIZE_32_CBC3 16
 
+#define NUMBER_OF_ELECTRON_PER_UM 75 // Number of electron deposited by a MIP in silicon per um
+
+// CBC
+#define CBC_VCTH_ELECTRON_UNIT 156              // conversion factor from 1 VcTh DAC into electron
+#define CBC_ELECTRON_TO_CALDAC_INTERCEPT 253.96 // Electron to CalDac calibration curve - intercept
+#define CBC_ELECTRON_TO_CALDAC_SLOPE -0.001648  // Electron to CalDac calibration curve - slope
+#define TWOS_SENSOR_THICHNESS 290               // 2S sensor active thickness
+
+// SSA
+#define SSA_THDAC_ELECTRON_UNIT 250  // conversion factor from 1 ThDac into electron
+#define SSA_CALDAC_ELECTRON_UNIT 243 // conversion factor from 1 CalDac into electron
+#define PSS_SENSOR_THICHNESS 290     // PSS sensor active thickness
+
+// MPA
+#define MPA_THDAC_ELECTRON_UNIT 94   // conversion factor from 1 ThDac into electron
+#define MPA_CALDAC_ELECTRON_UNIT 220 // conversion factor from 1 CalDac into electron
+#define PSP_SENSOR_THICHNESS 290     // PSP sensor active thickness
+
 // SSA2
 // in float
-#define SSA2_VBG_EXPECTED 0.275   // [V] this will need to be taken from database
+#define SSA2_VBG_EXPECTED 0.275   // FIXME [V] this will need to be taken from database
 #define SSA2_VREF_EXPECTED 0.850  // [V] this is true if ADC_VREF is tuned
-#define SSA2_VREF_MIN 0.750       // [V] should be verified once we have numbers/manual is updated
-#define SSA2_VREF_MAX 1.0         // [V] should be verified once we have numbers/manual is updated
+#define SSA2_VREF_MIN 0.750       // FIXME [V] should be verified once we have numbers/manual is updated
+#define SSA2_VREF_MAX 1.0         // FIXME [V] should be verified once we have numbers/manual is updated
 #define SSA2_ADC_PRECISION 0.010  // [V] from skeleton testing: changing by 1 bit ADC_VREF, VREF measured on skeleton changes by 7-8 mV. Here we are rounding up the precision.
 #define SSA2_ELECTRON_CALDAC 243. // 1 CalDAC = 0.039 fC = 243 electrons - confirmed by Davide
 #define SSA2_ELECTRON_THDAC 250.  // 1 ThDAC  = 0.040 fC = 250 electrons - confirmed by Davide
 
 // MPA2
 // in float
-#define MPA2_VBG_EXPECTED 0.280   // FIXMEEEE
-#define MPA2_VREF_EXPECTED 0.850  // FIXMEEEE
-#define MPA2_VREF_MIN 0.750       // FIXMEEEE
-#define MPA2_VREF_MAX 1.0         // FIXMEEE
-#define MPA2_ADC_PRECISION 0.010  // FIXME
+#define MPA2_VBG_EXPECTED 0.280   // FIXME [V] this will need to be taken from database
+#define MPA2_VREF_EXPECTED 0.850  // [V] this is true if ADC_VREF is tuned
+#define MPA2_VREF_MIN 0.750       // FIXME [V] should be verified once we have numbers/manual is updated
+#define MPA2_VREF_MAX 1.0         // FIXME [V] should be verified once we have numbers/manual is updated
+#define MPA2_ADC_PRECISION 0.010  // [V] from skeleton testing: changing by 1 bit ADC_VREF, VREF measured on skeleton changes by 7-8 mV. Here we are rounding up the precision.
 #define MPA2_ELECTRON_CALDAC 220. // 1 CalDAC = 0.035 fC = 220 electrons - confirmed by Davide
 #define MPA2_ELECTRON_THDAC 94.   // 1 ThDAC  = 0.015 fC =  94 electrons - confirmed by Davide
 
@@ -104,7 +122,8 @@ enum class FrontEndType
     MPA2,
     SSA2,
     RD53A,
-    RD53B,
+    RD53Bv1,
+    RD53Bv2,
     CIC2,
     OuterTracker2S,
     OuterTrackerPS,

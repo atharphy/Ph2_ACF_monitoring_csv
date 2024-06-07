@@ -252,7 +252,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             if((cFilePath.empty() == false) && (cFilePath.at(cFilePath.length() - 1) != '/')) cFilePath.append("/");
         }
         else if(static_cast<std::string>(theChild.name()) == LPGBT_CONFIGFILE_NODE_NAME)
-            theConfigFilePath = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_FILENAME_ATTRIBUTE_NAME).value());
+            theConfigFilePath = expandEnvironmentVariables(theChild.attribute(COMMON_FILENAME_ATTRIBUTE_NAME).value());
         else if(static_cast<std::string>(theChild.name()) == LPGBT_NODE_NAME)
         {
             std::string chipFileName = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
@@ -488,6 +488,14 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
     cSSA2->setMasterId(pHybrid->getMasterId());
 
     if(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cSSA2->setAverageNoise(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
+    if(pSSAnode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME) && pSSAnode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME))
+    {
+        std::map<std::string, float> theADCcalibration;
+        theADCcalibration["ADC_SLOPE"]  = pSSAnode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME).as_float();
+        theADCcalibration["ADC_OFFSET"] = pSSAnode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME).as_float();
+
+        cSSA2->setADCCalibrationMap(theADCcalibration);
+    }
 }
 
 void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os)
@@ -633,6 +641,14 @@ void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, st
     cMPA->setMasterId(pHybrid->getMasterId());
 
     if(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cMPA->setAverageNoise(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
+    if(pMPANode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME) && pMPANode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME))
+    {
+        std::map<std::string, float> theADCcalibration;
+        theADCcalibration["ADC_SLOPE"]  = pMPANode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME).as_float();
+        theADCcalibration["ADC_OFFSET"] = pMPANode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME).as_float();
+
+        cMPA->setADCCalibrationMap(theADCcalibration);
+    }
 
     os << BOLDCYAN << "|"
        << "  "
@@ -891,13 +907,16 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     if(cName.find(RD53_NODE_NAME) != std::string::npos)
                     {
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
-                        const auto frontEndType = cName.find(RD53A_NODE_NAME) != std::string::npos ? FrontEndType::RD53A : FrontEndType::RD53B;
+                        const auto frontEndType = cName.find(RD53A_NODE_NAME) != std::string::npos     ? FrontEndType::RD53A
+                                                  : cName.find(RD53Bv1_NODE_NAME) != std::string::npos ? FrontEndType::RD53Bv1
+                                                                                                       : FrontEndType::RD53Bv2;
                         pBoard->setFrontEndType(frontEndType);
                         parseRD53(cChild, cHybrid, cConfigFileDirectory, os, frontEndType);
                         if(cNextName.empty() || cNextName != cName) parseGlobalRD53Settings(pHybridNode, cHybrid, os);
                     }
                     else if(cName.find(CBC_NODE_NAME) != std::string::npos)
                     {
+                        pOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
                         cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
                         parseCbcContainer(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseGlobalCbcSettings(pHybridNode, cHybrid, os);
@@ -980,12 +999,14 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     }
                     else if(cName == SSA2_NODE_NAME)
                     {
+                        pOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS);
                         cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
                         parseSSA2Container(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseSSA2Settings(pHybridNode, cHybrid, os);
                     }
                     else if(cName == MPA2_NODE_NAME)
                     {
+                        pOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS);
                         cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
                         parseMPA2Container(cChild, cHybrid, cConfigFileDirectory, os);
                         if(cNextName.empty() || cNextName != cName) parseMPA2Settings(pHybridNode, cHybrid, os);
@@ -996,6 +1017,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
 
         if(pOpticalGroup->flpGBT != nullptr) parseHybridToLpGBT(pHybridNode, cHybrid, pOpticalGroup->flpGBT, os);
         if(pBoard->getBoardType() != BoardType::RD53) parseGlobalHybridMask(pHybridNode, cHybrid, os);
+
+        pugi::xml_node theLpGBTphaseMainNode = pHybridNode.child(LPGBT_PHASES_FOR_CIC_BYPASS_MAIN_NODE_NAME);
+        if(theLpGBTphaseMainNode) parseLpGBTphasesForBypass(theLpGBTphaseMainNode, cHybrid, os);
     }
 }
 
@@ -1394,7 +1418,8 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
 
 void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os)
 {
-    pugi::xml_document doc;
+    std::vector<std::string> listOfStringSettings{"RegNameDAC1", "RegNameDAC2", "DataOutputDir", "KIRA_ID", "OTinjectionOccupancyScan_ListOfInjectedPulses"};
+    pugi::xml_document       doc;
     openHWconfig(pFilename, doc);
 
     if(doc.child(HW_DESCRIPTION_NODE_NAME).child(SETTINGS_NODE_NAME) == 0) LOG(WARNING) << BOLDRED << "No -Settings- tag found in XML file: " << BOLDYELLOW << pFilename << RESET;
@@ -1405,22 +1430,31 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
 
         for(pugi::xml_node nSetting = nSettings.child(SETTING_NODE_NAME); nSetting; nSetting = nSetting.next_sibling())
         {
-            if((strcmp(nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value(), "RegNameDAC1") == 0) || (strcmp(nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value(), "RegNameDAC2") == 0) ||
-               (strcmp(nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value(), "DataOutputDir") == 0) || (strcmp(nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value(), "KIRA_ID") == 0))
+            auto theSettingValue = nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value();
+            bool isStringSetting = false;
+            for(auto stringSetting: listOfStringSettings)
+            {
+                if(strcmp(theSettingValue, stringSetting.c_str()) == 0)
+                {
+                    isStringSetting = true;
+                    break;
+                }
+            }
+            if(isStringSetting)
             {
                 std::string value(nSetting.first_child().value());
                 value.erase(std::remove(value.begin(), value.end(), ' '), value.end());
-                pSettingsMap[nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value()] = value;
+                pSettingsMap[theSettingValue] = value;
 
-                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value() << RESET << ":" << BOLDYELLOW
-                   << boost::any_cast<std::string>(pSettingsMap[nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value()]) << RESET << std::endl;
+                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << theSettingValue << RESET << ":" << BOLDYELLOW << boost::any_cast<std::string>(pSettingsMap[theSettingValue])
+                   << RESET << std::endl;
             }
             else
             {
-                pSettingsMap[nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value()] = convertAnyDouble(nSetting.first_child().value());
+                pSettingsMap[theSettingValue] = convertAnyDouble(nSetting.first_child().value());
 
-                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value() << RESET << ":" << BOLDYELLOW
-                   << boost::any_cast<double>(pSettingsMap[nSetting.attribute(COMMON_NAME_ATTRIBUTE_NAME).value()]) << RESET << std::endl;
+                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << theSettingValue << RESET << ":" << BOLDYELLOW << boost::any_cast<double>(pSettingsMap[theSettingValue]) << RESET
+                   << std::endl;
             }
         }
     }
@@ -1511,7 +1545,8 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
     if(frontEndType == FrontEndType::RD53A)
         theChip = cHybrid->addChipContainer(chipId, new RD53A(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
     else
-        theChip = cHybrid->addChipContainer(chipId, new RD53B(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+        theChip = cHybrid->addChipContainer(
+            chipId, new RD53B(frontEndType, cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
     theChip->setNumberOfChannels(static_cast<RD53*>(theChip)->getNRows(), static_cast<RD53*>(theChip)->getNCols());
 
     parseRD53Settings(theChipNode, theChip, os);
@@ -1586,8 +1621,10 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
     {
         if(theChip->getFrontEndType() == FrontEndType::RD53A)
             os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << RD53A_NODE_NAME << RESET << std::endl;
+        else if(theChip->getFrontEndType() == FrontEndType::RD53Bv1)
+            os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << RD53Bv1_NODE_NAME << RESET << std::endl;
         else
-            os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << RD53B_NODE_NAME << RESET << std::endl;
+            os << BOLDCYAN << "|\t|\t|----FrontEndType: " << BOLDYELLOW << RD53Bv2_NODE_NAME << RESET << std::endl;
 
         for(const pugi::xml_attribute& attr: cLocalChipSettings.attributes())
         {
@@ -1681,6 +1718,24 @@ void FileParser::parseCommunicationSettings(const std::string& pFilename, Commun
         retrieveMonitorParameters(theCommunicationSettingConfig.fDQMCommunication, COMMUNICATIONSETTINGS_DQM_NODE_NAME);
         retrieveMonitorParameters(theCommunicationSettingConfig.fMonitorDQMCommunication, COMMUNICATIONSETTINGS_MONITORDQM_NODE_NAME);
         retrieveMonitorParameters(theCommunicationSettingConfig.fPowerSupplyDQMCommunication, COMMUNICATIONSETTINGS_POWERSUPPLYCLIENT_NODE_NAME);
+    }
+}
+
+void FileParser::parseLpGBTphasesForBypass(pugi::xml_node lpgbtPhasesForBypassNode, Ph2_HwDescription::Hybrid* cHybrid, std::ostream& os)
+{
+    auto theCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+    for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
+    {
+        std::string    thePhyPortNodeName = std::string(LPGBT_PHASES_FOR_CIC_BYPASS_PHYPORT_NODE_NAME) + std::to_string(phyPort);
+        pugi::xml_node thePhyPortNode     = lpgbtPhasesForBypassNode.child(thePhyPortNodeName.c_str());
+        if(!thePhyPortNode) continue;
+        for(uint8_t stubLine = 0; stubLine < 4; ++stubLine)
+        {
+            std::string         theStubAttributeName = std::string(LPGBT_PHASES_FOR_CIC_BYPASS_LINE_ATTRIBUTE_NAME) + std::to_string(stubLine);
+            pugi::xml_attribute theStubAttribute     = thePhyPortNode.attribute(theStubAttributeName.c_str());
+            if(!theStubAttribute) continue;
+            theCic->setLpGBTphaseForCICbypass(phyPort, stubLine, convertAnyInt(theStubAttribute.value()));
+        }
     }
 }
 

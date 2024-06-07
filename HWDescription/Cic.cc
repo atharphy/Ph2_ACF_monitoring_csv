@@ -30,6 +30,7 @@ Cic::Cic(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string&
     configFileName = filename;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CIC2);
+    initializeLpGBTphasesForCICbypassMap();
 }
 
 // C'tors which take BeBoardId, FMCId, HybridId, CbcId
@@ -41,7 +42,28 @@ Cic::Cic(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
     configFileName = filename;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CIC2);
+    initializeLpGBTphasesForCICbypassMap();
 }
+
+void Cic::initializeLpGBTphasesForCICbypassMap()
+{
+    for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
+    {
+        for(uint8_t stubLine = 0; stubLine < 4; ++stubLine) { fLpGBTphasesForCICbypassMap[phyPort][stubLine] = 8; }
+    }
+}
+
+void Cic::setLpGBTphaseForCICbypass(uint8_t phyPort, uint8_t stubLine, uint8_t lpgbtPhase)
+{
+    if(phyPort >= 12 || stubLine >= 4)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] phyport or stubline outside the limits" << std::endl;
+        abort();
+    }
+    fLpGBTphasesForCICbypassMap[phyPort][stubLine] = lpgbtPhase;
+}
+
+uint8_t Cic::getLpGBTphaseForCICbypass(uint8_t phyPort, uint8_t stubLine) const { return fLpGBTphasesForCICbypassMap.at(phyPort).at(stubLine); }
 
 void Cic::initializeFreeRegisters()
 {
@@ -53,7 +75,7 @@ void Cic::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^scDllLocked[01]$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^scChannelLocked[0-5]$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^timingStatusBits$"), RegisterType::ReadOnly));
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^BX0_DEALY$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^BX0_DELAY$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^WA_DELAY\\d{2}$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^MASK_BLOCK[0-3]$"), RegisterType::Utility));
 }

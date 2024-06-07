@@ -122,6 +122,7 @@ class D19cFWInterface : public BeBoardFWInterface
     D19cDebugFWInterface*                getDebugInterface() { return fDebugInterface; }
     TriggerInterface*                    getTriggerInterface() { return fTriggerInterface; }
     L1ReadoutInterface*                  getL1ReadoutInterface() { return fL1ReadoutInterface; }
+    FastCommandInterface*                getFastCommandInterface() { return fFastCommandInterface; }
     FEConfigurationInterface*            getFEConfigurationInterface() { return fFEConfigurationInterface; }
     LinkInterface*                       getLinkInterface() { return fLinkInterface; }
     D19clpGBTSlowControlWorkerInterface* getlpGBTSlowControlInterface() { return flpGBTSlowControlWorkerInterface; }
@@ -336,7 +337,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // ##############################
     // # Pseudo Random Bit Sequence #
     // ##############################
-    double RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override { return 0; };
+    std::vector<double> RunBERtest(bool given_time, double frames_or_time, std::vector<std::pair<uint16_t, uint16_t>> hybrid_id_chip_lane, uint8_t frontendSpeed) override { return {}; };
 
     // ############################
     // # Read/Write Optical Group #

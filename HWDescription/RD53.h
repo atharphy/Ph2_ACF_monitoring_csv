@@ -49,16 +49,18 @@ const uint8_t PATTERN_CLOCK   = 0x00; // Start clock pattern
 // #####################
 namespace RD53EvtEncoder
 {
-const uint32_t CHIPGOOD    = 0x00000000; // Chip event status Good
-const uint32_t CHIPHEAD    = 0x00010000; // Chip event status Bad chip header
-const uint32_t CHIPID      = 0x00020000; // Chip event status Found conflicting chip ID
-const uint32_t CHIPPIX     = 0x00040000; // Chip event status Bad pixel row or column
-const uint32_t CHIPTOT     = 0x00080000; // Chip event status Invalid TOT value
-const uint32_t CHIPNOHIT   = 0x00100000; // Chip event status Hit data are missing
-const uint32_t CHIPFWERR   = 0x00200000; // Chip event status Firmware error
-const uint32_t CHIPNS_WAS0 = 0x00400000; // Chip event status new-stream bit was 0 in the first word of the event stream
-const uint32_t CHIPNS_WAS1 = 0x00800000; // Chip event status new-stream bit was 1 before the last word of the event stream
-const uint32_t CHIP_QROW   = 0x01000000; // Chip event status neighbor bit set for the first qrow
+const uint32_t CHIPGOOD          = 0x00000000; // Chip event status Good
+const uint32_t CHIPHEAD          = 0x00010000; // Chip event status Bad chip header
+const uint32_t CHIPID            = 0x00020000; // Chip event status Found conflicting chip ID
+const uint32_t CHIPPIX           = 0x00040000; // Chip event status Bad pixel row or column
+const uint32_t CHIPTOT           = 0x00080000; // Chip event status Invalid TOT value
+const uint32_t CHIPNOHIT         = 0x00100000; // Chip event status Hit data are missing
+const uint32_t CHIPFWERR         = 0x00200000; // Chip event status Firmware error
+const uint32_t CHIPNS_WAS0       = 0x00400000; // Chip event status new-stream bit was 0 in the first word of the event stream
+const uint32_t CHIPNS_WAS1       = 0x00800000; // Chip event status new-stream bit was 1 before the last word of the event stream
+const uint32_t CHIPQROW          = 0x01000000; // Chip event status neighbor bit set for the first qrow
+const uint32_t CHIPTRUNC_MAXHITS = 0x02000000; // Chip event status truncation occurred due to max number of hits reached per core
+const uint32_t CHIPTRUNC_TIMEOUT = 0x04000000; // Chip event status truncation occurred due to readout timeout
 } // namespace RD53EvtEncoder
 
 namespace Ph2_HwDescription
@@ -152,23 +154,31 @@ class RD53 : public ReadoutChip
     // ########################################
     struct FrontEnd
     {
-        const char*                    name;
-        const std::vector<const char*> thresholdRegs;
-        const char*                    gainReg;
-        const char*                    latencyReg;
-        const char*                    TDACGainReg;
-        const char*                    VDDDreadReg;
-        const char*                    VDDAreadReg;
-        size_t                         nLatencyBins2Span;
-        size_t                         nTDACvalues;
-        size_t                         maxToTvalue;
-        size_t                         splitToTvalue;
-        size_t                         nBitTrimDig;
-        size_t                         nBitTrimAna;
-        size_t                         colStart;
-        size_t                         colStop;
-        size_t                         VCalSleepTime; // [microseconds]
-        size_t                         AutoIncrementMask;
+        const char*                     name;
+        const std::vector<const char*>  thresholdRegs;
+        const char*                     gainReg;
+        const char*                     latencyReg;
+        const char*                     TDACGainReg;
+        const char*                     VDDDreadReg;
+        const char*                     VDDAreadReg;
+        size_t                          nLatencyBins2Span;
+        size_t                          nTDACvalues;
+        size_t                          maxToTvalue;
+        size_t                          splitToTvalue;
+        size_t                          nBitTrimDig;
+        size_t                          nBitTrimAna;
+        size_t                          colStart;
+        size_t                          colStop;
+        size_t                          VCalSleepTime; // [microseconds]
+        size_t                          AutoIncrementMask;
+        size_t                          broadcastChipId;
+        std::map<std::string, uint16_t> GlobalPulseConfMap;
+    };
+
+    struct SpecialRegInfo
+    {
+        std::string regName;
+        uint8_t     start; // Bit index at which the special register, i.e. field, starts
     };
 
     // ####################################
@@ -176,27 +186,31 @@ class RD53 : public ReadoutChip
     // ####################################
     LaneConfig laneConfig;
 
-    virtual size_t                   getNRows() const                                                                                                           = 0;
-    virtual size_t                   getNCols() const                                                                                                           = 0;
-    virtual size_t                   getMaxBCIDvalue() const                                                                                                    = 0;
-    virtual size_t                   getMaxTRIGIDvalue() const                                                                                                  = 0;
-    virtual std::vector<uint16_t>    getLaneUpInitSequence() const                                                                                              = 0;
-    virtual const DataFormatOptions& getDataFormatOptions()                                                                                                     = 0;
-    virtual const FrontEnd*          getFEtype(const size_t colStart, const size_t colStop) const                                                               = 0;
-    virtual uint32_t                 getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) const = 0;
-    virtual float                    VCal2Charge(float VCal, bool isNoise = false) const                                                                        = 0;
-    virtual float                    Charge2VCal(float Charge) const                                                                                            = 0;
-    virtual bool                     getUseGainDualSlope() const                                                                                                = 0;
+    virtual size_t                   getNRows() const                                                                                                     = 0;
+    virtual size_t                   getNCols() const                                                                                                     = 0;
+    virtual size_t                   getMaxBCIDvalue() const                                                                                              = 0;
+    virtual size_t                   getMaxTRIGIDvalue() const                                                                                            = 0;
+    virtual std::vector<uint16_t>    getLaneUpInitSequence() const                                                                                        = 0;
+    virtual const DataFormatOptions& getDataFormatOptions()                                                                                               = 0;
+    virtual const FrontEnd*          getFEtype(const size_t colStart = 0, const size_t colStop = 0)                                                       = 0;
+    virtual uint32_t                 getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_edge_width, bool cal_aux_mode, size_t cal_aux_delay) = 0;
+    virtual float                    VCal2Charge(float VCal, bool isNoise = false) const                                                                  = 0;
+    virtual float                    Charge2VCal(float Charge) const                                                                                      = 0;
+    virtual bool                     getUseGainDualSlope() const                                                                                          = 0;
 
     RD53() : ReadoutChip(0, 0, 0, 0, 0) {}
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
     RD53(const RD53&) = delete;
 
+    // #############################
+    // # Override member functions #
+    // #############################
     void              loadfRegMap(const std::string& fileName) override;
     std::stringstream getRegMapStream() override;
     uint32_t          getNumberOfChannels() const override;
     bool              isDACLocal(const std::string& regName) override;
     uint8_t           getNumberOfBits(const std::string& regName) override;
+    // #############################
 
     pixelMask& getPixelsMask() { return fPixelsMask; }
     pixelMask& getPixelsMaskDefault() { return fPixelsMaskDefault; }

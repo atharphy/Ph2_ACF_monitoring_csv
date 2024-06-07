@@ -2,6 +2,7 @@
 #include "HWInterface/CbcInterface.h"
 #include "HWInterface/D19cDebugFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19cL1ReadoutInterface.h"
 #include "HWInterface/ExceptionHandler.h"
 #include "HWInterface/TriggerInterface.h"
 #include "System/RegisterHelper.h"
@@ -25,8 +26,8 @@ void OTCICphaseAlignment::Initialise(void)
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CIC2, "PHY_PORT_CONFIG");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CIC2, "^scPhaseSelectB[0-3]i[0-5]$");
 
-    fNumberOfAlignmentIterations = findValueInSettings<double>("OTCICphaseAlignmentNumberOfAlignmentIterations", 100);
-    fMinLockingSuccessRate       = findValueInSettings<double>("OTCICphaseAlignmentMinLockingSuccessRate", 1.);
+    fNumberOfAlignmentIterations = findValueInSettings<double>("OTCICphaseAlignment_NumberOfAlignmentIterations", 100);
+    fMinLockingSuccessRate       = findValueInSettings<double>("OTCICphaseAlignment_MinLockingSuccessRate", 1.);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -85,6 +86,7 @@ void OTCICphaseAlignment::phaseAlignment()
 
     for(auto theBoard: *fDetectorContainer)
     {
+        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 100); // too low trigger rate does not work
         // all modules must be of the same type
         bool isPSmodule = theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
         // generate alignment pattern on all stub lines
@@ -301,8 +303,11 @@ void OTCICphaseAlignment::AlignAllCICinputs2S(BeBoard*            theBoard,
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
-    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", pNTriggers});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", 1});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_test_pulse", 0});
+    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_l1a", 1});
     cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     fBeBoardInterface->WriteBoardMultReg(theBoard, cRegVec);
 
@@ -326,6 +331,7 @@ void OTCICphaseAlignment::AlignAllCICinputs2S(BeBoard*            theBoard,
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
+        cInterface->getL1ReadoutInterface()->ResetReadout();
         cInterface->getTriggerInterface()->SendNTriggers(pNTriggers);
 
         for(auto theOpticalGroup: *theBoard)

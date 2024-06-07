@@ -121,7 +121,7 @@ bool DQMHistogramOTCICwordAlignment::fill(std::string& inputStream)
 
     if(theWordAlignmentDelayContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched OTCICwordAlignment WordAlignmentDelay!!!!\n";
+        // std::cout << "Matched OTCICwordAlignment WordAlignmentDelay!!!!\n";
         DetectorDataContainer theDetectorData =
             theWordAlignmentDelayContainerSerialization
                 .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>, EmptyContainer>(

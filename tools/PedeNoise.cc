@@ -19,7 +19,7 @@
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #endif
 
-std::string PedeNoise::fCalibrationDescription = "Measure noise and Pedestal/pulse peak, set threshold at 5 sigma from the pedestal and run occupancy measurement";
+std::string PedeNoise::fCalibrationDescription = "Measure noise and Pedestal/pulse peak";
 
 PedeNoise::PedeNoise() : Tool() {}
 
@@ -95,19 +95,19 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         if(cFrontEndType == FrontEndType::CBC3)
         {
             CBCChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(16, 2); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(16, 1, 2); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler);
         }
         else if(cFrontEndType == FrontEndType::SSA2)
         {
             SSAChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(1, NSSACHANNELS); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(1, 1, NSSACHANNELS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
         else if(cFrontEndType == FrontEndType::MPA2)
         {
             MPAChannelGroupHandler theChannelGroupHandler;
-            theChannelGroupHandler.setChannelGroupParameters(NMPAROWS, NSSACHANNELS); // 16*2*8
+            theChannelGroupHandler.setChannelGroupParameters(1, NMPAROWS, NSSACHANNELS); // 16*2*8
             setChannelGroupHandler(theChannelGroupHandler, cFrontEndType);
         }
     }
@@ -120,17 +120,17 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
     fPlotSCurves                 = findValueInSettings<double>("PlotSCurves", 0);
     fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
-    fPulseAmplitude              = findValueInSettings<double>("PedeNoisePulseAmplitude", 0);
-    fPulseAmplitudePix           = findValueInSettings<double>("PedeNoisePulseAmplitudePix", fPulseAmplitude);
+    fPulseAmplitude              = findValueInSettings<double>("PedeNoise_PulseAmplitude", 0);
+    fPulseAmplitudePix           = findValueInSettings<double>("PedeNoise_PulseAmplitudePix", fPulseAmplitude);
     std::cout << __PRETTY_FUNCTION__ << " fPulseAmplitudePix " << +fPulseAmplitudePix << std::endl;
     fPedeNoiseLimit          = findValueInSettings<double>("PedeNoiseLimit", 10); // NOT IN XML
     fPedeNoiseMask           = findValueInSettings<double>("PedeNoiseMask", 0);   // NOT IN XML
-    fPedeNoiseMaskUntrimmed  = findValueInSettings<double>("PedeNoiseMaskUntrimmed", 0);
-    fPedeNoiseUntrimmedLimit = findValueInSettings<double>("PedeNoiseUntrimmedLimit", 0.0);
+    fPedeNoiseMaskUntrimmed  = findValueInSettings<double>("PedeNoise_MaskUntrimmed", 0);
+    fPedeNoiseUntrimmedLimit = findValueInSettings<double>("PedeNoise_UntrimmedLimit", 0.0);
     fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
-    fUseFixRange             = findValueInSettings<double>("PedeNoiseUseFixRange", 0);
-    fMinThreshold            = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
-    fMaxThreshold            = findValueInSettings<double>("PedeNoiseMaxThreshold", 0);
+    fUseFixRange             = findValueInSettings<double>("PedeNoise_UseFixRange", 0);
+    fMinThreshold            = findValueInSettings<double>("PedeNoise_MinThreshold", 0);
+    fMaxThreshold            = findValueInSettings<double>("PedeNoise_MaxThreshold", 0);
     fNeventsForValidation    = findValueInSettings<double>("NeventsForValidation", 10000); // NOT IN XML
     fMaskingThreshold        = findValueInSettings<double>("MaskingThreshold", 0.001);     // NOT IN XML
     fPedeNoiseLatency        = findValueInSettings<double>("PedeNoiseLatency", 198);
@@ -235,7 +235,7 @@ void PedeNoise::sweepSCurves()
 
     if(fPulseAmplitude != 0 && originalAllChannelFlag && fWithCBC)
     {
-        this->SetTestAllChannels(false);
+        this->setTestAllChannels(false);
         LOG(INFO) << RED << "Cannot inject pulse for all channels, test in groups enabled. " << RESET;
     }
 
@@ -305,7 +305,7 @@ void PedeNoise::sweepSCurves()
     if(fWithMPA) LOG(INFO) << MAGENTA << "Sweep of Pixel S-curves will start at an average threshold of " << cPixelStartValue << RESET;
 
     measureSCurves(cStripStartValue, cPixelStartValue);
-    this->SetTestAllChannels(originalAllChannelFlag);
+    this->setTestAllChannels(originalAllChannelFlag);
     LOG(INFO) << BOLDBLUE << "Finished sweeping SCurves..." << RESET;
     return;
 }
@@ -339,11 +339,11 @@ void PedeNoise::Validate()
     bool originalAllChannelFlag = this->fAllChan;
 
     LOG(INFO) << "Setting all channels";
-    this->SetTestAllChannels(true);
+    this->setTestAllChannels(true);
     LOG(INFO) << "measuring with " << fNeventsForValidation << " events and " << fMaxNevents << " per burst";
     this->measureData(fNeventsForValidation, fMaxNevents);
     LOG(INFO) << "setting al channels v2";
-    this->SetTestAllChannels(originalAllChannelFlag);
+    this->setTestAllChannels(originalAllChannelFlag);
 #ifdef __USE_ROOT__
     fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
 #else
@@ -419,7 +419,7 @@ void PedeNoise::Validate()
 void PedeNoise::findPedestal(bool forceAllChannels)
 {
     bool originalAllChannelFlag = this->fAllChan;
-    if(forceAllChannels) this->SetTestAllChannels(true);
+    if(forceAllChannels) this->setTestAllChannels(true);
 
     // // figure  out if you should normalize or not
     uint8_t cNormalizationOrig = getNormalization();
@@ -432,7 +432,7 @@ void PedeNoise::findPedestal(bool forceAllChannels)
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
     this->bitWiseScan("Threshold", fEventsPerPoint, 0.56, fNEventsPerBurst);
-    if(forceAllChannels) this->SetTestAllChannels(originalAllChannelFlag);
+    if(forceAllChannels) this->setTestAllChannels(originalAllChannelFlag);
 
     uint8_t cNStripChips = 0, cNPixelChips = 0;
     for(auto cBoard: *fDetectorContainer)
@@ -476,8 +476,8 @@ void PedeNoise::findPedestal(bool forceAllChannels)
 void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartValue)
 {
     auto cChannels     = findValueInSettings<double>("NoiseMeasurementLimit", 1);
-    auto cLowerLimitTh = findValueInSettings<double>("PedeNoiseMinThreshold", 0);
-    auto cUpperLimitTh = findValueInSettings<double>("PedeNoiseMaxThreshold", 0);
+    auto cLowerLimitTh = findValueInSettings<double>("PedeNoise_MinThreshold", 0);
+    auto cUpperLimitTh = findValueInSettings<double>("PedeNoise_MaxThreshold", 0);
     if(fUseFixRange) LOG(INFO) << BOLDYELLOW << "Scan should be between " << cLowerLimitTh << " and " << cUpperLimitTh << " DAC units" << RESET;
 
     // adding limit to define what all one and all zero actually mean.. avoid waiting forever during scan!
@@ -1028,7 +1028,7 @@ void PedeNoise::Running()
     // HybridContainer::SetQueryFunction(myFunction);
     measureNoise();
     // HybridContainer::ResetQueryFunction();
-    Validate();
+    // Validate();
     LOG(INFO) << "Done with noise";
     Reset();
 }

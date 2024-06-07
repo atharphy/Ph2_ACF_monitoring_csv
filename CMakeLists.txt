@@ -90,9 +90,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # compiler options to avoid warnings promoted to errors
 
     set (GCC_NOERROR_FLAGS " -Wno-error=unused-result -Wno-error=deprecated-declarations -Wno-error=parentheses -Wno-error=misleading-indentation -Wno-error=unused-function -Wno-error=class-memaccess -Wno-error=implicit-fallthrough")
-    set (GCC_8_NOERROR_FLAGS "-Wno-error=catch-value -Wno-error=format-overflow -Wno-error=pedantic")
-    set (GCC_9_NOERROR_FLAGS "-Wno-error=deprecated-copy -Wno-error=int-in-bool-context")
-    set (GCC_10_NOERROR_FLAGS "-Wno-error=int-in-bool-context")
     set (GCC_12_NOERROR_FLAGS "-Wno-error=range-loop-construct -Wno-error=int-in-bool-context -Wno-error=nonnull")
 
     set(CMAKE_CXX_STANDARD $ENV{STDCXX} CACHE STRING "C++ version selection")
@@ -101,23 +98,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
       EXECUTE_PROCESS( COMMAND gcc -dumpfullversion OUTPUT_VARIABLE GCC_VERSION )
-      if(GCC_VERSION VERSION_LESS 7)
-        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_6_NOERROR_FLAGS}")
-      elseif(GCC_VERSION VERSION_LESS 8)
-        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_7_NOERROR_FLAGS}")
-      elseif(GCC_VERSION VERSION_LESS 9)
-        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_8_NOERROR_FLAGS}")
-      elseif(GCC_VERSION VERSION_LESS 10)
-        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_9_NOERROR_FLAGS}")
-      elseif(GCC_VERSION VERSION_LESS 11)
-        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_10_NOERROR_FLAGS}")
-      elseif(GCC_VERSION VERSION_LESS 14)
+      if(GCC_VERSION VERSION_LESS 14)
         set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} ${GCC_12_NOERROR_FLAGS}")
       endif()
-
-      if(GCC_VERSION VERSION_LESS 10.3)
-        set (GCC_NOERROR_FLAGS "${GCC_NOERROR_FLAGS} -Wno-error=deprecated-copy")
-      endif ()
     endif ()
 
     set (CMAKE_CXX_FLAGS "-O3 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
@@ -269,50 +252,53 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: [${BoldCyan}$ENV{PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
-    set (CMAKE_CXX_STANDARD 17)
+    # AMC13
+    # if(${CACTUS_AMC13_FOUND})
+    #     message(STATUS "    Enabling AMC13 component")
+    # endif(${CACTUS_AMC13_FOUND})
 
-    MESSAGE (STATUS "${CMAKE_CXX_FLAGS}")
+    # Antenna
+    # find_package(PH2_ANTENNA)
+    # if(PH2_ANTENNA_FOUND)
+    #     message(STATUS "    Building the Antenna components")
+    # endif(PH2_ANTENNA_FOUND)
 
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-    
+    # ZeroMQ
+    # find_package(ZMQ)
+    # if(ZMQ_FOUND)
+    #     find_package(PH2_USBINSTLIB)
+    #     if(PH2_USBINSTLIB_FOUND)
+    #     endif(PH2_USBINSTLIB_FOUND)
+    # endif(ZMQ_FOUND)
+
+    # EUDAQ
+    # if(${USE_EUDAQ})
+    #     set(USE_EUDAQ ON)
+    #     include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
+    #     set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
+    #     message(STATUS "EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}${Reset}")
+    # else(${USE_EUDAQ})
+    #     message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
+    # endif(${USE_EUDAQ})
+
+    # list(APPEND CMAKE_MODULE_PATH "${PH2_ACF_CMAKE_DIR}/cmake")
+
+    # find_package (CACTUS REQUIRED)
+    # if (CACTUS_FOUND)
+    #     message(STATUS "CACTUS FOUND: ${CACTUS_FOUND}")
+    # endif (CACTUS_FOUND)
+
     set(CompileForShep true)
     set(CompileForHerd false)
     set(NoDataShipping false)
 
-    # AMC13
-    if(${CACTUS_AMC13_FOUND})
-        message(STATUS "    Enabling AMC13 component")
-    endif(${CACTUS_AMC13_FOUND})
-
-    # Antenna
-    find_package(PH2_ANTENNA)
-    if(PH2_ANTENNA_FOUND)
-        message(STATUS "    Building the Antenna components")
-    endif(PH2_ANTENNA_FOUND)
-
-    # ZeroMQ
-    find_package(ZMQ)
-    if(ZMQ_FOUND)
-        find_package(PH2_USBINSTLIB)
-        if(PH2_USBINSTLIB_FOUND)
-        endif(PH2_USBINSTLIB_FOUND)
-    endif(ZMQ_FOUND)
-
-    # EUDAQ
-    if(${USE_EUDAQ})
-        set(USE_EUDAQ ON)
-        include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
-        set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
-        message(STATUS "EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}${Reset}")
-    else(${USE_EUDAQ})
-        message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
-    endif(${USE_EUDAQ})
-
+    set (CMAKE_CXX_STANDARD 17)
     cet_set_compiler_flags(
         EXTRA_FLAGS -DELPP_THREAD_SAFE
     )
 
-    message("--     ${BoldCyan}#### Done ####${Reset}")
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})    
+    include_directories(${CACTUS_INCLUDEDIR})
 
     add_subdirectory(tools)
     #add_subdirectory(ProductionToolsIT)

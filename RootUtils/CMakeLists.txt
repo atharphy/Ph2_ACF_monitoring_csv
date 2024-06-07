@@ -65,15 +65,11 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}ROOT UTILS${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/RootUtils/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    cet_set_compiler_flags(
-        EXTRA_FLAGS -Wno-reorder -Wl,--undefined
-    )
-
     cet_make(LIBRARY_NAME Ph2_RootUtils
             LIBRARIES
             pthread
             ${Boost_SYSTEM_LIBRARY}
-	    ROOT::Core
+	        ROOT::Core
     )
 
     install_headers()

@@ -16,13 +16,13 @@ LaneConfig::LaneConfig(bool                                   isPrimary,
                        const std::array<uint8_t, NCHIPLANES>& outputLanes,
                        const std::array<bool, NCHIPLANES>&    signleChannelInputLanes,
                        const std::array<bool, NCHIPLANES>&    dualChannelInputLanes)
-    : outputLaneMapping({0, 1, 2, 3}), inputLaneMapping({0, 1, 2, 3}), internalLanesEnabled({0, 0, 0, 0, 0}), nOutputLanes(1), masterLane(masterLane), isPrimary(isPrimary)
+    : outputLaneMapping({0, 1, 2, 3})
+    , inputLaneMapping({0, 1, 2, 3})
+    , internalLanesEnabled({0, 0, 0, 0, 0})
+    , nOutputLanes(std::count_if(outputLanes.begin(), outputLanes.end(), [](auto x) { return x > 0; }))
+    , masterLane(masterLane)
+    , isPrimary(isPrimary)
 {
-    // ################
-    // # nOutputLanes #
-    // ################
-    nOutputLanes = std::count_if(outputLanes.begin(), outputLanes.end(), [](auto x) { return x > 0; });
-
     // #####################
     // # outputLaneMapping #
     // #####################
@@ -275,7 +275,7 @@ std::stringstream RD53::getRegMapStream()
     for(const auto& it: fRegMap) fSetRegItem.insert({it.first, it.second});
 
     int cLineCounter = 0;
-    for(const auto& v: fSetRegItem)
+    for(const auto& reg: fSetRegItem)
     {
         while(fCommentMap.find(cLineCounter) != std::end(fCommentMap))
         {
@@ -285,16 +285,16 @@ std::stringstream RD53::getRegMapStream()
             cLineCounter++;
         }
 
-        theStream << v.first;
+        theStream << reg.first;
         for(auto j = 0u; j < Nspaces; j++) theStream << " ";
-        theStream.seekp(-(v.first.size() < Nspaces ? v.first.size() : Nspaces - 2), std::ios_base::cur);
-        theStream << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(v.second.fAddress);
-        for(auto j = 0u; j < 10 - (v.first.size() < Nspaces ? 0 : v.first.size() - Nspaces + 2); j++) theStream << " ";
-        theStream << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue); // Copy fValue in fDefValue
+        theStream.seekp(-(reg.first.size() < Nspaces ? reg.first.size() : Nspaces - 2), std::ios_base::cur);
+        theStream << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(reg.second.fAddress);
+        for(auto j = 0u; j < 10 - (reg.first.size() < Nspaces ? 0 : reg.first.size() - Nspaces + 2); j++) theStream << " ";
+        theStream << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(reg.second.fValue); // Copy fValue in fDefValue
         for(auto j = 0u; j < 18; j++) theStream << " ";
-        theStream << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(v.second.fValue);
+        theStream << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(reg.second.fValue);
         for(auto j = 0u; j < 29; j++) theStream << " ";
-        theStream << std::setfill('0') << std::setw(2) << std::dec << std::uppercase << int(v.second.fBitSize) << std::endl;
+        theStream << std::setfill('0') << std::setw(2) << std::dec << std::uppercase << int(reg.second.fBitSize) << std::endl;
 
         cLineCounter++;
     }

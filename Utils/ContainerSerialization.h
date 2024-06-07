@@ -8,6 +8,7 @@
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/DataContainer.h"
+#include "Utils/PacketHeader.h"
 #include "Utils/RD53Shared.h"
 #include "Utils/serialize_tuple.h"
 #include <boost/serialization/export.hpp>
@@ -54,6 +55,7 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<uint16_t, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, uint8_t>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, uint16_t>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, bool>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, std::string>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::string, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::string, std::string>)))
@@ -68,6 +70,7 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, T
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<double>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<float>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<uint16_t>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::vector<bool>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, (NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1)>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, (HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1)>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, 3 * (NCHANNELS + 1)>, EmptyContainer>)))
@@ -82,70 +85,20 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, NUMB
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS, 16>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<std::pair<uint16_t, uint16_t>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, 6>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<float, 6>>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, 4, 15>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<float, 4, 15>>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint8_t, 4>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint8_t, 4>>)))
 
 #include "Utils/Occupancy.h"
 #include <arpa/inet.h>
 #include <iostream>
 
-#define END_OF_TRANSMISSION_MESSAGE "DoneWithRun"
-
-class PacketHeader
-{
-  public:
-    PacketHeader()
-    {
-        for(uint8_t i = 0; i < SIZE; ++i) fPacketSize[i] = 0u;
-    };
-    ~PacketHeader(){};
-
-    uint8_t getPacketHeaderSize() { return SIZE; }
-
-    void addPacketHeader(std::string& thePacket)
-    {
-        uint64_t thePacketSize = thePacket.size() + SIZE;
-        setPacketSize(thePacketSize);
-        std::string packetString(&fPacketSize[0], SIZE);
-        thePacket.insert(0, packetString);
-    }
-
-    uint32_t getPacketSize(std::string& thePacket)
-    {
-        for(uint8_t i = 0; i < SIZE; ++i) fPacketSize[i] = thePacket[i];
-        return getPacketSize();
-    }
-
-    uint32_t getPacketSize(std::vector<char>& thePacket)
-    {
-        std::string theStringPacket(thePacket.begin(), thePacket.begin() + SIZE);
-        return getPacketSize(theStringPacket);
-    }
-
-  private:
-    static const uint8_t SIZE = 4;
-
-    void setPacketSize(uint64_t packetSize)
-    {
-        uint64_t maximumSize = 1 << (SIZE * 8 - 1);
-        if(packetSize >= maximumSize)
-        {
-            std::string outputMessage =
-                std::string(__PRETTY_FUNCTION__) + " ERROR: requested packet sizes = " + std::to_string(packetSize) + " is >= than " + std::to_string(maximumSize) + " are not allowed";
-            throw std::runtime_error(outputMessage);
-        }
-        uint32_t localPacketSize = htonl(packetSize);
-        for(uint8_t i = 0u; i < SIZE; ++i) fPacketSize[i] = ((localPacketSize >> (8u * i)) & 0xff);
-    }
-
-    uint32_t getPacketSize()
-    {
-        uint32_t localPacketSize = 0;
-        for(uint8_t i = 0; i < SIZE; ++i) localPacketSize += ((fPacketSize[i] & 0xff) << (8u * i));
-        return htonl(localPacketSize);
-    }
-
-    char fPacketSize[SIZE];
-};
+// #define END_OF_TRANSMISSION_MESSAGE "DoneWithRun"
 
 template <uint N>
 struct Serialize

@@ -40,7 +40,7 @@ void StubQuickCheck::Initialise()
 {
     // this is needed if you're going to use groups anywhere
     CBCChannelGroupHandler theChannelGroupHandler;
-    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    theChannelGroupHandler.setChannelGroupParameters(16, 1, 2);
     setChannelGroupHandler(theChannelGroupHandler);
 
 #ifdef __USE_ROOT__

@@ -19,8 +19,8 @@ void OTalignLpGBTinputs::Initialise(void)
     fRegisterHelper->takeSnapshot();
     fRegisterHelper->freeFrontEndRegister(FrontEndType::LpGBT, "^EPRX\\d{2}ChnCntr$");
 
-    fNumberOfAlignmentIterations = findValueInSettings<double>("OTalignLpGBTinputsNumberOfAlignmentIterations", 100);
-    fMinAlignmentSuccessRate     = findValueInSettings<double>("OTalignLpGBTinputsMinAlignmentSuccessRate", 0.99);
+    fNumberOfAlignmentIterations = findValueInSettings<double>("OTalignLpGBTinputs_NumberOfAlignmentIterations", 100);
+    fMinAlignmentSuccessRate     = findValueInSettings<double>("OTalignLpGBTinputs_MinAlignmentSuccessRate", 0.99);
 
     for(const auto cBoard: *fDetectorContainer)
     {

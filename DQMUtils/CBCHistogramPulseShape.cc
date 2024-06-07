@@ -30,9 +30,9 @@ void CBCHistogramPulseShape::book(TFile* theOutputFile, DetectorContainer& theDe
     fInitialLatency        = findValueInSettings<double>(pSettingsMap, "PulseShapeInitialLatency", 200);
     fFinalVcth             = findValueInSettings<double>(pSettingsMap, "PulseShapeFinalVcth", 600);
     fVcthStep              = findValueInSettings<double>(pSettingsMap, "PulseShapeVCthStep", 10);
-    fInitialDelay          = findValueInSettings<double>(pSettingsMap, "PulseShapeInitialDelay", 0);
-    fFinalDelay            = findValueInSettings<double>(pSettingsMap, "PulseShapeFinalDelay", 25);
-    fDelayStep             = findValueInSettings<double>(pSettingsMap, "PulseShapeDelayStep", 1);
+    fInitialDelay          = findValueInSettings<double>(pSettingsMap, "PulseShape_InitialDelay", 0);
+    fFinalDelay            = findValueInSettings<double>(pSettingsMap, "PulseShape_FinalDelay", 25);
+    fDelayStep             = findValueInSettings<double>(pSettingsMap, "PulseShape_DelayStep", 1);
     fPlotPulseShapeSCurves = findValueInSettings<double>(pSettingsMap, "PlotPulseShapeSCurves", 0);
 
     uint32_t numberOfChannels = theDetectorStructure.getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject()->size();
@@ -217,7 +217,7 @@ bool CBCHistogramPulseShape::fill(std::string& inputStream)
 
     if(theThresholdAndNoiseSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched CBCPulseShape ThresholdAndNoise!!!!!\n";
+        // std::cout << "Matched CBCPulseShape ThresholdAndNoise!!!!!\n";
         uint16_t              delay;
         DetectorDataContainer fDetectorData =
             theThresholdAndNoiseSerialization.deserializeHybridContainer<ThresholdAndNoise, ThresholdAndNoise, ThresholdAndNoise, uint16_t>(fDetectorContainer, delay);
@@ -226,7 +226,7 @@ bool CBCHistogramPulseShape::fill(std::string& inputStream)
     }
     else if(theSCurveSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched CBCPulseShape SCurve!!!!!\n";
+        // std::cout << "Matched CBCPulseShape SCurve!!!!!\n";
         uint16_t              threshold, latencyDAC, delayDAC;
         DetectorDataContainer fDetectorData =
             theSCurveSerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy, uint16_t, uint16_t, uint16_t>(fDetectorContainer, threshold, latencyDAC, delayDAC);

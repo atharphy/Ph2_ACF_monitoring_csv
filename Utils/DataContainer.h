@@ -220,7 +220,7 @@ class Summary : public SummaryBase
     {
         theArchive.template register_type<Summary<S, C>>();
         theArchive& boost::serialization::base_object<SummaryBase>(*this);
-        theArchive& theSummary_;
+        theArchive & theSummary_;
     }
 };
 
@@ -331,7 +331,7 @@ class BaseDataContainer
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive& summary_;
+        theArchive & summary_;
     }
 };
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(BaseDataContainer)
@@ -593,11 +593,11 @@ class ChipDataContainer
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive& id_;
-        theArchive& nOfRows_;
-        theArchive& nOfCols_;
+        theArchive & id_;
+        theArchive & nOfRows_;
+        theArchive & nOfCols_;
         theArchive& boost::serialization::base_object<BaseDataContainer>(*this);
-        theArchive& container_;
+        theArchive & container_;
     }
 };
 
@@ -664,7 +664,7 @@ class OpticalGroupDataContainer : public DataContainer<HybridDataContainer>
         {
             return DataContainer<HybridDataContainer>::addObject(id, new HybridDataContainer(id));
         }
-        LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
+        LOG(WARNING) << GREEN << "Object Id already present: " << BOLDYELLOW << id << RESET;
         return DataContainer<HybridDataContainer>::getObject(id);
     }
 
@@ -708,7 +708,7 @@ class BoardDataContainer : public DataContainer<OpticalGroupDataContainer>
         {
             return DataContainer<OpticalGroupDataContainer>::addObject(id, new OpticalGroupDataContainer(id));
         }
-        LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
+        LOG(WARNING) << GREEN << "Object Id already present: " << BOLDYELLOW << id << RESET;
         return DataContainer<OpticalGroupDataContainer>::getObject(id);
     }
 
@@ -756,7 +756,7 @@ class DetectorDataContainer : public DataContainer<BoardDataContainer>
         {
             return DataContainer<BoardDataContainer>::addObject(id, new BoardDataContainer(id));
         }
-        LOG(WARNING) << BOLDRED << "Object Id alreay present: " << id << RESET;
+        LOG(WARNING) << GREEN << "Object Id already present: " << BOLDYELLOW << id << RESET;
         return DataContainer<BoardDataContainer>::getObject(id);
     }
 

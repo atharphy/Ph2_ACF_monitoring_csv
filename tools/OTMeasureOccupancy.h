@@ -34,16 +34,23 @@ class OTMeasureOccupancy : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
-  private:
-    void prepareOccupancyMeasurement2S();
 
-    uint32_t       fNumberOfEvents{10000};
-    uint8_t        fCBCtestPulseValue{218};
+  protected:
+    void measureChannelOccupancy(size_t iteration = 0);
+    void prepareOccupancyMeasurement2S();
+    void prepareOccupancyMeasurementPS();
+    void applyThresholdOffset();
+
+    uint32_t fNumberOfEvents{10000};
+    float    fCBCtestPulseValue{1.};
+    float    fSSAtestPulseValue{1.};
+    float    fMPAtestPulseValue{1.};
+    bool     fForceChannelGroup{false};
+    int      fThresholdOffset{0};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
-    DQMHistogramOTMeasureOccupancy fDQMHistogramOTMeasureOccupancy;
+    DQMHistogramOTMeasureOccupancy* fDQMHistogramOTMeasureOccupancy{nullptr};
 #endif
 };
 

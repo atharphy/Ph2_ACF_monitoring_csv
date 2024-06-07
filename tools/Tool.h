@@ -137,9 +137,9 @@ class Tool : public Ph2_System::SystemController
     // Enable test pulse
     void enableTestPulse(bool enableTP);
     // Enable commissioning loops and Test Pulse
-    void setFWTestPulse();
+    void setFWTestPulse(bool inject);
     // Make test groups for everything Test pulse or Calibration
-    void SetTestAllChannels(bool pAllChan) { fAllChan = pAllChan; }
+    void setTestAllChannels(bool pAllChan) { fAllChan = pAllChan; }
     void SetTestPulse(bool pTestPulse) { fTestPulse = pTestPulse; }
     void SetHybridBroadcast(bool pDoBroadcast) { fDoHybridBroadcast = pDoBroadcast; }
     void SetBoardBroadcast(bool pDoBroadcast) { fDoBoardBroadcast = pDoBroadcast; }

@@ -32,7 +32,7 @@ bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pa
     return writeGood;
 }
 
-uint16_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode) { return RD53lpGBTInterface::ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress); }
+int32_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode) { return RD53lpGBTInterface::ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress); }
 
 bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify)
 {
@@ -81,6 +81,7 @@ uint16_t RD53lpGBTInterface::ReadReg(Chip* pChip, uint16_t pAddress)
 
 bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSize)
 {
+    const std::string filePathCSV = "${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv"; // @CONST@
     this->setBoard(pChip->getBeBoardId());
 
     // #####################
@@ -184,16 +185,16 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     // #######################################
     // # Properly configure lpGBT to use ADC #
     // #######################################
-    std::string   ConfigFilePath = static_cast<lpGBT*>(pChip)->getConfigFilePath();
-    std::ifstream stream(ConfigFilePath);
+    std::string   configFilePathCSV = static_cast<lpGBT*>(pChip)->getConfigFilePath();
+    std::ifstream stream(configFilePathCSV);
     if(!stream)
     {
-        LOG(WARNING) << BOLDRED << "The LpGBT ADC calibraton file name " << BOLDYELLOW << ConfigFilePath << BOLDRED << " does not exist" << RESET;
-        ConfigFilePath = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv");
-        LOG(WARNING) << BOLDBLUE << "\t--> Proceeding with the hardcoded path: " << BOLDYELLOW << ConfigFilePath << RESET;
+        LOG(WARNING) << BOLDRED << "The LpGBT ADC calibraton file name " << BOLDYELLOW << configFilePathCSV << BOLDRED << " does not exist" << RESET;
+        configFilePathCSV = expandEnvironmentVariables(filePathCSV);
+        LOG(WARNING) << BOLDBLUE << "\t--> Proceeding with the hardcoded path: " << BOLDYELLOW << configFilePathCSV << RESET;
     }
 
-    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), pChip->getId(), ConfigFilePath);
+    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), this->ReadChipID(static_cast<lpGBT*>(pChip), 1), configFilePathCSV);
     lpGBTInterface::EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
     lpGBTInterface::TuneVrefControlLib(static_cast<lpGBT*>(pChip));
     lpGBTInterface::AutoTuneVref(static_cast<lpGBT*>(pChip));
@@ -249,8 +250,7 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const 
     this->ConfigurePhShifter(pChip, {0, 1, 2, 3}, cFreq, cDriveStr, cEnFTune, cDelay);
 
     static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
-    for(const auto cHybrid: *pOpticalGroup)
-        for(const auto cChip: *cHybrid) { static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip); }
+    static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(pBoard);
 
     this->PhaseTrainRx(pChip, static_cast<lpGBT*>(pChip)->getRxGroups());
 
@@ -275,8 +275,7 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const 
 
     this->PhaseTrainRx(pChip, static_cast<lpGBT*>(pChip)->getRxGroups());
 
-    for(const auto cHybrid: *pOpticalGroup)
-        for(const auto cChip: *cHybrid) static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
+    static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(pBoard);
 
     // #####################################
     // # Set back Rx groups to fixed phase #
@@ -325,7 +324,7 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                 this->ConfigureRxPhase(pChip, cGroup, cChannel, phase);
 
                 static_cast<RD53Interface*>(pReadoutChipInterface)->InitRD53Downlink(pBoard);
-                static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(cChip);
+                static_cast<RD53Interface*>(pReadoutChipInterface)->StartPRBSpattern(pBoard);
 
                 const double result = this->RunBERtest(pChip, cGroup, cChannel, given_time, frames_or_time, (uint8_t)frontendSpeed);
 
@@ -353,7 +352,7 @@ bool RD53lpGBTInterface::ExternalPhaseAlignRx(Chip*                 pChip,
                     phaseGap  = bestPhaseEnd - bestPhaseStart;
                 }
 
-                static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(cChip);
+                static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(pBoard);
             }
 
             if(bestBERtest == 0)

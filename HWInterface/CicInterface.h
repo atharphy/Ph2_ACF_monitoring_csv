@@ -66,7 +66,7 @@ class CicInterface : public ChipInterface
      * \param pChip
      * \param pRegNode : Node of the register to read
      */
-    uint16_t                                      ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
+    int32_t                                       ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
     std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
 
     uint8_t ReadFCMDEdge(Ph2_HwDescription::Chip* pChip);
@@ -76,6 +76,10 @@ class CicInterface : public ChipInterface
     bool                        SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pPhaseTap);
     std::pair<uint8_t, uint8_t> fromChipL1ToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId);
     std::pair<uint8_t, uint8_t> fromChipStubToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId, uint8_t stubLine);
+    std::pair<uint8_t, uint8_t> fromPhyPortAndChanneltoChipIdAndLine(Ph2_HwDescription::Chip* pChip, uint8_t phyPort, uint8_t channel);
+    uint8_t                     fromChipIdToCICFEid(Ph2_HwDescription::Chip* pChip, uint8_t chipId);
+    uint8_t                     fromCICFEidToChipId(Ph2_HwDescription::Chip* pChip, uint8_t cicFEid);
+
     GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> getAllOptimalTaps(Ph2_HwDescription::Chip* pChip);
     GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>    getLineLocked(Ph2_HwDescription::Chip* pChip);
     bool                        writeAllTaps(Ph2_HwDescription::Chip* pChip, GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> cicInputTaps);
@@ -91,6 +95,9 @@ class CicInterface : public ChipInterface
     bool                        CheckFastCommandLock(Ph2_HwDescription::Chip* pChip);
     bool                        ConfigureAlignmentPatterns(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
     bool                        AutomatedWordAlignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
+    bool                        PrepareForAutomatedBX0Alignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns, uint8_t pLine, uint8_t pFEChip);
+    bool                        AutomatedBX0Alignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pAlignmentPatterns);
+    bool                        CheckAutomatedBX0Alignment(Ph2_HwDescription::Chip* pChip);
     bool                        ConfigureBx0Alignment(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> pPatterns, uint8_t pFEId = 0, uint8_t pLineId = 0);
     std::pair<bool, uint8_t>    CheckBx0Alignment(Ph2_HwDescription::Chip* pChip); // success , delay
     bool                        CheckReSync(Ph2_HwDescription::Chip* pChip);
@@ -143,7 +150,9 @@ class CicInterface : public ChipInterface
     std::vector<uint8_t>                                                              getI2CStatus() { return fI2CStatus; }
     void                                                                              setWithlpGBT(uint8_t pIsWithLpGBT) {}
     GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1> retrieveExternalWordAlignmentValues(Ph2_HwDescription::Chip* pChip);
-    bool ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip, const GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>& theWordAlignmentValues);
+    bool     ConfigureExternalWordAlignment(Ph2_HwDescription::Chip* pChip, const GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>& theWordAlignmentValues);
+    uint16_t retrieveExternalBX0AlignmentValue(Ph2_HwDescription::Chip* pChip);
+    bool     ConfigureExternalBX0Delay(Ph2_HwDescription::Chip* pChip, const uint16_t theBX0AlignmentValues);
 
     std::vector<uint8_t> getMapping(Ph2_HwDescription::Chip* pChip)
     {

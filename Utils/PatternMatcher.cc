@@ -1,4 +1,5 @@
 #include "Utils/PatternMatcher.h"
+#include <bitset>
 #include <iostream>
 
 PatternMatcher::PatternMatcher() {}
@@ -7,6 +8,7 @@ PatternMatcher::~PatternMatcher() {}
 
 void PatternMatcher::addToPattern(uint32_t thePattern, uint32_t thePatternMask, uint8_t thePatternBitLenght)
 {
+    fPatternNumberOfMaskedBits = 0;
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << std::hex << thePattern << " " << thePatternMask << std::dec << " " << +thePatternBitLenght << std::endl;
 
     uint8_t numberOfBitsInWord = (sizeof(uint32_t)) * 8;
@@ -60,6 +62,24 @@ bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector)
     return true;
 }
 
+uint32_t PatternMatcher::countMatchingBits(const std::vector<uint32_t>& theWordVector) const
+{
+    uint32_t numberOfMatchingBits = 0;
+
+    for(size_t index = 0; index <= fPatternAndMaskVector.size(); ++index)
+    {
+        if(index >= theWordVector.size()) break;
+        uint32_t        patternAndWordXOR = theWordVector[index] ^ fPatternAndMaskVector[index].first;
+        std::bitset<32> patternAndWordXORBitset(patternAndWordXOR);
+        std::bitset<32> maskBitset(fPatternAndMaskVector[index].second);
+        patternAndWordXORBitset.flip();
+        auto patternAndWordXORBitsetMasked = patternAndWordXORBitset & maskBitset;
+        numberOfMatchingBits += patternAndWordXORBitsetMasked.count();
+    }
+
+    return numberOfMatchingBits;
+}
+
 std::vector<uint32_t> PatternMatcher::getPattern() const
 {
     std::vector<uint32_t> thePatternVector;
@@ -94,4 +114,23 @@ void PatternMatcher::maskStubFor2Skickoff()
     }
 
     for(uint8_t patternIndex = 0; patternIndex < fPatternAndMaskVector.size(); ++patternIndex) { fPatternAndMaskVector[patternIndex].second &= theMaskVector[patternIndex]; }
+}
+
+uint32_t PatternMatcher::getNumberOfMaskedBits()
+{
+    if(fPatternNumberOfMaskedBits != 0) return fPatternNumberOfMaskedBits;
+
+    for(auto thePatterAndMask: fPatternAndMaskVector)
+    {
+        std::bitset<32> theMaskBitset(thePatterAndMask.second);
+        fPatternNumberOfMaskedBits += theMaskBitset.count();
+    }
+
+    return fPatternNumberOfMaskedBits;
+}
+
+void PatternMatcher::clear()
+{
+    fPatternNumberOfBits = 0;
+    fPatternAndMaskVector.clear();
 }

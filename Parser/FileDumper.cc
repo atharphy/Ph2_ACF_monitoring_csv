@@ -17,7 +17,6 @@ using namespace Ph2_HwDescription;
 
 FileDumper::FileDumper(const std::string& outputDirectory)
 {
-    fOutputDirectory = std::string(getenv("PH2ACF_BASE_DIR")) + "/" + outputDirectory + "/";
     // Overwrite if GUI is involved
     if(std::getenv("GIPHT_RESULT_FOLDER"))
     {
@@ -25,6 +24,7 @@ FileDumper::FileDumper(const std::string& outputDirectory)
         fOutputDirectory = std::getenv("GIPHT_RESULT_FOLDER");
         LOG(INFO) << "Use " << fOutputDirectory << " for file dump" << RESET;
     }
+    else if(!std::getenv("OTSDAQ_RESULTS_FOLDER")) { fOutputDirectory = std::string(getenv("PH2ACF_BASE_DIR")) + "/" + outputDirectory + "/"; }
 }
 
 FileDumper::~FileDumper() {}
@@ -204,6 +204,24 @@ void FileDumper::dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Hybri
     if(cWithSSA) appendReadoutChipConfigFilePath(SSA2_NODE_NAME);
 
     for(auto chip: *theHybrid) { dumpChipConfigurationFile(theHybridNode, chip); }
+
+    dumpLpGBTphasesForBypass(theHybridNode, theHybrid);
+}
+
+void FileDumper::dumpLpGBTphasesForBypass(pugi::xml_node theMotherNode, Ph2_HwDescription::Hybrid* theHybridContainer)
+{
+    auto           theCic                = static_cast<OuterTrackerHybrid*>(theHybridContainer)->fCic;
+    pugi::xml_node theLpGBTphaseMainNode = theMotherNode.append_child(LPGBT_PHASES_FOR_CIC_BYPASS_MAIN_NODE_NAME);
+    for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
+    {
+        std::string    thePhyPortNodeName = std::string(LPGBT_PHASES_FOR_CIC_BYPASS_PHYPORT_NODE_NAME) + std::to_string(phyPort);
+        pugi::xml_node thePhyPortNode     = theLpGBTphaseMainNode.append_child(thePhyPortNodeName.c_str());
+        for(uint8_t stubLine = 0; stubLine < 4; ++stubLine)
+        {
+            std::string theStubAttributeName                              = std::string(LPGBT_PHASES_FOR_CIC_BYPASS_LINE_ATTRIBUTE_NAME) + std::to_string(stubLine);
+            thePhyPortNode.append_attribute(theStubAttributeName.c_str()) = std::to_string(+theCic->getLpGBTphaseForCICbypass(phyPort, stubLine)).c_str();
+        }
+    }
 }
 
 void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, ReadoutChip* theReadoutChip)
@@ -232,9 +250,15 @@ void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, Readout
     theReadoutChipNode.append_attribute(COMMON_ENABLE_ATTRIBUTE_NAME)     = "1";
     theReadoutChipNode.append_attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME) = theFileName.c_str();
     theReadoutChipNode.append_attribute(CHIP_NOISE_ATTRIBUTE_NAME)        = std::to_string(theReadoutChip->getAverageNoise()).c_str();
+    if(theReadoutChip->getFrontEndType() == FrontEndType::SSA2 || theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
+    {
+        std::map<std::string, float> theADCmap                          = theReadoutChip->getADCCalibrationMap();
+        theReadoutChipNode.append_attribute(CHIP_SLOPE_ATTRIBUTE_NAME)  = std::to_string(theADCmap["ADC_SLOPE"]).c_str();
+        theReadoutChipNode.append_attribute(CHIP_OFFSET_ATTRIBUTE_NAME) = std::to_string(theADCmap["ADC_OFFSET"]).c_str();
+    }
 }
 
-void FileDumper::dumpSettings(pugi::xml_node theMotherNode, const std::unordered_map<std::string, boost::any>& theSettingMap)
+void FileDumper::dumpSettings(pugi::xml_node theMotherNode, const std::map<std::string, boost::any>& theSettingMap)
 {
     pugi::xml_node theSettingMainNode = theMotherNode.append_child(SETTINGS_NODE_NAME);
     for(const auto& theSetting: theSettingMap)

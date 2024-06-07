@@ -1,12 +1,12 @@
 /*!
-        \file                DQMHistogramOTCICphaseAlignmentForBypass.h
-        \brief               DQM class for OTCICphaseAlignmentForBypass
-        \author              Fabio Ravera
-        \date                22/03/24
+        \file                DQMHistogramOTCICBX0Alignment.h
+        \brief               DQM class for OTCICBX0Alignment
+        \author              Irene Zoi
+        \date                22/02/24
 */
 
-#ifndef DQMHistogramOTCICphaseAlignmentForBypass_h_
-#define DQMHistogramOTCICphaseAlignmentForBypass_h_
+#ifndef DQMHistogramOTCICBX0Alignment_h_
+#define DQMHistogramOTCICBX0Alignment_h_
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -14,21 +14,21 @@
 class TFile;
 
 /*!
- * \class DQMHistogramOTCICphaseAlignmentForBypass
- * \brief Class for OTCICphaseAlignmentForBypass monitoring histograms
+ * \class DQMHistogramOTCICBX0Alignment
+ * \brief Class for OTCICBX0Alignment monitoring histograms
  */
-class DQMHistogramOTCICphaseAlignmentForBypass : public DQMHistogramBase
+class DQMHistogramOTCICBX0Alignment : public DQMHistogramBase
 {
   public:
     /*!
      * constructor
      */
-    DQMHistogramOTCICphaseAlignmentForBypass();
+    DQMHistogramOTCICBX0Alignment();
 
     /*!
      * destructor
      */
-    ~DQMHistogramOTCICphaseAlignmentForBypass();
+    ~DQMHistogramOTCICBX0Alignment();
 
     /*!
      * \brief Book histograms
@@ -55,7 +55,12 @@ class DQMHistogramOTCICphaseAlignmentForBypass : public DQMHistogramBase
      */
     void reset(void) override;
 
+    void fillBX0AlignmentDelay(DetectorDataContainer& theBX0AlignmentDelayContainer);
+    void fillBX0AlignmentDelayVsRetimePix(DetectorDataContainer& theBX0AlignmentDelayContainer);
+
   private:
-    DetectorContainer* fDetectorContainer;
+    DetectorContainer*    fDetectorContainer;
+    DetectorDataContainer fBX0AlignmentDelayHistogramContainer;
+    DetectorDataContainer fBX0AlignmentDelayVsRetimePixHistogramContainer;
 };
 #endif

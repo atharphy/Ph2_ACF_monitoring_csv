@@ -34,11 +34,11 @@ namespace RD53FWconstants
 const uint8_t  NLANE_HYBRID         = 4;      // Number of lanes per hybrid
 const uint8_t  HEADEAR_WRTCMD       = 0xFF;   // Header of chip write command sequence
 const uint8_t  NBIT_FWVER           = 16;     // Number of bits for the firmware version
+const uint16_t NBIT_SLOWCMD_FIFO    = 16;     // Slow command FIFO depth 65.536, i.e. 16 bits (in terms of 32-bit words)
+const uint16_t NBIT_DATA_FIFO       = 27;     // Data FIFO depth 134.217.728, i.e. 27 bits (in terms of 32-bit words)
+const uint8_t  AURORA_SPEED         = 0;      // 0 = 1.28 Gbps, 1 = 640 Mbps
 const uint8_t  IPBUS_FASTDURATION   = 1;      // Duration of a fast command in terms of 40 MHz clk cycles
-const uint8_t  AURORA_SPEED         = 0;      // 0 = 1.28 Gbps, 1 = 640 Mbps, 2 = 320 Mbps
-const uint32_t NBIT_SLOWCMD_FIFO    = 16;     // Slow command FIFO depth 65.536, i.e. 16 bits (in terms of 32-bit words)
-const uint32_t NBIT_DATA_FIFO       = 27;     // Data FIFO depth 134.217.728, i.e. 27 bits (in terms of 32-bit words)
-const uint32_t EVENT_STREAM_TIMEOUT = 0xFFFF; // Event stream timeout
+const uint16_t EVENT_STREAM_TIMEOUT = 0xFFFF; // Event stream timeout
 
 enum ReadoutSpeed : uint8_t
 {
@@ -74,11 +74,11 @@ class RD53FWInterface : public BeBoardFWInterface
     void Pause() override;
     void Resume() override;
 
-    double   RunBERtest(bool given_time, double frames_or_time, uint16_t hybrid_id, uint16_t chip_id, uint8_t frontendSpeed) override;
-    void     ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true) override;
-    uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
-    void     ChipReset() override;
-    void     ChipReSync() override;
+    std::vector<double> RunBERtest(bool given_time, double frames_or_time, std::vector<std::pair<uint16_t, uint16_t>> hybrid_id_chip_lane, uint8_t frontendSpeed) override;
+    void                ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true) override;
+    uint32_t            ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
+    void                ChipReset() override;
+    void                ChipReSync() override;
 
     void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
     void SetOptoLinkVersion(uint8_t version) override;
@@ -226,6 +226,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void     ConfigureDIO5(const Ph2_HwDescription::BeBoard* pBoard, DIO5Config* config);
     void     SendDIO5Cfg(const DIO5Config* config);
     void     SendBoardCommandWithStrobe(const std::string& cmdReg);
+    void     ToggleRegister(const std::string& cmdReg, bool do1and0 = true);
     uint32_t GetBoardEnabledChips(const Ph2_HwDescription::BeBoard* pBoard, bool primariesOnly = false);
     uint32_t GetBoardEnabledHybrids(const Ph2_HwDescription::BeBoard* pBoard);
 

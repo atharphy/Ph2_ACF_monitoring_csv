@@ -23,7 +23,11 @@ OTalignBoardDataWord::~OTalignBoardDataWord() {}
 void OTalignBoardDataWord::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
+<<<<<<< HEAD
     fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.bitslip_Link[0-9A-F]_hybrid[01]");
+=======
+    fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl");
+>>>>>>> f3c2a216316e60cae68e4468356a1ea4d3a228c2
 
     // need to free bitslip when will be accessible
     // free the registers in case any

@@ -25,7 +25,10 @@ void OTverifyCICdataWord::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fNumberOfIterations = findValueInSettings<double>("OTverifyCICdataWordNumberOfIterations", 1000);
+    fNumberOfIterations = findValueInSettings<double>("OTverifyCICdataWord_NumberOfIterations", 1000);
+    fIsKickoff          = findValueInSettings<double>("isKickoff", 0) > 0;
+
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -65,8 +68,6 @@ void OTverifyCICdataWord::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTverifyCICdataWord::runIntegrityTest()
 {
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);
-
     LOG(INFO) << BOLDYELLOW << "OTverifyCICdataWord::runIntegrityTest ... start integrity test" << RESET;
     auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
@@ -103,7 +104,6 @@ void OTverifyCICdataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterface*
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
     cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
     cVecReg.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
-    cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
     cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
     fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
 
@@ -371,7 +371,6 @@ float OTverifyCICdataWord::injectAndMatch2SstubPatterns(ReadoutChip*            
                                                         std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector)
 {
     size_t numberOfLines      = 5;
-    bool   isKickoff          = true;
     float  matchingEfficiency = 0;
     fReadoutChipInterface->MaskAllChannels(theChip, true);
     static_cast<CbcInterface*>(fReadoutChipInterface)->injectStubs(theChip, stubSeedAndBendingVector);
@@ -424,7 +423,7 @@ float OTverifyCICdataWord::injectAndMatch2SstubPatterns(ReadoutChip*            
     // padding 0s
     thePattern.addToPattern(0x0, 0xF, 4);
 
-    if(isKickoff && theChip->getHybridId() % 2 == 0) thePattern.maskStubFor2Skickoff();
+    if(fIsKickoff && theChip->getHybridId() % 2 == 0) thePattern.maskStubFor2Skickoff();
 
     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
     {

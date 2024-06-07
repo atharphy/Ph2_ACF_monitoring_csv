@@ -420,6 +420,16 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>> ECVLinkAlignmentOT::Ch
     bool cAligned1 = L1WordAlignment(pOpticalGroup, fL1Debug, 1); // If one line is not aligned it is false for both lines
     ret.push_back(std::make_pair(0, std::make_pair(6, cAligned0)));
     ret.push_back(std::make_pair(1, std::make_pair(6, cAligned1)));
+    int hybridCount = 0;
+    for(auto cHybrid: *pOpticalGroup)
+    {
+        if(hybridCount == 0)
+            ret.push_back(std::make_pair(cHybrid->getId(), std::make_pair(6, cAligned0)));
+        else
+            ret.push_back(std::make_pair(cHybrid->getId(), std::make_pair(6, cAligned1)));
+        hybridCount++;
+    }
+
     return ret;
 }
 
@@ -572,8 +582,10 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> ECVLinkAlignmentOT::L
         {
             std::string l1adata;
 
-            std::vector<uint32_t> l1adatawords = cDebugInterface->L1ADebug(1, false);
-            for(auto word: l1adatawords)
+            std::vector<uint32_t> l1adatawords                = cDebugInterface->L1ADebug(1, false);
+            uint8_t               numberOfBytesInSinglePacket = getNumberOfBytesInSinglePacket(pOpticalGroup);
+            auto                  orderedLineOutputVector     = reorderPattern(l1adatawords, numberOfBytesInSinglePacket);
+            for(auto word: orderedLineOutputVector)
             {
                 std::bitset<32> bits(word);
                 std::string     binaryWordLine = bits.to_string();
@@ -585,6 +597,7 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> ECVLinkAlignmentOT::L
                 LOG(INFO) << "L1A debug Hybrid " << +cHybrid->getId() << " iteration " << i << RESET;
                 LOG(INFO) << l1adata << RESET;
             }
+
             std::size_t     found   = l1adata.find("111111111111111111111111111");
             std::bitset<32> pattern = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) ? 0xAD55AAB5 : 0xAAAAAAAA;
             if(found != std::string::npos && (1600 - found) > (250 + 32))
@@ -748,4 +761,18 @@ void ECVLinkAlignmentOT::writeObjects()
     this->SaveResults();
     fDQMHistogrammer.process();
 #endif
+}
+bool ECVLinkAlignmentOT::isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
+{
+    uint32_t header                  = 0x0ffffffe;
+    uint32_t headerMask              = 0xffffffff;
+    auto     orderedLineOutputVector = reorderPattern(theWordVector, numberOfBytesInSinglePacket);
+
+    std::pair<bool, size_t> isFoundAndWhere = matchPattern(orderedLineOutputVector, numberOfBytesInSinglePacket, header, headerMask);
+    return isFoundAndWhere.first;
+}
+
+uint8_t ECVLinkAlignmentOT::getNumberOfBytesInSinglePacket(const OpticalGroup* pOpticalGroup)
+{
+    return (static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(pOpticalGroup->flpGBT) == 10) ? 2 : 1;
 }

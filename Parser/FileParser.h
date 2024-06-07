@@ -24,9 +24,9 @@
 #include "pugixml.hpp"
 #include <boost/any.hpp>
 #include <iostream>
+#include <map>
 #include <stdlib.h>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 /*!
@@ -40,8 +40,8 @@ class RegManager;
 }
 namespace Ph2_Parser
 {
-using BeBoardVec  = std::vector<Ph2_HwDescription::BeBoard*>;    /*!< Vector of Board pointers */
-using SettingsMap = std::unordered_map<std::string, boost::any>; /*!< Maps the settings */
+using BeBoardVec  = std::vector<Ph2_HwDescription::BeBoard*>; /*!< Vector of Board pointers */
+using SettingsMap = std::map<std::string, boost::any>;        /*!< Maps the settings */
 
 /*!
  * \class FileParser
@@ -90,6 +90,8 @@ class FileParser
     void parseMPA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os);
     //
     void parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, Ph2_HwDescription::lpGBT* plpGBT, std::ostream& os);
+
+    void parseLpGBTphasesForBypass(pugi::xml_node lpgbtPhasesForBypassNode, Ph2_HwDescription::Hybrid* cHybrid, std::ostream& os);
 
     // ########################
     // # RD53 specific parser #

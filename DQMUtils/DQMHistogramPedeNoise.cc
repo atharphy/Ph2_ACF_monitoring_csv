@@ -211,7 +211,7 @@ bool DQMHistogramPedeNoise::fill(std::string& inputStream)
 
     if(theSCurveSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched PedeNoise SCurve!!!!!\n";
+        // std::cout << "Matched PedeNoise SCurve!!!!!\n";
         uint16_t              cStripValue, cPixelValue;
         DetectorDataContainer theDetectorData = theSCurveSerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy>(fDetectorContainer, cStripValue, cPixelValue);
         fillSCurvePlots(cStripValue, cPixelValue, theDetectorData);
@@ -219,14 +219,14 @@ bool DQMHistogramPedeNoise::fill(std::string& inputStream)
     }
     if(theThresholdAndNoiseSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched PedeNoise Threshold And Noise!!!!!\n";
+        // std::cout << "Matched PedeNoise Threshold And Noise!!!!!\n";
         DetectorDataContainer theDetectorData = theThresholdAndNoiseSerialization.deserializeHybridContainer<ThresholdAndNoise, ThresholdAndNoise, ThresholdAndNoise>(fDetectorContainer);
         fillPedestalAndNoisePlots(theDetectorData);
         return true;
     }
     if(theValidationSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched PedeNoise Validation!!!!!\n";
+        // std::cout << "Matched PedeNoise Validation!!!!!\n";
         DetectorDataContainer theDetectorData = theValidationSerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy>(fDetectorContainer);
         fillValidationPlots(theDetectorData);
         return true;
@@ -899,7 +899,7 @@ void DQMHistogramPedeNoise::fitSCurves()
                             cFit->SetParameter(1, cChannelNoise);
 
                             // Fit
-                            cChannelSCurve->Fit(cFit, "RQ+0");
+                            cChannelSCurve->Fit(cFit, "RQ");
 
                             theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThreshold      = cFit->GetParameter(0);
                             theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoise          = cFit->GetParameter(1);
@@ -912,5 +912,62 @@ void DQMHistogramPedeNoise::fitSCurves()
         }
     }
 
+    clearPedestalAndNoisePlots();
     fillPedestalAndNoisePlots(fThresholdAndNoiseContainer);
+}
+
+//========================================================================================================================
+void DQMHistogramPedeNoise::clearPedestalAndNoisePlots()
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        size_t boardId = cBoard->getId();
+        for(auto cOpticalGroup: *cBoard)
+        {
+            size_t opticalGroupId = cOpticalGroup->getId();
+            bool   is2Smodule     = (cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S);
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                size_t hybridId = cHybrid->getId();
+
+                fDetectorHybridNoiseHistograms.getHybrid(boardId, opticalGroupId, hybridId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+                fDetectorHybridStripNoiseHistograms.getHybrid(boardId, opticalGroupId, hybridId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+
+                if(is2Smodule)
+                {
+                    fDetectorHybridStripNoiseEvenHistograms.getHybrid(boardId, opticalGroupId, hybridId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+                    fDetectorHybridStripNoiseOddHistograms.getHybrid(boardId, opticalGroupId, hybridId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+                }
+                else { fDetectorHybridPixelNoiseHistograms.getHybrid(boardId, opticalGroupId, hybridId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset(); }
+
+                for(auto cChip: *cHybrid)
+                {
+                    size_t       chipId      = cChip->getId();
+                    FrontEndType theChipType = cChip->getFrontEndType();
+                    if(theChipType == FrontEndType::CBC3 || theChipType == FrontEndType::SSA2)
+                    {
+                        fDetectorChipStripPedestalHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+                        fDetectorChannelStripPedestalHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+                        fDetectorChipStripNoiseHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+                        fDetectorChannelStripNoiseHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+                    }
+
+                    if(theChipType == FrontEndType::CBC3)
+                    {
+                        fDetectorChannelStripNoiseEvenHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+                        fDetectorChannelStripNoiseOddHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+                    }
+
+                    if(theChipType == FrontEndType::MPA2)
+                    {
+                        fDetectorChipPixelPedestalHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+                        fDetectorChannelPixelPedestalHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+                        fDetectorChipPixelNoiseHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+                        fDetectorChannelPixelNoiseHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH1F>>().fTheHistogram->Reset();
+                        fDetectorChannel2DPixelNoiseHistograms.getChip(boardId, opticalGroupId, hybridId, chipId)->getSummary<HistContainer<TH2F>>().fTheHistogram->Reset();
+                    }
+                }
+            }
+        }
+    }
 }

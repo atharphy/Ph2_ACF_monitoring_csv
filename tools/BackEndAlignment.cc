@@ -19,7 +19,7 @@ void BackEndAlignment::Initialise()
     fSuccess = false;
     // this is needed if you're going to use groups anywhere
     CBCChannelGroupHandler theChannelGroupHandler;
-    theChannelGroupHandler.setChannelGroupParameters(16, 2);
+    theChannelGroupHandler.setChannelGroupParameters(16, 1, 2);
     setChannelGroupHandler(theChannelGroupHandler);
     // prepare common OTTool
     Prepare();

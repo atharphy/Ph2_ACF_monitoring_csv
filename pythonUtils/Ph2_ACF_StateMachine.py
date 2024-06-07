@@ -192,6 +192,7 @@ class StateMachine(object):
 
     def state_ERROR(self):
         print("An error occurred")
+        print(self.errorMessage_)
         self.status_ = "DONE"
         self.calibrationResult_ = "FAILED"
 

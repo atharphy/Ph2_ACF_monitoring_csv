@@ -103,7 +103,7 @@ bool DQMHistogramPSBiasCal::fill(std::string& inputStream)
     ContainerSerialization theDACSerialization("PSBiasCalVrefDac");
     if(theDACSerialization.attachDeserializer(inputStream))
     {
-        LOG(DEBUG) << BOLDMAGENTA << "Matched Vref DAC!!!!!" << RESET;
+        // LOG(DEBUG) << BOLDMAGENTA << "Matched Vref DAC!!!!!" << RESET;
         DetectorDataContainer theVREFDACData =
             theDACSerialization.deserializeBoardContainer<std::pair<uint32_t, float>, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
 
@@ -114,7 +114,7 @@ bool DQMHistogramPSBiasCal::fill(std::string& inputStream)
     ContainerSerialization theADCSlopeSerialization("PSBiasCalADCSlope");
     if(theADCSlopeSerialization.attachDeserializer(inputStream))
     {
-        LOG(DEBUG) << BOLDMAGENTA << "Matched ADC slope!!!!!" << RESET;
+        // LOG(DEBUG) << BOLDMAGENTA << "Matched ADC slope!!!!!" << RESET;
         DetectorDataContainer theADCSlopeData = theADCSlopeSerialization.deserializeBoardContainer<ADCSlope, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
 
         fillSlopePlots(theADCSlopeData);
@@ -124,7 +124,7 @@ bool DQMHistogramPSBiasCal::fill(std::string& inputStream)
     ContainerSerialization theAVDDSerialization("PSBiasCalAVDD");
     if(theAVDDSerialization.attachDeserializer(inputStream))
     {
-        LOG(DEBUG) << BOLDMAGENTA << "Matched AVDD!!!!!" << RESET;
+        // LOG(DEBUG) << BOLDMAGENTA << "Matched AVDD!!!!!" << RESET;
         DetectorDataContainer theAVDDData = theAVDDSerialization.deserializeBoardContainer<std::pair<uint32_t, float>, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
 
         fillVDDPlots(theAVDDData, true);
@@ -133,7 +133,7 @@ bool DQMHistogramPSBiasCal::fill(std::string& inputStream)
     ContainerSerialization theDVDDSerialization("PSBiasCalDVDD");
     if(theDVDDSerialization.attachDeserializer(inputStream))
     {
-        LOG(DEBUG) << BOLDMAGENTA << "Matched DVDD!!!!!" << RESET;
+        // LOG(DEBUG) << BOLDMAGENTA << "Matched DVDD!!!!!" << RESET;
         DetectorDataContainer theDVDDData = theDVDDSerialization.deserializeBoardContainer<std::pair<uint32_t, float>, EmptyContainer, std::string, EmptyContainer, EmptyContainer>(fDetectorContainer);
 
         fillVDDPlots(theDVDDData, false);
