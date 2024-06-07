@@ -52,6 +52,7 @@ class OTMPAtoCICecv : public Tool
 
     uint8_t  fShiftRegisterPattern{0xAA};
     uint32_t fNumberOfIterations{1000};
+    std::vector<float> fListOfMPAslvsCurrents{0, 4, 7};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
