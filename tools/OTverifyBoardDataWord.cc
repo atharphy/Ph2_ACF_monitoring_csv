@@ -126,13 +126,8 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterf
                 {
                     if(isStubPatternMatched(lineOutputVector[lineIndex], numberOfBytesInSinglePacket))
                         ++theHybridPatternMatchingEfficiency[lineIndex + 1];
-<<<<<<< HEAD
-                    else
-                        LOG(DEBUG) << BOLDRED << "Error on stub line " << lineIndex + 1 << " occurred in iteration number " << +iteration << RESET;
-=======
                     else if(!(fIsKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)))
                         LOG(ERROR) << BOLDRED << "Error on stub line " << lineIndex + 1 << " occurred in iteration number " << +iteration << RESET;
->>>>>>> f3c2a216316e60cae68e4468356a1ea4d3a228c2
                 }
             }
         }

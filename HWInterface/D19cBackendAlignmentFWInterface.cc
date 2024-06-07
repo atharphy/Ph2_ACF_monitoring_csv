@@ -168,13 +168,13 @@ void D19cBackendAlignmentFWInterface::SendCommand(std::string pCmdToTuner)
                    << +fAlignerObject.fType << " Tuner mode set to " << +fLineConfiguration.fMode << RESET;
 
     fTheRegManager->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", fAlignerObject.fCommand);
-    
+
     std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
 }
 void D19cBackendAlignmentFWInterface::GetReply(std::string pCmdToTuner)
 {
     fAlignerObject.fReply = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.phase_tuning_reply");
-    
+
     if(pCmdToTuner == "ReturnConfig")
     {
         std::map<std::string, int> cCnfgMap = (fAlignerObject.fOptical == 1) ? fTunerCnfgBitMap_Optical : fTunerCnfgBitMap_Electrical;

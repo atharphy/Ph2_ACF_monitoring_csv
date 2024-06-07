@@ -23,11 +23,7 @@ OTalignBoardDataWord::~OTalignBoardDataWord() {}
 void OTalignBoardDataWord::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
-<<<<<<< HEAD
-    fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.bitslip_Link[0-9A-F]_hybrid[01]");
-=======
     fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl");
->>>>>>> f3c2a216316e60cae68e4468356a1ea4d3a228c2
 
     // need to free bitslip when will be accessible
     // free the registers in case any
@@ -152,7 +148,7 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
         for(size_t hybridId = 0; hybridId < 2; ++hybridId)
         {
             std::stringstream registerNameStream;
-            registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.bitslip_Link"  << std::uppercase << linkNumber << "_hybrid" << std::dec << hybridId;
+            registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.bitslip_Link" << std::uppercase << linkNumber << "_hybrid" << std::dec << hybridId;
             alignedBitslipRegisters.push_back({registerNameStream.str(), 0xFFFFFFFF});
         }
     }
@@ -160,9 +156,10 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
     // Reading all bitslip registers
     fBeBoardInterface->ReadBoardMultReg(theBoard, alignedBitslipRegisters);
 
-
     // Set MSB to 1 to use values from bitslip registers
-    std::for_each(alignedBitslipRegisters.begin(), alignedBitslipRegisters.end(), [](std::pair<std::string, uint32_t> &registerNameAndValue) { registerNameAndValue.second = registerNameAndValue.second | 0x80000000; });
+    std::for_each(alignedBitslipRegisters.begin(),
+                  alignedBitslipRegisters.end(),
+                  [](std::pair<std::string, uint32_t>& registerNameAndValue) { registerNameAndValue.second = registerNameAndValue.second | 0x80000000; });
 
     // Updating bitslip registers with MSB set to 1
     fBeBoardInterface->WriteBoardMultReg(theBoard, alignedBitslipRegisters);

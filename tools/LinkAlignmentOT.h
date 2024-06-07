@@ -77,13 +77,7 @@ class LinkAlignmentOT : public OTTool
     bool PhaseAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool WordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pDisableUnsresponsiveHybrids = true);
     bool AlignStubPackage(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-<<<<<<< HEAD
-    bool AlignStubPackage(Ph2_HwDescription::BeBoard* pBoard);
-    bool AlignStubPackageSarah(Ph2_HwDescription::BeBoard* pBoard);
-    void AlignStubPackageLea(Ph2_HwDescription::BeBoard* pBoard);
-=======
     void AlignStubPackage(Ph2_HwDescription::BeBoard* pBoard);
->>>>>>> f3c2a216316e60cae68e4468356a1ea4d3a228c2
     bool Align();
 
   private:

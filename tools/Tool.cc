@@ -198,16 +198,15 @@ void Tool::Start(const StartInfo& theStartInfo)
 //     wakeUp.notify_one();
 // }
 
-
 void Tool::readBitslipRegs()
-{   
+{
     std::vector<std::pair<std::string, uint32_t>> alignedBitslipRegisters;
     for(size_t linkNumber = 0; linkNumber < 16; ++linkNumber)
     {
         for(size_t hybridId = 0; hybridId < 2; ++hybridId)
         {
             std::stringstream registerNameStream;
-            registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.bitslip_Link"  << std::uppercase << linkNumber << "_hybrid" << hybridId;
+            registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.bitslip_Link" << std::uppercase << linkNumber << "_hybrid" << hybridId;
             alignedBitslipRegisters.push_back({registerNameStream.str(), 0xFFFFFFFF});
         }
     }
@@ -217,10 +216,9 @@ void Tool::readBitslipRegs()
 
     for(const auto& registerNameAndValue: alignedBitslipRegisters)
     {
-        std::cout<< "Reading  " << registerNameAndValue.first << " = 0x" << std::hex << registerNameAndValue.second << std::dec << std::endl;
+        std::cout << "Reading  " << registerNameAndValue.first << " = 0x" << std::hex << registerNameAndValue.second << std::dec << std::endl;
     }
 }
-
 
 void Tool::Stop()
 {

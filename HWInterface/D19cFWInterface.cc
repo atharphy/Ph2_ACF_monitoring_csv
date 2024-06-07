@@ -635,10 +635,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     {
         for(uint32_t lineId = 0; lineId < 7; lineId++)
         {
-            uint32_t command =  0x20002000 | (hybridId << 16) | (lineId << 20);
+            uint32_t command = 0x20002000 | (hybridId << 16) | (lineId << 20);
             cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command});
         }
-
     }
     cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0xFFF50002});
 

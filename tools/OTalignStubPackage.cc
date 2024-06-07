@@ -22,10 +22,6 @@ void OTalignStubPackage::Initialise(void)
     fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
     fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9");
     fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11");
-<<<<<<< HEAD
-    // free the registers in case any
-=======
->>>>>>> f3c2a216316e60cae68e4468356a1ea4d3a228c2
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -71,28 +67,7 @@ void OTalignStubPackage::AlignStubPackage()
     uint16_t numberOfClockCyclesAfterInitialReset             = 100; // safety margin to avoid roll over
     uint16_t numberOfClockCyclesBetweenTwoConsecutiveTriggers = clockFrequency / triggerFrequency;
 
-<<<<<<< HEAD
-bool OTalignStubPackage::AlignStubPackageSingleHybrid(BeBoard* pBoard)
-{
-    size_t cTriggerMult  = 0;
-    size_t cDelayAfterTP = 300;
-    // set board and get interface
-    fBeBoardInterface->setBoard(pBoard->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-    // make sure you're only sending one trigger at a time here
-    LOG(INFO) << GREEN << "Trying to align CIC stub decoder in the back-end" << RESET;
-    // sparsification of
-    bool cSparsified = pBoard->getSparsification();
-    // disable FEs for all hybrids
-    if(cSparsified)
-        LOG(INFO) << BOLDMAGENTA << "OTalignStubPackage::AlignStubPackage Sparsification on " << RESET;
-    else
-        LOG(INFO) << BOLDMAGENTA << "OTalignStubPackage::AlignStubPackage Sparsification off " << RESET;
-
-    for(auto cOpticalGroup: *pBoard)
-=======
     if(numberOfClockCyclesBetweenTwoConsecutiveTriggers != float(clockFrequency / float(triggerFrequency)))
->>>>>>> f3c2a216316e60cae68e4468356a1ea4d3a228c2
     {
         std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Error: numberOfClockCyclesBetweenTwoConsecutiveTriggers must be an integer! Aborting..." << std::endl;
         abort();
@@ -330,9 +305,9 @@ void OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
     }
     LOG(INFO) << BOLDBLUE << "LinkAlignmentOT::AlignStubPackage setting hybrid enable register to " << std::bitset<32>(cNewMask) << RESET;
 
-    bool    cSkip       = false;
+    bool cSkip = false;
     // Two final delay variables according to the registers
-    uint32_t cFinalDelayOGs_link0_link9 = 0;
+    uint32_t cFinalDelayOGs_link0_link9   = 0;
     uint32_t cFinalDelayOGs_link10_link11 = 0;
     if(!cSkip)
     {
@@ -341,13 +316,15 @@ void OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
         {
             // Get register name dependent of OG
             std::string cRegName;
-            if( cOpticalGroup->getId() < 10 ) cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9";
-            else cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11";
+            if(cOpticalGroup->getId() < 10)
+                cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9";
+            else
+                cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11";
 
             // gethybrid IDs
             std::vector<uint8_t>                    cHybridIds(0);
             std::map<uint8_t, std::vector<uint8_t>> cHybridIdsMap;
-            auto cIter = cHybridIdsMap.find(cOpticalGroup->getId());
+            auto                                    cIter = cHybridIdsMap.find(cOpticalGroup->getId());
             if(cIter == cHybridIdsMap.end())
             {
                 std::vector<uint8_t> cDummy;
@@ -365,7 +342,7 @@ void OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
             }
 
             // unique ids for each hybrid
-            bool cCorrectDelay = false;
+            bool    cCorrectDelay = false;
             uint8_t cFinalDelayOG = 0;
             // now try and find correct package delay
             uint16_t cMaxBxCounter = 3564;
@@ -373,8 +350,7 @@ void OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
 
             LOG(DEBUG) << cMaxBxCounter << RESET;
             size_t cAttempt = 0;
-            do
-            {
+            do {
                 LOG(INFO) << BOLDMAGENTA << "Package delay alignment attempt#" << +cAttempt << RESET;
                 for(uint8_t cPackageDelay = 0; cPackageDelay < 8; cPackageDelay++)
                 {
@@ -383,11 +359,13 @@ void OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
                     LOG(INFO) << BOLDMAGENTA << "Trying a stub package delay set to " << +cPackageDelay << ".. check BxIds in SW" << RESET;
                     // Get register value according to OG and write it to the register
                     uint32_t cRegValue;
-                    if( cOpticalGroup->getId() < 10 ) cRegValue = (cPackageDelay << cOpticalGroup->getId()%10*3) + cFinalDelayOGs_link0_link9;
-                    else cRegValue = (cPackageDelay << cOpticalGroup->getId()%10*3) + cFinalDelayOGs_link10_link11;
-                     
+                    if(cOpticalGroup->getId() < 10)
+                        cRegValue = (cPackageDelay << cOpticalGroup->getId() % 10 * 3) + cFinalDelayOGs_link0_link9;
+                    else
+                        cRegValue = (cPackageDelay << cOpticalGroup->getId() % 10 * 3) + cFinalDelayOGs_link10_link11;
+
                     LOG(INFO) << BOLDYELLOW << "OG#" << cOpticalGroup->getId() << "\t.. Package delay of " << +cPackageDelay << " -- reg value " << std::bitset<32>(cRegValue) << RESET;
-                    fBeBoardInterface->WriteBoardReg(pBoard, cRegName, cRegValue );
+                    fBeBoardInterface->WriteBoardReg(pBoard, cRegName, cRegValue);
                     // fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cPackageDelay);
                     cInterface->Bx0Alignment();
 
@@ -427,8 +405,10 @@ void OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
                             auto& cBxIdsFirst  = cBxIds[cIter.second[0]];
                             auto& cBxIdsSecond = cBxIds[cIter.second[1]];
                             cSyncThisLink      = (cBxIdsFirst == cBxIdsSecond);
-                            if(cSyncThisLink) LOG(INFO) << BOLDGREEN << "Sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
-                            else LOG(INFO) << BOLDRED << "No Sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
+                            if(cSyncThisLink)
+                                LOG(INFO) << BOLDGREEN << "Sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
+                            else
+                                LOG(INFO) << BOLDRED << "No Sync on Link#" << +cIter.first << " between Hybrid#" << +cIter.second[0] << " and Hybrid#" << +cIter.second[1] << RESET;
                         }
                         // if in sync.. add first hybrid id to list
                         if(cSyncThisLink) { cIdsToCompare.push_back(cIter.second[0]); }
@@ -453,7 +433,9 @@ void OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
 
                                 uint8_t cMatchFound = (cBxIds[cIdFirst] == cBxIds[cIdSecond]);
                                 if(cMatchFound)
-                                { LOG(INFO) << BOLDGREEN << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " are identical.. next will check the difference" << RESET; }
+                                {
+                                    LOG(INFO) << BOLDGREEN << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " are identical.. next will check the difference" << RESET;
+                                }
                                 else
                                     LOG(INFO) << BOLDRED << "\t\t..BxIds from Hybrid#" << +cIdFirst << " and " << +cIdSecond << " DO NOT match.. " << RESET;
                                 cMatchesFound.push_back(cMatchFound);
@@ -497,7 +479,9 @@ void OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
                                         cNRollOvers += ((cPreviousBxId >= 2500) && (cPreviousBxId < cMaxBxCounter)) && (cBxId < cPreviousBxId) ? 1 : 0;
                                         cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxId % cMaxBxCounter) - cBxDifference;
                                         if(cBxId > (int)cDelayAfterTP)
-                                        { LOG(INFO) << BOLDGREEN << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << " [ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET; }
+                                        {
+                                            LOG(INFO) << BOLDGREEN << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << " [ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET;
+                                        }
                                         else
                                             LOG(INFO) << BOLDRED << "\t\t\t\t.. Diff#" << cCounter << " : " << cBxDifference << " [ BxID = " << cBxIds[cIdToCheck][cCounter] << " ]" << RESET;
                                         cBxDifferences.push_back(cBxDifference);
@@ -522,13 +506,15 @@ void OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
                         {
                             LOG(INFO) << BOLDGREEN << "All hybrids match for a package delay of " << +cPackageDelay << RESET;
                             cCorrectDelay = true;
-                            cFinalDelayOG   = cPackageDelay;
-                            if( cOpticalGroup->getId() < 10 ) cFinalDelayOGs_link0_link9 = cRegValue;
-                            else cFinalDelayOGs_link10_link11 = cRegValue;
+                            cFinalDelayOG = cPackageDelay;
+                            if(cOpticalGroup->getId() < 10)
+                                cFinalDelayOGs_link0_link9 = cRegValue;
+                            else
+                                cFinalDelayOGs_link10_link11 = cRegValue;
                         }
                         else
                             LOG(INFO) << BOLDRED << "For a package delay of " << +cPackageDelay << " found " << +cNFound << "/" << cMatchesFound.size()
-                                    << " pairs of hybrids with a constant difference in BxIds" << RESET;
+                                      << " pairs of hybrids with a constant difference in BxIds" << RESET;
                     } // Ids are synchronous across each link
                     else
                         LOG(INFO) << BOLDRED << "For a package delay of " << +cPackageDelay << " DE-SYNC in one of the links..." << RESET;
@@ -536,9 +522,11 @@ void OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
                 cAttempt++;
             } while(cAttempt < 1 && !cCorrectDelay);
             LOG(INFO) << BOLDGREEN << "Optimal package delay of OG#" << cOpticalGroup->getId() << " is: " << +cFinalDelayOG << RESET;
-            if( cOpticalGroup->getId() < 10 ) LOG(INFO) << BOLDGREEN << "Optimal package delay all OG until OG#" << cOpticalGroup->getId() << " is: " << std::bitset<32>(cFinalDelayOGs_link0_link9) << RESET;
-            else LOG(INFO) << BOLDGREEN << "Optimal package delay all OG until OG#" << cOpticalGroup->getId() << " is: " << std::bitset<32>(cFinalDelayOGs_link10_link11) << RESET;
-            
+            if(cOpticalGroup->getId() < 10)
+                LOG(INFO) << BOLDGREEN << "Optimal package delay all OG until OG#" << cOpticalGroup->getId() << " is: " << std::bitset<32>(cFinalDelayOGs_link0_link9) << RESET;
+            else
+                LOG(INFO) << BOLDGREEN << "Optimal package delay all OG until OG#" << cOpticalGroup->getId() << " is: " << std::bitset<32>(cFinalDelayOGs_link10_link11) << RESET;
+
         } // OG
     }
     // set everything back to original values .. except for the trigger source
@@ -572,8 +560,8 @@ void OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
     // and check
     // make sure you do this with internal triggers
     ReadNEvents(pBoard, 10);
-    const std::vector<Event*>& cEvents = this->GetEvents();
-    int cEventCount = 0;
+    const std::vector<Event*>& cEvents     = this->GetEvents();
+    int                        cEventCount = 0;
     for(auto& cEvent: cEvents)
     {
         for(auto cOpticalGroup: *pBoard)
@@ -581,10 +569,7 @@ void OTalignStubPackage::AlignStubPackage(BeBoard* pBoard)
             for(auto cHybrid: *cOpticalGroup)
             {
                 auto cBx = (int)cEvent->BxId(cHybrid->getId());
-                LOG(INFO) << BOLDGREEN << "Event#" << cEventCount <<
-                " Link#" << +cOpticalGroup->getId() <<
-                " Hybrid#" << +cHybrid->getId() <<
-                " BxId " << cBx << RESET;
+                LOG(INFO) << BOLDGREEN << "Event#" << cEventCount << " Link#" << +cOpticalGroup->getId() << " Hybrid#" << +cHybrid->getId() << " BxId " << cBx << RESET;
             }
         }
         cEventCount++;

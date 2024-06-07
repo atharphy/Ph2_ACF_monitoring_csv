@@ -114,22 +114,6 @@ class BeamTestCheck : public OTTool
     std::map<uint16_t, DetectorDataContainer*> fSCurveOccupancyMap;
     ContainerRecycleBin<Occupancy>             fRecycleBin;
 
-<<<<<<< HEAD
-    void PrepareForInternal(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLimitTriggers = 0);
-    void PrepareForExternalTP(Ph2_HwDescription::BeBoard* pBoard);
-    void PrepareForTP(Ph2_HwDescription::BeBoard* pBoard);
-    void PrepareForExternal(Ph2_HwDescription::BeBoard* pBoard);
-    void PrepareForTLU(Ph2_HwDescription::BeBoard* pBoard);
-    void ScanLatency(Ph2_HwDescription::BeBoard* pBoard, uint8_t pContinuousReadout);
-    void ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
-    void UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
-    void ProcessEvents(Ph2_HwDescription::BeBoard* pBoard);
-    void Count(const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pTriggerId, uint8_t pFillCorrelations = 0, uint8_t pPrintOut = 0);
-    void Validate();
-    std::string GetStubLatencyRegName(int pOGId);
-    void SetStubLatencyOG(BeBoard* pBoard, int pOGId, int pStubLatency);
-    unsigned GetBitsFromStubLatency(uint32_t pStubLatency, uint8_t pOGId);
-=======
     void        PrepareForInternal(Ph2_HwDescription::BeBoard* pBoard, uint8_t pLimitTriggers = 0);
     void        PrepareForExternalTP(Ph2_HwDescription::BeBoard* pBoard);
     void        PrepareForTP(Ph2_HwDescription::BeBoard* pBoard);
@@ -144,7 +128,6 @@ class BeamTestCheck : public OTTool
     std::string GetStubLatencyRegName(int pOGId);
     void        SetStubLatencyOG(BeBoard* pBoard, int pOGId, int pStubLatency);
     unsigned    GetBitsFromStubLatency(uint32_t pStubLatency, uint8_t pOGId);
->>>>>>> f3c2a216316e60cae68e4468356a1ea4d3a228c2
 
     std::vector<Ph2_HwInterface::Injection> fInjections;
 
