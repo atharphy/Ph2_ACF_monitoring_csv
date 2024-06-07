@@ -119,6 +119,8 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
         }
     } // optical groups connected to this  board
 
+    readBitslipRegs();
+
     // Set board trigger configuration for L1 alignment
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
@@ -142,14 +144,22 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
         }
     } // optical groups connected to this  board
 
+    readBitslipRegs();
+
+    auto getRegisterName = [](const std::string& type, size_t linkNumber, size_t hybridId)
+    {
+        std::stringstream registerNameStream;
+        registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.link" << std::uppercase << linkNumber << "_hybrid" << hybridId << "_" << type << "_bitslip" << std::dec;
+        return registerNameStream.str();
+    };
+
     std::vector<std::pair<std::string, uint32_t>> alignedBitslipRegisters;
     for(size_t linkNumber = 0; linkNumber < 16; ++linkNumber)
     {
         for(size_t hybridId = 0; hybridId < 2; ++hybridId)
         {
-            std::stringstream registerNameStream;
-            registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.bitslip_Link" << std::uppercase << linkNumber << "_hybrid" << std::dec << hybridId;
-            alignedBitslipRegisters.push_back({registerNameStream.str(), 0xFFFFFFFF});
+            alignedBitslipRegisters.push_back({getRegisterName("stub", linkNumber, hybridId), 0xFFFFFFFF});
+            alignedBitslipRegisters.push_back({getRegisterName("L1A", linkNumber, hybridId), 0xFFFFFFFF});
         }
     }
 
@@ -163,6 +173,8 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
 
     // Updating bitslip registers with MSB set to 1
     fBeBoardInterface->WriteBoardMultReg(theBoard, alignedBitslipRegisters);
+
+    readBitslipRegs();
 }
 
 bool OTalignBoardDataWord::stubWordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface, D19cDebugFWInterface* theDebugInterface)
@@ -262,30 +274,6 @@ bool OTalignBoardDataWord::L1WordAlignment(const OpticalGroup* theOpticalGroup, 
     fBeBoardInterface->Stop(theBoard);
 
     return cSuccess;
-}
-
-void OTalignBoardDataWord::manuallyConfigureLine(const Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip)
-{
-    auto cBoardId   = pChip->getBeBoardId();
-    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
-
-    D19cBackendAlignmentFWInterface* theAlignerInterface = cInterface->getBackendAlignmentInterface();
-    theAlignerInterface->InitializeConfiguration();
-    theAlignerInterface->InitializeAlignerObject();
-
-    AlignerObject theAlignerObject;
-    theAlignerObject.fHybrid = pChip->getHybridId();
-    theAlignerObject.fChip   = pChip->getId();
-    theAlignerObject.fLine   = pLineId;
-    LineConfiguration theLineConfiguration;
-    theLineConfiguration.fMode       = 2;
-    theLineConfiguration.fDelay      = pPhase;
-    theLineConfiguration.fBitslip    = pBitslip;
-    theLineConfiguration.fEnableL1   = 0;
-    theLineConfiguration.fMasterLine = 0;
-    theAlignerInterface->ManuallyConfigureLine(theAlignerObject, theLineConfiguration);
 }
 
 bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* theAlignerInterface,

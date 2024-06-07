@@ -200,14 +200,21 @@ void Tool::Start(const StartInfo& theStartInfo)
 
 void Tool::readBitslipRegs()
 {
+
+    auto getRegisterName = [](const std::string& type, size_t linkNumber, size_t hybridId)
+    {
+        std::stringstream registerNameStream;
+        registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.link" << std::uppercase << linkNumber << "_hybrid" << hybridId << "_" << type << "_bitslip" << std::dec;
+        return registerNameStream.str();
+    };
+
     std::vector<std::pair<std::string, uint32_t>> alignedBitslipRegisters;
     for(size_t linkNumber = 0; linkNumber < 16; ++linkNumber)
     {
         for(size_t hybridId = 0; hybridId < 2; ++hybridId)
         {
-            std::stringstream registerNameStream;
-            registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.bitslip_Link" << std::uppercase << linkNumber << "_hybrid" << hybridId;
-            alignedBitslipRegisters.push_back({registerNameStream.str(), 0xFFFFFFFF});
+            alignedBitslipRegisters.push_back({getRegisterName("stub", linkNumber, hybridId), 0xFFFFFFFF});
+            alignedBitslipRegisters.push_back({getRegisterName("L1A", linkNumber, hybridId), 0xFFFFFFFF});
         }
     }
 

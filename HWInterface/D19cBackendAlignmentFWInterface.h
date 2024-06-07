@@ -58,7 +58,6 @@ class D19cBackendAlignmentFWInterface
 
     void              InitializeConfiguration();
     void              InitializeAlignerObject();
-    void              SetAlignerObject(AlignerObject pAlignerObject);
     void              SetLineConfiguration(LineConfiguration pCnfg);
     LineConfiguration GetLineConfiguration() { return fLineConfiguration; };
 
@@ -77,6 +76,7 @@ class D19cBackendAlignmentFWInterface
     RegManager* fTheRegManager{nullptr};
 
   private:
+    void              SetAlignerObject(AlignerObject pAlignerObject);
     AlignerObject     fAlignerObject;
     LineConfiguration fLineConfiguration;
     Status            fStatus;

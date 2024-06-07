@@ -59,7 +59,6 @@ class OTalignBoardDataWord : public Tool
     bool L1WordAlignment(const Ph2_HwDescription::OpticalGroup*            pOpticalGroup,
                          Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
                          Ph2_HwInterface::D19cDebugFWInterface*            theDebugInterface);
-    void manuallyConfigureLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip);
     bool tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
                           uint8_t                                           lineId,
                           Ph2_HwInterface::AlignerObject&                   theAlignerObject,
