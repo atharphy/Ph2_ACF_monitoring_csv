@@ -21,8 +21,9 @@ void OTMPAtoCICecv::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fNumberOfIterations   = findValueInSettings<double>("OTMPAtoCICecv_NumberOfIterations", 1000);
-    fShiftRegisterPattern = findValueInSettings<double>("OTMPAtoCICecv_ShiftRegisterPattern", 0xAA);
+    fNumberOfIterations    = findValueInSettings<double>("OTMPAtoCICecv_NumberOfIterations", 1000);
+    fShiftRegisterPattern  = findValueInSettings<double>("OTMPAtoCICecv_ShiftRegisterPattern", 0xAA);
+    fListOfMPAslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>("OTMPAtoCICecv_ListOfMPAslvsCurrents", "1, 4, 7"));
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -97,7 +98,7 @@ void OTMPAtoCICecv::runElectricChainValidation()
 
     auto thePSinterface = static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface;
 
-    for(uint8_t slvsCurrent = 1; slvsCurrent < 8; ++slvsCurrent)
+    for(auto slvsCurrent: fListOfMPAslvsCurrents)
     {
         LOG(INFO) << BOLDGREEN << "    Measuring slvs current " << +slvsCurrent << RESET;
         for(auto theBoard: *fDetectorContainer)
@@ -155,11 +156,29 @@ void OTMPAtoCICecv::runElectricChainValidation()
                             {
                                 float matchingEfficiency = countMatchingBits(phyPortDataVector[line], possiblePatternList);
                                 auto  chipIdAndLine      = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
-                                // if(matchingEfficiency<1)
+                                // if(matchingEfficiency < 1 && matchingEfficiency>0.95)
                                 // {
-                                // for(auto word: phyPortDataVector[line]) std::cout << " " << word;
-                                // std::cout << std::dec << std::endl;
+                                //     size_t patternSize = 10;
+                                //     size_t numberOfPatterns = phyPortDataVector[line].size() / patternSize;
+                                //     for(size_t patternCounter = 0; patternCounter<numberOfPatterns; ++patternCounter)
+                                //     {
+                                //         auto first = phyPortDataVector[line].begin() + patternCounter * patternSize;
+                                //         auto last  = first + patternSize;
+                                //         std::vector<uint32_t> patternVector(first, last);
+                                //         bool matching = true;
+                                //         for(auto word : patternVector)
+                                //         {
+                                //             if(word != 0x33333333 && word != 0x66666666 && word != 0x99999999 && word != 0xCCCCCCCC)
+                                //             {
+                                //                 matching = false;
+                                //                 break;
+                                //             }
+                                //         }
+                                //         if(!matching) std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Iteration = " << patternCounter << " data = " << getPatternPrintout(patternVector, 2)
+                                //         << std::endl;
+                                //     }
                                 // }
+
                                 try // Handle disable chip
                                 {
                                     theMatchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first + 8)

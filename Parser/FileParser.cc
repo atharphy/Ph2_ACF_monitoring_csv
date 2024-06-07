@@ -1418,7 +1418,7 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
 
 void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os)
 {
-    std::vector<std::string> listOfStringSettings{"RegNameDAC1", "RegNameDAC2", "DataOutputDir", "KIRA_ID", "OTinjectionOccupancyScan_ListOfInjectedPulses"};
+    std::vector<std::string> listOfStringSettings{"RegNameDAC1", "RegNameDAC2", "DataOutputDir", "KIRA_ID", "OTinjectionOccupancyScan_ListOfInjectedPulses", "OTMPAtoCICecv_ListOfMPAslvsCurrents"};
     pugi::xml_document       doc;
     openHWconfig(pFilename, doc);
 
