@@ -199,8 +199,8 @@ class RegManager
     void                        captureRead(uint32_t value);
     void                        captureBlockRead(std::vector<uint32_t> data);
     Ph2_HwDescription::BeBoard* fTheBoardPointer;
-    size_t                      fNumberOfErrors {0};
-    size_t                      fMaximumAcceptableNumberOfErrors {100};
+    size_t                      fNumberOfErrors{0};
+    size_t                      fMaximumAcceptableNumberOfErrors{100};
 };
 } // namespace Ph2_HwInterface
 

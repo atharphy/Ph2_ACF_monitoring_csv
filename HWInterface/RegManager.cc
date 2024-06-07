@@ -420,7 +420,7 @@ bool RegManager::exceptionCatchedBoardDispatch(const std::string& callingFunctio
         LOG(ERROR) << BOLDRED << callingFunction << ": Exception caught from controlhub: " << e.what() << std::endl;
         if(fNumberOfErrors < fMaximumAcceptableNumberOfErrors)
         {
-            LOG(ERROR) << BOLDYELLOW << "Retrying, caught " << fNumberOfErrors << " controlhub exception out of the " << fMaximumAcceptableNumberOfErrors<< " acceptable" << RESET;
+            LOG(ERROR) << BOLDYELLOW << "Retrying, caught " << fNumberOfErrors << " controlhub exception out of the " << fMaximumAcceptableNumberOfErrors << " acceptable" << RESET;
             ++fNumberOfErrors;
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             return false;
