@@ -156,7 +156,7 @@ void OTverifyECVlpGBTCIC::runECV()
                                     {
                                         uint32_t header = pattern;
 
-                                        if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket, header))
+                                        if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket, header, fHeaderMask))
                                         {
                                             ++theHybridPatternMatchingEfficiency[0];
                                             break;

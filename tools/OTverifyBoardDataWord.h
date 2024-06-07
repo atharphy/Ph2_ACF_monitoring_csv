@@ -45,10 +45,10 @@ class OTverifyBoardDataWord : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    uint8_t            flagCharacter = 0xea;
-    uint8_t            idleCharacter = 0xaa;
-    uint32_t           header        = 0x0ffffffe;
-    uint32_t           headerMask    = 0xffffffff;
+    uint8_t            fFlagCharacter = 0xea;
+    uint8_t            fIdleCharacter = 0xaa;
+    uint32_t           fHeader        = 0x0ffffffe;
+    uint32_t           fHeaderMask    = 0xffffffff;
 
   private:
     void runIntegrityTest();
@@ -57,8 +57,8 @@ class OTverifyBoardDataWord : public Tool
 
   protected:
     size_t  fNumberOfIterations{1000};
-    bool    isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t flagCharacter = 0xea, uint8_t idleCharacter = 0xaa);
-    bool    isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t header = 0x0ffffffe, uint32_t headerMask = 0xffffffff);
+    bool    isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t flagCharacter, uint8_t idleCharacter);
+    bool    isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t header, uint32_t headerMask);
     void    prepareHybridForStubIntegrityTest(Ph2_HwDescription::Hybrid* theHybrid);
     void    prepareHybridForL1IntegrityTest(Ph2_HwDescription::Hybrid* theHybrid);
     void    prepareFWForL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, uint32_t theTriggerFrequency = 100);

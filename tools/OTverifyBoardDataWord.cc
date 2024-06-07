@@ -119,7 +119,7 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterf
                 auto lineOutputVector = theFWInterface->StubDebug(true, cNlines, false);
                 for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
                 {
-                    if(isStubPatternMatched(lineOutputVector[lineIndex], numberOfBytesInSinglePacket, flagCharacter, idleCharacter))
+                    if(isStubPatternMatched(lineOutputVector[lineIndex], numberOfBytesInSinglePacket, fFlagCharacter, fIdleCharacter))
                         ++theHybridPatternMatchingEfficiency[lineIndex + 1];
                     else if(!(fIsKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)))
                         LOG(ERROR) << BOLDRED << "Error on stub line " << lineIndex + 1 << " occurred in iteration number " << +iteration << RESET;
@@ -250,7 +250,7 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterfac
             for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
             {
                 auto lineOutputVector = theFWInterface->L1ADebug(1, false);
-                if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket, header, headerMask))
+                if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket, fHeader, fHeaderMask))
                     ++theHybridPatternMatchingEfficiency[0];
                 else { LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET; }
             }
