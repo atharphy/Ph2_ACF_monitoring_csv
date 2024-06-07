@@ -169,7 +169,7 @@ void D19cBackendAlignmentFWInterface::SendCommand(std::string pCmdToTuner)
 
     fTheRegManager->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", fAlignerObject.fCommand);
 
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fReply = " << std::hex << fAlignerObject.fCommand << std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fReply = " << std::hex << fAlignerObject.fCommand << std::dec << std::endl;
 
     std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
 }
@@ -177,7 +177,7 @@ void D19cBackendAlignmentFWInterface::GetReply(std::string pCmdToTuner)
 {
     fAlignerObject.fReply = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.phase_tuning_reply");
 
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fReply = " << std::hex << fAlignerObject.fReply << std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fReply = " << std::hex << fAlignerObject.fReply << std::dec << std::endl;
 
     uint8_t bitSlipMask = fAlignerObject.fOptical == 0 ? 0x0F : 0x1F;
 
@@ -188,7 +188,7 @@ void D19cBackendAlignmentFWInterface::GetReply(std::string pCmdToTuner)
         fAlignerObject.fType                = (fAlignerObject.fReply >> cCnfgMap["CmdCode"]) & 0xF;                       // 4 bits
         fLineConfiguration.fMode            = (fAlignerObject.fReply >> cCnfgMap["TunerMode"]) & 0x3;                     // 2 bits
         if(fAlignerObject.fOptical == 0) fLineConfiguration.fDelay = (fAlignerObject.fReply >> cCnfgMap["Delay"]) & 0x1F; // 5 bits
-        fLineConfiguration.fBitslip = (fAlignerObject.fReply >> cCnfgMap["Bitslip"]) & bitSlipMask;                               // 4 bits
+        fLineConfiguration.fBitslip = (fAlignerObject.fReply >> cCnfgMap["Bitslip"]) & bitSlipMask;                       // 4 bits
     }
     else
     {

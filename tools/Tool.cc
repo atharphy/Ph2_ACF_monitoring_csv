@@ -200,7 +200,6 @@ void Tool::Start(const StartInfo& theStartInfo)
 
 void Tool::readBitslipRegs()
 {
-
     auto getRegisterName = [](const std::string& type, size_t linkNumber, size_t hybridId)
     {
         std::stringstream registerNameStream;
