@@ -299,6 +299,7 @@
 
 
     <Setting name="OTverifyBoardDataWord_NumberOfIterations">100</Setting>
+    <Setting name="OTverifyECVlpGBTCIC_NumberOfIterations">1000</Setting>
     <Setting name="OTalignLpGBTinputs_NumberOfAlignmentIterations">100</Setting>
     <Setting name="OTalignLpGBTinputs_MinAlignmentSuccessRate">0.99</Setting>
 
