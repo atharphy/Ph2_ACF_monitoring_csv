@@ -96,7 +96,7 @@ class D19cBackendAlignmentFWInterface
 
     // map of bits for decoding configuration of electrical tuning
     std::map<std::string, int> fTunerCnfgBitMap_Electrical = {{"LineId", 28}, {"CmdCode", 24}, {"TunerMode", 13}, {"Delay", 4}, {"Bitslip", 0}};
-    
+
     std::map<std::string, int> fFlagBit = {{"SyncEn", 8}, {"PrbsEn", 9}, {"LfsrEn", 10}};
 
     // map of bits for decoding configuration of optical tuning

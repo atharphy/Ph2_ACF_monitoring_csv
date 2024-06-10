@@ -117,20 +117,20 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
             fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
 
             std::string controlRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
-            uint8_t theHybridFWid = theHybrid->getId() % 2 + 2* theOpticalGroup->getId();
-            uint32_t configureCommand = 0xf20100 | (theHybridFWid << 28);
+            uint8_t     theHybridFWid       = theHybrid->getId() % 2 + 2 * theOpticalGroup->getId();
+            uint32_t    configureCommand    = 0xf20100 | (theHybridFWid << 28);
             fBeBoardInterface->WriteBoardReg(theBoard, controlRegisterName, configureCommand);
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << configureCommand << std::dec << std::endl;
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << configureCommand << std::dec << std::endl;
             uint32_t doWordAlignmentCommand = 0xf50002 | (theHybridFWid << 28);
             fBeBoardInterface->WriteBoardReg(theBoard, controlRegisterName, doWordAlignmentCommand);
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << doWordAlignmentCommand << std::dec << std::endl;
-            for(uint32_t line = 0; line<numberOfStubLines; ++line)
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << doWordAlignmentCommand << std::dec << std::endl;
+            for(uint32_t line = 0; line < numberOfStubLines; ++line)
             {
-                uint32_t readCommand = 0x10000 | (theHybridFWid << 28) | ((line+1) << 20);
+                uint32_t readCommand = 0x10000 | (theHybridFWid << 28) | ((line + 1) << 20);
                 fBeBoardInterface->WriteBoardReg(theBoard, controlRegisterName, readCommand);
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line " << line << " command 0x" << std::hex << readCommand << std::dec << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line " << line << " command 0x" << std::hex << readCommand << std::dec << std::endl;
                 uint32_t readValue = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.phase_tuning_reply");
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line " << line << " reply 0x" << std::hex << readValue << std::dec << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line " << line << " reply 0x" << std::hex << readValue << std::dec << std::endl;
             }
         }
         // bool cAligned = stubWordAlignment(theOpticalGroup, theAlignerInterface, theDebugInterface);
