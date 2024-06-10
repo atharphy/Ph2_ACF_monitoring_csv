@@ -27,6 +27,8 @@ void DQMHistogramOTMPAtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
+    std::vector<float> listOfMPAslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTMPAtoCICecv_ListOfMPAslvsCurrents", "1, 4, 7"));
+
     uint8_t numberOfMPA         = 8;
     uint8_t numberOfLinesPerMPA = 6;
 
@@ -47,10 +49,10 @@ void DQMHistogramOTMPAtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
         }
     };
 
-    for(uint8_t slvsCurrent = 1; slvsCurrent < 8; ++slvsCurrent)
+    for(auto slvsCurrent: listOfMPAslvsCurrents)
     {
-        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("MPAtoCICPhaseScan_SLVScurrent_%d", slvsCurrent),
-                                                        Form("MPA to CIC Phase Scan Matching efficiency - SLVScurrent = %d", slvsCurrent),
+        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("MPAtoCICPhaseScan_SLVScurrent_%d", int(slvsCurrent)),
+                                                        Form("MPA to CIC Phase Scan Matching efficiency - SLVScurrent = %d", int(slvsCurrent)),
                                                         15,
                                                         -0.5,
                                                         14.5,

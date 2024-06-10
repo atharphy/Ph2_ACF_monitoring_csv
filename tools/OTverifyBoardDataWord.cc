@@ -112,19 +112,14 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterf
             auto& theHybridPatternMatchingEfficiency =
                 fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
 
-            auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-            fCicInterface->SelectOutput(cCic, true);
-            fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
-
-            fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
-            fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+            prepareHybridForStubIntegrityTest(theHybrid);
 
             for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
             {
                 auto lineOutputVector = theFWInterface->StubDebug(true, cNlines, false);
                 for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
                 {
-                    if(isStubPatternMatched(lineOutputVector[lineIndex], numberOfBytesInSinglePacket))
+                    if(isStubPatternMatched(lineOutputVector[lineIndex], numberOfBytesInSinglePacket, fFlagCharacter, fIdleCharacter))
                         ++theHybridPatternMatchingEfficiency[lineIndex + 1];
                     else if(!(fIsKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)))
                         LOG(ERROR) << BOLDRED << "Error on stub line " << lineIndex + 1 << " occurred in iteration number " << +iteration << RESET;
@@ -134,14 +129,21 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterf
     }
 }
 
-bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
+void OTverifyBoardDataWord::prepareHybridForStubIntegrityTest(Hybrid* theHybrid)
+{
+    auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+    fCicInterface->SelectOutput(cCic, true);
+    fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
+    fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theHybrid->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
+    fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theHybrid->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+}
+
+bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t flagCharacter, uint8_t idleCharacter)
 {
     // create a mask that is 0xFF for 5G and 0xFFFF for 10G modules
     uint16_t mask = 0xFF;
     if(numberOfBytesInSinglePacket == 2) mask = 0xFFFF;
 
-    uint8_t flagCharacter          = 0xea;
-    uint8_t idleCaracter           = 0xaa;
     uint8_t numberOfIdleCharacters = (numberOfBytesInSinglePacket == 1) ? 7 : 15;
 
     enum SearchPatternStatus
@@ -168,7 +170,7 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
             {
             case SearchPatternStatus::Idle: // I am in Idle, looking for flagCharacter
             {
-                if(currentByte == idleCaracter)
+                if(currentByte == idleCharacter)
                 {
                     ++numberOfConsecutiveIdleCharacters;
                     if(numberOfConsecutiveIdleCharacters > numberOfIdleCharacters) // too many Idle characters!!!
@@ -199,7 +201,7 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
             case SearchPatternStatus::FlagFound: // I found the flag, now I expect to fo back to Idle
             {
                 numberOfConsecutiveIdleCharacters = 0;
-                if(currentByte == idleCaracter)
+                if(currentByte == idleCharacter)
                 {
                     ++numberOfConsecutiveIdleCharacters;
                     status = SearchPatternStatus::Idle;
@@ -233,35 +235,22 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
 void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface)
 {
     LOG(INFO) << BOLDMAGENTA << "Running runL1IntegrityTest" << RESET;
-    // Set board trigger configuration for L1 alignment
-    std::vector<std::pair<std::string, uint32_t>> cVecReg;
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 100});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
-    cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-    cVecReg.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
-    cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
-    fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
+    prepareFWForL1IntegrityTest(theBoard);
 
     for(auto theOpticalGroup: *theBoard)
     {
         uint8_t numberOfBytesInSinglePacket = getNumberOfBytesInSinglePacket(theOpticalGroup);
         for(auto theHybrid: *theOpticalGroup)
         {
-            auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-            if(cCic == nullptr) continue;
-
             auto& theHybridPatternMatchingEfficiency =
                 fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
 
-            // select lines for slvs debug
-            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
-            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+            prepareHybridForL1IntegrityTest(theHybrid);
+
             for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
             {
                 auto lineOutputVector = theFWInterface->L1ADebug(1, false);
-                if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket))
+                if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket, fHeader, fHeaderMask))
                     ++theHybridPatternMatchingEfficiency[0];
                 else { LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET; }
             }
@@ -269,14 +258,32 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterfac
     }
 }
 
-bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket)
+bool OTverifyBoardDataWord::isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t header, uint32_t headerMask)
 {
-    uint32_t header                  = 0x0ffffffe;
-    uint32_t headerMask              = 0xffffffff;
-    auto     orderedLineOutputVector = reorderPattern(theWordVector, numberOfBytesInSinglePacket);
+    auto orderedLineOutputVector = reorderPattern(theWordVector, numberOfBytesInSinglePacket);
 
     std::pair<bool, size_t> isFoundAndWhere = matchPattern(orderedLineOutputVector, numberOfBytesInSinglePacket, header, headerMask);
     return isFoundAndWhere.first;
+}
+
+void OTverifyBoardDataWord::prepareHybridForL1IntegrityTest(Ph2_HwDescription::Hybrid* theHybrid)
+{
+    // select lines for slvs debug
+    fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theHybrid->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
+    fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theHybrid->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+}
+void OTverifyBoardDataWord::prepareFWForL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, uint32_t theTriggerFrequency)
+{
+    // Set board trigger configuration for L1 alignment
+    std::vector<std::pair<std::string, uint32_t>> cVecReg;
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", theTriggerFrequency});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
+    cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cVecReg.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
+    cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
+    fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
 }
 
 uint8_t OTverifyBoardDataWord::getNumberOfBytesInSinglePacket(OpticalGroup* cOpticalGroup) const

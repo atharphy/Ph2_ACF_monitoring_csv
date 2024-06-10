@@ -50,8 +50,9 @@ class OTMPAtoCICecv : public Tool
     void                               runElectricChainValidation();
     std::vector<std::vector<uint32_t>> readCICbypassOutput(Ph2_HwDescription::Hybrid* theHybrid, Ph2_HwInterface::D19cFWInterface* theFWinterface, uint8_t phyPort);
 
-    uint8_t  fShiftRegisterPattern{0xAA};
-    uint32_t fNumberOfIterations{1000};
+    uint8_t            fShiftRegisterPattern{0xAA};
+    uint32_t           fNumberOfIterations{1000};
+    std::vector<float> fListOfMPAslvsCurrents{1, 4, 7};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
