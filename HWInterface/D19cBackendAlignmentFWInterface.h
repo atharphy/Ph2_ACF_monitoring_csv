@@ -65,7 +65,6 @@ class D19cBackendAlignmentFWInterface
     Reply                    AlignWord(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration, bool pChangePattern);
     Reply                    ManuallyConfigureLine(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration);
     Reply                    RetrieveConfig(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration);
-    bool                     TuneLine(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration, bool pChangePattern);
     bool                     IsLineWordAligned();
     bool                     IsLinePhaseAligned();
     void                     EnablePrintout(bool pPrint = false) { fVerbose = (pPrint) ? 3 : 0; }
@@ -97,6 +96,8 @@ class D19cBackendAlignmentFWInterface
 
     // map of bits for decoding configuration of electrical tuning
     std::map<std::string, int> fTunerCnfgBitMap_Electrical = {{"LineId", 28}, {"CmdCode", 24}, {"TunerMode", 13}, {"Delay", 4}, {"Bitslip", 0}};
+    
+    std::map<std::string, int> fFlagBit = {{"SyncEn", 8}, {"PrbsEn", 9}, {"LfsrEn", 10}};
 
     // map of bits for decoding configuration of optical tuning
     std::map<std::string, int> fTunerCnfgBitMap_Optical = {{"LineId", 28}, {"CmdCode", 24}, {"TunerMode", 12}, {"Bitslip", 0}};

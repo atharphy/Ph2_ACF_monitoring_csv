@@ -131,6 +131,7 @@ void D19cBackendAlignmentFWInterface::SendCommand(std::string pCmdToTuner)
     fAlignerObject.fCommand += fAlignerObject.fType << 16;
     if(pCmdToTuner == "Configure")
     {
+        fAlignerObject.fCommand += 1 << fFlagBit["SyncEn"];
         fAlignerObject.fCommand += fLineConfiguration.fMode << cMap["TunerMode"];
         if(fLineConfiguration.fMode == 0 && fAlignerObject.fOptical == 0) fAlignerObject.fCommand += fLineConfiguration.fEnableL1 << cMap["EnableL1A"];
         if(fLineConfiguration.fMode == 1 && fAlignerObject.fOptical == 0) fAlignerObject.fCommand += fLineConfiguration.fMasterLine << cMap["MasterLine"];
@@ -157,7 +158,11 @@ void D19cBackendAlignmentFWInterface::SendCommand(std::string pCmdToTuner)
         fAlignerObject.fCommand += 1 << fAutoTunerCommands["PhaseAlign"];
     }
     if(pCmdToTuner == "TunePhase") { fAlignerObject.fCommand += 1 << fAutoTunerCommands["PhaseAlign"]; }
-    if(pCmdToTuner == "AlignLine") { fAlignerObject.fCommand += 1 << fAutoTunerCommands["WordAlign"]; }
+    if(pCmdToTuner == "AlignLine")
+    {
+        // fAlignerObject.fCommand += 1 << fFlagBit["SyncEn"];
+        fAlignerObject.fCommand += 1 << fAutoTunerCommands["WordAlign"];
+    }
     if(fVerbose == 1)
         LOG(INFO) << BOLDYELLOW << "D19cBackendAlignmentFWInterface::SendCommand " << pCmdToTuner << " 0x" << std::hex << fAlignerObject.fCommand << std::dec << " for Line#" << +fAlignerObject.fLine
                   << " on Hybrid#" << +fAlignerObject.fHybrid << " for Chip#" << +fAlignerObject.fChip << " Optical set to " << +fAlignerObject.fOptical << " Cmd type set to " << +fAlignerObject.fType
@@ -169,7 +174,7 @@ void D19cBackendAlignmentFWInterface::SendCommand(std::string pCmdToTuner)
 
     fTheRegManager->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", fAlignerObject.fCommand);
 
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fReply = " << std::hex << fAlignerObject.fCommand << std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fCommand = " << std::hex << fAlignerObject.fCommand << std::dec << std::endl;
 
     std::this_thread::sleep_for(std::chrono::microseconds(fAlignerObject.fWait_us));
 }
@@ -179,7 +184,7 @@ void D19cBackendAlignmentFWInterface::GetReply(std::string pCmdToTuner)
 
     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fReply = " << std::hex << fAlignerObject.fReply << std::dec << std::endl;
 
-    uint8_t bitSlipMask = fAlignerObject.fOptical == 0 ? 0x0F : 0x1F;
+    uint8_t bitSlipMask = 0x1F;
 
     if(pCmdToTuner == "ReturnConfig")
     {
@@ -304,15 +309,7 @@ Reply D19cBackendAlignmentFWInterface::RetrieveConfig(AlignerObject pAlignerObje
     Print();
     return cReply;
 }
-bool D19cBackendAlignmentFWInterface::TuneLine(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration, bool pChangePattern)
-{
-    if(fVerbose == 1)
-        LOG(INFO) << BOLDBLUE << "Tuning line " << +pAlignerObject.fLine << RESET;
-    else if(fVerbose == 2)
-        LOG(DEBUG) << BOLDBLUE << "Tuning line " << +pAlignerObject.fLine << RESET;
-    if(TunePhase(pAlignerObject, pLineConfiguration).fSuccess) { return AlignWord(fAlignerObject, fLineConfiguration, pChangePattern).fSuccess; }
-    return false;
-}
+
 bool D19cBackendAlignmentFWInterface::IsLineWordAligned() { return (fStatus.fWordAlignmentFSMstate == 14); }
 bool D19cBackendAlignmentFWInterface::IsLinePhaseAligned() { return (fStatus.fPhaseAlignmentFSMstate == 14); }
 
