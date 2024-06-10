@@ -85,7 +85,7 @@ void RD53AInterface::InitRD53Downlink(const BeBoard* pBoard)
     this->setBoard(pBoard->getId());
 
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::move(RD53Shared::firstChip->getLaneUpInitSequence()), -1);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::move(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53ACmd::RD53ACmdEncoder::SYNC)), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::move(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53ACmd::RD53ACmdEncoder::SYNC)), -1);
 }
 
 void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
@@ -378,7 +378,7 @@ void RD53AInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
     this->setBoard(pChip->getBeBoardId());
 
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, false);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, true);
 }
 
