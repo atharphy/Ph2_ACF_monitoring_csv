@@ -212,43 +212,27 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
         // stubs need to be ordered by bending code (remember that the CIC orders them based on the Code[MP]XX values)
         std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> possibleStubVectorList = producePossibleStubVectorList(thePixelClusterList);
 
-        std::vector<PatternMatcher> thePatternList;
-        for(auto& theStubVector: possibleStubVectorList) thePatternList.emplace_back(producePatternMatcher(theStubVector, numberOfBytesInSinglePacket, chipIdForCIC));
+        std::vector<std::pair<PatternMatcher, float>> thePatternAndEfficiencyList;
+        for(auto& theStubVector: possibleStubVectorList) thePatternAndEfficiencyList.emplace_back(std::make_pair(producePatternMatcher(theStubVector, numberOfBytesInSinglePacket, chipIdForCIC), 0.));
         
         for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
         {
             auto                  lineOutputVector        = theFWInterface->StubDebug(true, numberOfLines, false);
             std::vector<uint32_t> concatenatedStubPackage = mergeCICStubOuput(lineOutputVector, numberOfBytesInSinglePacket);
-            bool isMatched = false;
-            for(auto& thePattern: thePatternList)
+            for(auto& thePatternAndEfficiency: thePatternAndEfficiencyList)
             {
-                if(matchStubPattern(concatenatedStubPackage, thePattern, numberOfBytesInSinglePacket, numberOfLines))
-                {
-                    isMatched = true;
-                    break;
-                }
-            }
-            if(isMatched)
-            {
-                ++theStubEfficiency;
-                // LOG(INFO) << GREEN << "Stub pattern received " << getPatternPrintout(concatenatedStubPackage, numberOfBytesInSinglePacket) << RESET;
-            }
-            else
-            {
-                LOG(DEBUG) << BOLDRED << "OTverifyMPASSAdataWord::injectStubsPS - Error, expected stub pattern not found for Board " << +theMPA->getBeBoardId() << " OpticalGroup "
-                           << +theMPA->getOpticalGroupId() << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
-                LOG(DEBUG) << BOLDRED << "Stub data received    " << getPatternPrintout(concatenatedStubPackage, numberOfBytesInSinglePacket) << RESET;
-                for(auto& thePattern: thePatternList)
-                {
-                    LOG(DEBUG) << BOLDRED << "Stub pattern expected " << getPatternPrintout(thePattern.getPattern(), numberOfBytesInSinglePacket) << RESET;
-                    LOG(DEBUG) << BOLDRED << "Stub pattern mask     " << getPatternPrintout(thePattern.getMask(), numberOfBytesInSinglePacket) << RESET;
-                }
+                if(matchStubPattern(concatenatedStubPackage, thePatternAndEfficiency.first, numberOfBytesInSinglePacket, numberOfLines)) thePatternAndEfficiency.second++;
             }
             // for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
             // { LOG(INFO) << BOLDRED << "Line " << lineIndex << " -> " << getPatternPrintout(lineOutputVector[lineIndex], numberOfBytesInSinglePacket) << RESET; }
         }
         ++stripClusterLine;
-        theStubEfficiency /= fNumberOfIterations;
+        float maximumEfficiency = 0;
+        for(auto& thePatternAndEfficiency: thePatternAndEfficiencyList)
+        {
+            if(thePatternAndEfficiency.second > maximumEfficiency) maximumEfficiency = thePatternAndEfficiency.second;
+        }
+        theStubEfficiency = maximumEfficiency/fNumberOfIterations;
     }
 }
 

@@ -194,7 +194,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTalignBoardDataWord,
              OTCICphaseAlignment,
              OTCICwordAlignment,
-             OTSSAtoMPAecv>("Outer Tracker", "SSAtoMPAecv");
+             OTSSAtoMPAecv>("PS Module", "SSAtoMPAecv");
 
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");

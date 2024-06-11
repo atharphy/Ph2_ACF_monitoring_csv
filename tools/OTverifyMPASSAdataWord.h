@@ -45,6 +45,7 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
     uint8_t fStubRowCoordinate {0x0A};
 
     virtual std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> produceMatchingPixelClusterList(uint8_t colCoordinate);
+    DetectorDataContainer fPatternMatchingEfficiencyContainer;
 
   private:
     void                  fillHistograms();
@@ -54,7 +55,6 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
     std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList);
     PatternMatcher producePatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, int>>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC);
 
-    DetectorDataContainer fPatternMatchingEfficiencyContainer;
 
 
 #ifdef __USE_ROOT__

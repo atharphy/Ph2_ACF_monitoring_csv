@@ -10,14 +10,14 @@
 #ifndef OTSSAtoMPAecv_h__
 #define OTSSAtoMPAecv_h__
 
-#include "tools/OTverifyCICdataWord.h"
+#include "tools/OTverifyMPASSAdataWord.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
 #include "DQMUtils/DQMHistogramOTSSAtoMPAecv.h"
 #endif
 
-class OTSSAtoMPAecv : public OTverifyCICdataWord
+class OTSSAtoMPAecv : public OTverifyMPASSAdataWord
 {
   public:
     OTSSAtoMPAecv();
@@ -36,9 +36,10 @@ class OTSSAtoMPAecv : public OTverifyCICdataWord
     static std::string fCalibrationDescription;
     
   private:
-    void injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket) override;
-    void injectL1PS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket) override;
-    DetectorDataContainer fScanEfficiencyContainer;
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> produceMatchingPixelClusterList(uint8_t colCoordinate) override;
+    void runSSAtoMPAecvScan();
+    std::vector<float> fListOfSSAslvsCurrents{1, 4, 7};
+
     
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
