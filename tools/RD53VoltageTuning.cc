@@ -247,13 +247,7 @@ void VoltageTuning::run()
         // ##################
         // # Reset sequence #
         // ##################
-        for(const auto cBoard: *fDetectorContainer)
-        {
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetBoard();
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ConfigureBoard(cBoard);
-            this->ConfigureIT(cBoard);
-            this->ConfigureFrontendIT(cBoard);
-        }
+        CalibBase::ResetBoards();
     }
 
     if((doRepeatDig == true) || (doRepeatAna == true)) LOG(ERROR) << BOLDRED << "The calibration was not able to run successfully on all chips" << RESET;
