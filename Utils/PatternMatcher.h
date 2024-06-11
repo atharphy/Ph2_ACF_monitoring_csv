@@ -35,7 +35,7 @@ class PatternMatcher
      * \param theWordVector: the data to match
      * \return is the pattern matched
      */
-    bool isMatched(const std::vector<uint32_t>& theWordVector);
+    bool isMatched(const std::vector<uint32_t>& theWordVector) const;
 
     /*!
      * \brief returns the numberOfBits of the pattern that matches with the theWordVector vector provided

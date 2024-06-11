@@ -46,6 +46,7 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
+#include "tools/OTSSAtoMPAecv.h"
 
 using namespace MessageUtils;
 
@@ -178,7 +179,6 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass>("Outer Tracker", "alignLpGBTinputsForBypass");
 
-    Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTMPAtoCICecv>("PS Module", "MPAtoCICecv");
 
     // 2S specific calibrations
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(
@@ -188,6 +188,14 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     // PS specific calibrations
     Register<PSPhysics>("PS Module", "psphysics");
     Register<OTalignBoardDataWord, OTPSADCCalibration>("PS Module", "ADCBiasCalibration");
+    Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTMPAtoCICecv>("PS Module", "MPAtoCICecv");
+    
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTSSAtoMPAecv>("Outer Tracker", "SSAtoMPAecv");
+
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");
     Register<PixelAlive>("Inner Tracker", "noise");

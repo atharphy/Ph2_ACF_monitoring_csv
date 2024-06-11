@@ -40,7 +40,7 @@ void PatternMatcher::addToPattern(uint32_t thePattern, uint32_t thePatternMask, 
     // std::cout << std::endl;
 }
 
-bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector)
+bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector) const
 {
     if(theWordVector.size() < fPatternAndMaskVector.size()) return false;
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Incoming -> ";
