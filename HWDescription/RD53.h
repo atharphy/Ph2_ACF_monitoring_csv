@@ -37,7 +37,8 @@ const uint8_t NPIX_REGION     = 4;    // Number of pixels in a region (1x4)
 const uint8_t NROW_CORE       = 8;    // Number of rows in a core
 const uint8_t NBIT_ADDR       = 9;    // Number of address bits
 const uint8_t NBIT_TOT        = 4;    // Number of ToT bits
-const uint8_t NSYNC_WORDS     = 64;   // Number of Sync words for synchronization
+const uint8_t NSYNC_WORDS_S   = 2;    // Number of Sync words for synchronization (S = small)
+const uint8_t NSYNC_WORDS_L   = 64;   // Number of Sync words for synchronization (L = large)
 const uint8_t NWORDS_TO_SYNC  = 30;   // Number of words beforse send a Sync
 const uint8_t PATTERN_PRBS    = 0xAA; // Start PRBS pattern
 const uint8_t PATTERN_AURORA  = 0x55; // Start AURORA pattern
