@@ -1,4 +1,4 @@
-## IT-DAQ setup and run
+# IT-DAQ setup and run
 
 1. Folow instructions below to install all needed software packages (like `pugixml`, `boost`, `python`. etc ...)
 2. `mkdir choose_a_name`

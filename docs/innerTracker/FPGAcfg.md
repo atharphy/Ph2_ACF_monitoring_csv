@@ -1,4 +1,4 @@
-## Basic list of commands for the `fpgaconfig` program
+# Basic list of commands for the `fpgaconfig` program
 
  (run from the `choose_a_name` directory)
 
