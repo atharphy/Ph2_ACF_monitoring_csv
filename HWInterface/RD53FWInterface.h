@@ -17,7 +17,6 @@
 #include "Utils/RD53Event.h"
 #include "Utils/RD53RunProgress.h"
 #include "Utils/RD53Shared.h"
-#include "Utils/easylogging++.h"
 
 #include <uhal/uhal.hpp>
 
