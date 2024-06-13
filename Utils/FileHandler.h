@@ -11,6 +11,7 @@
 #define FILEHANDLER_H
 
 #include "FileHeader.h"
+#include "easylogging++.h"
 
 #include <atomic>
 #include <mutex>
@@ -18,8 +19,6 @@
 #include <thread>
 #include <unistd.h>
 #include <vector>
-
-#include "Utils/easylogging++.h"
 
 // #############
 // # CONSTANTS #

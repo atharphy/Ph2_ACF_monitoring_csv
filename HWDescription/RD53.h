@@ -17,7 +17,6 @@
 #include "Utils/Container.h"
 #include "Utils/RD53Event.h"
 #include "Utils/RD53Shared.h"
-#include "Utils/easylogging++.h"
 
 #include <iomanip>
 
