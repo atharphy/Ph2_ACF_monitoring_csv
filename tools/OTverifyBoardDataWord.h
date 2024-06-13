@@ -45,18 +45,27 @@ class OTverifyBoardDataWord : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
+    uint8_t            fFlagCharacter = 0xea;
+    uint8_t            fIdleCharacter = 0xaa;
+    uint32_t           fHeader        = 0x0ffffffe;
+    uint32_t           fHeaderMask    = 0xffffffff;
 
   private:
-    void    runIntegrityTest();
-    void    runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
-    void    runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
-    bool    isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket);
-    bool    isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket);
+    void runIntegrityTest();
+    void runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
+    void runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
+
+  protected:
+    size_t  fNumberOfIterations{1000};
+    bool    isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t flagCharacter, uint8_t idleCharacter);
+    bool    isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t header, uint32_t headerMask);
+    void    prepareHybridForStubIntegrityTest(Ph2_HwDescription::Hybrid* theHybrid);
+    void    prepareHybridForL1IntegrityTest(Ph2_HwDescription::Hybrid* theHybrid);
+    void    prepareFWForL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, uint32_t theTriggerFrequency = 100);
     uint8_t getNumberOfBytesInSinglePacket(Ph2_HwDescription::OpticalGroup* cOpticalGroup) const;
 
-    DetectorDataContainer fPatternMatchingEfficiencyContainer;
-    size_t                fNumberOfIterations{1000};
     bool                  fIsKickoff{false};
+    DetectorDataContainer fPatternMatchingEfficiencyContainer;
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

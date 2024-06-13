@@ -68,7 +68,7 @@ bool RegManager::WriteReg(const std::string& pRegNode, const uint32_t& pVal)
     if(mode == Mode::Replay) return true;
 
     fBoard->getNode(pRegNode).write(pVal);
-    fBoard->dispatch();
+    if(exceptionCatchedBoardDispatch(__PRETTY_FUNCTION__) == false) WriteReg(pRegNode, pVal);
     fTheBoardPointer->setReg(pRegNode, pVal);
 
     // Verify if the writing is done correctly
@@ -102,19 +102,7 @@ bool RegManager::WriteStackReg(const std::vector<std::pair<std::string, uint32_t
         fTheBoardPointer->setReg(v.first, v.second);
     }
 
-    try
-    {
-        fBoard->dispatch();
-    }
-    catch(...)
-    {
-        std::cerr << "Error while writing the following parameters: ";
-
-        for(auto const& v: pVecReg) std::cerr << v.first << ", ";
-
-        std::cerr << std::endl;
-        throw;
-    }
+    if(exceptionCatchedBoardDispatch(__PRETTY_FUNCTION__) == false) WriteStackReg(pVecReg);
 
     if(DEV_FLAG)
     {
@@ -149,7 +137,7 @@ bool RegManager::WriteBlockReg(const std::string& pRegNode, const std::vector<ui
     if(mode == Mode::Replay) return true;
 
     fBoard->getNode(pRegNode).writeBlock(pValues);
-    fBoard->dispatch();
+    if(exceptionCatchedBoardDispatch(__PRETTY_FUNCTION__) == false) WriteBlockReg(pRegNode, pValues);
 
     bool cWriteCorr = true;
 
@@ -183,7 +171,7 @@ bool RegManager::WriteBlockAtAddress(uint32_t uAddr, const std::vector<uint32_t>
     if(mode == Mode::Replay) return true;
 
     fBoard->getClient().writeBlock(uAddr, pValues, bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL);
-    fBoard->dispatch();
+    if(exceptionCatchedBoardDispatch(__PRETTY_FUNCTION__) == false) WriteBlockAtAddress(uAddr, pValues, bNonInc);
 
     bool cWriteCorr = true;
 
@@ -217,7 +205,7 @@ uint32_t RegManager::ReadReg(const std::string& pRegNode)
     if(mode == Mode::Replay) return replayRead();
 
     uhal::ValWord<uint32_t> cValRead = fBoard->getNode(pRegNode).read();
-    fBoard->dispatch();
+    if(exceptionCatchedBoardDispatch(__PRETTY_FUNCTION__) == false) ReadReg(pRegNode);
 
     if(DEV_FLAG)
     {
@@ -238,7 +226,7 @@ uint32_t RegManager::ReadAtAddress(uint32_t uAddr, uint32_t uMask)
     if(mode == Mode::Replay) return replayRead();
 
     uhal::ValWord<uint32_t> cValRead = fBoard->getClient().read(uAddr, uMask);
-    fBoard->dispatch();
+    if(exceptionCatchedBoardDispatch(__PRETTY_FUNCTION__) == false) ReadAtAddress(uAddr, uMask);
 
     if(DEV_FLAG)
     {
@@ -257,7 +245,7 @@ std::vector<uint32_t> RegManager::ReadBlockReg(const std::string& pRegNode, cons
     if(mode == Mode::Replay) return replayBlockRead(pBlockSize);
 
     uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode(pRegNode).readBlock(pBlockSize);
-    fBoard->dispatch();
+    if(exceptionCatchedBoardDispatch(__PRETTY_FUNCTION__) == false) ReadBlockReg(pRegNode, pBlockSize);
 
     if(DEV_FLAG)
     {
@@ -281,7 +269,7 @@ std::vector<uint32_t> RegManager::ReadBlockRegOffset(const std::string& pRegNode
     if(mode == Mode::Replay) return replayBlockRead(pBlocksize);
 
     uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode(pRegNode).readBlockOffset(pBlocksize, pBlockOffset);
-    fBoard->dispatch();
+    if(exceptionCatchedBoardDispatch(__PRETTY_FUNCTION__) == false) ReadBlockRegOffset(pRegNode, pBlocksize, pBlockOffset);
 
     if(DEV_FLAG)
     {
@@ -352,12 +340,12 @@ bool RegManager::pollRegister(const std::string& pRegisterName, uint32_t pValue,
     return cStopCondition;
 }
 
-void RegManager::ResetRegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable)
+void RegManager::ResetRegManager()
 {
     if(fBoard)
     {
         delete fBoard;
-        fBoard = new uhal::HwInterface(uhal::ConnectionManager::getDevice(pId, pUri, pAddressTable));
+        fBoard = new uhal::HwInterface(uhal::ConnectionManager::getDevice(fId, fUri, fAddressTable));
     }
 }
 
@@ -420,4 +408,33 @@ void RegManager::captureBlockRead(std::vector<uint32_t> data)
     write_binary(capture_file, uint32_t(data.size()));
     for(const auto& d: data) write_binary(capture_file, d);
 }
+
+bool RegManager::exceptionCatchedBoardDispatch(const std::string& callingFunction)
+{
+    try
+    {
+        fBoard->dispatch();
+    }
+    catch(const std::exception& e)
+    {
+        LOG(ERROR) << BOLDRED << callingFunction << ": Exception caught from controlhub: " << e.what() << std::endl;
+        if(fNumberOfErrors < fMaximumAcceptableNumberOfErrors)
+        {
+            LOG(ERROR) << BOLDYELLOW << "Retrying, caught " << fNumberOfErrors << " controlhub exception out of the " << fMaximumAcceptableNumberOfErrors << " acceptable" << RESET;
+            ++fNumberOfErrors;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            return false;
+        }
+        else
+        {
+            LOG(ERROR) << BOLDRED << "Maximum number of acceptable errors (" << fMaximumAcceptableNumberOfErrors << ") reached, throwing last exception" << RESET;
+            LOG(ERROR) << BOLDRED << "Please contact Fabio Ravera" << RESET;
+            fNumberOfErrors = 0; // in case it is decided to catch the exception and continue
+            throw;
+        }
+    }
+
+    return true;
+}
+
 } // namespace Ph2_HwInterface

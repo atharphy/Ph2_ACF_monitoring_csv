@@ -1,12 +1,12 @@
 /*!
-        \file                DQMHistogramOTCICphaseAlignmentForBypass.h
-        \brief               DQM class for OTCICphaseAlignmentForBypass
+        \file                DQMHistogramOTalignLpGBTinputsForBypass.h
+        \brief               DQM class for OTalignLpGBTinputsForBypass
         \author              Fabio Ravera
-        \date                22/03/24
+        \date                31/05/24
 */
 
-#ifndef DQMHistogramOTCICphaseAlignmentForBypass_h_
-#define DQMHistogramOTCICphaseAlignmentForBypass_h_
+#ifndef DQMHistogramOTalignLpGBTinputsForBypass_h_
+#define DQMHistogramOTalignLpGBTinputsForBypass_h_
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -14,21 +14,21 @@
 class TFile;
 
 /*!
- * \class DQMHistogramOTCICphaseAlignmentForBypass
- * \brief Class for OTCICphaseAlignmentForBypass monitoring histograms
+ * \class DQMHistogramOTalignLpGBTinputsForBypass
+ * \brief Class for OTalignLpGBTinputsForBypass monitoring histograms
  */
-class DQMHistogramOTCICphaseAlignmentForBypass : public DQMHistogramBase
+class DQMHistogramOTalignLpGBTinputsForBypass : public DQMHistogramBase
 {
   public:
     /*!
      * constructor
      */
-    DQMHistogramOTCICphaseAlignmentForBypass();
+    DQMHistogramOTalignLpGBTinputsForBypass();
 
     /*!
      * destructor
      */
-    ~DQMHistogramOTCICphaseAlignmentForBypass();
+    ~DQMHistogramOTalignLpGBTinputsForBypass();
 
     /*!
      * \brief Book histograms
@@ -55,7 +55,12 @@ class DQMHistogramOTCICphaseAlignmentForBypass : public DQMHistogramBase
      */
     void reset(void) override;
 
+    void fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort);
+    void fillBestPhase(DetectorDataContainer& bestPhaseContainer, uint8_t phyPort);
+
   private:
-    DetectorContainer* fDetectorContainer;
+    DetectorContainer*                       fDetectorContainer;
+    std::map<uint8_t, DetectorDataContainer> fPhaseScanMatchingEfficiencies;
+    std::map<uint8_t, DetectorDataContainer> fBestPhase;
 };
 #endif

@@ -237,6 +237,17 @@ void CalibBase::ResetBoardsReadBkFIFO()
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetReadBkFIFO();
 }
 
+void CalibBase::ResetBoards()
+{
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetBoard();
+        static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ConfigureBoard(cBoard);
+        this->ConfigureIT(cBoard);
+        this->ConfigureFrontendIT(cBoard);
+    }
+}
+
 void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)
 {
     theCurrentRun = currentRun;

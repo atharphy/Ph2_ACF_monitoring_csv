@@ -78,7 +78,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         endif()
     endif()
 
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils)
     if(NoDataShipping)
         set(LIBS ${LIBS} Ph2_MonitorDQM)
     endif()

@@ -67,6 +67,12 @@ BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint8
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<std::pair<uint16_t, uint16_t>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, 6>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<float, 6>>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, 4, 15>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<float, 4, 15>>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint8_t, 4>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint8_t, 4>>)))
 
 ContainerSerialization::ContainerSerialization(const std::string& calibrationName) : fCalibrationName(calibrationName) {}
 

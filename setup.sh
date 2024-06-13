@@ -87,7 +87,7 @@ fi
 # System #
 ##########
 export PATH=$PH2ACF_BASE_DIR/bin:$PH2ACF_BASE_DIR/ProductionToolsIT/LDACLINCalibration:$PATH
-export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$PH2ACF_BASE_DIR/RootWeb/lib:$CACTUSROOT/lib:$PH2ACF_BASE_DIR/lib:$EUDAQLIB:/opt/rh/llvm-toolset-7.0/root/usr/lib64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$USBINSTLIB:$ANTENNALIB:$PH2ACF_BASE_DIR/RootWeb/lib:$CACTUSROOT/lib:$PH2ACF_BASE_DIR/lib:$EUDAQLIB:$LD_LIBRARY_PATH
 
 #########
 # Flags #

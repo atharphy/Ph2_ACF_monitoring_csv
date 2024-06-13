@@ -133,7 +133,7 @@ bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const 
         auto cIterator = cRegMap.find(cReq.first);
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
+            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
             continue;
         }
 
@@ -154,7 +154,7 @@ std::vector<std::pair<std::string, uint16_t>> D19clpGBTInterface::ReadChipMultRe
         auto cIterator = cRegMap.find(cReq);
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trtying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq << RESET;
             abort();
         }
 
@@ -476,11 +476,8 @@ bool D19clpGBTInterface::didAlignmentSucceded(LpGBTalignmentResult& theOpticalGr
             // Check if the group and channel belong to a disabled hybrid
             for(auto cHybrid: *theOpticalGroup)
             {
-                auto        theHybridId = cHybrid->getId();
-                std::string sideToMatch = (theHybridId % 2 == 0) ? "R" : "L";
-                std::string theSide     = theGroupsAndChannelsPerHybrid[std::make_pair(theGoupAlignmenResult.first, theChannelAlignmentResult.first)];
-                std::size_t found       = theSide.find("FEH" + sideToMatch);
-                if(found == std::string::npos && theOpticalGroup->size() != 2) { skipGroupAndChannel = true; }
+                auto hybridAndChannel = theGroupsAndChannelsPerHybrid[std::make_pair(theGoupAlignmenResult.first, theChannelAlignmentResult.first)];
+                if(hybridAndChannel.first != (cHybrid->getId() % 2) && theOpticalGroup->size() != 2) { skipGroupAndChannel = true; }
             }
 
             float   alignmentSuccessRate = std::get<0>(theChannelAlignmentResult.second);
@@ -624,6 +621,32 @@ void D19clpGBTInterface::updateCICinputClockToMatchPSrate(Ph2_HwDescription::Chi
 
     updateClockFunction(cicClockRightRegisterName);
     updateClockFunction(cicClockLeftRegisterName);
+}
+
+void D19clpGBTInterface::setCICClockPolarityAndStrength(Ph2_HwDescription::Chip* pChip, uint8_t pPolarity, uint8_t pStrength, Ph2_HwDescription::OpticalGroup* theOpticalGroup)
+{
+    std::string cicClockRightRegisterName = "EPCLK" + std::to_string(fClock_RHS_CIC) + "ChnCntrH";
+    std::string cicClockLeftRegisterName  = "EPCLK" + std::to_string(fClock_LHS_CIC) + "ChnCntrH";
+    if(theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
+    {
+        cicClockRightRegisterName = "EPCLK" + std::to_string(fClock_RHS_Hybrid) + "ChnCntrH";
+        cicClockLeftRegisterName  = "EPCLK" + std::to_string(fClock_LHS_Hybrid) + "ChnCntrH";
+    }
+
+    auto updateClockFunction = [this, pChip](std::string registerName, uint8_t pPolarity, uint8_t pStrength)
+    {
+        auto theCurrentRegisterValue = this->ReadChipReg(pChip, registerName);
+        if((theCurrentRegisterValue & 0xC0) != pPolarity || (theCurrentRegisterValue & 0x38) != pStrength)
+        {
+            uint16_t theNewRegisterValue = pPolarity << 6 | pStrength << 3 | (theCurrentRegisterValue & 0x7);
+            LOG(INFO) << BOLDYELLOW << "Attention! Updating " << registerName << " from 0x" << std::hex << +theCurrentRegisterValue << " to 0x" << +theNewRegisterValue << std::dec
+                      << " to update the CIC clock polarity and strenght on BeBoard " << +pChip->getBeBoardId() << " OpticalGroup " << +pChip->getOpticalGroupId() << RESET;
+            this->WriteChipReg(pChip, registerName, theNewRegisterValue);
+        }
+    };
+
+    updateClockFunction(cicClockRightRegisterName, pPolarity, pStrength);
+    updateClockFunction(cicClockLeftRegisterName, pPolarity, pStrength);
 }
 
 } // namespace Ph2_HwInterface

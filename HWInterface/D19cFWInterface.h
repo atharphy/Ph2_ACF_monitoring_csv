@@ -17,7 +17,6 @@
 #include "HWInterface/BeBoardFWInterface.h"
 #include "Utils/DataContainer.h"
 #include "Utils/Event.h"
-#include "Utils/easylogging++.h"
 
 #include <limits.h>
 #include <map>

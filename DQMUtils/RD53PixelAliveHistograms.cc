@@ -162,7 +162,7 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                             if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISMASKED)
                             {
                                 Mask1DrowHist->Fill(row);
-                                Masked2DHist->Fill(row, col);
+                                Masked2DHist->Fill(col, row);
                             }
 
                             if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col, row);

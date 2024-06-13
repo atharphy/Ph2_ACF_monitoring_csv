@@ -433,6 +433,14 @@ void lpGBTInterface::ConfigureRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pChan
     // LOG(DEBUG) << BOLDMAGENTA << "lpGBT#" << +pChip->getId() << "Grp#" << +pGroup << " Chnl#" << +pChannel << " - phase " << +pPhase << RESET;
 }
 
+void lpGBTInterface::ConfigureAllRxPhase(Chip* pChip, uint8_t pPhase, std::map<uint8_t, std::vector<uint8_t>> theGroupsAndChannels)
+{
+    for(const auto& groupAndChannels: theGroupsAndChannels)
+    {
+        for(const auto channel: groupAndChannels.second) { this->ConfigureRxPhase(pChip, groupAndChannels.first, channel, pPhase); }
+    }
+}
+
 void lpGBTInterface::ConfigurePhShifter(Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint8_t pDriveStr, uint8_t pEnFTune, uint16_t pDelay)
 {
     for(const auto& cClock: pClocks)
