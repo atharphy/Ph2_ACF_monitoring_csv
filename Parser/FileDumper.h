@@ -33,6 +33,7 @@ class FileDumper
     void        dumpBoardConfigurationFile(pugi::xml_node theMotherNode, Ph2_HwDescription::BeBoard* theBoardContainer);
     void        dumpOpticalGroupConfigurationFile(pugi::xml_node theMotherNode, Ph2_HwDescription::OpticalGroup* theOpticalGroupContainer);
     void        dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Ph2_HwDescription::Hybrid* theHybridContainer);
+    void        dumpLpGBTphasesForBypass(pugi::xml_node theMotherNode, Ph2_HwDescription::Hybrid* theHybridContainer);
     void        dumpChipConfigurationFile(pugi::xml_node theMotherNode, Ph2_HwDescription::ReadoutChip* theReadoutChip);
     void        dumpSettings(pugi::xml_node theMotherNode, const std::map<std::string, boost::any>& theSettingMap);
     void        dumpMonitorSettings(pugi::xml_node theMotherNode, DetectorMonitorConfig* theDetectorMonitorConfig);

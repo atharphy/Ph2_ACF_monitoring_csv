@@ -98,6 +98,7 @@ class lpGBTInterface : public ChipInterface
     void     ConfigureRxSource(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pSource);
     void     ConfigureTxSource(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pSource);
     void     ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
+    void     ConfigureAllRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pPhase, std::map<uint8_t, std::vector<uint8_t>> theGroupsAndChannels);
     void     ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint8_t pDriveStr, uint8_t pEnFTune, uint16_t pDelay);
     void     SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
     uint8_t  GetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel); // To-Do: change to a map

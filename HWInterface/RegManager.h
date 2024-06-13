@@ -135,9 +135,9 @@ class RegManager
     virtual std::vector<uint32_t> ReadBlockRegOffset(const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset);
 
     /*!
-     * \brief Reset the HW Interface with different Id, Uri and Address Table
+     * \brief Reset the HW Interface
      */
-    virtual void ResetRegManager(const std::string& pId, const std::string& pUri, const std::string& pAddressTable);
+    virtual void ResetRegManager();
 
     /*!
      * \brief Stack the commands, deliver when full or timeout
@@ -191,12 +191,16 @@ class RegManager
         Replay
     };
 
+    bool exceptionCatchedBoardDispatch(const std::string& callingFunction);
+
     static Mode                 mode;
     uint32_t                    replayRead();
     std::vector<uint32_t>       replayBlockRead(size_t size);
     void                        captureRead(uint32_t value);
     void                        captureBlockRead(std::vector<uint32_t> data);
     Ph2_HwDescription::BeBoard* fTheBoardPointer;
+    size_t                      fNumberOfErrors{0};
+    size_t                      fMaximumAcceptableNumberOfErrors{100};
 };
 } // namespace Ph2_HwInterface
 
