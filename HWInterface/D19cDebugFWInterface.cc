@@ -100,7 +100,7 @@ std::vector<std::vector<uint32_t>> D19cDebugFWInterface::StubDebug(bool pWithTes
     do {
         // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Line " << cLine << " words " << std::hex;
         std::vector<std::string> cOutputWords(0);
-        for(size_t cIndex = 0; cIndex < 5; cIndex++)
+        for(size_t cIndex = 0; cIndex < 10; cIndex++)
         {
             auto cWord = cWords[cLine * 10 + cIndex];
             // std::cout << cWord << " ";
