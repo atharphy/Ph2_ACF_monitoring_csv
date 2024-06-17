@@ -1,17 +1,26 @@
-cmake_minimum_required (VERSION 3.0.00)
+cmake_minimum_required (VERSION 3.20.00)
 project (UserAPI)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
+######################
+# External libraries #
+######################
 find_package(Boost REQUIRED)
 find_package(ROOT REQUIRED)
 find_package(CACTUS REQUIRED)
 find_package(Protobuf REQUIRED)
 
+#############
+# C++ flags #
+#############
 set(CMAKE_CXX_COMPILER_ID "c++")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-g -pthread -DELPP_THREAD_SAFE $ENV{UseRootFlag}")
 
+################
+# Include dirs #
+################
 include_directories(${ROOT_INCLUDE_DIRS})
 include_directories(${CACTUS_INCLUDEDIR})
 include_directories(${Protobuf_INCLUDE_DIRS})
@@ -38,22 +47,19 @@ link_directories(${Protobuf_LIBRARIES})
 
 add_executable (UserAPI UserAPI.cpp)
 
-set(STATIC_LIBS
-  Ph2_Utils
-  Ph2_System
-  Ph2_Description
-  Ph2_Interface
-  Ph2_MonitorUtils
-  Ph2_Parser
-  Ph2_Tools
-  Ph2_MonitorDQM
-  Ph2_DQMUtils
-  Ph2_RootUtils
-  RootWeb
-  MessageUtils
-  NetworkUtils
-  )
+##############################
+# List of external libraries #
+##############################
+file(GLOB LIB_LIST RELATIVE "$ENV{PH2ACF_BASE_DIR}/bin/" "$ENV{PH2ACF_BASE_DIR}/bin/*.a")
+foreach(ELE ${LIB_LIST})
+  string(REPLACE ".a" "" ELE_STRIP ${ELE})
+  string(REPLACE "lib" "" ${ELE_STRIP} ${ELE_STRIP})
+  list(APPEND STATIC_LIBS ${ELE_STRIP})
+endforeach()
 
+#######################
+# Reshuffle libraries #
+#######################
 target_link_libraries(UserAPI
   ${ROOT_LIBRARIES}
 

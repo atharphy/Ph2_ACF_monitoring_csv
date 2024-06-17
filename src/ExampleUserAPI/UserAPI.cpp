@@ -1,10 +1,6 @@
 #include <iostream>
 
 #include "System/SystemController.h"
-// #include "HWDescription/RD53.h"
-// #include "HWDescription/RD53A.h"
-// #include "HWDescription/RD53B.h"
-// #include "Utils/RD53Event.h"
 
 INITIALIZE_EASYLOGGINGPP
 
