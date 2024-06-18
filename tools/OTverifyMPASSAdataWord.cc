@@ -222,7 +222,7 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
 
         std::vector<std::pair<PatternMatcher, float>> thePatternAndEfficiencyList;
         for(auto& theStubVector: possibleStubVectorList) thePatternAndEfficiencyList.emplace_back(std::make_pair(producePatternMatcher(theStubVector, numberOfBytesInSinglePacket, chipIdForCIC), 0.));
-        
+
         for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
         {
             auto                  lineOutputVector        = theFWInterface->StubDebug(true, numberOfLines, false);
@@ -235,13 +235,13 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
         {
             if(thePatternAndEfficiency.second > maximumEfficiency) maximumEfficiency = thePatternAndEfficiency.second;
         }
-        theStubEfficiency = maximumEfficiency/fNumberOfIterations;
+        theStubEfficiency = maximumEfficiency / fNumberOfIterations;
     }
 }
 
 std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> OTverifyMPASSAdataWord::produceStripClusterList()
 {
-    size_t numberOfSSAstubClusterLines = 8;
+    size_t                                             numberOfSSAstubClusterLines = 8;
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theStripClusterList;
     for(size_t stripIt = 0; stripIt < numberOfSSAstubClusterLines; ++stripIt) // injecting 8 clusters of size 1 15 strips spaced
     {
@@ -270,11 +270,11 @@ std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> OTverifyMPASSAdataWo
     return possibleStubVectorList;
 }
 
-PatternMatcher OTverifyMPASSAdataWord::producePatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, int>>& theStubVector, uint8_t numberOfBytesInSinglePacket,  uint8_t chipIdForCIC)
+PatternMatcher OTverifyMPASSAdataWord::producePatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, int>>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC)
 {
     size_t numberOfStubs     = 8 * theStubVector.size();
     size_t maximumStubNumber = (numberOfBytesInSinglePacket == 1) ? 16 : 35; // 16 if a 5G, 35 if a 10G
-    if(numberOfStubs > maximumStubNumber) // CIC aligns stubs by bending, but in pixel-pixel mode bending is 0 and it is not possible to know what the CIC will drop
+    if(numberOfStubs > maximumStubNumber)                                    // CIC aligns stubs by bending, but in pixel-pixel mode bending is 0 and it is not possible to know what the CIC will drop
     {
         std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] PS stube injected using pixel-pixel mode, more stubs than the maximum allowed!" << std::endl;
         abort();
@@ -291,11 +291,11 @@ PatternMatcher OTverifyMPASSAdataWord::producePatternMatcher(const std::vector<s
     {
         for(auto theStub: theStubVector)
         {
-            thePattern.addToPattern(0x0, 0x0, 3); // BX offset
-            thePattern.addToPattern(chipIdForCIC, 0x7, 3); // Chip ID
+            thePattern.addToPattern(0x0, 0x0, 3);                       // BX offset
+            thePattern.addToPattern(chipIdForCIC, 0x7, 3);              // Chip ID
             thePattern.addToPattern(std::get<1>(theStub) + 2, 0xFF, 8); // seed
-            thePattern.addToPattern(fBendingCode, 0x7, 3); // bending
-            thePattern.addToPattern(std::get<0>(theStub), 0xF, 4); // z
+            thePattern.addToPattern(fBendingCode, 0x7, 3);              // bending
+            thePattern.addToPattern(std::get<0>(theStub), 0xF, 4);      // z
         }
     }
 
@@ -305,24 +305,27 @@ PatternMatcher OTverifyMPASSAdataWord::producePatternMatcher(const std::vector<s
     }
 
     // padding 0s
-    if(numberOfBytesInSinglePacket == 1) thePattern.addToPattern(0x0, 0xFFFFF, 20); // 5G case
-    else thePattern.addToPattern(0x0, 0x1F, 5); // 10G case
+    if(numberOfBytesInSinglePacket == 1)
+        thePattern.addToPattern(0x0, 0xFFFFF, 20); // 5G case
+    else
+        thePattern.addToPattern(0x0, 0x1F, 5); // 10G case
 
     return thePattern;
 };
 
-void OTverifyMPASSAdataWord::matchAllPossibleStubPatterns(uint8_t numberOfBytesInSinglePacket, size_t numberOfLines, std::vector<std::pair<PatternMatcher, float>>& thePatternAndEfficiencyList, const std::vector<uint32_t>& concatenatedStubPackage, ReadoutChip* theMPA)
+void OTverifyMPASSAdataWord::matchAllPossibleStubPatterns(uint8_t                                        numberOfBytesInSinglePacket,
+                                                          size_t                                         numberOfLines,
+                                                          std::vector<std::pair<PatternMatcher, float>>& thePatternAndEfficiencyList,
+                                                          const std::vector<uint32_t>&                   concatenatedStubPackage,
+                                                          ReadoutChip*                                   theMPA)
 {
     for(auto& thePatternAndEfficiency: thePatternAndEfficiencyList)
     {
-        if(matchStubPattern(concatenatedStubPackage, thePatternAndEfficiency.first, numberOfBytesInSinglePacket, numberOfLines))
-        {
-            thePatternAndEfficiency.second++;
-        }
+        if(matchStubPattern(concatenatedStubPackage, thePatternAndEfficiency.first, numberOfBytesInSinglePacket, numberOfLines)) { thePatternAndEfficiency.second++; }
         else if(thePatternAndEfficiencyList.size() == 1)
         {
             LOG(DEBUG) << BOLDRED << "OTverifyMPASSAdataWord::injectStubsPS - Error, expected stub pattern not found for Board " << +theMPA->getBeBoardId() << " OpticalGroup "
-                        << +theMPA->getOpticalGroupId() << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
+                       << +theMPA->getOpticalGroupId() << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
             LOG(DEBUG) << BOLDRED << "Stub data received    " << getPatternPrintout(concatenatedStubPackage, numberOfBytesInSinglePacket) << RESET;
             LOG(DEBUG) << BOLDRED << "Stub pattern expected " << getPatternPrintout(thePatternAndEfficiency.first.getPattern(), numberOfBytesInSinglePacket) << RESET;
             LOG(DEBUG) << BOLDRED << "Stub pattern mask     " << getPatternPrintout(thePatternAndEfficiency.first.getMask(), numberOfBytesInSinglePacket) << RESET;

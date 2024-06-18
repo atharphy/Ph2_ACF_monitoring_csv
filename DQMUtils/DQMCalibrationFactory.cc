@@ -12,6 +12,7 @@
 #include "DQMUtils/DQMHistogramOTMPAtoCICecv.h"
 #include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
 #include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
+#include "DQMUtils/DQMHistogramOTSSAtoMPAecv.h"
 #include "DQMUtils/DQMHistogramOTalignBoardDataWord.h"
 #include "DQMUtils/DQMHistogramOTalignLpGBTinputs.h"
 #include "DQMUtils/DQMHistogramOTalignLpGBTinputsForBypass.h"
@@ -41,7 +42,6 @@
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
 #include "DQMUtils/RD53VoltageTuningHistograms.h"
-#include "DQMUtils/DQMHistogramOTSSAtoMPAecv.h"
 
 using namespace MessageUtils;
 
@@ -187,13 +187,9 @@ DQMCalibrationFactory::DQMCalibrationFactory()
 
     Register<DQMMetadataOT, DQMHistogramOTCICphaseAlignment, DQMHistogramOTalignLpGBTinputsForBypass>("alignLpGBTinputsForBypass");
     Register<DQMMetadataOT, DQMHistogramOTCICphaseAlignment, DQMHistogramOTalignLpGBTinputsForBypass, DQMHistogramOTMPAtoCICecv>("MPAtoCICecv");
-        
-    Register<DQMMetadataOT,
-             DQMHistogramOTalignLpGBTinputs,
-             DQMHistogramOTalignBoardDataWord,
-             DQMHistogramOTCICphaseAlignment,
-             DQMHistogramOTCICwordAlignment,
-             DQMHistogramOTSSAtoMPAecv>("SSAtoMPAecv");
+
+    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCICphaseAlignment, DQMHistogramOTCICwordAlignment, DQMHistogramOTSSAtoMPAecv>(
+        "SSAtoMPAecv");
 
     // ###################
     // # IT calibrations #

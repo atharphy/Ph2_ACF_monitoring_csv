@@ -495,11 +495,11 @@ void OTverifyCICdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdForCI
     {
         for(auto theStub: stubInformationList)
         {
-            thePattern.addToPattern(0x0, 0x0, 3); // BX offset
-            thePattern.addToPattern(chipIdForCIC, 0x7, 3); // Chip ID
+            thePattern.addToPattern(0x0, 0x0, 3);                   // BX offset
+            thePattern.addToPattern(chipIdForCIC, 0x7, 3);          // Chip ID
             thePattern.addToPattern(std::get<0>(theStub), 0xFF, 8); // seed
-            thePattern.addToPattern(std::get<1>(theStub), 0x7, 3); // bending
-            thePattern.addToPattern(std::get<2>(theStub), 0xF, 4); // z
+            thePattern.addToPattern(std::get<1>(theStub), 0x7, 3);  // bending
+            thePattern.addToPattern(std::get<2>(theStub), 0xF, 4);  // z
         }
     }
 
@@ -509,8 +509,10 @@ void OTverifyCICdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdForCI
     }
 
     // padding 0s
-    if(numberOfBytesInSinglePacket == 1) thePattern.addToPattern(0x0, 0xFFFFF, 20); // 5G case only
-    else thePattern.addToPattern(0x0, 0x1F, 5); // 10G case
+    if(numberOfBytesInSinglePacket == 1)
+        thePattern.addToPattern(0x0, 0xFFFFF, 20); // 5G case only
+    else
+        thePattern.addToPattern(0x0, 0x1F, 5); // 10G case
 
     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
     {

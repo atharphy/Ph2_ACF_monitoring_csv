@@ -17,6 +17,7 @@
 #include "tools/OTMPAtoCICecv.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
+#include "tools/OTSSAtoMPAecv.h"
 #include "tools/OTTemperature.h"
 #include "tools/OTVTRXLightOff.h"
 #include "tools/OTalignBoardDataWord.h"
@@ -46,7 +47,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/OTSSAtoMPAecv.h"
 
 using namespace MessageUtils;
 
@@ -179,7 +179,6 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass>("Outer Tracker", "alignLpGBTinputsForBypass");
 
-
     // 2S specific calibrations
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(
         "2S Module", "cbcpulseshape");
@@ -189,12 +188,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<PSPhysics>("PS Module", "psphysics");
     Register<OTalignBoardDataWord, OTPSADCCalibration>("PS Module", "ADCBiasCalibration");
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTMPAtoCICecv>("PS Module", "MPAtoCICecv");
-    
-    Register<OTalignLpGBTinputs,
-             OTalignBoardDataWord,
-             OTCICphaseAlignment,
-             OTCICwordAlignment,
-             OTSSAtoMPAecv>("PS Module", "SSAtoMPAecv");
+
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoMPAecv>("PS Module", "SSAtoMPAecv");
 
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");

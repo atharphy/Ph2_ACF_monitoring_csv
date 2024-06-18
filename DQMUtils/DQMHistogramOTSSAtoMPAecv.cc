@@ -65,7 +65,6 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
         phaseScanMatchingEfficiency.fTheHistogram->SetStats(false);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanMatchingEfficiencies[slvsCurrent], phaseScanMatchingEfficiency);
     }
-    
 }
 
 //========================================================================================================================
@@ -73,7 +72,6 @@ void DQMHistogramOTSSAtoMPAecv::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================
@@ -81,7 +79,6 @@ void DQMHistogramOTSSAtoMPAecv::reset(void)
 {
     // Clear histograms if needed
 }
-
 
 //========================================================================================================================
 void DQMHistogramOTSSAtoMPAecv::fillPatternEfficiencyScan(DetectorDataContainer& thePhaseMatchingEfficiency, uint8_t phase, uint8_t slvsCurrent)
@@ -96,17 +93,15 @@ void DQMHistogramOTSSAtoMPAecv::fillPatternEfficiencyScan(DetectorDataContainer&
 
                 auto thePatternMatchingEfficiencyVector = theHybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>();
 
-                TH2F* patternMatchingEfficiencyHistogram = fPhaseScanMatchingEfficiencies[slvsCurrent].getObject(theBoard->getId())
+                TH2F* patternMatchingEfficiencyHistogram = fPhaseScanMatchingEfficiencies[slvsCurrent]
+                                                               .getObject(theBoard->getId())
                                                                ->getObject(theOpticalGroup->getId())
                                                                ->getObject(theHybrid->getId())
                                                                ->getSummary<HistContainer<TH2F>>()
                                                                .fTheHistogram;
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
-                    for(size_t line = 0; line < 9; line++)
-                    {
-                        patternMatchingEfficiencyHistogram->SetBinContent(phase + 1, chipId * 9 + line + 1, thePatternMatchingEfficiencyVector[chipId][line]);
-                    }
+                    for(size_t line = 0; line < 9; line++) { patternMatchingEfficiencyHistogram->SetBinContent(phase + 1, chipId * 9 + line + 1, thePatternMatchingEfficiencyVector[chipId][line]); }
                 }
             }
         }
@@ -122,7 +117,7 @@ bool DQMHistogramOTSSAtoMPAecv::fill(std::string& inputStream)
     if(thePatternMatchinEfficiencyContainerSerialization.attachDeserializer(inputStream))
     {
         // std::cout << "Matched OTverifyMPASSAdataWord PatternMatchingEfficiency!!!!\n";
-        uint8_t phase, slvsCurrent;
+        uint8_t               phase, slvsCurrent;
         DetectorDataContainer theDetectorData =
             thePatternMatchinEfficiencyContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>(
                 fDetectorContainer, phase, slvsCurrent);

@@ -1418,8 +1418,9 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
 
 void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os)
 {
-    std::vector<std::string> listOfStringSettings{"RegNameDAC1", "RegNameDAC2", "DataOutputDir", "KIRA_ID", "OTinjectionOccupancyScan_ListOfInjectedPulses", "OTMPAtoCICecv_ListOfMPAslvsCurrents", "OTSSAtoMPAecv_ListOfSSAslvsCurrents"};
-    pugi::xml_document       doc;
+    std::vector<std::string> listOfStringSettings{
+        "RegNameDAC1", "RegNameDAC2", "DataOutputDir", "KIRA_ID", "OTinjectionOccupancyScan_ListOfInjectedPulses", "OTMPAtoCICecv_ListOfMPAslvsCurrents", "OTSSAtoMPAecv_ListOfSSAslvsCurrents"};
+    pugi::xml_document doc;
     openHWconfig(pFilename, doc);
 
     if(doc.child(HW_DESCRIPTION_NODE_NAME).child(SETTINGS_NODE_NAME) == 0) LOG(WARNING) << BOLDRED << "No -Settings- tag found in XML file: " << BOLDYELLOW << pFilename << RESET;
