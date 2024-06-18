@@ -50,13 +50,15 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
     {
         HistContainer<TH2F> phaseScanMatchingEfficiency(Form("MPAtoCICPhaseScan_SLVScurrent_%d", int(slvsCurrent)),
                                                         Form("MPA to CIC Phase Scan Matching efficiency - SLVScurrent = %d", int(slvsCurrent)),
-                                                        8,
+                                                        2,
                                                         -0.5,
-                                                        7.5,
+                                                        1.5,
                                                         numberOfMPA * numberOfLinesPerMPA,
                                                         -0.5,
                                                         numberOfMPA * numberOfLinesPerMPA - 0.5);
-        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("phase");
+        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("sampling egde");
+        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(1, "falling");
+        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(2, "rising");
         setYaxisBinLable(phaseScanMatchingEfficiency.fTheHistogram);
         phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
         phaseScanMatchingEfficiency.fTheHistogram->SetMaximum(1);
@@ -99,10 +101,12 @@ void DQMHistogramOTSSAtoMPAecv::fillPatternEfficiencyScan(DetectorDataContainer&
                                                                ->getObject(theHybrid->getId())
                                                                ->getSummary<HistContainer<TH2F>>()
                                                                .fTheHistogram;
-
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
-                    for(size_t cLineId = 0; cLineId < 9; cLineId++) { patternMatchingEfficiencyHistogram->SetBinContent(chipId + 1, cLineId + 1, thePatternMatchingEfficiencyVector[chipId][cLineId]); }
+                    for(size_t line = 0; line < 9; line++)
+                    {
+                        patternMatchingEfficiencyHistogram->SetBinContent(phase + 1, chipId * 9 + line + 1, thePatternMatchingEfficiencyVector[chipId][line]);
+                    }
                 }
             }
         }

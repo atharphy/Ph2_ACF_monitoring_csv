@@ -39,12 +39,13 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
     static std::string fCalibrationDescription; 
 
   protected:
-    uint8_t fFirstStrip {5};
-    uint8_t fStripGap {15};
+    uint8_t fFirstStrip {15};
+    uint8_t fStripGap {10};
     uint8_t fBendingCode {0x05};
     uint8_t fStubRowCoordinate {0x0A};
 
     virtual std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> produceMatchingPixelClusterList(uint8_t colCoordinate);
+    virtual void matchAllPossibleStubPatterns(uint8_t numberOfBytesInSinglePacket, size_t numberOfLines, std::vector<std::pair<PatternMatcher, float>>& thePatternAndEfficiencyList, const std::vector<uint32_t>& concatenatedStubPackage, Ph2_HwDescription::ReadoutChip* theMPA);
     DetectorDataContainer fPatternMatchingEfficiencyContainer;
 
   private:
@@ -54,8 +55,6 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> produceStripClusterList();
     std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList);
     PatternMatcher producePatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, int>>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC);
-
-
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

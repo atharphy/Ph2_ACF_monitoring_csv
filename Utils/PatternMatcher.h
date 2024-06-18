@@ -74,6 +74,15 @@ class PatternMatcher
     uint32_t getNumberOfMaskedBits();
 
     /*!
+     * \brief returns true if the pattern matches with the theWordVector vector provided within the indicated subset
+     * \param theWordVector the data to match
+     * \param firstBitPosition position of first bit to match
+     * \param numberOfBitsToMatch number of consecutive bits to match
+     * \return is the pattern matched
+     */
+    bool isSubsetMatched(const std::vector<uint32_t>& theWordVector, uint32_t firstBitPosition, uint32_t numberOfBitsToMatch) const;
+
+    /*!
      * @brief clear all data members
      */
     void clear();

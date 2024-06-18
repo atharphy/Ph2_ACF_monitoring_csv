@@ -37,6 +37,7 @@ class OTSSAtoMPAecv : public OTverifyMPASSAdataWord
     
   private:
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> produceMatchingPixelClusterList(uint8_t colCoordinate) override;
+    void matchAllPossibleStubPatterns(uint8_t numberOfBytesInSinglePacket, size_t numberOfLines, std::vector<std::pair<PatternMatcher, float>>& thePatternAndEfficiencyList, const std::vector<uint32_t>& concatenatedStubPackage, Ph2_HwDescription::ReadoutChip* theMPA) override;
     void runSSAtoMPAecvScan();
     std::vector<float> fListOfSSAslvsCurrents{1, 4, 7};
 

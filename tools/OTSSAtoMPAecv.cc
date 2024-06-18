@@ -5,6 +5,7 @@
 #include "HWInterface/D19cFWInterface.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/PatternMatcher.h"
+#include "HWInterface/MPA2Interface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -21,8 +22,8 @@ void OTSSAtoMPAecv::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fFirstStrip = 5;
-    fStripGap   = 7;
+    fFirstStrip = 6;
+    fStripGap   = 6;
     // free the registers in case any
     fNumberOfIterations = findValueInSettings<double>("OTSSAtoMPAecv_NumberOfIterations", 1000);
     fListOfSSAslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>("OTSSAtoMPAecv_ListOfSSAslvsCurrents", "1, 4, 7"));
@@ -78,10 +79,11 @@ void OTSSAtoMPAecv::Reset()
 
 void OTSSAtoMPAecv::runSSAtoMPAecvScan()
 {
-    for(uint8_t phase = 0; phase < 8; ++phase)
+    for(uint8_t slvsCurrent : fListOfSSAslvsCurrents)
     {
-        for(uint8_t slvsCurrent = 0; slvsCurrent < 8; ++slvsCurrent)
+        for(uint8_t phase = 0; phase < 2; ++phase)
         {
+            LOG(INFO) << BOLDGREEN << "MPA sampling phase = " << +phase << " SSA SLVS current = " << +slvsCurrent << RESET;
             //reset fPatternMatchingEfficiencyContainer
             for(auto theBoard: fPatternMatchingEfficiencyContainer)
             {
@@ -116,13 +118,24 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScan()
                             }
                             else if(theChip->getFrontEndType() == FrontEndType::MPA2)
                             {
-                                fReadoutChipInterface->WriteChipReg(theChip, "LatencyRx320", phase | (phase << 3));
+                                auto theMPAInterface = static_cast<MPA2Interface*>(fReadoutChipInterface);
+                                if(phase == 0)
+                                {
+                                    theMPAInterface->WriteChipReg(theChip, "EdgeSelTrig", 0x00);
+                                    theMPAInterface->WriteChipRegBits(theChip, "EdgeSelT1Raw", 0x00, "Mask", 0x01);
+                                }
+                                else
+                                {
+                                    theMPAInterface->WriteChipReg(theChip, "EdgeSelTrig", 0xFF);
+                                    theMPAInterface->WriteChipRegBits(theChip, "EdgeSelT1Raw", 0x01, "Mask", 0x01);
+                                }
                             }
                         }
                     }
                 }
             }
             runIntegrityTest();
+            
 #ifdef __USE_ROOT__
             fDQMHistogramOTSSAtoMPAecv.fillPatternEfficiencyScan(fPatternMatchingEfficiencyContainer, phase, slvsCurrent);
 #else
@@ -141,8 +154,36 @@ std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> OTSSAtoMPAecv::produceMatchin
 {
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList;
     thePixelClusterList.push_back({fStubRowCoordinate, colCoordinate, 1}); // matching strip cluster
-    thePixelClusterList.push_back({fStubRowCoordinate, colCoordinate << 1, 1});
-    thePixelClusterList.push_back({fStubRowCoordinate, colCoordinate >> 1, colCoordinate % 2 + 1});
+    uint8_t centroidCode = 2*colCoordinate + 9;
+    uint8_t centroidCodeNegativeShift = centroidCode >> 1;
+    uint8_t centroidCodePositiveShift = centroidCode << 1;
+    std::vector<uint8_t> centroidList {centroidCodeNegativeShift, centroidCodePositiveShift};
+    for(auto centroid: centroidList)
+    {
+        thePixelClusterList.push_back({fStubRowCoordinate, (centroid-9) >> 1, (centroid-9)%2 + 1}); 
+    }
 
     return thePixelClusterList;
+}
+
+void OTSSAtoMPAecv::matchAllPossibleStubPatterns(uint8_t numberOfBytesInSinglePacket, size_t numberOfLines, std::vector<std::pair<PatternMatcher, float>>& thePatternAndEfficiencyList, const std::vector<uint32_t>& concatenatedStubPackage, Ph2_HwDescription::ReadoutChip* theMPA)
+{
+    for(auto& thePatternAndEfficiency: thePatternAndEfficiencyList)
+    {
+        float maximumNumberOfMatchedStubs = 0;
+        for(uint8_t numberOfPacketsToSkip = 0; numberOfPacketsToSkip < numberOfLines * 8; ++numberOfPacketsToSkip)
+        {
+            float currentNumberOfMatchedStubs = 0;
+            std::vector<uint32_t> theShiftedWordVector = applyByteShift(concatenatedStubPackage, numberOfBytesInSinglePacket, numberOfPacketsToSkip);
+            for(size_t stubNumber = 0; stubNumber < 8; ++stubNumber)
+            {
+                if(thePatternAndEfficiency.first.isSubsetMatched(theShiftedWordVector, 29 + 21 * stubNumber, 21)) ++currentNumberOfMatchedStubs;
+            }
+            if(maximumNumberOfMatchedStubs < currentNumberOfMatchedStubs) maximumNumberOfMatchedStubs = currentNumberOfMatchedStubs;
+            if(currentNumberOfMatchedStubs == 8) break;
+        }
+        thePatternAndEfficiency.second += (maximumNumberOfMatchedStubs / 8);
+    }
+
+    return;
 }
