@@ -8,7 +8,7 @@
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
 #include "tools/AntennaTester.h"
-#include "tools/BackEndAlignment.h"
+#include "tools/LinkAlignmentOT.h"
 #include "tools/CBCPulseShape.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/LatencyScan.h"

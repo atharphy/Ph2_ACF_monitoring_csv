@@ -15,7 +15,6 @@
 #include "Utils/GenericDataArray.h"
 #include "Utils/Occupancy.h"
 #include "Utils/StartInfo.h"
-#include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 
 using namespace Ph2_HwDescription;
@@ -51,17 +50,6 @@ void Physics2S::ConfigureCalibration()
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
 
-    BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit(this);
-    cBackEndAligner.Initialise();
-    bool cAligned = cBackEndAligner.Align();
-    cBackEndAligner.resetPointers();
-
-    if(!cAligned)
-    {
-        LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
-        throw std::runtime_error("Failed to align back-end");
-    }
 }
 
 void Physics2S::Running()

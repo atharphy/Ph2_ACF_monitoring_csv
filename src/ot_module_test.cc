@@ -4,7 +4,6 @@
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
-#include "tools/BackEndAlignment.h"
 #include "tools/BeamTestCheck.h"
 #include "tools/CBCPulseShape.h"
 #include "tools/CheckCbcNeighbors.h"

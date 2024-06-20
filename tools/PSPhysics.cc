@@ -16,7 +16,6 @@
 #include "Utils/PSSync.h"
 #include "Utils/SSAChannelGroupHandler.h"
 #include "Utils/StartInfo.h"
-#include "tools/BackEndAlignment.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
 
@@ -41,21 +40,6 @@ void PSPhysics::ConfigureCalibration()
     cCicAligner.waitForRunToBeCompleted();
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
-
-    BackEndAlignment cBackEndAligner;
-    cBackEndAligner.Inherit(this);
-    cBackEndAligner.Initialise();
-    bool cAligned = cBackEndAligner.Align();
-    cBackEndAligner.resetPointers();
-
-    // cPSAlignment.Align();
-    cPSAlignment.Reset();
-
-    if(!cAligned)
-    {
-        LOG(ERROR) << BOLDRED << "Failed to align back-end" << RESET;
-        exit(1);
-    }
 
     for(auto board: *fDetectorContainer)
     {

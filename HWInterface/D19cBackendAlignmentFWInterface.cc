@@ -295,71 +295,10 @@ Reply D19cBackendAlignmentFWInterface::ManuallyConfigureLine(AlignerObject pAlig
     Print();
     return cReply;
 }
-Reply D19cBackendAlignmentFWInterface::RetrieveConfig(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration)
-{
-    Reply cReply;
-    // select FE
-    SetAlignerObject(pAlignerObject);
-    // configure aligner
-    SetLineConfiguration(pLineConfiguration);
-    SendCommand("ReturnConfig");
-    GetReply("ReturnConfig");
-    cReply.fCnfg    = fLineConfiguration;
-    cReply.fSuccess = true;
-    Print();
-    return cReply;
-}
 
 bool D19cBackendAlignmentFWInterface::IsLineWordAligned() { return (fStatus.fWordAlignmentFSMstate == 14); }
 bool D19cBackendAlignmentFWInterface::IsLinePhaseAligned() { return (fStatus.fPhaseAlignmentFSMstate == 14); }
 
-std::pair<bool, uint8_t> D19cBackendAlignmentFWInterface::PhaseTuneLine(const Chip* pChip, uint8_t pLineId, uint8_t pPattern, uint8_t pOptical)
-{
-    // EnablePrintout(true);
-    std::pair<bool, uint8_t> cLineStatus;
-    cLineStatus.first  = false;
-    cLineStatus.second = 0;
-
-    fAlignerObject.fHybrid  = pChip->getHybridId();
-    fAlignerObject.fChip    = (pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
-    fAlignerObject.fLine    = pLineId;
-    fAlignerObject.fOptical = pOptical;
-
-    fLineConfiguration.fPattern       = pPattern;
-    fLineConfiguration.fPatternPeriod = 8;
-    fLineConfiguration.fBitslip       = 0;
-    fLineConfiguration.fDelay         = 0;
-    auto cReply                       = this->TunePhase(fAlignerObject, fLineConfiguration);
-    cLineStatus.first                 = cReply.fSuccess;
-    cLineStatus.second                = cReply.fCnfg.fDelay;
-    if(!cLineStatus.first)
-    {
-        LOG(INFO) << BOLDRED << "Could not phase align-BE data for BeBoard#" << +pChip->getBeBoardId() << " Hybrid#" << +pChip->getHybridId() << " Chip#" << +pChip->getId() << " line# " << +pLineId
-                  << RESET;
-    }
-    return cLineStatus;
-}
-std::pair<bool, uint8_t> D19cBackendAlignmentFWInterface::WordAlignLine(const Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod, uint8_t pSamplingDelay, uint8_t pOptical)
-{
-    // EnablePrintout(true);
-    std::pair<bool, uint8_t> cLineStatus;
-    cLineStatus.first  = false;
-    cLineStatus.second = 0;
-
-    fAlignerObject.fHybrid  = pChip->getHybridId();
-    fAlignerObject.fChip    = (pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
-    fAlignerObject.fLine    = pLineId;
-    fAlignerObject.fOptical = pOptical;
-
-    fLineConfiguration.fPattern       = pAlignmentPattern;
-    fLineConfiguration.fPatternPeriod = pPeriod;
-    fLineConfiguration.fBitslip       = 0;
-    fLineConfiguration.fDelay         = pSamplingDelay;
-    auto cReply                       = this->AlignWord(fAlignerObject, fLineConfiguration, true);
-    cLineStatus.first                 = cReply.fSuccess;
-    cLineStatus.second                = cReply.fCnfg.fBitslip;
-    return cLineStatus;
-}
 void D19cBackendAlignmentFWInterface::ManuallyConfigureLine(const Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip, uint8_t pOptical)
 {
     EnablePrintout(true);

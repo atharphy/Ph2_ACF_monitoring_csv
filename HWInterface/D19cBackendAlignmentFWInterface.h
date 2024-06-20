@@ -64,12 +64,9 @@ class D19cBackendAlignmentFWInterface
     Reply                    TunePhase(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration);
     Reply                    AlignWord(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration, bool pChangePattern);
     Reply                    ManuallyConfigureLine(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration);
-    Reply                    RetrieveConfig(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration);
     bool                     IsLineWordAligned();
     bool                     IsLinePhaseAligned();
     void                     EnablePrintout(bool pPrint = false) { fVerbose = (pPrint) ? 3 : 0; }
-    std::pair<bool, uint8_t> PhaseTuneLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pOptical);
-    std::pair<bool, uint8_t> WordAlignLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod, uint8_t pSamplingDelay, uint8_t pOptical);
     void                     ManuallyConfigureLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip, uint8_t pOptical);
 
     RegManager* fTheRegManager{nullptr};
@@ -80,8 +77,6 @@ class D19cBackendAlignmentFWInterface
     LineConfiguration fLineConfiguration;
     Status            fStatus;
     uint8_t           fVerbose{3};
-
-  private:
     void ClearConfig();
     void ClearStatus();
     void GetReply(std::string pCommand);
