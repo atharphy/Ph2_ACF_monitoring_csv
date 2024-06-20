@@ -570,9 +570,9 @@ int main(int argc, char* argv[])
     {
         cTool.ConfigureHw();
         // just to check
-        // D19cDebugFWInterface* cDebugInterface   = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface());
         // for(const auto cBoard: *cTool.fDetectorContainer)
         // {
+        //     D19cDebugFWInterface* cDebugInterface   = static_cast<D19cDebugFWInterface*>(cTool.fBeBoardInterface->getFirmwareInterface(cBoard));
         //     cDebugInterface->L1ADebug();
         //     cTool.ReadNEvents(cBoard, 10);
         // }

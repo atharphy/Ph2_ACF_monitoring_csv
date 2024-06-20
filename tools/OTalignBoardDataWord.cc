@@ -96,7 +96,7 @@ void OTalignBoardDataWord::wordAlignBEdata()
 void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
 {
     LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::stubAndL1WordAlignment for an OG " << RESET;
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
 
     D19cDebugFWInterface*            theDebugInterface   = cInterface->getDebugInterface();
     D19cBackendAlignmentFWInterface* theAlignerInterface = cInterface->getBackendAlignmentInterface();

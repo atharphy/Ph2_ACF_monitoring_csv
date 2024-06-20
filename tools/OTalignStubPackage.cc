@@ -94,9 +94,8 @@ void OTalignStubPackage::AlignStubPackage()
 
     for(auto theBoard: *fDetectorContainer)
     {
-        // set board and get interface
-        fBeBoardInterface->setBoard(theBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        // get interface
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
         // make sure you're only sending one trigger at a time here
         LOG(INFO) << GREEN << "Trying to align CIC stub decoder in the back-end" << RESET;
 

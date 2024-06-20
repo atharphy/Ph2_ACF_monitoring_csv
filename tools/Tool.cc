@@ -162,7 +162,7 @@ void Tool::Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize)
 
 void Tool::Start(const StartInfo& theStartInfo)
 {
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fDirectoryName = " << fDirectoryName << std::endl;
+    LOG(DEBUG) << BOLDBLUE << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fDirectoryName = " << BOLDYELLOW << fDirectoryName << RESET;
     if(fDirectoryName == "")
     {
         std::string resultDirectory = getResultDirectoryName(theStartInfo);
@@ -952,8 +952,8 @@ void Tool::setSystemTestPulse(uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTP
                         cRegVec.push_back(std::make_pair("MiscTestPulseCtrl&AnalogMux", cTPRegValue));
                         cRegVec.push_back(std::make_pair("TestPulseDel&ChanGroup", cRegValue));
                         cRegVec.push_back(std::make_pair("TestPulsePotNodeSel", pTPAmplitude));
-                        LOG(DEBUG) << BOLDBLUE << "Read original Amux Value to be: " << std::bitset<8>(cOriginalAmuxValue) << " and changed to " << std::bitset<8>(cTPRegValue)
-                                   << " - the TP is bit 6!" RESET;
+                        LOG(DEBUG) << BOLDBLUE << "Read original Amux Value to be: " << std::bitset<8>(cOriginalAmuxValue) << " and changed to " << std::bitset<8>(cTPRegValue) << " - the TP is bit 6!"
+                                   << RESET;
                     }
 
                     this->fReadoutChipInterface->WriteChipMultReg(cChip, cRegVec);
@@ -1333,9 +1333,6 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                             currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 previousDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() &
                                 (0xFFFF - (1 << iBit));
-
-                        // LOG(DEBUG) << BOLDBLUE << "\t.. current setting is "
-                        //            << currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() << RESET;
                     }
                 }
             }

@@ -1693,7 +1693,7 @@ bool PSAlignment::Align()
     for(auto cBoard: *fDetectorContainer)
     {
         fBeBoardInterface->ChipReSync(cBoard);
-        auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
         auto cL1ReadoutInterface = cInterface->getL1ReadoutInterface();
         cL1ReadoutInterface->ResetReadout();
 

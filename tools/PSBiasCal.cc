@@ -697,8 +697,7 @@ void PSBiasCal::CalibrateBias()
                         .fOffset = fOffset;
 
                     // reset chip before measuring VDDs
-                    fBeBoardInterface->setBoard(cBoard->getId());
-                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadoutChipReset();
+                    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->ReadoutChipReset();
 
                     uint32_t ADC_AVDD = 0, ADC_DVDD = 0;
                     float    obtained_AVDD = 0, obtained_DVDD = 0;

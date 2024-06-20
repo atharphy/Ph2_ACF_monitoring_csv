@@ -313,8 +313,7 @@ SlvsLineStatus CicFEAlignment::CheckPhyPort(const Hybrid* pHybrid, PhyPortCnfg p
     std::bitset<8> cExpectedPattern(pPattern);
     std::string    cPatternToMatch = cExpectedPattern.to_string();
     auto           cBoardId        = pHybrid->getBeBoardId();
-    fBeBoardInterface->setBoard(cBoardId);
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto           cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
 
     auto  cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     auto& cCic       = static_cast<const OuterTrackerHybrid*>(pHybrid)->fCic;
@@ -484,8 +483,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
         bool cWithCBC = false;
         // generate alignment pattern on all stub lines
         LOG(INFO) << BOLDBLUE << "Generating Patterns needed for phase alignment of CIC inputs." << RESET;
-        fBeBoardInterface->setBoard(cBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -559,8 +557,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
     {
         if(!cDebug) continue;
 
-        fBeBoardInterface->setBoard(cBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
 
         D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
         for(auto cOpticalGroup: *cBoard)
