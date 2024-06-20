@@ -344,8 +344,7 @@ void Eudaq2Producer::DoStartRun()
     LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Opening shutter ..." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        fBeBoardInterface->setBoard(cBoard->getId());
-        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
         cInterface->ResetEventCounter();
 
         auto cReadoutInterface = cInterface->getL1ReadoutInterface();
@@ -377,8 +376,7 @@ void Eudaq2Producer::DoStopRun()
     LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Closing shutter..." << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        fBeBoardInterface->setBoard(cBoard->getId());
-        auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
         auto cReadoutInterface = cInterface->getL1ReadoutInterface();
         this->fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard));
         LOG(INFO) << BOLDBLUE << "[CMS-OT Producer] Shutter closed on board " << +cBoard->getId() << RESET;
@@ -434,8 +432,7 @@ void Eudaq2Producer::DoReset()
         // Just in case close the shutter
         for(auto cBoard: *fDetectorContainer)
         {
-            fBeBoardInterface->setBoard(cBoard->getId());
-            auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+            auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
             auto cReadoutInterface = cInterface->getL1ReadoutInterface();
 
             fBeBoardInterface->Stop(static_cast<BeBoard*>(cBoard));
@@ -525,7 +522,6 @@ void Eudaq2Producer::ReadoutLoop()
             LOG(INFO) << MAGENTA << "Running on normal mode" << RESET;
             for(auto cBoard: *fDetectorContainer)
             {
-                fBeBoardInterface->setBoard(cBoard->getId());
                 BeBoard*              cTheBoard = static_cast<BeBoard*>(cBoard);
                 std::vector<uint32_t> cRawData(0);
                 // Get data

@@ -62,7 +62,6 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
 {
     LOG(INFO) << BOLDYELLOW << "OTalignLpGBTinputsForBypass::AlignLpGBTinputs ... start LpGBT phase scan with CIC in bypass mode" << RESET;
 
-    auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
     auto    firstModule   = fDetectorContainer->getFirstObject()->getFirstObject();
     bool    isPS          = firstModule->getFrontEndType() == FrontEndType::OuterTrackerPS;
@@ -94,6 +93,7 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
         {
             for(auto theBoard: *fDetectorContainer)
             {
+                auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
                 for(auto theOpticalGroup: *theBoard)
                 {
                     auto& thelpGBT = theOpticalGroup->flpGBT;

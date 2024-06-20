@@ -49,10 +49,10 @@ void OTverifyECVlpGBTCIC::runECV()
     uint8_t lpGBTPhaseStart = 0, lpGBTPhaseEnd = 14;
 
     LOG(INFO) << BOLDYELLOW << "OTverifyECVlpGBTCIC::runIntegrityTest ... start integrity test" << RESET;
-    auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
     for(auto theBoard: *fDetectorContainer)
     {
+        auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
         for(auto theOpticalGroup: *theBoard)
         {
             for(uint8_t clockPolarity = clockPolarityStart; clockPolarity <= clockPolarityEnd; clockPolarity++)

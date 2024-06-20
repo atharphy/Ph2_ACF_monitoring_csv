@@ -58,7 +58,8 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
     void injectL1PS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket) override;
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>          produceStripClusterList();
     std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList);
-    PatternMatcher producePatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, int>>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC);
+    PatternMatcher produceStubPatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, int>>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC);
+    PatternMatcher produceL1PatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList, const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& theStripClusterList, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

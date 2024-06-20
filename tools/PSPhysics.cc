@@ -129,17 +129,6 @@ void PSPhysics::Running()
     theStartInfo.setRunNumber(fRunNumber);
     SystemController::Start(theStartInfo);
 
-    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-    std::cout << "handshake = " << static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-
     PSPhysics::run();
 }
 
@@ -223,9 +212,6 @@ void PSPhysics::run()
 
     while(fKeepRunning)
     {
-        // std::cout<<"Trigger status = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_stat.fast_command_block.general.source") << std::endl;
-        // std::cout<<"handshake = "<< static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable") << std::endl;
-
         fTotalDataSize += getDataFromBoards();
 
         std::cout << "Readout in total = " << fTotalDataSize << " events" << std::endl;

@@ -69,8 +69,7 @@ bool BackEndAlignment::PSAlignment(BeBoard* pBoard)
 {
     bool cTuned = true;
     LOG(INFO) << GREEN << "BackEndAlignment for PS Chip(s)" << RESET;
-    fBeBoardInterface->setBoard(pBoard->getId());
-    auto                  cInterface             = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto                  cInterface             = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(pBoard));
     D19cDebugFWInterface* cDebugInterface        = cInterface->getDebugInterface();
     uint8_t               cPhaseAlignmentPattern = 0xAA;
     uint8_t               cWordAlignmentPattern  = 0xEA;
@@ -288,8 +287,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
 bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
 {
     bool cAligned = true;
-    fBeBoardInterface->setBoard(pBoard->getId());
-    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(pBoard));
     D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
 
     for(auto cOpticalReadout: *pBoard)
@@ -407,7 +405,7 @@ bool BackEndAlignment::Align()
             LOG(INFO) << BOLDRED << "Back-end alignment FAILED..." << RESET;
         // re-load configuration of fast command block from register map loaded from xml file
         LOG(INFO) << BOLDBLUE << "Re-loading original coonfiguration of fast command block from hardware description file [.xml] " << RESET;
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureFastCommandBlock(theBoard);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->ConfigureFastCommandBlock(theBoard);
     }
     return cAligned;
 }

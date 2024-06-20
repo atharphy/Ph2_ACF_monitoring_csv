@@ -174,7 +174,6 @@ void BeamTestCheck::ValidateRaw()
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        fBeBoardInterface->setBoard(cBoard->getId());
         const std::vector<Event*>& cEvents      = this->GetEvents();
         BeBoardRegMap              cRegMap      = cBoard->getBeBoardRegMap();
         uint32_t                   cTriggerMult = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"].fValue;
@@ -219,7 +218,6 @@ void BeamTestCheck::Validate()
     LOG(INFO) << BOLDYELLOW << "Creating root file [hit map] from raw file" << RESET;
     for(auto cBoard: *fDetectorContainer)
     {
-        fBeBoardInterface->setBoard(cBoard->getId());
         const std::vector<Event*>& cEvents              = this->GetEvents();
         float                      cNormalizationFactor = fNevents; // cEvents.size() / (1 + cTriggerMult);
         LOG(INFO) << BOLDMAGENTA << "Read-back " << +cEvents.size() << " events from BeBoard#" << +cBoard->getId() << " - normalization factor for occupancy is " << +cNormalizationFactor << RESET;
@@ -707,7 +705,6 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
         for(auto cBoard: *fDetectorContainer)
         {
             auto cBrdIndx = cBoard->getId();
-            fBeBoardInterface->setBoard(cBoard->getId());
             const std::vector<Event*>& cEvents              = this->GetEvents();
             auto&                      cTriggerMult         = cBrdTriggerMult.getObject(cBoard->getId())->getSummary<uint32_t>();
             float                      cNormalizationFactor = fNevents;
@@ -885,7 +882,6 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
         // check read-back events
         for(auto cBoard: *fDetectorContainer)
         {
-            fBeBoardInterface->setBoard(cBoard->getId());
             const std::vector<Event*>& cEvents      = this->GetEvents();
             size_t                     cTriggerMult = fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
             for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++) { Count(cEvents, cTriggerId); }
@@ -1841,7 +1837,6 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinuousReadout)
         for(auto cBoard: *fDetectorContainer)
         {
             if(cSet[cBoard->getId()] == 0) continue;
-            fBeBoardInterface->setBoard(cBoard->getId());
             const std::vector<Event*>& cEvents              = this->GetEvents();
             auto&                      cTriggerMult         = cBrdTriggerMult.getObject(cBoard->getId())->getSummary<uint32_t>();
             float                      cNormalizationFactor = cEvents.size() / (1 + cTriggerMult);

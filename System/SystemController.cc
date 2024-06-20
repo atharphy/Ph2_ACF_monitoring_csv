@@ -231,7 +231,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     }
 
     fBeBoardInterface = new BeBoardInterface(fBeBoardFWMap);
-    fBeBoardInterface->setBoard(0);
 
     LOG(INFO) << GREEN << "Trying to connect to the Power Supply Server..." << RESET;
 
@@ -357,8 +356,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         // ###########################################
         // # Make sure all interfaces are configured #
         // ###########################################
-        fBeBoardInterface->setBoard(cBoard->getId());
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->ConfigureInterfaces(cBoard);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->ConfigureInterfaces(cBoard);
 
         for(auto cOpticalGroup: *cBoard)
         {
@@ -841,14 +839,11 @@ void SystemController::ConfigureHw(bool pReInitialize)
     for(const auto cBoard: *fDetectorContainer)
     {
         cBoard->printBoardType();
-        fBeBoardInterface->setBoard(cBoard->getId());
         if(cBoard->getToConfigure()) fBeBoardInterface->ConfigureBoard(cBoard);
     }
 
     for(const auto cBoard: *fDetectorContainer)
     {
-        fBeBoardInterface->setBoard(cBoard->getId());
-
         // #################
         // # Outer Tracker #
         // #################
@@ -985,7 +980,7 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo, bool pRe
 void SystemController::initializeExceptionHandler()
 {
     ExceptionHandler::getInstance()->setDetectorContainer(fDetectorContainer);
-    ExceptionHandler::getInstance()->setFirmwareInterface(fBeBoardInterface->getFirmwareInterface());
+    ExceptionHandler::getInstance()->setBeBoardInterface(fBeBoardInterface);
 }
 
 void SystemController::Start(const StartInfo& theStartInfo)

@@ -101,52 +101,8 @@ void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCI
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theStripClusterList{std::make_tuple<uint8_t, uint8_t>(0x0, 0x25, 2)};
     static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theSSA, theStripClusterList);
 
-    uint8_t numberOfPixelClusters = thePixelClusterList.size();
-    uint8_t numberOfStripClusters = theStripClusterList.size();
+    PatternMatcher thePatternMatcher = produceL1PatternMatcher(thePixelClusterList, theStripClusterList, numberOfBytesInSinglePacket, chipIdForCIC);
 
-    // Create expected pattern
-    PatternMatcher thePatternMatcher;
-    thePatternMatcher.addToPattern(0x0ffffffe, 0xffffffff, 32); // CIC header plus 0 in front added in the transmission
-    thePatternMatcher.addToPattern(0x0, 0x1ff, 9);
-    thePatternMatcher.addToPattern(0x0, 0x0, 9);
-    thePatternMatcher.addToPattern(numberOfStripClusters, 0x7F, 7);
-    thePatternMatcher.addToPattern(0x0, 0x1, 1);
-    thePatternMatcher.addToPattern(numberOfPixelClusters, 0x7F, 7);
-
-    std::map<uint8_t, std::pair<uint8_t, uint8_t>> orderedStripClusterList;
-    for(const auto& theCluster: theStripClusterList) { orderedStripClusterList[std::get<1>(theCluster)] = {std::get<0>(theCluster), std::get<2>(theCluster)}; }
-
-    // CIC ouputs cluster with loower address first
-    for(const auto& theCluster: orderedStripClusterList)
-    {
-        thePatternMatcher.addToPattern(chipIdForCIC, 0x7, 3);
-        thePatternMatcher.addToPattern(theCluster.first + 1, 0x7F, 7); // pixel column address starts from 1
-        thePatternMatcher.addToPattern(theCluster.second.second - 1, 0x7, 3);
-        thePatternMatcher.addToPattern(0x0, 0x0, 1);
-    }
-
-    std::map<uint8_t, std::pair<uint8_t, uint8_t>> orderedPixelClusterList;
-    for(const auto& theCluster: thePixelClusterList) { orderedPixelClusterList[std::get<1>(theCluster)] = {std::get<0>(theCluster), std::get<2>(theCluster)}; }
-
-    // CIC ouputs cluster with loower address first
-    for(const auto& theCluster: orderedPixelClusterList)
-    {
-        thePatternMatcher.addToPattern(chipIdForCIC, 0x7, 3);
-        thePatternMatcher.addToPattern(theCluster.first + 1, 0x7F, 7); // pixel column address starts from 1
-        thePatternMatcher.addToPattern(theCluster.second.second - 1, 0x7, 3);
-        thePatternMatcher.addToPattern(theCluster.second.first, 0xF, 4);
-    }
-
-    // add extra zeros for padding
-    size_t numberOfPatternBits  = thePatternMatcher.getNumberOfPatternBits();
-    size_t numberOfPaddingZeros = numberOfPatternBits % 4;
-    thePatternMatcher.addToPattern(0x0, ~(~0u << numberOfPaddingZeros), numberOfPaddingZeros);
-
-    // add CIC trailing 0 and idle pattern
-    if(numberOfStripClusters == 1)
-        thePatternMatcher.addToPattern(0x00aaaaaa, 0x00ffffff, 32);
-    else
-        thePatternMatcher.addToPattern(0x00a, 0x00f, 12); // 10G debug output is very often cut
     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
     {
         auto lineOutputVector        = theFWInterface->L1ADebug(1, false);
@@ -221,7 +177,7 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
         std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> possibleStubVectorList = producePossibleStubVectorList(thePixelClusterList);
 
         std::vector<std::pair<PatternMatcher, float>> thePatternAndEfficiencyList;
-        for(auto& theStubVector: possibleStubVectorList) thePatternAndEfficiencyList.emplace_back(std::make_pair(producePatternMatcher(theStubVector, numberOfBytesInSinglePacket, chipIdForCIC), 0.));
+        for(auto& theStubVector: possibleStubVectorList) thePatternAndEfficiencyList.emplace_back(std::make_pair(produceStubPatternMatcher(theStubVector, numberOfBytesInSinglePacket, chipIdForCIC), 0.));
 
         for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
         {
@@ -270,7 +226,7 @@ std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> OTverifyMPASSAdataWo
     return possibleStubVectorList;
 }
 
-PatternMatcher OTverifyMPASSAdataWord::producePatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, int>>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC)
+PatternMatcher OTverifyMPASSAdataWord::produceStubPatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, int>>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC)
 {
     size_t numberOfStubs     = 8 * theStubVector.size();
     size_t maximumStubNumber = (numberOfBytesInSinglePacket == 1) ? 16 : 35; // 16 if a 5G, 35 if a 10G
@@ -331,4 +287,56 @@ void OTverifyMPASSAdataWord::matchAllPossibleStubPatterns(uint8_t               
             LOG(DEBUG) << BOLDRED << "Stub pattern mask     " << getPatternPrintout(thePatternAndEfficiency.first.getMask(), numberOfBytesInSinglePacket) << RESET;
         }
     }
+}
+
+PatternMatcher OTverifyMPASSAdataWord::produceL1PatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList, const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& theStripClusterList, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC)
+{
+    uint8_t numberOfPixelClusters = thePixelClusterList.size();
+    uint8_t numberOfStripClusters = theStripClusterList.size();
+
+    // Create expected pattern
+    PatternMatcher thePatternMatcher;
+    thePatternMatcher.addToPattern(0x0ffffffe, 0xffffffff, 32); // CIC header plus 0 in front added in the transmission
+    thePatternMatcher.addToPattern(0x0, 0x1ff, 9);
+    thePatternMatcher.addToPattern(0x0, 0x0, 9);
+    thePatternMatcher.addToPattern(numberOfStripClusters, 0x7F, 7);
+    thePatternMatcher.addToPattern(0x0, 0x1, 1);
+    thePatternMatcher.addToPattern(numberOfPixelClusters, 0x7F, 7);
+
+    std::map<uint8_t, std::pair<uint8_t, uint8_t>> orderedStripClusterList;
+    for(const auto& theCluster: theStripClusterList) { orderedStripClusterList[std::get<1>(theCluster)] = {std::get<0>(theCluster), std::get<2>(theCluster)}; }
+
+    // CIC ouputs cluster with loower address first
+    for(const auto& theCluster: orderedStripClusterList)
+    {
+        thePatternMatcher.addToPattern(chipIdForCIC, 0x7, 3);
+        thePatternMatcher.addToPattern(theCluster.first + 1, 0x7F, 7); // pixel column address starts from 1
+        thePatternMatcher.addToPattern(theCluster.second.second - 1, 0x7, 3);
+        thePatternMatcher.addToPattern(0x0, 0x0, 1);
+    }
+
+    std::map<uint8_t, std::pair<uint8_t, uint8_t>> orderedPixelClusterList;
+    for(const auto& theCluster: thePixelClusterList) { orderedPixelClusterList[std::get<1>(theCluster)] = {std::get<0>(theCluster), std::get<2>(theCluster)}; }
+
+    // CIC ouputs cluster with lower address first
+    for(const auto& theCluster: orderedPixelClusterList)
+    {
+        thePatternMatcher.addToPattern(chipIdForCIC, 0x7, 3);
+        thePatternMatcher.addToPattern(theCluster.first + 1, 0x7F, 7); // pixel column address starts from 1
+        thePatternMatcher.addToPattern(theCluster.second.second - 1, 0x7, 3);
+        thePatternMatcher.addToPattern(theCluster.second.first, 0xF, 4);
+    }
+
+    // add extra zeros for padding
+    size_t numberOfPatternBits  = thePatternMatcher.getNumberOfPatternBits();
+    size_t numberOfPaddingZeros = numberOfPatternBits % 4;
+    thePatternMatcher.addToPattern(0x0, ~(~0u << numberOfPaddingZeros), numberOfPaddingZeros);
+
+    // add CIC trailing 0 and idle pattern
+    if(numberOfStripClusters == 1)
+        thePatternMatcher.addToPattern(0x00aaaaaa, 0x00ffffff, 32);
+    else
+        thePatternMatcher.addToPattern(0x00a, 0x00f, 12); // 10G debug output is very often cut
+
+    return thePatternMatcher;
 }
