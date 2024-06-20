@@ -970,7 +970,6 @@ void LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
 
                     LOG(INFO) << BOLDYELLOW << "OG#" << cOpticalGroup->getId() << "\t.. Package delay of " << +cPackageDelay << " -- reg value " << std::bitset<32>(cRegValue) << RESET;
                     fBeBoardInterface->WriteBoardReg(pBoard, cRegName, cRegValue);
-                    // fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cPackageDelay);
                     cInterface->Bx0Alignment();
 
                     ReadNEvents(pBoard, cNevents);
