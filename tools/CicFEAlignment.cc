@@ -313,7 +313,7 @@ SlvsLineStatus CicFEAlignment::CheckPhyPort(const Hybrid* pHybrid, PhyPortCnfg p
     std::bitset<8> cExpectedPattern(pPattern);
     std::string    cPatternToMatch = cExpectedPattern.to_string();
     auto           cBoardId        = pHybrid->getBeBoardId();
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
+    auto           cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
 
     auto  cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     auto& cCic       = static_cast<const OuterTrackerHybrid*>(pHybrid)->fCic;

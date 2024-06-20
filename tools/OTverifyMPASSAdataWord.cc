@@ -177,7 +177,8 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
         std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> possibleStubVectorList = producePossibleStubVectorList(thePixelClusterList);
 
         std::vector<std::pair<PatternMatcher, float>> thePatternAndEfficiencyList;
-        for(auto& theStubVector: possibleStubVectorList) thePatternAndEfficiencyList.emplace_back(std::make_pair(produceStubPatternMatcher(theStubVector, numberOfBytesInSinglePacket, chipIdForCIC), 0.));
+        for(auto& theStubVector: possibleStubVectorList)
+            thePatternAndEfficiencyList.emplace_back(std::make_pair(produceStubPatternMatcher(theStubVector, numberOfBytesInSinglePacket, chipIdForCIC), 0.));
 
         for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
         {
@@ -289,7 +290,10 @@ void OTverifyMPASSAdataWord::matchAllPossibleStubPatterns(uint8_t               
     }
 }
 
-PatternMatcher OTverifyMPASSAdataWord::produceL1PatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList, const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& theStripClusterList, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC)
+PatternMatcher OTverifyMPASSAdataWord::produceL1PatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList,
+                                                               const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& theStripClusterList,
+                                                               uint8_t                                                   numberOfBytesInSinglePacket,
+                                                               uint8_t                                                   chipIdForCIC)
 {
     uint8_t numberOfPixelClusters = thePixelClusterList.size();
     uint8_t numberOfStripClusters = theStripClusterList.size();

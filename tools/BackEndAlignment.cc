@@ -286,7 +286,7 @@ bool BackEndAlignment::CICAlignment(BeBoard* pBoard)
 
 bool BackEndAlignment::CBCAlignment(BeBoard* pBoard)
 {
-    bool cAligned = true;
+    bool                  cAligned        = true;
     auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(pBoard));
     D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
 

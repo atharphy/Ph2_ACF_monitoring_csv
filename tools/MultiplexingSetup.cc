@@ -21,7 +21,7 @@ void MultiplexingSetup::Initialise()
     {
         if(cBoard->isOptical()) continue;
 
-        auto     cBeBoard   = static_cast<BeBoard*>(cBoard);
+        auto cBeBoard      = static_cast<BeBoard*>(cBoard);
         bool cSetupScanned = (fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
         // if its not been scanned.. then send a reset
         if(cSetupScanned) { LOG(INFO) << BOLDBLUE << "Set-up has already been scanned..." << RESET; }

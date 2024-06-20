@@ -1012,7 +1012,6 @@ bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
             }
             if(isElectricalFc7)
             {
-
                 std::map<std::string, std::string> fFCMDLines;
 
                 if(fIsSEH) { fFCMDLines = f2SSEHFCMDLines; }

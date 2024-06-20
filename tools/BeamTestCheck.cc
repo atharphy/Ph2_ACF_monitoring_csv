@@ -704,7 +704,7 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
         // check read-back events
         for(auto cBoard: *fDetectorContainer)
         {
-            auto cBrdIndx = cBoard->getId();
+            auto                       cBrdIndx             = cBoard->getId();
             const std::vector<Event*>& cEvents              = this->GetEvents();
             auto&                      cTriggerMult         = cBrdTriggerMult.getObject(cBoard->getId())->getSummary<uint32_t>();
             float                      cNormalizationFactor = fNevents;

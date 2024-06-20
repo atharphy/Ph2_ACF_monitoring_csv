@@ -26,7 +26,7 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
 
     std::vector<float> listOfMPAslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTSSAtoMPAecv_ListOfSSAslvsCurrents", "1, 4, 7"));
 
-    uint8_t numberOfMPA         = 8;
+    uint8_t numberOfMPA             = 8;
     uint8_t numberOfStubLinesPerMPA = 8;
 
     auto setYaxisBinLabelForStubs = [numberOfMPA, numberOfStubLinesPerMPA](TH2F* theHistogram)
@@ -34,28 +34,22 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
         auto theAxis = theHistogram->GetYaxis();
         for(uint8_t mpaId = 0; mpaId < numberOfMPA; ++mpaId)
         {
-            for(uint8_t lineId = 0; lineId < numberOfStubLinesPerMPA; ++lineId)
-            {
-                theAxis->SetBinLabel(mpaId * numberOfStubLinesPerMPA + lineId + 1, Form("MPA%d_Stub%d", mpaId + 8, lineId));
-            }
+            for(uint8_t lineId = 0; lineId < numberOfStubLinesPerMPA; ++lineId) { theAxis->SetBinLabel(mpaId * numberOfStubLinesPerMPA + lineId + 1, Form("MPA%d_Stub%d", mpaId + 8, lineId)); }
         }
     };
 
     auto setYaxisBinLabelForL1 = [numberOfMPA](TH2F* theHistogram)
     {
         auto theAxis = theHistogram->GetYaxis();
-        for(uint8_t mpaId = 0; mpaId < numberOfMPA; ++mpaId)
-        {
-            theAxis->SetBinLabel(mpaId + 1, Form("MPA%d_L1", mpaId + 8));
-        }
+        for(uint8_t mpaId = 0; mpaId < numberOfMPA; ++mpaId) { theAxis->SetBinLabel(mpaId + 1, Form("MPA%d_L1", mpaId + 8)); }
     };
 
     auto setXaxisBinLabelForL1 = [numberOfMPA, this](TH2F* theHistogram)
     {
-        std::vector<std::string> edgeLabel = {"falling", "rising"};
-        int totalNumberOfShifts = fMaximum320PhaseShift - fMinimum320PhaseShift + 1;
-        auto theAxis = theHistogram->GetXaxis();
-        for(size_t labelIndex = 0; labelIndex<edgeLabel.size(); ++labelIndex)
+        std::vector<std::string> edgeLabel           = {"falling", "rising"};
+        int                      totalNumberOfShifts = fMaximum320PhaseShift - fMinimum320PhaseShift + 1;
+        auto                     theAxis             = theHistogram->GetXaxis();
+        for(size_t labelIndex = 0; labelIndex < edgeLabel.size(); ++labelIndex)
         {
             for(int shift = fMinimum320PhaseShift; shift <= fMaximum320PhaseShift; ++shift)
             {
@@ -68,13 +62,13 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
     for(auto slvsCurrent: listOfMPAslvsCurrents)
     {
         HistContainer<TH2F> phaseScanStubMatchingEfficiency(Form("SSAtoMPAStubPhaseScan_SLVScurrent_%d", int(slvsCurrent)),
-                                                        Form("SSA to MPA Stub Phase Scan Matching efficiency - SLVScurrent = %d", int(slvsCurrent)),
-                                                        2,
-                                                        -0.5,
-                                                        1.5,
-                                                        numberOfMPA * numberOfStubLinesPerMPA,
-                                                        -0.5,
-                                                        numberOfMPA * numberOfStubLinesPerMPA - 0.5);
+                                                            Form("SSA to MPA Stub Phase Scan Matching efficiency - SLVScurrent = %d", int(slvsCurrent)),
+                                                            2,
+                                                            -0.5,
+                                                            1.5,
+                                                            numberOfMPA * numberOfStubLinesPerMPA,
+                                                            -0.5,
+                                                            numberOfMPA * numberOfStubLinesPerMPA - 0.5);
         phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("sampling egde");
         phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(1, "falling");
         phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(2, "rising");
@@ -85,13 +79,13 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubPhaseScanMatchingEfficiencies[slvsCurrent], phaseScanStubMatchingEfficiency);
 
         HistContainer<TH2F> phaseScanL1MatchingEfficiency(Form("SSAtoMPAL1PhaseScan_SLVScurrent_%d", int(slvsCurrent)),
-                                                        Form("SSA to MPA L1 Phase Scan Matching efficiency - SLVScurrent = %d", int(slvsCurrent)),
-                                                        2 * totalNumberOfShifts,
-                                                        -0.5,
-                                                        2 * totalNumberOfShifts -1,
-                                                        numberOfMPA,
-                                                        -0.5,
-                                                        numberOfMPA - 0.5);
+                                                          Form("SSA to MPA L1 Phase Scan Matching efficiency - SLVScurrent = %d", int(slvsCurrent)),
+                                                          2 * totalNumberOfShifts,
+                                                          -0.5,
+                                                          2 * totalNumberOfShifts - 1,
+                                                          numberOfMPA,
+                                                          -0.5,
+                                                          numberOfMPA - 0.5);
         phaseScanL1MatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("sampling egde : 320MHz clock shift");
         setXaxisBinLabelForL1(phaseScanL1MatchingEfficiency.fTheHistogram);
         setYaxisBinLabelForL1(phaseScanL1MatchingEfficiency.fTheHistogram);
@@ -99,8 +93,6 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
         phaseScanL1MatchingEfficiency.fTheHistogram->SetMaximum(1);
         phaseScanL1MatchingEfficiency.fTheHistogram->SetStats(false);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fL1PhaseScanMatchingEfficiencies[slvsCurrent], phaseScanL1MatchingEfficiency);
-
-
     }
 }
 
@@ -168,7 +160,8 @@ void DQMHistogramOTSSAtoMPAecv::fillL1PatternEfficiencyScan(DetectorDataContaine
                                                                .fTheHistogram;
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
-                    patternMatchingEfficiencyHistogram->SetBinContent(clockEdge * totalNumberOfShifts + samplingPhaseOffset - fMinimum320PhaseShift + 1, chipId +1, thePatternMatchingEfficiencyVector[chipId][0]);
+                    patternMatchingEfficiencyHistogram->SetBinContent(
+                        clockEdge * totalNumberOfShifts + samplingPhaseOffset - fMinimum320PhaseShift + 1, chipId + 1, thePatternMatchingEfficiencyVector[chipId][0]);
                 }
             }
         }
@@ -196,7 +189,7 @@ bool DQMHistogramOTSSAtoMPAecv::fill(std::string& inputStream)
     {
         // std::cout << "Matched OTverifyMPASSAdataWord PatternMatchingEfficiency!!!!\n";
         uint8_t               clockEdge, slvsCurrent;
-        int samplingPhaseOffset;
+        int                   samplingPhaseOffset;
         DetectorDataContainer theDetectorData =
             theL1PatternMatchinEfficiencyContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>(
                 fDetectorContainer, clockEdge, slvsCurrent, samplingPhaseOffset);

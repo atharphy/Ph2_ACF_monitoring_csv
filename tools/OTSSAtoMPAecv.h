@@ -48,8 +48,8 @@ class OTSSAtoMPAecv : public OTverifyMPASSAdataWord
     void                                               resetPatternMatchingEfficiencyContainer();
     std::vector<float>                                 fListOfSSAslvsCurrents{1, 4, 7};
 
-    int fMinimum320PhaseShift = -1;
-    int fMaximum320PhaseShift = +1;
+    int                   fMinimum320PhaseShift = -1;
+    int                   fMaximum320PhaseShift = +1;
     DetectorDataContainer fOriginalPhaseContainer;
 
 #ifdef __USE_ROOT__

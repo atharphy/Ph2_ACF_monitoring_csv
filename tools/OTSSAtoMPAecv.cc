@@ -81,11 +81,12 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScan()
             {
                 for(auto theChip: *theHybrid)
                 {
-                    auto& theOriginalPhasePair = fOriginalPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<uint8_t, uint8_t>>();
+                    auto& theOriginalPhasePair =
+                        fOriginalPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<uint8_t, uint8_t>>();
                     uint8_t phase320registerValue = fReadoutChipInterface->ReadChipReg(theChip, "LatencyRx320") & 0x7;
-                    uint8_t phase40registerValue = fReadoutChipInterface->ReadChipReg(theChip, "LatencyRx40");
-                    theOriginalPhasePair.first  = (phase320registerValue & 0x7) | (phase40registerValue & 0x3) << 3;// Start phase
-                    theOriginalPhasePair.second = (phase320registerValue & 0x7) | (phase40registerValue & 0xC) << 1;// Restart phase
+                    uint8_t phase40registerValue  = fReadoutChipInterface->ReadChipReg(theChip, "LatencyRx40");
+                    theOriginalPhasePair.first    = (phase320registerValue & 0x7) | (phase40registerValue & 0x3) << 3; // Start phase
+                    theOriginalPhasePair.second   = (phase320registerValue & 0x7) | (phase40registerValue & 0xC) << 1; // Restart phase
                 }
             }
         }
@@ -130,10 +131,12 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForStubs(uint8_t slvsCurrent)
                     {
                         if(theChip->getFrontEndType() == FrontEndType::MPA2)
                         {
-                            auto theMPAInterface = static_cast<MPA2Interface*>(fReadoutChipInterface);
+                            auto    theMPAInterface = static_cast<MPA2Interface*>(fReadoutChipInterface);
                             uint8_t registerValue;
-                            if(clockEdge == 0) registerValue = 0x00;
-                            else registerValue = 0xFF;
+                            if(clockEdge == 0)
+                                registerValue = 0x00;
+                            else
+                                registerValue = 0xFF;
                             theMPAInterface->WriteChipReg(theChip, "EdgeSelTrig", registerValue);
                         }
                     }
@@ -153,7 +156,6 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForStubs(uint8_t slvsCurrent)
         }
 #endif
     }
-
 }
 
 void OTSSAtoMPAecv::runSSAtoMPAecvScanForL1(uint8_t slvsCurrent)
@@ -162,13 +164,13 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForL1(uint8_t slvsCurrent)
 
     for(uint8_t clockEdge = 0; clockEdge < 2; ++clockEdge)
     {
-        for(int samplingPhaseOffset = fMinimum320PhaseShift; samplingPhaseOffset <=fMaximum320PhaseShift; ++samplingPhaseOffset)
+        for(int samplingPhaseOffset = fMinimum320PhaseShift; samplingPhaseOffset <= fMaximum320PhaseShift; ++samplingPhaseOffset)
         {
             LOG(INFO) << BOLDGREEN << "MPA sampling clockEdge = " << +clockEdge << " and samplingPhaseOffset = " << samplingPhaseOffset << RESET;
             DetectorDataContainer thePossiblePhaseFlagContainer;
-            bool initialFlags = true;
-            auto        selectMPAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
-            std::string selectMPAfunctionName = "SelectMPAfunction";
+            bool                  initialFlags          = true;
+            auto                  selectMPAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
+            std::string           selectMPAfunctionName = "SelectMPAfunction";
             fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
             ContainerFactory::copyAndInitChip<bool>(*fDetectorContainer, thePossiblePhaseFlagContainer, initialFlags);
             fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
@@ -183,13 +185,16 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForL1(uint8_t slvsCurrent)
                         {
                             if(theChip->getFrontEndType() == FrontEndType::MPA2)
                             {
-                                auto theMPAInterface = static_cast<MPA2Interface*>(fReadoutChipInterface);
+                                auto    theMPAInterface = static_cast<MPA2Interface*>(fReadoutChipInterface);
                                 uint8_t registerValue;
-                                if(clockEdge == 0) registerValue = 0x0;
-                                else registerValue = 0x1;
+                                if(clockEdge == 0)
+                                    registerValue = 0x0;
+                                else
+                                    registerValue = 0x1;
                                 theMPAInterface->WriteChipRegBits(theChip, "EdgeSelT1Raw", registerValue, "Mask", 0x01);
-                                auto theOriginalPhasePair = fOriginalPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<uint8_t, uint8_t>>();
-                                uint8_t newOffsetStart   = theOriginalPhasePair.first  + samplingPhaseOffset;
+                                auto theOriginalPhasePair =
+                                    fOriginalPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<uint8_t, uint8_t>>();
+                                uint8_t newOffsetStart   = theOriginalPhasePair.first + samplingPhaseOffset;
                                 uint8_t newOffsetRestart = theOriginalPhasePair.second + samplingPhaseOffset;
                                 if(newOffsetStart > 0x1F || newOffsetStart < (-samplingPhaseOffset) || newOffsetRestart > 0x1F || newOffsetRestart < (-samplingPhaseOffset))
                                 {
@@ -217,7 +222,9 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForL1(uint8_t slvsCurrent)
                     {
                         for(auto theChip: *theHybrid)
                         {
-                            if(!theChip->getSummary<bool>()) fPatternMatchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()[theChip->getId()%8][0] = -1;
+                            if(!theChip->getSummary<bool>())
+                                fPatternMatchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
+                                    ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()[theChip->getId() % 8][0] = -1;
                         }
                     }
                 }
@@ -233,8 +240,6 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForL1(uint8_t slvsCurrent)
 #endif
         }
     }
-
-
 }
 
 std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> OTSSAtoMPAecv::produceMatchingPixelClusterList(uint8_t colCoordinate)

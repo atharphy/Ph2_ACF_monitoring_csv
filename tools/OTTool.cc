@@ -523,7 +523,7 @@ void OTTool::ContinuousReadout()
 void OTTool::StartReadoutTh(uint8_t cBrdId)
 {
     // get D19cFW Interface
-    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
+    auto cBoardIter        = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
     auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject((*cBoardIter)->getId())));
     auto cTriggerInterface = cInterface->getTriggerInterface();
     auto cReadoutInterface = cInterface->getL1ReadoutInterface();
@@ -582,7 +582,7 @@ void OTTool::ContinuousReadout(BeBoard* pBoard)
 void OTTool::CheckFinishedTh(uint8_t cBrdId)
 {
     // get D19cFW Interface
-    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
+    auto cBoardIter        = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
     auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject((*cBoardIter)->getId())));
     auto cTriggerInterface = cInterface->getTriggerInterface();
 
@@ -624,7 +624,7 @@ void OTTool::ContinuousReadoutTh(uint8_t cBrdId)
     fReadoutData[cBrdId].clear();
     LOG(DEBUG) << BOLDBLUE << fMyName << ":Starting continuous readout thread for BeBoard#" << +cBrdId << RESET;
     // get D19cFW Interface
-    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
+    auto cBoardIter        = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBrdId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBrdId; });
     auto cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject((*cBoardIter)->getId())));
     auto cTriggerInterface = cInterface->getTriggerInterface();
     // wait until triggers have started

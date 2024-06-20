@@ -59,7 +59,10 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>          produceStripClusterList();
     std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList);
     PatternMatcher produceStubPatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, int>>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC);
-    PatternMatcher produceL1PatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList, const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& theStripClusterList, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC);
+    PatternMatcher produceL1PatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList,
+                                           const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& theStripClusterList,
+                                           uint8_t                                                   numberOfBytesInSinglePacket,
+                                           uint8_t                                                   chipIdForCIC);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

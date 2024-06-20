@@ -62,7 +62,6 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
 {
     LOG(INFO) << BOLDYELLOW << "OTalignLpGBTinputsForBypass::AlignLpGBTinputs ... start LpGBT phase scan with CIC in bypass mode" << RESET;
 
-
     auto    firstModule   = fDetectorContainer->getFirstObject()->getFirstObject();
     bool    isPS          = firstModule->getFrontEndType() == FrontEndType::OuterTrackerPS;
     uint8_t numberOfLines = 4;
