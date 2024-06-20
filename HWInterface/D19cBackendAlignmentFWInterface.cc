@@ -298,16 +298,3 @@ Reply D19cBackendAlignmentFWInterface::ManuallyConfigureLine(AlignerObject pAlig
 
 bool D19cBackendAlignmentFWInterface::IsLineWordAligned() { return (fStatus.fWordAlignmentFSMstate == 14); }
 bool D19cBackendAlignmentFWInterface::IsLinePhaseAligned() { return (fStatus.fPhaseAlignmentFSMstate == 14); }
-
-void D19cBackendAlignmentFWInterface::ManuallyConfigureLine(const Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip, uint8_t pOptical)
-{
-    EnablePrintout(true);
-    fAlignerObject.fHybrid = pChip->getHybridId();
-    fAlignerObject.fChip   = (pChip->getFrontEndType() == FrontEndType::CIC2) ? 0 : pChip->getId() % 8;
-    fAlignerObject.fLine   = pLineId;
-
-    fLineConfiguration.fDelay   = pPhase;
-    fLineConfiguration.fBitslip = pBitslip;
-    this->ManuallyConfigureLine(fAlignerObject, fLineConfiguration);
-}
-} // namespace Ph2_HwInterface

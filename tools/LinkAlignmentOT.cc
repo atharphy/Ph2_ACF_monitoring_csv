@@ -552,28 +552,6 @@ std::pair<bool, uint8_t> LinkAlignmentOT::WordAlignLine(const Chip* pChip, uint8
     }
     return cLineStatus;
 }
-void LinkAlignmentOT::ManuallyConfigureLine(const Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip)
-{
-    auto cBoardId   = pChip->getBeBoardId();
-    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
-
-    D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
-    cAlignerInterface->InitializeConfiguration();
-    cAlignerInterface->InitializeAlignerObject();
-
-    AlignerObject cAlignerObjct;
-    cAlignerObjct.fHybrid = pChip->getHybridId();
-    cAlignerObjct.fChip   = pChip->getId();
-    cAlignerObjct.fLine   = pLineId;
-    LineConfiguration cLineCnfg;
-    cLineCnfg.fMode       = 2;
-    cLineCnfg.fDelay      = pPhase;
-    cLineCnfg.fBitslip    = pBitslip;
-    cLineCnfg.fEnableL1   = 0;
-    cLineCnfg.fMasterLine = 0;
-    cAlignerInterface->ManuallyConfigureLine(cAlignerObjct, cLineCnfg);
-}
 void LinkAlignmentOT::LegacyAlignmentMPA(const Chip* pChip)
 {
     auto cBoardId   = pChip->getBeBoardId();
@@ -689,7 +667,6 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
         cLineCnfg.fMode       = 0;
         cLineCnfg.fEnableL1   = 0;
         cLineCnfg.fMasterLine = 0;
-        cAlignerInterface->ManuallyConfigureLine(cAlignerObjct, cLineCnfg);
 
         for(uint16_t cPatternLength = 40; cPatternLength < 41; cPatternLength++)
         {

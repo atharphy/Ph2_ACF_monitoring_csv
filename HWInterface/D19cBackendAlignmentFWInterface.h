@@ -58,20 +58,17 @@ class D19cBackendAlignmentFWInterface
 
     void              InitializeConfiguration();
     void              InitializeAlignerObject();
-    void              SetLineConfiguration(LineConfiguration pCnfg);
     LineConfiguration GetLineConfiguration() { return fLineConfiguration; };
 
     Reply                    TunePhase(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration);
     Reply                    AlignWord(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration, bool pChangePattern);
-    Reply                    ManuallyConfigureLine(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration);
     bool                     IsLineWordAligned();
     bool                     IsLinePhaseAligned();
-    void                     EnablePrintout(bool pPrint = false) { fVerbose = (pPrint) ? 3 : 0; }
-    void                     ManuallyConfigureLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip, uint8_t pOptical);
-
+    
     RegManager* fTheRegManager{nullptr};
 
   private:
+    void              SetLineConfiguration(LineConfiguration pCnfg);
     void              SetAlignerObject(AlignerObject pAlignerObject);
     AlignerObject     fAlignerObject;
     LineConfiguration fLineConfiguration;
