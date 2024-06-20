@@ -208,7 +208,7 @@ void Tool::readBitslipRegs()
     };
 
     std::vector<std::pair<std::string, uint32_t>> alignedBitslipRegisters;
-    for(size_t linkNumber = 0; linkNumber < 16; ++linkNumber)
+    for(size_t linkNumber = 0; linkNumber < 12; ++linkNumber)
     {
         for(size_t hybridId = 0; hybridId < 2; ++hybridId)
         {

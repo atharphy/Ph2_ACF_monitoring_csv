@@ -120,7 +120,7 @@ class D19cBackendAlignmentFWInterface
     std::map<std::string, int> fLineCnfg_Electrical = {{"TunerMode", 13}, {"EnableL1A", 11}, {"MasterLine", 8}, {"Delay", 4}, {"Bitslip", 0}};
 
     // map of bits for setting configuration of line [optical]
-    std::map<std::string, int> fLineCnfg_Optical = {{"TunerMode", 12}, {"Bitslip", 0}};
+    std::map<std::string, int> fLineCnfg_Optical = {{"TunerMode", 13}, {"Bitslip", 0}};
 
     // map of alignment modes
     std::map<std::string, int> fAlignmentModes = {{"Manual", 2}, {"Auto", 0}};
