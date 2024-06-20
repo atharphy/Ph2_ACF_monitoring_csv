@@ -81,7 +81,7 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
 
         LOG(INFO) << BOLDMAGENTA << "Package delay set to " << +cPackageDelay << RESET;
         fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", cPackageDelay);
-        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface()))->Bx0Alignment();
+        (static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(pBoard)))->Bx0Alignment();
 
         // check stubs
         // 2 events should be enough

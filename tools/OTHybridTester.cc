@@ -167,8 +167,7 @@ bool OTHybridTester::LpGBTCheckULPattern(bool pIsExternal, uint8_t pPattern)
     D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
     for(auto cBoard: *fDetectorContainer)
     {
-        fBeBoardInterface->setBoard(cBoard->getId());
-        D19cFWInterface*      cFWInterface      = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cFWInterface*      cFWInterface      = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
         D19cTriggerInterface* cTriggerInterface = dynamic_cast<D19cTriggerInterface*>(cFWInterface->getTriggerInterface());
 
         for(auto cOpticalGroup: *cBoard)
@@ -957,10 +956,9 @@ bool OTHybridTester::LpGBTGetLinkLock()
     bool cStatus = false;
     for(auto cBoard: *fDetectorContainer)
     {
-        fBeBoardInterface->setBoard(cBoard->getId());
         for(auto cOpticalGroup: *cBoard)
         {
-            D19cFWInterface*   cFWInterface   = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+            D19cFWInterface*   cFWInterface   = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
             D19cLinkInterface* cLinkInterface = static_cast<D19cLinkInterface*>(cFWInterface->getLinkInterface());
             cStatus                           = cLinkInterface->GetLinkStatus(cOpticalGroup->getId());
         }
@@ -1014,8 +1012,6 @@ bool OTHybridTester::LpGBTFastCommandChecker(uint8_t pPattern)
             }
             if(isElectricalFc7)
             {
-                fBeBoardInterface->setBoard(cBoard->getId());
-
                 std::map<std::string, std::string> fFCMDLines;
 
                 if(fIsSEH) { fFCMDLines = f2SSEHFCMDLines; }
@@ -1193,7 +1189,6 @@ bool OTHybridTester::LpGBTCheckClocks()
     {
         for(auto cBoard: *fDetectorContainer)
         {
-            fBeBoardInterface->setBoard(cBoard->getId());
             bool isElectricalFc7 = true;
 
             D19clpGBTInterface* clpGBTInterface = static_cast<D19clpGBTInterface*>(flpGBTInterface);
@@ -1319,9 +1314,8 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
     uint8_t pChip      = 0;
     auto    cBoardId   = 1;
     auto    cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
     LOG(DEBUG) << BOLDYELLOW << "OTHybridTester::PhaseTuneLineEleFC7#" << +pLineId << " for a Chip#" << +pChip << RESET;
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
 
     D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
     cAlignerInterface->InitializeConfiguration();
@@ -1362,9 +1356,8 @@ void OTHybridTester::SetPhaseLineEleFC7(uint8_t pHybrid, uint8_t pLineId, uint8_
     uint8_t pChip      = 0;
     auto    cBoardId   = 1;
     auto    cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
     LOG(DEBUG) << BOLDYELLOW << "OTHybridTester::SetPhaseLineEleFC7#" << +pLineId << " for a Chip#" << +pChip << RESET;
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
 
     D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
     cAlignerInterface->InitializeConfiguration();

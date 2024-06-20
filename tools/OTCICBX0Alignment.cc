@@ -111,7 +111,7 @@ void OTCICBX0Alignment::BX0Alignment()
 
         // Send Resync to all hybrids connected to one board at once
         LOG(INFO) << BOLDMAGENTA << " Sending Resync !" << RESET;
-        auto    cInterface            = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        auto    cInterface            = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
         auto    cFastCommandInterface = cInterface->getFastCommandInterface();
         uint8_t theNumberOfResyncs    = 5;
         cFastCommandInterface->SendGlobalCounterResetResync(theNumberOfResyncs);
@@ -215,7 +215,7 @@ void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
 
             // Send Resync to all hybrids connected to one board at once
             LOG(INFO) << BOLDMAGENTA << " Sending Resync !" << RESET;
-            auto    cInterface            = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+            auto    cInterface            = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
             auto    cFastCommandInterface = cInterface->getFastCommandInterface();
             uint8_t theNumberOfResyncs    = 5;
             cFastCommandInterface->SendGlobalCounterResetResync(theNumberOfResyncs);

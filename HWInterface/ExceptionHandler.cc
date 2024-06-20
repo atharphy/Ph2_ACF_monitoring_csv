@@ -1,6 +1,6 @@
 #include <vector>
 
-#include "HWInterface/BeBoardFWInterface.h"
+#include "HWInterface/BeBoardInterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/ExceptionHandler.h"
 #include "Utils/Container.h"
@@ -37,7 +37,10 @@ void ExceptionHandler::setDetectorContainer(DetectorContainer* theDetectorContai
 
 void ExceptionHandler::updateFWInformation(uint16_t boardId)
 {
-    if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C) { static_cast<D19cFWInterface*>(fFirmwareInterface)->EnableFrontEnds(fDetectorContainer->getObject(boardId)); }
+    if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
+    {
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(boardId)))->EnableFrontEnds(fDetectorContainer->getObject(boardId));
+    }
 }
 
 void ExceptionHandler::disableChip(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId)

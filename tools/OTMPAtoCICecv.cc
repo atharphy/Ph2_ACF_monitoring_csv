@@ -94,7 +94,6 @@ void OTMPAtoCICecv::runElectricChainValidation()
     fDetectorContainer->addReadoutChipQueryFunction(MPAqueryFunction, theMPAqueryFunctionString);
 
     LOG(INFO) << BOLDYELLOW << "OTMPAtoCICecv::runElectricChainValidation ... start electric chain validation test" << RESET;
-    auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
     auto thePSinterface = static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface;
 
@@ -124,6 +123,7 @@ void OTMPAtoCICecv::runElectricChainValidation()
 
             for(auto theBoard: *fDetectorContainer)
             {
+                auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
                 for(auto theOpticalGroup: *theBoard)
                 {
                     auto possiblePatternList = getPossiblePatterns(fShiftRegisterPattern, static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10);

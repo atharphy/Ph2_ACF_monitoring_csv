@@ -33,7 +33,7 @@ void OTLightTransmission::ReadRegisters()
 #ifdef __USE_ROOT__
     json j;
     j["type"]                        = "data";
-    D19cFWInterface*       interface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    D19cFWInterface*       interface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()));
     std::list<std::string> to_read{"T", "V", "I", "TX", "RX"};
     for(auto item: to_read)
     {
