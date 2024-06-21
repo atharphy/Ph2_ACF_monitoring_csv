@@ -36,10 +36,13 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // # Field data #
     // ##############
     if(RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, pVerify) == false)
+    {
         RD53BInterface::SendGlobalPulse(pChip,
                                         pRD53->getFEtype()->GlobalPulseConfMap.find("RstAuroraV1")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializerV1")->second |
                                             pRD53->getFEtype()->GlobalPulseConfMap.find("RstAuroraV2")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializerV2")->second,
                                         10);
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    }
     // # bit 12:   EnCRC         --> Map in FormatOptions: enableCRC
     // # bit 11:   EnBCId        --> Map in FormatOptions: enableBCID
     // # bit 10:   EnLv1Id       --> Map in FormatOptions: enableTriggerId
@@ -197,6 +200,7 @@ void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
                                     pRD53->getFEtype()->GlobalPulseConfMap.find("RstAuroraV1")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializerV1")->second |
                                         pRD53->getFEtype()->GlobalPulseConfMap.find("RstAuroraV2")->second | pRD53->getFEtype()->GlobalPulseConfMap.find("RstSerializerV2")->second,
                                     10);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 
     // ################
     // # Data merging #
