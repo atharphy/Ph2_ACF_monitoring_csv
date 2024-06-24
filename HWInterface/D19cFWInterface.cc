@@ -840,6 +840,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // reset trigger
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
+    fBackendAlignmentInterface->SetIsOptical(fOptical);
 }
 
 void D19cFWInterface::EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard)

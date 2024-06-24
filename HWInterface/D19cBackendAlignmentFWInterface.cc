@@ -7,6 +7,90 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
+
+uint32_t PhaseTuningControl::encodeCommand() const
+{
+    uint32_t theCommand = 0;
+
+    theCommand |= ((fHybridId & 0x1F ) << 27);
+    theCommand |= ((fChipId & 0x7 ) << 24);
+    theCommand |= ((fLineId & 0xF ) << 20);
+    theCommand |= ((static_cast<uint8_t>(fCommand) & 0xF ) << 16);
+
+    switch (fCommand)
+    {
+        case Command::Configure:
+            theCommand |= ((static_cast<uint8_t>(fMode) & 0x3 ) << 13);
+            switch (fMode)
+            {
+                case Mode::Auto:
+                    theCommand |= ((fEnableL1A ? 1 : 0 ) << 11);
+                    if(fIsOptical)
+                    {
+                        theCommand |= ((fEnableSync ? 1 : 0 ) << 8);
+                        theCommand |= ((fEnablePRBS ? 1 : 0 ) << 9);
+                        theCommand |= ((fEnableLFSR ? 1 : 0 ) << 10);
+                        theCommand |= ((fEnableLCC ? 1 : 0 ) << 12);
+                    }
+                    break;
+
+                case Mode::Slave:
+                    if(!fIsOptical) theCommand |= ((fMasterLineId & 0xF) << 8);
+                    break;
+
+                case Mode::Manual:
+                    theCommand |= ((fBitSlip & 0x1F ) << 0);
+                    if(!fIsOptical) theCommand |= ((fDelay & 0x1F ) << 5);
+                    break;
+                
+                default:
+                    break;
+            }
+            break;
+
+        case Command::SetPatternLength:
+            if(!fIsOptical) theCommand |= ((fPatternLenght & 0xFF) << 0);
+            break;
+
+        case Command::SetSyncPattern:
+            if(!fIsOptical) theCommand |= ((fSyncPattern & 0xFF) << 0);
+            break;
+
+        case Command::Align:
+            if(!fIsOptical) theCommand |= ((fDoPhaseAlignment ? 1 : 0 ) << 0);
+            theCommand |= ((fDoWordAlignment ? 1 : 0 ) << 1);
+            theCommand |= ((fApplyManual ? 1 : 0 ) << 2);
+            break;
+
+        default:
+            break;
+    }
+
+    return theCommand;
+}
+
+void PhaseTuningControl::resetCommandBits()
+{
+    fBitSlip         = 0;
+    fDelay           = 0;
+    fPatternLenght   = 0;
+    fSyncPattern     = 0;
+    fDoWordAlignment = false;
+    fDoPhaseAlignment= false;
+    fApplyManual     = false;
+    fMasterLineId    = 0;
+    fEnableSync      = false;
+    fEnablePRBS      = false;
+    fEnableLFSR      = false;
+    fEnableL1A       = false;
+    fEnableLCC       = false;
+    fMode            = Mode::Auto;
+    fCommand         = Command::ReturnConfig;
+}
+
+
+
+
 D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(RegManager* theRegManager) : fTheRegManager(theRegManager) {}
 D19cBackendAlignmentFWInterface::~D19cBackendAlignmentFWInterface() {}
 
@@ -274,27 +358,43 @@ Reply D19cBackendAlignmentFWInterface::AlignWord(AlignerObject pAlignerObject, L
     Print();
     return cReply;
 }
-Reply D19cBackendAlignmentFWInterface::ManuallyConfigureLine(AlignerObject pAlignerObject, LineConfiguration pLineConfiguration)
-{
-    // fVerbose=3;
-    Reply cReply;
-    // select FE
-    SetAlignerObject(pAlignerObject);
-    // configure aligner
-    SetLineConfiguration(pLineConfiguration);
-    fLineConfiguration.fMode = fAlignmentModes["Manual"];
-    SendCommand("Configure");
-    SendCommand("Apply"); // was "AlignLine"
-    // SendCommand("ReturnConfig"); GetReply("ReturnConfig");
-
-    // ClearStatus();
-    SendCommand("ReturnConfig");
-    GetReply("ReturnConfig");
-    cReply.fCnfg    = fLineConfiguration;
-    cReply.fSuccess = (fStatus.fDone == 1);
-    Print();
-    return cReply;
-}
 
 bool D19cBackendAlignmentFWInterface::IsLineWordAligned() { return (fStatus.fWordAlignmentFSMstate == 14); }
 bool D19cBackendAlignmentFWInterface::IsLinePhaseAligned() { return (fStatus.fPhaseAlignmentFSMstate == 14); }
+
+void D19cBackendAlignmentFWInterface::AlignWord(uint8_t hybridId, uint8_t lineId, uint8_t chipId)
+{
+    if(!fIsOptical)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " does not support not optical modules, aborting" << RESET;
+        abort();
+    }
+    std::string phaseTuningControlRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
+    PhaseTuningControl thePhaseTuningControl(fIsOptical);
+    thePhaseTuningControl.setHybridId(hybridId);
+    thePhaseTuningControl.setLineId(lineId);
+    thePhaseTuningControl.setChipId(chipId);
+
+    // Configure command
+    thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Configure);
+    thePhaseTuningControl.setEnableSync(true);
+    thePhaseTuningControl.setMode(PhaseTuningControl::Mode::Auto);
+    writeCommand(thePhaseTuningControl.encodeCommand());
+
+    // align line
+    thePhaseTuningControl.resetCommandBits();
+    thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Align);
+    writeCommand(thePhaseTuningControl.encodeCommand());
+
+    //
+    thePhaseTuningControl.resetCommandBits();
+
+}
+
+void D19cBackendAlignmentFWInterface::writeCommand(uint32_t phaseTunerCommand)
+{
+    fTheRegManager->WriteReg("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", phaseTunerCommand);
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
+}
+
+}
