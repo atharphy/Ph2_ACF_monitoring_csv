@@ -19,8 +19,6 @@
 
 namespace Ph2_HwInterface
 {
-class AlignerObject;
-class LineConfiguration;
 class D19cBackendAlignmentFWInterface;
 class D19cDebugFWInterface;
 } // namespace Ph2_HwInterface
@@ -60,9 +58,8 @@ class OTalignBoardDataWord : public Tool
                          Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
                          Ph2_HwInterface::D19cDebugFWInterface*            theDebugInterface);
     bool tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
+                          uint16_t                                          hybridId,
                           uint8_t                                           lineId,
-                          Ph2_HwInterface::AlignerObject&                   theAlignerObject,
-                          Ph2_HwInterface::LineConfiguration&               theLineConfiguration,
                           std::vector<uint8_t>&                             theHybridBitSlipVector,
                           std::vector<uint8_t>&                             theHybridAlignmentRetryVector);
 

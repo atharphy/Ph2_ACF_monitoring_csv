@@ -316,11 +316,7 @@ void ECVLinkAlignmentOT::InitWordAlignStubs(const OpticalGroup* pOpticalGroup)
     auto cBoardId   = pOpticalGroup->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     LOG(INFO) << BOLDYELLOW << "ECVLinkAlignmentOT::WordAlignBEdata for an OG " << RESET;
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
-
-    D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
-    cAlignerInterface->InitializeConfiguration();
-    cAlignerInterface->InitializeAlignerObject();
+    
     LOG(INFO) << BOLDYELLOW << "ECVLinkAlignmentOT::WordAlignBEdata after debug interface " << RESET;
 
     // configure CICs to output alignment pattern on L1 lines
@@ -349,9 +345,7 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>> ECVLinkAlignmentOT::Ch
 
     auto                             cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
     D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
-    cAlignerInterface->InitializeConfiguration();
-    cAlignerInterface->InitializeAlignerObject();
-
+    
     size_t cNlines = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
 
     for(auto cHybrid: *pOpticalGroup)
@@ -362,28 +356,19 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>> ECVLinkAlignmentOT::Ch
             auto& cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
 
             LOG(INFO) << BOLDMAGENTA << "Aligning Stub line#" << +cLineId << " on Hybrid#" << +cHybrid->getId() << RESET;
-            AlignerObject cAlignerObjct;
-            cAlignerObjct.fHybrid  = cHybrid->getId();
-            cAlignerObjct.fChip    = 0;
-            cAlignerObjct.fLine    = cLineId;
-            cAlignerObjct.fOptical = 1;
-            LineConfiguration cLineCnfg;
-            cLineCnfg.fPattern       = 0xEA;
-            cLineCnfg.fPatternPeriod = 8;
-            cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-            bool cAligned = cAlignerInterface->IsLineWordAligned();
+            auto alignmentResult = cAlignerInterface->AlignWord(cHybrid->getId(), cLineId);
+            bool cAligned = alignmentResult.fWordAlignmentSuccess;
+            cThisBeBitSlip[cLineId] = alignmentResult.fBitslip;
             LOG(INFO) << "Line " << +cLineId << " " << cAligned << RESET;
-
-            cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
 
             if(cThisBeBitSlip[cLineId] == 0 && !fAllowZeroBitslip)
             {
                 size_t cMaxAttempts = 10;
                 size_t cIter        = 0;
                 do {
-                    cAlignerInterface->AlignWord(cAlignerObjct, cLineCnfg, true);
-                    cAligned                = cAlignerInterface->IsLineWordAligned();
-                    cThisBeBitSlip[cLineId] = cAlignerInterface->GetLineConfiguration().fBitslip;
+                    alignmentResult = cAlignerInterface->AlignWord(cHybrid->getId(), cLineId);
+                    cAligned = alignmentResult.fWordAlignmentSuccess;
+                    cThisBeBitSlip[cLineId] = alignmentResult.fBitslip;
                     cIter++;
                 } while(cIter < cMaxAttempts && cThisBeBitSlip[cLineId] == 0);
             }

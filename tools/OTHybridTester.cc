@@ -1318,25 +1318,8 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
 
     D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
-    cAlignerInterface->InitializeConfiguration();
-    cAlignerInterface->InitializeAlignerObject();
-
-    AlignerObject cAlignerObjct;
-    cAlignerObjct.fHybrid = pHybrid;
-    cAlignerObjct.fChip   = 0;
-    cAlignerObjct.fLine   = pLineId;
-    LineConfiguration cLineCnfg;
-    cLineCnfg.fPatternPeriod = 8;
-    // LOG(INFO) << BOLDRED << +cAlignerInterface->GetLineConfiguration().fDelay << RESET;
-    cAlignerInterface->TunePhase(cAlignerObjct, cLineCnfg);
-    // cAlignerInterface->GetLineStatus(cAlignerObjct);
-    // LOG(INFO) << BOLDRED << +cAlignerInterface->GetLineConfiguration().fDelay << RESET;
-    // cLineCnfg.fDelay = 1;
-    // cLineCnfg.fMode  = 2;
-    // cAlignerInterface->SetLineConfiguration(cLineCnfg);
-    // cAlignerInterface->GetLineStatus(cAlignerObjct);
-    // LOG(INFO) << BOLDRED << +cAlignerInterface->GetLineConfiguration().fDelay << RESET;
-    cLineStatus.first = cAlignerInterface->IsLinePhaseAligned();
+    auto theAlignmentResults = cAlignerInterface->TunePhase(pHybrid, pLineId);
+    cLineStatus.first = theAlignmentResults.fPhaseAlignmentSuccess;
     if(!cLineStatus.first)
     {
         LOG(INFO) << BOLDRED << "Could not phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;
@@ -1344,7 +1327,7 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
     }
     else { LOG(INFO) << BOLDBLUE << "Could phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET; }
 
-    cLineStatus.second = cAlignerInterface->GetLineConfiguration().fDelay;
+    cLineStatus.second = theAlignmentResults.fDelay;
     return cLineStatus;
 }
 

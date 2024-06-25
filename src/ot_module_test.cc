@@ -773,15 +773,6 @@ int main(int argc, char* argv[])
         // // reset
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
     }
-    if(!cmd.foundOption("read") && cmd.foundOption("checkLink"))
-    {
-        uint8_t         cPattern = (cmd.foundOption("checkLink")) ? convertAnyInt(cmd.optionValue("checkLink").c_str()) : 0xEA;
-        LinkAlignmentOT cLinkAlignment;
-        cLinkAlignment.Inherit(&cTool);
-        cLinkAlignment.Initialise();
-        cLinkAlignment.CheckLpgbtOutputs(cPattern);
-        cLinkAlignment.Reset();
-    }
 
     if(cmd.foundOption("injectionTest") && !cmd.foundOption("read"))
     {
