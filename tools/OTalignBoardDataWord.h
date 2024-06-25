@@ -50,13 +50,10 @@ class OTalignBoardDataWord : public Tool
     DetectorDataContainer fAlignmentRetryContainer;
 
     void wordAlignBEdata();
-    void stubAndL1WordAlignment(Ph2_HwDescription::BeBoard* theBoard);
-    bool stubWordAlignment(const Ph2_HwDescription::OpticalGroup*            theOpticalGroup,
+    void boardWordAlignment(Ph2_HwDescription::BeBoard* theBoard);
+    bool opticalGroupWordAlignment(const Ph2_HwDescription::OpticalGroup*            theOpticalGroup,
                            Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
                            Ph2_HwInterface::D19cDebugFWInterface*            theDebugInterface);
-    bool L1WordAlignment(const Ph2_HwDescription::OpticalGroup*            pOpticalGroup,
-                         Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
-                         Ph2_HwInterface::D19cDebugFWInterface*            theDebugInterface);
     bool tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
                           uint16_t                                          hybridId,
                           uint8_t                                           lineId,

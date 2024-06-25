@@ -356,7 +356,7 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>> ECVLinkAlignmentOT::Ch
             auto& cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
 
             LOG(INFO) << BOLDMAGENTA << "Aligning Stub line#" << +cLineId << " on Hybrid#" << +cHybrid->getId() << RESET;
-            auto alignmentResult = cAlignerInterface->AlignWord(cHybrid->getId(), cLineId);
+            auto alignmentResult = cAlignerInterface->alignWord(cHybrid->getId(), cLineId);
             bool cAligned = alignmentResult.fWordAlignmentSuccess;
             cThisBeBitSlip[cLineId] = alignmentResult.fBitslip;
             LOG(INFO) << "Line " << +cLineId << " " << cAligned << RESET;
@@ -366,7 +366,7 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>> ECVLinkAlignmentOT::Ch
                 size_t cMaxAttempts = 10;
                 size_t cIter        = 0;
                 do {
-                    alignmentResult = cAlignerInterface->AlignWord(cHybrid->getId(), cLineId);
+                    alignmentResult = cAlignerInterface->alignWord(cHybrid->getId(), cLineId);
                     cAligned = alignmentResult.fWordAlignmentSuccess;
                     cThisBeBitSlip[cLineId] = alignmentResult.fBitslip;
                     cIter++;

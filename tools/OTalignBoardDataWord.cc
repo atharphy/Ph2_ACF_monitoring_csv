@@ -24,6 +24,7 @@ void OTalignBoardDataWord::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl");
+    fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl");
 
     // need to free bitslip when will be accessible
     // free the registers in case any
@@ -73,7 +74,7 @@ void OTalignBoardDataWord::wordAlignBEdata()
 
     for(auto theBoard: *fDetectorContainer)
     {
-        stubAndL1WordAlignment(theBoard);
+        boardWordAlignment(theBoard);
         LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::wordAlignBEdata ... trying to readout L1 data.. " << RESET;
         ReadNEvents(theBoard, 10);
     }
@@ -93,20 +94,32 @@ void OTalignBoardDataWord::wordAlignBEdata()
 #endif
 }
 
-void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
+void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
 {
-    LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::stubAndL1WordAlignment for an OG " << RESET;
+    LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::boardWordAlignment for an OG " << RESET;
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
 
     D19cDebugFWInterface*            theDebugInterface   = cInterface->getDebugInterface();
     D19cBackendAlignmentFWInterface* theAlignerInterface = cInterface->getBackendAlignmentInterface();
     fBeBoardInterface->Stop(theBoard);
+    std::vector<std::pair<std::string, uint32_t>> cVecReg;
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 100});
+    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
+    cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+    cVecReg.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
+    cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
+    fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
+    fBeBoardInterface->ChipReSync(theBoard);
+    fBeBoardInterface->Start(theBoard);
 
-    LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::stubAndL1WordAlignment after debug interface " << RESET;
+    LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::boardWordAlignment after debug interface " << RESET;
 
     fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
     for(auto theOpticalGroup: *theBoard)
     {
+
         // uint8_t hybdridShift = 27;
         // size_t numberOfStubLines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
         // for(auto theHybrid: *theOpticalGroup)
@@ -154,7 +167,7 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
         //     // }
         // }
 
-        bool cAligned = stubWordAlignment(theOpticalGroup, theAlignerInterface, theDebugInterface);
+        bool cAligned = opticalGroupWordAlignment(theOpticalGroup, theAlignerInterface, theDebugInterface);
         if(!cAligned)
         {
             LOG(INFO) << BOLDRED << "Could not align stub word in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
@@ -164,30 +177,8 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
         }
     } // optical groups connected to this  board
 
-    // readBitslipRegs();
+    fBeBoardInterface->Stop(theBoard);
 
-    // Set board trigger configuration for L1 alignment
-    std::vector<std::pair<std::string, uint32_t>> cVecReg;
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 100});
-    cVecReg.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
-    cVecReg.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-    cVecReg.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
-    cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
-    fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
-
-    for(auto theOpticalGroup: *theBoard)
-    {
-        bool cAligned = L1WordAlignment(theOpticalGroup, theAlignerInterface, theDebugInterface);
-        if(!cAligned)
-        {
-            LOG(INFO) << BOLDRED << "Could not align stub word in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
-                      << " --- OpticalGroup will be disabled" << RESET;
-            ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
-            continue;
-        }
-    } // optical groups connected to this  board
 
     // readBitslipRegs();
 
@@ -222,11 +213,11 @@ void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
     // readBitslipRegs();
 }
 
-bool OTalignBoardDataWord::stubWordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface, D19cDebugFWInterface* theDebugInterface)
+bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface, D19cDebugFWInterface* theDebugInterface)
 {
     // align stub lines in the BE
     size_t cNlines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
-    LOG(INFO) << BOLDMAGENTA << "OTalignBoardDataWord::wordAlignBEdata ... word alignment on " << +cNlines << "/6 lines stub from CIC.." << RESET;
+    LOG(INFO) << BOLDMAGENTA << "OTalignBoardDataWord::wordAlignBEdata" << RESET;
     for(auto theHybrid: *theOpticalGroup)
     {
         auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
@@ -236,10 +227,12 @@ bool OTalignBoardDataWord::stubWordAlignment(const OpticalGroup* theOpticalGroup
         auto& theHybridAlignmentRetry =
             fAlignmentRetryContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
 
-        for(size_t cLineId = 1; cLineId <= cNlines; cLineId++)
+        for(size_t cLineId = 0; cLineId <= cNlines; cLineId++)
         {
-            LOG(INFO) << BOLDMAGENTA << "Aligning Stub line#" << +cLineId << " on Hybrid#" << +theHybrid->getId() << RESET;
-            bool isLineAligned                  = tryLineAlignment(theAlignerInterface, theHybrid->getId(), cLineId, theHybridBeBitSlip, theHybridAlignmentRetry);
+            std::string lineName = "L1";
+            if(cLineId != 0) lineName = "Stub line# " + std::to_string(cLineId - 1);
+            LOG(INFO) << BOLDMAGENTA << "Aligning " << lineName << " on Hybrid#" << +theHybrid->getId() << RESET;
+            bool isLineAligned = tryLineAlignment(theAlignerInterface, theHybrid->getId(), cLineId, theHybridBeBitSlip, theHybridAlignmentRetry);
 
             if(!isLineAligned)
             {
@@ -255,47 +248,6 @@ bool OTalignBoardDataWord::stubWordAlignment(const OpticalGroup* theOpticalGroup
     return true;
 }
 
-bool OTalignBoardDataWord::L1WordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface, D19cDebugFWInterface* theDebugInterface)
-{
-    LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::L1WordAlignment " << RESET;
-
-    auto theBoard = fDetectorContainer->getObject(theOpticalGroup->getBeBoardId());
-    bool cSuccess = true;
-
-    // configure triggers
-    // make sure you're only sending one trigger at a time
-
-    LOG(INFO) << BOLDBLUE << "Aligning the back-end to properly decode L1A data coming from the front-end objects." << RESET;
-    fBeBoardInterface->ChipReSync(theBoard);
-    fBeBoardInterface->Start(theBoard);
-    // back-end tuning on l1 lines
-
-    for(auto theHybrid: *theOpticalGroup)
-    {
-        auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-        if(cCic == nullptr)
-        {
-            LOG(INFO) << BOLDYELLOW << " No CIC to use for L1 Word alignment..." << RESET;
-            continue;
-        }
-
-        auto& theHybridBeBitSlip = fBitSlipContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
-        auto& theHybridAlignmentRetry =
-            fAlignmentRetryContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
-
-        int     cChipId = cCic->getId();
-        uint8_t cLineId = 0;
-        LOG(INFO) << BOLDBLUE << "Performing word alignment [in the back-end] to prepare for receiving CIC L1A data ...: FE " << +theHybrid->getId() << " Chip" << +cChipId << RESET;
-
-        // configure pattern
-        LOG(INFO) << BOLDBLUE << "OTalignBoardDataWord::L1WordAlignment for CIC data" << RESET;
-        cSuccess                            = cSuccess && tryLineAlignment(theAlignerInterface, theHybrid->getId(), cLineId, theHybridBeBitSlip, theHybridAlignmentRetry);
-    }
-    fBeBoardInterface->Stop(theBoard);
-
-    return cSuccess;
-}
-
 bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* theAlignerInterface,
                                             uint16_t                         hybridId,
                                             uint8_t                          lineId,
@@ -308,7 +260,7 @@ bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* the
     while(!isLineAligned && currentIterationNumber < maxNumberOfIterations)
     {
         ++currentIterationNumber;
-        AlignmentResult theAlignmentResult = theAlignerInterface->AlignWord(hybridId, lineId);
+        AlignmentResult theAlignmentResult = theAlignerInterface->alignWord(hybridId, lineId);
         isLineAligned = theAlignmentResult.fWordAlignmentSuccess;
         if(!isLineAligned)
         {

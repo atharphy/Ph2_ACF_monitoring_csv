@@ -108,10 +108,10 @@ class D19cBackendAlignmentFWInterface
     D19cBackendAlignmentFWInterface(RegManager* theRegManager);
     ~D19cBackendAlignmentFWInterface();
 
-    AlignmentResult AlignWord(uint8_t hybridId, uint8_t lineId);
-    AlignmentResult TunePhase(uint8_t hybridId, uint8_t lineId);
+    AlignmentResult alignWord(uint8_t hybridId, uint8_t lineId);
+    AlignmentResult tunePhase(uint8_t hybridId, uint8_t lineId);
     
-    void SetIsOptical(bool isOptical) {fIsOptical = isOptical;}
+    void setIsOptical(bool isOptical) {fIsOptical = isOptical;}
     
   private:
     RegManager* fTheRegManager{nullptr};

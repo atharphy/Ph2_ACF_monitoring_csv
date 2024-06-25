@@ -186,7 +186,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup, bool pD
             auto& cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
 
             LOG(INFO) << BOLDMAGENTA << "Aligning Stub line#" << +cLineId << " on Hybrid#" << +cHybrid->getId() << RESET;
-            auto alignmentResult = cAlignerInterface->AlignWord(cHybrid->getId(), cLineId);
+            auto alignmentResult = cAlignerInterface->alignWord(cHybrid->getId(), cLineId);
             bool cAligned = alignmentResult.fWordAlignmentSuccess;
             cThisBeBitSlip[cLineId] = alignmentResult.fBitslip;
 
@@ -206,7 +206,7 @@ bool LinkAlignmentOT::WordAlignBEdata(const OpticalGroup* pOpticalGroup, bool pD
                 size_t cMaxAttempts = 10;
                 size_t cIter        = 0;
                 do {
-                    alignmentResult = cAlignerInterface->AlignWord(cHybrid->getId(), cLineId);
+                    alignmentResult = cAlignerInterface->alignWord(cHybrid->getId(), cLineId);
                     cAligned = alignmentResult.fWordAlignmentSuccess;
                     cThisBeBitSlip[cLineId] = alignmentResult.fBitslip;
                     cIter++;
@@ -345,7 +345,7 @@ bool LinkAlignmentOT::PhaseAlignBEdata(const OpticalGroup* pOpticalGroup)
             else
                 LOG(INFO) << BOLDMAGENTA << "Setting sampling delay on L1A line on Hybrid#" << +cHybrid->getId() << RESET;
 
-            auto theAlignmentResults = cAlignerInterface->TunePhase(cHybrid->getId(), cLineId);
+            auto theAlignmentResults = cAlignerInterface->tunePhase(cHybrid->getId(), cLineId);
             cAligned                      = theAlignmentResults.fPhaseAlignmentSuccess;
             cThisBeSamplingDelay[cLineId] = theAlignmentResults.fDelay;
             if(!cAligned) return cAligned;
@@ -418,7 +418,7 @@ bool LinkAlignmentOT::L1WordAlignment(const OpticalGroup* pOpticalGroup, bool pS
         auto& cThisBeBitSlip  = cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>();
 
         uint8_t cLineId = 0;
-        auto alignmentResult = cAlignerInterface->AlignWord(cHybrid->getId(), cLineId);
+        auto alignmentResult = cAlignerInterface->alignWord(cHybrid->getId(), cLineId);
         cSuccess  = alignmentResult.fWordAlignmentSuccess;
         cThisBeBitSlip[cLineId] = alignmentResult.fBitslip;
     }

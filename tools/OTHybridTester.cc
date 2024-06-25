@@ -1318,7 +1318,7 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
 
     D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
-    auto theAlignmentResults = cAlignerInterface->TunePhase(pHybrid, pLineId);
+    auto theAlignmentResults = cAlignerInterface->tunePhase(pHybrid, pLineId);
     cLineStatus.first = theAlignmentResults.fPhaseAlignmentSuccess;
     if(!cLineStatus.first)
     {

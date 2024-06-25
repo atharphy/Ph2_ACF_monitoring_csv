@@ -145,13 +145,7 @@ AlignmentResult::AlignmentResult(const PhaseTuningReply& thePhaseTuningReply)
     fPhaseAlignmentSuccess = thePhaseTuningReply.getPhaseFSMstate() == PhaseTuningReply::PhaseFSMstate::TunedPHASE;
     fDelay   = thePhaseTuningReply.getDelay();
     fBitslip = thePhaseTuningReply.getBitSlip();
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fWordAlignmentSuccess = " << fWordAlignmentSuccess << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fPhaseAlignmentSuccess = " << fPhaseAlignmentSuccess << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fDelay = " << +fDelay << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fBitslip = " << +fBitslip << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] getWordFSMstate = " << static_cast<int>(thePhaseTuningReply.getWordFSMstate()) << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] getPhaseFSMstate = " << static_cast<int>(thePhaseTuningReply.getPhaseFSMstate()) << std::endl;
-
+    
     switch (thePhaseTuningReply.getWordFSMstate())
     {
         case PhaseTuningReply::WordFSMstate::IdleWordOrWaitIserdese:
@@ -246,9 +240,9 @@ D19cBackendAlignmentFWInterface::D19cBackendAlignmentFWInterface(RegManager* the
 
 D19cBackendAlignmentFWInterface::~D19cBackendAlignmentFWInterface() {}
 
-AlignmentResult D19cBackendAlignmentFWInterface::TunePhase(uint8_t hybridId, uint8_t lineId)
+AlignmentResult D19cBackendAlignmentFWInterface::tunePhase(uint8_t hybridId, uint8_t lineId)
 {
-    LOG(WARNING) << BOLDYELLOW << "Attention!!! D19cBackendAlignmentFWInterface::TunePhase not tested since FEH hybrid testing not supported by main Ph2_ACF repository" << RESET;
+    LOG(WARNING) << BOLDYELLOW << "Attention!!! D19cBackendAlignmentFWInterface::tunePhase not tested since FEH hybrid testing not supported by main Ph2_ACF repository" << RESET;
     if(fIsOptical)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " does not support optical modules, aborting" << RESET;
@@ -273,7 +267,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::TunePhase(uint8_t hybridId, uin
     return retrieveAlignmentResult(hybridId, lineId);
 }
 
-AlignmentResult D19cBackendAlignmentFWInterface::AlignWord(uint8_t hybridId, uint8_t lineId)
+AlignmentResult D19cBackendAlignmentFWInterface::alignWord(uint8_t hybridId, uint8_t lineId)
 {
     if(!fIsOptical)
     {
