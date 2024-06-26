@@ -59,6 +59,13 @@ class OTalignBoardDataWord : public Tool
                           uint8_t                                           lineId,
                           std::vector<uint8_t>&                             theHybridBitSlipVector,
                           std::vector<uint8_t>&                             theHybridAlignmentRetryVector);
+    bool tryAllLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
+                             uint16_t                                          hybridId,
+                             bool                                              isPSmodule,
+                             std::vector<uint8_t>&                             theHybridBitSlipVector,
+                             std::vector<uint8_t>&                             theHybridAlignmentRetryVector);
+
+    bool fAlignLinesInBroadcast {false};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

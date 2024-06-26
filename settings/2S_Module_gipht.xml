@@ -297,6 +297,7 @@
     <Setting name="PulseShape_PulseAmplitude">200</Setting>
     <Setting name="PulseShape_ChannelGroup"  >  0</Setting>
 
+    <Setting name="OTalignBoardDataWord_AlignLinesInBroadcast">0</Setting>
 
     <Setting name="OTverifyBoardDataWord_NumberOfIterations">100</Setting>
     <Setting name="OTverifyECVlpGBTCIC_NumberOfIterations">1000</Setting>

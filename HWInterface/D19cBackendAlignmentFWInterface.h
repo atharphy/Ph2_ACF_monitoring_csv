@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <vector>
 
 namespace Ph2_HwDescription
 {
@@ -109,6 +110,7 @@ class D19cBackendAlignmentFWInterface
     ~D19cBackendAlignmentFWInterface();
 
     AlignmentResult alignWord(uint8_t hybridId, uint8_t lineId);
+    std::vector<AlignmentResult> alignWordAllLines(uint8_t hybridId, uint8_t numberOfLines);
     AlignmentResult tunePhase(uint8_t hybridId, uint8_t lineId);
     
     void setIsOptical(bool isOptical) {fIsOptical = isOptical;}
@@ -121,6 +123,7 @@ class D19cBackendAlignmentFWInterface
 
     AlignmentResult retrieveAlignmentResult(uint8_t hybridId, uint8_t lineId);
     void writeCommand(uint32_t phaseTunerCommand);
+    void runWordAlignment(uint8_t hybridId, uint8_t lineId);
 };
 } // namespace Ph2_HwInterface
 #endif

@@ -26,6 +26,8 @@ void OTalignBoardDataWord::Initialise(void)
     fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl");
     fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl");
 
+    fAlignLinesInBroadcast = findValueInSettings<double>("OTalignBoardDataWord_AlignLinesInBroadcast", 0) > 0 ? true : false;
+     
     // need to free bitslip when will be accessible
     // free the registers in case any
     size_t               numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
@@ -179,7 +181,6 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
 
     fBeBoardInterface->Stop(theBoard);
 
-
     // readBitslipRegs();
 
     auto getRegisterName = [](const std::string& type, size_t linkNumber, size_t hybridId)
@@ -216,7 +217,8 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
 bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface, D19cDebugFWInterface* theDebugInterface)
 {
     // align stub lines in the BE
-    size_t cNlines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
+    bool isPSmodule = theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS;
+    size_t cNlines = isPSmodule ? 7 : 6;
     LOG(INFO) << BOLDMAGENTA << "OTalignBoardDataWord::wordAlignBEdata" << RESET;
     for(auto theHybrid: *theOpticalGroup)
     {
@@ -227,21 +229,28 @@ bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpti
         auto& theHybridAlignmentRetry =
             fAlignmentRetryContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
 
-        for(size_t cLineId = 0; cLineId <= cNlines; cLineId++)
+        if(fAlignLinesInBroadcast)
         {
-            std::string lineName = "L1";
-            if(cLineId != 0) lineName = "Stub line# " + std::to_string(cLineId - 1);
-            LOG(INFO) << BOLDMAGENTA << "Aligning " << lineName << " on Hybrid#" << +theHybrid->getId() << RESET;
-            bool isLineAligned = tryLineAlignment(theAlignerInterface, theHybrid->getId(), cLineId, theHybridBeBitSlip, theHybridAlignmentRetry);
-
-            if(!isLineAligned)
+            return tryAllLineAlignment(theAlignerInterface, theHybrid->getId(), isPSmodule, theHybridBeBitSlip, theHybridAlignmentRetry);
+        }
+        else
+        {
+            for(size_t cLineId = 0; cLineId < cNlines; cLineId++)
             {
-                if(((theHybrid->getId() % 2) == 0) & ((cLineId - 1) == 4) & (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S))
+                std::string lineName = "L1";
+                if(cLineId != 0) lineName = "Stub line# " + std::to_string(cLineId - 1);
+                LOG(INFO) << BOLDMAGENTA << "Aligning " << lineName << " on Hybrid#" << +theHybrid->getId() << RESET;
+                bool isLineAligned = tryLineAlignment(theAlignerInterface, theHybrid->getId(), cLineId, theHybridBeBitSlip, theHybridAlignmentRetry);
+
+                if(!isLineAligned)
                 {
-                    LOG(INFO) << BOLDYELLOW << "Attention! ignoring alignment failure on right hybrid CIC line 4 due to bug in kickoff SEH!" << RESET;
-                    continue;
-                } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
-                return false;
+                    if(((theHybrid->getId() % 2) == 0) && (cLineId == 5) && !isPSmodule)
+                    {
+                        LOG(INFO) << BOLDYELLOW << "Attention! ignoring alignment failure on right hybrid CIC line 4 due to bug in kickoff SEH!" << RESET;
+                        continue;
+                    } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
+                    return false;
+                }
             }
         }
     }
@@ -272,4 +281,52 @@ bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* the
     }
 
     return isLineAligned;
+}
+
+
+bool OTalignBoardDataWord::tryAllLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
+                                               uint16_t                                          hybridId,
+                                               bool                                              isPSmodule,
+                                               std::vector<uint8_t>&                             theHybridBitSlipVector,
+                                               std::vector<uint8_t>&                             theHybridAlignmentRetryVector)
+{
+    bool isHybridAligned = false;
+    int  maxNumberOfIterations  = 10;
+    int  currentIterationNumber = 0;
+    uint8_t numberOfLines = isPSmodule ? 7 : 6;
+    while(!isHybridAligned && currentIterationNumber < maxNumberOfIterations)
+    {
+        ++currentIterationNumber;
+        std::vector<AlignmentResult> theAlignmentVectorResult = theAlignerInterface->alignWordAllLines(hybridId, numberOfLines);
+        bool allLinesAligned = true;
+        for(uint8_t lineId = 0; lineId < numberOfLines; ++lineId)
+        {
+            if(((hybridId % 2) == 0) && (lineId == 5) && !isPSmodule)
+            {
+                LOG(INFO) << BOLDYELLOW << "Attention! ignoring alignment failure on right hybrid CIC line 4 due to bug in kickoff SEH!" << RESET;
+                continue;
+            } // CIC_OUT_4_R will always fail for kick-off SEH, ignore here to keep allowing noise measurements
+            if(!theAlignmentVectorResult[lineId].fWordAlignmentSuccess)
+            {
+                allLinesAligned = false;
+                break;
+            }
+        }
+        if(!allLinesAligned)
+        {
+            LOG(INFO) << BOLDYELLOW << "Alignment failed, retrying " << maxNumberOfIterations - currentIterationNumber << " more times before giving up" << RESET;
+            for(auto& retry : theHybridAlignmentRetryVector) ++retry;
+        }
+        else
+        {
+            isHybridAligned = true;
+            for(uint8_t lineId = 0; lineId < numberOfLines; ++lineId)
+            {
+                theHybridBitSlipVector[lineId] = theAlignmentVectorResult[lineId].fBitslip;
+            }
+        }
+    }
+
+    return isHybridAligned;
+
 }
