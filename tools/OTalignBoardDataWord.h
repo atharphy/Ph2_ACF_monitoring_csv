@@ -52,8 +52,8 @@ class OTalignBoardDataWord : public Tool
     void wordAlignBEdata();
     void boardWordAlignment(Ph2_HwDescription::BeBoard* theBoard);
     bool opticalGroupWordAlignment(const Ph2_HwDescription::OpticalGroup*            theOpticalGroup,
-                           Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
-                           Ph2_HwInterface::D19cDebugFWInterface*            theDebugInterface);
+                                   Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
+                                   Ph2_HwInterface::D19cDebugFWInterface*            theDebugInterface);
     bool tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
                           uint16_t                                          hybridId,
                           uint8_t                                           lineId,
@@ -65,7 +65,7 @@ class OTalignBoardDataWord : public Tool
                              std::vector<uint8_t>&                             theHybridBitSlipVector,
                              std::vector<uint8_t>&                             theHybridAlignmentRetryVector);
 
-    bool fAlignLinesInBroadcast {false};
+    bool fAlignLinesInBroadcast{false};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

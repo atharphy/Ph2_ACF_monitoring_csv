@@ -1317,9 +1317,9 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
     LOG(DEBUG) << BOLDYELLOW << "OTHybridTester::PhaseTuneLineEleFC7#" << +pLineId << " for a Chip#" << +pChip << RESET;
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
 
-    D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
-    auto theAlignmentResults = cAlignerInterface->tunePhase(pHybrid, pLineId);
-    cLineStatus.first = theAlignmentResults.fPhaseAlignmentSuccess;
+    D19cBackendAlignmentFWInterface* cAlignerInterface   = cInterface->getBackendAlignmentInterface();
+    auto                             theAlignmentResults = cAlignerInterface->tunePhase(pHybrid, pLineId);
+    cLineStatus.first                                    = theAlignmentResults.fPhaseAlignmentSuccess;
     if(!cLineStatus.first)
     {
         LOG(INFO) << BOLDRED << "Could not phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;

@@ -49,7 +49,6 @@ void Physics2S::ConfigureCalibration()
     cCicAligner.waitForRunToBeCompleted();
     cCicAligner.Reset();
     cCicAligner.dumpConfigFiles();
-
 }
 
 void Physics2S::Running()

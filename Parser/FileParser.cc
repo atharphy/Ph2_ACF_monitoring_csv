@@ -262,7 +262,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             uint8_t cChipId      = theChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
             uint8_t cChipVersion = theChild.attribute(LPGBT_VERSION_ATTRIBUTE_NAME).as_uint();
             bool    cIsOptical   = theChild.attribute(LPGBT_OPTICAL_ATTRIBUTE_NAME).as_bool();
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] cIsOptical = " << std::boolalpha << cIsOptical << std::endl;
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] cIsOptical = " << std::boolalpha << cIsOptical << std::endl;
 
             lpGBT* thelpGBT = new lpGBT(cBoardId, cFMCId, cOpticalGroupId, cChipId, chipFileName, theConfigFilePath);
 

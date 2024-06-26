@@ -27,7 +27,7 @@ void OTalignBoardDataWord::Initialise(void)
     fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl");
 
     fAlignLinesInBroadcast = findValueInSettings<double>("OTalignBoardDataWord_AlignLinesInBroadcast", 0) > 0 ? true : false;
-     
+
     // need to free bitslip when will be accessible
     // free the registers in case any
     size_t               numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
@@ -121,7 +121,6 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
     fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.trigger_source", 3);
     for(auto theOpticalGroup: *theBoard)
     {
-
         // uint8_t hybdridShift = 27;
         // size_t numberOfStubLines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
         // for(auto theHybrid: *theOpticalGroup)
@@ -217,8 +216,8 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
 bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface, D19cDebugFWInterface* theDebugInterface)
 {
     // align stub lines in the BE
-    bool isPSmodule = theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS;
-    size_t cNlines = isPSmodule ? 7 : 6;
+    bool   isPSmodule = theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS;
+    size_t cNlines    = isPSmodule ? 7 : 6;
     LOG(INFO) << BOLDMAGENTA << "OTalignBoardDataWord::wordAlignBEdata" << RESET;
     for(auto theHybrid: *theOpticalGroup)
     {
@@ -229,10 +228,7 @@ bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpti
         auto& theHybridAlignmentRetry =
             fAlignmentRetryContainer.getObject(theOpticalGroup->getBeBoardId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
 
-        if(fAlignLinesInBroadcast)
-        {
-            return tryAllLineAlignment(theAlignerInterface, theHybrid->getId(), isPSmodule, theHybridBeBitSlip, theHybridAlignmentRetry);
-        }
+        if(fAlignLinesInBroadcast) { return tryAllLineAlignment(theAlignerInterface, theHybrid->getId(), isPSmodule, theHybridBeBitSlip, theHybridAlignmentRetry); }
         else
         {
             for(size_t cLineId = 0; cLineId < cNlines; cLineId++)
@@ -270,7 +266,7 @@ bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* the
     {
         ++currentIterationNumber;
         AlignmentResult theAlignmentResult = theAlignerInterface->alignWord(hybridId, lineId);
-        isLineAligned = theAlignmentResult.fWordAlignmentSuccess;
+        isLineAligned                      = theAlignmentResult.fWordAlignmentSuccess;
         if(!isLineAligned)
         {
             LOG(INFO) << BOLDYELLOW << "Alignment on line " << +lineId << " failed, retrying " << maxNumberOfIterations - currentIterationNumber << " more times before giving up" << RESET;
@@ -283,22 +279,21 @@ bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* the
     return isLineAligned;
 }
 
-
 bool OTalignBoardDataWord::tryAllLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
                                                uint16_t                                          hybridId,
                                                bool                                              isPSmodule,
                                                std::vector<uint8_t>&                             theHybridBitSlipVector,
                                                std::vector<uint8_t>&                             theHybridAlignmentRetryVector)
 {
-    bool isHybridAligned = false;
-    int  maxNumberOfIterations  = 10;
-    int  currentIterationNumber = 0;
-    uint8_t numberOfLines = isPSmodule ? 7 : 6;
+    bool    isHybridAligned        = false;
+    int     maxNumberOfIterations  = 10;
+    int     currentIterationNumber = 0;
+    uint8_t numberOfLines          = isPSmodule ? 7 : 6;
     while(!isHybridAligned && currentIterationNumber < maxNumberOfIterations)
     {
         ++currentIterationNumber;
         std::vector<AlignmentResult> theAlignmentVectorResult = theAlignerInterface->alignWordAllLines(hybridId, numberOfLines);
-        bool allLinesAligned = true;
+        bool                         allLinesAligned          = true;
         for(uint8_t lineId = 0; lineId < numberOfLines; ++lineId)
         {
             if(((hybridId % 2) == 0) && (lineId == 5) && !isPSmodule)
@@ -315,18 +310,14 @@ bool OTalignBoardDataWord::tryAllLineAlignment(Ph2_HwInterface::D19cBackendAlign
         if(!allLinesAligned)
         {
             LOG(INFO) << BOLDYELLOW << "Alignment failed, retrying " << maxNumberOfIterations - currentIterationNumber << " more times before giving up" << RESET;
-            for(auto& retry : theHybridAlignmentRetryVector) ++retry;
+            for(auto& retry: theHybridAlignmentRetryVector) ++retry;
         }
         else
         {
             isHybridAligned = true;
-            for(uint8_t lineId = 0; lineId < numberOfLines; ++lineId)
-            {
-                theHybridBitSlipVector[lineId] = theAlignmentVectorResult[lineId].fBitslip;
-            }
+            for(uint8_t lineId = 0; lineId < numberOfLines; ++lineId) { theHybridBitSlipVector[lineId] = theAlignmentVectorResult[lineId].fBitslip; }
         }
     }
 
     return isHybridAligned;
-
 }

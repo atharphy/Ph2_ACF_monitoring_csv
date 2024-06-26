@@ -48,8 +48,8 @@ class LinkAlignmentOT : public OTTool
         auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
         return fLpGBTSamplingDelay.getObject((*cBoardIter)->getId())->getObject(pOpticalGroup->getId())->getFirstObject()->getSummary<uint8_t>();
     }
-    bool                     L1WordAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pScope, uint8_t pSkipLine = 0);
-    
+    bool L1WordAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pScope, uint8_t pSkipLine = 0);
+
   protected:
     // Alignment parameters
     DetectorDataContainer fLpGBTSamplingDelay;
