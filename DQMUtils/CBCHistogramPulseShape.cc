@@ -217,7 +217,7 @@ bool CBCHistogramPulseShape::fill(std::string& inputStream)
 
     if(theThresholdAndNoiseSerialization.attachDeserializer(inputStream))
     {
-        //std::cout << "Matched CBCPulseShape ThresholdAndNoise!!!!!\n";
+        // std::cout << "Matched CBCPulseShape ThresholdAndNoise!!!!!\n";
         uint16_t              delay;
         DetectorDataContainer fDetectorData =
             theThresholdAndNoiseSerialization.deserializeHybridContainer<ThresholdAndNoise, ThresholdAndNoise, ThresholdAndNoise, uint16_t>(fDetectorContainer, delay);
@@ -226,7 +226,7 @@ bool CBCHistogramPulseShape::fill(std::string& inputStream)
     }
     else if(theSCurveSerialization.attachDeserializer(inputStream))
     {
-        //std::cout << "Matched CBCPulseShape SCurve!!!!!\n";
+        // std::cout << "Matched CBCPulseShape SCurve!!!!!\n";
         uint16_t              threshold, latencyDAC, delayDAC;
         DetectorDataContainer fDetectorData =
             theSCurveSerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy, uint16_t, uint16_t, uint16_t>(fDetectorContainer, threshold, latencyDAC, delayDAC);

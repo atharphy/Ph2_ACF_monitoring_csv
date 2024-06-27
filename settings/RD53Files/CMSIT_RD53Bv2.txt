@@ -19,7 +19,7 @@ GCR_DEFAULT_CONFIG        0x06          0d0                     0d0             
 GCR_DEFAULT_CONFIG_B      0x07          0d0                     0d0                                16
 
 *-------------------------------------------------------------------------------------------------------
-* Linear Front End
+* Analog Front End
 *-------------------------------------------------------------------------------------------------------
 * RegName                 Addr          Defval                  Value                           BitSize
 *-------------------------------------------------------------------------------------------------------
@@ -343,6 +343,9 @@ SelfTriggerDelay          0x121         0d30                    0d30            
 SelfTriggerEn             0x122         0b0                     0b0                                 1
 ServiceFrameSkip          0x123         0b0                     0b0                                 8
 EnServiceData             0x124         0b0                     0b0                                 1
+ManualChoice              0x125         0b0                     0b0                                 1
+ManualMode                0x126         0b0                     0b0                                 4
+FixedMode                 0x127         0b0                     0b0                                 8
 
 RESISTORI2V               0x1A0         0d5000                  0d4990                             16
 ADC_OFFSET_VOLT           0x1A1         0d63                    0d68                               16

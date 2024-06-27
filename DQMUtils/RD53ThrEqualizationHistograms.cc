@@ -32,19 +32,19 @@ void ThrEqualizationHistograms::book(TFile* theOutputFile, DetectorContainer& th
     frontEnd              = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     auto hThrEqualization = CanvasContainer<TH1F>("ThrEqualization", "Threshold Equalization", nEvents + 1, 0, 1 + 1. / nEvents);
-    bookImplementer(theOutputFile, theDetectorStructure, ThrEqualization, hThrEqualization, "Efficiency", "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, ThrEqualization, hThrEqualization, "Efficiency", "Entries");
 
     auto hTDAC1D = CanvasContainer<TH1F>("TDAC1D", "TDAC distribution", frontEnd->nTDACvalues, 0, frontEnd->nTDACvalues);
-    bookImplementer(theOutputFile, theDetectorStructure, TDAC1D, hTDAC1D, "TDAC", "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, TDAC1D, hTDAC1D, "TDAC", "Entries");
 
     auto hTDAC2D = CanvasContainer<TH2F>("TDAC2D", "TDAC map", nCols, 0, nCols, nRows, 0, nRows);
-    bookImplementer(theOutputFile, theDetectorStructure, TDAC2D, hTDAC2D, "Column", "Row");
+    bookChipImplementer(theOutputFile, theDetectorStructure, TDAC2D, hTDAC2D, "Column", "Row");
 
     auto hOcc1D = CanvasContainer<TH1F>("TDACGainScan", "TDAC Gain scan", stopValue - startValue + 1, startValue, stopValue + 1);
-    bookImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "TDAC Gain", "Threshold Distribution (std.dev.)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, Occupancy1D, hOcc1D, "TDAC Gain", "Threshold Distribution (std.dev.)");
 
     auto hTDACGain = CanvasContainer<TH1F>("TDACGain", "TDAC Gain", stopValue - startValue + 1, startValue, stopValue + 1);
-    bookImplementer(theOutputFile, theDetectorStructure, TDACGain, hTDACGain, "TDAC Gain", "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, TDACGain, hTDACGain, "TDAC Gain", "Entries");
 
     AreHistoBooked = true;
 }

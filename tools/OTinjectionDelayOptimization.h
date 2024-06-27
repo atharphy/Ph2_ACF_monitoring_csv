@@ -49,9 +49,9 @@ class OTinjectionDelayOptimization : public Tool
     uint32_t       fNumberOfEvents{100};
     uint16_t       fMaximumDelay{150};
     uint16_t       fDelayStep{1};
-    uint8_t        fCBCtestPulseValue{218};
-    uint8_t        fSSAtestPulseValue{45};
-    uint8_t        fMPAtestPulseValue{50};
+    float          fCBCtestPulseValue{1.};
+    float          fSSAtestPulseValue{0.5};
+    float          fMPAtestPulseValue{0.5};
     float          fCBCnumberOfSigmaNoiseAwayFromPedestal{5.};
     float          fSSAnumberOfSigmaNoiseAwayFromPedestal{5.};
     float          fMPAnumberOfSigmaNoiseAwayFromPedestal{5.};

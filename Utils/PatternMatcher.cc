@@ -1,4 +1,6 @@
 #include "Utils/PatternMatcher.h"
+#include "Utils/Utilities.h"
+#include <bitset>
 #include <iostream>
 
 PatternMatcher::PatternMatcher() {}
@@ -7,6 +9,7 @@ PatternMatcher::~PatternMatcher() {}
 
 void PatternMatcher::addToPattern(uint32_t thePattern, uint32_t thePatternMask, uint8_t thePatternBitLenght)
 {
+    fPatternNumberOfMaskedBits = 0;
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << std::hex << thePattern << " " << thePatternMask << std::dec << " " << +thePatternBitLenght << std::endl;
 
     uint8_t numberOfBitsInWord = (sizeof(uint32_t)) * 8;
@@ -38,7 +41,7 @@ void PatternMatcher::addToPattern(uint32_t thePattern, uint32_t thePatternMask, 
     // std::cout << std::endl;
 }
 
-bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector)
+bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector) const
 {
     if(theWordVector.size() < fPatternAndMaskVector.size()) return false;
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Incoming -> ";
@@ -58,6 +61,24 @@ bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector)
     }
 
     return true;
+}
+
+uint32_t PatternMatcher::countMatchingBits(const std::vector<uint32_t>& theWordVector) const
+{
+    uint32_t numberOfMatchingBits = 0;
+
+    for(size_t index = 0; index <= fPatternAndMaskVector.size(); ++index)
+    {
+        if(index >= theWordVector.size()) break;
+        uint32_t        patternAndWordXOR = theWordVector[index] ^ fPatternAndMaskVector[index].first;
+        std::bitset<32> patternAndWordXORBitset(patternAndWordXOR);
+        std::bitset<32> maskBitset(fPatternAndMaskVector[index].second);
+        patternAndWordXORBitset.flip();
+        auto patternAndWordXORBitsetMasked = patternAndWordXORBitset & maskBitset;
+        numberOfMatchingBits += patternAndWordXORBitsetMasked.count();
+    }
+
+    return numberOfMatchingBits;
 }
 
 std::vector<uint32_t> PatternMatcher::getPattern() const
@@ -94,4 +115,65 @@ void PatternMatcher::maskStubFor2Skickoff()
     }
 
     for(uint8_t patternIndex = 0; patternIndex < fPatternAndMaskVector.size(); ++patternIndex) { fPatternAndMaskVector[patternIndex].second &= theMaskVector[patternIndex]; }
+}
+
+uint32_t PatternMatcher::getNumberOfMaskedBits()
+{
+    if(fPatternNumberOfMaskedBits != 0) return fPatternNumberOfMaskedBits;
+
+    for(auto thePatterAndMask: fPatternAndMaskVector)
+    {
+        std::bitset<32> theMaskBitset(thePatterAndMask.second);
+        fPatternNumberOfMaskedBits += theMaskBitset.count();
+    }
+
+    return fPatternNumberOfMaskedBits;
+}
+
+void PatternMatcher::clear()
+{
+    fPatternNumberOfBits = 0;
+    fPatternAndMaskVector.clear();
+}
+
+bool PatternMatcher::isSubsetMatched(const std::vector<uint32_t>& theWordVector, uint32_t firstBitPosition, uint32_t numberOfBitsToMatch) const
+{
+    PatternMatcher theSubsetPatternMatcher;
+    size_t         positionOfFirstWord = (firstBitPosition - 1) / 32;
+    size_t         positionOfLastWord  = (firstBitPosition - 1 + numberOfBitsToMatch) / 32;
+    if((firstBitPosition + numberOfBitsToMatch) % 32 == 0) --positionOfLastWord;
+
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] positionOfFirstWord = " << positionOfFirstWord << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] positionOfLastWord = " << positionOfLastWord << std::endl;
+
+    uint8_t  numberOfBitsToSkipFirstWord = (firstBitPosition - 1) % 32;
+    uint32_t bitToSkipMaskFirstWord      = ((~0u) << numberOfBitsToSkipFirstWord) >> numberOfBitsToSkipFirstWord;
+    uint8_t  numberOfBitsToSkipLastWord  = 32 - (firstBitPosition - 1 + numberOfBitsToMatch) % 32;
+    uint32_t bitToSkipMaskLastWord       = (~0u) << numberOfBitsToSkipLastWord;
+
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] numberOfBitsToSkipFirstWord = " << +numberOfBitsToSkipFirstWord << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] numberOfBitsToSkipLastWord = " << +numberOfBitsToSkipLastWord << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] bitToSkipMaskFirstWord = " << std::hex << bitToSkipMaskFirstWord << std::dec << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] bitToSkipMaskLastWord = " << std::hex << bitToSkipMaskLastWord << std::dec << std::endl;
+
+    if(positionOfLastWord > positionOfFirstWord)
+    {
+        theSubsetPatternMatcher.addToPattern(fPatternAndMaskVector[positionOfFirstWord].first, fPatternAndMaskVector[positionOfFirstWord].second & bitToSkipMaskFirstWord, 32);
+        for(size_t wordIndex = positionOfFirstWord + 1; wordIndex < positionOfLastWord - 1; ++wordIndex)
+        {
+            theSubsetPatternMatcher.addToPattern(fPatternAndMaskVector[wordIndex].first, fPatternAndMaskVector[wordIndex].second, 32);
+        }
+        theSubsetPatternMatcher.addToPattern(fPatternAndMaskVector[positionOfLastWord].first, fPatternAndMaskVector[positionOfLastWord].second & bitToSkipMaskLastWord, 32);
+    }
+    else
+    {
+        theSubsetPatternMatcher.addToPattern(fPatternAndMaskVector[positionOfLastWord].first, fPatternAndMaskVector[positionOfLastWord].second & bitToSkipMaskFirstWord & bitToSkipMaskLastWord, 32);
+    }
+
+    std::vector<uint32_t> theSubsetWordVector(theWordVector.begin() + positionOfFirstWord, theWordVector.begin() + positionOfLastWord + 1);
+    // std::cout << "Stub data received    " << getPatternPrintout(theSubsetWordVector, 2) << std::endl;
+    // std::cout << "Stub pattern expected " << getPatternPrintout(theSubsetPatternMatcher.getPattern(), 2) << std::endl;
+    // std::cout << "Stub pattern mask     " << getPatternPrintout(theSubsetPatternMatcher.getMask(), 2) << std::endl;
+
+    return theSubsetPatternMatcher.isMatched(theSubsetWordVector);
 }

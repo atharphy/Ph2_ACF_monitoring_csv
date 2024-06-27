@@ -308,7 +308,18 @@ class ReadoutChipInterface : public ChipInterface
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
 
+    virtual void produceBX0AlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    }
+
     virtual std::vector<uint8_t> getWordAlignmentPatterns()
+    {
+        std::vector<uint8_t> cAlignmentPattern{10, 0};
+        return cAlignmentPattern;
+    }
+
+    virtual std::vector<uint8_t> getBX0AlignmentPatterns()
     {
         std::vector<uint8_t> cAlignmentPattern{10, 0};
         return cAlignmentPattern;

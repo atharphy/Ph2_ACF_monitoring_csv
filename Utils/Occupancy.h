@@ -40,8 +40,8 @@ class Occupancy //: public streammable
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        theArchive& fOccupancy;
-        theArchive& fOccupancyError;
+        theArchive & fOccupancy;
+        theArchive & fOccupancyError;
     }
 
     float fOccupancy;

@@ -61,8 +61,8 @@ class OTverifyCICdataWord : public Tool
                                               std::vector<std::pair<uint8_t, int>> stubSeedAndBendingVector);
     void         injectL12S(Ph2_HwDescription::ReadoutChip* theChip, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket);
     virtual void injectL1PS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket);
-    bool         matchL1Pattern(std::vector<uint32_t> theWordVector, PatternMatcher thePatternMatcher, uint8_t numberOfBytesInSinglePacket);
-    bool         matchStubPattern(std::vector<uint32_t> theWordVector, PatternMatcher thePatternMatcher, uint8_t numberOfBytesInSinglePacket, size_t numberOfLines);
+    bool         matchL1Pattern(std::vector<uint32_t> theWordVector, const PatternMatcher& thePatternMatcher, uint8_t numberOfBytesInSinglePacket);
+    bool         matchStubPattern(const std::vector<uint32_t>& theWordVector, const PatternMatcher& thePatternMatcher, uint8_t numberOfBytesInSinglePacket, size_t numberOfLines);
 
     std::vector<uint32_t> mergeCICStubOuput(const std::vector<std::vector<uint32_t>>& stubLineDataList, uint8_t numberOfBytesInSinglePacket);
 
@@ -70,10 +70,10 @@ class OTverifyCICdataWord : public Tool
     // For simplicity, make sure bendind code is always greater than half value (0x7)
     std::map<uint8_t, uint8_t> fBendingAndCode{{0, 0x9}, {2, 0xB}, {4, 0xF}};
 
-    DetectorDataContainer fPatternMatchingEfficiencyContainer;
-
   private:
-    void fillHistograms();
+    DetectorDataContainer fPatternMatchingEfficiencyContainer;
+    void                  fillHistograms();
+    bool                  fIsKickoff{false};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

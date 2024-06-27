@@ -8,7 +8,7 @@ class DetectorDataContainer;
 
 namespace Ph2_HwInterface
 {
-class BeBoardFWInterface;
+class BeBoardInterface;
 
 class ExceptionHandler
 {
@@ -20,7 +20,7 @@ class ExceptionHandler
     void                   updateFWInformation(uint16_t boardId);
     DetectorDataContainer* fQueryFunctionNames{nullptr};
     DetectorContainer*     fDetectorContainer{nullptr};
-    BeBoardFWInterface*    fFirmwareInterface{nullptr};
+    BeBoardInterface*      fBeBoardInterface{nullptr};
 
   public:
     static ExceptionHandler* getInstance()
@@ -30,7 +30,7 @@ class ExceptionHandler
     }
 
     void setDetectorContainer(DetectorContainer* theDetectorContainer);
-    void setFirmwareInterface(Ph2_HwInterface::BeBoardFWInterface* theBeBoardFWInterface) { fFirmwareInterface = theBeBoardFWInterface; }
+    void setBeBoardInterface(Ph2_HwInterface::BeBoardInterface* theBeBoardInterface) { fBeBoardInterface = theBeBoardInterface; }
 
     void disableChip(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId, uint16_t chipId);
     void disableHybrid(uint16_t boardId, uint16_t opticalGroupId, uint16_t hybridId);

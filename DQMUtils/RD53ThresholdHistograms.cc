@@ -25,7 +25,7 @@ void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
     const uint16_t rangeThreshold = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits(frontEnd->thresholdRegs[0])) + 1;
 
     auto hThreshold = CanvasContainer<TH1F>("Threshold", "Threshold", rangeThreshold, 0, rangeThreshold);
-    bookImplementer(theOutputFile, theDetectorStructure, Threshold, hThreshold, "Threshold", "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, Threshold, hThreshold, "Threshold", "Entries");
 
     AreHistoBooked = true;
 }

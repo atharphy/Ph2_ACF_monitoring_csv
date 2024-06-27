@@ -24,12 +24,6 @@ void OTalignBoardDataWord::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl");
-    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable");
-    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
-    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");
-    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select");
-    fRegisterHelper->freeBoardRegister("fc7_daq_ctrl.readout_block.control.readout_reset");
-    fRegisterHelper->freeBoardRegister("fc7_daq_stat.fast_command_block.general.fsm_state");
 
     // need to free bitslip when will be accessible
     // free the registers in case any
@@ -102,7 +96,7 @@ void OTalignBoardDataWord::wordAlignBEdata()
 void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
 {
     LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::stubAndL1WordAlignment for an OG " << RESET;
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
 
     D19cDebugFWInterface*            theDebugInterface   = cInterface->getDebugInterface();
     D19cBackendAlignmentFWInterface* theAlignerInterface = cInterface->getBackendAlignmentInterface();
@@ -252,8 +246,7 @@ void OTalignBoardDataWord::manuallyConfigureLine(const Chip* pChip, uint8_t pLin
 {
     auto cBoardId   = pChip->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
 
     D19cBackendAlignmentFWInterface* theAlignerInterface = cInterface->getBackendAlignmentInterface();
     theAlignerInterface->InitializeConfiguration();

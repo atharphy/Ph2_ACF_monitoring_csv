@@ -66,7 +66,7 @@ class lpGBTInterface : public ChipInterface
     // # Chip configuration functions #
     // ################################
     bool     WriteChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify = true) override;
-    uint16_t ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
+    int32_t  ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip);
     uint32_t ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip);
     uint32_t ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t version);
@@ -98,6 +98,7 @@ class lpGBTInterface : public ChipInterface
     void     ConfigureRxSource(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pSource);
     void     ConfigureTxSource(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pSource);
     void     ConfigureRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
+    void     ConfigureAllRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pPhase, std::map<uint8_t, std::vector<uint8_t>> theGroupsAndChannels);
     void     ConfigurePhShifter(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pClocks, uint8_t pFreq, uint8_t pDriveStr, uint8_t pEnFTune, uint16_t pDelay);
     void     SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase);
     uint8_t  GetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel); // To-Do: change to a map
@@ -225,6 +226,7 @@ class lpGBTInterface : public ChipInterface
     void    VdacSetVout(Ph2_HwDescription::lpGBT* pChip, float pVoltageV, bool pEnable = true);
     float   MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_t pSamples = 1, bool pResetTempSensor = true);
     float   MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip, const std::string& pPowerSupply, uint8_t pSamples = 1, bool pDisableMonitorAfterMeasurement = true);
+    float   ReadChipMonitor(Ph2_HwDescription::lpGBT* pChip, const std::string& registerName, bool silentRunning = false);
 
     uint8_t                        fChosenPhase;
     std::map<std::string, uint8_t> GetPhaseTapMap();

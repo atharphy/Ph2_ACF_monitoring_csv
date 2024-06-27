@@ -22,9 +22,9 @@
       <node id="enable_sync_word"      mask="0x00000400"      permission="rw"      description="When '1', Sync words are inserted in the cmd stream every 32 commands" />
       <node id="ext_clk_en"            mask="0x00000800"      permission="rw"      description="Enable external clock as main clock input (40MHz)" />
       <node id="rst_cdce_sync"         mask="0x00001000"      permission="rw"      description="CDCE chip on FC7 that generates the clocks is forced to resync with the reference clock" />
-      <node id="set_sync_cmd_freq"     mask="0x00002000"      permission="rw"      description="Toggling this bit, forces the values of the registers nb_of_pll_words, nb_of_sync_words and chip_reset_duration to be updated in the firmware" />
-      <node id="nb_of_pll_words"       mask="0x000FC000"      permission="rw"      description=" " />
-      <node id="nb_of_sync_words"      mask="0x00700000"      permission="rw"      description=" " />
+      <node id="set_sync_cmd_freq"     mask="0x00002000"      permission="rw"      description="Toggling this bit, forces the value of the register chip_reset_duration to be updated in the firmware" />
+      <node id="nb_of_pll_words"       mask="0x000FC000"      permission="rw"      description="Number of pll words to send every nb_slow_cmd_before_pll slow commands" />
+      <node id="nb_of_sync_words"      mask="0x00700000"      permission="rw"      description="Number of sync words to send every nb_slow_cmd_before_sync slow commands" />
       <node id="chip_reset_duration"   mask="0xFF800000"      permission="rw"      description="For this register only the 5 lsb are used and it defines how long will the reset period be during the initialization procedure. The default value in the fw is 100 (x100ns period)" />
     </node>
 
@@ -225,6 +225,11 @@
       <node id="cmd_strobe"            mask="0x00100000"      permission="rw"      description="Start Procedure to set GTX polarity" />
     </node>
 
+    <node id="cnf_cmd_ctrl"         address="0x00000001B"     permission="rw"      description="Additional configurations for CMD Controller">
+      <node id="nb_slow_cmd_before_sync" mask="0x000003FF"    permission="rw"      description="Number of slow commands before sending sync words" />
+      <node id="nb_slow_cmd_before_pll"  mask="0x000FFC00"    permission="rw"      description="Number of slow commands before sending pll words" />
+    </node>
+
   </node>
 
   <!-- ================================================ -->
@@ -282,7 +287,6 @@
       <node id="Hybrid_type"           mask="0x00000007"      permission="r"       description="" />
       <node id="Nb_of_modules"         mask="0x00000078"      permission="r"       description="" />
       <node id="speed"                 mask="0x00000080"      permission="r"       description="" />
-      <node id="lane_up"               mask="0x0FFFFF00"      permission="r"       description="" />
     </node>
 
     <node id="aurora_rx_channel_up" address="0x00000007"      permission="r"       description=""> </node>
@@ -305,7 +309,7 @@
       <node id="trig_data_buf_empty"   mask="0x02000000"      permission="r"       description="Data payload fifo empty flag (all fifos combined) " />
     </node>
 
-    <node id="rate_measurement_bx_counter" address="0x0000000D" permission="r"     description=""> </node>
+    <node id="aurora_rx_lane_up"    address="0x0000000D"      permission="r"       description=""> </node>
 
     <node id="ddr3_num_errors"      address="0x0000000E"      permission="r"       description="Number of errors during DDR3 self-check"> </node>
     <node id="ddr3_num_words"       address="0x0000000F"      permission="r"       description="Nb of words readout during DDR3 self-check"> </node>

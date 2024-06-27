@@ -19,7 +19,7 @@
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #endif
 
-std::string PedeNoise::fCalibrationDescription = "Measure noise and Pedestal/pulse peak, set threshold at 5 sigma from the pedestal and run occupancy measurement";
+std::string PedeNoise::fCalibrationDescription = "Measure noise and Pedestal/pulse peak";
 
 PedeNoise::PedeNoise() : Tool() {}
 
@@ -178,7 +178,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         if(!fWithSSA && !fWithMPA) continue;
         if(!cForcePSasync) continue;
         cBoard->setEventType(EventType::PSAS);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->InitializePSCounterFWInterface(cBoard);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitializePSCounterFWInterface(cBoard);
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -1028,7 +1028,7 @@ void PedeNoise::Running()
     // HybridContainer::SetQueryFunction(myFunction);
     measureNoise();
     // HybridContainer::ResetQueryFunction();
-    Validate();
+    // Validate();
     LOG(INFO) << "Done with noise";
     Reset();
 }

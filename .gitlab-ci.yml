@@ -12,7 +12,7 @@
 
 workflow:
     rules:
-    - if: $CI_MERGE_REQUEST_ID || $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_MERGE_REQUEST_ID || $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_BRANCH == "Dev"
       when: always
     - if: '$CI_PIPELINE_SOURCE == "push"'
       changes: # when any file matching the below is edited, create a pipeline

@@ -90,6 +90,8 @@ class Cbc : public ReadoutChip
 
     bool                          isTopSensor(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn) override;
     std::pair<uint16_t, uint16_t> getGlobalCoordinates(Ph2_HwDescription::ReadoutChip* pChip, uint16_t pLocalColumn, uint16_t pLocalRow) override;
+
+    static uint8_t convertMIPtoInjectedCharge(float numberOfMIPs);
 };
 } // namespace Ph2_HwDescription
 

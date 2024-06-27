@@ -79,7 +79,7 @@
 			</Register>
 			<Register name="misc">
 				<Register name="backpressure_enable">0</Register>
-				<Register name="initial_fast_reset_enable">0</Register>
+				<Register name="initial_fast_reset_enable">1</Register>
 				<Register name="stubOR">1</Register>
 				<Register name="trigger_multiplicity">0</Register>
 				<Register name="trigger_timeout_enable">0</Register>

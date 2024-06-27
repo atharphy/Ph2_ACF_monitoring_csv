@@ -919,7 +919,6 @@ void SEHTester::UserFCMDTranslate(const std::string& userFilename = "fcmd_file.t
 
 void SEHTester::ClearBRAM(BeBoard* pBoard, const std::string& sBRAMToReset)
 {
-    fBeBoardInterface->setBoard(pBoard->getId());
     std::string cRegNameData;
     std::string cRegNameAddr;
     std::string cRegNameWrite;
@@ -956,7 +955,6 @@ void SEHTester::ClearBRAM(const std::string& sBramToReset)
 
 void SEHTester::WritePatternToBRAM(BeBoard* pBoard, const std::string& filename = "fcmd_file.txt")
 {
-    fBeBoardInterface->setBoard(pBoard->getId());
     //        this -> UserFCMDTranslate(filename);
     this->ClearBRAM("ref");
     bool             cIsSSAlFCMDBRAMGood = true;
@@ -1073,7 +1071,6 @@ void SEHTester::WritePatternToBRAM(const std::string& sFileName = "fcmd_file.txt
 
 void SEHTester::CheckFastCommandsBRAM(BeBoard* pBoard, const std::string& sFCMDLine)
 {
-    fBeBoardInterface->setBoard(pBoard->getId());
     std::string                     cOutputErrorsFileName = sFCMDLine;
     std::ofstream                   cBRAMErrorsFileHandle(cOutputErrorsFileName);
     std::map<int, std::vector<int>> cPatterns;
@@ -1114,7 +1111,6 @@ void SEHTester::CheckFastCommandsBRAM(const std::string& sFCMDLine)
 
 void SEHTester::CheckFastCommands(BeBoard* pBoard, const std::string& sFastCommand, const std::string& filename = "fcmd_file.txt")
 {
-    fBeBoardInterface->setBoard(pBoard->getId());
     this->ClearBRAM("test");
     this->WritePatternToBRAM(pBoard, filename);
     // fcmd test
@@ -1250,7 +1246,6 @@ void SEHTester::ReadRefAddrBRAM(int iRefBRAMAddr)
 
 void SEHTester::ReadCheckAddrBRAM(BeBoard* pBoard, int iCheckBRAMAddr)
 {
-    fBeBoardInterface->setBoard(pBoard->getId());
     fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.fe_for_ps_roh_fcmd_check.test_data_bram_addr", iCheckBRAMAddr);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     int cCheckSSAlFCMDBRAMData = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fe_for_ps_roh_ssa_fcmd_test.fe_for_ps_roh_fcmd_SSA_l_check");
@@ -1277,7 +1272,6 @@ void SEHTester::ReadCheckAddrBRAM(int iCheckBRAMAddr)
 
 void SEHTester::FastCommandScope(BeBoard* pBoard)
 {
-    fBeBoardInterface->setBoard(pBoard->getId());
     // uint32_t cSSA_L = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_l");
     uint32_t cCIC_R = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_r");
     uint32_t cCIC_L = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_l");
@@ -1290,7 +1284,6 @@ void SEHTester::FastCommandScope(BeBoard* pBoard)
 }
 bool SEHTester::FastCommandChecker(BeBoard* pBoard, uint8_t pPattern)
 {
-    fBeBoardInterface->setBoard(pBoard->getId());
     // uint32_t cSSA_L = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_l");
     uint32_t cCIC_R = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_ssa_r");
     uint32_t cCIC_L = fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_stat.physical_interface_block.fcmd_debug_cic_l");
@@ -1366,7 +1359,6 @@ bool SEHTester::FastCommandChecker(uint8_t pPattern)
 }
 void SEHTester::CheckHybridInputs(BeBoard* pBoard, std::vector<std::string> pInputs, std::vector<uint32_t>& pCounters)
 {
-    fBeBoardInterface->setBoard(pBoard->getId());
     uint32_t             cRegisterValue = 0;
     std::vector<uint8_t> cIndices(0);
     for(auto cInput: pInputs)
@@ -1411,7 +1403,6 @@ void SEHTester::CheckHybridInputs(std::vector<std::string> pInputs, std::vector<
 
 void SEHTester::CheckHybridOutputs(BeBoard* pBoard, std::vector<std::string> pOutputs, std::vector<uint32_t>& pCounters)
 {
-    fBeBoardInterface->setBoard(pBoard->getId());
     uint32_t             cRegisterValue = 0;
     std::vector<uint8_t> cIndices(0);
     for(auto cInput: pOutputs)

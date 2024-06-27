@@ -126,7 +126,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
         if(!fWithSSA && !fWithMPA) continue;
         if(!cForcePSasync) continue;
         cBoard->setEventType(EventType::PSAS);
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->InitializePSCounterFWInterface(cBoard);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitializePSCounterFWInterface(cBoard);
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)

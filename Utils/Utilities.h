@@ -102,6 +102,8 @@ uint32_t convertAnyInt(const char* pRegValue);
 
 double convertAnyDouble(const char* pRegValue);
 
+std::vector<float> convertStringToFloatList(std::string theListString);
+
 // tokenize string
 void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters);
 
@@ -235,5 +237,8 @@ std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector,
 std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t pattern, uint32_t patternMask);
 
 uint16_t linearizeRowAndCols(uint16_t row, uint16_t col, uint16_t numberOfCols);
+
+float                 countMatchingBits(const std::vector<uint32_t>& incomingData, const std::vector<uint32_t>& possiblePatternList);
+std::vector<uint32_t> getPossiblePatterns(uint8_t injectedPattern, bool is10Gmodule);
 
 #endif

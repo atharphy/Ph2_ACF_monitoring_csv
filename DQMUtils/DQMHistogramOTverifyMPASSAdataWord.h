@@ -7,7 +7,7 @@
 
 #ifndef DQMHistogramOTverifyMPASSAdataWord_h_
 #define DQMHistogramOTverifyMPASSAdataWord_h_
-#include "DQMUtils/DQMHistogramOTverifyCICdataWord.h"
+#include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
 
@@ -17,7 +17,7 @@ class TFile;
  * \class DQMHistogramOTverifyMPASSAdataWord
  * \brief Class for OTverifyMPASSAdataWord monitoring histograms
  */
-class DQMHistogramOTverifyMPASSAdataWord : public DQMHistogramOTverifyCICdataWord
+class DQMHistogramOTverifyMPASSAdataWord : public DQMHistogramBase
 {
   public:
     /*!
@@ -44,5 +44,21 @@ class DQMHistogramOTverifyMPASSAdataWord : public DQMHistogramOTverifyCICdataWor
      * needed if you do not fo into the SoC \param dataBuffer : vector of char with the TCP datastream
      */
     bool fill(std::string& inputStream) override;
+
+    /*!
+     * \brief process : do something with the histogram like colors, fit, drawing canvases, etc
+     */
+    void process() override;
+
+    /*!
+     * \brief Reset histogram
+     */
+    void reset(void) override;
+
+    void fillPatternMatchingEfficiencyResults(DetectorDataContainer& thePatternMatchingEfficiencyContainer);
+
+  private:
+    DetectorContainer*    fDetectorContainer;
+    DetectorDataContainer fPatternMatchingEfficiencyHistogramContainer;
 };
 #endif

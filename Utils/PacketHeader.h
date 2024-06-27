@@ -13,19 +13,18 @@ class PacketHeader
     PacketHeader();
     virtual ~PacketHeader();
 
-    uint8_t  getPacketHeaderSize();
+    uint8_t getPacketHeaderSize();
 
     void     addPacketHeader(std::string& thePacket);
     uint32_t getPacketSize(std::string& thePacket);
     uint32_t getPacketSize(std::vector<char>& thePacket);
 
   private:
-    void setPacketSize(uint64_t packetSize);
+    void     setPacketSize(uint64_t packetSize);
     uint32_t getPacketSize();
 
     static const uint8_t SIZE = 4;
-    char fPacketSize[SIZE];
+    char                 fPacketSize[SIZE];
 };
-
 
 #endif

@@ -320,7 +320,7 @@ uint8_t StubSweep::getStubPosition(std::vector<Event*> pEvents, uint32_t pHybrid
             cStubPosition            = cStub.getPosition();
             cCenter                  = cStub.getCenter();
             cBend                    = cStub.getBend();
-            outp << MAGENTA << "Stub Position : " << +cStubPosition << " , Bend : " << std::bitset<8>(cBend) << " , Center  = " << +(cCenter)*2 << RESET;
+            outp << MAGENTA << "Stub Position : " << +cStubPosition << " , Bend : " << std::bitset<8>(cBend) << " , Center  = " << +(cCenter) * 2 << RESET;
             // LOG (INFO) << CYAN << "Stub Position: " << +cStub.getPosition() << " Bend: " << +cStub.getBend() << "
             // Strip: " << cStub.getCenter() << RESET ;
         }

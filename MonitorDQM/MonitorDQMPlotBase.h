@@ -71,12 +71,7 @@ class MonitorDQMPlotBase
      */
     virtual void reset(void) = 0;
 
-    double findValueInSettings(const Ph2_Parser::SettingsMap& settingsMap, const std::string name, double defaultValue = 0.) const
-    {
-        auto setting = settingsMap.find(name);
-        return (setting != std::end(settingsMap) ? boost::any_cast<double>(setting->second) : defaultValue);
-    }
-
+  protected:
     uint32_t getTimeStampForRoot(time_t rawTime)
     {
         struct tm* timeinfo = localtime(&rawTime);
@@ -87,11 +82,11 @@ class MonitorDQMPlotBase
         return rootTime.Convert();
     }
 
-  protected:
     void bookImplementer(TFile*                   theOutputFile,
                          const DetectorContainer& theDetectorStructure,
                          DetectorDataContainer&   dataContainer,
                          GraphContainer<TGraph>&  graphContainer,
+                         const std::string&       type,
                          const char*              XTitle = nullptr,
                          const char*              YTitle = nullptr)
     {
@@ -108,7 +103,10 @@ class MonitorDQMPlotBase
         graphContainer.fTheGraph->SetMarkerStyle(20);
         graphContainer.fTheGraph->SetMarkerSize(0.4);
 
-        RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, graphContainer);
+        if(type == "chip")
+            RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, graphContainer);
+        else if(type == "opto")
+            RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, dataContainer, graphContainer);
     }
 };
 

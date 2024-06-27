@@ -17,7 +17,6 @@
 #include "Utils/Container.h"
 #include "Utils/RD53Event.h"
 #include "Utils/RD53Shared.h"
-#include "Utils/easylogging++.h"
 
 #include <iomanip>
 
@@ -37,7 +36,8 @@ const uint8_t NPIX_REGION     = 4;    // Number of pixels in a region (1x4)
 const uint8_t NROW_CORE       = 8;    // Number of rows in a core
 const uint8_t NBIT_ADDR       = 9;    // Number of address bits
 const uint8_t NBIT_TOT        = 4;    // Number of ToT bits
-const uint8_t NSYNC_WORDS     = 64;   // Number of Sync words for synchronization
+const uint8_t NSYNC_WORDS_S   = 2;    // Number of Sync words for synchronization (S = small)
+const uint8_t NSYNC_WORDS_L   = 64;   // Number of Sync words for synchronization (L = large)
 const uint8_t NWORDS_TO_SYNC  = 30;   // Number of words beforse send a Sync
 const uint8_t PATTERN_PRBS    = 0xAA; // Start PRBS pattern
 const uint8_t PATTERN_AURORA  = 0x55; // Start AURORA pattern
@@ -49,16 +49,18 @@ const uint8_t PATTERN_CLOCK   = 0x00; // Start clock pattern
 // #####################
 namespace RD53EvtEncoder
 {
-const uint32_t CHIPGOOD    = 0x00000000; // Chip event status Good
-const uint32_t CHIPHEAD    = 0x00010000; // Chip event status Bad chip header
-const uint32_t CHIPID      = 0x00020000; // Chip event status Found conflicting chip ID
-const uint32_t CHIPPIX     = 0x00040000; // Chip event status Bad pixel row or column
-const uint32_t CHIPTOT     = 0x00080000; // Chip event status Invalid TOT value
-const uint32_t CHIPNOHIT   = 0x00100000; // Chip event status Hit data are missing
-const uint32_t CHIPFWERR   = 0x00200000; // Chip event status Firmware error
-const uint32_t CHIPNS_WAS0 = 0x00400000; // Chip event status new-stream bit was 0 in the first word of the event stream
-const uint32_t CHIPNS_WAS1 = 0x00800000; // Chip event status new-stream bit was 1 before the last word of the event stream
-const uint32_t CHIP_QROW   = 0x01000000; // Chip event status neighbor bit set for the first qrow
+const uint32_t CHIPGOOD          = 0x00000000; // Chip event status Good
+const uint32_t CHIPHEAD          = 0x00010000; // Chip event status Bad chip header
+const uint32_t CHIPID            = 0x00020000; // Chip event status Found conflicting chip ID
+const uint32_t CHIPPIX           = 0x00040000; // Chip event status Bad pixel row or column
+const uint32_t CHIPTOT           = 0x00080000; // Chip event status Invalid TOT value
+const uint32_t CHIPNOHIT         = 0x00100000; // Chip event status Hit data are missing
+const uint32_t CHIPFWERR         = 0x00200000; // Chip event status Firmware error
+const uint32_t CHIPNS_WAS0       = 0x00400000; // Chip event status new-stream bit was 0 in the first word of the event stream
+const uint32_t CHIPNS_WAS1       = 0x00800000; // Chip event status new-stream bit was 1 before the last word of the event stream
+const uint32_t CHIPQROW          = 0x01000000; // Chip event status neighbor bit set for the first qrow
+const uint32_t CHIPTRUNC_MAXHITS = 0x02000000; // Chip event status truncation occurred due to max number of hits reached per core
+const uint32_t CHIPTRUNC_TIMEOUT = 0x04000000; // Chip event status truncation occurred due to readout timeout
 } // namespace RD53EvtEncoder
 
 namespace Ph2_HwDescription

@@ -261,6 +261,7 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
                 // map<char, int>::iterator it;
                 for(auto it = trainedPhases.begin(); it != trainedPhases.end(); ++it)
                 {
+                    // FIXME this does not work if you are not on optical group 0!
                     if(pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
                     {
                         if(it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 6, it->second);
@@ -285,7 +286,6 @@ void ECVLinkAlignmentOT::ECV(const OpticalGroup* pOpticalGroup)
                         if(it->first == "Group6Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 1, it->second);
                         if(it->first == "Group6Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 2, it->second);
                         if(it->first == "Group0Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 0, 0, it->second);
-
                         if(it->first == "Group0Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 5, it->second);
                         if(it->first == "Group1Channel0") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 6, it->second);
                         if(it->first == "Group1Channel2") StoreTrainedPhases(clockPolarity, clockStrength, cicStrength, 1, 4, it->second);
@@ -316,9 +316,8 @@ void ECVLinkAlignmentOT::InitWordAlignStubs(const OpticalGroup* pOpticalGroup)
     auto cBoardId   = pOpticalGroup->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     LOG(INFO) << BOLDYELLOW << "ECVLinkAlignmentOT::WordAlignBEdata for an OG " << RESET;
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
 
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
     D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
@@ -348,8 +347,7 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>> ECVLinkAlignmentOT::Ch
     auto& cBeBitSlip   = fBeBitSlip.getObject((*cBoardIter)->getId());
     auto& cBeBitSlipOG = cBeBitSlip->getObject(pOpticalGroup->getId());
 
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    auto                             cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto                             cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
     D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
@@ -418,8 +416,8 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>> ECVLinkAlignmentOT::Ch
     LOG(INFO) << BOLDMAGENTA << "ECVLinkAlignmentOT::WordAlignBEdata ... word alignment on L1 lines from CIC.." << RESET;
     bool cAligned0 = L1WordAlignment(pOpticalGroup, fL1Debug, 2); // If one line is not aligned it is false for both lines
     bool cAligned1 = L1WordAlignment(pOpticalGroup, fL1Debug, 1); // If one line is not aligned it is false for both lines
-    ret.push_back(std::make_pair(0, std::make_pair(6, cAligned0)));
-    ret.push_back(std::make_pair(1, std::make_pair(6, cAligned1)));
+    // ret.push_back(std::make_pair(0, std::make_pair(6, cAligned0)));
+    // ret.push_back(std::make_pair(1, std::make_pair(6, cAligned1)));
     int hybridCount = 0;
     for(auto cHybrid: *pOpticalGroup)
     {
@@ -450,10 +448,9 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> ECVLinkAlignmentOT::S
         hybridCount++;
     }
 
-    auto cBoardId   = pOpticalGroup->getBeBoardId();
-    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto                  cBoardId        = pOpticalGroup->getBeBoardId();
+    auto                  cBoardIter      = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
     D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
 
     uint8_t cNlines = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
@@ -471,7 +468,7 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> ECVLinkAlignmentOT::S
             std::vector<std::vector<uint32_t>> stubData;
 
             for(auto line: cDebugInterface->StubDebug(true, cNlines, false)) { stubData.push_back(line); }
-            if(i % 200 == 0) { LOG(INFO) << "Check output #Readout " << i << RESET; }
+            // if(i % 200 == 0) { LOG(INFO) << "Check output #Readout " << i << RESET; }
             int lineCount = 0;
 
             for(auto line: stubData)
@@ -483,7 +480,7 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> ECVLinkAlignmentOT::S
                     std::string     binaryWordLine = bits.to_string();
                     binaryLine += binaryWordLine;
                 }
-                if(i % 200 == 0) { LOG(INFO) << binaryLine << RESET; }
+                // if(i % 200 == 0) { LOG(INFO) << binaryLine << RESET; }
                 // line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
                 // LOG (INFO) << "Line "<<(lineCount % (cNlines*hybridCount)) << " : "<<  line << RESET;
                 std::bitset<32> pattern = 0xEAAAAAAA;
@@ -558,10 +555,9 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> ECVLinkAlignmentOT::L
         cHybridCount++;
     }
 
-    auto cBoardId   = pOpticalGroup->getBeBoardId();
-    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto                  cBoardId        = pOpticalGroup->getBeBoardId();
+    auto                  cBoardIter      = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
     D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
 
     std::vector<int> lineBitErrors(cHybridCount, 0);
@@ -592,11 +588,11 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> ECVLinkAlignmentOT::L
                 l1adata += binaryWordLine;
             }
 
-            if(i % 200 == 0)
-            {
-                LOG(INFO) << "L1A debug Hybrid " << +cHybrid->getId() << " iteration " << i << RESET;
-                LOG(INFO) << l1adata << RESET;
-            }
+            // if(i % 200 == 0)
+            // {
+            //     LOG(INFO) << "L1A debug Hybrid " << +cHybrid->getId() << " iteration " << i << RESET;
+            //     LOG(INFO) << l1adata << RESET;
+            // }
 
             std::size_t     found   = l1adata.find("111111111111111111111111111");
             std::bitset<32> pattern = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) ? 0xAD55AAB5 : 0xAAAAAAAA;
@@ -610,9 +606,9 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> ECVLinkAlignmentOT::L
                     lineBitErrors[+cHybrid->getId()] += bitErrors.count();
                 if(bitErrors.count() > 0 && (i - last_fail_print) > 100)
                 {
-                    LOG(INFO) << BOLDRED << l1adata << RESET;
-                    LOG(INFO) << BOLDRED << "L1A ID " << l1adata.substr(found + 28 + 9, 9) << "\t" << std::stoi(l1adata.substr(found + 28 + 9, 9), 0, 2) << RESET;
-                    LOG(INFO) << i << RESET;
+                    // LOG(INFO) << BOLDRED << l1adata << RESET;
+                    // LOG(INFO) << BOLDRED << "L1A ID " << l1adata.substr(found + 28 + 9, 9) << "\t" << std::stoi(l1adata.substr(found + 28 + 9, 9), 0, 2) << RESET;
+                    // LOG(INFO) << i << RESET;
                     last_fail_print = i;
                 }
             }
@@ -621,14 +617,14 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> ECVLinkAlignmentOT::L
                 lineBitErrors[+cHybrid->getId()] += 32;
                 if((1600 - found) > (250 + 32) && (i - last_fail_print) > 100)
                 {
-                    LOG(INFO) << BOLDRED << l1adata << RESET;
-                    LOG(INFO) << BOLDRED << "L1A ID " << l1adata.substr(found + 28 + 9, 9) << "\t" << std::stoi(l1adata.substr(found + 28 + 9, 9), 0, 2) << RESET;
-                    LOG(INFO) << i << RESET;
+                    // LOG(INFO) << BOLDRED << l1adata << RESET;
+                    // LOG(INFO) << BOLDRED << "L1A ID " << l1adata.substr(found + 28 + 9, 9) << "\t" << std::stoi(l1adata.substr(found + 28 + 9, 9), 0, 2) << RESET;
+                    // LOG(INFO) << i << RESET;
                     last_fail_print = i;
                 }
             }
         }
-        LOG(INFO) << +cHybrid->getId() << " : " << (float)(lineBitErrors[+cHybrid->getId()]) / (float)(n_triggers * 32) << RESET;
+        // LOG(INFO) << +cHybrid->getId() << " : " << (float)(lineBitErrors[+cHybrid->getId()]) / (float)(n_triggers * 32) << RESET;
         ret.push_back(std::make_pair(cHybrid->getId(), std::make_pair(6, (float)(lineBitErrors[+cHybrid->getId()]) / (float)(n_triggers * 32))));
     }
     return ret;
@@ -717,7 +713,7 @@ void ECVLinkAlignmentOT::StoreTrainedPhases(uint8_t pClockPolarity, uint8_t pClo
     ContainerFactory::copyAndInitHybrid<uint8_t>(*fDetectorContainer, cPhasesContainer);
 
     for(auto cOpticalGroup: *cBoard) { cPhasesContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(pHybridId)->getSummary<uint8_t>() = pPhase; } // optical group
-    LOG(INFO) << +pLine << RESET;
+    // LOG(INFO) << +pLine << RESET;
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillPhases(pClockPolarity, pClockStrength, pCicStrength, pHybridId, pLine, cPhasesContainer);
 #endif
