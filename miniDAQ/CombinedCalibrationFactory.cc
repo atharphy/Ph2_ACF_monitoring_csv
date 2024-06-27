@@ -47,6 +47,7 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
+#include "tools/OTSSAtoSSAecv.h"
 
 using namespace MessageUtils;
 
@@ -190,6 +191,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTMPAtoCICecv>("PS Module", "MPAtoCICecv");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoMPAecv>("PS Module", "SSAtoMPAecv");
+
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoSSAecv>("PS Module", "SSAtoSSAecv");
 
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");

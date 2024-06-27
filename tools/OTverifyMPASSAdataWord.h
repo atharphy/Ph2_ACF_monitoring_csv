@@ -50,6 +50,7 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
                                                                                             std::vector<std::pair<PatternMatcher, float>>& thePatternAndEfficiencyList,
                                                                                             const std::vector<uint32_t>&                   concatenatedStubPackage,
                                                                                             Ph2_HwDescription::ReadoutChip*                theMPA);
+    virtual void                                               setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA);
     DetectorDataContainer                                      fPatternMatchingEfficiencyContainer;
 
   private:
