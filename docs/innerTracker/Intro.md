@@ -8,11 +8,23 @@
 ## Important webpages and information
 
 - Mattermost forum: [`cms-it-daq`](https://mattermost.web.cern.ch/cms-it-daq/)
+
+### Documentation
+
 - Detailed description of the various calibrations: <https://cernbox.cern.ch/s/uSezc8ErG7F4tJ0>
 - ROC tuning sequence: <https://www.overleaf.com/read/ffpkqnjjjscd>
-- Latest IT-DAQ school: <https://indico.cern.ch/event/1374747/>
 - CROC testing guide: <https://croc-testing-user-guide.docs.cern.ch/>
+
+### School
+
+- Latest IT-DAQ school: <https://indico.cern.ch/event/1374747/>
+
+### TUI/GUI
+
 - Text-based User Interface (TUI) - aka Dirigent: <https://gitlab.cern.ch/ethz-phase2-pixels/dirigent/>
 - Graphical-based User Interface (GUI) - aka Ohio-GUI: <https://github.com/OSU-CMS/Ph2_ACF_GUI/>
+
+### Miscellanea
+
 - Program to generate enable/injection patterns for x-talk studies: `pyUtilsIT/ManipulateITchipMask.py`
 - Mask converter from `Ph2_ACF` to `Alki's` code: `pyUtilsIT/ConvertPh2ACFMask2Alkis.py`
