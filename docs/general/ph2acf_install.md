@@ -7,7 +7,7 @@ Follow these instructions to install and compile the Ph2_ACF software.
 ```shell
 git clone --recurse-submodules https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF.git
 # N.B. to synchronize only the submodule, run:
-# git submodule sync; git submodule update --init --recursive --remote
+# git submodule sync; git submodule update --init --recursive
 cd Ph2_ACF
 # Check out the desired tag (replace v4-XX accordingly)
 git checkout -b v4-XX v4-XX
