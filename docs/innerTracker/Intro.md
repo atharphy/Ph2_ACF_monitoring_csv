@@ -13,6 +13,6 @@
 - Latest IT-DAQ school: <https://indico.cern.ch/event/1374747/>
 - CROC testing guide: <https://croc-testing-user-guide.docs.cern.ch/>
 - Text-based User Interface (TUI) - aka Dirigent: <https://gitlab.cern.ch/ethz-phase2-pixels/dirigent/>
-- Graphical-based User Interface (Ohio-GUI) - aka Dirigent: <https://github.com/OSU-CMS/Ph2_ACF_GUI/>
+- Graphical-based User Interface (GUI) - aka Ohio-GUI: <https://github.com/OSU-CMS/Ph2_ACF_GUI/>
 - Program to generate enable/injection patterns for x-talk studies: `pyUtilsIT/ManipulateITchipMask.py`
 - Mask converter from `Ph2_ACF` to `Alki's` code: `pyUtilsIT/ConvertPh2ACFMask2Alkis.py`
