@@ -17,16 +17,13 @@ void OTSSAtoSSAecv::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTSSAtoSSAecv.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 }
 
-void OTSSAtoSSAecv::ConfigureCalibration()
-{
-
-}
+void OTSSAtoSSAecv::ConfigureCalibration() {}
 
 void OTSSAtoSSAecv::Running()
 {
@@ -40,36 +37,22 @@ void OTSSAtoSSAecv::Running()
 void OTSSAtoSSAecv::Stop(void)
 {
     LOG(INFO) << "Stopping OTSSAtoSSAecv measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTSSAtoSSAecv.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTSSAtoSSAecv.process();
+#endif
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTSSAtoSSAecv stopped.";
 }
 
-void OTSSAtoSSAecv::Pause()
-{
+void OTSSAtoSSAecv::Pause() {}
 
-}
+void OTSSAtoSSAecv::Resume() {}
 
+void OTSSAtoSSAecv::Reset() { fRegisterHelper->restoreSnapshot(); }
 
-void OTSSAtoSSAecv::Resume()
-{
-
-}
-
-
-void OTSSAtoSSAecv::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
-
-void OTSSAtoSSAecv::runSSAtoSSAecvScan()
-{
-
-}
+void OTSSAtoSSAecv::runSSAtoSSAecvScan() {}
 
 void OTSSAtoSSAecv::setStubLogicParameters(ReadoutChip* theMPA)
 {

@@ -18,6 +18,7 @@
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
 #include "tools/OTSSAtoMPAecv.h"
+#include "tools/OTSSAtoSSAecv.h"
 #include "tools/OTTemperature.h"
 #include "tools/OTVTRXLightOff.h"
 #include "tools/OTalignBoardDataWord.h"
@@ -47,7 +48,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/OTSSAtoSSAecv.h"
 
 using namespace MessageUtils;
 

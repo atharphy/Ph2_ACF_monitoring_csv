@@ -34,12 +34,11 @@ class OTSSAtoSSAecv : public OTSSAtoMPAecv
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
     void runSSAtoSSAecvScan();
     void setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA) override;
 
-    
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTSSAtoSSAecv fDQMHistogramOTSSAtoSSAecv;
