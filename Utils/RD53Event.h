@@ -101,7 +101,7 @@ struct RD53ChipEvent
     uint16_t hybrid_id;
     uint16_t chip_id;
     uint16_t chip_lane;
-    uint16_t l1a_data_size;
+    uint16_t l1a_size;
     uint16_t chip_type;
     uint16_t frame_delay;
 
