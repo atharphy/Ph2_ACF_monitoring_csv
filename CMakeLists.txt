@@ -314,6 +314,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     add_subdirectory(Parser)
     add_subdirectory(MessageUtils/cpp)
     add_subdirectory(miniDAQ)
+    add_subdirectory(src)
 
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/CMakeLists.txt${Reset}]")
