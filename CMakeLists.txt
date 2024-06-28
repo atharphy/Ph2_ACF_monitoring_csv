@@ -108,7 +108,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     endif()
 
-
     # Check for external dependences
     message("--")
     message("--     ${BoldCyan}#### Checking for external Dependencies ####${Reset}")
@@ -297,7 +296,7 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         EXTRA_FLAGS -DELPP_THREAD_SAFE
     )
 
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})    
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories(${CACTUS_INCLUDEDIR})
 
     add_subdirectory(tools)
