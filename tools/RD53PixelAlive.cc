@@ -100,15 +100,15 @@ void PixelAlive::localConfigure(const std::string& histoFileName, int currentRun
 
     LOG(INFO) << GREEN << "[PixelAlive::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
-    // ###############################
-    // # Initialize output directory #
-    // ###############################
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
-
     // ##########################
     // # Initialize calibration #
     // ##########################
     PixelAlive::ConfigureCalibration();
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
 
     // ###################################################
     // # Initialize histograms and binary and root files #

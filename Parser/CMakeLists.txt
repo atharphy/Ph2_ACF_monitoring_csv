@@ -7,7 +7,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     # Includes
     include_directories(${PROJECT_SOURCE_DIR})
-    
+
     # Library
 
     # Find source files

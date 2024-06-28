@@ -25,7 +25,7 @@ void CalibBase::ConfigureCalibration()
     nEvents       = this->findValueInSettings<double>("nEvents", 1);
     nEvtsBurst    = this->findValueInSettings<double>("nEvtsBurst", 1) < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
     nTRIGxEvent   = this->findValueInSettings<double>("nTRIGxEvent");
-    dataOutputDir = this->findValueInSettings<std::string>("DataOutputDir", "");
+    // dataOutputDir = this->findValueInSettings<std::string>("DataOutputDir", "");
 }
 
 void CalibBase::Stop()

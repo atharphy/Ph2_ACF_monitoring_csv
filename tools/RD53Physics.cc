@@ -124,15 +124,15 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 
     LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
-    // ###############################
-    // # Initialize output directory #
-    // ###############################
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
-
     // ##########################
     // # Initialize calibration #
     // ##########################
     Physics::ConfigureCalibration();
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
 
     // #########################################
     // # Initialize histogram and binary files #
