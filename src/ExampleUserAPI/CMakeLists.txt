@@ -52,9 +52,9 @@ add_executable (UserAPI UserAPI.cpp)
 ##############################
 file(GLOB LIB_LIST RELATIVE "$ENV{PH2ACF_BASE_DIR}/bin/" "$ENV{PH2ACF_BASE_DIR}/bin/*.a")
 foreach(ELE ${LIB_LIST})
-  string(REPLACE ".a" "" ELE_STRIP ${ELE})
-  string(REPLACE "lib" "" ${ELE_STRIP} ${ELE_STRIP})
-  list(APPEND STATIC_LIBS ${ELE_STRIP})
+  string(REPLACE ".a" "" ELE_STRIP_a ${ELE})
+  string(REPLACE "lib" "" ELE_STRIP_ALL ${ELE_STRIP_a})
+  list(APPEND STATIC_LIBS ${ELE_STRIP_ALL})
 endforeach()
 
 #######################

@@ -9,7 +9,6 @@
 
 #include "System/SystemController.h"
 #include "Utils/ConfigureInfo.h"
-#include "Utils/StartInfo.h"
 #include "Utils/argvparser.h"
 #include "tools/RD53BERtest.h"
 #include "tools/RD53ClockDelay.h"
@@ -43,7 +42,6 @@
 INITIALIZE_EASYLOGGINGPP
 
 using namespace Ph2_System;
-using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
 void introBanner()
