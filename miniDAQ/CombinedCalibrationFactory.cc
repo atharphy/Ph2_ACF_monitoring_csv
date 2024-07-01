@@ -26,6 +26,7 @@
 #include "tools/OTalignStubPackage.h"
 #include "tools/OTinjectionDelayOptimization.h"
 #include "tools/OTinjectionOccupancyScan.h"
+#include "tools/OTRegisterTester.h"
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/OTverifyCICdataWord.h"
 #include "tools/OTverifyECVlpGBTCIC.h"
@@ -69,6 +70,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyMPASSAdataWord,
              ECVLinkAlignmentOT>("Outer Tracker", "ecv");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyECVlpGBTCIC>("Outer Tracker", "OTLpGBTtoCICecv");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTRegisterTester>("Outer Tracker", "OTRegisterTester");
     Register<OTalignLpGBTinputs>("Outer Tracker", "OTalignLpGBTinputs");
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
     Register<OTalignBoardDataWord, OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");

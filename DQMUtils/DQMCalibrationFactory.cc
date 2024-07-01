@@ -19,6 +19,7 @@
 #include "DQMUtils/DQMHistogramOTalignStubPackage.h"
 #include "DQMUtils/DQMHistogramOTinjectionDelayOptimization.h"
 #include "DQMUtils/DQMHistogramOTinjectionOccupancyScan.h"
+#include "DQMUtils/DQMHistogramOTRegisterTester.cc"
 #include "DQMUtils/DQMHistogramOTverifyBoardDataWord.h"
 #include "DQMUtils/DQMHistogramOTverifyCICdataWord.h"
 #include "DQMUtils/DQMHistogramOTverifyECVlpGBTCIC.h"
@@ -69,6 +70,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord>("alignment");
     Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyECVlpGBTCIC>("OTLpGBTtoCICecv");
+    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTRegisterTester>("OTRegisterTester");    
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTinjectionDelayOptimization>("injectionDelayOptimization");
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTPSADCCalibration>("ADCBiasCalibration");
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTMeasureOccupancy>("measureOccupancy");
