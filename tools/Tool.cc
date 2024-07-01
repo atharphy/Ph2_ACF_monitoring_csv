@@ -1344,7 +1344,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
             setAllGlobalDacBeBoard(boardId, dacName, *currentDacList);
 
         Occupancy noOccupancy;
-        ContainerFactory::reinitializeContainer(currentStepOccupancyContainer, noOccupancy);
+        ContainerFactory::reinitializeContainer(*currentStepOccupancyContainer, noOccupancy);
         fDetectorDataContainer = currentStepOccupancyContainer;
         measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
         // TO-DO.. generalize so that I don't need the MPA/SSA
@@ -1598,7 +1598,7 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
             setAllGlobalDacBeBoard(boardId, dacName, *currentDacList);
 
         Occupancy noOccupancy;
-        ContainerFactory::reinitializeContainer(currentStepOccupancyContainer, noOccupancy);
+        ContainerFactory::reinitializeContainer(*currentStepOccupancyContainer, noOccupancy);
         fDetectorDataContainer = currentStepOccupancyContainer;
         measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
 

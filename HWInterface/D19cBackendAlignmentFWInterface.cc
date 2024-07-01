@@ -2,6 +2,9 @@
 #include "HWDescription/Chip.h"
 #include "HWInterface/RegManager.h"
 #include "Utils/ConsoleColor.h"
+#include "Utils/Container.h"
+#include "Utils/DataContainer.h"
+#include "Utils/ContainerFactory.h"
 
 using namespace Ph2_HwDescription;
 
@@ -10,10 +13,11 @@ namespace Ph2_HwInterface
 
 uint32_t PhaseTuningControl::encodeCommand() const
 {
-    bool     newFW      = false;
+    bool     newFW      = true;
     uint32_t theCommand = 0;
 
     theCommand |= ((fHybridId & 0x1F) << (newFW ? 27 : 28));
+    theCommand |= ((fChipId & 0x7) << 24);
     theCommand |= ((fLineId & 0xF) << 20);
     theCommand |= ((static_cast<uint8_t>(fCommand) & 0xF) << 16);
 
@@ -216,12 +220,14 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
     }
     PhaseTuningControl thePhaseTuningControl(fIsOptical);
     thePhaseTuningControl.setHybridId(hybridId);
+    thePhaseTuningControl.setChipId(lineId == 0xF ? 0x7 : 0x0);
     thePhaseTuningControl.setLineId(lineId);
 
     // Configure command
     thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Configure);
     thePhaseTuningControl.setEnableSync(true);
     thePhaseTuningControl.setMode(PhaseTuningControl::Mode::Auto);
+    thePhaseTuningControl.setEnableLCC(true);
     writeCommand(thePhaseTuningControl.encodeCommand());
 
     // align line
@@ -246,7 +252,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
     writeCommand(thePhaseTuningControl.encodeCommand());
 
     uint32_t reply = fTheRegManager->ReadReg(fPhaseTuningResultRegisterName);
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reply 0x" << std::hex << reply << std::dec << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reply 0x" << std::hex << reply << std::dec << std::endl;
     PhaseTuningReply thePhaseTuningReply;
     thePhaseTuningReply.decodeReply(reply, thePhaseTuningControl);
     AlignmentResult theAlignmentResults(thePhaseTuningReply);
@@ -262,19 +268,38 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
 void D19cBackendAlignmentFWInterface::writeCommand(uint32_t phaseTunerCommand)
 {
     fTheRegManager->WriteReg(fPhaseTuningControlRegisterName, phaseTunerCommand);
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << phaseTunerCommand << std::dec << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << phaseTunerCommand << std::dec << std::endl;
     std::this_thread::sleep_for(std::chrono::microseconds(100));
 }
 
 std::vector<AlignmentResult> D19cBackendAlignmentFWInterface::alignWordAllLines(uint8_t hybridId, uint8_t numberOfLines)
 {
     runWordAlignment(hybridId, 0xF);
+    return retrieveAllLineAlignmentResult(hybridId, numberOfLines);
+}
 
+std::vector<AlignmentResult> D19cBackendAlignmentFWInterface::retrieveAllLineAlignmentResult(uint8_t hybridId, uint8_t numberOfLines)
+{
     std::vector<AlignmentResult> theAlignmentResultVector;
-
     for(uint8_t lineId = 0; lineId < numberOfLines; ++lineId) theAlignmentResultVector.emplace_back(retrieveAlignmentResult(hybridId, lineId));
-
     return theAlignmentResultVector;
+}
+
+BoardDataContainer D19cBackendAlignmentFWInterface::alignWordAllHybrids(BoardContainer* theBoardContainer, uint8_t numberOfLines)
+{
+    BoardDataContainer theAlignmentResultContainer(theBoardContainer->getId());
+    ContainerFactory::copyAndInitHybrid<std::vector<AlignmentResult>>(*theBoardContainer, theAlignmentResultContainer);
+
+    runWordAlignment(0x1F, 0xF);
+    for(auto theOpticalGroup: theAlignmentResultContainer)
+    {
+        for(auto theHybrid: *theOpticalGroup)
+        {
+            theHybrid->getSummary<std::vector<AlignmentResult>>() = retrieveAllLineAlignmentResult(theHybrid->getId(), numberOfLines);
+        }
+    }
+
+    return theAlignmentResultContainer;
 }
 
 } // namespace Ph2_HwInterface

@@ -230,7 +230,7 @@
 
     <Setting name="DoManualVrefTuning"      >  0</Setting>
 
-    <Setting name="OTalignBoardDataWord_AlignLinesInBroadcast">0</Setting>
+    <Setting name="OTalignBoardDataWord_BroadcastAlignSetting">0</Setting> <!-- 0 = One line at a time - 2 = One hybrid at a time = 3 = all hybrids together -->
 
     <Setting name="OTverifyBoardDataWord_NumberOfIterations">100</Setting>
     <Setting name="OTverifyECVlpGBTCIC_NumberOfIterations">1000</Setting>

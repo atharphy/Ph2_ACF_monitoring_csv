@@ -55,17 +55,20 @@ class OTalignBoardDataWord : public Tool
                                    Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
                                    Ph2_HwInterface::D19cDebugFWInterface*            theDebugInterface);
     bool tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
-                          uint16_t                                          hybridId,
-                          uint8_t                                           lineId,
-                          std::vector<uint8_t>&                             theHybridBitSlipVector,
-                          std::vector<uint8_t>&                             theHybridAlignmentRetryVector);
+                          Ph2_HwDescription::Hybrid*                        theHybrid,
+                          uint8_t                                           lineId);
     bool tryAllLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
-                             uint16_t                                          hybridId,
-                             bool                                              isPSmodule,
-                             std::vector<uint8_t>&                             theHybridBitSlipVector,
-                             std::vector<uint8_t>&                             theHybridAlignmentRetryVector);
+                             Ph2_HwDescription::Hybrid*                        theHybrid);
+    bool tryAllHybridAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::BeBoard* theBoard);
 
-    bool fAlignLinesInBroadcast{false};
+    bool skip2SkickOff(uint16_t hybridId, uint8_t lineId, bool is2Smodule);
+
+    int  fBroadcastAlignSetting{0}; // 0 = one line at a time - 1 = one hybrid at a time - 2 = all hybrids in parallel
+    int  fMaxNumberOfIterations{10};
+    uint8_t fNumberOfLines;
+
+    void disableUnalignedHybrid(Ph2_HwDescription::Hybrid* theHybrid);
+
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

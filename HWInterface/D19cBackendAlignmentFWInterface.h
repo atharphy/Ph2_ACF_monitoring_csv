@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+class BoardContainer;
+class BoardDataContainer;
 namespace Ph2_HwDescription
 {
 class Chip;
@@ -52,6 +54,7 @@ class PhaseTuningControl
     void setMode(Mode theMode) { fMode = theMode; }
     void setCommand(Command theCommand) { fCommand = theCommand; }
     void setLineId(uint8_t theLineId) { fLineId = theLineId; }
+    void setChipId(uint8_t theChipId) { fChipId = theChipId; }
     void setHybridId(uint8_t theHybridId) { fHybridId = theHybridId; }
 
     void     resetCommandBits();
@@ -75,6 +78,7 @@ class PhaseTuningControl
     Mode    fMode{Mode::Auto};
     Command fCommand{Command::ReturnConfig};
     uint8_t fLineId{0};
+    uint8_t fChipId{0};
     uint8_t fHybridId{0};
 
     uint32_t fWait_us{100};
@@ -162,6 +166,7 @@ class D19cBackendAlignmentFWInterface
 
     AlignmentResult              alignWord(uint8_t hybridId, uint8_t lineId);
     std::vector<AlignmentResult> alignWordAllLines(uint8_t hybridId, uint8_t numberOfLines);
+    BoardDataContainer           alignWordAllHybrids(BoardContainer* theBoardContainer, uint8_t numberOfLines);
     AlignmentResult              tunePhase(uint8_t hybridId, uint8_t lineId);
 
     void setIsOptical(bool isOptical) { fIsOptical = isOptical; }
@@ -173,6 +178,7 @@ class D19cBackendAlignmentFWInterface
     std::string fPhaseTuningResultRegisterName  = "fc7_daq_stat.physical_interface_block.phase_tuning_reply";
 
     AlignmentResult retrieveAlignmentResult(uint8_t hybridId, uint8_t lineId);
+    std::vector<AlignmentResult> retrieveAllLineAlignmentResult(uint8_t hybridId, uint8_t numberOfLines);
     void            writeCommand(uint32_t phaseTunerCommand);
     void            runWordAlignment(uint8_t hybridId, uint8_t lineId);
 };
