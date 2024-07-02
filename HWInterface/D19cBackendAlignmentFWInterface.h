@@ -69,7 +69,7 @@ class PhaseTuningControl
     uint8_t fSyncPattern{0};
     bool    fDoWordAlignment{false};
     bool    fDoPhaseAlignment{false};
-    bool    fDoReset {false};
+    bool    fDoReset{false};
     bool    fApplyManual{false};
     uint8_t fMasterLineId{0};
     bool    fEnableSync{false};
@@ -179,10 +179,10 @@ class D19cBackendAlignmentFWInterface
     std::string fPhaseTuningControlRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
     std::string fPhaseTuningResultRegisterName  = "fc7_daq_stat.physical_interface_block.phase_tuning_reply";
 
-    AlignmentResult retrieveAlignmentResult(uint8_t hybridId, uint8_t lineId);
+    AlignmentResult              retrieveAlignmentResult(uint8_t hybridId, uint8_t lineId);
     std::vector<AlignmentResult> retrieveAllLineAlignmentResult(uint8_t hybridId, uint8_t numberOfLines);
-    void            writeCommand(uint32_t phaseTunerCommand);
-    void            runWordAlignment(uint8_t hybridId, uint8_t lineId);
+    void                         writeCommand(uint32_t phaseTunerCommand);
+    void                         runWordAlignment(uint8_t hybridId, uint8_t lineId);
 };
 } // namespace Ph2_HwInterface
 #endif

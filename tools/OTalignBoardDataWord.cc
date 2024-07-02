@@ -132,7 +132,8 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
 
     LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::boardWordAlignment after debug interface " << RESET;
 
-    if(fBroadcastAlignSetting == 2) tryAllHybridAlignment(theAlignerInterface, theBoard);
+    if(fBroadcastAlignSetting == 2)
+        tryAllHybridAlignment(theAlignerInterface, theBoard);
     else
     {
         for(auto theOpticalGroup: *theBoard)
@@ -153,7 +154,7 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
             //     fBeBoardInterface->WriteBoardReg(theBoard, controlRegisterName, configureCommand);
             //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << configureCommand << std::dec << std::endl;
             //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, controlRegisterName) << std::dec << std::endl;
-                
+
             //     uint32_t doWordAlignmentCommand = 0x7f50002 | (theHybridFWid << hybdridShift);
             //     fBeBoardInterface->WriteBoardReg(theBoard, controlRegisterName, doWordAlignmentCommand);
             //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << doWordAlignmentCommand << std::dec << std::endl;
@@ -192,7 +193,7 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
             if(!cAligned)
             {
                 LOG(INFO) << BOLDRED << "Could not align stub word in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
-                        << " --- OpticalGroup will be disabled" << RESET;
+                          << " --- OpticalGroup will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
                 continue;
             }
@@ -261,9 +262,7 @@ bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpti
     return true;
 }
 
-bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* theAlignerInterface,
-                                            Hybrid*                          theHybrid,
-                                            uint8_t                          lineId)
+bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* theAlignerInterface, Hybrid* theHybrid, uint8_t lineId)
 {
     bool isLineAligned          = false;
     int  currentIterationNumber = 0;
@@ -289,12 +288,11 @@ bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* the
     return isLineAligned;
 }
 
-bool OTalignBoardDataWord::tryAllLineAlignment(D19cBackendAlignmentFWInterface* theAlignerInterface,
-                                               Hybrid*                          theHybrid)
+bool OTalignBoardDataWord::tryAllLineAlignment(D19cBackendAlignmentFWInterface* theAlignerInterface, Hybrid* theHybrid)
 {
-    bool    isHybridAligned        = false;
-    int     currentIterationNumber = 0;
-    bool    isPSmodule = fDetectorContainer->getObject(theHybrid->getBeBoardId())->getObject(theHybrid->getOpticalGroupId())->getFrontEndType() == FrontEndType::OuterTrackerPS;
+    bool isHybridAligned        = false;
+    int  currentIterationNumber = 0;
+    bool isPSmodule             = fDetectorContainer->getObject(theHybrid->getBeBoardId())->getObject(theHybrid->getOpticalGroupId())->getFrontEndType() == FrontEndType::OuterTrackerPS;
 
     auto& theHybridBitSlipVector = fBitSlipContainer.getObject(theHybrid->getBeBoardId())->getObject(theHybrid->getOpticalGroupId())->getObject(theHybrid->getId())->getSummary<std::vector<uint8_t>>();
     auto& theHybridAlignmentRetryVector =
@@ -333,10 +331,9 @@ bool OTalignBoardDataWord::tryAllHybridAlignment(D19cBackendAlignmentFWInterface
 {
     bool isPSmodule = theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
 
-
     for(uint16_t iteration = 0; iteration <= fMaxNumberOfIterations; ++iteration)
     {
-        bool allHybridAligned = true;
+        bool               allHybridAligned         = true;
         BoardDataContainer alignmentResultContainer = theAlignerInterface->alignWordAllHybrids(theBoard, fNumberOfLines);
         for(auto theOpticalGroup: alignmentResultContainer)
         {
@@ -354,10 +351,7 @@ bool OTalignBoardDataWord::tryAllHybridAlignment(D19cBackendAlignmentFWInterface
                         ++theHybridAlignmentRetryVector[lineId];
                         allHybridAligned = false;
                     }
-                    else
-                    {
-                        theHybridBitSlipVector[lineId] = theAlignmentResultVector[lineId].fBitslip;
-                    }
+                    else { theHybridBitSlipVector[lineId] = theAlignmentResultVector[lineId].fBitslip; }
                 }
             }
         }
@@ -379,7 +373,7 @@ bool OTalignBoardDataWord::skip2SkickOff(uint16_t hybridId, uint8_t lineId, bool
 
 void OTalignBoardDataWord::disableUnalignedHybrid(Ph2_HwDescription::Hybrid* theHybrid)
 {
-    LOG(INFO) << BOLDRED << "Could not align stub word in OTalignBoardDataWord on Board id " << +theHybrid->getBeBoardId() << " OpticalGroup id " << +theHybrid->getOpticalGroupId() << " Hybrid id " << +theHybrid->getId()
-            << " --- Hybrid will be disabled" << RESET;
+    LOG(INFO) << BOLDRED << "Could not align stub word in OTalignBoardDataWord on Board id " << +theHybrid->getBeBoardId() << " OpticalGroup id " << +theHybrid->getOpticalGroupId() << " Hybrid id "
+              << +theHybrid->getId() << " --- Hybrid will be disabled" << RESET;
     ExceptionHandler::getInstance()->disableHybrid(theHybrid->getBeBoardId(), theHybrid->getOpticalGroupId(), theHybrid->getId());
 }

@@ -3,8 +3,8 @@
 #include "HWInterface/RegManager.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Container.h"
-#include "Utils/DataContainer.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/DataContainer.h"
 
 using namespace Ph2_HwDescription;
 
@@ -260,7 +260,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
     writeCommand(thePhaseTuningControl.encodeCommand());
 
     uint32_t reply = fTheRegManager->ReadReg(fPhaseTuningResultRegisterName);
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reply 0x" << std::hex << reply << std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reply 0x" << std::hex << reply << std::dec << std::endl;
     PhaseTuningReply thePhaseTuningReply;
     thePhaseTuningReply.decodeReply(reply, thePhaseTuningControl);
     AlignmentResult theAlignmentResults(thePhaseTuningReply);
@@ -276,7 +276,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
 void D19cBackendAlignmentFWInterface::writeCommand(uint32_t phaseTunerCommand)
 {
     fTheRegManager->WriteReg(fPhaseTuningControlRegisterName, phaseTunerCommand);
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << phaseTunerCommand << std::dec << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << phaseTunerCommand << std::dec << std::endl;
     std::this_thread::sleep_for(std::chrono::microseconds(100));
 }
 
@@ -301,10 +301,7 @@ BoardDataContainer D19cBackendAlignmentFWInterface::alignWordAllHybrids(BoardCon
     runWordAlignment(0x1F, 0xF);
     for(auto theOpticalGroup: theAlignmentResultContainer)
     {
-        for(auto theHybrid: *theOpticalGroup)
-        {
-            theHybrid->getSummary<std::vector<AlignmentResult>>() = retrieveAllLineAlignmentResult(theHybrid->getId(), numberOfLines);
-        }
+        for(auto theHybrid: *theOpticalGroup) { theHybrid->getSummary<std::vector<AlignmentResult>>() = retrieveAllLineAlignmentResult(theHybrid->getId(), numberOfLines); }
     }
 
     return theAlignmentResultContainer;

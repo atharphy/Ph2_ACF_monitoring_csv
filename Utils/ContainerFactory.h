@@ -32,17 +32,14 @@ namespace ContainerFactory
 
 // Copy structure -- Chip
 
-inline void copyStructure(const ChipContainer& original, ChipDataContainer& copy)
-{
-    copy.setNumberOfChannels(original.getNumberOfRows(), original.getNumberOfCols());
-}
+inline void copyStructure(const ChipContainer& original, ChipDataContainer& copy) { copy.setNumberOfChannels(original.getNumberOfRows(), original.getNumberOfCols()); }
 
 // Copy structure -- Hybrid
 
 inline void copyStructure(const HybridContainer& original, HybridDataContainer& copy)
 {
     for(const auto chip: original)
-    { 
+    {
         copy.addChipDataContainer(chip->getId(), chip->getNumberOfRows(), chip->getNumberOfCols());
         copyStructure(*chip, *copy.back());
     }
@@ -115,7 +112,6 @@ void copyAndInitChip(const ChipContainer& original, ChipDataContainer& copy)
 template <typename T, typename SC, typename SH>
 void copyAndInitStructure(const HybridContainer& original, HybridDataContainer& copy)
 {
-    
     copy.initialize<SH, SC>();
     for(const auto chip: original)
     {
@@ -123,7 +119,6 @@ void copyAndInitStructure(const HybridContainer& original, HybridDataContainer& 
         copyAndInitStructure<T, SC>(*chip, *copy.back());
     }
 }
-
 
 template <typename T>
 void copyAndInitStructure(const HybridContainer& original, HybridDataContainer& copy)
@@ -160,7 +155,6 @@ void copyAndInitHybrid(const HybridContainer& original, HybridDataContainer& cop
 template <typename T, typename SC, typename SH, typename SO>
 void copyAndInitStructure(const OpticalGroupContainer& original, OpticalGroupDataContainer& copy)
 {
-    
     copy.initialize<SO, SH>();
     for(const auto hybrid: original)
     {
@@ -619,10 +613,7 @@ template <typename T, typename SC, typename SH>
 void reinitializeContainer(HybridDataContainer& theDataContainer, T& channel, SC& chipSummary, SH& hybridSummary)
 {
     theDataContainer.resetSummary<SH, SC>(hybridSummary);
-    for(auto chip: theDataContainer)
-    {
-        reinitializeContainer<T, SC>(*chip, channel, chipSummary);
-    }
+    for(auto chip: theDataContainer) { reinitializeContainer<T, SC>(*chip, channel, chipSummary); }
 }
 
 template <typename T, typename S>
@@ -664,10 +655,7 @@ template <typename T, typename SC, typename SH, typename SO>
 void reinitializeContainer(OpticalGroupDataContainer& theDataContainer, T& channel, SC& chipSummary, SH& hybridSummary, SO& opticalGroupSummary)
 {
     theDataContainer.resetSummary<SO, SH>(opticalGroupSummary);
-    for(auto hybrid: theDataContainer)
-    {
-        reinitializeContainer<T, SC, SH>(*hybrid, channel, chipSummary, hybridSummary);
-    }
+    for(auto hybrid: theDataContainer) { reinitializeContainer<T, SC, SH>(*hybrid, channel, chipSummary, hybridSummary); }
 }
 
 template <typename T, typename S>
@@ -716,10 +704,7 @@ template <typename T, typename SC, typename SH, typename SO, typename SB>
 void reinitializeContainer(BoardDataContainer& theDataContainer, T& channel, SC& chipSummary, SH& hybridSummary, SO& opticalGroupSummary, SB& boardSummary)
 {
     theDataContainer.resetSummary<SB, SO>(boardSummary);
-    for(auto opticalGroup: theDataContainer)
-    {
-        reinitializeContainer<T, SC, SH, SO>(*opticalGroup, channel, chipSummary, hybridSummary, opticalGroupSummary);
-    }
+    for(auto opticalGroup: theDataContainer) { reinitializeContainer<T, SC, SH, SO>(*opticalGroup, channel, chipSummary, hybridSummary, opticalGroupSummary); }
 }
 
 template <typename T, typename S>
@@ -775,10 +760,7 @@ template <typename T, typename SC, typename SH, typename SO, typename SB, typena
 void reinitializeContainer(DetectorDataContainer& theDataContainer, T& channel, SC& chipSummary, SH& hybridSummary, SO& opticalGroupSummary, SB& boardSummary, SD& detectorSummary)
 {
     theDataContainer.resetSummary<SD, SB>(detectorSummary);
-    for(auto board: theDataContainer)
-    {
-        reinitializeContainer<T, SC, SH, SO, SB>(*board, channel, chipSummary, hybridSummary, opticalGroupSummary, boardSummary);
-    }
+    for(auto board: theDataContainer) { reinitializeContainer<T, SC, SH, SO, SB>(*board, channel, chipSummary, hybridSummary, opticalGroupSummary, boardSummary); }
 }
 
 template <typename T, typename S>
