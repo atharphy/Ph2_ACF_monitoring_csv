@@ -36,6 +36,10 @@ class OTRegisterTester : public Tool
     static std::string fCalibrationDescription;
     
   private:
+
+  protected:
+    size_t fNumberOfIterations{1000};
+    void   TestRegisters();
     
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
