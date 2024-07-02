@@ -55,13 +55,12 @@ Tool::Tool()
     , fDoHybridBroadcast(false)
     , fOfStream(nullptr)
 {
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
     fHttpServer = nullptr;
 #endif
 }
 
-#ifdef __USE_ROOT__
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
 Tool::Tool(THttpServer* pHttpServer)
     : SystemController()
     , fCanvasMap()
@@ -81,7 +80,6 @@ Tool::Tool(THttpServer* pHttpServer)
     , fDoHybridBroadcast(false)
 {
 }
-#endif
 #endif
 
 Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
@@ -270,7 +268,7 @@ void Tool::Inherit(const Tool* pTool)
     fOfStream                    = pTool->fOfStream;
     fMetadataHandler             = pTool->fMetadataHandler;
 
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
     fHttpServer = pTool->fHttpServer;
 #endif
 }
@@ -282,7 +280,7 @@ void Tool::resetPointers() {}
 void Tool::Destroy()
 {
     LOG(INFO) << BOLDRED << "Destroying memory objects" << RESET;
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
     LOG(INFO) << BOLDRED << "Destroying HttpServer" << RESET;
     if(fHttpServer)
     {
@@ -424,8 +422,7 @@ void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObje
     if(cHisto != std::end(cChipHistMap->second)) cChipHistMap->second.erase(cHisto);
 
     cChipHistMap->second[pName] = pObject;
-
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
     if(fHttpServer) fHttpServer->Register("/Histograms", pObject);
 #endif
 }
@@ -453,7 +450,7 @@ void Tool::bookHistogram(HybridContainer* pHybrid, std::string pName, TObject* p
     if(cHisto != std::end(cHybridHistMap->second)) cHybridHistMap->second.erase(cHisto);
 
     cHybridHistMap->second[pName] = pObject;
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
     if(fHttpServer) fHttpServer->Register("/Histograms", pObject);
 #endif
 }
@@ -481,7 +478,7 @@ void Tool::bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* p
     if(cHisto != std::end(cBeBoardHistMap->second)) cBeBoardHistMap->second.erase(cHisto);
 
     cBeBoardHistMap->second[pName] = pObject;
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
     if(fHttpServer) fHttpServer->Register("/Histograms", pObject);
 #endif
 }
@@ -759,7 +756,7 @@ void Tool::AddMetadata()
 
 void Tool::StartHttpServer(const int pPort, bool pReadonly)
 {
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
 
     if(fHttpServer)
     {
@@ -798,7 +795,7 @@ void Tool::StartHttpServer(const int pPort, bool pReadonly)
 
 void Tool::HttpServerProcess()
 {
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
 
     if(fHttpServer)
     {
