@@ -387,7 +387,7 @@ class Tool : public Ph2_System::SystemController
     // # Hanldlers for Running thread #
     // ################################
     static std::atomic<bool> fKeepRunning;
-    int                      fRunNumber;
+    static std::atomic<int>  fRunNumber;
     std::future<void>        fRunningFuture; // @Fabio@
     // @Mauro@
     /* bool                        doExit; */

@@ -27,7 +27,8 @@ using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-std::atomic<bool> Tool::fKeepRunning(false);
+std::atomic<bool> Tool::fKeepRunning{false};
+std::atomic<int>  Tool::fRunNumber{0};
 
 Tool::Tool()
     : SystemController()
@@ -71,7 +72,6 @@ Tool::Tool(THttpServer* pHttpServer)
     , fDirectoryName("")
     , fResultFile(nullptr)
     , fHttpServer(pHttpServer)
-    , fRunNumber(0)
     , fSkipMaskedChannels(false)
     , fAllChan(false)
     , fMaskChannelsFromOtherGroups(false)
@@ -252,7 +252,6 @@ void Tool::Inherit(const Tool* pTool)
     fSummaryTreeValue     = pTool->fSummaryTreeValue;
 #endif
     fTestGroupChannelMap         = pTool->fTestGroupChannelMap;
-    fRunNumber                   = pTool->fRunNumber;
     fSkipMaskedChannels          = pTool->fSkipMaskedChannels;
     fAllChan                     = pTool->fAllChan;
     fMaskForTestGroupChannelMap  = pTool->fMaskForTestGroupChannelMap;
