@@ -45,6 +45,7 @@ class PhaseTuningControl
     void setEnableSync(bool enableSync) { fEnableSync = enableSync; }
     void setDoWordAlignment(bool doWordAlignment) { fDoWordAlignment = doWordAlignment; }
     void setDoPhaseAlignment(bool doPhaseAlignment) { fDoPhaseAlignment = doPhaseAlignment; }
+    void setDoReset(bool doReset) { fDoReset = doReset; }
     void setApplyManual(bool applyManual) { fApplyManual = applyManual; }
     void setEnablePRBS(bool enablePRBS) { fEnablePRBS = enablePRBS; }
     void setMasterLineId(uint8_t theMasterLineId) { fMasterLineId = theMasterLineId; }
@@ -68,6 +69,7 @@ class PhaseTuningControl
     uint8_t fSyncPattern{0};
     bool    fDoWordAlignment{false};
     bool    fDoPhaseAlignment{false};
+    bool    fDoReset {false};
     bool    fApplyManual{false};
     uint8_t fMasterLineId{0};
     bool    fEnableSync{false};

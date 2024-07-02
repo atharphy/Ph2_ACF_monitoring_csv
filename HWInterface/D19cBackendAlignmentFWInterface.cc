@@ -63,6 +63,7 @@ uint32_t PhaseTuningControl::encodeCommand() const
         if(!fIsOptical) theCommand |= ((fDoPhaseAlignment ? 1 : 0) << 0);
         theCommand |= ((fDoWordAlignment ? 1 : 0) << 1);
         theCommand |= ((fApplyManual ? 1 : 0) << 2);
+        theCommand |= ((fDoReset ? 1 : 0) << 3);
         break;
 
     default: break;
@@ -79,6 +80,7 @@ void PhaseTuningControl::resetCommandBits()
     fSyncPattern      = 0;
     fDoWordAlignment  = false;
     fDoPhaseAlignment = false;
+    fDoReset          = false;
     fApplyManual      = false;
     fMasterLineId     = 0;
     fEnableSync       = false;
@@ -223,7 +225,13 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
     thePhaseTuningControl.setChipId(lineId == 0xF ? 0x7 : 0x0);
     thePhaseTuningControl.setLineId(lineId);
 
+    // Reset
+    thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Align);
+    thePhaseTuningControl.setDoReset(true);
+    writeCommand(thePhaseTuningControl.encodeCommand());
+
     // Configure command
+    thePhaseTuningControl.resetCommandBits();
     thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Configure);
     thePhaseTuningControl.setEnableSync(true);
     thePhaseTuningControl.setMode(PhaseTuningControl::Mode::Auto);
