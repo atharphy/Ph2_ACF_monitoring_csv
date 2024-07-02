@@ -19,15 +19,15 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     # Check for ZMQ installed
     if(ZMQ_FOUND)
-        #here, now check for UsbInstLib
+        # Now check for UsbInstLib
         if(PH2_USBINSTLIB_FOUND)
 
-            #add include directoreis for ZMQ and USBINSTLIB
+            # Add include directoreis for ZMQ and USBINSTLIB
             include_directories(${PH2_USBINSTLIB_INCLUDE_DIRS})
             link_directories(${PH2_USBINSTLIB_LIBRARY_DIRS})
             include_directories(${ZMQ_INCLUDE_DIRS})
 
-            #and link against the libs
+            # And link against the libs
             set(LIBS ${LIBS} ${ZMQ_LIBRARIES} ${PH2_USBINSTLIB_LIBRARIES})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{ZmqFlag} $ENV{USBINSTFlag}")
         endif()
@@ -81,7 +81,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
         endif()
 
-        #check for THttpServer
+        # Check for THttpServer
         if(${ROOT_HAS_HTTP})
             set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
             set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
@@ -135,7 +135,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         else()
           target_link_libraries(${name} ${LIBS})
         endif()
-        #check for PowerSupply
+
+        # Check for PowerSupply
         if ("${name}" STREQUAL "SEHTest")
             if(${PH2_POWERSUPPLY_FOUND})
                 target_link_libraries(${name} ${LIBS} "${PH2_POWERSUPPLY_LIBRARIES}")

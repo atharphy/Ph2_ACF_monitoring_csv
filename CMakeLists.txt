@@ -108,7 +108,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     set (CMAKE_CXX_FLAGS "-O3 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
     if(NoDataShipping)
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     endif()
 
     ##################################
@@ -117,21 +117,22 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     message("--")
     message("--     ${BoldCyan}#### Checking for external Dependencies ####${Reset}")
     if(CompileForShep OR NoDataShipping)
-        # ROOT
-        find_package(ROOT COMPONENTS RHTTP)
-        if(ROOT_FOUND)
-            # Check for THttpServer
-            if(EXISTS ${ROOT_RHTTP_LIBRARY})
-                message(STATUS "    Found THttp Server support - enabling compiler flags")
-                set(ROOT_HAS_HTTP TRUE)
-            elseif()
-                message(STATUS "    ROOT built without THttp Server - disabling compiler flags")
-            endif()
-            # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -")
-            message(STATUS "    Using ROOT version ${ROOT_VERSION}")
-        endif(ROOT_FOUND)
+      ########
+      # ROOT #
+      ########
+      find_package(ROOT COMPONENTS RHTTP)
+      if(ROOT_FOUND)
+        # Check for THttpServer
+        if(EXISTS ${ROOT_RHTTP_LIBRARY})
+          message(STATUS "    Found THttp Server support - enabling compiler flags")
+          set(ROOT_HAS_HTTP TRUE)
+        elseif()
+          message(STATUS "    ROOT built without THttp Server - disabling compiler flags")
+        endif()
+        message(STATUS "    Using ROOT version ${ROOT_VERSION}")
+      endif(ROOT_FOUND)
     else()
-    message(STATUS "Building without ROOT")
+      message(STATUS "Building without ROOT")
     endif()
 
     # AMC13
@@ -164,7 +165,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
             set(PH2_TCUSB_LIBRARY_DIRS ${EXTERNAL_INSTALL_LOCATION}/src/ext_tcusb/lib)
             set(PH2_TCUSB_LIBRARIES ${EXTERNAL_INSTALL_LOCATION}/src/ext_tcusb/lib/libcmsph2_tcusb.so  ${EXTERNAL_INSTALL_LOCATION}/src/ext_tcusb/lib/libcmsph2_tcusb_utils.so)
         endif(NOT PH2_TCUSB_FOUND)
-
     endif($ENV{CompileWithTCUSB})
 
     #########
