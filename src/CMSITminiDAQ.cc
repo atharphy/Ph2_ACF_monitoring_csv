@@ -177,6 +177,7 @@ int main(int argc, char** argv)
     std::string whichCalib        = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "";
     std::string EUDAQproducerNAME = cmd.foundOption("prodName") == true ? cmd.optionValue("prodName") : "";
     std::string binaryFile        = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
+    std::string eudaqRunCtr       = cmd.foundOption("eudaqRunCtr") == true ? cmd.optionValue("eudaqRunCtr") : "tcp://localhost:44000";
     bool        program           = cmd.foundOption("prog") == true ? true : false;
     bool        skipcfg           = cmd.foundOption("skipcfg") == true ? true : false;
     bool        reset             = cmd.foundOption("reset") == true ? true : false;
@@ -186,7 +187,6 @@ int main(int argc, char** argv)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
     else if(cmd.foundOption("replay") == true)
         RegManager::enableReplay(cmd.optionValue("replay"));
-    std::string eudaqRunCtr = cmd.foundOption("eudaqRunCtr") == true ? cmd.optionValue("eudaqRunCtr") : "tcp://localhost:44000";
 
     // ########################
     // # Configure the logger #

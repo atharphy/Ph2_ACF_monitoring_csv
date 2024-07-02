@@ -5,10 +5,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     MESSAGE(STATUS "    ${BoldYellow}SRC${Reset} [stand-alone]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    # Includes
+    ############
+    # Includes #
+    ############
     include_directories(${PROJECT_SOURCE_DIR})
 
-    # Library dirs
+    ################
+    # Library dirs #
+    ################
     link_directories(${PROJECT_SOURCE_DIR/lib})
 
     find_package(Protobuf REQUIRED)
@@ -67,7 +71,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # link_directories(${Boost_LIBRARY_DIRS})
     set(LIBS ${LIBS} ${Boost_DATE_TIME_LIBRARY} ${Boost_IOSTREAMS_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE})
 
-    # Find ROOT and link against it
+    #################################
+    # Find ROOT and link against it #
+    #################################
     if(${ROOT_FOUND})
         include_directories(${ROOT_INCLUDE_DIRS})
         set(LIBS ${LIBS} ${ROOT_LIBRARIES})
@@ -87,7 +93,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{MultiplexingFlag}")
     endif(DEFINED ENV{MultiplexingFlag})
 
-    # Build eudaq producer
+    ########################
+    # Build eudaq producer #
+    ########################
     if(${USE_EUDAQ})
         set(LIBS ${LIBS} ${EUDAQ_LIB})
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{EuDaqFlag}")
@@ -132,12 +140,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
             if(${PH2_POWERSUPPLY_FOUND})
                 target_link_libraries(${name} ${LIBS} "${PH2_POWERSUPPLY_LIBRARIES}")
             endif()
-        endif()
-        if ("${name}" STREQUAL "powersupply")
-            if(${PH2_POWERSUPPLY_FOUND})
-                target_link_libraries(${name} ${LIBS} "${PH2_POWERSUPPLY_LIBRARIES}")
-            endif()
-        endif()
+          endif()
 
         if ("${name}" STREQUAL "powersupply")
             if(${PH2_POWERSUPPLY_FOUND})
@@ -150,7 +153,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
                target_link_libraries(${name} ${LIBS} protobuf::libprotobuf)
             endif()
         endif()
-
     endforeach(sourcefile ${BINARIES})
 
     message("--     ${BoldCyan}#### End ####${Reset}")

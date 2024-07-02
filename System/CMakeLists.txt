@@ -9,10 +9,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     include_directories(${PROJECT_SOURCE_DIR})
 
     # Library directories
-    # None
 
     # Boost also needs to be linked
-    #    include_directories(${Boost_INCLUDE_DIRS})
+    # include_directories(${Boost_INCLUDE_DIRS})
     # link_directories(${Boost_LIBRARY_DIRS})
     set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY})
 
@@ -35,15 +34,15 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     TARGET_LINK_LIBRARIES(Ph2_System ${LIBS})
 
-      #check for TestCard USBDriver
-      if(${PH2_TCUSB_FOUND})
-        include_directories(${PH2_TCUSB_INCLUDE_DIRS})
-        link_directories(${PH2_TCUSB_LIBRARY_DIRS})
-        set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
-
+    # Check for TestCard USBDriver
+    if(${PH2_TCUSB_FOUND})
+      include_directories(${PH2_TCUSB_INCLUDE_DIRS})
+      link_directories(${PH2_TCUSB_LIBRARY_DIRS})
+      set(LIBS ${LIBS} ${PH2_TCUSB_LIBRARIES} usb)
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
     endif()
-    #check for TestCard USBDriver
+
+    # Check for TestCard USBDriver
     if(${PH2_TCUSB_FOUND})
       include_directories(${PH2_TCUSB_INCLUDE_DIRS})
       link_directories(${PH2_TCUSB_LIBRARY_DIRS})
@@ -65,9 +64,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         endif()
     endif()
 
-    ####################################
-    ## EXECUTABLES
-    ####################################
+    #################
+    ## EXECUTABLES ##
+    #################
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/System *.cc)
 

@@ -77,7 +77,6 @@ void lpGBT::loadfRegMap(const std::string& fileName)
 
     if(file.good() == true)
     {
-        initializeFreeRegisters();
         std::string line, fName, fAddress_str, fDefValue_str, fValue_str, fBitSize_str;
         int         cLineCounter = 0;
         ChipRegItem fRegItem;
