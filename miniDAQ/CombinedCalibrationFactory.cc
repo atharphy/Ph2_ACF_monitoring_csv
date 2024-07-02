@@ -48,6 +48,7 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
+#include "tools/OTBitErrorRateTest.h"
 
 using namespace MessageUtils;
 
@@ -179,6 +180,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTTemperature>("Outer Tracker", "cmNoise");
 
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass>("Outer Tracker", "alignLpGBTinputsForBypass");
+
+    Register<OTBitErrorRateTest>("Outer Tracker", "bert");
 
     // 2S specific calibrations
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(

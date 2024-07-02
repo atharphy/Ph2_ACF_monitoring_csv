@@ -381,6 +381,7 @@
                 <node id="stub_debug"                    mask="0x00000010"/>
             </node>
             <node id="phase_tuning_ctrl"          address="0x015" mask="0xFFFFFFFF"/>
+            <node id="bert_control"               address="0x017" mask="0xFFFFFFFF"/>
             <node id="link0_hybrid0_stub_bitslip" address="0x020" mask="0xFFFFFFFF"/>
             <node id="link0_hybrid1_stub_bitslip" address="0x021" mask="0xFFFFFFFF"/>
             <node id="link1_hybrid0_stub_bitslip" address="0x022" mask="0xFFFFFFFF"/>
@@ -603,6 +604,7 @@
 
         <node id="physical_interface_block"     address="0x3000">
             <node id="phase_tuning_reply"       address="0x001" mask="0xFFFFFFFF"/>
+            <node id="bert_stat"                address="0x101" mask="0xFFFFFFFF"/>
             <node id="hardware_ready"           address="0x002" mask="0x00010000"/>
             <node id="delay5_done_cbc0"         address="0x002" mask="0x00000001"/>
             <node id="serializer_done_cbc0"     address="0x002" mask="0x00000002"/>
