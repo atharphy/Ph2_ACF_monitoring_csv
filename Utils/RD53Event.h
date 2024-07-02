@@ -152,7 +152,7 @@ class RD53Event : public Ph2_HwInterface::Event
     static void DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint32_t& eventStatus, bool silentRunning = false);
     static bool EvtErrorHandler(uint32_t status);
     static void PrintEvents(const std::vector<RD53Event>& events, const std::vector<uint32_t>& pData = {});
-    static void MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events);
+    static bool MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events);
 
     // ################
     // # Event format #

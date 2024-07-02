@@ -799,7 +799,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
     return events.size();
 }
 
-void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events)
+bool RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events)
 {
 #ifdef __USE_ROOT__
     TFile theFile(fileName.c_str(), "RECREATE");
@@ -933,8 +933,11 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
 
     theTree.Write();
     theFile.Close();
+
+    return true;
 #else
-    LOG(WARNING) << BOLDBLUE << "[RD53Event::MakeNtuple] The function to translate raw data into ROOT ntuple was not compiled" << RESET;
+    LOG(WARNING) << BOLDRED << ">>> The function to translate raw data into ROOT ntuple was not compiled <<<" << RESET;
+    return false;
 #endif
 }
 

@@ -96,8 +96,7 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     }
 
     std::string fileName(binaryFile);
-    RD53Event::MakeNtuple(fileName.replace(fileName.find(".raw"), 4, ".root"), decodedEvents);
-    LOG(INFO) << GREEN << "Saving raw data into ROOT ntuple: " << BOLDYELLOW << fileName << RESET;
+    if(RD53Event::MakeNtuple(fileName.replace(fileName.find(".raw"), 4, ".root"), decodedEvents) == true) LOG(INFO) << GREEN << "Saving raw data into ROOT ntuple: " << BOLDYELLOW << fileName << RESET;
 
     mySysCntr.closeFileHandler();
 }
@@ -554,7 +553,7 @@ int main(int argc, char** argv)
         {
             std::string fileName(binaryFile);
             fileName.erase(0, (fileName.find_last_of("/\\") == std::string::npos ? 0 : fileName.find_last_of("/\\")));
-            fileName  = fileName.erase(fileName.find(".raw") - 8, 12) + "fromBin";
+            fileName  = fileName.erase(fileName.find(".raw") - 8, 12) + "fromRaw";
             runNumber = atof(fileName.substr(fileName.find("Run") + 3, 6).c_str());
             ph.setValueInSettings<double>("SaveBinaryData", false);
 
