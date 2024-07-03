@@ -80,8 +80,33 @@ void OTalignBoardDataWord::wordAlignBEdata()
     {
         boardWordAlignment(theBoard);
         LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::wordAlignBEdata ... trying to readout L1 data.. " << RESET;
-        ReadNEvents(theBoard, 10);
+        // ReadNEvents(theBoard, 10);
     }
+
+    // for(auto theBoard: *fDetectorContainer)
+    // {
+    //     for(uint8_t bitSlip = 0; bitSlip<32; ++bitSlip)
+    //     {
+    //         std::string controlPhaseRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
+    //         std::string statusPhaseRegisterName  = "fc7_daq_stat.physical_interface_block.phase_tuning_reply";
+    //         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.physical_interface_block.link6_hybrid0_L1A_bitslip", (0x80000000 | bitSlip));
+    //         fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0x60010000);
+    //         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusPhaseRegisterName) << std::dec << std::endl;
+    //         try
+    //         {
+    //             ReadNEvents(theBoard, 10);
+    //         }
+    //         catch(const std::exception& e)
+    //         {
+    //             // std::cerr << e.what() << '\n';
+    //             std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] bitslip = " << +bitSlip << " not working" << std::endl;
+    //             continue;
+    //         }
+
+    //         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] bitslip = " << +bitSlip << BOLDGREEN << " WORKING!!!!!!!" << RESET << std::endl;
+
+    //     }
+    // }
 
 #ifdef __USE_ROOT__
     fDQMHistogramOTalignBoardDataWord.fillBitSlipValues(fBitSlipContainer);
@@ -227,7 +252,7 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
     // Set MSB to 1 to use values from bitslip registers
     std::for_each(alignedBitslipRegisters.begin(),
                   alignedBitslipRegisters.end(),
-                  [](std::pair<std::string, uint32_t>& registerNameAndValue) { registerNameAndValue.second = (registerNameAndValue.second | 0x80000000) + 4; });
+                  [](std::pair<std::string, uint32_t>& registerNameAndValue) { registerNameAndValue.second = (registerNameAndValue.second | 0x80000000); });
 
     // Updating bitslip registers with MSB set to 1
     fBeBoardInterface->WriteBoardMultReg(theBoard, alignedBitslipRegisters);
