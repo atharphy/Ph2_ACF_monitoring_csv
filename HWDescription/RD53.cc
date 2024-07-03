@@ -87,6 +87,7 @@ void RD53::loadfRegMap(const std::string& fileName)
         unsigned int col              = 0;
         ChipRegItem  fRegItem;
 
+        initializeFreeRegisters();
         while(getline(file, line))
         {
             if(line.find_first_not_of(" \t") == std::string::npos || line.at(0) == '#' || line.at(0) == '*' || line.empty())
