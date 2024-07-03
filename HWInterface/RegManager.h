@@ -23,6 +23,7 @@ namespace uhal
 class HwInterface;
 class Node;
 } // namespace uhal
+
 /*!
  * \namespace Ph2_HwInterface
  * \brief Namespace regrouping all the interfaces to the hardware
@@ -45,7 +46,7 @@ class RegManager
 
   public:
     std::recursive_mutex fMutex;
-    // Connection w uHal
+    // Connection to uHal
     /*!
      * \brief Constructor of the RegManager class
      * \param puHalConfigFileName : path of the uHal Config File
@@ -202,6 +203,7 @@ class RegManager
     size_t                      fNumberOfErrors{0};
     size_t                      fMaximumAcceptableNumberOfErrors{100};
 };
+
 } // namespace Ph2_HwInterface
 
 #endif

@@ -120,15 +120,15 @@ void ThrEqualization::localConfigure(const std::string& histoFileName, int curre
 
     LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
-    // ###############################
-    // # Initialize output directory #
-    // ###############################
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
-
     // ##########################
     // # Initialize calibration #
     // ##########################
     ThrEqualization::ConfigureCalibration();
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
 
     // #########################################
     // # Initialize histogram and binary files #

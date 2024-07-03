@@ -314,12 +314,12 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
 
-void RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hybridId)
+bool RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hybridId)
 {
     std::vector<uint32_t> commandList;
 
     RD53FWInterface::ComposeAndPackChipCommands(data, hybridId, commandList);
-    RD53FWInterface::SendChipCommands(commandList);
+    return RD53FWInterface::SendChipCommands(commandList);
 }
 
 void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList)
@@ -340,8 +340,10 @@ void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& da
     if(data.size() % 2 != 0) commandList.emplace_back(bits::pack<16, 16>(data.back(), RD53ACmd::RD53ACmdEncoder::SYNC));
 }
 
-void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
+bool RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
 {
+    bool returnValue = true;
+
     // ############################
     // # Check write-command FIFO #
     // ############################
@@ -355,9 +357,13 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
         if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
 
         nAttempts++;
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
     if(nAttempts == RD53Shared::MAXATTEMPTS)
+    {
         LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
+        returnValue = false;
+    }
 
     // ###############################
     // # Send command(s) to the chip #
@@ -375,25 +381,12 @@ void RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
     if(nAttempts == RD53Shared::MAXATTEMPTSCMDDISPATCH)
-        LOG(ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << RD53Shared::MAXATTEMPTSCMDDISPATCH << BOLDRED << ")" << RESET;
-
-    // ############################
-    // # Check write-command FIFO #
-    // ############################
-    nAttempts = 0;
-    while(((RegManager::ReadReg("user.stat_regs.slow_cmd.error_flag") || !RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_empty") || RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full")) ==
-           true) &&
-          (nAttempts < RD53Shared::MAXATTEMPTS))
     {
-        if(RegManager::ReadReg("user.stat_regs.slow_cmd.error_flag") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
-        if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false) LOG(ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
-        if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
-
-        nAttempts++;
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+        LOG(ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << RD53Shared::MAXATTEMPTSCMDDISPATCH << BOLDRED << ")" << RESET;
+        returnValue = false;
     }
-    if(nAttempts == RD53Shared::MAXATTEMPTS)
-        LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
+
+    return returnValue;
 }
 
 std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(ReadoutChip* pChip)
