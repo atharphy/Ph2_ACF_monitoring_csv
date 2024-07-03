@@ -66,10 +66,10 @@ void OTverifyBoardDataWord::Reset() { fRegisterHelper->restoreSnapshot(); }
 void OTverifyBoardDataWord::runIntegrityTest()
 {
     LOG(INFO) << BOLDYELLOW << "OTverifyBoardDataWord::runIntegrityTest ... start integrity test" << RESET;
-    auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
     for(auto theBoard: *fDetectorContainer)
     {
+        auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
         runStubIntegrityTest(theBoard, theFWInterface);
         runL1IntegrityTest(theBoard, theFWInterface);
     }

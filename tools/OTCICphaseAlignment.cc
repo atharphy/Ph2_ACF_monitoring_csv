@@ -299,8 +299,7 @@ void OTCICphaseAlignment::AlignAllCICinputs2S(BeBoard*            theBoard,
 
     uint32_t pNTriggers = 500;
 
-    fBeBoardInterface->setBoard(theBoard->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
 
     std::vector<std::pair<std::string, uint32_t>> cRegVec;
     cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 6});
