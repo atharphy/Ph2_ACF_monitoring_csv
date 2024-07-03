@@ -47,11 +47,24 @@ void OTRegisterTester::TestRegisters()
 
             for(auto cHybrid: *theOpticalGroup)
             {
-                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                // auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 //FIXME check CIC
                 //fCicInterface->ConfigureDriveStrength(cCic, cicStrength);
                 for(auto theChip: *cHybrid)
                 {
+                    float theRegisterMatchingEfficiency = 0;
+                    for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+                    {
+                    
+                        uint16_t theRegisterValueWrite = 0x01;
+                        fReadoutChipInterface->WriteChipReg(theChip, "Threshold", theRegisterValueWrite);
+                        auto theRegisterValueRead = fReadoutChipInterface->ReadChipReg(theChip, "Threshold");
+
+                        if (theRegisterValueRead == theRegisterValueWrite ) theRegisterMatchingEfficiency++;
+
+                    }
+                    theRegisterMatchingEfficiency/=fNumberOfIterations;
+                    LOG(INFO) << BOLDBLUE << " Pattern matching efficiency for chip " << +theChip->getId() << " on hybrid " << +cHybrid->getId() << " is " << theRegisterMatchingEfficiency << RESET;
                     //FIXME check chips
                 }// chip loop
             } // hybrid loop
