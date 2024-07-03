@@ -67,3 +67,32 @@ void OTSSAtoSSAecv::setStubLogicParameters(ReadoutChip* theMPA)
     fReadoutChipInterface->WriteChipReg(theMPA, "CodeP56", 0x05);
     fReadoutChipInterface->WriteChipReg(theMPA, "CodeP78", 0x06);
 }
+
+std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> OTSSAtoSSAecv::produceStripClusterList()
+{
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> listOfInjectedStrips;
+
+    listOfInjectedStrips.push_back({0,   1, 1});
+    listOfInjectedStrips.push_back({0, 118, 1});
+
+    return listOfInjectedStrips;
+}
+
+std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> OTSSAtoSSAecv::produceMatchingPixelClusterList(uint8_t colCoordinate)
+{
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList;
+    thePixelClusterList.push_back({fStubRowCoordinate, colCoordinate == 1 ? 118 : 1, 1});
+    return thePixelClusterList;
+}
+
+std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> OTSSAtoSSAecv::producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList)
+{
+    std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> possibleStubVectorList;
+    for(const auto& thePixelCluster: thePixelClusterList)
+    {
+        std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector{{fStubRowCoordinate, std::get<1>(thePixelCluster) * 2 + std::get<2>(thePixelCluster) - 1, 0}};
+        possibleStubVectorList.push_back(theStubVector);
+    }
+
+    return possibleStubVectorList;
+}

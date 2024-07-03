@@ -45,6 +45,7 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
     uint8_t fStubRowCoordinate{0x0A};
 
     virtual std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> produceMatchingPixelClusterList(uint8_t colCoordinate);
+    virtual std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> produceStripClusterList();
     virtual void                                               matchAllPossibleStubPatterns(uint8_t                                        numberOfBytesInSinglePacket,
                                                                                             size_t                                         numberOfLines,
                                                                                             std::vector<std::pair<PatternMatcher, float>>& thePatternAndEfficiencyList,
@@ -57,8 +58,7 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
     void fillHistograms();
     void injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket) override;
     void injectL1PS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket) override;
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>          produceStripClusterList();
-    std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList);
+    virtual std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList);
     PatternMatcher produceStubPatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, int>>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC);
     PatternMatcher produceL1PatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList,
                                            const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& theStripClusterList,
