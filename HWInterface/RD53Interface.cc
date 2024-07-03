@@ -22,7 +22,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     auto                  nameAndValue(SetSpecialRegister(regName, data, pChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
     PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerify);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
+    if(static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId()) == false) static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO();
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
