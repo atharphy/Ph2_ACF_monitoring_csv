@@ -235,7 +235,7 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
     thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Configure);
     thePhaseTuningControl.setEnableSync(true);
     thePhaseTuningControl.setMode(PhaseTuningControl::Mode::Auto);
-    thePhaseTuningControl.setEnableLCC(true);
+    // thePhaseTuningControl.setEnableLCC(true);
     writeCommand(thePhaseTuningControl.encodeCommand());
 
     // align line

@@ -1,6 +1,7 @@
 #include "tools/OTBitErrorRateTest.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
+#include "HWInterface/D19cFWInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -92,24 +93,26 @@ void OTBitErrorRateTest::bitErrorRateTest()
             std::string statusPhaseRegisterName  = "fc7_daq_stat.physical_interface_block.phase_tuning_reply";
             std::string statusBertRegisterName   = "fc7_daq_stat.physical_interface_block.bert_stat";
             
-            fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0xfff50008);
+            fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0xFFF50008); // reset of phase tuning FSM
             usleep(100);
-            fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, 0xFFF20039);
+            fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, 0xFFF20039); // Rx enable and select error counter
             usleep(100);
-            fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, 0xFFF30080);
+            fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, 0xFFF30080); // set threshold
             usleep(100);
-            fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0xFFF20300);
+            fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0xFFF20300); // configure for PRBS and sync enable on phase tuning FSM
             usleep(100);
 
             for(uint8_t line=0; line<7; ++line)
             {
-                fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, (0x50060000 | (line << 20)));
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] register = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusBertRegisterName) << std::dec << std::endl;
+                uint32_t command = (0x40060000 | (line << 20));
+                fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, command);
+                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command = 0x" << std::hex << command << std::dec << std::endl;
+                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reply   = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusBertRegisterName) << std::dec << std::endl;
             }
 
             for(uint8_t line=0; line<7; ++line)
             {
-                uint32_t value = (0x50010000 | (line << 20));
+                uint32_t value = (0x40010000 | (line << 20));
                 fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, value);
                 std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing = 0x" << std::hex << value << std::dec << std::endl;
                 std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusBertRegisterName) << std::dec << std::endl;
@@ -124,18 +127,31 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
             for(uint8_t line=0; line<7; ++line)
             {
-                fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, (0x50060000 | (line << 20)));
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] register = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusBertRegisterName) << std::dec << std::endl;
+                uint32_t command = (0x40060000 | (line << 20));
+                fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, command);
+                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command = 0x" << std::hex << command << std::dec << std::endl;
+                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reply    = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusBertRegisterName) << std::dec << std::endl;
             }
 
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] sending 0xFFF50004" << std::endl;
+            
             fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, 0xFFF50004);
 
             for(uint8_t line=0; line<7; ++line)
             {
-                fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, (0x50070000 | (line << 20)));
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] register = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusBertRegisterName) << std::dec << std::endl;
+                uint32_t command = (0x40070000 | (line << 20));
+                fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, command);
+                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command = 0x" << std::hex << command << std::dec << std::endl;
+                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reply   = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusBertRegisterName) << std::dec << std::endl;
             }
 
+            auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
+            fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", 8);
+            fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+            auto lineOutputVector        = theFWInterface->StubDebug(true, 6, false);
+            for(auto line : lineOutputVector) LOG(INFO) << BOLDRED << "Stub data received    " << getPatternPrintout(line, 1, true) << RESET;
+
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] sending 0xFFF20002" << std::endl;
 
             fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0xFFF20002);
 
@@ -143,7 +159,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
             for(uint8_t line=0; line<7; ++line)
             {
-                fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, (0x50010000 | (line << 20)));
+                fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, (0x40010000 | (line << 20)));
                 uint32_t theReply = fBeBoardInterface->ReadBoardReg(theBoard, statusPhaseRegisterName);
                 std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line " << +line << " reply = 0x" << std::hex << theReply << std::dec << std::endl;
             }
@@ -166,7 +182,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
             //usleep(10000);
             for(size_t line=0; line<7; ++line)
                 {
-                    uint32_t readRegisterValue = (line << 20) | 0x50040000; // 
+                    uint32_t readRegisterValue = (line << 20) | 0x40040000; // 
                     fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, readRegisterValue);
 
                     uint32_t readValue = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.bert_stat");
@@ -175,7 +191,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
             for(size_t line=0; line<7; ++line)
                 {
-                    uint32_t readRegisterValue = (line << 20) | 0x58040000; // 
+                    uint32_t readRegisterValue = (line << 20) | 0x48040000; // 
                     fBeBoardInterface->WriteBoardReg(theBoard, controlBertRegisterName, readRegisterValue);
 
                     uint32_t readValue = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.bert_stat");
@@ -193,6 +209,22 @@ bool OTBitErrorRateTest::prepareLpGBTforBERT(Ph2_HwDescription::OpticalGroup* th
 {
     bool is10G = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10;
     auto theLpGBT = theOpticalGroup->flpGBT;
+
+    // flpGBTInterface->WriteChipReg(theLpGBT, "ULDataSource1", 0x09);
+    // flpGBTInterface->WriteChipReg(theLpGBT, "ULDataSource2", 0x09);
+    // flpGBTInterface->WriteChipReg(theLpGBT, "ULDataSource3", 0x09);
+    // flpGBTInterface->WriteChipReg(theLpGBT, "ULDataSource4", 0x01);
+
+    // flpGBTInterface->WriteChipReg(theLpGBT, "ULDataSource1", 0x24);
+    // flpGBTInterface->WriteChipReg(theLpGBT, "ULDataSource2", 0x24);
+    // flpGBTInterface->WriteChipReg(theLpGBT, "ULDataSource3", 0x24);
+    // flpGBTInterface->WriteChipReg(theLpGBT, "ULDataSource4", 0x04);
+
+    // flpGBTInterface->WriteChipReg(theLpGBT, "DPDataPattern0", 0xEA);
+    // flpGBTInterface->WriteChipReg(theLpGBT, "DPDataPattern1", 0xEA);
+    // flpGBTInterface->WriteChipReg(theLpGBT, "DPDataPattern2", 0xEA);
+    // flpGBTInterface->WriteChipReg(theLpGBT, "DPDataPattern3", 0xEA);
+
     
     uint16_t value=0; std::string reg = "";
     std::cout<<std::hex; // print hex values
@@ -343,6 +375,8 @@ bool OTBitErrorRateTest::prepareLpGBTforBERT(Ph2_HwDescription::OpticalGroup* th
     flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain32", 0x00);
     flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain54", 0x00);
     flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrainEc6", 0x00);
+
+
 
     return allAligned;
 }

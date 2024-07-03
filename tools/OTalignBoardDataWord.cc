@@ -215,6 +215,8 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
             //     //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line " << line << " reply 0x" << std::hex << readValue << std::dec << std::endl;
             //     // }
             // }
+            // fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0xfff50008);
+            // fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0xfff20100);
 
             bool cAligned = opticalGroupWordAlignment(theOpticalGroup, theAlignerInterface, theDebugInterface);
             if(!cAligned)
@@ -228,6 +230,8 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
     }
 
     fBeBoardInterface->Stop(theBoard);
+
+    return;
 
     auto getRegisterName = [](const std::string& type, size_t linkNumber, size_t hybridId)
     {
