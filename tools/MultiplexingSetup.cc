@@ -21,9 +21,7 @@ void MultiplexingSetup::Initialise()
     {
         if(cBoard->isOptical()) continue;
 
-        auto     cBeBoard   = static_cast<BeBoard*>(cBoard);
-        uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
-        fBeBoardInterface->setBoard(theBoardId);
+        auto cBeBoard      = static_cast<BeBoard*>(cBoard);
         bool cSetupScanned = (fBeBoardInterface->ReadBoardReg(cBeBoard, "fc7_daq_stat.physical_interface_block.multiplexing_bp.setup_scanned") == 1);
         // if its not been scanned.. then send a reset
         if(cSetupScanned) { LOG(INFO) << BOLDBLUE << "Set-up has already been scanned..." << RESET; }
@@ -59,9 +57,7 @@ void MultiplexingSetup::Scan()
         if(cBoard->isOptical()) continue;
         uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Scanning all available backplanes and cards on BeBoard " << +theBoardId << RESET;
-        fBeBoardInterface->setBoard(theBoardId);
-        fBeBoardInterface->getBoardInfo(static_cast<BeBoard*>(cBoard));
-        D19cMuxBackplaneFWInterface* cInterface = static_cast<D19cMuxBackplaneFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cMuxBackplaneFWInterface* cInterface = static_cast<D19cMuxBackplaneFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
         fAvailableCards                         = cInterface->ScanMultiplexingSetup();
         parseAvailable(false);
         printAvailableCards();
@@ -76,9 +72,8 @@ void MultiplexingSetup::Disconnect()
         if(cBoard->isOptical()) continue;
         uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Disconnecting all backplanes and cards on BeBoard " << +theBoardId << RESET;
-        fBeBoardInterface->setBoard(theBoardId);
         fBeBoardInterface->getBoardInfo(static_cast<BeBoard*>(cBoard));
-        D19cMuxBackplaneFWInterface* cInterface = static_cast<D19cMuxBackplaneFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cMuxBackplaneFWInterface* cInterface = static_cast<D19cMuxBackplaneFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
         cInterface->DisconnectMultiplexingSetup();
     }
 }
@@ -89,8 +84,7 @@ void MultiplexingSetup::ConfigureSingleCard(uint8_t pBackPlaneId, uint8_t pCardI
         if(cBoard->isOptical()) continue;
         uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Configuring backplane " << +pBackPlaneId << " card " << +pCardId << " on BeBoard " << +theBoardId << RESET;
-        fBeBoardInterface->setBoard(theBoardId);
-        D19cMuxBackplaneFWInterface* cInterface = static_cast<D19cMuxBackplaneFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cMuxBackplaneFWInterface* cInterface = static_cast<D19cMuxBackplaneFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
         cInterface->ConfigureMultiplexingSetup(pBackPlaneId, pCardId, fInterlockEnabled);
         parseAvailable();
         printAvailableCards();
@@ -103,8 +97,7 @@ void MultiplexingSetup::ConfigureAll()
         if(cBoard->isOptical()) continue;
         uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Configuring all cards on BeBoard " << +theBoardId << RESET;
-        fBeBoardInterface->setBoard(theBoardId);
-        D19cMuxBackplaneFWInterface* cInterface = static_cast<D19cMuxBackplaneFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+        D19cMuxBackplaneFWInterface* cInterface = static_cast<D19cMuxBackplaneFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
         fAvailableCards                         = cInterface->ScanMultiplexingSetup();
         parseAvailable(false);
         printAvailableCards();
@@ -123,7 +116,7 @@ void MultiplexingSetup::Power(bool pEnable)
         if(cBoard->isOptical()) continue;
         uint16_t theBoardId = static_cast<BeBoard*>(cBoard)->getId();
         LOG(INFO) << BOLDBLUE << "Powering FMCs on " << +theBoardId << RESET;
-        // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface())->InitFMCPower();
+        // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitFMCPower();
     }
 }
 

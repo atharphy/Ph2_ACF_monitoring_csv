@@ -316,9 +316,8 @@ void ECVLinkAlignmentOT::InitWordAlignStubs(const OpticalGroup* pOpticalGroup)
     auto cBoardId   = pOpticalGroup->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
     LOG(INFO) << BOLDYELLOW << "ECVLinkAlignmentOT::WordAlignBEdata for an OG " << RESET;
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
 
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
     D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
@@ -348,8 +347,7 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, bool>>> ECVLinkAlignmentOT::Ch
     auto& cBeBitSlip   = fBeBitSlip.getObject((*cBoardIter)->getId());
     auto& cBeBitSlipOG = cBeBitSlip->getObject(pOpticalGroup->getId());
 
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    auto                             cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto                             cInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
     D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
     cAlignerInterface->InitializeConfiguration();
     cAlignerInterface->InitializeAlignerObject();
@@ -450,10 +448,9 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> ECVLinkAlignmentOT::S
         hybridCount++;
     }
 
-    auto cBoardId   = pOpticalGroup->getBeBoardId();
-    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto                  cBoardId        = pOpticalGroup->getBeBoardId();
+    auto                  cBoardIter      = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
     D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
 
     uint8_t cNlines = (pOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
@@ -558,10 +555,9 @@ std::vector<std::pair<uint8_t, std::pair<uint8_t, float>>> ECVLinkAlignmentOT::L
         cHybridCount++;
     }
 
-    auto cBoardId   = pOpticalGroup->getBeBoardId();
-    auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto                  cBoardId        = pOpticalGroup->getBeBoardId();
+    auto                  cBoardIter      = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
+    auto                  cInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
     D19cDebugFWInterface* cDebugInterface = cInterface->getDebugInterface();
 
     std::vector<int> lineBitErrors(cHybridCount, 0);

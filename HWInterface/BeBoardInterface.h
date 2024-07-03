@@ -69,14 +69,13 @@ class BeBoardInterface
     BeBoardFWInterface*  fBoardFW;
     uint16_t             fPrevBoardIdentifier;
     std::recursive_mutex theMtx;
-
-  public:
     /*!
      * \brief Set the board to talk with
      * \param pBoardId
      */
     void setBoard(uint16_t pBoardIdentifier);
 
+  public:
     /*!
      * \brief Constructor of the BeBoardInterface class
      * \param pBoardMap Reference to the BoardFWInterface
@@ -286,7 +285,11 @@ class BeBoardInterface
     /*! \brief Access to the firmware interface for a given board
      * \return pointer to the BeBoardFWInterface object
      */
-    BeBoardFWInterface* getFirmwareInterface() { return fBoardFW; }
+    BeBoardFWInterface* getFirmwareInterface(Ph2_HwDescription::BeBoard* pBoard)
+    {
+        setBoard(pBoard->getId());
+        return fBoardFW;
+    }
 
     /*! \brief Set or reset the start signal */
     void SetForceStart(Ph2_HwDescription::BeBoard* pBoard, bool bStart);

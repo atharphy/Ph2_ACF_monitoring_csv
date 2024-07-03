@@ -57,10 +57,10 @@ void OTCicBypassTest::Reset() { fRegisterHelper->restoreSnapshot(); }
 void OTCicBypassTest::runCICbypassTest()
 {
     LOG(INFO) << BOLDYELLOW << "OTCicBypassTest::runCICbypassTest ... start integrity test" << RESET;
-    auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
 
     for(auto theBoard: *fDetectorContainer)
     {
+        auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
         for(auto theOpticalGroup: *theBoard)
         {
             // bool isA2Smodule = theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S;

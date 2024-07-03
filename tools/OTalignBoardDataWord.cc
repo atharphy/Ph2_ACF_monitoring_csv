@@ -96,7 +96,7 @@ void OTalignBoardDataWord::wordAlignBEdata()
 void OTalignBoardDataWord::stubAndL1WordAlignment(BeBoard* theBoard)
 {
     LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::stubAndL1WordAlignment for an OG " << RESET;
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
 
     D19cDebugFWInterface*            theDebugInterface   = cInterface->getDebugInterface();
     D19cBackendAlignmentFWInterface* theAlignerInterface = cInterface->getBackendAlignmentInterface();
@@ -246,8 +246,7 @@ void OTalignBoardDataWord::manuallyConfigureLine(const Chip* pChip, uint8_t pLin
 {
     auto cBoardId   = pChip->getBeBoardId();
     auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    fBeBoardInterface->setBoard((*cBoardIter)->getId());
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface());
+    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
 
     D19cBackendAlignmentFWInterface* theAlignerInterface = cInterface->getBackendAlignmentInterface();
     theAlignerInterface->InitializeConfiguration();
