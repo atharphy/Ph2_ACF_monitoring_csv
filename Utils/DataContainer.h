@@ -343,7 +343,7 @@ class DataContainer
 {
   public:
     DataContainer(uint16_t id) : Container<T>(id) { ; }
-    DataContainer(unsigned int size) : Container<T>(size) {}
+    // DataContainer(unsigned int size) : Container<T>(size) {}
     virtual ~DataContainer() { ; }
 
     DataContainer(const DataContainer&) = delete;
