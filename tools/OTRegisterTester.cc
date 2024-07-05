@@ -45,6 +45,8 @@ void OTRegisterTester::TestRegisters()
     bool isPS = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
     if(isPS) numberOfReadoutChips=NCHIPS_OT*2;
     int totalNumberOfChips = numberOfReadoutChips+1;
+    std::vector<std::string> theReadoutChipRegisters{"Threshold"};
+    std::vector<std::string> theCICRegisters{"scPhaseSelectB0i0"};
     for(auto theBoard: *fDetectorContainer)
     {
         for(auto theOpticalGroup: *theBoard)
@@ -58,42 +60,15 @@ void OTRegisterTester::TestRegisters()
                 theRegisterMatchingEfficiency.assign(totalNumberOfChips,0);
                 for(auto theChip: *cHybrid)
                 {
-                    float theEfficiency = 0;
-                    for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
-                    {
-                    
-                        uint16_t theRegisterValueWrite = fPattern;
-                        LOG(DEBUG) << BOLDBLUE << " Pattern for matching " << std::hex << +fPattern << std::dec << RESET;
-                        fReadoutChipInterface->WriteChipReg(theChip, "Threshold", theRegisterValueWrite);
-                        auto theRegisterValueRead = fReadoutChipInterface->ReadChipReg(theChip, "Threshold");
-
-                        if (theRegisterValueRead == theRegisterValueWrite ) theEfficiency++;
-
-                    }
-                    theEfficiency/=fNumberOfIterations;
-                    theRegisterMatchingEfficiency[theChip->getId()] = theEfficiency;
-                    LOG(DEBUG) << BOLDBLUE << " Pattern matching efficiency for chip " << +theChip->getId() << " on hybrid " << +cHybrid->getId() << " is " << theEfficiency << RESET;
-                    //FIXME check chips
+                    theRegisterMatchingEfficiency[theChip->getId()] = EfficiencyCalculator(theChip, theReadoutChipRegisters); //theEfficiency;
                 }// chip loop
                 
+
                 LOG(DEBUG) << BOLDMAGENTA << " Done with chips. Moving to CIC" << RESET;
-                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                float theEfficiency = 0;
-                for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
-                {
-                    uint16_t theRegisterValueWrite = fPattern;
-                    LOG(DEBUG) << BOLDBLUE << " Pattern for matching " << std::hex << +fPattern << std::dec << RESET;
-                    fCicInterface->WriteChipReg(cCic, "scPhaseSelectB0i0", theRegisterValueWrite);
-                    auto theRegisterValueRead = fCicInterface->ReadChipReg(cCic, "scPhaseSelectB0i0");
-                    if (theRegisterValueRead == theRegisterValueWrite ) theEfficiency++;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;                
+                theRegisterMatchingEfficiency[totalNumberOfChips-1] = EfficiencyCalculator(cCic, theCICRegisters);
 
-                }
-                theEfficiency/=fNumberOfIterations;
-                theRegisterMatchingEfficiency[totalNumberOfChips-1] = theEfficiency; //last vector position for CIC
-                LOG(DEBUG) << BOLDBLUE << " Pattern matching efficiency for CIC " << +cCic->getId() << " on hybrid " << +cHybrid->getId() << " is " << theEfficiency << RESET;
-
-                // here I should append the CIC efficiency
-                #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
 fDQMHistogramOTRegisterTester.fillPatternMatchingEfficiencyResults(fPatternMatchingEfficiencyContainer);
 #else
     if(fDQMStreamerEnabled)
@@ -106,6 +81,31 @@ fDQMHistogramOTRegisterTester.fillPatternMatchingEfficiencyResults(fPatternMatch
         } // optical group loop
     } // board loop
 }
+
+float OTRegisterTester::EfficiencyCalculator(Ph2_HwDescription::Chip *theChip, std::vector<std::string> theRegisters)
+{
+    float theEfficiency = 0;
+    for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+    {
+        for(auto registerIterator : theRegisters) //= theReadoutChipRegisters.begin(); registerIterator != theReadoutChipRegisters.end())
+        {
+            uint16_t theRegisterValueRead = 0;
+            if(theChip->getFrontEndType() != FrontEndType::CIC2 )
+            {
+                fReadoutChipInterface->WriteChipReg(theChip, registerIterator, fPattern);
+                theRegisterValueRead = fReadoutChipInterface->ReadChipReg(theChip, registerIterator);
+            }
+            else
+            {
+                fCicInterface->WriteChipReg(theChip, registerIterator, fPattern);
+                theRegisterValueRead = fCicInterface->ReadChipReg(theChip, registerIterator);
+            }
+            if (theRegisterValueRead == fPattern ) theEfficiency++;
+        }
+    }
+    return theEfficiency/=(fNumberOfIterations*theRegisters.size());
+}
+
 void OTRegisterTester::Stop(void)
 {
     LOG(INFO) << "Stopping OTRegisterTester measurement.";
