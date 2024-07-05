@@ -97,15 +97,15 @@ void ClockDelay::localConfigure(const std::string& histoFileName, int currentRun
 
     LOG(INFO) << GREEN << "[ClockDelay::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
-    // ###############################
-    // # Initialize output directory #
-    // ###############################
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
-
     // ##########################
     // # Initialize calibration #
     // ##########################
     ClockDelay::ConfigureCalibration();
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
 
     // #########################################
     // # Initialize histogram and binary files #

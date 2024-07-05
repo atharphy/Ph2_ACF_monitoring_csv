@@ -81,13 +81,13 @@ void RD53::loadfRegMap(const std::string& fileName)
 
     if(file.good() == true)
     {
-        initializeFreeRegisters();
         std::string  line, fName, fAddress_str, fDefValue_str, fValue_str, fBitSize_str;
         bool         foundPixelConfig = false;
         int          cLineCounter     = 0;
         unsigned int col              = 0;
         ChipRegItem  fRegItem;
 
+        initializeFreeRegisters();
         while(getline(file, line))
         {
             if(line.find_first_not_of(" \t") == std::string::npos || line.at(0) == '#' || line.at(0) == '*' || line.empty())
@@ -263,7 +263,7 @@ void RD53::loadfRegMap(const std::string& fileName)
         file.close();
     }
     else
-        throw Exception("[RD53::loadfRegMapd] The RD53 file settings does not exist");
+        throw Exception("[RD53::loadfRegMap] The RD53 file settings does not exist");
 }
 
 std::stringstream RD53::getRegMapStream()
