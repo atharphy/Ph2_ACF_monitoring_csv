@@ -277,6 +277,12 @@ void D19cFWInterface::configureTxRxPolarities(const Ph2_HwDescription::BeBoard* 
     LOG(INFO) << BOLDYELLOW << "Configuring Tx/Rx polarity" << RESET;
     uint32_t cTxGlobalValueL8 = 0, cRxGlobalValueL8 = 0;
     uint32_t cTxGlobalValueL12 = 0, cRxGlobalValueL12 = 0;
+    // if fw is built with L8+L12
+    uint32_t    fmc2_card_type = ReadReg("fc7_daq_stat.general.info.fmc2_card_type");
+    size_t      cLinkOffset    = 0 ;
+    if ( fFMCMap[fmc2_card_type] == "OPTO_QUAD") cLinkOffset = 4;
+    if( fFMCMap[fmc2_card_type] == "OPTO_OCTA") cLinkOffset = 8;
+
     for(auto cOpticalGroup: *pBoard)
     {
         std::string cFMCSlot        = (cOpticalGroup->getFMCId() == 12) ? "FMC-L12" : "FMC-L8";
@@ -286,14 +292,18 @@ void D19cFWInterface::configureTxRxPolarities(const Ph2_HwDescription::BeBoard* 
         uint32_t cTxLocalValue = (cFMCSlot == "FMC-L8") ? 1 : 0;
         uint32_t cRxLocalValue = ((clpGbt->getVersion() == 1 && cFMCSlot == "FMC-L12") || (clpGbt->getVersion() == 0 && cFMCSlot == "FMC-L8")) ? 1 : 0;
 
-        int cBitNumber = (cOpticalGroupId > 3) ? (cOpticalGroupId - 4) : cOpticalGroupId;
+        int cBitNumber = 0;
         if(cFMCSlot == "FMC-L12")
         {
+            cBitNumber = (cLinkOffset > 0 ) ? (cOpticalGroupId - cLinkOffset) : cOpticalGroupId;
+            LOG (INFO) << "Bit number: " << cBitNumber << " --- Links offset: " << cLinkOffset << " --- OG Id: " << cOpticalGroupId << RESET;
             cRxGlobalValueL12 |= (cRxLocalValue << cBitNumber);
             cTxGlobalValueL12 |= (cTxLocalValue << cBitNumber);
         }
         else
         {
+            cBitNumber = cOpticalGroupId;
+            LOG (INFO) << "Bit number: " << cBitNumber << " --- Links offset: " << cLinkOffset << " --- OG Id: " << cOpticalGroupId << RESET;
             cRxGlobalValueL8 |= (cRxLocalValue << cBitNumber);
             cTxGlobalValueL8 |= (cTxLocalValue << cBitNumber);
         }
@@ -833,7 +843,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
 void D19cFWInterface::EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard)
 {
     fNCic                                                       = 0;
-    uint16_t                                      hybrid_enable = 0;
+    uint32_t                                      hybrid_enable = 0;
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     cVecReg.clear();
     for(auto cOpticalGroup: *pBoard)
