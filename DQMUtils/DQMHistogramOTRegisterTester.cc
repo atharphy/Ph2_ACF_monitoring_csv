@@ -5,6 +5,7 @@
 #include "Utils/ContainerSerialization.h"
 
 #include "TFile.h"
+#include "TH1.h"
 
 //========================================================================================================================
 DQMHistogramOTRegisterTester::DQMHistogramOTRegisterTester() {}
@@ -20,10 +21,63 @@ void DQMHistogramOTRegisterTester::book(TFile* theOutputFile, DetectorContainer&
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
     // make fDetectorContainer ready to receive the information fromm the stream
     fDetectorContainer = &theDetectorStructure;
-    // SoC utilities only - END
-    
-}
 
+    // SoC utilities only - END
+    bool isPS = theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
+
+    
+    int numberOfBins = 8;
+    std::string binLabel = "CBC";
+    if(isPS)
+    {
+        numberOfBins = 16;
+        binLabel = "SSA";
+    }
+    numberOfBins+=1; // adding CIC
+    HistContainer<TH1F> patternMatchingEfficiencyHistogram(
+        "RegisterMatchingEfficiency", "Register Matching Efficiency", numberOfBins, - 0.5, numberOfBins - 0.5);
+    patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle("Chip");
+    patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("Efficiency");
+
+    for(uint8_t bin = 0; bin < numberOfBins; ++bin) 
+    {
+        if(isPS && bin>8) binLabel = "MPA";
+        patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetBinLabel(bin + 1, Form("%s%d", binLabel.c_str(), bin));
+        if (bin == numberOfBins-1) patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetBinLabel(bin + 1, "CIC");
+
+    }
+    patternMatchingEfficiencyHistogram.fTheHistogram->SetMinimum(0);
+    patternMatchingEfficiencyHistogram.fTheHistogram->SetMaximum(1.1);
+    patternMatchingEfficiencyHistogram.fTheHistogram->SetStats(false);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPatternMatchingEfficiencyHistogramContainer, patternMatchingEfficiencyHistogram);
+}
+//========================================================================================================================
+void DQMHistogramOTRegisterTester::fillPatternMatchingEfficiencyResults(DetectorDataContainer& thePatternMatchingEfficiencyContainer)
+{
+    for(auto board: thePatternMatchingEfficiencyContainer)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                if(!hybrid->hasSummary()) continue;
+
+                auto thePatternMatchingEfficiencyVector = hybrid->getSummary<std::vector<float>>();
+
+                TH1F* patternMatchingEfficiencyHistogram = fPatternMatchingEfficiencyHistogramContainer.getObject(board->getId())
+                                                               ->getObject(opticalGroup->getId())
+                                                               ->getObject(hybrid->getId())
+                                                               ->getSummary<HistContainer<TH1F>>()
+                                                               .fTheHistogram;
+
+                for(size_t bin = 0; bin < thePatternMatchingEfficiencyVector.size(); ++bin) // not using the chipID because I want always to read all phases
+                {
+                    patternMatchingEfficiencyHistogram->SetBinContent(bin + 1, thePatternMatchingEfficiencyVector[bin]);
+                }
+            }
+        }
+    }
+}
 //========================================================================================================================
 void DQMHistogramOTRegisterTester::process()
 {
@@ -45,19 +99,16 @@ bool DQMHistogramOTRegisterTester::fill(std::string& inputStream)
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
-    // As example, I'm expecting to receive a data stream from an uint32_t contained from calibration "OTRegisterTester"
-    // ContainerSerialization myStreamer("OTRegisterTester");
-    
-    // if(myStreamer.attachDeserializer(inputStream))
-    // {
-    //     // It matched! Decoding data
-    //     std::cout << "Matched OTRegisterTester!!!!!\n";
-    //     // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
-    //     DetectorDataContainer theDetectorData = myStreamer.deserializeChannelContainer<MyType>(fDetectorContainer);
-    //     // Filling the histograms
-    //     myFillplotFunction(theDetectorData);
-    //     return true;
-    // }
+    ContainerSerialization thePatternMatchinEfficiencyContainerSerialization("OTRegisterTesterPatternMatchingEfficiency");
+
+    if(thePatternMatchinEfficiencyContainerSerialization.attachDeserializer(inputStream))
+    {
+        // std::cout << "Matched OTverifyCICdataWord PatternMatchingEfficiency!!!!\n";
+        DetectorDataContainer theDetectorData =
+            thePatternMatchinEfficiencyContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer,  std::vector<float>>(fDetectorContainer);
+        fillPatternMatchingEfficiencyResults(theDetectorData);
+        return true;
+    }
     //the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
     // for this stream)
     return false;

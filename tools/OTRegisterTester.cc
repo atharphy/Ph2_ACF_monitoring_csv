@@ -16,6 +16,10 @@ void OTRegisterTester::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     fNumberOfIterations = findValueInSettings<double>("OTRegisterTester_NumberOfIterations", 100);
+    fPattern      = findValueInSettings<double>("OTRegisterTester_Pattern", 0xAA);
+
+    ContainerFactory::copyAndInitHybrid<std::vector<float>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);
+
 #ifdef __USE_ROOT__ 
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTRegisterTester.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -47,26 +51,45 @@ void OTRegisterTester::TestRegisters()
 
             for(auto cHybrid: *theOpticalGroup)
             {
-                // auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                //FIXME check CIC
-                //fCicInterface->ConfigureDriveStrength(cCic, cicStrength);
+                auto& theRegisterMatchingEfficiency = fPatternMatchingEfficiencyContainer.getObject(cHybrid->getBeBoardId())
+                ->getObject(cHybrid->getOpticalGroupId())
+                ->getObject(cHybrid->getHybridId())
+                ->getSummary<std::vector<float>>();
+                    
+                
                 for(auto theChip: *cHybrid)
                 {
-                    float theRegisterMatchingEfficiency = 0;
+                    float theEfficiency = 0;
                     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
                     {
                     
-                        uint16_t theRegisterValueWrite = 0x01;
+                        uint16_t theRegisterValueWrite = fPattern;
+                        LOG(DEBUG) << BOLDBLUE << " Pattern for matching " << std::hex << +fPattern << std::dec << RESET;
                         fReadoutChipInterface->WriteChipReg(theChip, "Threshold", theRegisterValueWrite);
                         auto theRegisterValueRead = fReadoutChipInterface->ReadChipReg(theChip, "Threshold");
 
-                        if (theRegisterValueRead == theRegisterValueWrite ) theRegisterMatchingEfficiency++;
+                        if (theRegisterValueRead == theRegisterValueWrite ) theEfficiency++;
 
                     }
-                    theRegisterMatchingEfficiency/=fNumberOfIterations;
-                    LOG(INFO) << BOLDBLUE << " Pattern matching efficiency for chip " << +theChip->getId() << " on hybrid " << +cHybrid->getId() << " is " << theRegisterMatchingEfficiency << RESET;
+                    theEfficiency/=fNumberOfIterations;
+                    theRegisterMatchingEfficiency.push_back(theEfficiency);
+                    LOG(DEBUG) << BOLDBLUE << " Pattern matching efficiency for chip " << +theChip->getId() << " on hybrid " << +cHybrid->getId() << " is " << theEfficiency << RESET;
                     //FIXME check chips
                 }// chip loop
+                // auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                //FIXME check CIC
+                //fCicInterface->ConfigureDriveStrength(cCic, cicStrength);
+
+                // here I should append the CIC efficiency
+                #ifdef __USE_ROOT__
+fDQMHistogramOTRegisterTester.fillPatternMatchingEfficiencyResults(fPatternMatchingEfficiencyContainer);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization thePatternMatchinEfficiencyContainerSerialization("OTRegisterTesterPatternMatchingEfficiency");
+        thePatternMatchinEfficiencyContainerSerialization.streamByHybridContainer(fDQMStreamer, fPatternMatchingEfficiencyContainer);
+    }
+#endif
             } // hybrid loop
         } // optical group loop
     } // board loop
