@@ -41,6 +41,10 @@ void OTRegisterTester::Running()
 }
 void OTRegisterTester::TestRegisters()
 {
+    int numberOfReadoutChips = NCHIPS_OT;
+    bool isPS = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
+    if(isPS) numberOfReadoutChips=NCHIPS_OT*2;
+    int totalNumberOfChips = numberOfReadoutChips+1;
     for(auto theBoard: *fDetectorContainer)
     {
         for(auto theOpticalGroup: *theBoard)
@@ -51,8 +55,7 @@ void OTRegisterTester::TestRegisters()
                 ->getObject(cHybrid->getOpticalGroupId())
                 ->getObject(cHybrid->getHybridId())
                 ->getSummary<std::vector<float>>();
-                    
-                
+                theRegisterMatchingEfficiency.assign(totalNumberOfChips,0);
                 for(auto theChip: *cHybrid)
                 {
                     float theEfficiency = 0;
@@ -68,7 +71,7 @@ void OTRegisterTester::TestRegisters()
 
                     }
                     theEfficiency/=fNumberOfIterations;
-                    theRegisterMatchingEfficiency.push_back(theEfficiency);
+                    theRegisterMatchingEfficiency[theChip->getId()] = theEfficiency;
                     LOG(DEBUG) << BOLDBLUE << " Pattern matching efficiency for chip " << +theChip->getId() << " on hybrid " << +cHybrid->getId() << " is " << theEfficiency << RESET;
                     //FIXME check chips
                 }// chip loop
@@ -86,7 +89,7 @@ void OTRegisterTester::TestRegisters()
 
                 }
                 theEfficiency/=fNumberOfIterations;
-                theRegisterMatchingEfficiency.push_back(theEfficiency);
+                theRegisterMatchingEfficiency[totalNumberOfChips-1] = theEfficiency; //last vector position for CIC
                 LOG(DEBUG) << BOLDBLUE << " Pattern matching efficiency for CIC " << +cCic->getId() << " on hybrid " << +cHybrid->getId() << " is " << theEfficiency << RESET;
 
                 // here I should append the CIC efficiency
