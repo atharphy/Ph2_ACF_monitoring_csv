@@ -72,7 +72,7 @@ std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> OTSSAtoSSAecv::produceStripCl
 {
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> listOfInjectedStrips;
 
-    listOfInjectedStrips.push_back({0,   1, 1});
+    listOfInjectedStrips.push_back({0, 1, 1});
     listOfInjectedStrips.push_back({0, 118, 1});
 
     return listOfInjectedStrips;

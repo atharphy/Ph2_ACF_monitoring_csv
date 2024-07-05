@@ -36,12 +36,11 @@ class OTSSAtoSSAecv : public OTSSAtoMPAecv
     static std::string fCalibrationDescription;
 
   private:
-    void runSSAtoSSAecvScan();
-    void setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA) override;
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> produceStripClusterList() override;
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> produceMatchingPixelClusterList(uint8_t colCoordinate) override;
+    void                                                        runSSAtoSSAecvScan();
+    void                                                        setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA) override;
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>          produceStripClusterList() override;
+    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>          produceMatchingPixelClusterList(uint8_t colCoordinate) override;
     std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList) override;
-
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
