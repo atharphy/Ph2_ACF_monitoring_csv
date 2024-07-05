@@ -24,7 +24,7 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    std::vector<float> listOfMPAslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTSSAtoMPAecv_ListOfSSAslvsCurrents", "1, 4, 7"));
+    std::vector<float> listOfSSAslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTSSAtoMPAecv_ListOfSSAslvsCurrents", "1, 4, 7"));
 
     uint8_t numberOfMPA             = 8;
     uint8_t numberOfStubLinesPerMPA = 8;
@@ -59,7 +59,7 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
     };
     int totalNumberOfShifts = fMaximum320PhaseShift - fMinimum320PhaseShift + 1;
 
-    for(auto slvsCurrent: listOfMPAslvsCurrents)
+    for(auto slvsCurrent: listOfSSAslvsCurrents)
     {
         HistContainer<TH2F> phaseScanStubMatchingEfficiency(Form("SSAtoMPAStubPhaseScan_SLVScurrent_%d", int(slvsCurrent)),
                                                             Form("SSA to MPA Stub Phase Scan Matching efficiency - SLVScurrent = %d", int(slvsCurrent)),
@@ -177,7 +177,7 @@ bool DQMHistogramOTSSAtoMPAecv::fill(std::string& inputStream)
 
     if(theStubPatternMatchinEfficiencyContainerSerialization.attachDeserializer(inputStream))
     {
-        // std::cout << "Matched OTverifyMPASSAdataWord PatternMatchingEfficiency!!!!\n";
+        // std::cout << "Matched OTSSAtoMPAecv StubPatternMatchingEfficiency!!!!\n";
         uint8_t               clockEdge, slvsCurrent;
         DetectorDataContainer theDetectorData =
             theStubPatternMatchinEfficiencyContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>(
@@ -187,7 +187,7 @@ bool DQMHistogramOTSSAtoMPAecv::fill(std::string& inputStream)
     }
     if(theL1PatternMatchinEfficiencyContainerSerialization.attachDeserializer(inputStream))
     {
-        // std::cout << "Matched OTverifyMPASSAdataWord PatternMatchingEfficiency!!!!\n";
+        // std::cout << "Matched OTSSAtoMPAecv L1PatternMatchingEfficiency!!!!\n";
         uint8_t               clockEdge, slvsCurrent;
         int                   samplingPhaseOffset;
         DetectorDataContainer theDetectorData =

@@ -67,10 +67,11 @@ class SSA2Interface : public ReadoutChipInterface
     float getVrefPrecision(Ph2_HwDescription::ReadoutChip* pSSA2);
     float getVrefMinValue(Ph2_HwDescription::ReadoutChip* pSSA2);
     float getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pSSA2);
+    bool  WriteChipRegBits(Ph2_HwDescription::Chip* theSSA, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = false);
 
   private:
     uint8_t ReadChipId(Ph2_HwDescription::Chip* pChip);                                                                                                                      // FIXME
-    bool    WriteChipRegBits(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = false); // FIXME
+    bool    WriteChipRegBitsLocal(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = false); // FIXME
     // bool    ConfigureAmux(Ph2_HwDescription::Chip* pChip, const std::string& pRegister, bool pVerify = true);                                                                // FIXME
 
     const std::map<std::string, uint8_t> SSA2_ADC_CONTROL_TABLE = {

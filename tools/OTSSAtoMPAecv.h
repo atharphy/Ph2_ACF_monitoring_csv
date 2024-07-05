@@ -35,17 +35,18 @@ class OTSSAtoMPAecv : public OTverifyMPASSAdataWord
 
     static std::string fCalibrationDescription;
 
-  private:
+  protected:
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> produceMatchingPixelClusterList(uint8_t colCoordinate) override;
     void                                               matchAllPossibleStubPatterns(uint8_t                                        numberOfBytesInSinglePacket,
                                                                                     size_t                                         numberOfLines,
                                                                                     std::vector<std::pair<PatternMatcher, float>>& thePatternAndEfficiencyList,
                                                                                     const std::vector<uint32_t>&                   concatenatedStubPackage,
                                                                                     Ph2_HwDescription::ReadoutChip*                theMPA) override;
+    void                                               resetPatternMatchingEfficiencyContainer();
+  private:
     void                                               runSSAtoMPAecvScan();
     void                                               runSSAtoMPAecvScanForStubs(uint8_t slvsCurrent);
     void                                               runSSAtoMPAecvScanForL1(uint8_t slvsCurrent);
-    void                                               resetPatternMatchingEfficiencyContainer();
     std::vector<float>                                 fListOfSSAslvsCurrents{1, 4, 7};
 
     int                   fMinimum320PhaseShift = -1;

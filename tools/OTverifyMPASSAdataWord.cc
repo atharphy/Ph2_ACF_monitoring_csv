@@ -129,7 +129,8 @@ void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCI
 void OTverifyMPASSAdataWord::setStubLogicParameters(ReadoutChip* theMPA)
 {
     fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 0);
-    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM10", fBendingCode);
+    fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 0);
+    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM10", fBendingToCode.at(0));
     fReadoutChipInterface->WriteChipReg(theMPA, "CodeDM8", 0);
     fReadoutChipInterface->WriteChipReg(theMPA, "CodeM76", 0);
     fReadoutChipInterface->WriteChipReg(theMPA, "CodeM54", 0);
@@ -194,6 +195,10 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
         {
             auto                  lineOutputVector        = theFWInterface->StubDebug(true, numberOfLines, false);
             std::vector<uint32_t> concatenatedStubPackage = mergeCICStubOuput(lineOutputVector, numberOfBytesInSinglePacket);
+            LOG(INFO) << BOLDRED << "Stub data received    " << getPatternPrintout(concatenatedStubPackage, numberOfBytesInSinglePacket) << RESET;
+            LOG(INFO) << BOLDYELLOW << "Stub pattern expected " << getPatternPrintout(thePatternAndEfficiencyList[0].first.getPattern(), numberOfBytesInSinglePacket) << RESET;
+            LOG(INFO) << BOLDYELLOW << "Stub pattern expected " << getPatternPrintout(thePatternAndEfficiencyList[1].first.getPattern(), numberOfBytesInSinglePacket) << RESET;
+            LOG(INFO) << BOLDYELLOW << "Stub pattern expected " << getPatternPrintout(thePatternAndEfficiencyList[2].first.getPattern(), numberOfBytesInSinglePacket) << RESET;
             matchAllPossibleStubPatterns(numberOfBytesInSinglePacket, numberOfLines, thePatternAndEfficiencyList, concatenatedStubPackage, theMPA);
         }
         ++stripClusterLine;
@@ -261,7 +266,7 @@ PatternMatcher OTverifyMPASSAdataWord::produceStubPatternMatcher(const std::vect
             thePattern.addToPattern(0x0, 0x0, 3);                       // BX offset
             thePattern.addToPattern(chipIdForCIC, 0x7, 3);              // Chip ID
             thePattern.addToPattern(std::get<1>(theStub) + 2, 0xFF, 8); // seed
-            thePattern.addToPattern(fBendingCode, 0x7, 3);              // bending
+            thePattern.addToPattern(fBendingToCode.at(std::get<2>(theStub)), 0x7, 3);              // bending
             thePattern.addToPattern(std::get<0>(theStub), 0xF, 4);      // z
         }
     }
