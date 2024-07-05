@@ -13,7 +13,7 @@
 
 - Detailed description of the various calibrations: <https://cernbox.cern.ch/s/uSezc8ErG7F4tJ0>
 - ROC tuning sequence: <https://www.overleaf.com/read/ffpkqnjjjscd>
-- CROC testing guide: <https://croc-testing-user-guide.docs.cern.ch/>
+- CROC testing guide (old): <https://croc-testing-user-guide.docs.cern.ch/>
 
 ### School
 
