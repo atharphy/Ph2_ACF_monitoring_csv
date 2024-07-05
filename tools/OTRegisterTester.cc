@@ -45,10 +45,6 @@ void OTRegisterTester::TestRegisters()
     {
         for(auto theOpticalGroup: *theBoard)
         {
-            //FIXME check lpgbt
-            //static_cast<D19clpGBTInterface*>(flpGBTInterface)->setCICClockPolarityAndStrength(theOpticalGroup->flpGBT, clockPolarity, clockStrength, theOpticalGroup);
-
-
             for(auto cHybrid: *theOpticalGroup)
             {
                 auto& theRegisterMatchingEfficiency = fPatternMatchingEfficiencyContainer.getObject(cHybrid->getBeBoardId())
@@ -76,9 +72,22 @@ void OTRegisterTester::TestRegisters()
                     LOG(DEBUG) << BOLDBLUE << " Pattern matching efficiency for chip " << +theChip->getId() << " on hybrid " << +cHybrid->getId() << " is " << theEfficiency << RESET;
                     //FIXME check chips
                 }// chip loop
-                // auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                //FIXME check CIC
-                //fCicInterface->ConfigureDriveStrength(cCic, cicStrength);
+                
+                LOG(DEBUG) << BOLDMAGENTA << " Done with chips. Moving to CIC" << RESET;
+                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                float theEfficiency = 0;
+                for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+                {
+                    uint16_t theRegisterValueWrite = fPattern;
+                    LOG(DEBUG) << BOLDBLUE << " Pattern for matching " << std::hex << +fPattern << std::dec << RESET;
+                    fCicInterface->WriteChipReg(cCic, "scPhaseSelectB0i0", theRegisterValueWrite);
+                    auto theRegisterValueRead = fCicInterface->ReadChipReg(cCic, "scPhaseSelectB0i0");
+                    if (theRegisterValueRead == theRegisterValueWrite ) theEfficiency++;
+
+                }
+                theEfficiency/=fNumberOfIterations;
+                theRegisterMatchingEfficiency.push_back(theEfficiency);
+                LOG(DEBUG) << BOLDBLUE << " Pattern matching efficiency for CIC " << +cCic->getId() << " on hybrid " << +cHybrid->getId() << " is " << theEfficiency << RESET;
 
                 // here I should append the CIC efficiency
                 #ifdef __USE_ROOT__
