@@ -124,7 +124,7 @@ void SCurve::localConfigure(const std::string& histoFileName, int currentRun)
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<SCurveHistograms>(histoFileName, "SCurve", histos, currentRun, saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "SCurve", histos, currentRun, saveBinaryData);
 }
 
 void SCurve::run()

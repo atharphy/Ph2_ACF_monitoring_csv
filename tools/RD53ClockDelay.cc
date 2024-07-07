@@ -110,13 +110,13 @@ void ClockDelay::localConfigure(const std::string& histoFileName, int currentRun
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<ClockDelayHistograms>(histoFileName, "ClockDelay", histos, currentRun, PixelAlive::saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "ClockDelay", histos, currentRun, PixelAlive::saveBinaryData);
     // ######################
     // # Initialize Latency #
     // ######################
     std::string fileName = histoFileName;
     fileName.replace(fileName.find("_ClockDelay"), 15, "_Latency");
-    la.initializeFiles<LatencyHistograms>(fileName, "Latency", la.histos);
+    la.initializeFiles(fileName, "Latency", la.histos);
 }
 
 void ClockDelay::run()

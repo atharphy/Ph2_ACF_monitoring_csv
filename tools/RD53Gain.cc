@@ -130,7 +130,7 @@ void Gain::localConfigure(const std::string& histoFileName, int currentRun)
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<GainHistograms>(histoFileName, "Gain", histos, currentRun, saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "Gain", histos, currentRun, saveBinaryData);
 }
 
 void Gain::run()

@@ -103,7 +103,7 @@ void Latency::localConfigure(const std::string& histoFileName, int currentRun)
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<LatencyHistograms>(histoFileName, "Latency", histos, currentRun, PixelAlive::saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "Latency", histos, currentRun, PixelAlive::saveBinaryData);
 }
 
 void Latency::run()

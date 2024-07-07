@@ -22,7 +22,6 @@ void RD53eudaqProducer::DoInitialise()
     std::stringstream outp;
     RD53sysCntrPhys.InitializeHw(configFile, outp);
     RD53sysCntrPhys.InitializeSettings(configFile, outp);
-    nTRIGxEvent = RD53sysCntrPhys.findValueInSettings<double>("nTRIGxEvent");
 }
 
 void RD53eudaqProducer::DoConfigure() { RD53sysCntrPhys.localConfigure(); }
@@ -82,7 +81,7 @@ void RD53eudaqProducer::DoStartRun()
     // # Get configuration directly from EUDAQ framework #
     // ###################################################
     std::string fileName("Run" + RD53Shared::fromInt2Str(theRunNumber) + "_Physics");
-    RD53sysCntrPhys.initializeFiles<PhysicsHistograms>(fileName, "Physics", RD53sysCntrPhys.histos, theRunNumber);
+    RD53sysCntrPhys.initializeFiles(fileName, "Physics", RD53sysCntrPhys.histos, theRunNumber);
     StartInfo theStartInfo;
     theStartInfo.setRunNumber(theRunNumber);
     RD53sysCntrPhys.Start(theStartInfo);
@@ -186,7 +185,8 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             auto                      ev         = eudaq::Event::MakeUnique(EUDAQ::EVENT);
             auto                      eudaqEvent = static_cast<eudaq::RawEvent*>(ev.get());
             auto                      tluTrigId  = RD53EvtList[it].tlu_trigger_id;
-            CMSITEventData::EventData theEvent{std::time(nullptr), eudaqProducer->nTRIGxEvent, RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
+            CMSITEventData::EventData theEvent{
+                std::time(nullptr), eudaqProducer->RD53sysCntrPhys.nTRIGxEvent, RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
 
             // ########################################################
             // # @TMP@ : choose between internal vs TLU event counter #
