@@ -24,7 +24,7 @@ void RD53eudaqProducer::DoInitialise()
     RD53sysCntrPhys.InitializeSettings(configFile, outp);
 }
 
-void RD53eudaqProducer::DoConfigure() { RD53sysCntrPhys.localConfigure(); }
+void RD53eudaqProducer::DoConfigure() { RD53sysCntrPhys.localConfigure("", -1); }
 
 void RD53eudaqProducer::DoStartRun()
 {
@@ -37,9 +37,9 @@ void RD53eudaqProducer::DoStartRun()
             for(auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid) static_cast<Ph2_HwInterface::RD53Interface*>(RD53sysCntrPhys.fReadoutChipInterface)->ConfigureChip(cChip);
 
-    theRunNumber      = GetRunNumber();
-    swTrigCnt         = 0;
-    previousTLUTrigId = 0;
+    RD53sysCntrPhys.theCurrentRun = GetRunNumber();
+    swTrigCnt                     = 0;
+    previousTLUTrigId             = 0;
 
     // #####################
     // # Send a BORE event #
@@ -80,10 +80,10 @@ void RD53eudaqProducer::DoStartRun()
     // ###################################################
     // # Get configuration directly from EUDAQ framework #
     // ###################################################
-    std::string fileName("Run" + RD53Shared::fromInt2Str(theRunNumber) + "_Physics");
-    RD53sysCntrPhys.initializeFiles(fileName, "Physics", RD53sysCntrPhys.histos, theRunNumber);
+    std::string fileName("Run" + RD53Shared::fromInt2Str(RD53sysCntrPhys.theCurrentRun) + "_Physics");
+    RD53sysCntrPhys.initializeFiles(fileName, "Physics", RD53sysCntrPhys.histos, RD53sysCntrPhys.theCurrentRun);
     StartInfo theStartInfo;
-    theStartInfo.setRunNumber(theRunNumber);
+    theStartInfo.setRunNumber(RD53sysCntrPhys.theCurrentRun);
     RD53sysCntrPhys.Start(theStartInfo);
 
     doExit = false;
@@ -104,16 +104,16 @@ void RD53eudaqProducer::DoStopRun()
     // # Copy configuration file #
     // ###########################
     const auto configFileBasename = configFile.substr(configFile.find_last_of("/\\") + 1);
-    const auto outputConfigFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(theRunNumber) + "_" + configFileBasename;
+    const auto outputConfigFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(RD53sysCntrPhys.theCurrentRun) + "_" + configFileBasename;
     system(("cp " + configFile + " " + outputConfigFile).c_str());
 
     // #####################
     // # Update run number #
     // #####################
     std::ofstream fileRunNumberOut;
-    theRunNumber++;
+    RD53sysCntrPhys.theCurrentRun++;
     fileRunNumberOut.open(EUDAQ::FILERUNNUMBER, std::ios::out);
-    if(fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(theRunNumber) << std::endl;
+    if(fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(RD53sysCntrPhys.theCurrentRun) << std::endl;
     fileRunNumberOut.close();
 
     RD53eudaqProducer::DoTerminate();
