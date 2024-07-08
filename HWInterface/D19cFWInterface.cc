@@ -278,10 +278,10 @@ void D19cFWInterface::configureTxRxPolarities(const Ph2_HwDescription::BeBoard* 
     uint32_t cTxGlobalValueL8 = 0, cRxGlobalValueL8 = 0;
     uint32_t cTxGlobalValueL12 = 0, cRxGlobalValueL12 = 0;
     // if fw is built with L8+L12
-    uint32_t    fmc2_card_type = ReadReg("fc7_daq_stat.general.info.fmc2_card_type");
-    size_t      cLinkOffset    = 0 ;
-    if ( fFMCMap[fmc2_card_type] == "OPTO_QUAD") cLinkOffset = 4;
-    if( fFMCMap[fmc2_card_type] == "OPTO_OCTA") cLinkOffset = 8;
+    uint32_t fmc2_card_type = ReadReg("fc7_daq_stat.general.info.fmc2_card_type");
+    size_t   cLinkOffset    = 0;
+    if(fFMCMap[fmc2_card_type] == "OPTO_QUAD") cLinkOffset = 4;
+    if(fFMCMap[fmc2_card_type] == "OPTO_OCTA") cLinkOffset = 8;
 
     for(auto cOpticalGroup: *pBoard)
     {
@@ -295,15 +295,15 @@ void D19cFWInterface::configureTxRxPolarities(const Ph2_HwDescription::BeBoard* 
         int cBitNumber = 0;
         if(cFMCSlot == "FMC-L12")
         {
-            cBitNumber = (cLinkOffset > 0 ) ? (cOpticalGroupId - cLinkOffset) : cOpticalGroupId;
-            LOG (INFO) << "Bit number: " << cBitNumber << " --- Links offset: " << cLinkOffset << " --- OG Id: " << cOpticalGroupId << RESET;
+            cBitNumber = (cLinkOffset > 0) ? (cOpticalGroupId - cLinkOffset) : cOpticalGroupId;
+            LOG(INFO) << "Bit number: " << cBitNumber << " --- Links offset: " << cLinkOffset << " --- OG Id: " << cOpticalGroupId << RESET;
             cRxGlobalValueL12 |= (cRxLocalValue << cBitNumber);
             cTxGlobalValueL12 |= (cTxLocalValue << cBitNumber);
         }
         else
         {
             cBitNumber = cOpticalGroupId;
-            LOG (INFO) << "Bit number: " << cBitNumber << " --- Links offset: " << cLinkOffset << " --- OG Id: " << cOpticalGroupId << RESET;
+            LOG(INFO) << "Bit number: " << cBitNumber << " --- Links offset: " << cLinkOffset << " --- OG Id: " << cOpticalGroupId << RESET;
             cRxGlobalValueL8 |= (cRxLocalValue << cBitNumber);
             cTxGlobalValueL8 |= (cTxLocalValue << cBitNumber);
         }

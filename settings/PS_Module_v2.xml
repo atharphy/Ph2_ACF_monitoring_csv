@@ -275,6 +275,9 @@
 
     <Setting name="OTSSAtoMPAecv_NumberOfIterations">1000</Setting>
     <Setting name="OTSSAtoMPAecv_ListOfSSAslvsCurrents">1, 4, 7</Setting>
+
+    <Setting name="OTSSAtoSSAecv_NumberOfIterations">1000</Setting>
+    <Setting name="OTSSAtoSSAecv_ListOfSSAslvsCurrents">1, 4, 7</Setting>
 </Settings>
 
 
