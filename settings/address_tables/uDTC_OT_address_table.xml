@@ -37,7 +37,7 @@
             </node>
 
             <node id="global"                       address="0x0000">
-                <node id="hybrid_enable"			address="0x005" mask="0x0000FFFF"/>
+                <node id="hybrid_enable"			address="0x005" mask="0x00FFFFFF"/>
                 <node id="chips_enable_hyb_00"		address="0x006" mask="0x000000FF"/>
                 <node id="chips_enable_hyb_01"		address="0x006" mask="0x0000FF00"/>
                 <node id="chips_enable_hyb_02"		address="0x006" mask="0x00FF0000"/>
