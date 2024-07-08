@@ -103,10 +103,8 @@ void BiasSweep::Initialize()
     fSweepCanvas = new TCanvas(cName, "Bias Sweep", 10, 0, 500, 500);
     fSweepCanvas->SetGrid();
     fSweepCanvas->cd();
-#ifdef __HTTP__
-
+#if defined __USE_ROOT__ && defined __HTTP__
     if(fHttpServer) fHttpServer->Register("/", fSweepCanvas);
-
 #endif
     LOG(INFO) << "Created Canvas for Bias sweeps";
 

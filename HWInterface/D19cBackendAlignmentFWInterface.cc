@@ -125,7 +125,7 @@ void D19cBackendAlignmentFWInterface::SendCommand(std::string pCmdToTuner)
     fAlignerObject.fType    = fTunerControl[pCmdToTuner];
     // build command
     std::map<std::string, int> cMap = (fAlignerObject.fOptical == 1) ? fLineCnfg_Optical : fLineCnfg_Electrical;
-    fAlignerObject.fCommand += fAlignerObject.fHybrid << 28;
+    fAlignerObject.fCommand += fAlignerObject.fHybrid << 27;
     fAlignerObject.fCommand += fAlignerObject.fChip << 24;
     fAlignerObject.fCommand += fAlignerObject.fLine << 20;
     fAlignerObject.fCommand += fAlignerObject.fType << 16;

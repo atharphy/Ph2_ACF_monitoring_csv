@@ -7,7 +7,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     # Includes
     include_directories(${PROJECT_SOURCE_DIR})
-    
+
     # Library
 
     # Find source files
@@ -24,9 +24,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # link_directories(${Boost_LIBRARY_DIRS})
     set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY})
 
-    ################
-    ## EXECUTABLES #
-    ################
+    ###############
+    # EXECUTABLES #
+    ###############
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/Parser *.cc)
 
