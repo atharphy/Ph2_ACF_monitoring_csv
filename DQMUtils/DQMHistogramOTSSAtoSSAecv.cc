@@ -23,7 +23,7 @@ void DQMHistogramOTSSAtoSSAecv::book(TFile* theOutputFile, DetectorContainer& th
     // make fDetectorContainer ready to receive the information fromm the stream
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
-    int numberOfSSA = 8;
+    int numberOfSSA        = 8;
     int numberOfDirections = 2;
 
     auto setYaxisBinLabelForStubs = [this, numberOfSSA, numberOfDirections](TH2F* theHistogram)
@@ -31,12 +31,12 @@ void DQMHistogramOTSSAtoSSAecv::book(TFile* theOutputFile, DetectorContainer& th
         auto theAxis = theHistogram->GetYaxis();
         for(int direction = 0; direction < numberOfDirections; ++direction)
         {
-            bool isLeftToRight = direction == 0;
-            std::pair<int, int> mpaRange = getMPArange(isLeftToRight);
+            bool                isLeftToRight = direction == 0;
+            std::pair<int, int> mpaRange      = getMPArange(isLeftToRight);
             for(int mpaId = mpaRange.first; mpaId < mpaRange.second; ++mpaId)
             {
                 int ssaId = mpaId + (isLeftToRight ? +1 : -1);
-                theAxis->SetBinLabel(direction * (mpaRange.second - mpaRange.first) + (mpaId - mpaRange.first)  + 1, Form("SSA%d#rightarrowSSA%d", ssaId, mpaId)); 
+                theAxis->SetBinLabel(direction * (mpaRange.second - mpaRange.first) + (mpaId - mpaRange.first) + 1, Form("SSA%d#rightarrowSSA%d", ssaId, mpaId));
             }
         }
     };
@@ -83,13 +83,14 @@ void DQMHistogramOTSSAtoSSAecv::fillStubPatternEfficiencyScan(DetectorDataContai
                                                                ->getObject(theHybrid->getId())
                                                                ->getSummary<HistContainer<TH2F>>()
                                                                .fTheHistogram;
-                bool isLeftToRight = injectedStrip == 1;
-                int direction = isLeftToRight ? 0 : 1;
-                std::pair<int, int> mpaRange = getMPArange(isLeftToRight);
+                bool                isLeftToRight = injectedStrip == 1;
+                int                 direction     = isLeftToRight ? 0 : 1;
+                std::pair<int, int> mpaRange      = getMPArange(isLeftToRight);
 
-                for(int mpaId = mpaRange.first; mpaId < mpaRange.second; ++mpaId) 
+                for(int mpaId = mpaRange.first; mpaId < mpaRange.second; ++mpaId)
                 {
-                    patternMatchingEfficiencyHistogram->SetBinContent(clockEdge + 1, direction * (mpaRange.second - mpaRange.first) + (mpaId - mpaRange.first)  + 1, thePatternMatchingEfficiencyVector[mpaId][1]);
+                    patternMatchingEfficiencyHistogram->SetBinContent(
+                        clockEdge + 1, direction * (mpaRange.second - mpaRange.first) + (mpaId - mpaRange.first) + 1, thePatternMatchingEfficiencyVector[mpaId][1]);
                 }
             }
         }
@@ -139,14 +140,13 @@ std::pair<int, int> DQMHistogramOTSSAtoSSAecv::getMPArange(bool isLeftToRight) c
     std::pair<int, int> mpaRange;
     if(isLeftToRight)
     {
-        mpaRange.first = 0;
+        mpaRange.first  = 0;
         mpaRange.second = 7;
     }
     else
     {
-        mpaRange.first = 1;
+        mpaRange.first  = 1;
         mpaRange.second = 8;
     }
     return mpaRange;
 }
-

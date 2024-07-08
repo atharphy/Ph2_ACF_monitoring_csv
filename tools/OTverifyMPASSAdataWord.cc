@@ -259,11 +259,11 @@ PatternMatcher OTverifyMPASSAdataWord::produceStubPatternMatcher(const std::vect
     {
         for(auto theStub: theStubVector)
         {
-            thePattern.addToPattern(0x0, 0x0, 3);                       // BX offset
-            thePattern.addToPattern(chipIdForCIC, 0x7, 3);              // Chip ID
-            thePattern.addToPattern(std::get<1>(theStub) + 2, 0xFF, 8); // seed
-            thePattern.addToPattern(fBendingToCode.at(std::get<2>(theStub)), 0x7, 3);              // bending
-            thePattern.addToPattern(std::get<0>(theStub), 0xF, 4);      // z
+            thePattern.addToPattern(0x0, 0x0, 3);                                     // BX offset
+            thePattern.addToPattern(chipIdForCIC, 0x7, 3);                            // Chip ID
+            thePattern.addToPattern(std::get<1>(theStub) + 2, 0xFF, 8);               // seed
+            thePattern.addToPattern(fBendingToCode.at(std::get<2>(theStub)), 0x7, 3); // bending
+            thePattern.addToPattern(std::get<0>(theStub), 0xF, 4);                    // z
         }
     }
 

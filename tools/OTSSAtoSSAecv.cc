@@ -1,8 +1,8 @@
 #include "tools/OTSSAtoSSAecv.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/SSA2Interface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
-#include "HWInterface/SSA2Interface.h"
-#include "HWInterface/D19cFWInterface.h"
 #include "Utils/GenericDataArray.h"
 
 using namespace Ph2_HwDescription;
@@ -21,7 +21,7 @@ void OTSSAtoSSAecv::Initialise(void)
     // free the registers in case any
     fNumberOfIterations    = findValueInSettings<double>("OTSSAtoSSAecv_NumberOfIterations", 1000);
     fListOfSSAslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>("OTSSAtoSSAecv_ListOfSSAslvsCurrents", "1, 4, 7"));
-    
+
     ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);
 
     fBendingToCode = {{-7, 1}, {-5, 2}, {-3, 3}, {+3, 5}, {+5, 6}, {+7, 7}};
@@ -108,7 +108,7 @@ void OTSSAtoSSAecv::runSSAtoSSAecvScan()
                             {
                                 if(theChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
-                                    auto    theSSAInterface = static_cast<SSA2Interface*>(fReadoutChipInterface);
+                                    auto theSSAInterface = static_cast<SSA2Interface*>(fReadoutChipInterface);
                                     theSSAInterface->WriteChipRegBits(theChip, "LateralRX_sampling", (clockEdge << 3) | (clockEdge << 7), "mask_peri_D", 0x88);
                                 }
                             }
@@ -118,15 +118,15 @@ void OTSSAtoSSAecv::runSSAtoSSAecvScan()
                     runStubIntegrityTest(theBoard, theFWInterface);
                 }
 
-        #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
                 fDQMHistogramOTSSAtoSSAecv.fillStubPatternEfficiencyScan(fPatternMatchingEfficiencyContainer, injectedStrip, clockEdge, slvsCurrent);
-        #else
+#else
                 if(fDQMStreamerEnabled)
                 {
                     ContainerSerialization thePatternMatchingEfficiencyContainerSerialization("OTSSAtoSSAecvStubPatternMatchingEfficiency");
                     thePatternMatchingEfficiencyContainerSerialization.streamByHybridContainer(fDQMStreamer, fPatternMatchingEfficiencyContainer, injectedStrip, clockEdge, slvsCurrent);
                 }
-        #endif
+#endif
             }
         }
     }
@@ -165,13 +165,13 @@ std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> OTSSAtoSSAecv::produceMatchin
 
 std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> OTSSAtoSSAecv::producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList)
 {
-    std::vector<int> bendingList{3, 5, 7};
+    std::vector<int>                                            bendingList{3, 5, 7};
     std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> possibleStubVectorList;
     for(const auto& thePixelCluster: thePixelClusterList)
     {
         for(auto bending: bendingList)
         {
-            int multiplier = std::get<1>(thePixelCluster) == 0 ? -1 : +1;
+            int                                            multiplier = std::get<1>(thePixelCluster) == 0 ? -1 : +1;
             std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector{{fStubRowCoordinate, std::get<1>(thePixelCluster) * 2 + std::get<2>(thePixelCluster) - 1, multiplier * bending}};
             possibleStubVectorList.push_back(theStubVector);
         }

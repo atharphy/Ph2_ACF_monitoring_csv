@@ -43,11 +43,12 @@ class OTSSAtoMPAecv : public OTverifyMPASSAdataWord
                                                                                     const std::vector<uint32_t>&                   concatenatedStubPackage,
                                                                                     Ph2_HwDescription::ReadoutChip*                theMPA) override;
     void                                               resetPatternMatchingEfficiencyContainer();
+
   private:
-    void                                               runSSAtoMPAecvScan();
-    void                                               runSSAtoMPAecvScanForStubs(uint8_t slvsCurrent);
-    void                                               runSSAtoMPAecvScanForL1(uint8_t slvsCurrent);
-    std::vector<float>                                 fListOfSSAslvsCurrents{1, 4, 7};
+    void               runSSAtoMPAecvScan();
+    void               runSSAtoMPAecvScanForStubs(uint8_t slvsCurrent);
+    void               runSSAtoMPAecvScanForL1(uint8_t slvsCurrent);
+    std::vector<float> fListOfSSAslvsCurrents{1, 4, 7};
 
     int                   fMinimum320PhaseShift = -1;
     int                   fMaximum320PhaseShift = +1;

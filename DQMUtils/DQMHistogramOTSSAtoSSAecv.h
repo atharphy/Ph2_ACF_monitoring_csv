@@ -58,9 +58,8 @@ class DQMHistogramOTSSAtoSSAecv : public DQMHistogramBase
     void fillStubPatternEfficiencyScan(DetectorDataContainer& thePatternMatchingEfficiency, uint8_t injectedStrip, uint8_t clockEdge, uint8_t slvsCurrent);
 
   private:
-    std::pair<int, int> getMPArange(bool isLeftToRight) const;
-    DetectorContainer* fDetectorContainer;
+    std::pair<int, int>                      getMPArange(bool isLeftToRight) const;
+    DetectorContainer*                       fDetectorContainer;
     std::map<uint8_t, DetectorDataContainer> fStubPhaseScanMatchingEfficiencies;
-
 };
 #endif
