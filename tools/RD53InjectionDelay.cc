@@ -111,11 +111,13 @@ void InjectionDelay::localConfigure(const std::string& histoFileName, int curren
     // # Initialize histogram and binary files #
     // #########################################
     CalibBase::initializeFiles(histoFileName, "InjectionDelay", histos, currentRun, PixelAlive::saveBinaryData);
+
     // ######################
     // # Initialize Latency #
     // ######################
     std::string fileName = histoFileName;
     fileName.replace(fileName.find("_InjectionDelay"), 15, "_Latency");
+    la.CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
     la.initializeFiles(fileName, "Latency", la.histos);
 }
 

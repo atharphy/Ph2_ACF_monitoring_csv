@@ -111,11 +111,13 @@ void ClockDelay::localConfigure(const std::string& histoFileName, int currentRun
     // # Initialize histogram and binary files #
     // #########################################
     CalibBase::initializeFiles(histoFileName, "ClockDelay", histos, currentRun, PixelAlive::saveBinaryData);
+
     // ######################
     // # Initialize Latency #
     // ######################
     std::string fileName = histoFileName;
     fileName.replace(fileName.find("_ClockDelay"), 15, "_Latency");
+    la.CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
     la.initializeFiles(fileName, "Latency", la.histos);
 }
 
