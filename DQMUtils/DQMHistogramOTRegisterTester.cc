@@ -41,7 +41,7 @@ void DQMHistogramOTRegisterTester::book(TFile* theOutputFile, DetectorContainer&
 
     for(uint8_t bin = 0; bin < numberOfBins; ++bin) 
     {
-        if(isPS && bin>8) binLabel = "MPA";
+        if(isPS && bin>7) binLabel = "MPA";
         patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetBinLabel(bin + 1, Form("%s%d", binLabel.c_str(), bin));
         if (bin == numberOfBins-1) patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetBinLabel(bin + 1, "CIC");
 
