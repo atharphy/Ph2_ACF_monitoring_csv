@@ -20,7 +20,6 @@ GoodRunNumbers.dat
 core.*
 Results
 tags
-Calibrations
 .run_number.txt
 settings/connections_186.xml
 .ycm_extra_conf.py
