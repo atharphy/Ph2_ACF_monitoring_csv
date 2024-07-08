@@ -92,22 +92,24 @@ fDQMHistogramOTRegisterTester.fillPatternMatchingEfficiencyResults(fPatternMatch
 float OTRegisterTester::EfficiencyCalculator(Ph2_HwDescription::Chip *theChip, std::vector<std::string> theRegisters)
 {
     float theEfficiency = 0;
-    for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+    for(auto registerIterator : theRegisters)
     {
-        for(auto registerIterator : theRegisters) //= theReadoutChipRegisters.begin(); registerIterator != theReadoutChipRegisters.end())
+        for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
         {
+            auto thePattern = fPattern;
+            if(iteration %2 == 0 ) thePattern = ~fPattern;
             uint16_t theRegisterValueRead = 0;
             if(theChip->getFrontEndType() != FrontEndType::CIC2 )
             {
-                fReadoutChipInterface->WriteChipReg(theChip, registerIterator, fPattern);
+                fReadoutChipInterface->WriteChipReg(theChip, registerIterator, thePattern);
                 theRegisterValueRead = fReadoutChipInterface->ReadChipReg(theChip, registerIterator);
             }
             else
             {
-                fCicInterface->WriteChipReg(theChip, registerIterator, fPattern);
+                fCicInterface->WriteChipReg(theChip, registerIterator, thePattern);
                 theRegisterValueRead = fCicInterface->ReadChipReg(theChip, registerIterator);
             }
-            if (theRegisterValueRead == fPattern ) theEfficiency++;
+            if (theRegisterValueRead == thePattern ) theEfficiency++;
         }
     }
     return theEfficiency/=(fNumberOfIterations*theRegisters.size());
