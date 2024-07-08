@@ -195,10 +195,6 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
         {
             auto                  lineOutputVector        = theFWInterface->StubDebug(true, numberOfLines, false);
             std::vector<uint32_t> concatenatedStubPackage = mergeCICStubOuput(lineOutputVector, numberOfBytesInSinglePacket);
-            LOG(INFO) << BOLDRED << "Stub data received    " << getPatternPrintout(concatenatedStubPackage, numberOfBytesInSinglePacket) << RESET;
-            LOG(INFO) << BOLDYELLOW << "Stub pattern expected " << getPatternPrintout(thePatternAndEfficiencyList[0].first.getPattern(), numberOfBytesInSinglePacket) << RESET;
-            LOG(INFO) << BOLDYELLOW << "Stub pattern expected " << getPatternPrintout(thePatternAndEfficiencyList[1].first.getPattern(), numberOfBytesInSinglePacket) << RESET;
-            LOG(INFO) << BOLDYELLOW << "Stub pattern expected " << getPatternPrintout(thePatternAndEfficiencyList[2].first.getPattern(), numberOfBytesInSinglePacket) << RESET;
             matchAllPossibleStubPatterns(numberOfBytesInSinglePacket, numberOfLines, thePatternAndEfficiencyList, concatenatedStubPackage, theMPA);
         }
         ++stripClusterLine;

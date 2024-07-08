@@ -32,10 +32,11 @@ void DQMHistogramOTSSAtoSSAecv::book(TFile* theOutputFile, DetectorContainer& th
         for(int direction = 0; direction < numberOfDirections; ++direction)
         {
             bool isLeftToRight = direction == 0;
-            std::pair<int, int> ssaRange = getSSArange(isLeftToRight);
-            for(int ssaId = ssaRange.first; ssaId < ssaRange.second; ++ssaId)
+            std::pair<int, int> mpaRange = getMPArange(isLeftToRight);
+            for(int mpaId = mpaRange.first; mpaId < mpaRange.second; ++mpaId)
             {
-                theAxis->SetBinLabel(direction * (ssaRange.second - ssaRange.first) + (ssaId - ssaRange.first)  + 1, Form("SSA%d#rightarrowSSA%d", ssaId + (isLeftToRight ? -1 : +1), ssaId)); 
+                int ssaId = mpaId + (isLeftToRight ? +1 : -1);
+                theAxis->SetBinLabel(direction * (mpaRange.second - mpaRange.first) + (mpaId - mpaRange.first)  + 1, Form("SSA%d#rightarrowSSA%d", ssaId, mpaId)); 
             }
         }
     };
@@ -83,12 +84,12 @@ void DQMHistogramOTSSAtoSSAecv::fillStubPatternEfficiencyScan(DetectorDataContai
                                                                ->getSummary<HistContainer<TH2F>>()
                                                                .fTheHistogram;
                 bool isLeftToRight = injectedStrip == 1;
-                std::pair<int, int> ssaRange = getSSArange(isLeftToRight);
+                int direction = isLeftToRight ? 0 : 1;
+                std::pair<int, int> mpaRange = getMPArange(isLeftToRight);
 
-                for(int chipId = ssaRange.first; chipId < ssaRange.second; ++chipId) // not using the chipID because I want always to read all phases
+                for(int mpaId = mpaRange.first; mpaId < mpaRange.second; ++mpaId) 
                 {
-                    // attention!!! this is the MPA address
-                    patternMatchingEfficiencyHistogram->SetBinContent(clockEdge + 1, chipId - ssaRange.second + (isLeftToRight ? 0 : (ssaRange.second - ssaRange.first)) + 1, thePatternMatchingEfficiencyVector[chipId][1]);
+                    patternMatchingEfficiencyHistogram->SetBinContent(clockEdge + 1, direction * (mpaRange.second - mpaRange.first) + (mpaId - mpaRange.first)  + 1, thePatternMatchingEfficiencyVector[mpaId][1]);
                 }
             }
         }
@@ -133,19 +134,19 @@ bool DQMHistogramOTSSAtoSSAecv::fill(std::string& inputStream)
 }
 
 //========================================================================================================================
-std::pair<int, int> DQMHistogramOTSSAtoSSAecv::getSSArange(bool isLeftToRight) const
+std::pair<int, int> DQMHistogramOTSSAtoSSAecv::getMPArange(bool isLeftToRight) const
 {
-    std::pair<int, int> ssaRange;
+    std::pair<int, int> mpaRange;
     if(isLeftToRight)
     {
-        ssaRange.first = 0;
-        ssaRange.second = 7;
+        mpaRange.first = 0;
+        mpaRange.second = 7;
     }
     else
     {
-        ssaRange.first = 1;
-        ssaRange.second = 8;
+        mpaRange.first = 1;
+        mpaRange.second = 8;
     }
-    return ssaRange;
+    return mpaRange;
 }
 

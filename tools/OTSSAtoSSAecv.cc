@@ -88,13 +88,11 @@ void OTSSAtoSSAecv::runSSAtoSSAecvScan()
         std::vector<uint8_t> injectedStripList = {1, 118};
         for(auto injectedStrip: injectedStripList)
         {
-            if(injectedStrip == 1) continue;
             fCurrentStripInjected = injectedStrip;
 
             LOG(INFO) << BOLDGREEN << "Scanning SSA to SSA stub phases for " << (injectedStrip == 1 ? "Left to Right" : "Right to Left") << " lateral communication" << RESET;
             for(uint8_t clockEdge = 0; clockEdge < 2; ++clockEdge)
             {
-                if(clockEdge == 1) continue;
                 LOG(INFO) << BOLDGREEN << "SSA sampling clockEdge = " << +clockEdge << RESET;
 
                 resetPatternMatchingEfficiencyContainer();

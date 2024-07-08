@@ -999,7 +999,6 @@ bool MPA2Interface::injectNoiseClusters(ReadoutChip* pMPA, std::vector<std::tupl
         for(uint8_t colIndex = 0; colIndex < std::get<2>(theCluster); ++colIndex)
         {
             listOfRegisters.push_back({MPA2::getPixelRegisterName("ENFLAGS", std::get<0>(theCluster), std::get<1>(theCluster) + colIndex), 0x0}); // inverting polarity for the pixels to inject
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] enabling pixel " << std::get<1>(theCluster) + colIndex << std::endl;
         }
     }
 

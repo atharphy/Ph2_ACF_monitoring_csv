@@ -1175,7 +1175,6 @@ bool SSA2Interface::injectNoiseClusters(ReadoutChip* pSSA2, std::vector<std::tup
         {
             std::string registerName = SSA2::getStripRegisterName("ENFLAGS", std::get<1>(theCluster) + stripIndex);
             listOfRegisters.push_back({registerName, 0x23}); // Enabling the channel and inverting polarity
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] enabling strip " << std::get<1>(theCluster) + stripIndex << std::endl;
         }
     }
     // listOfRegisters.push_back({"mask_strip", 0xFF});
