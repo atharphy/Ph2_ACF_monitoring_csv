@@ -45,8 +45,8 @@ void OTRegisterTester::TestRegisters()
     bool isPS = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
     if(isPS) numberOfReadoutChips=NCHIPS_OT*2;
     int totalNumberOfChips = numberOfReadoutChips+1;
-    std::vector<std::string> theReadoutChipRegisters{"Threshold"};
-    std::vector<std::string> theCICRegisters{"scPhaseSelectB0i0"};
+    std::vector<std::string> theReadoutChipRegisters{"Threshold","TriggerLatency1","Vplus1&2","Channel001","Channel254"}; // CBCs chosen registers from both page 0 and page 1. PS registers below
+    std::vector<std::string> theCICRegisters{"scPhaseSelectB0i0","scPhaseSelectB2i5","scDllCurrentSet2","EXT_WA_DELAY14","CALIB_PATTERN3"}; // checking different blocks
     for(auto theBoard: *fDetectorContainer)
     {
         for(auto theOpticalGroup: *theBoard)
@@ -60,6 +60,13 @@ void OTRegisterTester::TestRegisters()
                 theRegisterMatchingEfficiency.assign(totalNumberOfChips,0);
                 for(auto theChip: *cHybrid)
                 {
+                    if(isPS)
+                    {
+                        if(theChip->getFrontEndType() == FrontEndType::MPA2)
+                            theReadoutChipRegisters = {"Threshold","ECM","LatencyRx320","PixelControl_R7","TrimDAC_C22_R3"}; 
+                        else // SSA2
+                            theReadoutChipRegisters = {"Threshold","control_3","ClockDeskewing_coarse","DigCalibPattern_L_S2"};
+                    }
                     theRegisterMatchingEfficiency[theChip->getId()] = EfficiencyCalculator(theChip, theReadoutChipRegisters); //theEfficiency;
                 }// chip loop
                 
