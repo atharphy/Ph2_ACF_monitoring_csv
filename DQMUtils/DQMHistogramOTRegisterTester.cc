@@ -25,26 +25,23 @@ void DQMHistogramOTRegisterTester::book(TFile* theOutputFile, DetectorContainer&
     // SoC utilities only - END
     bool isPS = theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
 
-    
-    int numberOfBins = 8;
-    std::string binLabel = "CBC";
+    int         numberOfBins = 8;
+    std::string binLabel     = "CBC";
     if(isPS)
     {
         numberOfBins = 16;
-        binLabel = "SSA";
+        binLabel     = "SSA";
     }
-    numberOfBins+=1; // adding CIC
-    HistContainer<TH1F> patternMatchingEfficiencyHistogram(
-        "RegisterMatchingEfficiency", "Register Matching Efficiency", numberOfBins, - 0.5, numberOfBins - 0.5);
+    numberOfBins += 1; // adding CIC
+    HistContainer<TH1F> patternMatchingEfficiencyHistogram("RegisterMatchingEfficiency", "Register Matching Efficiency", numberOfBins, -0.5, numberOfBins - 0.5);
     patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle("Chip");
     patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("Efficiency");
 
-    for(uint8_t bin = 0; bin < numberOfBins; ++bin) 
+    for(uint8_t bin = 0; bin < numberOfBins; ++bin)
     {
-        if(isPS && bin>7) binLabel = "MPA";
+        if(isPS && bin > 7) binLabel = "MPA";
         patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetBinLabel(bin + 1, Form("%s%d", binLabel.c_str(), bin));
-        if (bin == numberOfBins-1) patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetBinLabel(bin + 1, "CIC");
-
+        if(bin == numberOfBins - 1) patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetBinLabel(bin + 1, "CIC");
     }
     patternMatchingEfficiencyHistogram.fTheHistogram->SetMinimum(0);
     patternMatchingEfficiencyHistogram.fTheHistogram->SetMaximum(1.1);
@@ -83,7 +80,6 @@ void DQMHistogramOTRegisterTester::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================
@@ -104,13 +100,12 @@ bool DQMHistogramOTRegisterTester::fill(std::string& inputStream)
     if(thePatternMatchinEfficiencyContainerSerialization.attachDeserializer(inputStream))
     {
         // std::cout << "Matched OTverifyCICdataWord PatternMatchingEfficiency!!!!\n";
-        DetectorDataContainer theDetectorData =
-            thePatternMatchinEfficiencyContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer,  std::vector<float>>(fDetectorContainer);
+        DetectorDataContainer theDetectorData = thePatternMatchinEfficiencyContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, std::vector<float>>(fDetectorContainer);
         fillPatternMatchingEfficiencyResults(theDetectorData);
         return true;
     }
-    //the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
-    // for this stream)
+    // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
+    //  for this stream)
     return false;
     // SoC utilities only - END
 }

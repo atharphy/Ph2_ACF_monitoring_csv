@@ -34,14 +34,15 @@ class OTRegisterTester : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
     DetectorDataContainer fPatternMatchingEfficiencyContainer;
+
   protected:
     size_t  fNumberOfIterations{1000};
     uint8_t fPattern{0xAA};
     void    TestRegisters();
-    float   EfficiencyCalculator(Ph2_HwDescription::Chip *theChip, std::vector<std::string> theRegisters);
+    float   EfficiencyCalculator(Ph2_HwDescription::Chip* theChip, std::vector<std::string> theRegisters);
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTRegisterTester fDQMHistogramOTRegisterTester;
