@@ -18,6 +18,7 @@
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
 #include "tools/OTSSAtoMPAecv.h"
+#include "tools/OTSSAtoSSAecv.h"
 #include "tools/OTTemperature.h"
 #include "tools/OTVTRXLightOff.h"
 #include "tools/OTalignBoardDataWord.h"
@@ -190,6 +191,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTMPAtoCICecv>("PS Module", "MPAtoCICecv");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoMPAecv>("PS Module", "SSAtoMPAecv");
+
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoSSAecv>("PS Module", "SSAtoSSAecv");
 
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");
