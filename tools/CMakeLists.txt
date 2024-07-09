@@ -5,20 +5,27 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     MESSAGE(STATUS "    ${BoldYellow}TOOLS${Reset} [stand-alone]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    # Includes
+    ############
+    # Includes #
+    ############
     include_directories(${grammars})
     include_directories(${PROJECT_SOURCE_DIR})
     include_directories(${PROJECT_SOURCE_DIR}/Utils)
 
-    # Library dirs
-    # none
+    ################
+    # Library dirs #
+    ################
 
-    # Find source files
+    #####################
+    # Find source files #
+    #####################
     file(GLOB HEADERS *.h)
     file(GLOB SOURCES *.cc)
 
-    # Boost also needs to be linked
-    #  include_directories(${Boost_INCLUDE_DIRS})
+    #########
+    # Boost #
+    #########
+    # include_directories(${Boost_INCLUDE_DIRS})
     # link_directories(${Boost_LIBRARY_DIRS})
     set(LIBS ${LIBS} boost_serialization ${Boost_ARCHIVE_LIBRARY} ${Boost_SERIALIZATION_LIBRARY} ${Boost_MULTIPRECISION_LIBRARY})
 
@@ -63,31 +70,35 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
     endif(${PH2_TCUSB_FOUND})
 
-    #last but not least, find root and link against it
+    ########
+    # ROOT #
+    ########
     if(NoDataShipping)
         if(${ROOT_FOUND})
             include_directories(${ROOT_INCLUDE_DIRS})
             set(LIBS ${LIBS} ${ROOT_LIBRARIES})
             if(NoDataShipping)
-                set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
+              set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
             endif()
 
-            #check for THttpServer
+            # Check for THttpServer
             if(${ROOT_HAS_HTTP})
-                set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
-                set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
+              set(LIBS ${LIBS} ${ROOT_RHTTP_LIBRARY})
+              set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{HttpFlag}")
             endif()
         endif()
     endif()
 
     set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils Ph2_System)
     if(NoDataShipping)
-        set(LIBS ${LIBS} Ph2_DQMUtils)
+      set(LIBS ${LIBS} Ph2_DQMUtils)
     endif()
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/tools *.cc)
 
-    # Build eudaq producer
+    #########
+    # EUDAQ #
+    #########
     if (USE_EUDAQ)
         set(LIBS ${LIBS} ${EUDAQ_LIB})
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{EuDaqFlag}")
@@ -102,7 +113,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
 
-    # Add the library
+    ###################
+    # Add the library #
+    ###################
     add_library(Ph2_Tools STATIC ${SOURCES} ${HEADERS})
 
     foreach(sourcefile ${BINARIES})
@@ -127,10 +140,6 @@ else()
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS "    ${BoldYellow}TOOLS${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/tools/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
-
-    # include_directories(${UHAL_DIR}/uhal/include)
-    # include_directories(${UHAL_DIR}/log/include)
-    # include_directories(${UHAL_DIR}/grammars/include)
 
     include_directories(${CACTUS_INCLUDEDIR})
     include_directories(${Protobuf_INCLUDE_DIRS})

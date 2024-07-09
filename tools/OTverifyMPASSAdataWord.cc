@@ -126,6 +126,21 @@ void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCI
     theL1Efficiency /= fNumberOfIterations;
 }
 
+void OTverifyMPASSAdataWord::setStubLogicParameters(ReadoutChip* theMPA)
+{
+    fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 0);
+    fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 0);
+    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM10", fBendingToCode.at(0));
+    fReadoutChipInterface->WriteChipReg(theMPA, "CodeDM8", 0);
+    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM76", 0);
+    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM54", 0);
+    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM32", 0);
+    fReadoutChipInterface->WriteChipReg(theMPA, "CodeP12", 0);
+    fReadoutChipInterface->WriteChipReg(theMPA, "CodeP34", 0);
+    fReadoutChipInterface->WriteChipReg(theMPA, "CodeP56", 0);
+    fReadoutChipInterface->WriteChipReg(theMPA, "CodeP78", 0);
+}
+
 void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdForCIC, D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket)
 {
     ReadoutChip* theSSA = nullptr;
@@ -149,16 +164,12 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
                                        ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()[theMPA->getId() % 8];
 
     fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 0); // Use normal stub mode
-    fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 0);
-    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM10", fBendingCode); // bending = 0 will output 101
-    fReadoutChipInterface->WriteChipReg(theMPA, "CodeDM8", 0);
-    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM76", 0);
-    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM54", 0);
-    fReadoutChipInterface->WriteChipReg(theMPA, "CodeM32", 0);
-    fReadoutChipInterface->WriteChipReg(theMPA, "CodeP12", 0);
-    fReadoutChipInterface->WriteChipReg(theMPA, "CodeP34", 0);
-    fReadoutChipInterface->WriteChipReg(theMPA, "CodeP56", 0);
-    fReadoutChipInterface->WriteChipReg(theMPA, "CodeP78", 0);
+
+    fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte0", 0);
+    fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte1", 0);
+    fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte2", 0);
+    fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte3", 0);
+    setStubLogicParameters(theMPA);
 
     auto theStripClusterList = produceStripClusterList();
     static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theSSA, theStripClusterList);
@@ -248,11 +259,11 @@ PatternMatcher OTverifyMPASSAdataWord::produceStubPatternMatcher(const std::vect
     {
         for(auto theStub: theStubVector)
         {
-            thePattern.addToPattern(0x0, 0x0, 3);                       // BX offset
-            thePattern.addToPattern(chipIdForCIC, 0x7, 3);              // Chip ID
-            thePattern.addToPattern(std::get<1>(theStub) + 2, 0xFF, 8); // seed
-            thePattern.addToPattern(fBendingCode, 0x7, 3);              // bending
-            thePattern.addToPattern(std::get<0>(theStub), 0xF, 4);      // z
+            thePattern.addToPattern(0x0, 0x0, 3);                                     // BX offset
+            thePattern.addToPattern(chipIdForCIC, 0x7, 3);                            // Chip ID
+            thePattern.addToPattern(std::get<1>(theStub) + 2, 0xFF, 8);               // seed
+            thePattern.addToPattern(fBendingToCode.at(std::get<2>(theStub)), 0x7, 3); // bending
+            thePattern.addToPattern(std::get<0>(theStub), 0xF, 4);                    // z
         }
     }
 

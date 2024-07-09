@@ -21,7 +21,9 @@ include(FetchContent)
 
 set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
 
-# Get the latest commit hash
+##############################
+# Get the latest commit hash #
+##############################
 execute_process(
     COMMAND git rev-parse HEAD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -43,7 +45,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     cmake_minimum_required(VERSION 3.17)
     project(Ph2_ACF)
 
-    # Set the output directory
+    ############################
+    # Set the output directory #
+    ############################
     if ( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
        MESSAGE( STATUS "${BoldRed}" )
        MESSAGE( FATAL_ERROR "${Reset}In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there. You may need to remove CMakeCache.txt." )
@@ -69,7 +73,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
        )
     # ---------- Setup output Directories -------------------------
 
-    # Set the cmake module path
+    #############################
+    # Set the cmake module path #
+    #############################
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
     set(CompileForShep "$ENV{CompileForShep}")
@@ -85,9 +91,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     MESSAGE(STATUS "    CompileForShep = ${BoldRed}${CompileForShep}${Reset}")
     MESSAGE(STATUS "    CompileForHerd = ${BoldRed}${CompileForHerd}${Reset}")
     MESSAGE(STATUS "    NoDataShipping = ${BoldRed}${NoDataShipping}${Reset}")
-
-    # If it's a recent gcc compiler, then let's add some
-    # compiler options to avoid warnings promoted to errors
 
     set (GCC_NOERROR_FLAGS " -Wno-error=unused-result -Wno-error=deprecated-declarations -Wno-error=parentheses -Wno-error=misleading-indentation -Wno-error=unused-function -Wno-error=class-memaccess -Wno-error=implicit-fallthrough")
     set (GCC_12_NOERROR_FLAGS "-Wno-error=range-loop-construct -Wno-error=int-in-bool-context -Wno-error=nonnull")
@@ -105,29 +108,31 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     set (CMAKE_CXX_FLAGS "-O3 -fopenmp -fno-omit-frame-pointer -Werror -pedantic -Wno-unused-parameter -Wno-ignored-qualifiers -Wno-missing-field-initializers -Wall -Werror=return-type -Wextra -Winit-self -Wno-unused-local-typedefs -Woverloaded-virtual -Wnon-virtual-dtor -Wdelete-non-virtual-dtor ${GCC_NOERROR_FLAGS} -pthread -Wcpp -fPIC ${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE")
     if(NoDataShipping)
-        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     endif()
 
-
-    # Check for external dependences
+    ##################################
+    # Check for external dependences #
+    ##################################
     message("--")
     message("--     ${BoldCyan}#### Checking for external Dependencies ####${Reset}")
     if(CompileForShep OR NoDataShipping)
-        # ROOT
-        find_package(ROOT COMPONENTS RHTTP)
-        if(ROOT_FOUND)
-            # Check for THttpServer
-            if(EXISTS ${ROOT_RHTTP_LIBRARY})
-                message(STATUS "    Found THttp Server support - enabling compiler flags")
-                set(ROOT_HAS_HTTP TRUE)
-            elseif()
-                message(STATUS "    ROOT built without THttp Server - disabling compiler flags")
-            endif()
-            # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -")
-            message(STATUS "    Using ROOT version ${ROOT_VERSION}")
-        endif(ROOT_FOUND)
+      ########
+      # ROOT #
+      ########
+      find_package(ROOT COMPONENTS RHTTP)
+      if(ROOT_FOUND)
+        # Check for THttpServer
+        if(EXISTS ${ROOT_RHTTP_LIBRARY})
+          message(STATUS "    Found THttp Server support - enabling compiler flags")
+          set(ROOT_HAS_HTTP TRUE)
+        elseif()
+          message(STATUS "    ROOT built without THttp Server - disabling compiler flags")
+        endif()
+        message(STATUS "    Using ROOT version ${ROOT_VERSION}")
+      endif(ROOT_FOUND)
     else()
-    message(STATUS "Building without ROOT")
+      message(STATUS "Building without ROOT")
     endif()
 
     # AMC13
@@ -160,11 +165,12 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
             set(PH2_TCUSB_LIBRARY_DIRS ${EXTERNAL_INSTALL_LOCATION}/src/ext_tcusb/lib)
             set(PH2_TCUSB_LIBRARIES ${EXTERNAL_INSTALL_LOCATION}/src/ext_tcusb/lib/libcmsph2_tcusb.so  ${EXTERNAL_INSTALL_LOCATION}/src/ext_tcusb/lib/libcmsph2_tcusb_utils.so)
         endif(NOT PH2_TCUSB_FOUND)
-
     endif($ENV{CompileWithTCUSB})
 
-    # EUDAQ
-    if ($ENV{CompileWithEUDAQ}) # Asked for EUDAQ
+    #########
+    # EUDAQ #
+    #########
+    if ($ENV{CompileWithEUDAQ})
         message(STATUS "Building with EUDAQ")
         set(USE_EUDAQ ON)
         if(NOT DEFINED ENV{EUDAQDIR})
@@ -187,7 +193,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
     endif($ENV{CompileWithEUDAQ})
 
-    # ZeroMQ
+    ##########
+    # ZeroMQ #
+    ##########
     find_package(ZMQ)
     if(ZMQ_FOUND)
         find_package(PH2_USBINSTLIB)
@@ -195,7 +203,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         endif(PH2_USBINSTLIB_FOUND)
     endif(ZMQ_FOUND)
 
-    # Boost
+    #########
+    # Boost #
+    #########
     # To use a local installtion of BOOST
     #set(BOOST_ROOT "" CACHE PATH "Boost library path")
     #set(Boost_NO_SYSTEM_PATHS on CACHE BOOL "Do not search system for Boost")
@@ -252,42 +262,6 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     MESSAGE(STATUS "    ${BoldYellow}PH2_ACF${Reset} [otsdaq]: [${BoldCyan}$ENV{PH2ACF_BASE_DIR}/CMakeLists.txt${Reset}]")
     MESSAGE(STATUS " ")
 
-    # AMC13
-    # if(${CACTUS_AMC13_FOUND})
-    #     message(STATUS "    Enabling AMC13 component")
-    # endif(${CACTUS_AMC13_FOUND})
-
-    # Antenna
-    # find_package(PH2_ANTENNA)
-    # if(PH2_ANTENNA_FOUND)
-    #     message(STATUS "    Building the Antenna components")
-    # endif(PH2_ANTENNA_FOUND)
-
-    # ZeroMQ
-    # find_package(ZMQ)
-    # if(ZMQ_FOUND)
-    #     find_package(PH2_USBINSTLIB)
-    #     if(PH2_USBINSTLIB_FOUND)
-    #     endif(PH2_USBINSTLIB_FOUND)
-    # endif(ZMQ_FOUND)
-
-    # EUDAQ
-    # if(${USE_EUDAQ})
-    #     set(USE_EUDAQ ON)
-    #     include_directories($ENV{EUDAQDIR}/include $ENV{EUDAQDIR}/user/tlu/module/src)
-    #     set(EUDAQ_LIB -L$ENV{EUDAQLIB} eudaq_core)
-    #     message(STATUS "EUDAQ variable is defined. EUDAQ directory: ${BoldCyan}$ENV{EUDAQDIR}${Reset}")
-    # else(${USE_EUDAQ})
-    #     message(STATUS "EUDAQ variable is not defined. Building without EUDAQ producer")
-    # endif(${USE_EUDAQ})
-
-    # list(APPEND CMAKE_MODULE_PATH "${PH2_ACF_CMAKE_DIR}/cmake")
-
-    # find_package (CACTUS REQUIRED)
-    # if (CACTUS_FOUND)
-    #     message(STATUS "CACTUS FOUND: ${CACTUS_FOUND}")
-    # endif (CACTUS_FOUND)
-
     set(CompileForShep true)
     set(CompileForHerd false)
     set(NoDataShipping false)
@@ -297,11 +271,10 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         EXTRA_FLAGS -DELPP_THREAD_SAFE
     )
 
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR})    
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
     include_directories(${CACTUS_INCLUDEDIR})
 
     add_subdirectory(tools)
-    #add_subdirectory(ProductionToolsIT)
     add_subdirectory(DQMUtils)
     add_subdirectory(Utils)
     add_subdirectory(RootUtils)
