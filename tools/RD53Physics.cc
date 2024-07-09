@@ -106,8 +106,8 @@ void Physics::Stop()
     CalibBase::saveChipRegisters(doUpdateChip);
 
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers (i.e. events): " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded events (i.e. bunch crossings): " << BOLDYELLOW << numberOfEventsPerRun << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of corrupted bunch crossings: " << BOLDYELLOW << std::setprecision(3) << corruptedEventCounter << " ("
               << 1. * corruptedEventCounter / numberOfEventsPerRun * 100. << "%)" << std::setprecision(-1) << RESET;
 }
@@ -124,15 +124,15 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 
     LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
-    // ###############################
-    // # Initialize output directory #
-    // ###############################
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
-
     // ##########################
     // # Initialize calibration #
     // ##########################
     Physics::ConfigureCalibration();
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
 
     // #########################################
     // # Initialize histogram and binary files #
@@ -246,7 +246,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
 
         if(RD53Event::EvtErrorHandler(static_cast<RD53Event*>(event)->eventStatus) == false)
         {
-            LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << evtCounter << RESET;
+            LOG(ERROR) << BOLDBLUE << "\t--> Corrupted bunch crossing n. " << BOLDYELLOW << evtCounter << RESET;
             corruptedEventCounter++;
             RD53Event::PrintEvents({*static_cast<RD53Event*>(event)});
         }

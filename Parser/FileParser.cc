@@ -164,7 +164,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
 
     os << BOLDBLUE << "|"
        << "----" << pBeBordNode.name() << " --> " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute(COMMON_ID_ATTRIBUTE_NAME).value() << BOLDBLUE
-       << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDBLUE << ", EventType: " << BOLDYELLOW << cEventTypeString << BOLDBLUE << ", Configure: " << BOLDYELLOW << configureBoardFlag << RESET
+       << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDBLUE << ", EventType: " << BOLDYELLOW << cEventTypeString << BOLDBLUE << ", Configure: " << BOLDYELLOW << +configureBoardFlag << RESET
        << std::endl;
 
     pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child(BEBOARD_CONNECTION_NODE_NAME);
@@ -1418,9 +1418,15 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
 
 void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os)
 {
-    std::vector<std::string> listOfStringSettings{
-        "RegNameDAC1", "RegNameDAC2", "DataOutputDir", "KIRA_ID", "OTinjectionOccupancyScan_ListOfInjectedPulses", "OTMPAtoCICecv_ListOfMPAslvsCurrents", "OTSSAtoMPAecv_ListOfSSAslvsCurrents"};
-    pugi::xml_document doc;
+    std::vector<std::string> listOfStringSettings{"RegNameDAC1",
+                                                  "RegNameDAC2",
+                                                  "DataOutputDir",
+                                                  "KIRA_ID",
+                                                  "OTinjectionOccupancyScan_ListOfInjectedPulses",
+                                                  "OTMPAtoCICecv_ListOfMPAslvsCurrents",
+                                                  "OTSSAtoMPAecv_ListOfSSAslvsCurrents",
+                                                  "OTSSAtoSSAecv_ListOfSSAslvsCurrents"};
+    pugi::xml_document       doc;
     openHWconfig(pFilename, doc);
 
     if(doc.child(HW_DESCRIPTION_NODE_NAME).child(SETTINGS_NODE_NAME) == 0) LOG(WARNING) << BOLDRED << "No -Settings- tag found in XML file: " << BOLDYELLOW << pFilename << RESET;
