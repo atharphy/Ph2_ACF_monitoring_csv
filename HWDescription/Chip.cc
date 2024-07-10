@@ -219,7 +219,8 @@ void Chip::clearSnapshot()
 
 void Chip::reinitializeFreeRegisters()
 {
-    auto pointerToLastValidValue = std::remove_if(fListOfFreeRegisters.begin(), fListOfFreeRegisters.end(), [](std::pair<std::regex, RegisterType> theRegister) { return (theRegister.second == RegisterType::User); });
+    auto pointerToLastValidValue =
+        std::remove_if(fListOfFreeRegisters.begin(), fListOfFreeRegisters.end(), [](std::pair<std::regex, RegisterType> theRegister) { return (theRegister.second == RegisterType::User); });
     fListOfFreeRegisters.erase(pointerToLastValidValue, fListOfFreeRegisters.end());
 }
 

@@ -1396,7 +1396,7 @@ bool CicInterface::ConfigureDriveStrength(Chip* pChip, uint8_t pDriveStrength)
         }
         cRegValue = this->ReadChipReg(pChip, cRegName);
         LOG(DEBUG) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec << "[ drive strength set to "
-                  << +pDriveStrength << " ]" << RESET;
+                   << +pDriveStrength << " ]" << RESET;
     }
     return cSuccess;
 }

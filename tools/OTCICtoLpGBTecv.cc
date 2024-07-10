@@ -80,7 +80,7 @@ void OTCICtoLpGBTecv::runECV()
                         std::string pintout = "            RX PHASE: ";
                         for(uint8_t phase = lpGBTPhaseStart; phase <= lpGBTPhaseEnd; phase++)
                         {
-                            pintout += (" " + std::to_string(+phase)); 
+                            pintout += (" " + std::to_string(+phase));
                             if(phase != lpGBTPhaseStart) std::cout << "\x1b[A";
                             LOG(INFO) << BOLDMAGENTA << pintout << RESET;
                             std::map<uint8_t, std::vector<uint8_t>> theGroupsAndChannels = theOpticalGroup->getLpGBTrxGroupsAndChannels();
