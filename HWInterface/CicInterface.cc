@@ -1386,7 +1386,7 @@ bool CicInterface::ConfigureDriveStrength(Chip* pChip, uint8_t pDriveStrength)
     {
         auto cValue = (cRegValue & 0xF8) | cIterator->second; //(cRxTermination << 4) | (cClkTermination << 3) | cIterator->second;
         cSuccess    = this->WriteChipReg(pChip, cRegName, cValue);
-        LOG(INFO) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec << RESET;
         if(!cSuccess)
         {
             LOG(INFO) << BOLDRED << "Could not configure drive strength on CIC output pads on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
@@ -1395,7 +1395,7 @@ bool CicInterface::ConfigureDriveStrength(Chip* pChip, uint8_t pDriveStrength)
             return false;
         }
         cRegValue = this->ReadChipReg(pChip, cRegName);
-        LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec << "[ drive strength set to "
+        LOG(DEBUG) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec << "[ drive strength set to "
                   << +pDriveStrength << " ]" << RESET;
     }
     return cSuccess;

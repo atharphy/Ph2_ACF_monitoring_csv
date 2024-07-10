@@ -29,7 +29,7 @@
 #include "tools/OTinjectionOccupancyScan.h"
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/OTverifyCICdataWord.h"
-#include "tools/OTverifyECVlpGBTCIC.h"
+#include "tools/OTCICtoLpGBTecv.h"
 #include "tools/OTverifyMPASSAdataWord.h"
 #include "tools/PSPhysics.h"
 #include "tools/PedeNoise.h"
@@ -69,7 +69,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              ECVLinkAlignmentOT>("Outer Tracker", "ecv");
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyECVlpGBTCIC>("Outer Tracker", "OTLpGBTtoCICecv");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICtoLpGBTecv>("Outer Tracker", "OTCICtoLpGBTecv");
     Register<OTalignLpGBTinputs>("Outer Tracker", "OTalignLpGBTinputs");
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
     Register<OTalignBoardDataWord, OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");
@@ -193,6 +193,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoMPAecv>("PS Module", "SSAtoMPAecv");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoSSAecv>("PS Module", "SSAtoSSAecv");
+
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTSSAtoMPAecv, OTSSAtoSSAecv, OTalignLpGBTinputsForBypass, OTMPAtoCICecv>("PS Module", "PSecv");
 
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");

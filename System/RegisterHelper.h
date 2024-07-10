@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <vector>
+#include <iostream>
+#include "HWDescription/FrontEndDescription.h"
 
 namespace Ph2_HwInterface
 {
@@ -42,6 +45,15 @@ class RegisterHelper
   private:
     void clearSnapshot();
     void resetFreeRegisters();
+    template<typename C, typename T>
+    void printModifiedRegisters(const C* theContainer, const std::vector<std::pair<std::string, T>> registerMap)
+    {
+      std::cout << Ph2_HwDescription::FrontEndDescription::getFrontEndName(theContainer->getFrontEndType()) << " id " << +theContainer->getId() << std::endl;
+      for(const auto& registerNameAndValue: registerMap)
+      {
+        std::cout<< "Setting back " << registerNameAndValue.first << " to 0x" << std::hex << +registerNameAndValue.second << std::dec << std::endl;
+      }
+    }
 
     DetectorContainer*                                        fDetectorContainer{nullptr};
     Ph2_HwInterface::BeBoardInterface*                        fBeBoardInterface{nullptr};
