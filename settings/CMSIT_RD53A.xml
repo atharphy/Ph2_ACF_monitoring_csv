@@ -8,7 +8,7 @@
     -->
 
     <!-- Frontend chip configuration -->
-    <OpticalGroup Id="0" FMCId="L12">
+     <OpticalGroup Id="0" enable="1" FMCId="L12">
       <!--
       <lpGBT_Files path="${PWD}" />
       <lpGBT_ConfigFile fileName="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv" />

@@ -7,7 +7,7 @@
     <CDCE configure="0" clockRate="320"/>
 
     <!-- skeleton -->
-    <OpticalGroup Id="0" FMCId="L12" reset="1">
+     <OpticalGroup Id="0" enable="1" FMCId="L12" reset="1">
         <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
 
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
@@ -46,7 +46,7 @@
         </Hybrid>
     </OpticalGroup>
 
-    <OpticalGroup Id="1" FMCId="L12" reset="1">
+     <OpticalGroup Id="1" enable="1" FMCId="L12" reset="1">
         <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
         <!--<NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/> Only for PS-->
 

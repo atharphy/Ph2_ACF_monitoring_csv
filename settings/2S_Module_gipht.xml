@@ -5,7 +5,7 @@
     <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.35.2:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="1" clockRate="320"/>
 
-    <OpticalGroup Id="0" FMCId="L12" reset="1">
+     <OpticalGroup Id="0" enable="1" FMCId="L12" reset="1">
         <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
         <!--<NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/> Only for PS-->
 

@@ -117,6 +117,7 @@ void FileDumper::dumpOpticalGroupConfigurationFile(pugi::xml_node theMotherNode,
 {
     pugi::xml_node theOpticalGroupNode                             = theMotherNode.append_child(OPTICALGROUP_NODE_NAME);
     theOpticalGroupNode.append_attribute(COMMON_ID_ATTRIBUTE_NAME) = std::to_string(theOpticalGroup->getId()).c_str();
+    theOpticalGroupNode.append_attribute(COMMON_ENABLE_ATTRIBUTE_NAME) = "1"; // If it was disabled, it would not be here
     auto theOpticalGroupFMCidAttribute                             = theOpticalGroupNode.append_attribute(OPTICALGROUP_FMCID_ATTRIBUTE_NAME);
     auto theFMCid                                                  = theOpticalGroup->getFMCId();
     if(theFMCid == 8)
@@ -165,7 +166,7 @@ void FileDumper::dumpHybridConfigurationFile(pugi::xml_node theMotherNode, Hybri
 {
     pugi::xml_node theHybridNode                                 = theMotherNode.append_child(HYBRID_NODE_NAME);
     theHybridNode.append_attribute(COMMON_ID_ATTRIBUTE_NAME)     = std::to_string(theHybrid->getId() % 2).c_str();
-    theHybridNode.append_attribute(HYBRID_ENABLE_ATTRIBUTE_NAME) = "1"; // If it was disabled, it would not be here
+    theHybridNode.append_attribute(COMMON_ENABLE_ATTRIBUTE_NAME) = "1"; // If it was disabled, it would not be here
     theHybridNode.append_attribute(COMMON_RESET_ATTRIBUTE_NAME)  = (theHybrid->getReset() > 0) ? "1" : "0";
 
     auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
