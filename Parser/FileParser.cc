@@ -966,9 +966,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                         throw std::runtime_error("CIC edgeSelect can only be either 0 or 1");
                                 }
                                 LOG(INFO) << BOLDBLUE << " Global settings " << cNameGlobal << RESET;
-                                std::vector<std::string> cAttributes{"clockFrequency", "enableBend", "enableLastLine", "enableSparsification"};
-                                std::vector<std::string> cRegNames{"", "BEND_SEL", "N_OUTPUT_TRIGGER_LINES_SEL", "CBC_SPARSIFICATION_SEL"};
-                                std::vector<uint16_t>    cBitPositions{1, 2, 3, 4};
+                                std::vector<std::string> cAttributes{"enableBend", "enableLastLine", "enableSparsification"};
+                                std::vector<std::string> cRegNames{"BEND_SEL", "N_OUTPUT_TRIGGER_LINES_SEL", "CBC_SPARSIFICATION_SEL"};
+                                std::vector<uint16_t>    cBitPositions{2, 3, 4};
                                 for(auto it = cRegNames.begin(); it != cRegNames.end(); ++it)
                                 {
                                     auto     cIndex       = std::distance(cRegNames.begin(), it);
