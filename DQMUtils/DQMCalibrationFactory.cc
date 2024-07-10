@@ -13,7 +13,7 @@
 #include "DQMUtils/DQMHistogramOTMPAtoCICecv.h"
 #include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
 #include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
-#include "DQMUtils/DQMHistogramOTRegisterTester.cc"
+#include "DQMUtils/DQMHistogramOTRegisterTester.h"
 #include "DQMUtils/DQMHistogramOTSSAtoMPAecv.h"
 #include "DQMUtils/DQMHistogramOTSSAtoSSAecv.h"
 #include "DQMUtils/DQMHistogramOTalignBoardDataWord.h"
