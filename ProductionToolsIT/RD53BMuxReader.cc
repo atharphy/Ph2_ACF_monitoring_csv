@@ -106,7 +106,7 @@ void RD53BMuxReader::run()
                     {
                         chipInterface->WriteChipReg(cChip, "DAC_NTC", idac);
                         const auto adc = chipInterface->ReadChipADC(cChip, "NTC_CURR");
-                        if((adc > 0) && (adc< 4096))
+                        if((adc > 0) && (adc < 4096))
                         {
                             n += 1;
                             x_sum += idac;
@@ -117,10 +117,11 @@ void RD53BMuxReader::run()
                     }
                     float offset = (x2_sum * y_sum - x_sum * xy_sum) / (x2_sum * n - x_sum * x_sum);
                     chipInterface->WriteChipReg(cChip, "DAC_NTC", 100); // back to the default value
-		    if (offset >50){
-		      LOG(INFO) << "ignoring offset " << offset;
-		      offset=0;
-		    }
+                    if(offset > 50)
+                    {
+                        LOG(INFO) << "ignoring offset " << offset;
+                        offset = 0;
+                    }
 
                     // raw ADC: for a list of "observables" see RD53BInterface::getADCobservable  in HWInterface/RD53BInterface.cc
                     const auto sampleNtimes                    = cChip->getRegItem("SAMPLE_N_TIMES").fValue;
