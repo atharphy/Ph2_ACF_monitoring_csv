@@ -149,6 +149,10 @@
     <Setting name="KiraCalibrationIntensityStart" > 29000 </Setting>
     <Setting name="KiraCalibrationIntensityStop" > 31500 </Setting>
     <Setting name="KiraCalibrationIntensityStep" > 100 </Setting>
+
+    <Setting name="OTRegisterTester_NumberOfIterations">1000</Setting>
+    <Setting name="OTRegisterTester_Pattern">0xAA</Setting>
+    
     <Setting name="OTverifyBoardDataWord_NumberOfIterations">100</Setting>
     <Setting name="OTCICtoLpGBTecv_NumberOfIterations">1000</Setting>
     <Setting name="OTalignLpGBTinputs_NumberOfAlignmentIterations">100</Setting>
