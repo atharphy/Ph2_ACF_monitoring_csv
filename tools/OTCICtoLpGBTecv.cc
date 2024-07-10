@@ -1,4 +1,4 @@
-#include "tools/OTverifyECVlpGBTCIC.h"
+#include "tools/OTCICtoLpGBTecv.h"
 #include "HWDescription/BeBoard.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "System/RegisterHelper.h"
@@ -8,47 +8,47 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-std::string OTverifyECVlpGBTCIC::fCalibrationDescription = "Performs the Electric Chain Validation between the lpGBT and the CIC using the algorithms implemented in OTverifyBoardDataWord.";
+std::string OTCICtoLpGBTecv::fCalibrationDescription = "Performs the Electric Chain Validation between the lpGBT and the CIC using the algorithms implemented in OTverifyBoardDataWord.";
 
-OTverifyECVlpGBTCIC::OTverifyECVlpGBTCIC() : OTverifyBoardDataWord() {}
+OTCICtoLpGBTecv::OTCICtoLpGBTecv() : OTverifyBoardDataWord() {}
 
-OTverifyECVlpGBTCIC::~OTverifyECVlpGBTCIC() {}
+OTCICtoLpGBTecv::~OTCICtoLpGBTecv() {}
 
-void OTverifyECVlpGBTCIC::Initialise(void)
+void OTCICtoLpGBTecv::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fNumberOfIterations              = findValueInSettings<double>("OTverifyECVlpGBTCIC_NumberOfIterations", 100);
+    fNumberOfIterations              = findValueInSettings<double>("OTCICtoLpGBTecv_NumberOfIterations", 1000);
     size_t             numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
     std::vector<float> initialEmptyVector(numberOfLines, 0);
     ContainerFactory::copyAndInitHybrid<std::vector<float>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer, initialEmptyVector);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
-    fDQMHistogramOTverifyECVlpGBTCIC.book(fResultFile, *fDetectorContainer, fSettingsMap);
+    fDQMHistogramOTCICtoLpGBTecv.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 }
 
-void OTverifyECVlpGBTCIC::ConfigureCalibration() {}
+void OTCICtoLpGBTecv::ConfigureCalibration() {}
 
-void OTverifyECVlpGBTCIC::Running()
+void OTCICtoLpGBTecv::Running()
 {
-    LOG(INFO) << BOLDMAGENTA << "Starting OTverifyECVlpGBTCIC measurement." << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Starting OTCICtoLpGBTecv measurement." << RESET;
     Initialise();
     runECV();
-    LOG(INFO) << BOLDGREEN << "Done with OTverifyECVlpGBTCIC." << RESET;
+    LOG(INFO) << BOLDGREEN << "Done with OTCICtoLpGBTecv." << RESET;
     Reset();
 }
 
-void OTverifyECVlpGBTCIC::runECV()
+void OTCICtoLpGBTecv::runECV()
 {
     uint8_t clockPolarityStart = 0, clockPolarityEnd = 1;
     uint8_t cicClockStrengthStart = 1, cicClockStrengthEnd = 7;
     uint8_t cicSLVSStrengthStart = 1, cicSLVSStrengthEnd = 5;
     uint8_t lpGBTPhaseStart = 0, lpGBTPhaseEnd = 14;
 
-    LOG(INFO) << BOLDYELLOW << "OTverifyECVlpGBTCIC::runIntegrityTest ... start integrity test" << RESET;
+    LOG(INFO) << BOLDYELLOW << "OTCICtoLpGBTecv::runIntegrityTest ... start integrity test" << RESET;
 
     for(auto theBoard: *fDetectorContainer)
     {
@@ -57,8 +57,10 @@ void OTverifyECVlpGBTCIC::runECV()
         {
             for(uint8_t clockPolarity = clockPolarityStart; clockPolarity <= clockPolarityEnd; clockPolarity++)
             {
+                LOG(INFO) << BOLDMAGENTA << "CLOCK POLARITY: " << +clockPolarity << RESET;
                 for(uint8_t clockStrength = cicClockStrengthStart; clockStrength <= cicClockStrengthEnd; clockStrength++)
                 {
+                    LOG(INFO) << BOLDMAGENTA << "    CLOCK STRENGTH: " << +clockStrength << RESET;
                     static_cast<D19clpGBTInterface*>(flpGBTInterface)->setCICClockPolarityAndStrength(theOpticalGroup->flpGBT, clockPolarity, clockStrength, theOpticalGroup);
 
                     uint8_t numberOfBytesInSinglePacket = getNumberOfBytesInSinglePacket(theOpticalGroup);
@@ -68,18 +70,19 @@ void OTverifyECVlpGBTCIC::runECV()
 
                     for(uint8_t cicStrength = cicSLVSStrengthStart; cicStrength <= cicSLVSStrengthEnd; cicStrength++)
                     {
+                        LOG(INFO) << BOLDMAGENTA << "        CIC STRENGTH: " << +cicStrength << RESET;
                         for(auto cHybrid: *theOpticalGroup)
                         {
                             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                             fCicInterface->ConfigureDriveStrength(cCic, cicStrength);
                         }
 
+                        std::string pintout = "            RX PHASE: ";
                         for(uint8_t phase = lpGBTPhaseStart; phase <= lpGBTPhaseEnd; phase++)
                         {
-                            LOG(INFO) << BOLDRED << "CLOCK POLARITY:\t" << +clockPolarity << RESET;
-                            LOG(INFO) << BOLDRED << "CLOCK STRENGTH:\t" << +clockStrength << RESET;
-                            LOG(INFO) << BOLDRED << "CIC STRENGTH:\t" << +cicStrength << RESET;
-                            LOG(INFO) << BOLDRED << "RX PHASE:\t" << +phase << RESET;
+                            pintout += (" " + std::to_string(+phase));
+                            if(phase != lpGBTPhaseStart) std::cout << "\x1b[A";
+                            LOG(INFO) << BOLDMAGENTA << pintout << RESET;
                             std::map<uint8_t, std::vector<uint8_t>> theGroupsAndChannels = theOpticalGroup->getLpGBTrxGroupsAndChannels();
                             auto&                                   clpGBT               = theOpticalGroup->flpGBT;
                             flpGBTInterface->ConfigureAllRxPhase(clpGBT, phase, theGroupsAndChannels);
@@ -90,7 +93,7 @@ void OTverifyECVlpGBTCIC::runECV()
                                                                                ->getObject(theOpticalGroup->getId())
                                                                                ->getObject(theHybrid->getId())
                                                                                ->getSummary<std::vector<float>>();
-                                LOG(INFO) << BOLDMAGENTA << "Running runStubIntegrityTest on Hybrid " << +theHybrid->getId() << RESET;
+                                // LOG(INFO) << BOLDMAGENTA << "Running runStubIntegrityTest on Hybrid " << +theHybrid->getId() << RESET;
                                 prepareHybridForStubIntegrityTest(theHybrid);
 
                                 for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
@@ -113,7 +116,7 @@ void OTverifyECVlpGBTCIC::runECV()
                                     }
                                 }
 
-                                LOG(INFO) << BOLDMAGENTA << "Running L1StubIntegrityTeston Hybrid " << +theHybrid->getId() << RESET;
+                                // LOG(INFO) << BOLDMAGENTA << "Running L1StubIntegrityTest on Hybrid " << +theHybrid->getId() << RESET;
                                 uint32_t theTriggerFrequency = 10; // higher rate reduces L1 efficiency
                                 prepareFWForL1IntegrityTest(theBoard, theTriggerFrequency);
                                 prepareHybridForL1IntegrityTest(theHybrid);
@@ -176,11 +179,11 @@ void OTverifyECVlpGBTCIC::runECV()
 
                             } // hybrid loop
 #ifdef __USE_ROOT__
-                            fDQMHistogramOTverifyECVlpGBTCIC.fillEfficiency(clockPolarity, clockStrength, cicStrength, phase, fPatternMatchingEfficiencyContainer);
+                            fDQMHistogramOTCICtoLpGBTecv.fillEfficiency(clockPolarity, clockStrength, cicStrength, phase, fPatternMatchingEfficiencyContainer);
 #else
                             if(fDQMStreamerEnabled)
                             {
-                                ContainerSerialization theECVlpGBTCICContainerSerialization("OTverifyECVlpGBTCICEfficiencyHistogram");
+                                ContainerSerialization theECVlpGBTCICContainerSerialization("OTCICtoLpGBTecvEfficiencyHistogram");
                                 theECVlpGBTCICContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fPatternMatchingEfficiencyContainer, clockPolarity, clockStrength, cicStrength, phase);
                             }
 #endif
@@ -204,20 +207,20 @@ void OTverifyECVlpGBTCIC::runECV()
     }
 }
 
-void OTverifyECVlpGBTCIC::Stop(void)
+void OTCICtoLpGBTecv::Stop(void)
 {
-    LOG(INFO) << "Stopping OTverifyECVlpGBTCIC measurement.";
+    LOG(INFO) << "Stopping OTCICtoLpGBTecv measurement.";
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: processing the histograms
-    fDQMHistogramOTverifyECVlpGBTCIC.process();
+    fDQMHistogramOTCICtoLpGBTecv.process();
 #endif
     SaveResults();
     closeFileHandler();
-    LOG(INFO) << "OTverifyECVlpGBTCIC stopped.";
+    LOG(INFO) << "OTCICtoLpGBTecv stopped.";
 }
 
-void OTverifyECVlpGBTCIC::Pause() {}
+void OTCICtoLpGBTecv::Pause() {}
 
-void OTverifyECVlpGBTCIC::Resume() {}
+void OTCICtoLpGBTecv::Resume() {}
 
-void OTverifyECVlpGBTCIC::Reset() { fRegisterHelper->restoreSnapshot(); }
+void OTCICtoLpGBTecv::Reset() { fRegisterHelper->restoreSnapshot(); }
