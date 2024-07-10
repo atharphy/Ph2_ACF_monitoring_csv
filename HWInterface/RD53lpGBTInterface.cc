@@ -83,6 +83,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
 {
     const std::string filePathCSV = "${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv"; // @CONST@
     this->setBoard(pChip->getBeBoardId());
+    const auto& lpGBTRegMap = pChip->getRegMap();
 
     // #####################
     // # Make reverted map #
@@ -146,29 +147,47 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     // ####################################################
     // # Programming registers as from configuration file #
     // ####################################################
+    std::map<std::string, uint8_t> registerBlackList = {{"_I2CMasterID", 0}, {"_I2CFreq", 0}, {"_I2CSlaveAddress", 0}, {"_I2CRegAddress", 0}, {"_I2CRegData", 0}};
+    bool                           doI2C             = false;
+
     LOG(INFO) << GREEN << "Initializing registers of LpGBT: " << BOLDYELLOW << pChip->getId() << RESET;
-    const auto& lpGBTRegMap = pChip->getRegMap();
     for(const auto& cRegItem: lpGBTRegMap)
         if(cRegItem.second.fPrmptCfg == true)
         {
-            LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << cRegItem.first << BOLDBLUE << " = " << BOLDYELLOW << cRegItem.second.fValue << RESET;
-
-            if(cRegItem.first.find("_phase"))
+            if(registerBlackList.find(cRegItem.first) == registerBlackList.end())
             {
-                lpGBTInterface::ConfigureRxPhase(
-                    pChip, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(4, 1)))}, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(5, 1)))}, cRegItem.second.fValue);
-                static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
+                LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << cRegItem.first << BOLDBLUE << " = " << BOLDYELLOW << cRegItem.second.fValue << RESET;
+
+                if(cRegItem.first.find("_phase"))
+                {
+                    lpGBTInterface::ConfigureRxPhase(
+                        pChip, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(4, 1)))}, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(5, 1)))}, cRegItem.second.fValue);
+                    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
+                }
+                else
+                    try
+                    {
+                        RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+                    }
+                    catch(const std::exception& e)
+                    {
+                        LOG(WARNING) << BOLDRED << "Warning: " << BOLDYELLOW << e.what() << RESET;
+                    }
             }
             else
-                try
-                {
-                    RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
-                }
-                catch(const std::exception& e)
-                {
-                    LOG(WARNING) << BOLDRED << "Warning: " << BOLDYELLOW << e.what() << RESET;
-                }
+            {
+                registerBlackList[cRegItem.first] = cRegItem.second.fValue;
+                doI2C                             = true;
+            }
         }
+
+    if(doI2C == true)
+        RD53lpGBTInterface::WriteI2C(pChip,
+                                     registerBlackList["_I2CMasterID"],
+                                     registerBlackList["_I2CSlaveAddress"],
+                                     (registerBlackList["_I2CRegData"] << 8) | registerBlackList["_I2CRegAddress"],
+                                     2,
+                                     registerBlackList["_I2CFreq"]);
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
     this->PrintChipMode(pChip);

@@ -83,10 +83,10 @@ nav:
       - 'Software setup': innerTracker/SWsetup.md
       - 'FPGA configuration': innerTracker/FPGAcfg.md
       - 'Running Ph2_ACF': innerTracker/Running.md
-      - 'IT Configuration':
+      - 'IT Configuration'
         - 'Config file': innerTracker/ConfigFile.md
         - 'Voltage settings': innerTracker/VoltageSettings.md
-      - 'IT Calibrations:':
+      - 'IT Calibrations':
         - 'Scans':
           - 'innerTracker/calibrations/PixelAlive.md'
           - 'innerTracker/calibrations/SCurve.md'
