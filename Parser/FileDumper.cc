@@ -115,11 +115,11 @@ void FileDumper::dumpBoardConfigurationFile(pugi::xml_node theMotherNode, BeBoar
 
 void FileDumper::dumpOpticalGroupConfigurationFile(pugi::xml_node theMotherNode, OpticalGroup* theOpticalGroup)
 {
-    pugi::xml_node theOpticalGroupNode                             = theMotherNode.append_child(OPTICALGROUP_NODE_NAME);
-    theOpticalGroupNode.append_attribute(COMMON_ID_ATTRIBUTE_NAME) = std::to_string(theOpticalGroup->getId()).c_str();
+    pugi::xml_node theOpticalGroupNode                                 = theMotherNode.append_child(OPTICALGROUP_NODE_NAME);
+    theOpticalGroupNode.append_attribute(COMMON_ID_ATTRIBUTE_NAME)     = std::to_string(theOpticalGroup->getId()).c_str();
     theOpticalGroupNode.append_attribute(COMMON_ENABLE_ATTRIBUTE_NAME) = "1"; // If it was disabled, it would not be here
-    auto theOpticalGroupFMCidAttribute                             = theOpticalGroupNode.append_attribute(OPTICALGROUP_FMCID_ATTRIBUTE_NAME);
-    auto theFMCid                                                  = theOpticalGroup->getFMCId();
+    auto theOpticalGroupFMCidAttribute                                 = theOpticalGroupNode.append_attribute(OPTICALGROUP_FMCID_ATTRIBUTE_NAME);
+    auto theFMCid                                                      = theOpticalGroup->getFMCId();
     if(theFMCid == 8)
         theOpticalGroupFMCidAttribute = OPTICALGROUP_FMCID_ATTRIBUTE_L8_VALUE;
     else if(theFMCid == 12)
