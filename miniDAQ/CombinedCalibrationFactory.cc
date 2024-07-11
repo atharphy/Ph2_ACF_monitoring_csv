@@ -11,12 +11,14 @@
 #include "tools/LatencyScan.h"
 #include "tools/OTCICBX0Alignment.h"
 #include "tools/OTCICphaseAlignment.h"
+#include "tools/OTCICtoLpGBTecv.h"
 #include "tools/OTCICwordAlignment.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTCicBypassTest.h"
 #include "tools/OTMPAtoCICecv.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
+#include "tools/OTRegisterTester.h"
 #include "tools/OTSSAtoMPAecv.h"
 #include "tools/OTSSAtoSSAecv.h"
 #include "tools/OTTemperature.h"
@@ -29,7 +31,6 @@
 #include "tools/OTinjectionOccupancyScan.h"
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/OTverifyCICdataWord.h"
-#include "tools/OTverifyECVlpGBTCIC.h"
 #include "tools/OTverifyMPASSAdataWord.h"
 #include "tools/PSPhysics.h"
 #include "tools/PedeNoise.h"
@@ -69,7 +70,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              ECVLinkAlignmentOT>("Outer Tracker", "ecv");
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyECVlpGBTCIC>("Outer Tracker", "OTLpGBTtoCICecv");
+
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICtoLpGBTecv>("Outer Tracker", "OTCICtoLpGBTecv");
+    Register<OTRegisterTester>("Outer Tracker", "OTRegisterTester");
+
     Register<OTalignLpGBTinputs>("Outer Tracker", "OTalignLpGBTinputs");
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
     Register<OTalignBoardDataWord, OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");
@@ -193,6 +197,9 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoMPAecv>("PS Module", "SSAtoMPAecv");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoSSAecv>("PS Module", "SSAtoSSAecv");
+
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTSSAtoMPAecv, OTSSAtoSSAecv, OTalignLpGBTinputsForBypass, OTMPAtoCICecv>("PS Module",
+                                                                                                                                                                                           "PSecv");
 
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");

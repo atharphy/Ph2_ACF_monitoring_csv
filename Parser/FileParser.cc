@@ -220,6 +220,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
 
 void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, BeBoard* pBoard, std::ostream& os)
 {
+    bool cEnable = pOpticalGroupNode.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool();
+    if(!cEnable) return;
+
     std::string cFilePath         = "";
     std::string theConfigFilePath = "";
     uint32_t    cOpticalGroupId   = pOpticalGroupNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
@@ -842,13 +845,13 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
 
 void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* pOpticalGroup, std::ostream& os, BeBoard* pBoard)
 {
-    bool cEnable = pHybridNode.attribute(HYBRID_ENABLE_ATTRIBUTE_NAME).as_bool();
+    bool cEnable = pHybridNode.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool();
 
     if(cEnable)
     {
         os << BOLDBLUE << "|       |"
            << "----" << pHybridNode.name() << " --> " << BOLDBLUE << pHybridNode.first_attribute().name() << ": " << BOLDYELLOW << pHybridNode.attribute(COMMON_ID_ATTRIBUTE_NAME).value() << BOLDBLUE
-           << ", Enable: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute(HYBRID_ENABLE_ATTRIBUTE_NAME).value()) << BOLDBLUE << RESET << std::endl;
+           << ", Enable: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).value()) << BOLDBLUE << RESET << std::endl;
 
         Hybrid* cHybrid;
         if(pBoard->getBoardType() == BoardType::RD53)
@@ -966,9 +969,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                         throw std::runtime_error("CIC edgeSelect can only be either 0 or 1");
                                 }
                                 LOG(INFO) << BOLDBLUE << " Global settings " << cNameGlobal << RESET;
-                                std::vector<std::string> cAttributes{"clockFrequency", "enableBend", "enableLastLine", "enableSparsification"};
-                                std::vector<std::string> cRegNames{"", "BEND_SEL", "N_OUTPUT_TRIGGER_LINES_SEL", "CBC_SPARSIFICATION_SEL"};
-                                std::vector<uint16_t>    cBitPositions{1, 2, 3, 4};
+                                std::vector<std::string> cAttributes{"enableBend", "enableLastLine", "enableSparsification"};
+                                std::vector<std::string> cRegNames{"BEND_SEL", "N_OUTPUT_TRIGGER_LINES_SEL", "CBC_SPARSIFICATION_SEL"};
+                                std::vector<uint16_t>    cBitPositions{2, 3, 4};
                                 for(auto it = cRegNames.begin(); it != cRegNames.end(); ++it)
                                 {
                                     auto     cIndex       = std::distance(cRegNames.begin(), it);

@@ -6,12 +6,14 @@
 #include "DQMUtils/DQMHistogramLatencyScan.h"
 #include "DQMUtils/DQMHistogramOTCICBX0Alignment.h"
 #include "DQMUtils/DQMHistogramOTCICphaseAlignment.h"
+#include "DQMUtils/DQMHistogramOTCICtoLpGBTecv.h"
 #include "DQMUtils/DQMHistogramOTCICwordAlignment.h"
 #include "DQMUtils/DQMHistogramOTCMNoise.h"
 #include "DQMUtils/DQMHistogramOTCicBypassTest.h"
 #include "DQMUtils/DQMHistogramOTMPAtoCICecv.h"
 #include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
 #include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
+#include "DQMUtils/DQMHistogramOTRegisterTester.h"
 #include "DQMUtils/DQMHistogramOTSSAtoMPAecv.h"
 #include "DQMUtils/DQMHistogramOTSSAtoSSAecv.h"
 #include "DQMUtils/DQMHistogramOTalignBoardDataWord.h"
@@ -22,7 +24,6 @@
 #include "DQMUtils/DQMHistogramOTinjectionOccupancyScan.h"
 #include "DQMUtils/DQMHistogramOTverifyBoardDataWord.h"
 #include "DQMUtils/DQMHistogramOTverifyCICdataWord.h"
-#include "DQMUtils/DQMHistogramOTverifyECVlpGBTCIC.h"
 #include "DQMUtils/DQMHistogramOTverifyMPASSAdataWord.h"
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #include "DQMUtils/DQMHistogramPedestalEqualization.h"
@@ -69,7 +70,10 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCICBX0Alignment,
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord>("alignment");
-    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyECVlpGBTCIC>("OTLpGBTtoCICecv");
+
+    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCICtoLpGBTecv>("OTCICtoLpGBTecv");
+    Register<DQMMetadataOT, DQMHistogramOTRegisterTester>("OTRegisterTester");
+
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTinjectionDelayOptimization>("injectionDelayOptimization");
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTPSADCCalibration>("ADCBiasCalibration");
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTMeasureOccupancy>("measureOccupancy");

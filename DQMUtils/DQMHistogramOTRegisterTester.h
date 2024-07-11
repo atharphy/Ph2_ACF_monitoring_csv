@@ -1,12 +1,12 @@
 /*!
-        \file                DQMHistogramOTverifyECVlpGBTCIC.h
-        \brief               DQM class for OTverifyECVlpGBTCIC
+        \file                DQMHistogramOTRegisterTester.h
+        \brief               DQM class for OTRegisterTester
         \author              Irene Zoi
-        \date                23/05/24
+        \date                01/07/24
 */
 
-#ifndef DQMHistogramOTverifyECVlpGBTCIC_h_
-#define DQMHistogramOTverifyECVlpGBTCIC_h_
+#ifndef DQMHistogramOTRegisterTester_h_
+#define DQMHistogramOTRegisterTester_h_
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -14,21 +14,21 @@
 class TFile;
 
 /*!
- * \class DQMHistogramOTverifyECVlpGBTCIC
- * \brief Class for OTverifyECVlpGBTCIC monitoring histograms
+ * \class DQMHistogramOTRegisterTester
+ * \brief Class for OTRegisterTester monitoring histograms
  */
-class DQMHistogramOTverifyECVlpGBTCIC : public DQMHistogramBase
+class DQMHistogramOTRegisterTester : public DQMHistogramBase
 {
   public:
     /*!
      * constructor
      */
-    DQMHistogramOTverifyECVlpGBTCIC();
+    DQMHistogramOTRegisterTester();
 
     /*!
      * destructor
      */
-    ~DQMHistogramOTverifyECVlpGBTCIC();
+    ~DQMHistogramOTRegisterTester();
 
     /*!
      * \brief Book histograms
@@ -44,7 +44,6 @@ class DQMHistogramOTverifyECVlpGBTCIC : public DQMHistogramBase
      * needed if you do not fo into the SoC \param dataBuffer : vector of char with the TCP datastream
      */
     bool fill(std::string& inputStream) override;
-    void fillEfficiency(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, DetectorDataContainer& theEfficiencyContainer);
 
     /*!
      * \brief process : do something with the histogram like colors, fit, drawing canvases, etc
@@ -56,9 +55,10 @@ class DQMHistogramOTverifyECVlpGBTCIC : public DQMHistogramBase
      */
     void reset(void) override;
 
+    void fillPatternMatchingEfficiencyResults(DetectorDataContainer& thePatternMatchingEfficiencyContainer);
+
   private:
     DetectorContainer*    fDetectorContainer;
-    DetectorDataContainer fEfficiencyPolarity0;
-    DetectorDataContainer fEfficiencyPolarity1;
+    DetectorDataContainer fPatternMatchingEfficiencyHistogramContainer;
 };
 #endif
