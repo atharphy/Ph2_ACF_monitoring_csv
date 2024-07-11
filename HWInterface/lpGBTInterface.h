@@ -43,7 +43,7 @@ namespace Ph2_HwInterface
 {
 struct lpGBTClockConfig
 {
-    uint8_t fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1;
+    uint8_t fClkFreq = 4, fClkDriveStr = 1, fClkInvert = 1, fI2CFreq = 2;
     uint8_t fClkPreEmphWidth = 0, fClkPreEmphMode = 0, fClkPreEmphStr = 0;
 };
 

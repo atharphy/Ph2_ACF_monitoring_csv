@@ -94,7 +94,7 @@ void Gain::sendData()
         ContainerSerialization theOccupancySerialization("GainOccupancy");
         for(const auto theOccContainer: detectorContainerVector)
         {
-            uint16_t deltaVcal = dacList[index++] - offset;
+            uint16_t deltaVcal = dacList[index++] - offset + (stopValue - startValue) / (2 * nSteps);
             theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer, deltaVcal);
         }
     }
@@ -397,7 +397,7 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
 void Gain::fillHisto()
 {
 #ifdef __USE_ROOT__
-    for(auto i = 0u; i < dacList.size(); i++) histos->fillOccupancy(*detectorContainerVector[i], dacList[i] - offset);
+    for(auto i = 0u; i < dacList.size(); i++) histos->fillOccupancy(*detectorContainerVector[i], dacList[i] - offset + (stopValue - startValue) / (2 * nSteps));
     histos->fillGain(*theGainContainer);
 #endif
 }

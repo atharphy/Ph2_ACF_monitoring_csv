@@ -147,7 +147,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     // ####################################################
     // # Programming registers as from configuration file #
     // ####################################################
-    std::map<std::string, uint8_t> registerBlackList = {{"_I2CMasterID", 0}, {"_I2CFreq", 0}, {"_I2CSlaveAddress", 0}, {"_I2CRegAddress", 0}, {"_I2CRegData", 0}};
+    std::map<std::string, int16_t> registerBlackList = {{"_I2CMasterID", -1}, {"_I2CFreq", -1}, {"_I2CSlaveAddress", -1}, {"_I2CRegAddress", -1}, {"_I2CRegData", -1}};
     bool                           doI2C             = false;
 
     LOG(INFO) << GREEN << "Initializing registers of LpGBT: " << BOLDYELLOW << pChip->getId() << RESET;
@@ -182,12 +182,23 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
         }
 
     if(doI2C == true)
-        RD53lpGBTInterface::WriteI2C(pChip,
-                                     registerBlackList["_I2CMasterID"],
-                                     registerBlackList["_I2CSlaveAddress"],
-                                     (registerBlackList["_I2CRegData"] << 8) | registerBlackList["_I2CRegAddress"],
-                                     2,
-                                     registerBlackList["_I2CFreq"]);
+    {
+        if(registerBlackList["_I2CRegData"] >= 0)
+            RD53lpGBTInterface::WriteI2C(pChip,
+                                         registerBlackList["_I2CMasterID"],
+                                         registerBlackList["_I2CSlaveAddress"],
+                                         (registerBlackList["_I2CRegData"] << 8) | registerBlackList["_I2CRegAddress"],
+                                         2,
+                                         registerBlackList["_I2CFreq"]);
+        else
+        {
+            RD53lpGBTInterface::WriteI2C(pChip, registerBlackList["_I2CMasterID"], registerBlackList["_I2CSlaveAddress"], registerBlackList["_I2CRegAddress"], 1, registerBlackList["_I2CFreq"]);
+            const auto i2Cread = RD53lpGBTInterface::ReadI2C(pChip, registerBlackList["_I2CMasterID"], registerBlackList["_I2CSlaveAddress"], 1, registerBlackList["_I2CFreq"]);
+            LOG(INFO) << GREEN << "Reading from LpGBT I2C-slave device addr 0x" << BOLDYELLOW << std::hex << registerBlackList["_I2CSlaveAddress"] << std::dec << RESET << GREEN
+                      << " value = " << BOLDYELLOW << i2Cread << RESET;
+        }
+    }
+    // lpGBTClockConfig.fI2CFreq;
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
     this->PrintChipMode(pChip);
