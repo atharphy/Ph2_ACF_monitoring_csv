@@ -108,8 +108,8 @@ void ThrAdjustment::localConfigure(const std::string& histoFileName, int current
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<ThresholdHistograms>(histoFileName, "ThrAdjustment", histos, currentRun, PixelAlive::saveBinaryData);
-    CalibBase::initializeFiles<PixelAliveHistograms>(histoFileName, "PixelAlive", PixelAlive::histos);
+    CalibBase::initializeFiles(histoFileName, "ThrAdjustment", histos, currentRun, PixelAlive::saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "PixelAlive", PixelAlive::histos);
 }
 
 void ThrAdjustment::run()

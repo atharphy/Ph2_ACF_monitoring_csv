@@ -44,7 +44,7 @@ class CalibBase : public Tool
     void Stop() override;
     void ConfigureCalibration() override;
 
-    virtual void   localConfigure(const std::string& histoFileName = "", int currentRun = -1);
+    virtual void   localConfigure(const std::string& histoFileName, int currentRun);
     virtual void   run()                      = 0;
     virtual void   draw(bool saveData = true) = 0;
     virtual size_t getNumberIterations() { return 0; };

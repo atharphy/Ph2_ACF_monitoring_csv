@@ -134,7 +134,7 @@ void OTCicBypassTest::injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA)
     static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface->WriteChipRegBits(theMPA, "Control_1", 0x2, "Mask", 0x03);
 
     // fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 2); // Use pixel mode to exclude possible SSA communication issues
-    // fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 31);
+    // fReadoutChipInterface->WriteChipReg(theMPA, "StubWindow", 8);
     // fReadoutChipInterface->WriteChipReg(theMPA, "CodeM10", 0x0); // bending = 0 will ouput 0
 
     // // col, row, cluster size

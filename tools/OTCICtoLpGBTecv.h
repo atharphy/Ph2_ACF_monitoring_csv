@@ -1,29 +1,29 @@
 /*!
  *
- * \file OTverifyECVlpGBTCIC.h
- * \brief OTverifyECVlpGBTCIC class
+ * \file OTCICtoLpGBTecv.h
+ * \brief OTCICtoLpGBTecv class
  * \author Irene Zoi, built on Fabio Ravera's OTverifyBoardDataWord and inspired by Stefan Maier's ECVLinkAlignmentOT
  *
  * \date 23/05/24
  *
  */
 
-#ifndef OTverifyECVlpGBTCIC_h__
-#define OTverifyECVlpGBTCIC_h__
+#ifndef OTCICtoLpGBTecv_h__
+#define OTCICtoLpGBTecv_h__
 
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
-#include "DQMUtils/DQMHistogramOTverifyECVlpGBTCIC.h"
+#include "DQMUtils/DQMHistogramOTCICtoLpGBTecv.h"
 #endif
 
-class OTverifyECVlpGBTCIC : public OTverifyBoardDataWord
+class OTCICtoLpGBTecv : public OTverifyBoardDataWord
 {
   public:
-    OTverifyECVlpGBTCIC();
-    ~OTverifyECVlpGBTCIC();
+    OTCICtoLpGBTecv();
+    ~OTCICtoLpGBTecv();
 
     void Initialise(void);
 
@@ -56,7 +56,7 @@ class OTverifyECVlpGBTCIC : public OTverifyBoardDataWord
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
-    DQMHistogramOTverifyECVlpGBTCIC fDQMHistogramOTverifyECVlpGBTCIC;
+    DQMHistogramOTCICtoLpGBTecv fDQMHistogramOTCICtoLpGBTecv;
 #endif
 };
 

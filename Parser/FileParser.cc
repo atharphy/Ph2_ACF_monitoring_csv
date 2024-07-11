@@ -220,6 +220,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
 
 void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, BeBoard* pBoard, std::ostream& os)
 {
+    bool cEnable = pOpticalGroupNode.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool();
+    if(!cEnable) return;
+
     std::string cFilePath         = "";
     std::string theConfigFilePath = "";
     uint32_t    cOpticalGroupId   = pOpticalGroupNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
@@ -256,7 +259,8 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         else if(static_cast<std::string>(theChild.name()) == LPGBT_NODE_NAME)
         {
             std::string chipFileName = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
-            os << BOLDBLUE << "|\t|----OpticalGroup --> Id: " << BOLDYELLOW << cOpticalGroupId << BOLDBLUE << ", FMC Id: " << BOLDYELLOW << cFMCId << RESET << std::endl;
+            os << BOLDBLUE << "|\t|----OpticalGroup --> Id: " << BOLDYELLOW << cOpticalGroupId << BOLDBLUE << ", Enable: " << BOLDYELLOW << cEnable << BOLDBLUE << ", FMC Id: " << BOLDYELLOW << cFMCId
+               << RESET << std::endl;
             os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << chipFileName << RESET << std::endl;
             os << BOLDBLUE << "|\t|\t|---- ADC Config. File: " << BOLDYELLOW << theConfigFilePath << RESET << std::endl;
             uint8_t cChipId      = theChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
@@ -842,13 +846,13 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
 
 void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* pOpticalGroup, std::ostream& os, BeBoard* pBoard)
 {
-    bool cEnable = pHybridNode.attribute(HYBRID_ENABLE_ATTRIBUTE_NAME).as_bool();
+    bool cEnable = pHybridNode.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool();
 
     if(cEnable)
     {
         os << BOLDBLUE << "|       |"
            << "----" << pHybridNode.name() << " --> " << BOLDBLUE << pHybridNode.first_attribute().name() << ": " << BOLDYELLOW << pHybridNode.attribute(COMMON_ID_ATTRIBUTE_NAME).value() << BOLDBLUE
-           << ", Enable: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute(HYBRID_ENABLE_ATTRIBUTE_NAME).value()) << BOLDBLUE << RESET << std::endl;
+           << ", Enable: " << BOLDYELLOW << expandEnvironmentVariables(pHybridNode.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).value()) << BOLDBLUE << RESET << std::endl;
 
         Hybrid* cHybrid;
         if(pBoard->getBoardType() == BoardType::RD53)
@@ -966,9 +970,9 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                         throw std::runtime_error("CIC edgeSelect can only be either 0 or 1");
                                 }
                                 LOG(INFO) << BOLDBLUE << " Global settings " << cNameGlobal << RESET;
-                                std::vector<std::string> cAttributes{"clockFrequency", "enableBend", "enableLastLine", "enableSparsification"};
-                                std::vector<std::string> cRegNames{"", "BEND_SEL", "N_OUTPUT_TRIGGER_LINES_SEL", "CBC_SPARSIFICATION_SEL"};
-                                std::vector<uint16_t>    cBitPositions{1, 2, 3, 4};
+                                std::vector<std::string> cAttributes{"enableBend", "enableLastLine", "enableSparsification"};
+                                std::vector<std::string> cRegNames{"BEND_SEL", "N_OUTPUT_TRIGGER_LINES_SEL", "CBC_SPARSIFICATION_SEL"};
+                                std::vector<uint16_t>    cBitPositions{2, 3, 4};
                                 for(auto it = cRegNames.begin(); it != cRegNames.end(); ++it)
                                 {
                                     auto     cIndex       = std::distance(cRegNames.begin(), it);
@@ -1418,9 +1422,15 @@ void FileParser::parseCbcSettings(pugi::xml_node pCbcNode, ReadoutChip* pCbc, st
 
 void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSettingsMap, std::ostream& os)
 {
-    std::vector<std::string> listOfStringSettings{
-        "RegNameDAC1", "RegNameDAC2", "DataOutputDir", "KIRA_ID", "OTinjectionOccupancyScan_ListOfInjectedPulses", "OTMPAtoCICecv_ListOfMPAslvsCurrents", "OTSSAtoMPAecv_ListOfSSAslvsCurrents"};
-    pugi::xml_document doc;
+    std::vector<std::string> listOfStringSettings{"RegNameDAC1",
+                                                  "RegNameDAC2",
+                                                  "DataOutputDir",
+                                                  "KIRA_ID",
+                                                  "OTinjectionOccupancyScan_ListOfInjectedPulses",
+                                                  "OTMPAtoCICecv_ListOfMPAslvsCurrents",
+                                                  "OTSSAtoMPAecv_ListOfSSAslvsCurrents",
+                                                  "OTSSAtoSSAecv_ListOfSSAslvsCurrents"};
+    pugi::xml_document       doc;
     openHWconfig(pFilename, doc);
 
     if(doc.child(HW_DESCRIPTION_NODE_NAME).child(SETTINGS_NODE_NAME) == 0) LOG(WARNING) << BOLDRED << "No -Settings- tag found in XML file: " << BOLDYELLOW << pFilename << RESET;

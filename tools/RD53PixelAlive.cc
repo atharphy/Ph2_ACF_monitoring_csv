@@ -113,7 +113,7 @@ void PixelAlive::localConfigure(const std::string& histoFileName, int currentRun
     // ###################################################
     // # Initialize histograms and binary and root files #
     // ###################################################
-    CalibBase::initializeFiles<PixelAliveHistograms>(histoFileName, "PixelAlive", histos, currentRun, saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "PixelAlive", histos, currentRun, saveBinaryData);
 }
 
 void PixelAlive::run()

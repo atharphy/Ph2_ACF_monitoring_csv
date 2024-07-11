@@ -77,8 +77,8 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
-    static const std::set<std::string> registerClkDataDelayList = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
-    bool                               doWriteClkDataDelay      = false;
+    const std::set<std::string> registerClkDataDelayList = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
+    bool                        doWriteClkDataDelay      = false;
 
     for(auto i = 0u; i < registerClkDataDelayList.size(); i++)
     {
@@ -97,7 +97,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // #############################################
     // # Programmig global registers: pre-emphasis #
     // #############################################
-    static const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
+    const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
         if((cRegItem.second.fPrmptCfg == true) && (registerPreEmphasisWhiteList.find(cRegItem.first) != registerPreEmphasisWhiteList.end()))
@@ -106,35 +106,35 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const std::set<std::string> registerBlackList = {"RESISTORI2V",
-                                                            "ADC_OFFSET_VOLT",
-                                                            "ADC_MAXIMUM_VOLT",
-                                                            "TEMPSENS_IDEAL_FACTOR",
-                                                            "TEMPSENS_IDEAL_FACTOR_ANA",
-                                                            "TEMPSENS_IDEAL_FACTOR_DIG",
-                                                            "RADSENS_IDEAL_FACTOR",
-                                                            "RADSENS_IDEAL_FACTOR_ANA",
-                                                            "RADSENS_IDEAL_FACTOR_DIG",
-                                                            "TEMPSENS_OFFSET_TOP",
-                                                            "TEMPSENS_OFFSET_BOTTOM",
-                                                            "SAMPLE_N_TIMES",
-                                                            "WAIT_MUX_CONFIG",
-                                                            "VREF_ADC"}; // @CONST@
-    static const std::set<std::string> registerWhiteList = {"DAC_PREAMP_L_LIN",
-                                                            "DAC_PREAMP_R_LIN",
-                                                            "DAC_PREAMP_TL_LIN",
-                                                            "DAC_PREAMP_TR_LIN",
-                                                            "DAC_PREAMP_T_LIN",
-                                                            "DAC_PREAMP_M_LIN",
-                                                            "DAC_FC_LIN",
-                                                            "DAC_KRUM_CURR_LIN",
-                                                            "DAC_REF_KRUM_LIN",
-                                                            "DAC_COMP_LIN",
-                                                            "DAC_COMP_TA_LIN",
-                                                            "DAC_GDAC_L_LIN",
-                                                            "DAC_GDAC_R_LIN",
-                                                            "DAC_GDAC_M_LIN",
-                                                            "DAC_LDAC_LIN"}; // @CONST@
+    const std::set<std::string> registerBlackList = {"RESISTORI2V",
+                                                     "ADC_OFFSET_VOLT",
+                                                     "ADC_MAXIMUM_VOLT",
+                                                     "TEMPSENS_IDEAL_FACTOR",
+                                                     "TEMPSENS_IDEAL_FACTOR_ANA",
+                                                     "TEMPSENS_IDEAL_FACTOR_DIG",
+                                                     "RADSENS_IDEAL_FACTOR",
+                                                     "RADSENS_IDEAL_FACTOR_ANA",
+                                                     "RADSENS_IDEAL_FACTOR_DIG",
+                                                     "TEMPSENS_OFFSET_TOP",
+                                                     "TEMPSENS_OFFSET_BOTTOM",
+                                                     "SAMPLE_N_TIMES",
+                                                     "WAIT_MUX_CONFIG",
+                                                     "VREF_ADC"}; // @CONST@
+    const std::set<std::string> registerWhiteList = {"DAC_PREAMP_L_LIN",
+                                                     "DAC_PREAMP_R_LIN",
+                                                     "DAC_PREAMP_TL_LIN",
+                                                     "DAC_PREAMP_TR_LIN",
+                                                     "DAC_PREAMP_T_LIN",
+                                                     "DAC_PREAMP_M_LIN",
+                                                     "DAC_FC_LIN",
+                                                     "DAC_KRUM_CURR_LIN",
+                                                     "DAC_REF_KRUM_LIN",
+                                                     "DAC_COMP_LIN",
+                                                     "DAC_COMP_TA_LIN",
+                                                     "DAC_GDAC_L_LIN",
+                                                     "DAC_GDAC_R_LIN",
+                                                     "DAC_GDAC_M_LIN",
+                                                     "DAC_LDAC_LIN"}; // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
         if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&
