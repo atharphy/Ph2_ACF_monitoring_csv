@@ -219,7 +219,7 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
                                                           col);
                                 }
                                 initializePlot(&theChannel, histogramName, histogramTitle, &channel);
-                                if(copyChip->hasSummary()) copyChip->getChannel<T>(row, col) = std::move(theChannel);
+                                copyChip->getChannel<T>(row, col) = std::move(theChannel);
                             }
                         }
                     }

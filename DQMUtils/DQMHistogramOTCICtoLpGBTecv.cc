@@ -1,4 +1,4 @@
-#include "DQMUtils/DQMHistogramOTverifyECVlpGBTCIC.h"
+#include "DQMUtils/DQMHistogramOTCICtoLpGBTecv.h"
 #include "RootUtils/RootContainerFactory.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
@@ -8,13 +8,13 @@
 #include "TH2F.h"
 
 //========================================================================================================================
-DQMHistogramOTverifyECVlpGBTCIC::DQMHistogramOTverifyECVlpGBTCIC() {}
+DQMHistogramOTCICtoLpGBTecv::DQMHistogramOTCICtoLpGBTecv() {}
 
 //========================================================================================================================
-DQMHistogramOTverifyECVlpGBTCIC::~DQMHistogramOTverifyECVlpGBTCIC() {}
+DQMHistogramOTCICtoLpGBTecv::~DQMHistogramOTCICtoLpGBTecv() {}
 
 //========================================================================================================================
-void DQMHistogramOTverifyECVlpGBTCIC::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
+void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
@@ -73,32 +73,32 @@ void DQMHistogramOTverifyECVlpGBTCIC::book(TFile* theOutputFile, DetectorContain
 }
 
 //========================================================================================================================
-void DQMHistogramOTverifyECVlpGBTCIC::process()
+void DQMHistogramOTCICtoLpGBTecv::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
 }
 
 //========================================================================================================================
-void DQMHistogramOTverifyECVlpGBTCIC::reset(void)
+void DQMHistogramOTCICtoLpGBTecv::reset(void)
 {
     // Clear histograms if needed
 }
 
 //========================================================================================================================
-bool DQMHistogramOTverifyECVlpGBTCIC::fill(std::string& inputStream)
+bool DQMHistogramOTCICtoLpGBTecv::fill(std::string& inputStream)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
-    // As example, I'm expecting to receive a data stream from an uint32_t contained from calibration "OTverifyECVlpGBTCIC"
-    ContainerSerialization theECVlpGBTCICContainerSerialization("OTverifyECVlpGBTCICEfficiencyHistogram");
+    // As example, I'm expecting to receive a data stream from an uint32_t contained from calibration "OTCICtoLpGBTecv"
+    ContainerSerialization theECVlpGBTCICContainerSerialization("OTCICtoLpGBTecvEfficiencyHistogram");
 
     if(theECVlpGBTCICContainerSerialization.attachDeserializer(inputStream))
     {
         // It matched! Decoding data
-        std::cout << "Matched OTverifyECVlpGBTCIC!!!!!\n";
+        std::cout << "Matched OTCICtoLpGBTecv!!!!!\n";
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
         uint8_t               pClockPolarity, pClockStrength, pCicStrength, pPhase;
         DetectorDataContainer theDetectorData = theECVlpGBTCICContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, float, EmptyContainer>(
@@ -115,7 +115,7 @@ bool DQMHistogramOTverifyECVlpGBTCIC::fill(std::string& inputStream)
     // SoC utilities only - END
 }
 
-void DQMHistogramOTverifyECVlpGBTCIC::fillEfficiency(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, DetectorDataContainer& theEfficiencyContainer)
+void DQMHistogramOTCICtoLpGBTecv::fillEfficiency(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, DetectorDataContainer& theEfficiencyContainer)
 {
     for(auto board: theEfficiencyContainer)
     {
