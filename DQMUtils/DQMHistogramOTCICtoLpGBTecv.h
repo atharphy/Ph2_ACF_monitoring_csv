@@ -1,12 +1,12 @@
 /*!
-        \file                DQMHistogramOTverifyECVlpGBTCIC.h
-        \brief               DQM class for OTverifyECVlpGBTCIC
+        \file                DQMHistogramOTCICtoLpGBTecv.h
+        \brief               DQM class for OTCICtoLpGBTecv
         \author              Irene Zoi
         \date                23/05/24
 */
 
-#ifndef DQMHistogramOTverifyECVlpGBTCIC_h_
-#define DQMHistogramOTverifyECVlpGBTCIC_h_
+#ifndef DQMHistogramOTCICtoLpGBTecv_h_
+#define DQMHistogramOTCICtoLpGBTecv_h_
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -14,21 +14,21 @@
 class TFile;
 
 /*!
- * \class DQMHistogramOTverifyECVlpGBTCIC
- * \brief Class for OTverifyECVlpGBTCIC monitoring histograms
+ * \class DQMHistogramOTCICtoLpGBTecv
+ * \brief Class for OTCICtoLpGBTecv monitoring histograms
  */
-class DQMHistogramOTverifyECVlpGBTCIC : public DQMHistogramBase
+class DQMHistogramOTCICtoLpGBTecv : public DQMHistogramBase
 {
   public:
     /*!
      * constructor
      */
-    DQMHistogramOTverifyECVlpGBTCIC();
+    DQMHistogramOTCICtoLpGBTecv();
 
     /*!
      * destructor
      */
-    ~DQMHistogramOTverifyECVlpGBTCIC();
+    ~DQMHistogramOTCICtoLpGBTecv();
 
     /*!
      * \brief Book histograms

@@ -86,9 +86,6 @@
 #define LPGBT_VERSION_ATTRIBUTE_NAME "version"
 #define LPGBT_OPTICAL_ATTRIBUTE_NAME "optical"
 
-// Hybrid attributes
-#define HYBRID_ENABLE_ATTRIBUTE_NAME "enable"
-
 // LpGBT phases for CIC bypassPort
 #define LPGBT_PHASES_FOR_CIC_BYPASS_LINE_ATTRIBUTE_NAME "LpGBTphaseForCICbypassPhyPort"
 
