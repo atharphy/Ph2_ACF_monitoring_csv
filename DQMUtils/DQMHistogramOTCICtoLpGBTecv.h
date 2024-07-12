@@ -58,7 +58,6 @@ class DQMHistogramOTCICtoLpGBTecv : public DQMHistogramBase
 
   private:
     DetectorContainer*    fDetectorContainer;
-    DetectorDataContainer fEfficiencyPolarity0;
-    DetectorDataContainer fEfficiencyPolarity1;
+    std::map<uint8_t, DetectorDataContainer> fEfficiency;
 };
 #endif
