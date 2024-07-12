@@ -55,8 +55,6 @@ class RD53eudaqProducer : public eudaq::Producer
     void MainLoop();
     void MySendEvent(eudaq::EventSP theEvent);
 
-    int      theRunNumber;
-    uint32_t nTRIGxEvent;
     uint32_t previousTLUTrigId;
     size_t   swTrigCnt;
 

@@ -24,8 +24,8 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
-    static const std::set<std::string> registerClkDataDelayList = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK", "CLK_DATA_DELAY_2INV"}; // @CONST@
-    bool                               doWriteClkDataDelay      = false;
+    const std::set<std::string> registerClkDataDelayList = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK", "CLK_DATA_DELAY_2INV"}; // @CONST@
+    bool                        doWriteClkDataDelay      = false;
 
     for(auto i = 0u; i < registerClkDataDelayList.size(); i++)
     {
@@ -44,7 +44,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // #############################################
     // # Programmig global registers: pre-emphasis #
     // #############################################
-    static const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
+    const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
         if((cRegItem.second.fPrmptCfg == true) && (registerPreEmphasisWhiteList.find(cRegItem.first) != registerPreEmphasisWhiteList.end()))
@@ -53,8 +53,8 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const std::set<std::string> registerBlackList = {"HighGain_LIN", "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "SAMPLE_N_TIMES", "VREF_ADC"}; // @CONST@
-    static const std::set<std::string> registerWhiteList = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"};                  // @CONST@
+    const std::set<std::string> registerBlackList = {"HighGain_LIN", "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "SAMPLE_N_TIMES", "VREF_ADC"}; // @CONST@
+    const std::set<std::string> registerWhiteList = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"};                  // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
         if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&

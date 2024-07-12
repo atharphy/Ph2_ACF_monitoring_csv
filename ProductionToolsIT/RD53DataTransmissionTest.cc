@@ -79,7 +79,7 @@ void DataTransmissionTest::localConfigure(const std::string& histoFileName, int 
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<DataTransmissionTestGraphs>(histoFileName, "DataTransmissionTest", histos);
+    CalibBase::initializeFiles(histoFileName, "DataTransmissionTest", histos);
 }
 
 void DataTransmissionTest::run()

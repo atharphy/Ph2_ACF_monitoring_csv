@@ -88,8 +88,8 @@ void SCurve::sendData()
         ContainerSerialization theOccupancySerialization("SCurveOccupancy");
         for(const auto theOccContainer: detectorContainerVector)
         {
-            int deltaVacl = dacList[index++] - offset;
-            theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer, deltaVacl);
+            uint16_t deltaVcal = dacList[index++] - offset + (stopValue - startValue) / (2 * nSteps);
+            theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer, deltaVcal);
         }
     }
 }
@@ -124,7 +124,7 @@ void SCurve::localConfigure(const std::string& histoFileName, int currentRun)
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<SCurveHistograms>(histoFileName, "SCurve", histos, currentRun, saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "SCurve", histos, currentRun, saveBinaryData);
 }
 
 void SCurve::run()
@@ -315,7 +315,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
 void SCurve::fillHisto()
 {
 #ifdef __USE_ROOT__
-    for(auto i = 0u; i < dacList.size(); i++) histos->fillOccupancy(*detectorContainerVector[i], dacList[i] - offset);
+    for(auto i = 0u; i < dacList.size(); i++) histos->fillOccupancy(*detectorContainerVector[i], dacList[i] - offset + (stopValue - startValue) / (2 * nSteps));
     histos->fillThrAndNoise(*theThresholdAndNoiseContainer);
 #endif
 }

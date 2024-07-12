@@ -79,7 +79,7 @@ void VoltageTuning::localConfigure(const std::string& histoFileName, int current
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<VoltageTuningHistograms>(histoFileName, "VoltageTuning", histos);
+    CalibBase::initializeFiles(histoFileName, "VoltageTuning", histos);
 }
 
 void VoltageTuning::run()

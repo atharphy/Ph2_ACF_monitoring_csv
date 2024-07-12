@@ -489,7 +489,7 @@ TObject* Tool::getHist(ChipContainer* pChip, std::string pName)
     if(cChipHistMap == std::end(fChipHistMap))
     {
         // Fabio: CBC specific -> to be moved out from Tool
-        LOG(ERROR) << RED << "Error: could not find the Histograms for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getHybridId()) << ")" << RESET;
+        LOG(ERROR) << BOLDRED << "Error: could not find the Histograms for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getHybridId()) << ")" << RESET;
         return nullptr;
     }
     else
@@ -498,7 +498,7 @@ TObject* Tool::getHist(ChipContainer* pChip, std::string pName)
 
         if(cHisto == std::end(cChipHistMap->second))
         {
-            LOG(ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET;
+            LOG(ERROR) << BOLDRED << "Error: could not find the Histogram with the name " << BOLDYELLOW << pName << RESET;
             return nullptr;
         }
         else
@@ -512,7 +512,7 @@ TObject* Tool::getHist(HybridContainer* pHybrid, std::string pName)
 
     if(cHybridHistMap == std::end(fHybridHistMap))
     {
-        LOG(ERROR) << RED << "Error: could not find the Histograms for Hybrid " << int(pHybrid->getId()) << RESET;
+        LOG(ERROR) << BOLDRED << "Error: could not find the Histograms for Hybrid " << BOLDYELLOW << int(pHybrid->getId()) << RESET;
         return nullptr;
     }
     else
@@ -521,7 +521,7 @@ TObject* Tool::getHist(HybridContainer* pHybrid, std::string pName)
 
         if(cHisto == std::end(cHybridHistMap->second))
         {
-            LOG(ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET;
+            LOG(ERROR) << BOLDRED << "Error: could not find the Histogram with the name " << BOLDYELLOW << pName << RESET;
             return nullptr;
         }
         else
@@ -535,7 +535,7 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
 
     if(cBeBoardHistMap == std::end(fBeBoardHistMap))
     {
-        LOG(ERROR) << RED << "Error: could not find the Histograms for Hybrid " << int(pBeBoard->getId()) << RESET;
+        LOG(ERROR) << BOLDRED << "Error: could not find the Histograms for Hybrid " << BOLDYELLOW << int(pBeBoard->getId()) << RESET;
         return nullptr;
     }
     else
@@ -544,7 +544,7 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
 
         if(cHisto == std::end(cBeBoardHistMap->second))
         {
-            LOG(ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET;
+            LOG(ERROR) << BOLDRED << "Error: could not find the Histogram with the name " << BOLDYELLOW << pName << RESET;
             return nullptr;
         }
         else
@@ -635,7 +635,8 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
         LOG(INFO) << "OTSDAQ result directory environmental variable set: " << std::getenv("OTSDAQ_RESULTS_FOLDER");
         nDirname = std::string(std::getenv("OTSDAQ_RESULTS_FOLDER")) + "/" + pDirname + "/";
     }
-    else { nDirname = pDirname; }
+    else
+        nDirname = pDirname;
     if(pDate) nDirname += currentDateTime();
 
     std::string cCommand = "mkdir -p " + nDirname;
@@ -646,7 +647,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
     }
     catch(std::exception& e)
     {
-        LOG(ERROR) << BOLDRED << "Exception when trying to create Result Directory: " << e.what() << RESET;
+        LOG(ERROR) << BOLDRED << "Exception when trying to create Result Directory: " << BOLDYELLOW << e.what() << RESET;
     }
 
     fDirectoryName = nDirname;
@@ -672,11 +673,11 @@ void Tool::InitResultFile(const std::string& pFilename)
         }
         catch(std::exception& e)
         {
-            LOG(ERROR) << "Exceptin when trying to create Result File: " << e.what();
+            LOG(ERROR) << BOLDRED << "Exceptin when trying to create Result File: " << BOLDYELLOW << e.what() << RESET;
         }
     }
     else
-        LOG(INFO) << RED << "ERROR: " << RESET << "No result directory initialized - not saving results!";
+        LOG(WARNING) << BOLDRED << "Error: " << BOLDYELLOW << "no result directory initialized - not saving results" << RESET;
 #endif
 }
 
@@ -781,7 +782,7 @@ void Tool::StartHttpServer(const int pPort, bool pReadonly)
     }
     catch(std::exception& e)
     {
-        LOG(ERROR) << "Exception when trying to start THttpServer: " << e.what();
+        LOG(ERROR) << BOLDRED << "Exception when trying to start THttpServer: " << BOLDYELLOW << e.what() << RESET;
     }
 
     LOG(INFO) << "Opening THttpServer on port " << pPort << ". Point your browser to: " << GREEN << hostname << ":" << pPort << RESET;
@@ -881,7 +882,7 @@ void Tool::dumpConfigFiles()
     }
     else
     {
-        LOG(ERROR) << "Error: no results Directory initialized" << RESET;
+        LOG(ERROR) << BOLDRED << "Error: " << BOLDYELLOW << "no results Directory initialized" << RESET;
         abort();
     }
 }
