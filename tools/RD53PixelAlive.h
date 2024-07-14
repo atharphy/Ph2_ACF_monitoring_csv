@@ -72,6 +72,7 @@ class PixelAlive : public CalibBase
     bool                saveBinaryData;
 
     bool                                     doSaveData;
+    bool                                     doSilentRunning{false};
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };

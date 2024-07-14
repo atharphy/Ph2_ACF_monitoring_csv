@@ -49,11 +49,14 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
         }
     }
 
-    if(status == false)
-        LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 id " << BOLDYELLOW << pChip->getId() << BOLDRED << " reg. " << BOLDYELLOW << regName << BOLDRED
-                   << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED << ", read = " << BOLDYELLOW << actualValue << RESET;
-    else if((pVerify == true) && (status == true))
-        LOG(DEBUG) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
+    if(RD53Interface::silentRunning == false)
+    {
+        if(status == false)
+            LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 id " << BOLDYELLOW << pChip->getId() << BOLDRED << " reg. " << BOLDYELLOW << regName << BOLDRED
+                       << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED << ", read = " << BOLDYELLOW << actualValue << RESET;
+        else if((pVerify == true) && (status == true))
+            LOG(DEBUG) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
+    }
 
     // #######################################
     // # Update both real and fake registers #
@@ -87,8 +90,9 @@ int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
         auto regReadback = ReadRD53Reg(pRD53, regName);
         if(regReadback.size() == 0)
         {
-            LOG(WARNING) << BLUE << "Empty register readback from chip id " << BOLDYELLOW << pChip->getId() << BLUE << ", attempt n. " << BOLDYELLOW << attempt + 1 << BLUE << "/" << BOLDYELLOW
-                         << +RD53Shared::MAXATTEMPTS << RESET;
+            if(RD53Interface::silentRunning == false)
+                LOG(WARNING) << BLUE << "Empty register readback from chip id " << BOLDYELLOW << pChip->getId() << BLUE << ", attempt n. " << BOLDYELLOW << attempt + 1 << BLUE << "/" << BOLDYELLOW
+                             << +RD53Shared::MAXATTEMPTS << RESET;
             SendRD53Clear(pRD53);
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
         }
@@ -96,7 +100,8 @@ int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
             return regReadback[0].second;
     }
 
-    LOG(ERROR) << BOLDRED << "Empty register (" << BOLDYELLOW << regName << BOLDRED << ") readback FIFO after " << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED " attempts" << RESET;
+    if(RD53Interface::silentRunning == false)
+        LOG(ERROR) << BOLDRED << "Empty register (" << BOLDYELLOW << regName << BOLDRED << ") readback FIFO after " << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED " attempts" << RESET;
 
     return -1;
 }

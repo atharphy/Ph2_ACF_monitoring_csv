@@ -248,6 +248,15 @@ void CalibBase::ResetBoards()
     }
 }
 
+void CalibBase::SilentRunning(bool doSilentRunning)
+{
+    for(const auto cBoard: *fDetectorContainer)
+    {
+        static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->silentRunning = doSilentRunning;
+        static_cast<RD53Interface*>(this->fReadoutChipInterface)->silentRunning            = doSilentRunning;
+    }
+}
+
 void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)
 {
     theCurrentRun = currentRun;
