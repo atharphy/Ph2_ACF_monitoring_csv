@@ -800,8 +800,39 @@ EPRX63ChnCntr_phase       0x1EB         0x00              0x00                  
 *-------------------------------------------------------------------------------------------------------
 * RegName                 Addr          Defval            Value                         BitSize
 *-------------------------------------------------------------------------------------------------------
-_I2CMasterID              0x300         0d02              0d02                          8
-_I2CFreq                  0x301         0d02              0d02                          8
-_I2CSlaveAddress          0x302         0d40              0d40                          8
-_I2CRegAddress            0x303         0d00              0d00                          8
-_I2CRegData               0x304         0d00              0d00                          8
+_I2CVTRxRegGCR            0x300         0d00              0d00                          8
+_I2CVTRxRegSDA            0x302         0d00              0d00                          8
+
+_I2CVTRxRegCH0BIAS        0x303         0d00              0d00                          8
+_I2CVTRxRegCH0MOD         0x304         0d00              0d00                          8
+_I2CVTRxRegCH0EMP         0x305         0d00              0d00                          8
+
+_I2CVTRxRegCH1BIAS        0x306         0d00              0d00                          8
+_I2CVTRxRegCH1MOD         0x307         0d00              0d00                          8
+_I2CVTRxRegCH1EMP         0x308         0d00              0d00                          8
+
+_I2CVTRxRegCH2BIAS        0x309         0d00              0d00                          8
+_I2CVTRxRegCH2MOD         0x30A         0d00              0d00                          8
+_I2CVTRxRegCH2EMP         0x30B         0d00              0d00                          8
+
+_I2CVTRxRegCH3BIAS        0x30C         0d00              0d00                          8
+_I2CVTRxRegCH3MOD         0x30D         0d00              0d00                          8
+_I2CVTRxRegCH3EMP         0x30E         0d00              0d00                          8
+
+_I2CVTRxRegStatus         0x314         0d00              0d00                          8
+_I2CVTRxRegID             0x315         0d00              0d00                          8
+
+_I2CVTRxRegUID0           0x316         0d00              0d00                          8
+_I2CVTRxRegUID1           0x317         0d00              0d00                          8
+_I2CVTRxRegUID2           0x318         0d00              0d00                          8
+_I2CVTRxRegUID3           0x319         0d00              0d00                          8
+
+_I2CVTRxRegSEU0           0x31A         0d00              0d00                          8
+_I2CVTRxRegSEU1           0x31B         0d00              0d00                          8
+_I2CVTRxRegSEU2           0x31C         0d00              0d00                          8
+_I2CVTRxRegSEU3           0x31D         0d00              0d00                          8
+
+_I2CMasterID              0x320         0d02              0d02                          8
+_I2CFreq                  0x321         0d02              0d02                          8
+_I2CSlaveAddress          0x322         0d40              0d40                          8
+_I2CRegAddress            0x323         0d00              0d00                          8

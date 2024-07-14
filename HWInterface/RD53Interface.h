@@ -69,6 +69,8 @@ class RD53Interface : public ReadoutChipInterface
     virtual std::pair<std::string, uint16_t> SetSpecialRegister(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap)      = 0;
     virtual uint16_t                         GetSpecialRegisterValue(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) = 0;
 
+    bool silentRunning{false};
+
   protected:
     virtual std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName) = 0;
 

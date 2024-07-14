@@ -402,7 +402,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
     // #####################
     // # Read the register #
     // #####################
-    if(RegManager::ReadReg("user.stat_regs.readout1.register_fifo_full") == true) LOG(ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
+    if((RD53FWInterface::silentRunning == false) && (RegManager::ReadReg("user.stat_regs.readout1.register_fifo_full") == true)) LOG(ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
 
     while(RegManager::ReadReg("user.stat_regs.readout1.register_fifo_empty") == false)
     {
@@ -414,7 +414,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
         if(chipAddress == chipLane) regReadback.emplace_back(regAddress, regValue);
     }
 
-    if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
+    if((regReadback.size() == 0) && (RD53FWInterface::silentRunning == false)) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
 
     return regReadback;
 }
