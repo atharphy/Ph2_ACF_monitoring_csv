@@ -40,6 +40,7 @@ class CalibBase : public Tool
     void    setSinglePixel(Ph2_HwDescription::ReadoutChip* pChip, size_t row, size_t col, bool enable, bool inject);
     void    ResetBoardsReadBkFIFO();
     void    ResetBoards();
+    void    SilentRunning(bool doSilentRunning);
 
     void Stop() override;
     void ConfigureCalibration() override;

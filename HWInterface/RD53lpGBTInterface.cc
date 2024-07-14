@@ -20,9 +20,57 @@ namespace Ph2_HwInterface
 
 bool RD53lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerify)
 {
-    bool writeGood = RD53lpGBTInterface::WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerify);
+    bool status = false;
+
+    if(pRegNode.find("_I2CVTRxReg") == std::string::npos)
+        status = RD53lpGBTInterface::WriteReg(pChip, pChip->getRegItem(pRegNode).fAddress, pValue, pVerify);
+    else
+    {
+        // #######################
+        // # Write I2C registers #
+        // #######################
+        int nAttempts = 0;
+        do {
+            // #######################
+            // # I2C write operation #
+            // #######################
+            RD53lpGBTInterface::WriteI2C(pChip,
+                                         pChip->getRegItem("_I2CMasterID").fValue,
+                                         pChip->getRegItem("_I2CSlaveAddress").fValue,
+                                         (pValue << 8) | (pChip->getRegItem(pRegNode).fAddress & 0x00FF),
+                                         2,
+                                         pChip->getRegItem("_I2CFreq").fValue);
+
+            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+
+            // ######################
+            // # I2C read operation #
+            // ######################
+            if(pVerify == true)
+            {
+                RD53lpGBTInterface::WriteI2C(pChip,
+                                             pChip->getRegItem("_I2CMasterID").fValue,
+                                             pChip->getRegItem("_I2CSlaveAddress").fValue,
+                                             pChip->getRegItem(pRegNode).fAddress & 0x00FF,
+                                             1,
+                                             pChip->getRegItem("_I2CFreq").fValue);
+                const auto i2Cread =
+                    RD53lpGBTInterface::ReadI2C(pChip, pChip->getRegItem("_I2CMasterID").fValue, pChip->getRegItem("_I2CSlaveAddress").fValue, 1, pChip->getRegItem("_I2CFreq").fValue);
+                if(i2Cread == pValue) status = true;
+            }
+            nAttempts++;
+        } while((pVerify == true) && (status == false) && (nAttempts < RD53Shared::MAXATTEMPTS));
+
+        if((pVerify == true) && (status == false))
+        {
+            LOG(ERROR) << BOLDRED << "[RD53lpGBTInterface::WriteChipReg] LpGBT register writing issue on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID "
+                       << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET;
+            return status;
+        }
+    }
+
     pChip->setReg(pRegNode, pValue);
-    return writeGood;
+    return status;
 }
 
 bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerify)
@@ -32,29 +80,31 @@ bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pa
     return writeGood;
 }
 
-int32_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode) { return RD53lpGBTInterface::ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress); }
+int32_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
+{
+    if(pRegNode.find("_I2CVTRxReg") == std::string::npos)
+        return RD53lpGBTInterface::ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress);
+    else
+    {
+        RD53lpGBTInterface::WriteI2C(
+            pChip, pChip->getRegItem("_I2CMasterID").fValue, pChip->getRegItem("_I2CSlaveAddress").fValue, pChip->getRegItem(pRegNode).fAddress & 0x00FF, 1, pChip->getRegItem("_I2CFreq").fValue);
+        return RD53lpGBTInterface::ReadI2C(pChip, pChip->getRegItem("_I2CMasterID").fValue, pChip->getRegItem("_I2CSlaveAddress").fValue, 1, pChip->getRegItem("_I2CFreq").fValue);
+    }
+}
 
 bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify)
 {
-    const uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F; // Setting highest write address possible (lpGBT version dependent)
-
     this->setBoard(pChip->getBeBoardId());
+    bool status = false;
 
     if(pValue > RD53Shared::setBits(RD53Shared::MAXBITCHIPREG))
     {
         LOG(ERROR) << BOLDRED << "[RD53lpGBTInterface::WriteReg] LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pValue << BOLDRED << " to address " << BOLDYELLOW << pAddress
                    << RESET;
-        return false;
+        return status;
     }
 
-    if(pAddress >= cMaxWriteAddress)
-    {
-        LOG(WARNING) << "[RD53lpGBTInterface::WriteReg] LpGBT read-write registers end at " << cMaxWriteAddress << " ... impossible to write to address " << BOLDYELLOW << pAddress << RESET;
-        return false;
-    }
-
-    int  nAttempts = 0;
-    bool status;
+    int nAttempts = 0;
     do {
         status = fBoardFW->WriteOptoLinkRegister(pChip, pAddress, pValue, pVerify);
         nAttempts++;
@@ -62,11 +112,12 @@ bool RD53lpGBTInterface::WriteReg(Chip* pChip, uint16_t pAddress, uint16_t pValu
 
     if((pVerify == true) && (status == false))
     {
-        LOG(ERROR) << BOLDRED << "[RD53lpGBTInterface::WriteReg] LpGBT register writing issue" << RESET;
-        return false;
+        LOG(ERROR) << BOLDRED << "[RD53lpGBTInterface::WriteReg] LpGBT register writing issue on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW
+                   << +pChip->getOpticalGroupId() << RESET;
+        return status;
     }
 
-    return true;
+    return status;
 }
 
 uint16_t RD53lpGBTInterface::ReadReg(Chip* pChip, uint16_t pAddress)
@@ -83,7 +134,6 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
 {
     const std::string filePathCSV = "${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv"; // @CONST@
     this->setBoard(pChip->getBeBoardId());
-    const auto& lpGBTRegMap = pChip->getRegMap();
 
     // #####################
     // # Make reverted map #
@@ -117,7 +167,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     if(PUSMStatus != revertedPUSMStatusMap["READY"])
     {
         LOG(ERROR) << BOLDRED << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[cChipVersion][PUSMStatus] << RESET;
-        return false;
+        // return false; // @TMP@
     }
     LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[cChipVersion][PUSMStatus] << RESET;
 
@@ -147,58 +197,29 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     // ####################################################
     // # Programming registers as from configuration file #
     // ####################################################
-    std::map<std::string, int16_t> registerBlackList = {{"_I2CMasterID", -1}, {"_I2CFreq", -1}, {"_I2CSlaveAddress", -1}, {"_I2CRegAddress", -1}, {"_I2CRegData", -1}};
-    bool                           doI2C             = false;
-
     LOG(INFO) << GREEN << "Initializing registers of LpGBT: " << BOLDYELLOW << pChip->getId() << RESET;
+    const auto& lpGBTRegMap = pChip->getRegMap();
     for(const auto& cRegItem: lpGBTRegMap)
         if(cRegItem.second.fPrmptCfg == true)
         {
-            if(registerBlackList.find(cRegItem.first) == registerBlackList.end())
-            {
-                LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << cRegItem.first << BOLDBLUE << " = " << BOLDYELLOW << cRegItem.second.fValue << RESET;
+            LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << cRegItem.first << BOLDBLUE << " = " << BOLDYELLOW << cRegItem.second.fValue << RESET;
 
-                if(cRegItem.first.find("_phase"))
-                {
-                    lpGBTInterface::ConfigureRxPhase(
-                        pChip, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(4, 1)))}, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(5, 1)))}, cRegItem.second.fValue);
-                    static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
-                }
-                else
-                    try
-                    {
-                        RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
-                    }
-                    catch(const std::exception& e)
-                    {
-                        LOG(WARNING) << BOLDRED << "Warning: " << BOLDYELLOW << e.what() << RESET;
-                    }
+            if(cRegItem.first.find("_phase") != std::string::npos)
+            {
+                lpGBTInterface::ConfigureRxPhase(
+                    pChip, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(4, 1)))}, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(5, 1)))}, cRegItem.second.fValue);
+                static_cast<lpGBT*>(pChip)->setPhaseRxAligned(true); // @TMP@
             }
             else
-            {
-                registerBlackList[cRegItem.first] = cRegItem.second.fValue;
-                doI2C                             = true;
-            }
+                try
+                {
+                    RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+                }
+                catch(const std::exception& e)
+                {
+                    LOG(WARNING) << BOLDRED << "Warning: " << BOLDYELLOW << e.what() << RESET;
+                }
         }
-
-    if(doI2C == true)
-    {
-        if(registerBlackList["_I2CRegData"] >= 0)
-            RD53lpGBTInterface::WriteI2C(pChip,
-                                         registerBlackList["_I2CMasterID"],
-                                         registerBlackList["_I2CSlaveAddress"],
-                                         (registerBlackList["_I2CRegData"] << 8) | registerBlackList["_I2CRegAddress"],
-                                         2,
-                                         registerBlackList["_I2CFreq"]);
-        else
-        {
-            RD53lpGBTInterface::WriteI2C(pChip, registerBlackList["_I2CMasterID"], registerBlackList["_I2CSlaveAddress"], registerBlackList["_I2CRegAddress"], 1, registerBlackList["_I2CFreq"]);
-            const auto i2Cread = RD53lpGBTInterface::ReadI2C(pChip, registerBlackList["_I2CMasterID"], registerBlackList["_I2CSlaveAddress"], 1, registerBlackList["_I2CFreq"]);
-            LOG(INFO) << GREEN << "Reading from LpGBT I2C-slave device addr 0x" << BOLDYELLOW << std::hex << registerBlackList["_I2CSlaveAddress"] << std::dec << RESET << GREEN
-                      << " value = " << BOLDYELLOW << i2Cread << RESET;
-        }
-    }
-    // lpGBTClockConfig.fI2CFreq;
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
     this->PrintChipMode(pChip);

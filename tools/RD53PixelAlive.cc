@@ -118,6 +118,8 @@ void PixelAlive::localConfigure(const std::string& histoFileName, int currentRun
 
 void PixelAlive::run()
 {
+    if(doSilentRunning == true) CalibBase::SilentRunning(doSilentRunning);
+
     if((doDataIntegrity != 0) && (std::string(frontEnd->name).find("RD53B") != std::string::npos))
     {
         RD53RunProgress::turnOFF();
@@ -330,6 +332,7 @@ void PixelAlive::run()
         throw std::runtime_error("Option -DoDataIntegrity- not available for RD53A");
 
     PixelAlive::runPixelAlive();
+    if(doSilentRunning == true) CalibBase::SilentRunning(false);
 }
 
 void PixelAlive::runPixelAlive()

@@ -41,30 +41,8 @@ void lpGBTInterface::StopPRBSpattern(Chip* pChip)
 bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
-    auto           cBoardType       = fBoardFW->getBoardType();
-    auto           cAddress         = pChip->getRegItem(pDacName).fAddress;
-    const uint16_t maxRegValue      = 0xFF;                                                            // @CONST@
-    const uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F; // Setting highest write address possible (lpGBT version dependent)
-
-    // ######################################################
-    // # Checking that written value isn't more than 8 bits #
-    // ######################################################
-    if(pDacValue > maxRegValue)
-    {
-        LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address 0x" << BOLDYELLOW << std::hex << cAddress << std::dec
-                   << RESET;
-        return false;
-    }
-
-    // ##########################################################################
-    // # Checking that register address isn't higher than highest write address #
-    // ##########################################################################
-    if(cAddress > cMaxWriteAddress)
-    {
-        LOG(WARNING) << GREEN << "LpGBT read-write registers end at " << BOLDYELLOW << cMaxWriteAddress << RESET << GREEN << " ... impossible to write to address 0x" << BOLDYELLOW << std::hex
-                     << cAddress << std::dec << RESET;
-        return false;
-    }
+    auto cBoardType = fBoardFW->getBoardType();
+    auto cAddress   = pChip->getRegItem(pDacName).fAddress;
 
     bool cSuccess = false;
     if((cBoardType != BoardType::RD53) && (pChip->isOptical() == true))
