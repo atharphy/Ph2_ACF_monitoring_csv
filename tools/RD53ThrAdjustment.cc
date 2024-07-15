@@ -222,7 +222,7 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                               << BOLDYELLOW << "VCAL_MED" << BOLDBLUE << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
                 }
 
-    for(auto i = 0u; i <= numberOfBits; i++)
+    for(auto i = 0u; i <= numberOfBits + 1u; i++)
     {
         // ###########################
         // # Download new DAC values #
@@ -288,6 +288,7 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                                     midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                         }
                     }
+        if(i == numberOfBits + 1u) break; // Allows to compute last move
 
         // ################
         // # Run analysis #
@@ -355,7 +356,7 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
     // ###########################
     // # Download new DAC values #
     // ###########################
-    CalibBase::downloadNewDACvalues(midHDACcontainer, regNames);
+    CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames);
 
     // #################################
     // # Reset masks to default values #

@@ -104,9 +104,9 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // #########################
     RegManager::WriteStackReg({{"user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 1}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 0}});
 
-    // ##########
-    // # Resets #
-    // ##########
+    // ################
+    // # Board resets #
+    // ################
     RD53FWInterface::ResetFastCmdBlk();
     RD53FWInterface::ResetSlowCmdFIFO();
     RD53FWInterface::ResetReadBkFIFO();
@@ -188,8 +188,16 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // #########################################
     // # Read optical link slow control status #
     // #########################################
-    uint32_t txIsReady, rxIsReady;
-    RD53FWInterface::StatusOptoLinkSlowControl(txIsReady, rxIsReady);
+    uint32_t txIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.tx_ready");
+    uint32_t rxIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
+    if(txIsReady == true)
+        LOG(INFO) << GREEN << "Optical link tx slow control status: " << BOLDYELLOW << "ready" << RESET;
+    else
+        LOG(WARNING) << GREEN << "Optical link tx slow control status: " << BOLDRED << "not ready" << RESET;
+    if(rxIsReady == true)
+        LOG(INFO) << GREEN << "Optical link rx slow control status: " << BOLDYELLOW << "ready" << RESET;
+    else
+        LOG(WARNING) << GREEN << "Optical link rx slow control status: " << BOLDRED << "not ready" << RESET;
 
     // ###########################
     // # Check RD53 AURORA speed #
@@ -1037,22 +1045,6 @@ void RD53FWInterface::ResetOptoLinkSlowControl()
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_reset", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_rx_reset", 0x1}});
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_reset", 0x0}, {"user.ctrl_regs.lpgbt_1.ic_rx_reset", 0x0}});
-}
-
-void RD53FWInterface::StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady)
-{
-    txIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.tx_ready");
-    rxIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
-
-    if(txIsReady == true)
-        LOG(INFO) << GREEN << "Optical link tx slow control status: " << BOLDYELLOW << "ready" << RESET;
-    else
-        LOG(WARNING) << GREEN << "Optical link tx slow control status: " << BOLDRED << "not ready" << RESET;
-
-    if(rxIsReady == true)
-        LOG(INFO) << GREEN << "Optical link rx slow control status: " << BOLDYELLOW << "ready" << RESET;
-    else
-        LOG(WARNING) << GREEN << "Optical link rx slow control status: " << BOLDRED << "not ready" << RESET;
 }
 
 void RD53FWInterface::ResetOptoLink()

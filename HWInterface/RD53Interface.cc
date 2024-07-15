@@ -22,7 +22,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     auto                  nameAndValue(SetSpecialRegister(regName, data, pChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
     PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerify);
-    if(static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId()) == false) static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO();
+    if(static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId()) == false) static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO(); // @TMP@
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
@@ -93,7 +93,7 @@ int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
             if(RD53Interface::silentRunning == false)
                 LOG(WARNING) << BLUE << "Empty register readback from chip id " << BOLDYELLOW << pChip->getId() << BLUE << ", attempt n. " << BOLDYELLOW << attempt + 1 << BLUE << "/" << BOLDYELLOW
                              << +RD53Shared::MAXATTEMPTS << RESET;
-            SendRD53Clear(pRD53);
+            SendRD53Clear(pRD53); // @TMP@
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
         }
         else
