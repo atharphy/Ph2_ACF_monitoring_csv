@@ -12,6 +12,7 @@ namespace Ph2_HwInterface
 {
 class ReadoutChipInterface;
 class BeBoardInterface;
+class VTRxInterface;
 class lpGBTInterface;
 class CicInterface;
 class BeBoardFWInterface;
@@ -27,6 +28,7 @@ class RegisterHelper
     RegisterHelper(DetectorContainer*                                        theDetectorContainer,
                    Ph2_HwInterface::BeBoardInterface*                        theBeBoardInterface,
                    Ph2_HwInterface::ReadoutChipInterface*                    theReadoutChipInterface,
+                   Ph2_HwInterface::VTRxInterface*                           theVTRxInterface,
                    Ph2_HwInterface::lpGBTInterface*                          thelpGBTInterface,
                    Ph2_HwInterface::CicInterface*                            theCicInterface,
                    std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*>* theBeBoardFWMap);
@@ -59,6 +61,7 @@ class RegisterHelper
     Ph2_HwInterface::BeBoardInterface*                        fBeBoardInterface{nullptr};
     Ph2_HwInterface::ReadoutChipInterface*                    fReadoutChipInterface{nullptr};
     Ph2_HwInterface::lpGBTInterface*                          flpGBTInterface{nullptr};
+    Ph2_HwInterface::VTRxInterface*                           fVTRxInterface{nullptr};
     Ph2_HwInterface::CicInterface*                            fCicInterface{nullptr}; // Interface to a CIC [only valid for OT]
     std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*>* fBeBoardFWMap{nullptr};
 };

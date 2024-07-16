@@ -27,7 +27,7 @@ Cic::Cic(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string&
     fChipCode      = 4;
     fChipAddress   = 0x60;
     fMaxRegValue   = 255; // 8 bit registers in CIC
-    configFileName = filename;
+    fConfigFileName = filename;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CIC2);
     initializeLpGBTphasesForCICbypassMap();
@@ -39,7 +39,7 @@ Cic::Cic(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
     fChipCode      = 4;
     fChipAddress   = 0x60;
     fMaxRegValue   = 255; // 8 bit registers in CIC
-    configFileName = filename;
+    fConfigFileName = filename;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CIC2);
     initializeLpGBTphasesForCICbypassMap();

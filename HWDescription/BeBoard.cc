@@ -18,6 +18,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include "Utils/Utilities.h"
 
 namespace Ph2_HwDescription
 {

@@ -12,7 +12,6 @@
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/D19clpGBTInterface.h"
 #include "HWInterface/ExceptionHandler.h"
-#include "HWInterface/ReadoutChipInterface.h"
 #include "Utils/GenericDataArray.h"
 #include "boost/format.hpp"
 #include <numeric>
@@ -185,7 +184,7 @@ bool CicInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std
         auto cIterator = cRegMap.find(cReq.first);
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
+            LOG(ERROR) << BOLDRED << "CicInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
             continue;
         }
 
@@ -218,7 +217,7 @@ std::vector<std::pair<std::string, uint16_t>> CicInterface::ReadChipMultReg(Ph2_
         auto cIterator = cRegMap.find(cReq);
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "SSA2Interface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            LOG(ERROR) << BOLDRED << "CicInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq << RESET;
             abort();
         }
 

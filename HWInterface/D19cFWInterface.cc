@@ -29,6 +29,7 @@
 #include <chrono>
 #include <time.h>
 #include <uhal/uhal.hpp>
+#include "HWDescription/lpGBT.h"
 // #pragma GCC diagnostic ignored "-Wpedantic"
 
 using namespace Ph2_HwDescription;

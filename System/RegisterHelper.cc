@@ -5,9 +5,11 @@
 #include "HWInterface/BeBoardInterface.h"
 #include "HWInterface/CicInterface.h"
 #include "HWInterface/lpGBTInterface.h"
+#include "HWInterface/VTRxInterface.h"
 #include "Parser/ParserDefinitions.h"
 #include "Utils/Container.h"
 #include "pugixml.hpp"
+#include "HWDescription/VTRx.h"
 
 #include "iostream"
 
@@ -18,6 +20,7 @@ using namespace Ph2_HwDescription;
 RegisterHelper::RegisterHelper(DetectorContainer*                                        theDetectorContainer,
                                BeBoardInterface*                                         theBeBoardInterface,
                                ReadoutChipInterface*                                     theReadoutChipInterface,
+                               VTRxInterface*                                            theVTRxInterface,
                                lpGBTInterface*                                           thelpGBTInterface,
                                CicInterface*                                             theCicInterface,
                                std::map<uint16_t, Ph2_HwInterface::BeBoardFWInterface*>* theBeBoardFWMap)
@@ -25,6 +28,7 @@ RegisterHelper::RegisterHelper(DetectorContainer*                               
     , fBeBoardInterface(theBeBoardInterface)
     , fReadoutChipInterface(theReadoutChipInterface)
     , flpGBTInterface(thelpGBTInterface)
+    , fVTRxInterface(theVTRxInterface)
     , fCicInterface(theCicInterface)
     , fBeBoardFWMap(theBeBoardFWMap)
 {
@@ -40,6 +44,10 @@ void RegisterHelper::takeSnapshot()
         {
             auto theLpGBT = theOpticalGroup->flpGBT;
             if(theLpGBT != nullptr) { theLpGBT->takeSnapshot(); }
+
+            auto theVTRx = theOpticalGroup->fVTRx;
+            if(theVTRx != nullptr) { theVTRx->takeSnapshot(); }
+
             for(auto theHybrid: *theOpticalGroup)
             {
                 if(fCicInterface != nullptr) // easy check if it is IT or OT
@@ -62,6 +70,10 @@ void RegisterHelper::clearSnapshot()
         {
             auto theLpGBT = theOpticalGroup->flpGBT;
             if(theLpGBT != nullptr) { theLpGBT->clearSnapshot(); }
+
+            auto theVTRx = theOpticalGroup->fVTRx;
+            if(theVTRx != nullptr) { theVTRx->clearSnapshot(); }
+
             for(auto theHybrid: *theOpticalGroup)
             {
                 if(fCicInterface != nullptr) // easy check if it is IT or OT
@@ -91,6 +103,14 @@ void RegisterHelper::restoreSnapshot()
                 const auto modifiedLpGBTRegisters = theLpGBT->getSnapshot();
                 flpGBTInterface->WriteChipMultReg(theLpGBT, modifiedLpGBTRegisters);
             }
+            
+            auto theVTRx = theOpticalGroup->fVTRx;
+            if(theVTRx != nullptr)
+            {
+                const auto modifiedVTRxRegisters = theVTRx->getSnapshot();
+                fVTRxInterface->WriteChipMultReg(theVTRx, modifiedVTRxRegisters);
+            }
+
             for(auto theHybrid: *theOpticalGroup)
             {
                 if(fCicInterface != nullptr) // easy check if it is IT or OT
@@ -128,6 +148,12 @@ void RegisterHelper::freeFrontEndRegister(const FrontEndType theFrontEndType, st
             {
                 if(theOpticalGroup->flpGBT->getFrontEndType() == theFrontEndType) { theOpticalGroup->flpGBT->addFreeRegister(registerPattern); }
             }
+
+            if(theOpticalGroup->fVTRx != nullptr)
+            {
+                if(theOpticalGroup->fVTRx->getFrontEndType() == theFrontEndType) { theOpticalGroup->fVTRx->addFreeRegister(registerPattern); }
+            }
+
             for(auto theHybrid: *theOpticalGroup)
             {
                 if(fCicInterface != nullptr) // easy check if it is IT or OT
@@ -162,6 +188,10 @@ void RegisterHelper::resetFreeRegisters()
         {
             auto theLpGBT = theOpticalGroup->flpGBT;
             if(theLpGBT != nullptr) { theLpGBT->reinitializeFreeRegisters(); }
+
+            auto theVTRx = theOpticalGroup->fVTRx;
+            if(theVTRx != nullptr) { theVTRx->reinitializeFreeRegisters(); }
+
             for(auto theHybrid: *theOpticalGroup)
             {
                 if(fCicInterface != nullptr) // easy check if it is IT or OT

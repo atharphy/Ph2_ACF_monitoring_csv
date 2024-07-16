@@ -68,7 +68,7 @@ RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybr
     : ReadoutChip(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id)
 {
     fMaxRegValue   = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
-    configFileName = fileName;
+    fConfigFileName = fileName;
     myComment      = cfgComment;
     myChipLane     = pRD53Lane;
 }

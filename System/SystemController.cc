@@ -26,6 +26,7 @@
 #include "System/RegisterHelper.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/StartInfo.h"
+#include "HWInterface/VTRxInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -37,6 +38,7 @@ SystemController::SystemController()
     : fBeBoardInterface(nullptr)
     , fReadoutChipInterface(nullptr)
     , flpGBTInterface(nullptr)
+    , fVTRxInterface(nullptr)
     , fCicInterface(nullptr)
     , fDetectorContainer(nullptr)
     , fSettingsMap()
@@ -60,6 +62,7 @@ void SystemController::Inherit(const SystemController* pController)
     fBeBoardInterface     = pController->fBeBoardInterface;
     fReadoutChipInterface = pController->fReadoutChipInterface;
     flpGBTInterface       = pController->flpGBTInterface;
+    fVTRxInterface        = pController->fVTRxInterface;
     fBeBoardFWMap         = pController->fBeBoardFWMap;
     fSettingsMap          = pController->fSettingsMap;
     fFileHandler          = pController->fFileHandler;
@@ -125,6 +128,9 @@ void SystemController::Destroy()
 
     delete flpGBTInterface;
     flpGBTInterface = nullptr;
+
+    delete fVTRxInterface;
+    fVTRxInterface = nullptr;
 
     delete fDetectorContainer;
     fDetectorContainer = nullptr;
@@ -265,6 +271,12 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstOpticalGroup->flpGBT->isOptical());
                 }
+                bool cWithVTRx = (cFirstOpticalGroup->fVTRx != nullptr);
+                if(cWithVTRx)
+                {
+                    LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for VTRx" << RESET;
+                    fVTRxInterface = new VTRxInterface(fBeBoardFWMap);
+                }
 
                 LOG(INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;
                 if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
@@ -370,7 +382,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         }
     }
 
-    fRegisterHelper = new RegisterHelper(fDetectorContainer, fBeBoardInterface, fReadoutChipInterface, flpGBTInterface, fCicInterface, &fBeBoardFWMap);
+    fRegisterHelper = new RegisterHelper(fDetectorContainer, fBeBoardInterface, fReadoutChipInterface, fVTRxInterface, flpGBTInterface, fCicInterface, &fBeBoardFWMap);
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os) { this->fParser.parseSettings(pFilename, fSettingsMap, os); }

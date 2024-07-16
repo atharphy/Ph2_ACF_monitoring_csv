@@ -29,7 +29,7 @@ class lpGBT : public Chip
         uint8_t Polarity;
     };
 
-    lpGBT(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName, const std::string& fConfigFilePath);
+    lpGBT(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName, const std::string& configFilePath);
 
     lpGBT(const lpGBT&) = delete;
 

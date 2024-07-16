@@ -14,7 +14,6 @@
 #include "Hybrid.h"
 #include "Utils/Container.h"
 #include "Utils/Visitor.h"
-#include "lpGBT.h"
 
 #include <vector>
 
@@ -24,6 +23,9 @@
  */
 namespace Ph2_HwDescription
 {
+class VTRx;
+class lpGBT;
+
 /*!
  * \class OpticalGroup
  * \brief handles a vector of Chip which are connected to the OpticalGroup
@@ -43,7 +45,7 @@ class OpticalGroup
     OpticalGroup(const OpticalGroup&) = delete;
 
     // D'tor
-    ~OpticalGroup() { delete flpGBT; };
+    ~OpticalGroup();
 
     /*!
      * \brief acceptor method for HwDescriptionVisitor
@@ -55,9 +57,11 @@ class OpticalGroup
 
         for(auto* cHybrid: *this) static_cast<Hybrid*>(cHybrid)->accept(pVisitor);
     }
-    void addlpGBT(lpGBT* plpGBT) { flpGBT = plpGBT; }
+    void addlpGBT(lpGBT* plpGBT);
+    void addVTRx(VTRx* pVTRx);
 
     lpGBT* flpGBT    = nullptr;
+    VTRx*  fVTRx     = nullptr;
     bool   fIsLocked = false;
 
     std::pair<uint8_t, uint16_t> getStubCnfg() { return std::make_pair(fStubPackageDelay, fStubLatency); }
