@@ -15,6 +15,7 @@
 #include "tools/OTCMNoise.h"
 #include "tools/OTCicBypassTest.h"
 #include "tools/OTMPAtoCICecv.h"
+#include "tools/OTCBCtoCICecv.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
 #include "tools/OTSSAtoMPAecv.h"
@@ -183,6 +184,15 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(
         "2S Module", "cbcpulseshape");
     Register<Physics2S>("2S Module", "physics2s");
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTalignLpGBTinputsForBypass,
+             OTCBCtoCICecv>("2S Module", "CBCtoCICecv");
+
 
     // PS specific calibrations
     Register<PSPhysics>("PS Module", "psphysics");
