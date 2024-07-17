@@ -57,6 +57,10 @@ class OTverifyBoardDataWord : public Tool
 
   protected:
     size_t  fNumberOfIterations{1000};
+    std::vector<float> fListOfLpGBTPhase{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+    std::vector<float> fListOfCICStrength{1, 2, 3, 4, 5};
+    std::vector<float> fListOfClockPolarity{0, 1};
+    std::vector<float> fListOfClockStrength{1, 2, 3, 4, 5, 6, 7};
     bool    isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t flagCharacter, uint8_t idleCharacter);
     bool    isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t header, uint32_t headerMask);
     void    prepareHybridForStubIntegrityTest(Ph2_HwDescription::Hybrid* theHybrid);

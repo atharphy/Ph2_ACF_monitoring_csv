@@ -44,7 +44,7 @@ class DQMHistogramOTCICtoLpGBTecv : public DQMHistogramBase
      * needed if you do not fo into the SoC \param dataBuffer : vector of char with the TCP datastream
      */
     bool fill(std::string& inputStream) override;
-    void fillEfficiency(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, DetectorDataContainer& theEfficiencyContainer);
+    void fillEfficiency(uint8_t pClockStrengthLengthOfOptions, uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhase, DetectorDataContainer& theEfficiencyContainer);
 
     /*!
      * \brief process : do something with the histogram like colors, fit, drawing canvases, etc
