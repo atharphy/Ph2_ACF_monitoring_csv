@@ -40,13 +40,12 @@ void OTCBCtoCICecv::Running()
     //setCBCshiftRegister();   //from MPA to CIC ecv
     //runElectricChainValidation();  //from MPA to CIC ecv
     //phaseAlignment();
-    //printCICStrengthAndPhase();
     //itrOverCICStrength();
     //RunCICbypassTest();
     //printCICStrengthAndPhase();
     //writeCBCReg();
     LOG(INFO) << BOLDRED << "========== Starting OTCBC2CICalignment test ==========" << RESET;
-    printCICStrengthAndPhase();
+    itrOverCICStrength();
     LOG(INFO) << BOLDRED << "========== End OTCBC2CICalignment test ==========" << RESET;
     LOG(INFO) << "Done with OTCBCtoCICecv.";
     Reset();
@@ -260,4 +259,18 @@ void OTCBCtoCICecv::printCICStrengthAndPhase()
             }
         }
     }
+}
+
+void OTCBCtoCICecv::itrOverCICStrength()
+{
+    uint8_t cicSLVSStrengthStart    = 1, cicSLVSStrengthEnd     = 5 ;
+    for(auto theBoard: *fDetectorContainer)
+        for(auto theOpticalGroup: *theBoard)
+            for(uint8_t cicStrength = cicSLVSStrengthStart; cicStrength <= cicSLVSStrengthEnd; ++cicStrength)
+                for(auto theHybrid: *theOpticalGroup)
+                {
+                    auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                    LOG(INFO) << "Setting CIC strength to FEH" << theHybrid->getId() << RESET;
+                    fCicInterface->ConfigureDriveStrength(cCic, cicStrength);
+                }
 }

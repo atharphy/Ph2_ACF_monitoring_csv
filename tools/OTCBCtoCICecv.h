@@ -43,6 +43,7 @@ class OTCBCtoCICecv : public Tool
     void Resume() override;
     void Reset();
     void printCICStrengthAndPhase();
+    void itrOverCICStrength();
 
     static std::string fCalibrationDescription;
 
