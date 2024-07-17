@@ -141,7 +141,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 // ###################################
                 // # Check if DataMerging is enabled #
                 // ###################################
-                auto lane = static_cast<RD53*>(cChip)->getChipLane();
+                const auto lane = static_cast<RD53*>(cChip)->getChipLane();
                 if(static_cast<RD53*>(cChip)->laneConfig.isPrimary == false)
                 {
                     enableDataMerging = true;
@@ -153,18 +153,16 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 // # Check if ChipID is enabled #
                 // ##############################
                 if(static_cast<RD53*>(cChip)->getDataFormatOptions().enableChipId == true) enableChipID = true;
+
+                // ###############################
+                // # Map chips into the firmware #
+                // ###############################
+                RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_id", cChip->getId() & 3);
+                RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_primary", primaries[lane]);
             }
 
-    RegManager::WriteStackReg({{"user.ctrl_regs.Aurora_block.data_merging_en", enableDataMerging}, {"user.ctrl_regs.i2c_block.chip_id_en", enableChipID}});
-
-    for(const auto cChip: *pBoard->getFirstObject()->getFirstObject())
-    {
-        auto lane = static_cast<RD53*>(cChip)->getChipLane();
-        RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_id", cChip->getId() & 3);
-        RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_primary", primaries[lane]);
-    }
-
-    RegManager::WriteReg("user.ctrl_regs.Aurora_block.slave_en", slaveEn);
+    RegManager::WriteStackReg(
+        {{"user.ctrl_regs.Aurora_block.data_merging_en", enableDataMerging}, {"user.ctrl_regs.i2c_block.chip_id_en", enableChipID}, {"user.ctrl_regs.Aurora_block.slave_en", slaveEn}});
 
     // ################################
     // # Enabling hybrids and chips   #
@@ -1126,14 +1124,15 @@ void RD53FWInterface::SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_
                                {"user.ctrl_regs.lpgbt_mapping.update_downlink", 0}});
 }
 
-void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, uint8_t RxGroup, uint8_t RxModuleId, uint8_t lane)
+void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, const std::vector<std::pair<uint8_t, uint8_t>>& RxGroupsChipLanes, uint8_t RxModuleId)
 {
-    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.uplink_map_id", RxLink},
-                               {"user.ctrl_regs.lpgbt_mapping.upgroup_map_id", RxGroup},
-                               {"user.ctrl_regs.lpgbt_mapping.module_map_id", RxModuleId},
-                               {"user.ctrl_regs.lpgbt_mapping.chip_map_id", lane},
-                               {"user.ctrl_regs.lpgbt_mapping.update_uplink", 1},
-                               {"user.ctrl_regs.lpgbt_mapping.update_uplink", 0}});
+    for(auto RxGroupChipLane: RxGroupsChipLanes) // @TMP@ Yiannis
+        RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.uplink_map_id", RxLink},
+                                   {"user.ctrl_regs.lpgbt_mapping.upgroup_map_id", RxGroupChipLane.first},
+                                   {"user.ctrl_regs.lpgbt_mapping.module_map_id", RxModuleId},
+                                   {"user.ctrl_regs.lpgbt_mapping.chip_map_id", RxGroupChipLane.second},
+                                   {"user.ctrl_regs.lpgbt_mapping.update_uplink", 1},
+                                   {"user.ctrl_regs.lpgbt_mapping.update_uplink", 0}});
 }
 
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }

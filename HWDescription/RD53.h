@@ -232,7 +232,7 @@ class RD53 : public ReadoutChip
     // #################
     // # LpGBT mapping #
     // #################
-    void setRxGroup(uint8_t pRxGroup) { fLpGBTmap.RxGroup = pRxGroup; }
+    void addRxGroup(uint8_t pRxGroup, uint8_t chipLane) { fLpGBTmap.RxGroupsChipLanes.push_back(std::pair(pRxGroup, chipLane)); }
     void setRxChannel(uint8_t pRxChannel) { fLpGBTmap.RxChannel = pRxChannel; }
     void setRxPolarity(uint8_t pRxPolarity) { fLpGBTmap.RxPolarity = pRxPolarity; }
 
@@ -240,7 +240,13 @@ class RD53 : public ReadoutChip
     void setTxChannel(uint8_t pTxChannel) { fLpGBTmap.TxChannel = pTxChannel; }
     void setTxPolarity(uint8_t pTxPolarity) { fLpGBTmap.TxPolarity = pTxPolarity; }
 
-    uint8_t getRxGroup() { return fLpGBTmap.RxGroup; }
+    std::vector<std::pair<uint8_t, uint8_t>> getRxGroupsChipLanes() { return fLpGBTmap.RxGroupsChipLanes; }
+    std::vector<uint8_t>                     getRxGroups()
+    {
+        std::vector<uint8_t> RxGroups;
+        for(auto RxGroupChipLane: fLpGBTmap.RxGroupsChipLanes) RxGroups.push_back(RxGroupChipLane.second);
+        return RxGroups;
+    }
     uint8_t getRxChannel() { return fLpGBTmap.RxChannel; }
     uint8_t getRxPolarity() { return fLpGBTmap.RxPolarity; }
 
@@ -254,18 +260,19 @@ class RD53 : public ReadoutChip
   private:
     struct LpGBTmap
     {
-        uint8_t RxGroup;
-        uint8_t RxChannel;
-        uint8_t RxPolarity;
-        uint8_t TxGroup;
-        uint8_t TxChannel;
-        uint8_t TxPolarity;
+        std::vector<std::pair<uint8_t, uint8_t>> RxGroupsChipLanes;
+        uint8_t                                  RxChannel;
+        uint8_t                                  RxPolarity;
+        uint8_t                                  TxGroup;
+        uint8_t                                  TxChannel;
+        uint8_t                                  TxPolarity;
     } fLpGBTmap;
     pixelMask   fPixelsMask;
     pixelMask   fPixelsMaskDefault;
     std::string myComment;
     uint8_t     myChipLane;
 };
+
 } // namespace Ph2_HwDescription
 
 #endif

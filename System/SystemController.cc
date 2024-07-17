@@ -434,7 +434,6 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
             LOG(INFO) << BOLDBLUE << "\t--> Configured up and down link mapping in firmware" << RESET;
 
             if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
-            // && (static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, theBeBoardFW, fReadoutChipInterface) == true)) // @TMP@
             {
                 static_cast<RD53lpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, fReadoutChipInterface);
                 LOG(INFO) << CYAN << "=== LpGBT chip " << BOLDYELLOW << +cOpticalGroup->getId() << RESET << CYAN << " configured ===" << RESET;

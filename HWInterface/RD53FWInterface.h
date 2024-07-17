@@ -208,7 +208,7 @@ class RD53FWInterface : public BeBoardFWInterface
     uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
     void     ResetOptoLinkSlowControl();
     void     SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_t TxModuleId);
-    void     SetUpLinkMapping(uint8_t RxLink, uint8_t RxGroup, uint8_t RxModuleId, uint8_t lane);
+    void     SetUpLinkMapping(uint8_t RxLink, const std::vector<std::pair<uint8_t, uint8_t>>& RxGroups, uint8_t RxModuleId);
 
     // ####################################################
     // # Hybrid ADC measurements: temperature and voltage #

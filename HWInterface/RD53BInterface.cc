@@ -283,8 +283,7 @@ void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* 
             {
                 RD53Interface::WriteChipReg(cChip, "EnServiceData", 1, false);
 
-                LOG(INFO) << GREEN << "Optimizing " << BOLDYELLOW << "TAP0" << RESET << GREEN << " setting for chip ID " << BOLDYELLOW << cChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW
-                          << +static_cast<RD53*>(cChip)->getChipLane() << RESET;
+                LOG(INFO) << GREEN << "Optimizing " << BOLDYELLOW << "TAP0" << RESET << GREEN << " setting for chip ID " << BOLDYELLOW << cChip->getId() << RESET;
 
                 const auto            maxTAP0value = RD53Shared::setBits(cChip->getNumberOfBits("DAC_CML_BIAS_0"));
                 const float           timeLimit    = 1;   // @CONST@

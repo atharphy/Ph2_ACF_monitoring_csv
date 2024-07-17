@@ -12,36 +12,9 @@
 #include "Utils/Utilities.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/easylogging++.h"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/math/special_functions/binomial.hpp>
-
-long getTimeTook(struct timeval& pStart, bool pMili)
-{
-    struct timeval end;
-    long           seconds(0), useconds(0);
-
-    gettimeofday(&end, 0);
-    seconds  = end.tv_sec - pStart.tv_sec;
-    useconds = end.tv_usec - pStart.tv_usec;
-
-    if(pMili)
-        return (long)(seconds * 1e3 + useconds / 1000);
-
-    else
-        return (long)(seconds * 1e6 + useconds);
-}
-
-void myflush(std::istream& in)
-{
-    in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    in.clear();
-}
-
-void mypause()
-{
-    std::cout << "Press [Enter] to continue ...";
-    std::cin.get();
-}
 
 std::string getResultDirectoryName(const StartInfo& theStartInfo)
 {
@@ -250,19 +223,6 @@ std::string expandEnvironmentVariables(std::string s)
     if(getenv(variable.c_str()) != NULL) value = std::string(getenv(variable.c_str()));
 
     return expandEnvironmentVariables(pre + value + post);
-}
-
-std::vector<uint8_t> splitToVector(const std::string& str, const char delimiter)
-{
-    std::vector<uint8_t> v;
-    std::stringstream    ss(str);
-    while(ss.good())
-    {
-        std::string substr;
-        std::getline(ss, substr, delimiter);
-        v.push_back(std::stoi(substr));
-    }
-    return v;
 }
 
 double hitProbability(double pThreshold)
