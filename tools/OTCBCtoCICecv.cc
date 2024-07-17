@@ -45,7 +45,7 @@ void OTCBCtoCICecv::Running()
     //printCICStrengthAndPhase();
     //writeCBCReg();
     LOG(INFO) << BOLDRED << "========== Starting OTCBC2CICalignment test ==========" << RESET;
-    itrOverCICStrength();
+    writeCBCReg();
     LOG(INFO) << BOLDRED << "========== End OTCBC2CICalignment test ==========" << RESET;
     LOG(INFO) << "Done with OTCBCtoCICecv.";
     Reset();
@@ -273,4 +273,30 @@ void OTCBCtoCICecv::itrOverCICStrength()
                     LOG(INFO) << "Setting CIC strength to FEH" << theHybrid->getId() << RESET;
                     fCicInterface->ConfigureDriveStrength(cCic, cicStrength);
                 }
+}
+
+void OTCBCtoCICecv::writeCBCReg()
+{
+    uint16_t cReg;
+    bool pVerifyBit;
+    uint8_t writeBit;
+    for (uint16_t i = 0x01; i < 0xFF; i += 0x10)
+    {
+        for(auto theBoard: *fDetectorContainer)
+            for(auto theOpticalGroup: *theBoard)
+                for(auto theHybrid: *theOpticalGroup)
+                {
+                    LOG(INFO) << "kpal: for FEH " << theHybrid->getId() << RESET;
+                    for(auto theCBC: *theHybrid)
+                    {
+                        // itr over BetaMult&SLVS from 0x01 to 0xF1 with sum of 0x10
+                        writeBit = uint8_t(i);
+                        pVerifyBit= fReadoutChipInterface->WriteChipReg(theCBC, "BetaMult&SLVS", writeBit, true);
+                        cReg      = fReadoutChipInterface->ReadChipReg(theCBC, "BetaMult&SLVS");
+                        LOG(INFO) << "kpal: CBC number: " << theCBC->getId() << " BetaMult&SLVS: 0x" << std::hex << cReg << std::dec << " pVerifyBit: " << pVerifyBit << RESET;
+                    }
+                }
+        //LOG(INFO) << "kpal: RunCICbypassTest" << RESET;
+        //RunCICbypassTest();
+    }
 }
