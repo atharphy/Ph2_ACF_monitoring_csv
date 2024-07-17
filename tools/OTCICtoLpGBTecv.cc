@@ -19,22 +19,26 @@ void OTCICtoLpGBTecv::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
-    fNumberOfIterations              = findValueInSettings<double>("OTCICtoLpGBTecv_NumberOfIterations", 1000);        
-    fListOfLpGBTPhase                = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_LpGBTPhase", "0-14"));
-    fListOfCICStrength               = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_CICStrength", "1-5"));
-    fListOfClockPolarity             = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_ClockPolarity", "0-1"));
-    fListOfClockStrength             = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_ClockStrength", "1-7")); 
+    fNumberOfIterations  = findValueInSettings<double>("OTCICtoLpGBTecv_NumberOfIterations", 1000);
+    fListOfLpGBTPhase    = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_LpGBTPhase", "0-14"));
+    fListOfCICStrength   = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_CICStrength", "1-5"));
+    fListOfClockPolarity = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_ClockPolarity", "0-1"));
+    fListOfClockStrength = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_ClockStrength", "1-7"));
 
     // Error handle for incorrect LpGBTPhase input
     std::unordered_set<float> allowedLpGBTPhases{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
     std::unordered_set<float> phaseValues;
-    for (float phase: fListOfLpGBTPhase) {
-        if (phaseValues.find(phase) != phaseValues.end()) {
+    for(float phase: fListOfLpGBTPhase)
+    {
+        if(phaseValues.find(phase) != phaseValues.end())
+        {
             LOG(ERROR) << BOLDRED << "Error, repeat detected in OTCICtoLpGBTecv_LpGBTPhase parameter." << std::endl;
             throw Exception("Repeat detected in OTCICtoLpGBTecv_LpGBTPhase parameter");
         }
-        if (allowedLpGBTPhases.find(phase) == allowedLpGBTPhases.end()) {
-            LOG(ERROR) << BOLDRED << "Error, " << phase << " is not an allowed value for the OTCICtoLpGBTecv_LpGBTPhase parameter. The allowed values are: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, and 14." << std::endl;
+        if(allowedLpGBTPhases.find(phase) == allowedLpGBTPhases.end())
+        {
+            LOG(ERROR) << BOLDRED << "Error, " << phase
+                       << " is not an allowed value for the OTCICtoLpGBTecv_LpGBTPhase parameter. The allowed values are: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, and 14." << std::endl;
             throw Exception("Unallowed value for the OTCICtoLpGBTecv_LpGBTPhase parameter");
         }
         phaseValues.insert(phase);
@@ -43,12 +47,15 @@ void OTCICtoLpGBTecv::Initialise(void)
     // Error handle for incorrect CICStrength input
     std::unordered_set<float> allowedCICStrengths{1, 2, 3, 4, 5};
     std::unordered_set<float> cicStrengthValues;
-    for (float cicStrength: fListOfCICStrength) {
-        if (cicStrengthValues.find(cicStrength) != cicStrengthValues.end()) {
+    for(float cicStrength: fListOfCICStrength)
+    {
+        if(cicStrengthValues.find(cicStrength) != cicStrengthValues.end())
+        {
             LOG(ERROR) << BOLDRED << "Error, repeat detected in OTCICtoLpGBTecv_CICStrength parameter." << std::endl;
             throw Exception("Repeat detected in OTCICtoLpGBTecv_CICStrength parameter");
         }
-        if (allowedCICStrengths.find(cicStrength) == allowedCICStrengths.end()) {
+        if(allowedCICStrengths.find(cicStrength) == allowedCICStrengths.end())
+        {
             LOG(ERROR) << BOLDRED << "Error, " << cicStrength << " is not an allowed value for the OTCICtoLpGBTecv_CICStrength parameter. The allowed values are: 1, 2, 3, 4, and 5." << std::endl;
             throw Exception("Unallowed value for the OTCICtoLpGBTecv_CICStrength parameter");
         }
@@ -58,12 +65,15 @@ void OTCICtoLpGBTecv::Initialise(void)
     // Error handle for incorrect ClockPolarity input
     std::unordered_set<float> allowedClockPolarities{0, 1};
     std::unordered_set<float> clockPolarityValues;
-    for (float clockPolarity: fListOfClockPolarity) {
-        if (clockPolarityValues.find(clockPolarity) != clockPolarityValues.end()) {
+    for(float clockPolarity: fListOfClockPolarity)
+    {
+        if(clockPolarityValues.find(clockPolarity) != clockPolarityValues.end())
+        {
             LOG(ERROR) << BOLDRED << "Error, repeat detected in OTCICtoLpGBTecv_ClockPolarity parameter." << std::endl;
             throw Exception("Repeat detected in OTCICtoLpGBTecv_ClockPolarity parameter");
         }
-        if (allowedClockPolarities.find(clockPolarity) == allowedClockPolarities.end()) {
+        if(allowedClockPolarities.find(clockPolarity) == allowedClockPolarities.end())
+        {
             LOG(ERROR) << BOLDRED << "Error, " << clockPolarity << " is not an allowed value for the OTCICtoLpGBTecv_ClockPolarity parameter. The allowed values are 0 and 1." << std::endl;
             throw Exception("Unallowed value for the OTCICtoLpGBTecv_ClockPolarity parameter");
         }
@@ -73,18 +83,21 @@ void OTCICtoLpGBTecv::Initialise(void)
     // Error handle for incorrect ClockStrength input
     std::unordered_set<float> allowedClockStrengths{1, 2, 3, 4, 5, 6, 7};
     std::unordered_set<float> clockStrengthValues;
-    for (float clockStrength: fListOfClockStrength) {
-        if (clockStrengthValues.find(clockStrength) != clockStrengthValues.end()) {
+    for(float clockStrength: fListOfClockStrength)
+    {
+        if(clockStrengthValues.find(clockStrength) != clockStrengthValues.end())
+        {
             LOG(ERROR) << BOLDRED << "Error, repeat detected in OTCICtoLpGBTecv_ClockStrength parameter." << std::endl;
             throw Exception("Repeat detected in OTCICtoLpGBTecv_ClockStrength parameter");
         }
-        if (allowedClockStrengths.find(clockStrength) == allowedClockStrengths.end()) {
-            LOG(ERROR) << BOLDRED << "Error, " << clockStrength << " is not an allowed value for the OTCICtoLpGBTecv_ClockStrength parameter. The allowed values are: 1, 2, 3, 4, 5, 6, and 7." << std::endl;
+        if(allowedClockStrengths.find(clockStrength) == allowedClockStrengths.end())
+        {
+            LOG(ERROR) << BOLDRED << "Error, " << clockStrength << " is not an allowed value for the OTCICtoLpGBTecv_ClockStrength parameter. The allowed values are: 1, 2, 3, 4, 5, 6, and 7."
+                       << std::endl;
             throw Exception("Unallowed value for the OTCICtoLpGBTecv_ClockStrength parameter");
         }
         clockStrengthValues.insert(clockStrength);
     }
-
 
     size_t             numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
     std::vector<float> initialEmptyVector(numberOfLines, 0);
@@ -108,7 +121,7 @@ void OTCICtoLpGBTecv::Running()
 }
 
 void OTCICtoLpGBTecv::runECV()
-{   
+{
     LOG(INFO) << BOLDYELLOW << "OTCICtoLpGBTecv::runIntegrityTest ... start integrity test" << RESET;
 
     for(auto theBoard: *fDetectorContainer)
@@ -139,7 +152,7 @@ void OTCICtoLpGBTecv::runECV()
                         }
 
                         std::string printout = "            RX PHASE: ";
-                        int i = 0;
+                        int         i        = 0;
                         for(auto phase: fListOfLpGBTPhase)
                         {
                             printout += (" " + std::to_string(+static_cast<int>(phase)));
@@ -243,10 +256,10 @@ void OTCICtoLpGBTecv::runECV()
                             } // hybrid loop
 #ifdef __USE_ROOT__
                             // Find the pClockStrength and pPhase indices
-                            auto phaseIterator = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
-                            uint8_t phaseIndex = std::distance(fListOfLpGBTPhase.begin(), phaseIterator) + 1;
-                            auto clockStrengthIterator = std::find(fListOfClockStrength.begin(), fListOfClockStrength.end(), clockStrength);
-                            uint8_t clockStrengthIndex = std::distance(fListOfClockStrength.begin(), clockStrengthIterator) + 1;
+                            auto    phaseIterator                = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
+                            uint8_t phaseIndex                   = std::distance(fListOfLpGBTPhase.begin(), phaseIterator) + 1;
+                            auto    clockStrengthIterator        = std::find(fListOfClockStrength.begin(), fListOfClockStrength.end(), clockStrength);
+                            uint8_t clockStrengthIndex           = std::distance(fListOfClockStrength.begin(), clockStrengthIterator) + 1;
                             uint8_t clockStrengthLengthOfOptions = fListOfClockStrength.size();
 
                             fDQMHistogramOTCICtoLpGBTecv.fillEfficiency(clockStrengthLengthOfOptions, clockPolarity, clockStrengthIndex, cicStrength, phaseIndex, fPatternMatchingEfficiencyContainer);
@@ -254,14 +267,15 @@ void OTCICtoLpGBTecv::runECV()
                             if(fDQMStreamerEnabled)
                             {
                                 // Find the pClockStrength and pPhase indices
-                                auto phaseIterator = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
-                                uint8_t phaseIndex = std::distance(fListOfLpGBTPhase.begin(), pPhaseIterator) + 1;
-                                auto clockStrengthIterator = std::find(fListOfClockStrength.begin(), fListOfClockStrength.end(), clockStrength);
-                                uint8_t clockStrengthIndex = std::distance(fListOfClockStrength.begin(), pClockStrengthIterator) + 1;
+                                auto    phaseIterator                = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
+                                uint8_t phaseIndex                   = std::distance(fListOfLpGBTPhase.begin(), pPhaseIterator) + 1;
+                                auto    clockStrengthIterator        = std::find(fListOfClockStrength.begin(), fListOfClockStrength.end(), clockStrength);
+                                uint8_t clockStrengthIndex           = std::distance(fListOfClockStrength.begin(), pClockStrengthIterator) + 1;
                                 uint8_t clockStrengthLengthOfOptions = fListOfClockStrength.size();
 
                                 ContainerSerialization theECVlpGBTCICContainerSerialization("OTCICtoLpGBTecvEfficiencyHistogram");
-                                theECVlpGBTCICContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fPatternMatchingEfficiencyContainer, clockStrengthLengthOfOptions clockPolarity, clockStrengthIndex, cicStrength, phaseIndex);
+                                theECVlpGBTCICContainerSerialization.streamByOpticalGroupContainer(
+                                    fDQMStreamer, fPatternMatchingEfficiencyContainer, clockStrengthLengthOfOptions clockPolarity, clockStrengthIndex, cicStrength, phaseIndex);
                             }
 #endif
 

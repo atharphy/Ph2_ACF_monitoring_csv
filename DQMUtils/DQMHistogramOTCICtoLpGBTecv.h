@@ -57,7 +57,7 @@ class DQMHistogramOTCICtoLpGBTecv : public DQMHistogramBase
     void reset(void) override;
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer*                       fDetectorContainer;
     std::map<uint8_t, DetectorDataContainer> fEfficiency;
 };
 #endif

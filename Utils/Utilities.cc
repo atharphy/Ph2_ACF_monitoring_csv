@@ -163,16 +163,18 @@ std::vector<float> convertStringToFloatList(std::string theListString)
     boost::erase_all(theListString, " ");
     std::vector<float> theListOfFloats;
 
-    if (theListString.find('-') != std::string::npos) {
-        size_t dashPosition = theListString.find('-');
+    if(theListString.find('-') != std::string::npos)
+    {
+        size_t            dashPosition = theListString.find('-');
         std::stringstream startString(theListString.substr(0, dashPosition));
         std::stringstream endString(theListString.substr(dashPosition + 1));
-        float startFloat, endFloat;
+        float             startFloat, endFloat;
         startString >> startFloat;
         endString >> endFloat;
-        for (float i = startFloat; i <= endFloat; i++) theListOfFloats.push_back(i);
+        for(float i = startFloat; i <= endFloat; i++) theListOfFloats.push_back(i);
     }
-    else {
+    else
+    {
         std::vector<std::string> subStringList;
         boost::algorithm::split(subStringList, theListString, boost::algorithm::is_any_of(","));
         for(auto subString: subStringList) theListOfFloats.push_back(strtof(subString.c_str(), nullptr));
