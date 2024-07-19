@@ -658,7 +658,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
     RD53FWInterface::WriteArbitraryRegister("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents);
 
-    // @TMP@
+    // @TMP@ : Autozero
     if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::FastCMDFSM)
         RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
                                                                     RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
@@ -1126,7 +1126,7 @@ void RD53FWInterface::SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_
 
 void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, const std::vector<std::pair<uint8_t, uint8_t>>& RxGroupsChipLanes, uint8_t RxModuleId)
 {
-    for(auto RxGroupChipLane: RxGroupsChipLanes) // @TMP@ Yiannis
+    for(auto RxGroupChipLane: RxGroupsChipLanes) // @TMP@ : Yiannis
         RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.uplink_map_id", RxLink},
                                    {"user.ctrl_regs.lpgbt_mapping.upgroup_map_id", RxGroupChipLane.first},
                                    {"user.ctrl_regs.lpgbt_mapping.module_map_id", RxModuleId},
