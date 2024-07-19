@@ -186,6 +186,9 @@ class RD53 : public ReadoutChip
     // ####################################
     LaneConfig laneConfig;
 
+    // ############################
+    // # Virtual member functions #
+    // ############################
     virtual size_t                   getNRows() const                                                                                                     = 0;
     virtual size_t                   getNCols() const                                                                                                     = 0;
     virtual size_t                   getMaxBCIDvalue() const                                                                                              = 0;
@@ -198,6 +201,9 @@ class RD53 : public ReadoutChip
     virtual float                    Charge2VCal(float Charge) const                                                                                      = 0;
     virtual bool                     getUseGainDualSlope() const                                                                                          = 0;
 
+    // ################
+    // # Constructors #
+    // ################
     RD53() : ReadoutChip(0, 0, 0, 0, 0) {}
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
     RD53(const RD53&) = delete;
@@ -212,9 +218,8 @@ class RD53 : public ReadoutChip
     uint8_t           getNumberOfBits(const std::string& regName) override;
     // #############################
 
-    pixelMask& getPixelsMask() { return fPixelsMask; }
-    pixelMask& getPixelsMaskDefault() { return fPixelsMaskDefault; }
-
+    pixelMask&  getPixelsMask() { return fPixelsMask; }
+    pixelMask&  getPixelsMaskDefault() { return fPixelsMaskDefault; }
     void        copyMaskFromDefault(const std::string& which = "all");
     void        copyMaskToDefault(const std::string& which = "all");
     void        resetMask();
