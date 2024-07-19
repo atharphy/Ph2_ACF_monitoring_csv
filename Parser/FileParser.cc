@@ -1471,17 +1471,6 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
     }
 }
 
-// ########################
-// # RD53 specific parser #
-// ########################
-template <class T, size_t N>
-auto parseString(const std::string& data)
-{
-    std::array<T, N> result;
-    std::transform(data.begin(), data.end(), result.begin(), [](char c) { return c - '0'; });
-    return result;
-}
-
 void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, Ph2_HwDescription::lpGBT* pLpGBT, std::ostream& os)
 {
     for(pugi::xml_node cChild: pHybridNode.children())

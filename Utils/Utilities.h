@@ -1,16 +1,14 @@
 /*
-
     \file                          Utilities.h
     \brief                         Some objects that might come in handy
     \author                        Nicolas PIERRE
     \version                       1.0
     \date                          10/06/14
     Support :                      mail to : nicolas.pierre@icloud.com
+*/
 
- */
-
-#ifndef __UTILITIES_H__
-#define __UTILITIES_H__
+#ifndef UTILITIES_H
+#define UTILITIES_H
 
 #include "HWDescription/Definition.h"
 #include "StartInfo.h"
@@ -36,6 +34,14 @@ std::string string_format(const std::string& format, Args... args)
     std::unique_ptr<char[]> buf(new char[size]);
     snprintf(buf.get(), size, format.c_str(), args...);
     return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
+}
+
+template <class T, size_t N>
+auto parseString(const std::string& data)
+{
+    std::array<T, N> result;
+    std::transform(data.begin(), data.end(), result.begin(), [](char c) { return c - '0'; });
+    return result;
 }
 
 std::string getResultDirectoryName(const StartInfo& theStartInfo);
@@ -78,7 +84,7 @@ double convertAnyDouble(const char* pRegValue);
 
 std::vector<float> convertStringToFloatList(std::string theListString);
 
-// tokenize string
+// Tokenize string
 void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters);
 
 /*! \brief Expand environment variables in string
