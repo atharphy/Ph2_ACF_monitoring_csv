@@ -4,6 +4,7 @@
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include <algorithm>
+#include <unordered_set>
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -268,14 +269,14 @@ void OTCICtoLpGBTecv::runECV()
                             {
                                 // Find the pClockStrength and pPhase indices
                                 auto    phaseIterator                = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
-                                uint8_t phaseIndex                   = std::distance(fListOfLpGBTPhase.begin(), pPhaseIterator) + 1;
+                                uint8_t phaseIndex                   = std::distance(fListOfLpGBTPhase.begin(), phaseIterator) + 1;
                                 auto    clockStrengthIterator        = std::find(fListOfClockStrength.begin(), fListOfClockStrength.end(), clockStrength);
-                                uint8_t clockStrengthIndex           = std::distance(fListOfClockStrength.begin(), pClockStrengthIterator) + 1;
+                                uint8_t clockStrengthIndex           = std::distance(fListOfClockStrength.begin(), clockStrengthIterator) + 1;
                                 uint8_t clockStrengthLengthOfOptions = fListOfClockStrength.size();
 
                                 ContainerSerialization theECVlpGBTCICContainerSerialization("OTCICtoLpGBTecvEfficiencyHistogram");
                                 theECVlpGBTCICContainerSerialization.streamByOpticalGroupContainer(
-                                    fDQMStreamer, fPatternMatchingEfficiencyContainer, clockStrengthLengthOfOptions clockPolarity, clockStrengthIndex, cicStrength, phaseIndex);
+                                    fDQMStreamer, fPatternMatchingEfficiencyContainer, clockStrengthLengthOfOptions, clockPolarity, clockStrengthIndex, cicStrength, phaseIndex);
                             }
 #endif
 
