@@ -5,7 +5,6 @@
   \version             1.0
   \date                6/5/19
   Support :            mail to : fabio.ravera@cern.ch
-
 */
 
 #ifndef __MonitorDQMPlotBASE_H__
@@ -77,8 +76,9 @@ class MonitorDQMPlotBase
         struct tm* timeinfo = localtime(&rawTime);
         char       timeStampString[80];
         strftime(timeStampString, sizeof(timeStampString), TIME_FORMAT, timeinfo);
+        std::string tmpTime{std::to_string(1) + timeStampString};
 
-        TDatime rootTime(timeStampString);
+        TDatime rootTime(tmpTime.c_str());
         return rootTime.Convert();
     }
 
@@ -101,7 +101,7 @@ class MonitorDQMPlotBase
             graphContainer.fTheGraph->GetYaxis()->SetTitle(YTitle);
         }
         graphContainer.fTheGraph->SetMarkerStyle(20);
-        graphContainer.fTheGraph->SetMarkerSize(0.4);
+        graphContainer.fTheGraph->SetMarkerSize(0.8);
 
         if(type == "chip")
             RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, graphContainer);
