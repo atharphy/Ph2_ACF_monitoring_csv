@@ -61,7 +61,7 @@ a value for `VOFS` as close as possible to 0.5 V.
 
 The full procedure as given by L. Gaioni can be found [here](https://indico.cern.ch/event/1247433/).
 
-### Main contributions to the current consumption:
+### Main contributions to the current consumption
 
 - Pre-amplifier =  3 μA per pixel (total additional 435 mA)
 - Comparator = 1.1 μA per pixel for low thresholds,  
@@ -145,7 +145,7 @@ Then, assuming a target threshold of 1000 e-:
     - Update the `GDAC` values in `CMSIT_RD53B.xml`
 1. Without re-running the threshold equalization, mask the noisy pixels:
     - `CMSITminiDAQ -f CMSIT_RD53B.xml -c noise`
-1. Run a `pixelalive` setting the appropriate rate for `OccPerPixel `to mask the stuck pixels
+1. Run a `pixelalive` setting the appropriate rate for `OccPerPixel` to mask the stuck pixels
     (e. g. `OccPerPixel` = 0.9 to mask all pixels that detect less than 90 % of the injected signals):
     - `CMSITminiDAQ -f CMSIT_RD53B.xml -c pixelalive`
 1. Check the distribution of the thresholds:

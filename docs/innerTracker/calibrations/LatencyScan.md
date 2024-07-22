@@ -6,8 +6,8 @@ Finds the optimal latency for scans and measurements.
 If used with TLU or external trigger source, make sure to have a relatively high hit occupancy in order to locate the maximum.
 
 !!! warning "You have to update the config manually in the xml file"
-	* RD53B: `TriggerConfig`
-	* RD53A: `LATENCY_CONFIG`
+	- RD53B: `TriggerConfig`
+	- RD53A: `LATENCY_CONFIG`
 
 ## Configuration parameters
 
