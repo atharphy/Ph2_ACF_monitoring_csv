@@ -202,14 +202,13 @@ class RD53FWInterface : public BeBoardFWInterface
     // ###################################
     // # Read/Write Status Optical Group #
     // ###################################
-    void     ResetOptoLinkSlowControl();
-    void     StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady);
     void     ResetOptoLink() override;
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
     bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify = true) override;
     uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
+    void     ResetOptoLinkSlowControl();
     void     SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_t TxModuleId);
-    void     SetUpLinkMapping(uint8_t RxLink, uint8_t RxGroup, uint8_t RxModuleId, uint8_t lane);
+    void     SetUpLinkMapping(uint8_t RxLink, const std::vector<std::pair<uint8_t, uint8_t>>& RxGroups, uint8_t RxModuleId);
 
     // ####################################################
     // # Hybrid ADC measurements: temperature and voltage #

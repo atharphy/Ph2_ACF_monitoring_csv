@@ -8,7 +8,6 @@
 */
 
 #include "RD53PixelAlive.h"
-#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -118,8 +117,6 @@ void PixelAlive::localConfigure(const std::string& histoFileName, int currentRun
 
 void PixelAlive::run()
 {
-    if(doSilentRunning == true) CalibBase::SilentRunning(doSilentRunning);
-
     if((doDataIntegrity != 0) && (std::string(frontEnd->name).find("RD53B") != std::string::npos))
     {
         RD53RunProgress::turnOFF();
@@ -158,6 +155,9 @@ void PixelAlive::run()
                     for(const auto cChip: *cHybrid)
                     {
                         std::map<std::string, uint16_t> regValueMap;
+
+                        LOG(INFO) << GREEN << "Results for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                                  << +cChip->getId() << RESET << GREEN << "]" << RESET;
 
                         for(const auto& su: suffix)
                         {
@@ -204,9 +204,9 @@ void PixelAlive::run()
 
                                     const auto& ele     = std::find(suffix.begin(), suffix.end(), su);
                                     const auto  coreCol = (ele - suffix.begin()) * baseNumberOfBits + i;
-                                    LOG(WARNING) << BOLDBLUE << "\t--> " << (doDataIntegrity == 2 ? "Found problematic " : "") << "Core-Column " << BOLDYELLOW << coreCol << BOLDBLUE << "/"
-                                                 << BOLDYELLOW << RD53Shared::firstChip->getNCols() / RD53Constants::NROW_CORE << BOLDBLUE << " --> I'll try "
-                                                 << (doDataIntegrity == 2 ? "to nail down the problem " : "") << "at pixel level" << RESET;
+                                    LOG(WARNING) << BOLDBLUE << "\t--> Found problematic Core-Column " << BOLDYELLOW << coreCol << BOLDBLUE << "(" << BOLDYELLOW
+                                                 << RD53Shared::firstChip->getNCols() / RD53Constants::NROW_CORE << BOLDBLUE << ")" << RESET << GREEN
+                                                 << " --> I'll try to nail down the problem at pixel level" << RESET;
 
                                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                                     {
@@ -272,8 +272,6 @@ void PixelAlive::run()
                         // ###########################
                         // # Download new DAC values #
                         // ###########################
-                        LOG(INFO) << GREEN << "Results for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                  << +cChip->getId() << RESET << GREEN << "]" << RESET;
                         for(const auto& su: suffix)
                         {
                             this->fReadoutChipInterface->WriteChipReg(cChip, regName + su, regValueMap[su], false);
@@ -331,8 +329,12 @@ void PixelAlive::run()
     else if((doDataIntegrity == true) && (strcmp(frontEnd->name, "RD53B") != 0))
         throw std::runtime_error("Option -DoDataIntegrity- not available for RD53A");
 
+    // #########################
+    // # Run actual PixelAlive #
+    // #########################
+    CalibBase::SilentRunning(doSilentRunning);
     PixelAlive::runPixelAlive();
-    if(doSilentRunning == true) CalibBase::SilentRunning(false);
+    CalibBase::SilentRunning(!doSilentRunning);
 }
 
 void PixelAlive::runPixelAlive()

@@ -283,8 +283,7 @@ void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* 
             {
                 RD53Interface::WriteChipReg(cChip, "EnServiceData", 1, false);
 
-                LOG(INFO) << GREEN << "Optimizing " << BOLDYELLOW << "TAP0" << RESET << GREEN << " setting for chip ID " << BOLDYELLOW << cChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW
-                          << +static_cast<RD53*>(cChip)->getChipLane() << RESET;
+                LOG(INFO) << GREEN << "Optimizing " << BOLDYELLOW << "TAP0" << RESET << GREEN << " setting for chip ID " << BOLDYELLOW << cChip->getId() << RESET;
 
                 const auto            maxTAP0value = RD53Shared::setBits(cChip->getNumberOfBits("DAC_CML_BIAS_0"));
                 const float           timeLimit    = 1;   // @CONST@
@@ -545,7 +544,7 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
     RD53Interface::WriteChipReg(pRD53, "PIX_MODE", pixMode);
 }
 
-void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>& cmdStream)
+void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, const std::vector<uint16_t>& cmdStream)
 {
     // #################################################################################################################################################################
     // # Compute number of 16-bit words to which we add NSYNC_WORDS sync words every RD53Constants::NWORDS_TO_SYNC:                                                    #

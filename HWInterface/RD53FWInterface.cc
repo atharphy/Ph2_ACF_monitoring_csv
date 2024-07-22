@@ -104,9 +104,9 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // #########################
     RegManager::WriteStackReg({{"user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 1}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 0}});
 
-    // ##########
-    // # Resets #
-    // ##########
+    // ################
+    // # Board resets #
+    // ################
     RD53FWInterface::ResetFastCmdBlk();
     RD53FWInterface::ResetSlowCmdFIFO();
     RD53FWInterface::ResetReadBkFIFO();
@@ -141,7 +141,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 // ###################################
                 // # Check if DataMerging is enabled #
                 // ###################################
-                auto lane = static_cast<RD53*>(cChip)->getChipLane();
+                const auto lane = static_cast<RD53*>(cChip)->getChipLane();
                 if(static_cast<RD53*>(cChip)->laneConfig.isPrimary == false)
                 {
                     enableDataMerging = true;
@@ -153,18 +153,16 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 // # Check if ChipID is enabled #
                 // ##############################
                 if(static_cast<RD53*>(cChip)->getDataFormatOptions().enableChipId == true) enableChipID = true;
+
+                // ###############################
+                // # Map chips into the firmware #
+                // ###############################
+                RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_id", cChip->getId() & 3);
+                RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_primary", primaries[lane]);
             }
 
-    RegManager::WriteStackReg({{"user.ctrl_regs.Aurora_block.data_merging_en", enableDataMerging}, {"user.ctrl_regs.i2c_block.chip_id_en", enableChipID}});
-
-    for(const auto cChip: *pBoard->getFirstObject()->getFirstObject())
-    {
-        auto lane = static_cast<RD53*>(cChip)->getChipLane();
-        RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_id", cChip->getId() & 3);
-        RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_primary", primaries[lane]);
-    }
-
-    RegManager::WriteReg("user.ctrl_regs.Aurora_block.slave_en", slaveEn);
+    RegManager::WriteStackReg(
+        {{"user.ctrl_regs.Aurora_block.data_merging_en", enableDataMerging}, {"user.ctrl_regs.i2c_block.chip_id_en", enableChipID}, {"user.ctrl_regs.Aurora_block.slave_en", slaveEn}});
 
     // ################################
     // # Enabling hybrids and chips   #
@@ -188,8 +186,16 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // #########################################
     // # Read optical link slow control status #
     // #########################################
-    uint32_t txIsReady, rxIsReady;
-    RD53FWInterface::StatusOptoLinkSlowControl(txIsReady, rxIsReady);
+    uint32_t txIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.tx_ready");
+    uint32_t rxIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
+    if(txIsReady == true)
+        LOG(INFO) << GREEN << "Optical link tx slow control status: " << BOLDYELLOW << "ready" << RESET;
+    else
+        LOG(WARNING) << GREEN << "Optical link tx slow control status: " << BOLDRED << "not ready" << RESET;
+    if(rxIsReady == true)
+        LOG(INFO) << GREEN << "Optical link rx slow control status: " << BOLDYELLOW << "ready" << RESET;
+    else
+        LOG(WARNING) << GREEN << "Optical link rx slow control status: " << BOLDRED << "not ready" << RESET;
 
     // ###########################
     // # Check RD53 AURORA speed #
@@ -652,7 +658,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
     RD53FWInterface::WriteArbitraryRegister("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents);
 
-    // @TMP@
+    // @TMP@ : Autozero
     if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::FastCMDFSM)
         RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
                                                                     RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
@@ -1039,22 +1045,6 @@ void RD53FWInterface::ResetOptoLinkSlowControl()
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_reset", 0x0}, {"user.ctrl_regs.lpgbt_1.ic_rx_reset", 0x0}});
 }
 
-void RD53FWInterface::StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady)
-{
-    txIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.tx_ready");
-    rxIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
-
-    if(txIsReady == true)
-        LOG(INFO) << GREEN << "Optical link tx slow control status: " << BOLDYELLOW << "ready" << RESET;
-    else
-        LOG(WARNING) << GREEN << "Optical link tx slow control status: " << BOLDRED << "not ready" << RESET;
-
-    if(rxIsReady == true)
-        LOG(INFO) << GREEN << "Optical link rx slow control status: " << BOLDYELLOW << "ready" << RESET;
-    else
-        LOG(WARNING) << GREEN << "Optical link rx slow control status: " << BOLDRED << "not ready" << RESET;
-}
-
 void RD53FWInterface::ResetOptoLink()
 {
     RegManager::WriteReg("user.ctrl_regs.lpgbt_1.mgt_reset", 0x1);
@@ -1134,14 +1124,15 @@ void RD53FWInterface::SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_
                                {"user.ctrl_regs.lpgbt_mapping.update_downlink", 0}});
 }
 
-void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, uint8_t RxGroup, uint8_t RxModuleId, uint8_t lane)
+void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, const std::vector<std::pair<uint8_t, uint8_t>>& RxGroupsChipLanes, uint8_t RxModuleId)
 {
-    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.uplink_map_id", RxLink},
-                               {"user.ctrl_regs.lpgbt_mapping.upgroup_map_id", RxGroup},
-                               {"user.ctrl_regs.lpgbt_mapping.module_map_id", RxModuleId},
-                               {"user.ctrl_regs.lpgbt_mapping.chip_map_id", lane},
-                               {"user.ctrl_regs.lpgbt_mapping.update_uplink", 1},
-                               {"user.ctrl_regs.lpgbt_mapping.update_uplink", 0}});
+    for(auto RxGroupChipLane: RxGroupsChipLanes) // @TMP@ : Yiannis
+        RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.uplink_map_id", RxLink},
+                                   {"user.ctrl_regs.lpgbt_mapping.upgroup_map_id", RxGroupChipLane.first},
+                                   {"user.ctrl_regs.lpgbt_mapping.module_map_id", RxModuleId},
+                                   {"user.ctrl_regs.lpgbt_mapping.chip_map_id", RxGroupChipLane.second},
+                                   {"user.ctrl_regs.lpgbt_mapping.update_uplink", 1},
+                                   {"user.ctrl_regs.lpgbt_mapping.update_uplink", 0}});
 }
 
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
