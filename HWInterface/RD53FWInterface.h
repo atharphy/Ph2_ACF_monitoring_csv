@@ -30,6 +30,7 @@ class BeBoard;
 // #######################
 namespace RD53FWconstants
 {
+const uint8_t  NMAXCHIP_HYBRID      = 4;      // Maximum number of chips in a hybrid
 const uint8_t  NLANE_HYBRID         = 4;      // Number of lanes per hybrid
 const uint8_t  HEADEAR_WRTCMD       = 0xFF;   // Header of chip write command sequence
 const uint8_t  NBIT_FWVER           = 16;     // Number of bits for the firmware version

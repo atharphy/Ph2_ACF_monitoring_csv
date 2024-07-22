@@ -325,7 +325,7 @@ int main(int argc, char** argv)
                 else if(pa.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->size() != 1)
                 {
                     auto chipSubset = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addReadoutChipQueryFunction(chipSubset, "readoutChipSubset");
+                    pa.fDetectorContainer->addReadoutChipQueryFunction(chipSubset, "chipSubset");
                     doTwice = true;
                 }
             }

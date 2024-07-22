@@ -316,6 +316,9 @@ void VoltageTuning::run()
                               << (allEnabled_current - allDisabled_current) / (RD53Shared::firstChip->getNRows() * RD53Shared::firstChip->getNCols()) << BOLDBLUE << " uA" << RESET;
                 }
 
+    // #################
+    // # Restore query #
+    // #################
     fDetectorContainer->resetReadoutChipQueryFunction();
     fDetectorContainer->setEnabledAll(true);
 }

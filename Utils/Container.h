@@ -64,8 +64,6 @@ class Container
 {
   public:
     Container(uint16_t id) : BaseContainer(id) {}
-    // Container(unsigned int size) : std::vector<T*>(size) {}
-
     Container(const Container&) = delete;
     Container(Container&& theCopyContainer) : std::vector<T*>(std::move(theCopyContainer)), BaseContainer(std::move(theCopyContainer)) {}
 
