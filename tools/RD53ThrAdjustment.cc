@@ -119,7 +119,7 @@ void ThrAdjustment::run()
     ThrAdjustment::bitWiseScanGlobal_Maximum(frontEnd->thresholdRegs, targetThreshold, startValue, stopValue);
 
     LOG(INFO) << RESET;
-    LOG(INFO) << BOLDMAGENTA << ">>> Searching for a threshold corresponding to " << std::setprecision(1) << BOLDYELLOW << TARGETEFF * 100 << "%" << BOLDMAGENTA << " efficiency <<<" << RESET;
+    LOG(INFO) << BOLDMAGENTA << ">>> Searching for a threshold corresponding to " << std::setprecision(1) << BOLDYELLOW << TARGETEFF * 100 << BOLDMAGENTA << "% efficiency <<<" << RESET;
     ThrAdjustment::bitWiseScanGlobal_Zero(frontEnd->thresholdRegs, targetThreshold, startValue, stopValue);
 
     // ############################
@@ -199,7 +199,7 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
     ContainerFactory::copyAndInitChip<char>(*fDetectorContainer, directionContainer, zeroC);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, minDACcontainer, init = startValue);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midHDACcontainer);
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, downloadDACcontainer);
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, downloadDACcontainer, init = 0);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midLDACcontainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
@@ -222,36 +222,43 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                               << BOLDYELLOW << "VCAL_MED" << BOLDBLUE << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
                 }
 
-    // #######################################
-    // # Prepare query and disable all chips #
-    // #######################################
-    CalibBase::prepareChipQueryForEnDis("chipSubset");
-    for(const auto cBoard: directionContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid) cChip->setEnabled(false);
+    // #####################
+    // # Disable all chips #
+    // #####################
+    // CalibBase::prepareChipQueryForEnDis("chipSubset"); // @TMP@
+    CalibBase::setChipEnDis(false);
 
-    for(auto i = 0u; i < RD53FWconstants::NMAXCHIP_HYBRID; i++)
+    for(auto it = 0u; it < RD53FWconstants::NMAXCHIP_HYBRID; it++)
     {
-        // ########################################
-        // # Enable one chip per hybrid at a time #
-        // ########################################
-        for(const auto cBoard: directionContainer)
+        // ######################################################
+        // # Enable one chip per hybrid at a time and set query #
+        // ######################################################
+        bool isDetectorEmpty = false;
+        fDetectorContainer->removeReadoutChipQueryFunction("chipSubset"); // @TMP@
+        for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
-                    if(i < cHybrid->size()) cHybrid[i].setEnabled(true);
+                {
+                    if(it < cHybrid->fullSize()) cHybrid->at(it)->setEnabled(true);
+                    if((it > 0) && (it <= cHybrid->fullSize())) cHybrid->at(it - 1)->setEnabled(false);
+                    isDetectorEmpty |= (cHybrid->size() == 0);
+                }
+        if(isDetectorEmpty == true) break;
+        CalibBase::prepareChipQueryForEnDis("chipSubset"); // @TMP@
+
+        LOG(INFO) << RESET;
+        LOG(INFO) << BOLDMAGENTA << ">>> Optimizing all frontend chips #" << BOLDYELLOW << it << BOLDMAGENTA << " <<<" << RESET;
 
         for(auto i = 0u; i <= numberOfBits + 1u; i++)
         {
             // ###########################
             // # Download new DAC values #
             // ###########################
-            for(const auto cBoard: directionContainer)
+            for(const auto cBoard: *fDetectorContainer)
                 for(const auto cOpticalGroup: *cBoard)
                     for(const auto cHybrid: *cOpticalGroup)
                         for(const auto cChip: *cHybrid)
-                        {
-                            if(cChip->getSummary<char>() == 'H')
+                            if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == 'H')
                             {
                                 midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                     midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
@@ -268,7 +275,7 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                                 downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                     midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                             }
-                            else if(cChip->getSummary<char>() == 'L')
+                            else if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == 'L')
                             {
                                 midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                     midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
@@ -299,24 +306,24 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                                      minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) *
                                         (1 - goldenRatio);
 
-                                if(cChip->getSummary<char>() == '0')
+                                if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == '0')
                                     downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                         midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-                                else if(cChip->getSummary<char>() == '1')
+                                else if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() ==
+                                        '1')
                                     downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                         midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                             }
-                        }
             if(i == numberOfBits + 1u) break; // Allows to compute last move
 
             // ################
             // # Run analysis #
             // ################
+            CalibBase::SilentRunning(true);
             CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames);
-            PixelAlive::doSilentRunning = true;
             PixelAlive::run();
-            PixelAlive::doSilentRunning = false;
-            auto output                 = PixelAlive::analyze();
+            CalibBase::SilentRunning(false);
+            auto output = PixelAlive::analyze();
 
             // ##############################################
             // # Send periodic data to monitor the progress #
@@ -326,7 +333,7 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
             // #####################
             // # Compute next step #
             // #####################
-            for(const auto cBoard: *output)
+            for(const auto cBoard: *fDetectorContainer)
                 for(const auto cOpticalGroup: *cBoard)
                     for(const auto cHybrid: *cOpticalGroup)
                         for(const auto cChip: *cHybrid)
@@ -334,7 +341,12 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                             // #######################
                             // # Build discriminator #
                             // #######################
-                            auto value = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
+                            auto value = output->getObject(cBoard->getId())
+                                             ->getObject(cOpticalGroup->getId())
+                                             ->getObject(cHybrid->getId())
+                                             ->getObject(cChip->getId())
+                                             ->getSummary<GenericDataVector, OccupancyAndPh>()
+                                             .fOccupancy;
 
                             if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == 'H')
                                 outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = value;
@@ -373,16 +385,17 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
         }
     }
 
-    // #################
-    // # Restore query #
-    // #################
+    // ################################
+    // # Restore query and enable all #
+    // ################################
     fDetectorContainer->resetReadoutChipQueryFunction();
     fDetectorContainer->setEnabledAll(true);
 
     // ###########################
     // # Download new DAC values #
     // ###########################
-    CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames);
+    LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
+    CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames, true, 0);
 
     // #################################
     // # Reset masks to default values #
@@ -508,6 +521,7 @@ void ThrAdjustment::bitWiseScanGlobal_Zero(const std::vector<const char*>& regNa
     // ###########################
     // # Download new DAC values #
     // ###########################
+    LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
     CalibBase::downloadNewDACvalues(bestDACcontainer, regNames, true, 0);
 
     // ################

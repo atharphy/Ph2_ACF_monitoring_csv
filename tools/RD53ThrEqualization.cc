@@ -513,6 +513,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
     // ###########################
     // # Download new DAC values #
     // ###########################
+    LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
     CalibBase::downloadNewDACvalues(bestDACcontainer, {regName.c_str()}, true, 0);
 
     // #################################

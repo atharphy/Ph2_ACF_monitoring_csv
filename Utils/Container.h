@@ -1,13 +1,11 @@
 /*
-
-        \file                          Container.h
-        \brief                         containers for DAQ
-        \author                        Fabio Ravera, Lorenzo Uplegger
-        \version                       1.0
-        \date                          08/04/19
-        Support :                      mail to : fabio.ravera@cern.ch
-
- */
+  \file                  Container.h
+  \brief                 Containers for DAQ
+  \author                Fabio Ravera, Lorenzo Uplegger
+  \version               1.0
+  \date                  08/04/19
+  Support:               email to fabio.ravera@cern.ch
+*/
 
 #ifndef __CONTAINER_H__
 #define __CONTAINER_H__
@@ -33,7 +31,7 @@ class ChipContainer;
 class BaseContainer
 {
   public:
-    BaseContainer(uint16_t id = -1) : id_(id), isEnabled_(true) { ; }
+    BaseContainer(uint16_t id = -1) : id_(id), isEnabled_(true) {}
 
     BaseContainer(const BaseContainer&) = delete;
     BaseContainer(BaseContainer&& theCopyContainer)
@@ -168,16 +166,15 @@ class Container
 class ChannelContainerBase
 {
   public:
-    ChannelContainerBase() { ; }
-    virtual ~ChannelContainerBase() { ; }
-    virtual void normalize(uint32_t numberOfEvents) { ; }
+    ChannelContainerBase() {}
+    virtual ~ChannelContainerBase() {}
+    virtual void normalize(uint32_t numberOfEvents) {}
 
   private:
     friend class boost::serialization::access;
     template <class Archive>
     void serialize(Archive& theArchive, const unsigned int version)
     {
-        ;
     }
 };
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(ChannelContainerBase)
@@ -355,7 +352,7 @@ class HWDescriptionContainer : public Container<T>
 
   public:
     HWDescriptionContainer(uint16_t id) : Container<T>(id) {}
-    ~HWDescriptionContainer() { ; }
+    ~HWDescriptionContainer() {}
 
     struct QueryFunction
     {
@@ -399,29 +396,25 @@ class HWDescriptionContainer : public Container<T>
 
     virtual MyConstIterator end() const { return MyConstIterator(this, std::vector<T*>::end(), std::vector<T*>::end()); }
 
-    template <typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration
-                                   // is defined
+    template <typename theHW = HW> // Small trick to make sure that it is not instantiated before HW forward declaration is defined
     theHW* getObject(size_t theId)
     {
         return static_cast<theHW*>(Container<T>::getObject(theId));
     }
 
-    template <typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration
-                                   // is defined
+    template <typename theHW = HW> // Small trick to make sure that it is not instantiated before HW forward declaration is defined
     const theHW* getObject(size_t theId) const
     {
         return static_cast<const theHW*>(Container<T>::getObject(theId));
     }
 
-    template <typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration
-                                   // is defined
+    template <typename theHW = HW> // Small trick to make sure that it is not instantiated before HW forward declaration is defined
     theHW* getFirstObject()
     {
         return static_cast<theHW*>(*(begin()));
     }
 
-    template <typename theHW = HW> // small trick to make sure that it is not instantiated before HW forward declaration
-                                   // is defined
+    template <typename theHW = HW> // Small trick to make sure that it is not instantiated before HW forward declaration is defined
     const theHW* getFirstObject() const
     {
         return static_cast<const theHW*>(*(begin()));
@@ -454,16 +447,16 @@ class HWDescriptionContainer : public Container<T>
         updateQueryFunction();
     }
 
+    T*&      operator[](size_t pos) { return this->std::vector<T*>::operator[](pos); }
+    const T& operator[](size_t pos) const { return this->std::vector<T*>::operator[](pos); }
+    T*       at(size_t index) { return this->std::vector<T*>::at(index); }
+    T*       at(size_t index) const { return this->std::vector<T*>::at(index); }
+
   protected:
     QueryFunction fQueryFunction;
 
   private:
-    T*&                                                  operator[](size_t pos) { return this->std::vector<T*>::operator[](pos); }
-    const T&                                             operator[](size_t pos) const { return this->std::vector<T*>::operator[](pos); }
     std::map<std::string, std::function<bool(const T*)>> fQueryFunctionMap;
-
-    T* at(size_t index) { return this->std::vector<T*>::at(index); }
-    T* at(size_t index) const { return this->std::vector<T*>::at(index); }
 
     void updateQueryFunction()
     {
@@ -495,8 +488,6 @@ class HybridContainer : public HWDescriptionContainer<ChipContainer, Ph2_HwDescr
     {
         return static_cast<T*>(HWDescriptionContainer<ChipContainer, Ph2_HwDescription::ReadoutChip>::addObject(id, chip));
     }
-
-  private:
 };
 
 class OpticalGroupContainer : public HWDescriptionContainer<HybridContainer, Ph2_HwDescription::Hybrid>
@@ -508,8 +499,6 @@ class OpticalGroupContainer : public HWDescriptionContainer<HybridContainer, Ph2
     {
         return static_cast<T*>(HWDescriptionContainer<HybridContainer, Ph2_HwDescription::Hybrid>::addObject(id, hybrid));
     }
-
-  private:
 };
 
 class BoardContainer : public HWDescriptionContainer<OpticalGroupContainer, Ph2_HwDescription::OpticalGroup>
@@ -521,8 +510,6 @@ class BoardContainer : public HWDescriptionContainer<OpticalGroupContainer, Ph2_
     {
         return static_cast<T*>(HWDescriptionContainer<OpticalGroupContainer, Ph2_HwDescription::OpticalGroup>::addObject(id, opticalGroup));
     }
-
-  private:
 };
 
 class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDescription::BeBoard>
@@ -667,8 +654,6 @@ class DetectorContainer : public HWDescriptionContainer<BoardContainer, Ph2_HwDe
             }
         }
     }
-
-  private:
 };
 
 #endif
