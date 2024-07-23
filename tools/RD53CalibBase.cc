@@ -220,7 +220,14 @@ void CalibBase::prepareChipQueryForEnDis(const std::string& queryName)
 
     fDetectorContainer->resetReadoutChipQueryFunction();
     fDetectorContainer->addReadoutChipQueryFunction(chipSubset, queryName);
-    fDetectorContainer->setEnabledAll(true);
+}
+
+void CalibBase::setChipEnDis(bool enable)
+{
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+              for(const auto cChip: *cHybrid) cChip->setEnabled(enable); // @TMP@
 }
 
 void CalibBase::setSinglePixel(ReadoutChip* pChip, size_t row, size_t col, bool enable, bool inject)

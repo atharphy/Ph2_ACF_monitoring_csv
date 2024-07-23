@@ -99,7 +99,11 @@ void VoltageTuning::run()
 
     auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
+    // ################################
+    // # Prepare query and enable all #
+    // ################################
     CalibBase::prepareChipQueryForEnDis("chipSubset");
+    fDetectorContainer->setEnabledAll(true);
 
     for(auto nAttempt = 0; nAttempt < RD53Shared::MAXATTEMPTS; nAttempt++)
     {
@@ -316,6 +320,9 @@ void VoltageTuning::run()
                               << (allEnabled_current - allDisabled_current) / (RD53Shared::firstChip->getNRows() * RD53Shared::firstChip->getNCols()) << BOLDBLUE << " uA" << RESET;
                 }
 
+    // ################################
+    // # Restore query and enable all #
+    // ################################
     fDetectorContainer->resetReadoutChipQueryFunction();
     fDetectorContainer->setEnabledAll(true);
 }

@@ -40,8 +40,9 @@ class ClockDelay : public PixelAlive
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override
     {
-        return PixelAlive::getNumberIterations() *
-               (stopValue - startValue + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+        const uint16_t nIterations =
+            (stopValue - startValue + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+        return PixelAlive::getNumberIterations() * nIterations;
     }
 
     void analyze();
