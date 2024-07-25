@@ -12,19 +12,7 @@
 #ifndef EXTTRIGGERLATENCYSCAN_H__
 #define EXTTRIGGERLATENCYSCAN_H__
 
-#include "Utils/CommonVisitors.h"
-#include "Utils/ContainerRecycleBin.h"
-#include "Utils/Visitor.h"
-#include "tools/Tool.h"
 #include "tools/LatencyScan.h"
-#ifdef __USE_ROOT__
-#include "DQMUtils/DQMHistogramLatencyScan.h"
-#include "TCanvas.h"
-#include "TF1.h"
-#include "TGaxis.h"
-#include "TH1F.h"
-#include "TH2F.h"
-#endif
 
 namespace Ph2_HwDescription
 {
