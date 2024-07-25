@@ -13,8 +13,14 @@
 namespace Ph2_HwDescription
 {
 
-VTRx::VTRx(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName, const std::string& configFilePath) : Chip(pBeBoardId, FMCId, pOpticalGroupId, 0, pChipId)
+VTRx::VTRx(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName, const std::string& configFilePath, lpGBT* theLpGBT)
+: Chip(pBeBoardId, FMCId, pOpticalGroupId, 0, pChipId)
+, fTheLpGBT(theLpGBT)
 {
+    fChipCode      = 5;
+    fChipAddress   = 0x50;
+    fMasterId      = 1;
+    fMaxRegValue   = 255; // 8 bit registers in CIC
     fConfigFileName  = fileName;
     setFrontEndType(FrontEndType::VTRx);
     VTRx::loadfRegMap(fConfigFileName);

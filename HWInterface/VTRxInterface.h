@@ -16,6 +16,9 @@ namespace Ph2_HwInterface
  * \class CicInterface
  * \brief Class representing the User Interface to the Cic on different boards
  */
+
+class lpGBTInterface;
+
 class VTRxInterface : public ChipInterface
 {
   public:
@@ -23,7 +26,7 @@ class VTRxInterface : public ChipInterface
      * \brief Constructor of the VTRxInterface Class
      * \param pBoardMap
      */
-    VTRxInterface(const BeBoardFWMap& pBoardMap);
+    VTRxInterface(const BeBoardFWMap& pBoardMap, lpGBTInterface *theLpGBTInterface);
     /*!
      * \brief Destructor of the VTRxInterface Class
      */
@@ -31,11 +34,11 @@ class VTRxInterface : public ChipInterface
 
     /*!
      * \brief Configure the Cic with the Cic Config File
-     * \param pCic: pointer to CIC object
+     * \param pChip: pointer to VTRx object
      * \param pVerify: perform a readback check
      * \param pBlockSize: the number of registers to be written at once, default is 310
      */
-    bool ConfigureChip(Ph2_HwDescription::Chip* pCic, bool pVerify = true, uint32_t pBlockSize = 310) override;
+    bool ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) override;
 
     /*!
      * \brief Write the designated register in both Chip and Chip Config File
@@ -59,6 +62,11 @@ class VTRxInterface : public ChipInterface
      */
     int32_t                                       ReadChipReg(Ph2_HwDescription::Chip* pChip, const std::string& pRegNode) override;
     std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
+
+    uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip);
+
+  private:
+    lpGBTInterface* fTheLpGBTinterface;
 
 };
 }

@@ -14,9 +14,12 @@
 
 namespace Ph2_HwDescription
 {
+
+class lpGBT;
 class VTRx : public Chip
 {
-    VTRx(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName, const std::string& configFilePath);
+  public:
+    VTRx(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName, const std::string& configFilePath, lpGBT* theLpGBT);
 
     VTRx(const VTRx&) = delete;
 
@@ -26,6 +29,8 @@ class VTRx : public Chip
 
     std::stringstream getRegMapStream() override;
     uint8_t           getNumberOfBits(const std::string& dacName) override { return 0; }
+
+    lpGBT* fTheLpGBT;
 
 };
 }

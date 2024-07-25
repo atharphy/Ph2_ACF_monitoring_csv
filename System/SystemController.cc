@@ -27,6 +27,7 @@
 #include "Utils/ConfigureInfo.h"
 #include "Utils/StartInfo.h"
 #include "HWInterface/VTRxInterface.h"
+#include "HWDescription/VTRx.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -275,7 +276,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 if(cWithVTRx)
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for VTRx" << RESET;
-                    fVTRxInterface = new VTRxInterface(fBeBoardFWMap);
+                    fVTRxInterface = new VTRxInterface(fBeBoardFWMap, flpGBTInterface);
                 }
 
                 LOG(INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;
@@ -563,6 +564,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             LOG(INFO) << BOLDRED << "SOMETHING FUNNY" << RESET;
             continue;
         }
+        if(cOpticalGroup->fVTRx != nullptr) fVTRxInterface->ConfigureChip(cOpticalGroup->fVTRx);
     }
 
     // module start-up

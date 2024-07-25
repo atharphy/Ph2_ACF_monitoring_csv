@@ -1,6 +1,10 @@
 #include "HWInterface/VTRxInterface.h"
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19cOpticalInterface.h"
+#include "HWDescription/VTRx.h"
+#include "HWDescription/lpGBT.h"
+#include "HWInterface/lpGBTInterface.h"
 
 #include <sstream>
 
@@ -8,10 +12,11 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-VTRxInterface::VTRxInterface(const BeBoardFWMap& pBoardMap) : ChipInterface(pBoardMap)
+VTRxInterface::VTRxInterface(const BeBoardFWMap& pBoardMap, lpGBTInterface *theLpGBTInterface)
+: ChipInterface(pBoardMap)
+, fTheLpGBTinterface(theLpGBTInterface)
 {
 }
-
 
 VTRxInterface::~VTRxInterface() {}
 
@@ -45,70 +50,102 @@ bool VTRxInterface::ConfigureChip(Chip* theVTRx, bool pVerify, uint32_t pBlockSi
 
 bool VTRxInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerify)
 {
-    setBoard(pChip->getBeBoardId());
-    // LOG(DEBUG) << BOLDMAGENTA << "VTRxInterface::WriteChipReg trying to write to register 0x" << pRegNode << RESET;
     ChipRegMap cRegMap       = pChip->getRegMap();
-    cRegMap[pRegNode].fValue = pValue;
-    return fBoardFW->SingleRegisterWrite(pChip, cRegMap[pRegNode], pVerify);
+    ChipRegItem theRegister;
+    try
+    {
+        theRegister = cRegMap.at(pRegNode);
+    }
+    catch(const std::exception& e)
+    {
+        LOG(ERROR) << BOLDRED << "VTRxInterface::WriteChipReg trying to write to a register that doesn't exist in the map : " << pRegNode << RESET;
+        return false;
+    }
+
+    auto theLpGBT = static_cast<VTRx*>(pChip)->fTheLpGBT;
+    uint8_t masterId = pChip->getMasterId();
+    uint8_t slaveAddress = pChip->getChipAddress();
+    uint8_t numberOfBytes = 1, frequency = 2;
+    uint32_t slaveData = pValue << 8 | theRegister.fAddress;
+
+    bool success = fTheLpGBTinterface->WriteI2C(theLpGBT, masterId, slaveAddress, slaveData, numberOfBytes, frequency);
+    
+    if(pVerify)
+    {
+        auto theReadValue = ReadChipReg(pChip, pRegNode);
+        if(theReadValue != pValue)
+        {
+            LOG(ERROR) << BOLDRED << "VTRxInterface::WriteChipReg : Wrong value read back for " << pRegNode << ": written 0x" << std::hex << +pValue << " but read back 0x" << +theReadValue << std::dec << RESET;
+            return false;
+        }
+    }
+    else if(success) theRegister.fValue = pValue;
+
+    return success;
 }
 
 bool VTRxInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify)
 {
-    // first, identify the correct BeBoardFWInterface
-    setBoard(pChip->getBeBoardId());
-    auto                     cRegMap = pChip->getRegMap();
-    std::vector<ChipRegItem> cRegItems;
-    for(auto cReq: pVecReq)
-    {
-        auto cIterator = cRegMap.find(cReq.first);
-        if(cIterator == cRegMap.end())
-        {
-            LOG(ERROR) << BOLDRED << "VTRxInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
-            continue;
-        }
-
-        ChipRegItem cItem = cIterator->second;
-        cItem.fValue      = cReq.second;
-        cRegItems.push_back(cItem);
-    }
-    return fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
+    bool success = true;
+    for(const auto& theRegister: pVecReq) success &= WriteChipReg(pChip, theRegister.first, theRegister.second, pVerify);
+    return success;
 }
 
 int32_t VTRxInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 {
-    setBoard(pChip->getBeBoardId());
-    // LOG(DEBUG) << BOLDMAGENTA << "VTRxInterface::ReadChipReg(string) Register " << pRegNode << RESET;
+    auto theLpGBT = static_cast<VTRx*>(pChip)->fTheLpGBT;
+    uint8_t masterId = pChip->getMasterId();
+    uint8_t slaveAddress = pChip->getChipAddress();
+    uint8_t numberOfBytes = 1, frequency = 2;
 
-    ChipRegMap cRegMap = pChip->getRegMap();
-    if(cRegMap.find(pRegNode) == cRegMap.end()) { LOG(INFO) << BOLDRED << "Could not find CIC register " << pRegNode << RESET; }
+    ChipRegItem theRegister;
+    try
+    {
+        theRegister = pChip->getRegMap().at(pRegNode);
+    }
+    catch(const std::exception& e)
+    {
+        LOG(ERROR) << BOLDRED << "VTRxInterface::ReadChipReg trying to write to a register that doesn't exist in the map : " << pRegNode << RESET;
+        return 0;
+    }
 
-    ChipRegItem cRegItem = pChip->getRegItem(pRegNode);
-    return fBoardFW->SingleRegisterRead(pChip, cRegItem);
+    fTheLpGBTinterface->WriteI2C(theLpGBT, masterId, slaveAddress, theRegister.fAddress, numberOfBytes, frequency);
+    auto theReadValue = fTheLpGBTinterface->ReadI2C(theLpGBT, masterId, slaveAddress, numberOfBytes, frequency);
+
+    theRegister.fValue = theReadValue;
+
+    return theReadValue;
 }
 
 std::vector<std::pair<std::string, uint16_t>> VTRxInterface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
 {
-    setBoard(pChip->getBeBoardId());
-    auto                     cRegMap = pChip->getRegMap();
-    std::vector<ChipRegItem> cRegItems;
-    for(auto cReq: theRegisterList)
+    std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
+    for(auto theRegister: theRegisterList)
     {
-        auto cIterator = cRegMap.find(cReq);
-        if(cIterator == cRegMap.end())
-        {
-            LOG(ERROR) << BOLDRED << "VTRxInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq << RESET;
-            abort();
-        }
-
-        ChipRegItem cItem = cIterator->second;
-        cRegItems.push_back(cItem);
+        theRegisterValues.push_back({theRegister, ReadChipReg(pChip, theRegister)});
     }
 
-    fBoardFW->MultiRegisterRead(pChip, cRegItems);
-
-    std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
-    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
     return theRegisterValues;
+}
+
+uint32_t VTRxInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip)
+{
+    std::vector<std::string> theIdRegisterList;
+    uint8_t numberOfRegisters = 4;
+    for(uint8_t registerNumber = 0; registerNumber<numberOfRegisters; ++registerNumber)
+    {
+        theIdRegisterList.push_back("UID" + std::to_string(+registerNumber));
+    }
+
+    auto theReadBackIdRegisters = ReadChipMultReg(pChip, theIdRegisterList);
+
+    uint32_t uniqueId = 0;
+    for(uint8_t registerNumber = 0; registerNumber<numberOfRegisters; ++registerNumber)
+    {
+        uniqueId |= (theReadBackIdRegisters[registerNumber].second << (registerNumber*8));
+    }
+
+    return uniqueId;
 }
 
 
