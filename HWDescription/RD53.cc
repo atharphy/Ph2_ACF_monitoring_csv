@@ -415,6 +415,11 @@ void RD53::enableDefaultPixel(unsigned int row, unsigned int col, bool enable)
 {
     fPixelsMaskDefault.Enable[row + this->getNRows() * col] = enable;
     fPixelsMaskDefault.HitBus[row + this->getNRows() * col] = enable;
+
+    if(enable == true)
+        fChipOriginalMask->enableChannel(row, col);
+    else
+        fChipOriginalMask->disableChannel(row, col);
 }
 
 void     RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixelsMask.InjEn[row + this->getNRows() * col] = inject; }
