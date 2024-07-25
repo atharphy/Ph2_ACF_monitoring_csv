@@ -139,7 +139,7 @@ void PixelAlive::run()
             // ########################
             // # Start silent running #
             // ########################
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->silentRunning = true;
+            CalibBase::SilentRunning(true);
 
             // ############################
             // # Disable all core columns #
@@ -296,7 +296,7 @@ void PixelAlive::run()
             // #######################
             // # Stop silent running #
             // #######################
-            static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->silentRunning = false;
+            CalibBase::SilentRunning(false);
         }
 
         // ############################
