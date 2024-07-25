@@ -39,13 +39,9 @@ class ExtTriggerLatencyScan : public LatencyScan
     void Pause() override;
     void Resume() override;
 
-
   protected:
-
   private:
-
     void InitializeExternalTriggers();
-
 };
 
 #endif

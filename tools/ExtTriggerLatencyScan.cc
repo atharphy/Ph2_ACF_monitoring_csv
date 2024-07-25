@@ -5,12 +5,11 @@ std::string ExtTriggerLatencyScan::fCalibrationDescription = "Run latency scan w
 ExtTriggerLatencyScan::ExtTriggerLatencyScan() : LatencyScan() {}
 ExtTriggerLatencyScan::~ExtTriggerLatencyScan() {}
 
-
 //////////////////////////////////////          PRIVATE METHODS             //////////////////////////////////////
 
 void ExtTriggerLatencyScan::InitializeExternalTriggers()
 {
-    LOG (INFO) << "Prepare for external triggers" << RESET;
+    LOG(INFO) << "Prepare for external triggers" << RESET;
     this->enableTestPulse(false);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -29,11 +28,11 @@ void ExtTriggerLatencyScan::InitializeExternalTriggers()
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
         cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
         // enable DIO5
-        LOG (INFO) << "\tTrigger source: 5" << RESET;
-        LOG (INFO) << "\tEnable DIO5 Block" << RESET;
-        LOG (INFO) << "\tDisable output on channel 2" << RESET;
-        LOG (INFO) << "\tEnable termination on channel 2" << RESET;
-        LOG (INFO) << "\tSet threshold on channel to 0" << RESET;
+        LOG(INFO) << "\tTrigger source: 5" << RESET;
+        LOG(INFO) << "\tEnable DIO5 Block" << RESET;
+        LOG(INFO) << "\tDisable output on channel 2" << RESET;
+        LOG(INFO) << "\tEnable termination on channel 2" << RESET;
+        LOG(INFO) << "\tSet threshold on channel to 0" << RESET;
 
         cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x0});
         cRegVec.push_back({"fc7_daq_cnfg.dio5_block.dio5_en", 0x1});
@@ -45,12 +44,10 @@ void ExtTriggerLatencyScan::InitializeExternalTriggers()
         fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
 
         // stop triggers
-        fBeBoardInterface->Stop(cBoard);        
+        fBeBoardInterface->Stop(cBoard);
         // send a ReSync
         fBeBoardInterface->ChipReSync(cBoard);
     }
-
-
 }
 
 // State machine control functions
