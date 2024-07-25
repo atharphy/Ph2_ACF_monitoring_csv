@@ -124,10 +124,6 @@ void PixelAlive::run()
         const std::string                regName = "EN_CORE_COL";
         const std::array<std::string, 4> suffix  = {"_0", "_1", "_2", "_3"};
 
-        uint8_t               tmp = 0;
-        DetectorDataContainer badPixelsContainer;
-        ContainerFactory::copyAndInitChannel<uint8_t>(*fDetectorContainer, badPixelsContainer, tmp);
-
         std::shared_ptr<DetectorDataContainer> localOccContainer = std::make_shared<DetectorDataContainer>();
         this->fDetectorDataContainer                             = localOccContainer.get();
         ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, *this->fDetectorDataContainer);
@@ -155,6 +151,7 @@ void PixelAlive::run()
                     for(const auto cChip: *cHybrid)
                     {
                         std::map<std::string, uint16_t> regValueMap;
+                        size_t                          badPixelsCounterChip = 0;
 
                         LOG(INFO) << GREEN << "Results for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "]" << RESET;
@@ -196,8 +193,9 @@ void PixelAlive::run()
                                         break;
                                     }
 
-                                size_t badPixelsCounter = 0;
-                                if((doDataIntegrity == 2) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0)))
+                                size_t badPixelsCounterCoreCol = 0;
+                                size_t testedPixels            = 0;
+                                if(((doDataIntegrity == 2) || (doDataIntegrity == 3)) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0)))
                                 {
                                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                     this->fReadoutChipInterface->MaskAllChannels(cChip, true);
@@ -213,7 +211,7 @@ void PixelAlive::run()
                                         const auto colStart = coreCol * RD53Constants::NROW_CORE;
                                         for(auto col = colStart; col < colStart + RD53Constants::NROW_CORE; col++)
                                         {
-                                            if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col)) continue;
+                                            if(!cChip->getChipOriginalMask()->isChannelEnabled(row, col)) continue;
 
                                             // ################
                                             // # Run analysis #
@@ -223,6 +221,7 @@ void PixelAlive::run()
                                             this->fMaskChannelsFromOtherGroups = false;
                                             this->measureData(1, 1);
                                             CalibBase::setSinglePixel(cChip, row, col, false, false);
+                                            testedPixels++;
 
                                             // #####################
                                             // # Compute next step #
@@ -237,16 +236,20 @@ void PixelAlive::run()
 
                                             if((statusGood == false) || (RD53Event::decodedEvents.size() == 0))
                                             {
-                                                badPixelsCounter++;
-                                                badPixelsContainer.getObject(cBoard->getId())
-                                                    ->getObject(cOpticalGroup->getId())
-                                                    ->getObject(cHybrid->getId())
-                                                    ->getObject(cChip->getId())
-                                                    ->getChannel<uint8_t>(row, col) = true;
+                                                if(doDataIntegrity == 2)
+                                                {
+                                                    static_cast<RD53*>(cChip)->enableDefaultPixel(row, col, false);
+                                                    badPixelsCounterCoreCol++;
+                                                }
+                                                else
+                                                {
+                                                    static_cast<RD53*>(cChip)->maskCoreDefault(row, col);
+                                                    badPixelsCounterCoreCol += RD53Constants::NROW_CORE * RD53Constants::NROW_CORE;
+                                                }
+                                                badPixelsCounterChip += badPixelsCounterCoreCol;
                                                 static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                             }
 
-                                            const auto testedPixels = row * RD53Constants::NROW_CORE + col - colStart + 1;
                                             if((testedPixels % NPIXELS_PRINTOUT) == 0)
                                                 LOG(INFO) << BOLDBLUE << "\t--> Number of tested pixels: " << BOLDYELLOW << testedPixels << BOLDBLUE << "/" << BOLDYELLOW
                                                           << RD53Shared::firstChip->getNRows() * RD53Constants::NROW_CORE << RESET;
@@ -256,7 +259,7 @@ void PixelAlive::run()
                                 }
 
                                 if(((doDataIntegrity == 1) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0))) ||
-                                   (badPixelsCounter == (RD53Shared::firstChip->getNRows() * RD53Constants::NROW_CORE)))
+                                   (badPixelsCounterCoreCol == (RD53Shared::firstChip->getNRows() * RD53Constants::NROW_CORE)))
                                 {
                                     regValueMap[su] ^= 1 << i;
                                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
@@ -275,42 +278,18 @@ void PixelAlive::run()
                         for(const auto& su: suffix)
                         {
                             this->fReadoutChipInterface->WriteChipReg(cChip, regName + su, regValueMap[su], false);
-                            const uint16_t mask             = cChip->getRegMap()[regName + su].fDefValue;
-                            const auto     numberOfBits     = RD53Shared::firstChip->getRegMap()[regName + su].fBitSize;
-                            const auto     baseNumberOfBits = RD53Shared::firstChip->getRegMap()[regName + suffix[0]].fBitSize;
-                            const auto     value            = (std::bitset<RD53Constants::NBIT_MAXREG>(regValueMap[su]) & std::bitset<RD53Constants::NBIT_MAXREG>(mask))
+                            const uint16_t mask         = cChip->getRegMap()[regName + su].fDefValue;
+                            const auto     numberOfBits = RD53Shared::firstChip->getRegMap()[regName + su].fBitSize;
+                            const auto     value        = (std::bitset<RD53Constants::NBIT_MAXREG>(regValueMap[su]) & std::bitset<RD53Constants::NBIT_MAXREG>(mask))
                                                    .to_string()
                                                    .erase(0, RD53Constants::NBIT_MAXREG - numberOfBits);
                             const bool problems = (regValueMap[su] != mask);
                             LOG(INFO) << (problems ? BOLDRED : BOLDBLUE) << "\t--> " << BOLDYELLOW << regName + su << (problems ? BOLDRED : BOLDBLUE) << " = 0b" << BOLDYELLOW << value
                                       << (problems ? BOLDRED : BOLDBLUE) << " (0 = disabled)" << RESET;
-
-                            if((doDataIntegrity == 2) && (problems == false))
-                            {
-                                size_t badPixelsCounter = 0;
-                                for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
-                                {
-                                    const auto& ele      = std::find(suffix.begin(), suffix.end(), su);
-                                    const auto  colStart = ((ele - suffix.begin()) * baseNumberOfBits) * RD53Constants::NROW_CORE;
-                                    for(auto col = colStart; col < colStart + numberOfBits * RD53Constants::NROW_CORE; col++)
-                                        if(badPixelsContainer.getObject(cBoard->getId())
-                                               ->getObject(cOpticalGroup->getId())
-                                               ->getObject(cHybrid->getId())
-                                               ->getObject(cChip->getId())
-                                               ->getChannel<uint8_t>(row, col) == true)
-                                        {
-                                            badPixelsCounter++;
-                                            static_cast<RD53*>(cChip)->enablePixel(row, col, false);
-                                        }
-                                }
-
-                                if(badPixelsCounter != 0)
-                                {
-                                    static_cast<RD53*>(cChip)->copyMaskToDefault("en hb");
-                                    LOG(WARNING) << BOLDRED << "\t\t--> Found " << BOLDYELLOW << badPixelsCounter << BOLDRED << " bad pixel(s) in this region --> masked" << RESET;
-                                }
-                            }
                         }
+
+                        if(((doDataIntegrity == 2) || (doDataIntegrity == 3)) && (badPixelsCounterChip != 0))
+                            LOG(WARNING) << BOLDRED << "\t\t--> Found " << BOLDYELLOW << badPixelsCounterChip << BOLDRED << " bad pixel(s) in this chip --> masked" << RESET;
                         LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                     }
 
@@ -416,14 +395,14 @@ std::shared_ptr<DetectorDataContainer> PixelAlive::analyze()
 
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                   ->getObject(cBoard->getId())
-                                                                                                                   ->getObject(cOpticalGroup->getId())
-                                                                                                                   ->getObject(cHybrid->getId())
-                                                                                                                   ->getObject(cChip->getId())
-                                                                                                                   ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
-                                                                                                                   ->allChannelGroup()
-                                                                                                                   ->isChannelEnabled(row, col))
+                            if(cChip->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
+                                                                                               ->getObject(cBoard->getId())
+                                                                                               ->getObject(cOpticalGroup->getId())
+                                                                                               ->getObject(cHybrid->getId())
+                                                                                               ->getObject(cChip->getId())
+                                                                                               ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                               ->allChannelGroup()
+                                                                                               ->isChannelEnabled(row, col))
                             {
                                 if(injType == RD53Shared::INJtype::None)
                                     theOccContainer->getObject(cBoard->getId())
