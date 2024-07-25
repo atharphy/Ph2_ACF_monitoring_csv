@@ -180,7 +180,7 @@ void PixelAlive::run()
                                 // ################
                                 this->SetTestPulse(false);
                                 this->fMaskChannelsFromOtherGroups = false;
-                                this->measureData(1, 1);
+                                this->measureData(10, 10);
 
                                 // #####################
                                 // # Compute next step #
@@ -219,7 +219,7 @@ void PixelAlive::run()
                                             CalibBase::setSinglePixel(cChip, row, col, true, true);
                                             this->SetTestPulse(false);
                                             this->fMaskChannelsFromOtherGroups = false;
-                                            this->measureData(1, 1);
+                                            this->measureData(10, 10);
                                             CalibBase::setSinglePixel(cChip, row, col, false, false);
                                             testedPixels++;
 
@@ -246,7 +246,6 @@ void PixelAlive::run()
                                                     static_cast<RD53*>(cChip)->maskCoreDefault(row, col);
                                                     badPixelsCounterCoreCol += RD53Constants::NROW_CORE * RD53Constants::NROW_CORE;
                                                 }
-                                                badPixelsCounterChip += badPixelsCounterCoreCol;
                                                 static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                             }
 
@@ -255,6 +254,7 @@ void PixelAlive::run()
                                                           << RD53Shared::firstChip->getNRows() * RD53Constants::NROW_CORE << RESET;
                                         }
                                     }
+                                    badPixelsCounterChip += badPixelsCounterCoreCol;
                                     static_cast<RD53*>(cChip)->copyMaskFromDefault("en hb");
                                 }
 
@@ -289,7 +289,7 @@ void PixelAlive::run()
                         }
 
                         if(((doDataIntegrity == 2) || (doDataIntegrity == 3)) && (badPixelsCounterChip != 0))
-                            LOG(WARNING) << BOLDRED << "\t\t--> Found " << BOLDYELLOW << badPixelsCounterChip << BOLDRED << " bad pixel(s) in this chip --> masked" << RESET;
+                            LOG(WARNING) << BOLDRED << "\t--> Found " << BOLDYELLOW << badPixelsCounterChip << BOLDRED << " bad pixel(s) in this chip --> masked" << RESET;
                         LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
                     }
 

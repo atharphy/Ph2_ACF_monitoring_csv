@@ -11,7 +11,7 @@
 #define UTILITIES_H
 
 #include "HWDescription/Definition.h"
-#include "StartInfo.h"
+#include "Utils/StartInfo.h"
 
 #include <algorithm>
 #include <bitset>

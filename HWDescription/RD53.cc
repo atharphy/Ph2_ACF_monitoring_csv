@@ -430,9 +430,9 @@ uint32_t RD53::getNumberOfChannels() const { return this->getNRows() * this->get
 
 void RD53::maskCoreDefault(unsigned int row, unsigned int col)
 {
-    const unsigned int rowStart = RD53Constants::NROW_CORE * (this->getNRows() / RD53Constants::NROW_CORE);
+    const unsigned int rowStart = RD53Constants::NROW_CORE * (row / RD53Constants::NROW_CORE);
     const unsigned int rowStop  = rowStart + RD53Constants::NROW_CORE;
-    const unsigned int colStart = RD53Constants::NROW_CORE * (this->getNCols() / RD53Constants::NROW_CORE);
+    const unsigned int colStart = RD53Constants::NROW_CORE * (col / RD53Constants::NROW_CORE);
     const unsigned int colStop  = colStart + RD53Constants::NROW_CORE;
 
     for(auto r = rowStart; r < rowStop; r++)
