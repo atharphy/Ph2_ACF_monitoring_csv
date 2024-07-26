@@ -11,6 +11,7 @@
 #define OTCBCtoCICecv_h__
 
 #include "tools/Tool.h"
+#include "tools/OTCicBypassTest.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
@@ -27,7 +28,7 @@ namespace Ph2_HwInterface
 class D19cFWInterface;
 }
 
-class OTCBCtoCICecv : public Tool
+class OTCBCtoCICecv : public OTCicBypassTest
 {
   public:
     OTCBCtoCICecv();

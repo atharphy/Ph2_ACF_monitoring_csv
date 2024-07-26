@@ -12,7 +12,7 @@ using namespace Ph2_System;
 
 std::string OTCBCtoCICecv::fCalibrationDescription = "Run electric chain validation test between CBC and CIC";
 
-OTCBCtoCICecv::OTCBCtoCICecv() : Tool() {}
+OTCBCtoCICecv::OTCBCtoCICecv() : OTCicBypassTest() {}
 
 OTCBCtoCICecv::~OTCBCtoCICecv() {}
 
@@ -280,7 +280,7 @@ void OTCBCtoCICecv::writeCBCReg()
     uint16_t cReg;
     bool pVerifyBit;
     uint8_t writeBit;
-    for (uint16_t i = 0x01; i < 0xFF; i += 0x10)
+    for (uint16_t i = 0x01; i < 0x1F; i += 0x10)
     {
         for(auto theBoard: *fDetectorContainer)
             for(auto theOpticalGroup: *theBoard)
@@ -296,7 +296,7 @@ void OTCBCtoCICecv::writeCBCReg()
                         LOG(INFO) << "kpal: CBC number: " << theCBC->getId() << " BetaMult&SLVS: 0x" << std::hex << cReg << std::dec << " pVerifyBit: " << pVerifyBit << RESET;
                     }
                 }
-        //LOG(INFO) << "kpal: RunCICbypassTest" << RESET;
-        //RunCICbypassTest();
+        LOG(INFO) << "kpal: RunCICbypassTest" << RESET;
+        RunCICbypassTest();
     }
 }
