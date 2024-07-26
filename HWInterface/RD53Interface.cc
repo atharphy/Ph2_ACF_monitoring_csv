@@ -18,12 +18,17 @@ RD53Interface::RD53Interface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterfa
 bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
+    auto pRD53 = static_cast<RD53*>(pChip);
 
     const auto            nameAndValue(SetSpecialRegister(regName, data, pChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
     PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerify);
     if(static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId()) == false)
+    {
         static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO(); // @TMP@ : Temporary fix to avoid FIFO empty at readback
+        SendRD53Clear(pRD53);                                       // @TMP@ : Temporary fix to avoid FIFO empty at readback
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+    }
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
@@ -37,7 +42,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
             auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
             if((pixMode & RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->AutoIncrementMask) == 0) // Check only auto-increment bits
             {
-                auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
+                auto regReadback = ReadRD53Reg(pRD53, regName);
                 actualValue      = regReadback[0].second;
                 auto row         = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
                 if((regReadback.size() == 0) || (regReadback[0].first != row) || (regReadback[0].second != data)) status = false;
@@ -94,7 +99,8 @@ int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
             if(RD53Interface::silentRunning == false)
                 LOG(WARNING) << BLUE << "Empty register readback from chip id " << BOLDYELLOW << pChip->getId() << BLUE << ", attempt n. " << BOLDYELLOW << attempt + 1 << BLUE << "/" << BOLDYELLOW
                              << +RD53Shared::MAXATTEMPTS << RESET;
-            SendRD53Clear(pRD53); // @TMP@ : Temporary fix to avoid FIFO empty at readback
+            static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO(); // @TMP@ : Temporary fix to avoid FIFO empty at readback
+            SendRD53Clear(pRD53);                                       // @TMP@ : Temporary fix to avoid FIFO empty at readback
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
         }
         else

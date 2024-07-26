@@ -128,8 +128,7 @@ class RD53FWInterface : public BeBoardFWInterface
         Undefined = 0
     };
 
-    // @TMP@
-    enum class AutozeroSource : uint32_t
+    enum class AutozeroSource : uint32_t // @TMP@
     {
         Software = 1,
         FastCMDFSM,

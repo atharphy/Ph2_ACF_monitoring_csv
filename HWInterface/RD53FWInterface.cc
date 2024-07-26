@@ -912,8 +912,7 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
     else
         LOG(ERROR) << BOLDRED << "Option not recognized " << BOLDYELLOW << +static_cast<uint8_t>(injType) << RESET;
 
-    // @TMP@
-    if(enableAutozero == true)
+    if(enableAutozero == true) // @TMP@
     {
         if(RD53FWInterface::localCfgFastCmd.trigger_source != TriggerSource::FastCMDFSM)
             RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::Software;
