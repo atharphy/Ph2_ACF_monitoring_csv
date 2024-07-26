@@ -103,11 +103,11 @@ void OTCicBypassTest::calcEfficiencyBypassingCIC()
                         for(size_t line = 0; line < cNlines; ++line)
                         {
                             //LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " -> " << getPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket) << RESET;
-                            uint cbcID;
+                            uint CBCId;
                             uint trig;
                             if (phyPort < 10)
                             {
-                                cbcID = (4 * phyPort + line) / 5;
+                                CBCId = (4 * phyPort + line) / 5;
                                 trig = (4 * phyPort + line) % 5;
 
                                 trigInjectedPacket = "";
@@ -116,17 +116,17 @@ void OTCicBypassTest::calcEfficiencyBypassingCIC()
                                 trigOutputPacket = getBinaryPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket);
 
 
-                                LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " cbcID " << cbcID << " Trig " << trig << " -> " << trigInjectedPacket << RESET;
-                                LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " cbcID " << cbcID << " Trig " << trig << " -> " << trigOutputPacket << RESET;
+                                LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " CBC Id " << CBCId << " Trig " << trig << " -> " << trigInjectedPacket << RESET;
+                                LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " CBC Id " << CBCId << " Trig " << trig << " -> " << trigOutputPacket << RESET;
 
                                 auto CBCtoCICefficiency = injectedAndOutputPacketEfficiency(trigInjectedPacket, trigOutputPacket);
-                                LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " cbcID " << cbcID << " Trig " << trig << " efficiency " << CBCtoCICefficiency << RESET;
+                                LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " CBC Id " << CBCId << " Trig " << trig << " efficiency " << CBCtoCICefficiency << RESET;
                                 LOG(INFO) << RESET;
                             }
                             else
                             {
-                                cbcID = (4 * phyPort + line) - 40;
-                                LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " cbcID " << cbcID << " L1 " << " -> " << getBinaryPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket) << RESET;
+                                CBCId = (4 * phyPort + line) - 40;
+                                LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " CBC Id " << CBCId << " L1 " << " -> " << getBinaryPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket) << RESET;
                             }
                         }
                     }
