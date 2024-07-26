@@ -72,6 +72,7 @@ void OTCicBypassTest::runCICbypassTest()
                 auto                                                              theChipToCICMapping = fCicInterface->getMapping(cCic);
 
                 // inject the same channels on all Readout chips
+                LOG(INFO) << "Injecting stubs on hybrid " << theHybrid->getId() << RESET;
                 for(auto theChip: *theHybrid)
                 {
                     for(uint8_t stubLine = 0; stubLine < 5; ++stubLine)
