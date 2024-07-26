@@ -456,6 +456,45 @@ std::string getPatternPrintout(const std::vector<uint32_t>& theWordVector, uint8
     return thePattern.str();
 }
 
+std::string getBinaryPatternPrintout(const std::vector<uint32_t>& theWordVector, uint8_t wordSize, bool reorderWords)
+{
+    if(wordSize != 1 && wordSize != 2)
+    {
+        std::cerr << "getBinaryPatternPrintout wordSize can be only 1 or 2" << std::endl;
+        abort();
+    }
+    std::vector<uint32_t> theLocalWordVector;
+    if(reorderWords)
+        theLocalWordVector = reorderPattern(theWordVector, wordSize);
+    else
+        theLocalWordVector = theWordVector;
+
+    uint16_t mask = (wordSize == 1) ? 0xFF : 0xFFFF;
+
+    std::stringstream thePattern;
+
+    for(auto theWord: theLocalWordVector)
+    {
+        for(int8_t theByteShift = sizeof(uint32_t) - wordSize; theByteShift >= 0; theByteShift -= wordSize)
+        {
+            uint32_t byteValue = ((theWord >> (theByteShift * 8)) & mask);
+            if(wordSize == 1)
+            {
+                std::bitset<8> binary(byteValue);
+                thePattern << binary.to_string();
+            }
+            else if (wordSize == 2)
+            {
+                std::bitset<16> binary(byteValue);
+                thePattern << binary.to_string();
+            }
+
+        }
+        thePattern << " ";
+    }
+    return thePattern.str();
+}
+
 std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t pattern, uint32_t patternMask)
 {
     uint8_t numberOfBytesInWord = sizeof(uint32_t);
