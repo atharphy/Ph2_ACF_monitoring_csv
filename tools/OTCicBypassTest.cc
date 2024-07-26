@@ -114,8 +114,13 @@ void OTCicBypassTest::runCICbypassTest()
                                 for (int i = 0; i < 4 * 10; i++) trigInjectedPacket += trigShortPacket[trig];
 
                                 trigOutputPacket = getBinaryPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket);
+
+
                                 LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " cbcID " << cbcID << " Trig " << trig << " -> " << trigInjectedPacket << RESET;
                                 LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " cbcID " << cbcID << " Trig " << trig << " -> " << trigOutputPacket << RESET;
+
+                                auto CBCtoCICefficiency = injectedAndOutputPacketEfficiency(trigInjectedPacket, trigOutputPacket);
+                                LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " cbcID " << cbcID << " Trig " << trig << " efficiency " << CBCtoCICefficiency << RESET;
                                 LOG(INFO) << RESET;
                             }
                             else
@@ -166,4 +171,10 @@ void OTCicBypassTest::injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA)
     // std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 1)};
     // // std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{};
     // static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, theClusterList);
+}
+
+float OTCicBypassTest::injectedAndOutputPacketEfficiency(std::string injectedPacket, std::string outputPacket)
+{
+    if (injectedPacket == outputPacket) return 1.0;
+    return 0.0;
 }
