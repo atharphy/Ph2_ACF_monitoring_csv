@@ -42,7 +42,7 @@ class KIRA : public OTTool
     ~KIRA();
     // void IntensityCalibration();
     void Initialise(int kiraPort, std::string kiraId);
-    void PrepareForExternal(BeBoard* pBoard);
+    void PrepareForExternal();
     void determineLatency();
     void performKIRATest();
     void calibrateIntensity();

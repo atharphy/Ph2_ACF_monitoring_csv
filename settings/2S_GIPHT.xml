@@ -118,7 +118,7 @@
     <Setting name="Check2SRefSide">1</Setting>   <!-- L == 1  ; R== 0 --> 
     <Setting name="Check2SRefChip">0</Setting>   <!-- L == 1  ; R== 0 --> 
     
-    <Setting name="KIRA_ID">    myArduino  </Setting>
+    <Setting name="KIRA_ID">    ArduinoTestBox  </Setting>
     <Setting name="KIRA_Port" > 7011 </Setting>
     <Setting name="KiraLatencyLed" > 4</Setting>
     <Setting name="KiraLatencySensor" > 0</Setting>

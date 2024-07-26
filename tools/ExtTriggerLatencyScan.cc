@@ -37,7 +37,7 @@ void ExtTriggerLatencyScan::InitializeExternalTriggers()
         cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x0});
         cRegVec.push_back({"fc7_daq_cnfg.dio5_block.dio5_en", 0x1});
         cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.out_enable", 0});
-        cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.term_enable", 1});
+        //cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.term_enable", 1});
         cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.threshold", 0});
 
         fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
