@@ -149,8 +149,10 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
             cBeBoard->setEventType(EventType::PSAS);
         else if(cEventTypeString == BEBOARD_EVENT_TYPE_ATTRIBUTE_VR2S_VALUE)
             cBeBoard->setEventType(EventType::VR2S);
-        else
+        else if(cEventTypeString == BEBOARD_EVENT_TYPE_ATTRIBUTE_VR_VALUE)
             cBeBoard->setEventType(EventType::VR);
+        else
+            cBeBoard->setEventType(EventType::VRPCTestAdapter);
     }
 
     uint8_t cBoardReset = convertAnyInt(pBeBordNode.attribute(BEBOARD_BOARDRESET_ATTRIBUTE_NAME).value());
@@ -162,10 +164,13 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
     uint8_t cReset = convertAnyInt(pBeBordNode.attribute(BEBOARD_LINKRESET_ATTRIBUTE_NAME).value());
     cBeBoard->setLinkReset(cReset);
 
+    std::string cComment = (pBeBordNode.attribute(BEBOARD_COMMENT_ATTRIBUTE_NAME) ? pBeBordNode.attribute(BEBOARD_COMMENT_ATTRIBUTE_NAME).value() : "");
+    cBeBoard->setComment(cComment);
+
     os << BOLDBLUE << "|"
        << "----" << pBeBordNode.name() << " --> " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute(COMMON_ID_ATTRIBUTE_NAME).value() << BOLDBLUE
-       << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDBLUE << ", EventType: " << BOLDYELLOW << cEventTypeString << BOLDBLUE << ", Configure: " << BOLDYELLOW << +configureBoardFlag << RESET
-       << std::endl;
+       << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDBLUE << ", EventType: " << BOLDYELLOW << cEventTypeString << BOLDBLUE << ", Configure: " << BOLDYELLOW << +configureBoardFlag << BOLDBLUE
+       << ", Comment: " << BOLDYELLOW << cComment << RESET << std::endl;
 
     pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child(BEBOARD_CONNECTION_NODE_NAME);
 
