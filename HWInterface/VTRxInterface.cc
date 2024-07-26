@@ -1,9 +1,9 @@
 #include "HWInterface/VTRxInterface.h"
+#include "HWDescription/VTRx.h"
+#include "HWDescription/lpGBT.h"
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/D19cOpticalInterface.h"
-#include "HWDescription/VTRx.h"
-#include "HWDescription/lpGBT.h"
 #include "HWInterface/lpGBTInterface.h"
 
 #include <sstream>
@@ -12,11 +12,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-VTRxInterface::VTRxInterface(const BeBoardFWMap& pBoardMap, lpGBTInterface *theLpGBTInterface)
-: ChipInterface(pBoardMap)
-, fTheLpGBTinterface(theLpGBTInterface)
-{
-}
+VTRxInterface::VTRxInterface(const BeBoardFWMap& pBoardMap, lpGBTInterface* theLpGBTInterface) : ChipInterface(pBoardMap), fTheLpGBTinterface(theLpGBTInterface) {}
 
 VTRxInterface::~VTRxInterface() {}
 
@@ -47,10 +43,9 @@ bool VTRxInterface::ConfigureChip(Chip* theVTRx, bool pVerify, uint32_t pBlockSi
     return cSuccess;
 }
 
-
 bool VTRxInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16_t pValue, bool pVerify)
 {
-    ChipRegMap cRegMap       = pChip->getRegMap();
+    ChipRegMap  cRegMap = pChip->getRegMap();
     ChipRegItem theRegister;
     try
     {
@@ -62,24 +57,26 @@ bool VTRxInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint1
         return false;
     }
 
-    auto theLpGBT = static_cast<VTRx*>(pChip)->fTheLpGBT;
-    uint8_t masterId = pChip->getMasterId();
-    uint8_t slaveAddress = pChip->getChipAddress();
-    uint8_t numberOfBytes = 1, frequency = 2;
+    auto     theLpGBT      = static_cast<VTRx*>(pChip)->fTheLpGBT;
+    uint8_t  masterId      = pChip->getMasterId();
+    uint8_t  slaveAddress  = pChip->getChipAddress();
+    uint8_t  numberOfBytes = 1, frequency = 2;
     uint32_t slaveData = pValue << 8 | theRegister.fAddress;
 
     bool success = fTheLpGBTinterface->WriteI2C(theLpGBT, masterId, slaveAddress, slaveData, numberOfBytes, frequency);
-    
+
     if(pVerify)
     {
         auto theReadValue = ReadChipReg(pChip, pRegNode);
         if(theReadValue != pValue)
         {
-            LOG(ERROR) << BOLDRED << "VTRxInterface::WriteChipReg : Wrong value read back for " << pRegNode << ": written 0x" << std::hex << +pValue << " but read back 0x" << +theReadValue << std::dec << RESET;
+            LOG(ERROR) << BOLDRED << "VTRxInterface::WriteChipReg : Wrong value read back for " << pRegNode << ": written 0x" << std::hex << +pValue << " but read back 0x" << +theReadValue << std::dec
+                       << RESET;
             return false;
         }
     }
-    else if(success) theRegister.fValue = pValue;
+    else if(success)
+        theRegister.fValue = pValue;
 
     return success;
 }
@@ -93,9 +90,9 @@ bool VTRxInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<st
 
 int32_t VTRxInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 {
-    auto theLpGBT = static_cast<VTRx*>(pChip)->fTheLpGBT;
-    uint8_t masterId = pChip->getMasterId();
-    uint8_t slaveAddress = pChip->getChipAddress();
+    auto    theLpGBT      = static_cast<VTRx*>(pChip)->fTheLpGBT;
+    uint8_t masterId      = pChip->getMasterId();
+    uint8_t slaveAddress  = pChip->getChipAddress();
     uint8_t numberOfBytes = 1, frequency = 2;
 
     ChipRegItem theRegister;
@@ -120,10 +117,7 @@ int32_t VTRxInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
 std::vector<std::pair<std::string, uint16_t>> VTRxInterface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
 {
     std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
-    for(auto theRegister: theRegisterList)
-    {
-        theRegisterValues.push_back({theRegister, ReadChipReg(pChip, theRegister)});
-    }
+    for(auto theRegister: theRegisterList) { theRegisterValues.push_back({theRegister, ReadChipReg(pChip, theRegister)}); }
 
     return theRegisterValues;
 }
@@ -131,22 +125,15 @@ std::vector<std::pair<std::string, uint16_t>> VTRxInterface::ReadChipMultReg(Ph2
 uint32_t VTRxInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip)
 {
     std::vector<std::string> theIdRegisterList;
-    uint8_t numberOfRegisters = 4;
-    for(uint8_t registerNumber = 0; registerNumber<numberOfRegisters; ++registerNumber)
-    {
-        theIdRegisterList.push_back("UID" + std::to_string(+registerNumber));
-    }
+    uint8_t                  numberOfRegisters = 4;
+    for(uint8_t registerNumber = 0; registerNumber < numberOfRegisters; ++registerNumber) { theIdRegisterList.push_back("UID" + std::to_string(+registerNumber)); }
 
     auto theReadBackIdRegisters = ReadChipMultReg(pChip, theIdRegisterList);
 
     uint32_t uniqueId = 0;
-    for(uint8_t registerNumber = 0; registerNumber<numberOfRegisters; ++registerNumber)
-    {
-        uniqueId |= (theReadBackIdRegisters[registerNumber].second << (registerNumber*8));
-    }
+    for(uint8_t registerNumber = 0; registerNumber < numberOfRegisters; ++registerNumber) { uniqueId |= (theReadBackIdRegisters[registerNumber].second << (registerNumber * 8)); }
 
     return uniqueId;
 }
 
-
-}
+} // namespace Ph2_HwInterface

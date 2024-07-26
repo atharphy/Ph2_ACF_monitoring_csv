@@ -12,13 +12,13 @@
 #include "HWDescription/BeBoard.h"
 #include "HWDescription/BeBoardRegItem.h"
 #include "Parser/ParserDefinitions.h"
+#include "Utils/Utilities.h"
 #include "pugixml.hpp"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 #include <sstream>
-#include "Utils/Utilities.h"
 
 namespace Ph2_HwDescription
 {

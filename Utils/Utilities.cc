@@ -125,7 +125,7 @@ double MyGammaSignal(double* x, double* par)
 
 uint32_t convertAnyInt(std::string pRegValue)
 {
-    int         baseType = 0;
+    int baseType = 0;
     if(pRegValue.find("0x") != std::string::npos)
         baseType = 16;
     else if(pRegValue.find("0d") != std::string::npos)
@@ -138,7 +138,7 @@ uint32_t convertAnyInt(std::string pRegValue)
 
 double convertAnyDouble(std::string pRegValue)
 {
-    int         baseType = 0;
+    int baseType = 0;
     if(pRegValue.find("0x") != std::string::npos)
     {
         baseType = 16;

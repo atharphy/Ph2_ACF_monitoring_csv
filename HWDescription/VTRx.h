@@ -31,8 +31,7 @@ class VTRx : public Chip
     uint8_t           getNumberOfBits(const std::string& dacName) override { return 0; }
 
     lpGBT* fTheLpGBT;
-
 };
-}
+} // namespace Ph2_HwDescription
 
 #endif

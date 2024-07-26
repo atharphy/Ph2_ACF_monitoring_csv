@@ -26,7 +26,7 @@ class VTRxInterface : public ChipInterface
      * \brief Constructor of the VTRxInterface Class
      * \param pBoardMap
      */
-    VTRxInterface(const BeBoardFWMap& pBoardMap, lpGBTInterface *theLpGBTInterface);
+    VTRxInterface(const BeBoardFWMap& pBoardMap, lpGBTInterface* theLpGBTInterface);
     /*!
      * \brief Destructor of the VTRxInterface Class
      */
@@ -67,9 +67,7 @@ class VTRxInterface : public ChipInterface
 
   private:
     lpGBTInterface* fTheLpGBTinterface;
-
 };
-}
+} // namespace Ph2_HwInterface
 
 #endif
-

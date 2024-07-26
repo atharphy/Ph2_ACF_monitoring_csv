@@ -8,6 +8,7 @@
 */
 
 #include "System/SystemController.h"
+#include "HWDescription/VTRx.h"
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/ExceptionHandler.h"
@@ -15,6 +16,7 @@
 #include "HWInterface/RD53AInterface.h"
 #include "HWInterface/RD53BInterface.h"
 #include "HWInterface/RD53FWInterface.h"
+#include "HWInterface/VTRxInterface.h"
 #include "MonitorUtils/CBCMonitor.h"
 #include "MonitorUtils/DetectorMonitor.h"
 #include "MonitorUtils/PSMonitor.h"
@@ -26,8 +28,6 @@
 #include "System/RegisterHelper.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/StartInfo.h"
-#include "HWInterface/VTRxInterface.h"
-#include "HWDescription/VTRx.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

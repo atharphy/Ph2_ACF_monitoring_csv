@@ -7,8 +7,8 @@
 #include "HWDescription/RD53A.h"
 #include "HWDescription/RD53B.h"
 #include "HWDescription/SSA2.h"
-#include "HWDescription/lpGBT.h"
 #include "HWDescription/VTRx.h"
+#include "HWDescription/lpGBT.h"
 #include "Parser/ParserDefinitions.h"
 #include "Utils/Utilities.h"
 
@@ -332,7 +332,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         else if(static_cast<std::string>(theChild.name()) == VTRX_NODE_NAME)
         {
             std::string chipFileName = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
-            uint8_t cChipId      = theChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
+            uint8_t     cChipId      = theChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
 
             VTRx* theVTRx = new VTRx(cBoardId, cFMCId, cOpticalGroupId, cChipId, chipFileName, theConfigFilePath, theOpticalGroup->flpGBT);
 

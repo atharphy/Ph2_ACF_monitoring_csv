@@ -1,9 +1,9 @@
 #include "tools/MetadataHandler.h"
+#include "HWDescription/VTRx.h"
+#include "HWInterface/VTRxInterface.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
-#include "HWInterface/VTRxInterface.h"
-#include "HWDescription/VTRx.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/DQMMetadata.h"
@@ -285,7 +285,7 @@ void MetadataHandler::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuse
         {
             auto theVTRx = cOpticalGroup->fVTRx;
             if(theVTRx == nullptr) continue;
-            uint32_t chipFuseId = fVTRxInterface->ReadChipFuseID(theVTRx);
+            uint32_t chipFuseId                                                                                                             = fVTRxInterface->ReadChipFuseID(theVTRx);
             theVTRxFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertToString(chipFuseId);
         }
     }

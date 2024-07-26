@@ -28,15 +28,9 @@ OpticalGroup::~OpticalGroup()
     fVTRx = nullptr;
 }
 
-void OpticalGroup::addlpGBT(lpGBT* plpGBT)
-{
-    flpGBT = plpGBT;
-}
+void OpticalGroup::addlpGBT(lpGBT* plpGBT) { flpGBT = plpGBT; }
 
-void OpticalGroup::addVTRx(VTRx* pVTRx)
-{
-    fVTRx = pVTRx;
-}
+void OpticalGroup::addVTRx(VTRx* pVTRx) { fVTRx = pVTRx; }
 
 std::map<uint8_t, std::vector<uint8_t>> OpticalGroup::getLpGBTrxGroupsAndChannels() const
 {

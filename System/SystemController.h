@@ -63,7 +63,7 @@ class CommunicationSettingConfig;
 
 namespace Ph2_HwInterface
 {
-    class VTRxInterface;
+class VTRxInterface;
 }
 
 /*!
@@ -86,7 +86,7 @@ class SystemController
     Ph2_HwInterface::BeBoardInterface*     fBeBoardInterface;     //!< Interface to the BeBoard
     Ph2_HwInterface::ReadoutChipInterface* fReadoutChipInterface; //!< Interface to the readout chip
     Ph2_HwInterface::lpGBTInterface*       flpGBTInterface;       //!< Interface to the LpGBT
-    Ph2_HwInterface::VTRxInterface*        fVTRxInterface;       //!< Interface to the VTRx
+    Ph2_HwInterface::VTRxInterface*        fVTRxInterface;        //!< Interface to the VTRx
     Ph2_HwInterface::CicInterface*         fCicInterface;         //!< Interface to a CIC [only valid for OT]
 
     DetectorContainer*      fDetectorContainer;

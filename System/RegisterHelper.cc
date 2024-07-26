@@ -1,15 +1,15 @@
 #include "System/RegisterHelper.h"
 #include "HWDescription/Definition.h"
 #include "HWDescription/OuterTrackerHybrid.h"
+#include "HWDescription/VTRx.h"
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/BeBoardInterface.h"
 #include "HWInterface/CicInterface.h"
-#include "HWInterface/lpGBTInterface.h"
 #include "HWInterface/VTRxInterface.h"
+#include "HWInterface/lpGBTInterface.h"
 #include "Parser/ParserDefinitions.h"
 #include "Utils/Container.h"
 #include "pugixml.hpp"
-#include "HWDescription/VTRx.h"
 
 #include "iostream"
 
@@ -103,7 +103,7 @@ void RegisterHelper::restoreSnapshot()
                 const auto modifiedLpGBTRegisters = theLpGBT->getSnapshot();
                 flpGBTInterface->WriteChipMultReg(theLpGBT, modifiedLpGBTRegisters);
             }
-            
+
             auto theVTRx = theOpticalGroup->fVTRx;
             if(theVTRx != nullptr)
             {
