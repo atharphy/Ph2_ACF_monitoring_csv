@@ -44,6 +44,7 @@
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
 #include "DQMUtils/RD53VoltageTuningHistograms.h"
+#include "DQMUtils/DQMHistogramOTPSringOscillatorTest.h"
 
 using namespace MessageUtils;
 
@@ -197,6 +198,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
         "SSAtoMPAecv");
     Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCICphaseAlignment, DQMHistogramOTCICwordAlignment, DQMHistogramOTSSAtoSSAecv>(
         "SSAtoSSAecv");
+    Register<DQMHistogramOTPSringOscillatorTest>("ringOscillatorTest");
 
     // ###################
     // # IT calibrations #
