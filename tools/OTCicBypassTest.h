@@ -37,7 +37,7 @@ class OTCicBypassTest : public Tool
     void Pause() override;
     void Resume() override;
     void Reset();
-    void RunCICbypassTest() { runCICbypassTest(); }
+    void calcEfficiencyBypassingCIC();
 
     static std::string fCalibrationDescription;
 

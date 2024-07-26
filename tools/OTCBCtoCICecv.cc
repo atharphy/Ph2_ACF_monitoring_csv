@@ -296,7 +296,6 @@ void OTCBCtoCICecv::writeCBCReg()
                         LOG(INFO) << "kpal: CBC number: " << theCBC->getId() << " BetaMult&SLVS: 0x" << std::hex << cReg << std::dec << " pVerifyBit: " << pVerifyBit << RESET;
                     }
                 }
-        LOG(INFO) << "kpal: RunCICbypassTest" << RESET;
-        RunCICbypassTest();
+    calcEfficiencyBypassingCIC();
     }
 }

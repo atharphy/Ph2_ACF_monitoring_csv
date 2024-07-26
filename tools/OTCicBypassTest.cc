@@ -54,9 +54,9 @@ void OTCicBypassTest::Resume() {}
 
 void OTCicBypassTest::Reset() { fRegisterHelper->restoreSnapshot(); }
 
-void OTCicBypassTest::runCICbypassTest()
+void OTCicBypassTest::calcEfficiencyBypassingCIC()
 {
-    LOG(INFO) << BOLDYELLOW << "OTCicBypassTest::runCICbypassTest ... start integrity test" << RESET;
+    LOG(INFO) << BOLDYELLOW << "OTCicBypassTest::calcEfficiencyBypassingCIC()" << RESET;
 
     for(auto theBoard: *fDetectorContainer)
     {
@@ -128,6 +128,58 @@ void OTCicBypassTest::runCICbypassTest()
                                 cbcID = (4 * phyPort + line) - 40;
                                 LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " cbcID " << cbcID << " L1 " << " -> " << getBinaryPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket) << RESET;
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void OTCicBypassTest::runCICbypassTest()
+{
+    LOG(INFO) << BOLDYELLOW << "OTCicBypassTest::runCICbypassTest ... start integrity test" << RESET;
+
+    for(auto theBoard: *fDetectorContainer)
+    {
+        auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
+        for(auto theOpticalGroup: *theBoard)
+        {
+            // bool isA2Smodule = theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S;
+            uint8_t numberOfBytesInSinglePacket = (static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10) ? 2 : 1;
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                std::map<uint8_t, std::map<uint8_t, std::pair<uint8_t, uint8_t>>> phyPortAndChannelToChipAndLine;
+                auto&                                                             cCic                = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                auto                                                              theChipToCICMapping = fCicInterface->getMapping(cCic);
+
+                // inject the same channels on all Readout chips
+                for(auto theChip: *theHybrid)
+                {
+                    for(uint8_t stubLine = 0; stubLine < 5; ++stubLine)
+                    {
+                        std::pair<uint8_t, uint8_t> phyPortAndChannel = fCicInterface->fromChipStubToPhyPortAndChannel(cCic, theChipToCICMapping, theChip->getId() % 8, stubLine);
+                        phyPortAndChannelToChipAndLine[phyPortAndChannel.first][phyPortAndChannel.second] = {theChip->getId(), stubLine};
+                    }
+
+                    if(theChip->getFrontEndType() == FrontEndType::CBC3) injectStubs2S(theChip);
+                    if(theChip->getFrontEndType() == FrontEndType::MPA2) injectStubsPS(theChip);
+                }
+
+                fCicInterface->SelectOutput(cCic, false);
+                fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
+                fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+                for(uint phyPort = 0; phyPort < 12; ++phyPort)
+                {
+                    uint8_t registerValue = 0x10 + phyPort;
+                    fCicInterface->WriteChipReg(cCic, "MUX_CTRL", registerValue);
+                    for(size_t iteration = 0; iteration < fNumberOfIterations; ++iteration)
+                    {
+                        auto   lineOutputVector = theFWinterface->StubDebug(true, 4, false);
+                        size_t cNlines          = 4;
+                        for(size_t line = 0; line < cNlines; ++line)
+                        {
+                            LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " -> " << getPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket) << RESET;
                         }
                     }
                 }
