@@ -115,7 +115,7 @@ void GenericDacDacScan::localConfigure(const std::string& histoFileName, int cur
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<GenericDacDacScanHistograms>(histoFileName, "GenericDacDacScan", histos, currentRun, PixelAlive::saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "GenericDacDacScan", histos, currentRun, PixelAlive::saveBinaryData);
 }
 
 void GenericDacDacScan::run()

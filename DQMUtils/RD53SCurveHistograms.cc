@@ -76,7 +76,7 @@ bool SCurveHistograms::fill(std::string& inputStream)
     }
     if(theOccupancySerialization.attachDeserializer(inputStream))
     {
-        int                   deltaVcal;
+        uint16_t              deltaVcal;
         DetectorDataContainer fDetectorData = theOccupancySerialization.deserializeChipContainer<OccupancyAndPh, OccupancyAndPh>(fDetectorContainer, deltaVcal);
         SCurveHistograms::fillOccupancy(fDetectorData, deltaVcal);
         return true;
@@ -84,7 +84,7 @@ bool SCurveHistograms::fill(std::string& inputStream)
     return false;
 }
 
-void SCurveHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL)
+void SCurveHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContainer, uint16_t DELTA_VCAL)
 {
     for(const auto cBoard: OccupancyContainer)
         for(const auto cOpticalGroup: *cBoard)

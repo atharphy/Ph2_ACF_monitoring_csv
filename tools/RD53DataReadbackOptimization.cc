@@ -114,7 +114,7 @@ void DataReadbackOptimization::localConfigure(const std::string& histoFileName, 
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<DataReadbackOptimizationHistograms>(histoFileName, "DataReadbackOptimization", histos);
+    CalibBase::initializeFiles(histoFileName, "DataReadbackOptimization", histos);
 }
 
 void DataReadbackOptimization::run()

@@ -99,7 +99,7 @@ bool GainHistograms::fill(std::string& inputStream)
     return false;
 }
 
-void GainHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL)
+void GainHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContainer, uint16_t DELTA_VCAL)
 {
     for(const auto cBoard: OccupancyContainer)
         for(const auto cOpticalGroup: *cBoard)

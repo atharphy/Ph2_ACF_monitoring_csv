@@ -108,8 +108,8 @@ void ThrAdjustment::localConfigure(const std::string& histoFileName, int current
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<ThresholdHistograms>(histoFileName, "ThrAdjustment", histos, currentRun, PixelAlive::saveBinaryData);
-    CalibBase::initializeFiles<PixelAliveHistograms>(histoFileName, "PixelAlive", PixelAlive::histos);
+    CalibBase::initializeFiles(histoFileName, "ThrAdjustment", histos, currentRun, PixelAlive::saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "PixelAlive", PixelAlive::histos);
 }
 
 void ThrAdjustment::run()
@@ -293,8 +293,10 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
         // # Run analysis #
         // ################
         CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames);
+        PixelAlive::doSilentRunning = true;
         PixelAlive::run();
-        auto output = PixelAlive::analyze();
+        PixelAlive::doSilentRunning = false;
+        auto output                 = PixelAlive::analyze();
 
         // ##############################################
         // # Send periodic data to monitor the progress #

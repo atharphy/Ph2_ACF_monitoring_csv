@@ -79,7 +79,7 @@ void BERtest::localConfigure(const std::string& histoFileName, int currentRun)
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<BERtestHistograms>(histoFileName, "BERtest", histos);
+    CalibBase::initializeFiles(histoFileName, "BERtest", histos);
 }
 
 void BERtest::run()

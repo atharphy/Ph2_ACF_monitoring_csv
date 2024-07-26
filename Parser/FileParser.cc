@@ -260,7 +260,8 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         else if(static_cast<std::string>(theChild.name()) == LPGBT_NODE_NAME)
         {
             std::string chipFileName = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
-            os << BOLDBLUE << "|\t|----OpticalGroup --> Id: " << BOLDYELLOW << cOpticalGroupId << BOLDBLUE << ", FMC Id: " << BOLDYELLOW << cFMCId << RESET << std::endl;
+            os << BOLDBLUE << "|\t|----OpticalGroup --> Id: " << BOLDYELLOW << cOpticalGroupId << BOLDBLUE << ", Enable: " << BOLDYELLOW << cEnable << BOLDBLUE << ", FMC Id: " << BOLDYELLOW << cFMCId
+               << RESET << std::endl;
             os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << chipFileName << RESET << std::endl;
             os << BOLDBLUE << "|\t|\t|---- ADC Config. File: " << BOLDYELLOW << theConfigFilePath << RESET << std::endl;
             uint8_t cChipId      = theChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
@@ -1435,6 +1436,10 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
                                                   "RegNameDAC2",
                                                   "DataOutputDir",
                                                   "KIRA_ID",
+                                                  "OTCICtoLpGBTecv_CICStrength",
+                                                  "OTCICtoLpGBTecv_ClockPolarity",
+                                                  "OTCICtoLpGBTecv_ClockStrength",
+                                                  "OTCICtoLpGBTecv_LpGBTPhase",
                                                   "OTinjectionOccupancyScan_ListOfInjectedPulses",
                                                   "OTMPAtoCICecv_ListOfMPAslvsCurrents",
                                                   "OTSSAtoMPAecv_ListOfSSAslvsCurrents",

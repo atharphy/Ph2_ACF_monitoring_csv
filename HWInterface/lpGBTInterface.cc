@@ -41,30 +41,8 @@ void lpGBTInterface::StopPRBSpattern(Chip* pChip)
 bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
-    auto           cBoardType       = fBoardFW->getBoardType();
-    auto           cAddress         = pChip->getRegItem(pDacName).fAddress;
-    const uint16_t maxRegValue      = 0xFF;                                                            // @CONST@
-    const uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F; // Setting highest write address possible (lpGBT version dependent)
-
-    // ######################################################
-    // # Checking that written value isn't more than 8 bits #
-    // ######################################################
-    if(pDacValue > maxRegValue)
-    {
-        LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address 0x" << BOLDYELLOW << std::hex << cAddress << std::dec
-                   << RESET;
-        return false;
-    }
-
-    // ##########################################################################
-    // # Checking that register address isn't higher than highest write address #
-    // ##########################################################################
-    if(cAddress > cMaxWriteAddress)
-    {
-        LOG(WARNING) << GREEN << "LpGBT read-write registers end at " << BOLDYELLOW << cMaxWriteAddress << RESET << GREEN << " ... impossible to write to address 0x" << BOLDYELLOW << std::hex
-                     << cAddress << std::dec << RESET;
-        return false;
-    }
+    auto cBoardType = fBoardFW->getBoardType();
+    auto cAddress   = pChip->getRegItem(pDacName).fAddress;
 
     bool cSuccess = false;
     if((cBoardType != BoardType::RD53) && (pChip->isOptical() == true))
@@ -1309,13 +1287,11 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
 
     if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
-        LOG(INFO) << BOLDRED << "I2C Write transaction FAILED" << RESET;
+        LOG(INFO) << BOLDRED << "I2C Write transaction failed" << RESET;
 #if defined(__TCUSB__)
         // In the test system a run time error is undesired
         return false;
 #else
-        LOG(WARNING) << BOLDRED << "LpGBT BERT: All zeros at input on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
-                     << RESET;
         LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return false;
@@ -1349,15 +1325,14 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
         // LOG(DEBUG) << GREEN << "Waiting for I2C Read transaction to finisih" << RESET;
         cIter++;
     } while(cIter < lpGBTconstants::MAXATTEMPTS && !lpGBTInterface::IsI2CSuccess(pChip, pMaster));
+
     if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
-        LOG(INFO) << BOLDRED << "I2C Read Transaction FAILED" << RESET;
+        LOG(INFO) << BOLDRED << "I2C Read Transaction failed" << RESET;
 #if defined(__TCUSB__)
         // In the test system a run time error is undesired
         return false;
 #else
-        LOG(WARNING) << BOLDRED << "LpGBT BERT: All zeros at input on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
-                     << RESET;
         LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return false;

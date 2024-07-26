@@ -140,7 +140,7 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 #ifdef __USE_ROOT__
     if(this->fResultFile != nullptr) this->fResultFile->Close();
 #endif
-    CalibBase::initializeFiles<PhysicsHistograms>(histoFileName, "Physics", histos, currentRun);
+    CalibBase::initializeFiles(histoFileName, "Physics", histos, currentRun);
 }
 
 void Physics::run()
