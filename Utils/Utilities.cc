@@ -490,7 +490,7 @@ std::string getBinaryPatternPrintout(const std::vector<uint32_t>& theWordVector,
             }
 
         }
-        thePattern << " ";
+        thePattern << "";
     }
     return thePattern.str();
 }

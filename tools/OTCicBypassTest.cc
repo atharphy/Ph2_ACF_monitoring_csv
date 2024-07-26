@@ -85,6 +85,10 @@ void OTCicBypassTest::runCICbypassTest()
                     if(theChip->getFrontEndType() == FrontEndType::MPA2) injectStubsPS(theChip);
                 }
 
+                std::string trigShortPacket[5] = {"00001010", "10100000", "10101010", "01011010", "11110001"};
+                std::string trigInjectedPacket;
+                std::string trigOutputPacket;
+
                 fCicInterface->SelectOutput(cCic, false);
                 fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
                 fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theOpticalGroup->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
@@ -105,7 +109,14 @@ void OTCicBypassTest::runCICbypassTest()
                             {
                                 cbcID = (4 * phyPort + line) / 5;
                                 trig = (4 * phyPort + line) % 5;
-                                LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " cbcID " << cbcID << " Trig " << trig << " -> " << getBinaryPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket) << RESET;
+
+                                trigInjectedPacket = "";
+                                for (int i = 0; i < 4 * 10; i++) trigInjectedPacket += trigShortPacket[trig];
+
+                                trigOutputPacket = getBinaryPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket);
+                                LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " cbcID " << cbcID << " Trig " << trig << " -> " << trigInjectedPacket << RESET;
+                                LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " cbcID " << cbcID << " Trig " << trig << " -> " << trigOutputPacket << RESET;
+                                LOG(INFO) << RESET;
                             }
                             else
                             {
