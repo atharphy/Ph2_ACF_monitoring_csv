@@ -175,6 +175,32 @@ void OTCicBypassTest::injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA)
 
 float OTCicBypassTest::injectedAndOutputPacketEfficiency(std::string injectedPacket, std::string outputPacket)
 {
-    if (injectedPacket == outputPacket) return 1.0;
-    return 0.0;
+    float maxEfficiency = 0.0;
+    auto packetLength = injectedPacket.length();
+    int matchingBits;
+    float efficiency;
+    for (int i = 0; i < 8; i++)
+    {
+        if (injectedPacket == outputPacket) return 1.0;
+        // check that lengths are same
+        if (injectedPacket.length() != outputPacket.length())
+        {
+            LOG(ERROR) << BOLDRED << "ERROR: injected and output packet lengths are not same" << RESET;
+            return 0.0;
+        }
+
+        matchingBits = 0;
+        for (uint j = 0; j < injectedPacket.length(); j++)
+            if (injectedPacket[j] == outputPacket[j])
+                matchingBits++;
+
+        efficiency = (matchingBits * 1.0) / packetLength;
+        if (efficiency > maxEfficiency)
+            maxEfficiency = efficiency;
+
+        // move first character to last position for outputPacket
+        LOG(INFO) << "Efficiency: " << efficiency << " moving first character to last position for outputPacket" << RESET;
+        outputPacket = outputPacket.substr(1) + outputPacket[0];
+    }
+    return maxEfficiency;
 }
