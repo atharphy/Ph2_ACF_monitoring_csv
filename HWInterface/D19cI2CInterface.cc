@@ -6,6 +6,7 @@ using namespace Ph2_HwDescription;
 #include "HWDescription/OpticalGroup.h"
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWInterface/RegManager.h"
+#include "Utils/Utilities.h"
 #include <thread>
 namespace Ph2_HwInterface
 {

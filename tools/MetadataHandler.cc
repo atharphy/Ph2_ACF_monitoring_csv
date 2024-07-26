@@ -1,4 +1,6 @@
 #include "tools/MetadataHandler.h"
+#include "HWDescription/VTRx.h"
+#include "HWInterface/VTRxInterface.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
@@ -281,10 +283,9 @@ void MetadataHandler::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuse
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            auto theLpGBT = cOpticalGroup->flpGBT;
-            if(theLpGBT == nullptr) continue;
-            uint32_t chipFuseId = 0; // flpGBTInterface->ReadVTRxChipFuseID(theLpGBT);
-            // Temporary function in lpgbt interface until VTRx interface is implemented
+            auto theVTRx = cOpticalGroup->fVTRx;
+            if(theVTRx == nullptr) continue;
+            uint32_t chipFuseId                                                                                                             = fVTRxInterface->ReadChipFuseID(theVTRx);
             theVTRxFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertToString(chipFuseId);
         }
     }
