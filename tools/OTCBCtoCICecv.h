@@ -43,13 +43,13 @@ class OTCBCtoCICecv : public OTCicBypassTest
     void Pause() override;
     void Resume() override;
     void Reset();
-    void printCICStrengthAndPhase();
-    void itrOverCICStrength();
-    void writeCBCReg();
 
     static std::string fCalibrationDescription;
 
   private:
+    void printCICStrengthAndPhase();
+    void itrOverCICStrength();
+    void itrOverCBCStrength();
     void                               setCBCshiftRegister();
     void                               runElectricChainValidation();
     std::vector<std::vector<uint32_t>> readCICbypassOutput(Ph2_HwDescription::Hybrid* theHybrid, Ph2_HwInterface::D19cFWInterface* theFWinterface, uint8_t phyPort);

@@ -43,9 +43,9 @@ void OTCBCtoCICecv::Running()
     //itrOverCICStrength();
     //RunCICbypassTest();
     //printCICStrengthAndPhase();
-    //writeCBCReg();
+    //itrOverCBCStrength();
     LOG(INFO) << BOLDRED << "========== Starting OTCBC2CICalignment test ==========" << RESET;
-    writeCBCReg();
+    itrOverCBCStrength();
     LOG(INFO) << BOLDRED << "========== End OTCBC2CICalignment test ==========" << RESET;
     LOG(INFO) << "Done with OTCBCtoCICecv.";
     Reset();
@@ -275,7 +275,7 @@ void OTCBCtoCICecv::itrOverCICStrength()
                 }
 }
 
-void OTCBCtoCICecv::writeCBCReg()
+void OTCBCtoCICecv::itrOverCBCStrength()
 {
     uint16_t cReg;
     bool pVerifyBit;
