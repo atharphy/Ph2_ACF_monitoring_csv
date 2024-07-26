@@ -98,7 +98,8 @@ void OTCicBypassTest::runCICbypassTest()
                         size_t cNlines          = 4;
                         for(size_t line = 0; line < cNlines; ++line)
                         {
-                            LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " -> " << getPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket) << RESET;
+                            //LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " -> " << getPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket) << RESET;
+                            LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " -> " << getBinaryPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket) << RESET;
                         }
                     }
                 }
