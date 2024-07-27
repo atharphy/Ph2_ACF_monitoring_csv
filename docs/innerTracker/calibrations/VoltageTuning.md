@@ -2,7 +2,8 @@
 
 **Scan command:** `voltagetuning`
 
-### "RD53A"
+## RD53A
+
 Although it is not strictly needed for a first test, in principle you need to tune:
 
 | Name      | Target value | Description |
@@ -10,7 +11,7 @@ Although it is not strictly needed for a first test, in principle you need to tu
 | $I_{ref}$ | $4 \mu A$ | through external jumpers and measuring the voltage drop across a resistor (typically R45, 10kOhm)|
     | $V_{ref}$ | $0.9 V$   | through the register `MONITOR_CONFIG_BG` in the `XML`
 
-### "RD53B"
+## RD53B
 
 Although it is not strictly needed for a first test, in principle you need to tune:
 

@@ -94,25 +94,23 @@ double MyGammaSignal(double* x, double* par)
     return fitval;
 }
 
-uint32_t convertAnyInt(const char* pRegValue)
+uint32_t convertAnyInt(std::string pRegValue)
 {
-    int         baseType = 0;
-    std::string myRegValue(pRegValue);
-    if(myRegValue.find("0x") != std::string::npos)
+    int baseType = 0;
+    if(pRegValue.find("0x") != std::string::npos)
         baseType = 16;
-    else if(myRegValue.find("0d") != std::string::npos)
+    else if(pRegValue.find("0d") != std::string::npos)
         baseType = 10;
-    else if(myRegValue.find("0b") != std::string::npos)
+    else if(pRegValue.find("0b") != std::string::npos)
         baseType = 2;
-    if(baseType != 0) myRegValue.erase(0, 2);
-    return static_cast<uint32_t>(strtoul(myRegValue.c_str(), 0, (baseType != 0 ? baseType : 10)));
+    if(baseType != 0) pRegValue.erase(0, 2);
+    return static_cast<uint32_t>(strtoul(pRegValue.c_str(), 0, (baseType != 0 ? baseType : 10)));
 }
 
-double convertAnyDouble(const char* pRegValue)
+double convertAnyDouble(std::string pRegValue)
 {
-    int         baseType = 0;
-    std::string myRegValue(pRegValue);
-    if(myRegValue.find("0x") != std::string::npos)
+    int baseType = 0;
+    if(pRegValue.find("0x") != std::string::npos)
     {
         baseType = 16;
         unsigned int      x;
@@ -121,24 +119,35 @@ double convertAnyDouble(const char* pRegValue)
         ss >> x;
         return x;
     }
-    else if(myRegValue.find("0d") != std::string::npos)
+    else if(pRegValue.find("0d") != std::string::npos)
         baseType = 10;
-    else if(myRegValue.find("0b") != std::string::npos)
+    else if(pRegValue.find("0b") != std::string::npos)
         baseType = 2;
-    if(baseType != 0) myRegValue.erase(0, 2);
-    return strtod(myRegValue.c_str(), 0);
+    if(baseType != 0) pRegValue.erase(0, 2);
+    return strtod(pRegValue.c_str(), 0);
 }
 
 std::vector<float> convertStringToFloatList(std::string theListString)
 {
     boost::erase_all(theListString, " ");
-
-    std::vector<std::string> subStringList;
-    boost::algorithm::split(subStringList, theListString, boost::algorithm::is_any_of(","));
-
     std::vector<float> theListOfFloats;
-    for(auto subString: subStringList) theListOfFloats.push_back(strtof(subString.c_str(), nullptr));
 
+    if(theListString.find('-') != std::string::npos)
+    {
+        size_t            dashPosition = theListString.find('-');
+        std::stringstream startString(theListString.substr(0, dashPosition));
+        std::stringstream endString(theListString.substr(dashPosition + 1));
+        float             startFloat, endFloat;
+        startString >> startFloat;
+        endString >> endFloat;
+        for(float i = startFloat; i <= endFloat; i++) theListOfFloats.push_back(i);
+    }
+    else
+    {
+        std::vector<std::string> subStringList;
+        boost::algorithm::split(subStringList, theListString, boost::algorithm::is_any_of(","));
+        for(auto subString: subStringList) theListOfFloats.push_back(strtof(subString.c_str(), nullptr));
+    }
     return theListOfFloats;
 }
 

@@ -7,6 +7,7 @@
 This scan is measuring the ToT response of each pixel to a range of injected charges and calculates the calibration constants for \( q(\textrm{ToT}) = \textrm{gain} \cdot \textrm{ToT} + \textrm{offset} \;\; [q] = 1 e^- \).
 
 ## Configuration parameters
+
 | Name             | Typical value | Description |
 | ---------------- | ------------- | ----------- |
 | `nEvents`        | 100           |             |

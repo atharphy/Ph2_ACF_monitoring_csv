@@ -21,5 +21,6 @@ The number of steps is `10`or less depending whether `TAPxStop - TAPxStart <10`
 ![Setup](images/DataReadBackOptimisation.png){width=600}
 
 ## Failure Modes
+
 Below `100` there is a high error rate
 ![Setup](images/DataReadBackOptimisation_Error.png){width=600}

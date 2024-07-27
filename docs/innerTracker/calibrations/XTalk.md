@@ -1,4 +1,5 @@
 # Crosstalk (X-Talk) studies
+
 The user can define its own enable and injection patterns (`INJtype = 3`) [link](../ConfigFile.md#injection) and then
 run an `SCurve` scan to measure possible X-talk
 
