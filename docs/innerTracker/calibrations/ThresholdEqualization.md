@@ -6,7 +6,6 @@
 
 The threshold equalization should return a more narrow threshold distribution and scurve.
 
-
 ## Configuration parameters
 
 | Name             | Typical value | Description |
@@ -28,10 +27,10 @@ The threshold equalization should return a more narrow threshold distribution an
 
 If `ResetTDAC = -1` then as starting values of TDAC are used those in the config file, the TDAC are reset to the value.In case the resulting TDAC distribution is highly asymmetric, then you might want to re-run the scan by resetting the TDAC, or when the thr. vs TDAC becomes non linear as after irradiation.
 
-The threshold equalization can be run for 
+The threshold equalization can be run for
 
-* high global threshold (`DoNSteps = 0`) to equalize the pixels around the same threshold value
-* low global threshold (`DoNSteps = 1`) to improve the width of the threshold 1d distribution
+- high global threshold (`DoNSteps = 0`) to equalize the pixels around the same threshold value
+- low global threshold (`DoNSteps = 1`) to improve the width of the threshold 1d distribution
 
 The plots below show the improvement of the standard deviation in the threshold distribution after re-running the threshold equalization with `DoNSteps = 1` at low threshold.
 

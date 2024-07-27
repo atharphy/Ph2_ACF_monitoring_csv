@@ -222,32 +222,21 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                               << BOLDYELLOW << "VCAL_MED" << BOLDBLUE << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
                 }
 
-    // #####################
-    // # Disable all chips #
-    // #####################
-    // CalibBase::prepareChipQueryForEnDis("chipSubset"); // @TMP@
+    // ################################
+    // # Prepare query and enable all #
+    // ################################
+    CalibBase::prepareChipQueryForEnDis("chipSubset");
     CalibBase::setChipEnDis(false);
 
-    for(auto it = 0u; it < RD53FWconstants::NMAXCHIP_HYBRID; it++)
+    for(auto indx = 0u; indx < RD53FWconstants::NMAXCHIP_HYBRID; indx++)
     {
-        // ######################################################
-        // # Enable one chip per hybrid at a time and set query #
-        // ######################################################
-        bool isDetectorEmpty = false;
-        fDetectorContainer->removeReadoutChipQueryFunction("chipSubset"); // @TMP@
-        for(const auto cBoard: *fDetectorContainer)
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                {
-                    if(it < cHybrid->fullSize()) cHybrid->at(it)->setEnabled(true);
-                    if((it > 0) && (it <= cHybrid->fullSize())) cHybrid->at(it - 1)->setEnabled(false);
-                    isDetectorEmpty |= (cHybrid->size() == 0);
-                }
-        if(isDetectorEmpty == true) break;
-        CalibBase::prepareChipQueryForEnDis("chipSubset"); // @TMP@
+        if(CalibBase::shiftEnable(indx) == true) break;
+        // @TMP@ : enable chips in the hardware
+        // @TMP@ : do not drop event data after n attempts
+        // @TMP@ : fill only container with no "hybrid errors"
 
         LOG(INFO) << RESET;
-        LOG(INFO) << BOLDMAGENTA << ">>> Optimizing all frontend chips #" << BOLDYELLOW << it << BOLDMAGENTA << " <<<" << RESET;
+        LOG(INFO) << BOLDMAGENTA << ">>> Optimizing all frontend chips #" << BOLDYELLOW << indx << BOLDMAGENTA << " <<<" << RESET;
 
         for(auto i = 0u; i <= numberOfBits + 1u; i++)
         {

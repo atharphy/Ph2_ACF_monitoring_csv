@@ -163,6 +163,9 @@ class BeBoard : public BoardContainer
     void setToConfigure(uint8_t pToConfigure) { fToConfigure = pToConfigure; }
     bool getToConfigure() const { return fToConfigure; }
 
+    void        setComment(const std::string& pComment) { fComment = pComment; }
+    std::string getComment() const { return fComment; }
+
     void        setConnectionId(std::string theConnectionId) { fConnectionId = theConnectionId; }
     std::string getConnectionId() const { return fConnectionId; }
 
@@ -208,6 +211,7 @@ class BeBoard : public BoardContainer
     uint8_t           fResetLink{1};
     uint16_t          fStubOffset{0};
     uint8_t           fReset{0};
+    std::string       fComment{""};
     bool              fToConfigure{true};
 
     std::string fConnectionId{""};

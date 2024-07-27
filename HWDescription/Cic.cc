@@ -24,10 +24,10 @@ namespace Ph2_HwDescription
 
 Cic::Cic(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string& filename) : Chip(pFeDesc, pChipId)
 {
-    fChipCode      = 4;
-    fChipAddress   = 0x60;
-    fMaxRegValue   = 255; // 8 bit registers in CIC
-    configFileName = filename;
+    fChipCode       = 4;
+    fChipAddress    = 0x60;
+    fMaxRegValue    = 255; // 8 bit registers in CIC
+    fConfigFileName = filename;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CIC2);
     initializeLpGBTphasesForCICbypassMap();
@@ -36,10 +36,10 @@ Cic::Cic(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string&
 // C'tors which take BeBoardId, FMCId, HybridId, CbcId
 Cic::Cic(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, const std::string& filename) : Chip(pBeBoardId, pFMCId, pOpticalGroupId, pHybridId, pChipId)
 {
-    fChipCode      = 4;
-    fChipAddress   = 0x60;
-    fMaxRegValue   = 255; // 8 bit registers in CIC
-    configFileName = filename;
+    fChipCode       = 4;
+    fChipAddress    = 0x60;
+    fMaxRegValue    = 255; // 8 bit registers in CIC
+    fConfigFileName = filename;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CIC2);
     initializeLpGBTphasesForCICbypassMap();

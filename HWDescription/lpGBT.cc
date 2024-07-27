@@ -13,10 +13,10 @@ namespace Ph2_HwDescription
 {
 lpGBT::lpGBT(uint8_t pBeId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName, const std::string& pConfigFilePath) : Chip(pBeId, FMCId, pOpticalGroupId, 0, pChipId)
 {
-    configFileName  = fileName;
+    fConfigFileName = fileName;
     fConfigFilePath = pConfigFilePath;
     setFrontEndType(FrontEndType::LpGBT);
-    lpGBT::loadfRegMap(configFileName);
+    lpGBT::loadfRegMap(fConfigFileName);
 }
 
 void lpGBT::initializeFreeRegisters()

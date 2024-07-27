@@ -39,6 +39,7 @@ class CalibBase : public Tool
     uint8_t assignGroupType(RD53Shared::INJtype injType) const;
     void    prepareChipQueryForEnDis(const std::string& queryName);
     void    setChipEnDis(bool enable);
+    bool    shiftEnable(size_t indx);
     void    setSinglePixel(Ph2_HwDescription::ReadoutChip* pChip, size_t row, size_t col, bool enable, bool inject);
     void    ResetBoardsReadBkFIFO();
     void    ResetBoards();

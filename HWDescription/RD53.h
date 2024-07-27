@@ -227,6 +227,8 @@ class RD53 : public ReadoutChip
     void        disableAllPixels();
     size_t      getNbMaskedPixels();
     void        enablePixel(unsigned int row, unsigned int col, bool enable);
+    void        enableDefaultPixel(unsigned int row, unsigned int col, bool enable);
+    void        maskCoreDefault(unsigned int row, unsigned int col);
     void        injectPixel(unsigned int row, unsigned int col, bool inject);
     void        setTDAC(unsigned int row, unsigned int col, uint8_t TDAC);
     void        resetTDAC(uint8_t TDAC);

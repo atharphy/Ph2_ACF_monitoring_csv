@@ -31,7 +31,7 @@ Cbc::Cbc(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string&
     fMaxRegValue      = 255; // 8 bit registers in CBC
     fChipOriginalMask = std::make_shared<ChannelGroup<1, NCHANNELS>>();
     fChipOriginalMask->enableAllChannels();
-    configFileName = filename;
+    fConfigFileName = filename;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CBC3);
     fAverageNoise = 6.7;

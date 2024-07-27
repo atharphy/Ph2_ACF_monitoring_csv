@@ -4,10 +4,9 @@
 
 |Untuned thresholds: `Vth = 400` | Threhold minimization: `Vth = 380` |
 | ------------------------------ | ---------------------------------- |
-|![Setup](images/thremin_1.png){width=300 } | ![Setup](images/thremin_2.png){width=300 } | 
+|![Setup](images/thremin_1.png){width=300 } | ![Setup](images/thremin_2.png){width=300 } |
 |**Equalized thresholds: `Vth = 380`** | **Threhold minimization: `Vth = 357`** |
 |![Setup](images/thremin_3.png){width=300 } | ![Setup](images/thremin_4.png){width=300 } |
-
 
 Threshold minimisation algorithm is based on:
 

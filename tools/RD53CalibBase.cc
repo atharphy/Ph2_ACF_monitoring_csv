@@ -169,14 +169,14 @@ void CalibBase::saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*
                         fileOutID << "Iteration " << i << " --- reg = " << dacList[i] - offset << std::endl;
                         for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                             for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                                if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                       ->getObject(cBoard->getId())
-                                                                                                                       ->getObject(cOpticalGroup->getId())
-                                                                                                                       ->getObject(cHybrid->getId())
-                                                                                                                       ->getObject(cChip->getId())
-                                                                                                                       ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
-                                                                                                                       ->allChannelGroup()
-                                                                                                                       ->isChannelEnabled(row, col))
+                                if(cChip->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
+                                                                                                   ->getObject(cBoard->getId())
+                                                                                                   ->getObject(cOpticalGroup->getId())
+                                                                                                   ->getObject(cHybrid->getId())
+                                                                                                   ->getObject(cChip->getId())
+                                                                                                   ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                                   ->allChannelGroup()
+                                                                                                   ->isChannelEnabled(row, col))
                                     fileOutID << "r " << row << " c " << col << " h "
                                               << detectorContainerVector[i]
                                                          ->getObject(cBoard->getId())
@@ -220,6 +220,7 @@ void CalibBase::prepareChipQueryForEnDis(const std::string& queryName)
 
     fDetectorContainer->resetReadoutChipQueryFunction();
     fDetectorContainer->addReadoutChipQueryFunction(chipSubset, queryName);
+    fDetectorContainer->setEnabledAll(true);
 }
 
 void CalibBase::setChipEnDis(bool enable)
@@ -227,7 +228,23 @@ void CalibBase::setChipEnDis(bool enable)
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
-              for(const auto cChip: *cHybrid) cChip->setEnabled(enable); // @TMP@
+                for(auto i = 0u; i < cHybrid->fullSize(); i++) cHybrid->at(i)->setEnabled(enable);
+}
+
+bool CalibBase::shiftEnable(size_t indx)
+{
+    bool isDetectorEmpty = false;
+
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+            {
+                if(indx < cHybrid->fullSize()) cHybrid->at(indx)->setEnabled(true);
+                if((indx > 0) && (indx <= cHybrid->fullSize())) cHybrid->at(indx - 1)->setEnabled(false);
+                isDetectorEmpty |= (cHybrid->size() == 0);
+            }
+
+    return isDetectorEmpty;
 }
 
 void CalibBase::setSinglePixel(ReadoutChip* pChip, size_t row, size_t col, bool enable, bool inject)

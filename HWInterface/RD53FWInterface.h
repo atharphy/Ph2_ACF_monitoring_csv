@@ -84,7 +84,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void SetOptoLinkVersion(uint8_t version) override;
     // #############################
 
-    bool silentRunning{false};
+    void ConfigurePCTestAdapter(const std::string& config);
     void SelectBERcheckBitORFrame(const uint8_t bitORframe);
     void WriteArbitraryRegister(const std::string&                regName,
                                 const uint32_t                    value,
@@ -96,6 +96,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void ResetSlowCmdFIFO();
     void ResetReadBkFIFO();
     void ResetReadoutBlk();
+    bool silentRunning{false};
 
     // ####################################
     // # Check AURORA lock on data stream #
@@ -128,8 +129,7 @@ class RD53FWInterface : public BeBoardFWInterface
         Undefined = 0
     };
 
-    // @TMP@
-    enum class AutozeroSource : uint32_t
+    enum class AutozeroSource : uint32_t // @TMP@
     {
         Software = 1,
         FastCMDFSM,

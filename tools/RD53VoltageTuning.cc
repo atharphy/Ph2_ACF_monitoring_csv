@@ -103,7 +103,6 @@ void VoltageTuning::run()
     // # Prepare query and enable all #
     // ################################
     CalibBase::prepareChipQueryForEnDis("chipSubset");
-    fDetectorContainer->setEnabledAll(true);
 
     for(auto nAttempt = 0; nAttempt < RD53Shared::MAXATTEMPTS; nAttempt++)
     {

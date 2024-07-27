@@ -11,7 +11,7 @@
 #define UTILITIES_H
 
 #include "HWDescription/Definition.h"
-#include "StartInfo.h"
+#include "Utils/StartInfo.h"
 
 #include <algorithm>
 #include <bitset>
@@ -78,9 +78,9 @@ double MyGammaSignal(double* x, double* par);
  * \param pRegValue: parsed xml parmaeter char*
  * \return converted integer
  */
-uint32_t convertAnyInt(const char* pRegValue);
+uint32_t convertAnyInt(std::string pRegValue);
 
-double convertAnyDouble(const char* pRegValue);
+double convertAnyDouble(std::string pRegValue);
 
 std::vector<float> convertStringToFloatList(std::string theListString);
 

@@ -40,7 +40,7 @@ class BaseContainer
         isEnabled_ = theCopyContainer.isEnabled_;
     }
 
-    virtual ~BaseContainer() { ; }
+    virtual ~BaseContainer() {}
     uint16_t                     getId(void) const { return id_; }
     virtual void                 cleanDataStored(void)            = 0;
     virtual const BaseContainer* getElement(uint16_t theId) const = 0;

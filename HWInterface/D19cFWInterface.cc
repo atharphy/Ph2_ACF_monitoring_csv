@@ -14,6 +14,7 @@
 #include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Hybrid.h"
 #include "HWDescription/OuterTrackerHybrid.h"
+#include "HWDescription/lpGBT.h"
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
 #include "HWInterface/D19cDebugFWInterface.h"
 #include "HWInterface/D19cFastCommandInterface.h"
