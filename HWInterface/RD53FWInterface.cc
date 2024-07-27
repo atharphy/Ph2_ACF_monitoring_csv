@@ -222,7 +222,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     RD53FWInterface::resetNtrialsNevents();
 
     // #########################
-    // # Portcard test adapter #
+    // # PortCard Test Adapter #
     // #########################
     if(pBoard->getEventType() == EventType::VRPCTestAdapter) RD53FWInterface::ConfigurePCTestAdapter(pBoard->getComment());
 }

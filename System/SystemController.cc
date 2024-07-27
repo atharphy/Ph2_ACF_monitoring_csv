@@ -1030,7 +1030,7 @@ uint32_t SystemController::ReadData(BeBoard* pBoard, std::vector<uint32_t>& pDat
 void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents)
 {
     std::vector<uint32_t> cData;
-    return this->ReadNEvents(pBoard, pNEvents, cData, true);
+    this->ReadNEvents(pBoard, pNEvents, cData, true);
 }
 
 void SystemController::ReadNEvents(uint32_t pNEvents)
