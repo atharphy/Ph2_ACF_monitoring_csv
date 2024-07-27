@@ -34,10 +34,10 @@ class RD53ChannelGroup : public ChannelGroupBase
     bool     isChannelEnabled(uint16_t row, uint16_t col) const override { return storage[row + numberOfRows_ * col]; }
     void     enableChannel(uint16_t row, uint16_t col) override { storage[row + numberOfRows_ * col] = true; }
     void     disableChannel(uint16_t row, uint16_t col) override { storage[row + numberOfRows_ * col] = false; }
-    void     disableAllChannels(void) override { std::fill(storage.begin(), storage.end(), false); }
-    void     enableAllChannels(void) override { std::fill(storage.begin(), storage.end(), true); }
-    void     flipAllChannels(void) override { std::transform(storage.begin(), storage.end(), storage.begin(), std::logical_not<>{}); }
-    bool     areAllChannelsEnabled(void) const override
+    void     disableAllChannels() override { std::fill(storage.begin(), storage.end(), false); }
+    void     enableAllChannels() override { std::fill(storage.begin(), storage.end(), true); }
+    void     flipAllChannels() override { std::transform(storage.begin(), storage.end(), storage.begin(), std::logical_not<>{}); }
+    bool     areAllChannelsEnabled() const override
     {
         return std::all_of(storage.begin(), storage.end(), [](auto x) { return x; });
     }

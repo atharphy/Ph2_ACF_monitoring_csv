@@ -42,7 +42,8 @@ void RD53Event::fillChipDataContainer(ChipDataContainer* chipContainer, const st
     bool   vectorRequired = chipContainer->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
     size_t chipIndx;
 
-    if((eventStatus == RD53FWEvtEncoder::GOOD) && (RD53Event::isHittedChip(hybridId, chipContainer->getId(), chipIndx) == true))
+    if(((RD53Event::weakCheckDataStatus == false) && (eventStatus == RD53FWEvtEncoder::GOOD) && (RD53Event::isHittedChip(hybridId, chipContainer->getId(), chipIndx) == true)) ||
+       ((RD53Event::weakCheckDataStatus == true) && (RD53Event::isHittedChip(hybridId, chipContainer->getId(), chipIndx) == true) && (chip_events[chipIndx].eventStatus == RD53FWEvtEncoder::GOOD)))
     {
         if(vectorRequired == true)
         {
@@ -118,6 +119,7 @@ void RD53Event::clearEventContainer(BeBoard& theBoard, DetectorDataContainer& th
 // # Event static data member instantiation #
 // ##########################################
 std::vector<RD53Event> RD53Event::decodedEvents;
+bool                   RD53Event::weakCheckDataStatus(false);
 
 std::vector<std::thread>            RD53Event::decodingThreads;
 std::vector<std::vector<RD53Event>> RD53Event::vecEvents(RD53Shared::NTHREADS);

@@ -220,18 +220,24 @@ void CalibBase::prepareChipQueryForEnDis(const std::string& queryName)
 
     fDetectorContainer->resetReadoutChipQueryFunction();
     fDetectorContainer->addReadoutChipQueryFunction(chipSubset, queryName);
-    fDetectorContainer->setEnabledAll(true);
 }
 
-void CalibBase::setChipEnDis(bool enable)
+void CalibBase::setChipEnDis(bool enable, std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler)
 {
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
-                for(auto i = 0u; i < cHybrid->fullSize(); i++) cHybrid->at(i)->setEnabled(enable);
+                for(auto i = 0u; i < cHybrid->fullSize(); i++)
+                {
+                    cHybrid->at(i)->setEnabled(enable);
+                    if(enable == true)
+                        theChnGroupHandler->getRegionOfInterest().enableAllChannels();
+                    else
+                        theChnGroupHandler->getRegionOfInterest().disableAllChannels();
+                }
 }
 
-bool CalibBase::shiftEnable(size_t indx)
+bool CalibBase::shiftEnable(size_t indx, std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler)
 {
     bool isDetectorEmpty = false;
 
@@ -239,8 +245,24 @@ bool CalibBase::shiftEnable(size_t indx)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
             {
-                if(indx < cHybrid->fullSize()) cHybrid->at(indx)->setEnabled(true);
-                if((indx > 0) && (indx <= cHybrid->fullSize())) cHybrid->at(indx - 1)->setEnabled(false);
+                // #########
+                // # Index #
+                // #########
+                if(indx < cHybrid->fullSize())
+                {
+                    cHybrid->at(indx)->setEnabled(true);
+                    theChnGroupHandler->getRegionOfInterest().enableAllChannels();
+                }
+
+                // #############
+                // # Index - 1 #
+                // #############
+                if((indx > 0) && (indx <= cHybrid->fullSize()))
+                {
+                    cHybrid->at(indx - 1)->setEnabled(false);
+                    theChnGroupHandler->getRegionOfInterest().disableAllChannels();
+                }
+
                 isDetectorEmpty |= (cHybrid->size() == 0);
             }
 

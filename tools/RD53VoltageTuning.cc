@@ -323,7 +323,6 @@ void VoltageTuning::run()
     // # Restore query and enable all #
     // ################################
     fDetectorContainer->resetReadoutChipQueryFunction();
-    fDetectorContainer->setEnabledAll(true);
 }
 
 void VoltageTuning::draw(bool saveData)

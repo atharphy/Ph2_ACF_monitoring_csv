@@ -18,8 +18,6 @@
 #include "Utils/RD53Event.h"
 #include "Utils/RD53Shared.h"
 
-#include <iomanip>
-
 // ##################
 // # Default values #
 // ##################
