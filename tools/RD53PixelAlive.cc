@@ -147,17 +147,17 @@ void PixelAlive::run()
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
-                        const auto&                     corecolRegs = static_cast<RD53*>(cChip)->getFEtype(colStart, colStop)->CoreColRegs;
-                        std::map<std::string, uint16_t> regValueMap;
+                        const auto&                     coreColRegs          = static_cast<RD53*>(cChip)->getFEtype(colStart, colStop)->CoreColRegs;
                         size_t                          badPixelsCounterChip = 0;
+                        std::map<std::string, uint16_t> regValueMap;
 
                         LOG(INFO) << GREEN << "Results for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "]" << RESET;
 
-                        for(const auto& regName: corecolRegs)
+                        for(const auto& regName: coreColRegs)
                         {
                             const auto numberOfBits     = cChip->getNumberOfBits(regName);
-                            const auto baseNumberOfBits = cChip->getNumberOfBits(corecolRegs.at(0));
+                            const auto baseNumberOfBits = cChip->getNumberOfBits(coreColRegs.at(0));
                             regValueMap[regName]        = RD53Shared::setBits(numberOfBits);
 
                             for(auto i = 0u; i < numberOfBits; i++)
@@ -198,8 +198,8 @@ void PixelAlive::run()
                                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                     this->fReadoutChipInterface->MaskAllChannels(cChip, true);
 
-                                    const auto& ele     = std::find(corecolRegs.begin(), corecolRegs.end(), regName);
-                                    const auto  coreCol = (ele - corecolRegs.begin()) * baseNumberOfBits + i;
+                                    const auto& ele     = std::find(coreColRegs.begin(), coreColRegs.end(), regName);
+                                    const auto  coreCol = (ele - coreColRegs.begin()) * baseNumberOfBits + i;
                                     LOG(WARNING) << BOLDBLUE << "\t--> Found problematic Core-Column " << BOLDYELLOW << coreCol << BOLDBLUE << "(" << BOLDYELLOW
                                                  << RD53Shared::firstChip->getNCols() / RD53Constants::NROW_CORE << BOLDBLUE << ")" << RESET << GREEN
                                                  << " --> I'll try to nail down the problem at pixel level" << RESET;
@@ -273,7 +273,7 @@ void PixelAlive::run()
                         // ###########################
                         // # Download new DAC values #
                         // ###########################
-                        for(const auto& regName: corecolRegs)
+                        for(const auto& regName: coreColRegs)
                         {
                             this->fReadoutChipInterface->WriteChipReg(cChip, regName, regValueMap[regName], false);
                             const uint16_t mask         = cChip->getRegMap()[regName].fDefValue;
