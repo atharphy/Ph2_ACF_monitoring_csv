@@ -95,6 +95,7 @@ void CalibBase::saveChipRegisters(bool doUpdateChip)
 
 void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const std::vector<const char*>& regNames, bool checkAgainst, int value)
 {
+    const auto            chipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
 
@@ -106,7 +107,6 @@ void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const 
             for(const auto cHybrid: *cOpticalGroup)
             {
                 chipCommandList.clear();
-                int hybridId = cHybrid->getId();
 
                 for(const auto cChip: *cHybrid)
                     for(const auto& regName: regNames)
@@ -115,13 +115,12 @@ void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const 
                             (DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() != value)) ||
                            (checkAgainst == false))
                         {
-                            static_cast<RD53Interface*>(this->fReadoutChipInterface)
-                                ->PackWriteCommand(
-                                    cChip,
-                                    regName,
-                                    DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>(),
-                                    chipCommandList,
-                                    true);
+                            chipInterface->PackWriteCommand(
+                                cChip,
+                                regName,
+                                DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>(),
+                                chipCommandList,
+                                true);
 
                             LOG(INFO) << BOLDMAGENTA << ">>> " << (checkAgainst == true ? "Best " : "") << BOLDYELLOW << regName << BOLDMAGENTA
                                       << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
@@ -137,10 +136,10 @@ void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const 
                         }
                     }
 
-                static_cast<RD53Interface*>(this->fReadoutChipInterface)->PackHybridCommands(cBoard, chipCommandList, hybridId, hybridCommandList);
+                chipInterface->PackHybridCommands(cBoard, chipCommandList, cHybrid->getId(), hybridCommandList);
             }
 
-            static_cast<RD53Interface*>(this->fReadoutChipInterface)->SendHybridCommands(cBoard, hybridCommandList);
+            chipInterface->SendHybridCommands(cBoard, hybridCommandList);
         }
 }
 
@@ -222,36 +221,57 @@ void CalibBase::prepareChipQueryForEnDis(const std::string& queryName)
     fDetectorContainer->addReadoutChipQueryFunction(chipSubset, queryName);
 }
 
-void CalibBase::setChipEnDis(bool enable, std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler)
+void CalibBase::setChipEnDis(bool enable)
 {
+    const auto            chipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
+    std::vector<uint16_t> chipCommandList;
+    std::vector<uint32_t> hybridCommandList;
+
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
+        {
+            hybridCommandList.clear();
+
             for(const auto cHybrid: *cOpticalGroup)
+            {
+                chipCommandList.clear();
+
                 for(auto i = 0u; i < cHybrid->fullSize(); i++)
                 {
                     cHybrid->at(i)->setEnabled(enable);
-                    if(enable == true)
-                        theChnGroupHandler->getRegionOfInterest().enableAllChannels();
-                    else
-                        theChnGroupHandler->getRegionOfInterest().disableAllChannels();
+                    chipInterface->EnDisChip(static_cast<RD53*>(cHybrid->at(i)), chipCommandList, enable);
                 }
+
+                chipInterface->PackHybridCommands(cBoard, chipCommandList, cHybrid->getId(), hybridCommandList);
+            }
+
+            chipInterface->SendHybridCommands(cBoard, hybridCommandList);
+        }
 }
 
-bool CalibBase::shiftEnable(size_t indx, std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler)
+bool CalibBase::shiftEnable(size_t indx)
 {
-    bool isDetectorEmpty = false;
+    const auto            chipInterface   = static_cast<RD53Interface*>(this->fReadoutChipInterface);
+    bool                  isDetectorEmpty = false;
+    std::vector<uint16_t> chipCommandList;
+    std::vector<uint32_t> hybridCommandList;
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
+        {
+            hybridCommandList.clear();
+
             for(const auto cHybrid: *cOpticalGroup)
             {
+                chipCommandList.clear();
+
                 // #########
                 // # Index #
                 // #########
                 if(indx < cHybrid->fullSize())
                 {
                     cHybrid->at(indx)->setEnabled(true);
-                    theChnGroupHandler->getRegionOfInterest().enableAllChannels();
+                    chipInterface->EnDisChip(static_cast<RD53*>(cHybrid->at(indx)), chipCommandList, true);
                 }
 
                 // #############
@@ -260,11 +280,16 @@ bool CalibBase::shiftEnable(size_t indx, std::shared_ptr<RD53ChannelGroupHandler
                 if((indx > 0) && (indx <= cHybrid->fullSize()))
                 {
                     cHybrid->at(indx - 1)->setEnabled(false);
-                    theChnGroupHandler->getRegionOfInterest().disableAllChannels();
+                    chipInterface->EnDisChip(static_cast<RD53*>(cHybrid->at(indx - 1)), chipCommandList, false);
                 }
 
                 isDetectorEmpty |= (cHybrid->size() == 0);
+
+                chipInterface->PackHybridCommands(cBoard, chipCommandList, cHybrid->getId(), hybridCommandList);
             }
+
+            chipInterface->SendHybridCommands(cBoard, hybridCommandList);
+        }
 
     return isDetectorEmpty;
 }

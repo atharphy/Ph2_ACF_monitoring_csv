@@ -226,12 +226,12 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
     // # Prepare query, disable all chips, and set weak check of data status #
     // #######################################################################
     CalibBase::prepareChipQueryForEnDis("chipSubset");
-    CalibBase::setChipEnDis(false, PixelAlive::theChnGroupHandler);
+    CalibBase::setChipEnDis(false);
     RD53Event::weakCheckDataStatus = true;
 
     for(auto indx = 0u; indx < RD53FWconstants::NMAXCHIP_HYBRID; indx++)
     {
-        if(CalibBase::shiftEnable(indx, PixelAlive::theChnGroupHandler) == true) break;
+        if(CalibBase::shiftEnable(indx) == true) break;
 
         LOG(INFO) << RESET;
         LOG(INFO) << BOLDMAGENTA << ">>> Optimizing all frontend chips #" << BOLDYELLOW << indx << BOLDMAGENTA << " <<<" << RESET;
@@ -376,7 +376,7 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
     // # Restore query, enable all chips, and reset weak check of data status #
     // ########################################################################
     fDetectorContainer->resetReadoutChipQueryFunction();
-    CalibBase::setChipEnDis(true, PixelAlive::theChnGroupHandler);
+    CalibBase::setChipEnDis(true);
     RD53Event::weakCheckDataStatus = false;
 
     // ###########################

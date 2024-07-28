@@ -366,10 +366,10 @@ std::vector<int> VoltageTuning::createScanRange(Chip* pChip, const std::string r
     std::vector<int> scanRange;
 
     if(initial <= target)
-        for(int vTrim = (RD53Shared::setBits(pChip->getRegItem(regName).fBitSize) + 1) / 2; vTrim <= static_cast<int>(RD53Shared::setBits(pChip->getRegItem(regName).fBitSize)); vTrim++)
+        for(int vTrim = (RD53Shared::setBits(pChip->getNumberOfBits(regName)) + 1) / 2; vTrim <= static_cast<int>(RD53Shared::setBits(pChip->getNumberOfBits(regName))); vTrim++)
             scanRange.push_back(vTrim);
     else if(initial > target)
-        for(int vTrim = (RD53Shared::setBits(pChip->getRegItem(regName).fBitSize) + 1) / 2; vTrim >= 0; vTrim--) scanRange.push_back(vTrim);
+        for(int vTrim = (RD53Shared::setBits(pChip->getNumberOfBits(regName)) + 1) / 2; vTrim >= 0; vTrim--) scanRange.push_back(vTrim);
 
     return scanRange;
 }
