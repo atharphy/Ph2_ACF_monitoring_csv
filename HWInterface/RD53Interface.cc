@@ -23,7 +23,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     const auto            nameAndValue(SetSpecialRegister(regName, data, pChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
     PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerify);
-    if(static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId()) == false)
+    if(static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdStream, pChip->getHybridId()) == false)
     {
         static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO(); // @TMP@ : Temporary fix to avoid FIFO empty at readback
         SendRD53Clear(pRD53);                                       // @TMP@ : Temporary fix to avoid FIFO empty at readback
@@ -80,7 +80,7 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
     auto                  nameAndValue(SetSpecialRegister(regName, data, RD53Shared::firstChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
     PackWriteBroadcastCommand(pBoard, nameAndValue.first, nameAndValue.second, cmdStream);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdStream, -1);
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
@@ -181,7 +181,16 @@ void RD53Interface::DumpChipRegisters(ReadoutChip* pChip)
     }
 }
 
-void RD53Interface::ChipErrorReport(ReadoutChip* pChip)
+void RD53Interface::EnDisChip(Chip* pChip, std::vector<uint16_t>& chipCommandList, bool enable)
+{
+    for(const auto& regName: static_cast<RD53*>(pChip)->getFEtype()->CoreColRegs)
+    {
+        const uint16_t value = (enable == true ? RD53Shared::setBits(pChip->getNumberOfBits(regName)) & pChip->getRegItem(regName).fDefValue : 0);
+        PackWriteCommand(pChip, regName, value, chipCommandList, true);
+    }
+}
+
+void RD53Interface::ChipErrorReport(Chip* pChip)
 {
     const uint16_t baseAddrFakeCNT = 0x200; // @CONST@
 
@@ -264,7 +273,7 @@ void RD53Interface::ReadChipAllLocalReg(ReadoutChip* pChip, const std::string& r
 void RD53Interface::SendChipCommands(const BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId)
 {
     this->setBoard(pBoard->getId());
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(chipCommandList, hybridId);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(chipCommandList, hybridId);
 }
 
 void RD53Interface::PackHybridCommands(const BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId, std::vector<uint32_t>& hybridCommandList)

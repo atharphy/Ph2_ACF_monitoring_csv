@@ -112,7 +112,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
     // #############################################
-    bool                                       WriteChipCommand(const std::vector<uint16_t>& data, int hybridId);
+    bool                                       WriteChipCommands(const std::vector<uint16_t>& data, int hybridId);
     void                                       ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList);
     bool                                       SendChipCommands(const std::vector<uint32_t>& commandList);
     std::vector<std::pair<uint16_t, uint16_t>> ReadChipRegisters(Ph2_HwDescription::ReadoutChip* pChip);

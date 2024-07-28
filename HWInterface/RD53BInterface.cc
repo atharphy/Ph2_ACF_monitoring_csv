@@ -163,7 +163,7 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG_B", 0x538A);
 }
 
-void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
+void RD53BInterface::InitRD53Uplinks(Chip* pChip)
 {
     this->setBoard(pChip->getBeBoardId());
     auto        pRD53  = static_cast<RD53*>(pChip);
@@ -568,7 +568,7 @@ void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, const std::vector<uin
             for(auto i = 0; i < RD53Constants::NSYNC_WORDS_S; i++) RD53BCmd::serialize(RD53BCmd::Sync{}, cmdPacket);
         }
 
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdPacket, pRD53->getHybridId());
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdPacket, pRD53->getHybridId());
         begin = it;
     }
 }
@@ -595,7 +595,7 @@ void RD53BInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
     this->setBoard(pChip->getBeBoardId());
 
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, false);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53BCmd::RD53BCmdEncoder::SYNC), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53BCmd::RD53BCmdEncoder::SYNC), -1);
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, true);
 }
 
@@ -614,7 +614,7 @@ void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
     this->setBoard(pBoard->getId());
 
     if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53Bv1)
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53BCmd::Clear{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(serialize(RD53BCmd::Clear{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
     else
         RD53BInterface::SendGlobalPulseBroadcast(pBoard);
 }
@@ -636,7 +636,7 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
                                          (theMap.find("RstSerializerV1") != theMap.end() ? theMap.find("RstSerializerV1")->second : 0) |
                                          (theMap.find("RstBCIDCnt") != theMap.end() ? theMap.find("RstBCIDCnt")->second : 0),
                                      cmdStream);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdStream, pChip->getHybridId());
 
     std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
 }
@@ -645,7 +645,7 @@ void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53BCmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(serialize(RD53BCmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
 
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }

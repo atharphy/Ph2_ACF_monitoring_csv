@@ -45,7 +45,8 @@ const RD53::FrontEnd  RD53A::SYNC        = {"SYNC",
                                              {"ADCstatConversion", 0x0100},
                                              {"ActivRinOsc", 0x2000},
                                              {"AcqureZeroSyncFE", 0x4000},
-                                             {"RstAutozeroSyncFE", 0x800}}};
+                                             {"RstAutozeroSyncFE", 0x800}},
+                                            {"EN_CORE_COL_SYNC"}};
 const RD53::FrontEnd  RD53A::LIN         = {"LIN",
                                             {"Vthreshold_LIN"},
                                             "KRUM_CURR_LIN",
@@ -74,7 +75,8 @@ const RD53::FrontEnd  RD53A::LIN         = {"LIN",
                                              {"ADCstatConversion", 0x0100},
                                              {"ActivRinOsc", 0x2000},
                                              {"AcqureZeroSyncFE", 0x4000},
-                                             {"RstAutozeroSyncFE", 0x800}}};
+                                             {"RstAutozeroSyncFE", 0x800}},
+                                            {"EN_CORE_COL_LIN_1", "EN_CORE_COL_LIN_2"}};
 const RD53::FrontEnd  RD53A::DIFF        = {"DIFF",
                                             {"VTH1_DIFF"},
                                             "VFF_DIFF",
@@ -104,7 +106,8 @@ const RD53::FrontEnd  RD53A::DIFF        = {"DIFF",
                                              {"ADCstatConversion", 0x1000},
                                              {"ActivRinOsc", 0x2000},
                                              {"AcqureZeroSyncFE", 0x4000},
-                                             {"RstAutozeroSyncFE", 0x800}}};
+                                             {"RstAutozeroSyncFE", 0x800}},
+                                            {"EN_CORE_COL_DIFF_1", "EN_CORE_COL_DIFF_2"}};
 const RD53::FrontEnd* RD53A::frontEnds[] = {&RD53A::SYNC, &RD53A::LIN, &RD53A::DIFF};
 
 const std::map<std::string, RD53::SpecialRegInfo> RD53A::specialRegMap = {{"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},

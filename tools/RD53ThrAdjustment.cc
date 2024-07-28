@@ -222,18 +222,16 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                               << BOLDYELLOW << "VCAL_MED" << BOLDBLUE << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
                 }
 
-    // ################################
-    // # Prepare query and enable all #
-    // ################################
+    // #######################################################################
+    // # Prepare query, disable all chips, and set weak check of data status #
+    // #######################################################################
     CalibBase::prepareChipQueryForEnDis("chipSubset");
     CalibBase::setChipEnDis(false);
+    RD53Event::weakCheckDataStatus = true;
 
     for(auto indx = 0u; indx < RD53FWconstants::NMAXCHIP_HYBRID; indx++)
     {
         if(CalibBase::shiftEnable(indx) == true) break;
-        // @TMP@ : enable chips in the hardware
-        // @TMP@ : do not drop event data after n attempts
-        // @TMP@ : fill only container with no "hybrid errors"
 
         LOG(INFO) << RESET;
         LOG(INFO) << BOLDMAGENTA << ">>> Optimizing all frontend chips #" << BOLDYELLOW << indx << BOLDMAGENTA << " <<<" << RESET;
@@ -374,11 +372,12 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
         }
     }
 
-    // ################################
-    // # Restore query and enable all #
-    // ################################
+    // ########################################################################
+    // # Restore query, enable all chips, and reset weak check of data status #
+    // ########################################################################
     fDetectorContainer->resetReadoutChipQueryFunction();
-    fDetectorContainer->setEnabledAll(true);
+    CalibBase::setChipEnDis(true);
+    RD53Event::weakCheckDataStatus = false;
 
     // ###########################
     // # Download new DAC values #
