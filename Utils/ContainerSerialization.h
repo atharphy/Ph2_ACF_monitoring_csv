@@ -93,6 +93,10 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<float, 4, 1
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<float, 4, 15>>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint8_t, 4>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint8_t, 4>>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint16_t, 9>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint16_t, 9>>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint16_t, 4>, EmptyContainer>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint16_t, 4>>)))
 
 #include "Utils/Occupancy.h"
 #include <arpa/inet.h>
