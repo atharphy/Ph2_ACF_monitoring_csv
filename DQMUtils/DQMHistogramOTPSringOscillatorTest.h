@@ -55,7 +55,22 @@ class DQMHistogramOTPSringOscillatorTest : public DQMHistogramBase
      */
     void reset(void) override;
 
+    void fillMPAringOscillatorInverter(const DetectorDataContainer& theRingOscillatorContainer);
+
+    void fillMPAringOscillatorDelay(const DetectorDataContainer& theRingOscillatorContainer);
+
+    void fillSSAringOscillatorInverter(const DetectorDataContainer& theRingOscillatorContainer);
+
+    void fillSSAringOscillatorDelay(const DetectorDataContainer& theRingOscillatorContainer);
+
   private:
+    void fillMPAringOscillator(const DetectorDataContainer& theRingOscillatorContainer, DetectorDataContainer& theMPAringOscillatorContainer);
+    void fillSSAringOscillator(const DetectorDataContainer& theRingOscillatorContainer, DetectorDataContainer& theSSAringOscillatorContainer);
     DetectorContainer*    fDetectorContainer;
+    DetectorDataContainer fMPAringOscillatorInverterContainer;
+    DetectorDataContainer fMPAringOscillatorDelayContainer;
+    DetectorDataContainer fSSAringOscillatorInverterContainer;
+    DetectorDataContainer fSSAringOscillatorDelayContainer;
+    
 };
 #endif

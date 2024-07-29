@@ -79,7 +79,12 @@ void OTPSringOscillatorTest::Reset()
 
 void OTPSringOscillatorTest::runRingOscillatorTest()
 {
-    // MPA
+    runMPAringOscillatorTest();
+    runSSAringOscillatorTest();
+}
+
+void OTPSringOscillatorTest::runMPAringOscillatorTest()
+{
     auto        selectMPAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
     std::string selectMPAfunctionName = "SelectMPAfunction";
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
@@ -91,7 +96,6 @@ void OTPSringOscillatorTest::runRingOscillatorTest()
     ContainerFactory::copyAndInitChip<GenericDataArray<uint16_t, NMPAROWS + 1>>(*fDetectorContainer, theMPADelayRingOscillatorContained);
 
     std::vector<std::string> listOfRingOscillatorControls {"RingOscillator", "RingOscillator_ALL"};
-
 
     for(auto registerName: listOfRingOscillatorControls)
     {
@@ -123,7 +127,7 @@ void OTPSringOscillatorTest::runRingOscillatorTest()
             uint16_t totalCount = registerValues[registerIndex*2].second | (registerValues[registerIndex*2 + 1].second << 8);
             theOutputContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<GenericDataArray<uint16_t, NMPAROWS + 1>>()[registerIndex] = totalCount;
         }
-    }; 
+    };
 
     for(auto board: *fDetectorContainer)
     {
@@ -140,4 +144,81 @@ void OTPSringOscillatorTest::runRingOscillatorTest()
         }
     }
 
+#ifdef __USE_ROOT__
+    fDQMHistogramOTPSringOscillatorTest.fillMPAringOscillatorInverter(theMPAInverterRingOscillatorContained);
+    fDQMHistogramOTPSringOscillatorTest.fillMPAringOscillatorDelay(theMPADelayRingOscillatorContained);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theMPAringOscillatorInverterSerialization("OTPSringOscillatorTestMPAringOscillatorInverter");
+        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theMPAInverterRingOscillatorContained);
+
+        ContainerSerialization theMPAringOscillatorDelaySerialization("OTPSringOscillatorTestMPAringOscillatorDelay");
+        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theMPADelayRingOscillatorContained);
+    }
+#endif
+
+    fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
+}
+
+void OTPSringOscillatorTest::runSSAringOscillatorTest()
+{
+    auto        selectSSAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
+    std::string selectSSAfunctionName = "SelectSSAfunction";
+    fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
+
+    DetectorDataContainer theSSAInverterRingOscillatorContained;
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint16_t,4>>(*fDetectorContainer, theSSAInverterRingOscillatorContained);
+
+    DetectorDataContainer theSSADelayRingOscillatorContained;
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint16_t,4>>(*fDetectorContainer, theSSADelayRingOscillatorContained);
+
+    setSameDac("Ring_oscillator_ctrl", 0x00);
+    setSameDac("Ring_oscillator_ctrl",  0x1 << 7 | fNumberOfClockCycles);
+
+    usleep(100);
+
+    std::vector<std::string> listOfRingOscillatorInverter {"Ring_oscillator_out_locBL_T1_L", "Ring_oscillator_out_locBL_T1_H", "Ring_oscillator_out_locBC_T1_L", "Ring_oscillator_out_locBC_T1_H", "Ring_oscillator_out_locBR_T1_L", "Ring_oscillator_out_locBR_T1_H", "Ring_oscillator_out_locTR_T1_L", "Ring_oscillator_out_locTR_T1_H"};
+    std::vector<std::string> listOfRingOscillatorDelay    {"Ring_oscillator_out_locBL_T2_L", "Ring_oscillator_out_locBL_T2_H", "Ring_oscillator_out_locBC_T2_L", "Ring_oscillator_out_locBC_T2_H", "Ring_oscillator_out_locBR_T2_L", "Ring_oscillator_out_locBR_T2_H", "Ring_oscillator_out_locTR_T2_L", "Ring_oscillator_out_locTR_T2_H"};
+
+    auto getOscillatorCounts = [this](ReadoutChip* theChip, const std::vector<std::string>& theRegisterList, DetectorDataContainer& theOutputContainer)
+    {
+        auto registerValues = this->fReadoutChipInterface->ReadChipMultReg(theChip, theRegisterList);
+        for(int registerIndex = 0; registerIndex < 4; ++registerIndex)
+        {
+            uint16_t totalCount = registerValues[registerIndex*2].second | (registerValues[registerIndex*2 + 1].second << 8);
+            theOutputContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<GenericDataArray<uint16_t, 4>>()[registerIndex] = totalCount;
+        }
+    };
+
+    for(auto board: *fDetectorContainer)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                for(auto chip: *hybrid)
+                {
+                    getOscillatorCounts(chip, listOfRingOscillatorInverter, theSSAInverterRingOscillatorContained);
+                    getOscillatorCounts(chip, listOfRingOscillatorDelay, theSSADelayRingOscillatorContained);
+                }
+            }
+        }
+    }
+
+#ifdef __USE_ROOT__
+    fDQMHistogramOTPSringOscillatorTest.fillSSAringOscillatorInverter(theSSAInverterRingOscillatorContained);
+    fDQMHistogramOTPSringOscillatorTest.fillSSAringOscillatorDelay(theSSADelayRingOscillatorContained);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theSSAringOscillatorInverterSerialization("OTPSringOscillatorTestSSAringOscillatorInverter");
+        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theSSAInverterRingOscillatorContained);
+
+        ContainerSerialization theSSAringOscillatorDelaySerialization("OTPSringOscillatorTestSSAringOscillatorDelay");
+        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theSSADelayRingOscillatorContained);
+    }
+#endif
+
+    fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
 }

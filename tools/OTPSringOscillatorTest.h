@@ -37,6 +37,8 @@ class OTPSringOscillatorTest : public Tool
     
   private:
     void runRingOscillatorTest();
+    void runMPAringOscillatorTest();
+    void runSSAringOscillatorTest();
     uint8_t fNumberOfClockCycles = 100;
     
 #ifdef __USE_ROOT__
