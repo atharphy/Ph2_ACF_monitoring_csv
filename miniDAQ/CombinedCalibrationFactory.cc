@@ -19,6 +19,7 @@
 #include "tools/OTMPAtoCICecv.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
+#include "tools/OTPSringOscillatorTest.h"
 #include "tools/OTRegisterTester.h"
 #include "tools/OTSSAtoMPAecv.h"
 #include "tools/OTSSAtoSSAecv.h"
@@ -50,7 +51,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/OTPSringOscillatorTest.h"
 
 using namespace MessageUtils;
 
@@ -213,7 +213,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTSSAtoMPAecv, OTSSAtoSSAecv, OTalignLpGBTinputsForBypass, OTMPAtoCICecv>("PS Module",
                                                                                                                                                                                            "PSecv");
-    Register<OTPSringOscillatorTest>("PS Module", "ringOscillatorTest");                                                                                                                                                                            
+    Register<OTPSringOscillatorTest>("PS Module", "ringOscillatorTest");
 
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");

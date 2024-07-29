@@ -34,13 +34,13 @@ class OTPSringOscillatorTest : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
-    void runRingOscillatorTest();
-    void runMPAringOscillatorTest();
-    void runSSAringOscillatorTest();
+    void    runRingOscillatorTest();
+    void    runMPAringOscillatorTest();
+    void    runSSAringOscillatorTest();
     uint8_t fNumberOfClockCycles = 100;
-    
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTPSringOscillatorTest fDQMHistogramOTPSringOscillatorTest;

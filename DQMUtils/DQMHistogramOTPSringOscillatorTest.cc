@@ -1,9 +1,9 @@
 #include "DQMUtils/DQMHistogramOTPSringOscillatorTest.h"
+#include "HWDescription/ReadoutChip.h"
 #include "RootUtils/RootContainerFactory.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
-#include "HWDescription/ReadoutChip.h"
 #include "Utils/GenericDataArray.h"
 
 #include "TFile.h"
@@ -36,25 +36,19 @@ void DQMHistogramOTPSringOscillatorTest::book(TFile* theOutputFile, DetectorCont
 
         auto theXaxis = theHistogram->GetXaxis();
         theXaxis->SetTitle("MPA Id");
-        for(int mpaId = 8; mpaId< 16; ++mpaId)
-        {
-            theXaxis->SetBinLabel(mpaId%8 + 1, Form("%d", mpaId));
-        }
+        for(int mpaId = 8; mpaId < 16; ++mpaId) { theXaxis->SetBinLabel(mpaId % 8 + 1, Form("%d", mpaId)); }
 
         auto theYaxis = theHistogram->GetYaxis();
         theYaxis->SetTitle("Ring oscillator");
         theYaxis->SetBinLabel(1, "periphery");
-        for(int row = 0; row< NMPAROWS; ++row)
-        {
-            theYaxis->SetBinLabel(row + 2, Form("Row%d", row));
-        }
+        for(int row = 0; row < NMPAROWS; ++row) { theYaxis->SetBinLabel(row + 2, Form("Row%d", row)); }
     };
 
-    HistContainer<TH2I> theMPAringOscillatorInverterHistogram("MPAringOscillatorInverterCounts", "MPA Ring Oscillator Inverter Counts", 8, -7.5, 15.5,  NMPAROWS+1, -0.5,  NMPAROWS+1-0.5);
+    HistContainer<TH2I> theMPAringOscillatorInverterHistogram("MPAringOscillatorInverterCounts", "MPA Ring Oscillator Inverter Counts", 8, -7.5, 15.5, NMPAROWS + 1, -0.5, NMPAROWS + 1 - 0.5);
     formatMPAHistogram(theMPAringOscillatorInverterHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, *fDetectorContainer, fMPAringOscillatorInverterContainer, theMPAringOscillatorInverterHistogram);
 
-    HistContainer<TH2I> theMPAringOscillatorDelayHistogram("MPAringOscillatorDelayCounts", "MPA Ring Oscillator Delay Counts", 8, -7.5, 15.5,  NMPAROWS+1, -0.5,  NMPAROWS+1-0.5);
+    HistContainer<TH2I> theMPAringOscillatorDelayHistogram("MPAringOscillatorDelayCounts", "MPA Ring Oscillator Delay Counts", 8, -7.5, 15.5, NMPAROWS + 1, -0.5, NMPAROWS + 1 - 0.5);
     formatMPAHistogram(theMPAringOscillatorDelayHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, *fDetectorContainer, fMPAringOscillatorDelayContainer, theMPAringOscillatorDelayHistogram);
 
@@ -71,10 +65,7 @@ void DQMHistogramOTPSringOscillatorTest::book(TFile* theOutputFile, DetectorCont
 
         auto theXaxis = theHistogram->GetXaxis();
         theXaxis->SetTitle("SSA Id");
-        for(int ssaId = 0; ssaId< 8; ++ssaId)
-        {
-            theXaxis->SetBinLabel(ssaId + 1, Form("%d", ssaId));
-        }
+        for(int ssaId = 0; ssaId < 8; ++ssaId) { theXaxis->SetBinLabel(ssaId + 1, Form("%d", ssaId)); }
 
         auto theYaxis = theHistogram->GetYaxis();
         theYaxis->SetTitle("Ring oscillator");
@@ -84,11 +75,11 @@ void DQMHistogramOTPSringOscillatorTest::book(TFile* theOutputFile, DetectorCont
         theYaxis->SetBinLabel(4, "TR");
     };
 
-    HistContainer<TH2I> theSSAringOscillatorInverterHistogram("SSAringOscillatorInverterCounts", "SSA Ring Oscillator Inverter Counts", 8, -7.5, 15.5,  4, -0.5,  3.5);
+    HistContainer<TH2I> theSSAringOscillatorInverterHistogram("SSAringOscillatorInverterCounts", "SSA Ring Oscillator Inverter Counts", 8, -7.5, 15.5, 4, -0.5, 3.5);
     formatSSAHistogram(theSSAringOscillatorInverterHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, *fDetectorContainer, fSSAringOscillatorInverterContainer, theSSAringOscillatorInverterHistogram);
 
-    HistContainer<TH2I> theSSAringOscillatorDelayHistogram("SSAringOscillatorDelayCounts", "SSA Ring Oscillator Delay Counts", 8, -7.5, 15.5,  4, -0.5,  3.5);
+    HistContainer<TH2I> theSSAringOscillatorDelayHistogram("SSAringOscillatorDelayCounts", "SSA Ring Oscillator Delay Counts", 8, -7.5, 15.5, 4, -0.5, 3.5);
     formatSSAHistogram(theSSAringOscillatorDelayHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, *fDetectorContainer, fSSAringOscillatorDelayContainer, theSSAringOscillatorDelayHistogram);
 
@@ -100,7 +91,6 @@ void DQMHistogramOTPSringOscillatorTest::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================
@@ -118,16 +108,14 @@ void DQMHistogramOTPSringOscillatorTest::fillMPAringOscillator(const DetectorDat
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto theRingOscillatorHistogram = theMPAringOscillatorContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2I>>().fTheHistogram;
+                auto theRingOscillatorHistogram =
+                    theMPAringOscillatorContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2I>>().fTheHistogram;
 
                 for(auto theChip: *theHybrid)
                 {
                     if(!theChip->hasSummary()) continue;
                     auto theRingOscillatorChipContainer = theChip->getSummary<GenericDataArray<uint16_t, NMPAROWS + 1>>();
-                    for(int bin=0; bin<NMPAROWS + 1; ++bin)
-                    {
-                        theRingOscillatorHistogram->SetBinContent(theChip->getId()%8 + 1, bin+1, theRingOscillatorChipContainer[bin]);
-                    }
+                    for(int bin = 0; bin < NMPAROWS + 1; ++bin) { theRingOscillatorHistogram->SetBinContent(theChip->getId() % 8 + 1, bin + 1, theRingOscillatorChipContainer[bin]); }
                 }
             }
         }
@@ -155,16 +143,14 @@ void DQMHistogramOTPSringOscillatorTest::fillSSAringOscillator(const DetectorDat
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto theRingOscillatorHistogram = theSSAringOscillatorContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2I>>().fTheHistogram;
+                auto theRingOscillatorHistogram =
+                    theSSAringOscillatorContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2I>>().fTheHistogram;
 
                 for(auto theChip: *theHybrid)
                 {
                     if(!theChip->hasSummary()) continue;
                     auto theRingOscillatorChipContainer = theChip->getSummary<GenericDataArray<uint16_t, 4>>();
-                    for(int bin=0; bin<4; ++bin)
-                    {
-                        theRingOscillatorHistogram->SetBinContent(theChip->getId()%8 + 1, bin+1, theRingOscillatorChipContainer[bin]);
-                    }
+                    for(int bin = 0; bin < 4; ++bin) { theRingOscillatorHistogram->SetBinContent(theChip->getId() % 8 + 1, bin + 1, theRingOscillatorChipContainer[bin]); }
                 }
             }
         }
@@ -194,13 +180,15 @@ bool DQMHistogramOTPSringOscillatorTest::fill(std::string& inputStream)
 
     if(theMPAringOscillatorInverterSerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer theDetectorData = theMPAringOscillatorInverterSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, NMPAROWS + 1>>(fDetectorContainer);
+        DetectorDataContainer theDetectorData =
+            theMPAringOscillatorInverterSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, NMPAROWS + 1>>(fDetectorContainer);
         fillMPAringOscillatorInverter(theDetectorData);
         return true;
     }
     if(theMPAringOscillatorDelaySerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer theDetectorData = theMPAringOscillatorDelaySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, NMPAROWS + 1>>(fDetectorContainer);
+        DetectorDataContainer theDetectorData =
+            theMPAringOscillatorDelaySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, NMPAROWS + 1>>(fDetectorContainer);
         fillMPAringOscillatorDelay(theDetectorData);
         return true;
     }

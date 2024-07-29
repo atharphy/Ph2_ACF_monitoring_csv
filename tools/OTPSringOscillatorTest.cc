@@ -1,9 +1,9 @@
 #include "tools/OTPSringOscillatorTest.h"
-#include "System/RegisterHelper.h"
-#include "Utils/ContainerSerialization.h"
 #include "HWDescription/Definition.h"
 #include "HWDescription/MPA2.h"
 #include "HWDescription/SSA2.h"
+#include "System/RegisterHelper.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
 
 using namespace Ph2_HwDescription;
@@ -28,16 +28,13 @@ void OTPSringOscillatorTest::Initialise(void)
     }
     fNumberOfClockCycles = numberOfClockCycles;
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTPSringOscillatorTest.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 }
 
-void OTPSringOscillatorTest::ConfigureCalibration()
-{
-
-}
+void OTPSringOscillatorTest::ConfigureCalibration() {}
 
 void OTPSringOscillatorTest::Running()
 {
@@ -51,31 +48,20 @@ void OTPSringOscillatorTest::Running()
 void OTPSringOscillatorTest::Stop(void)
 {
     LOG(INFO) << "Stopping OTPSringOscillatorTest measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTPSringOscillatorTest.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTPSringOscillatorTest.process();
+#endif
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTPSringOscillatorTest stopped.";
 }
 
-void OTPSringOscillatorTest::Pause()
-{
+void OTPSringOscillatorTest::Pause() {}
 
-}
+void OTPSringOscillatorTest::Resume() {}
 
-
-void OTPSringOscillatorTest::Resume()
-{
-
-}
-
-
-void OTPSringOscillatorTest::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTPSringOscillatorTest::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTPSringOscillatorTest::runRingOscillatorTest()
 {
@@ -95,7 +81,7 @@ void OTPSringOscillatorTest::runMPAringOscillatorTest()
     DetectorDataContainer theMPADelayRingOscillatorContained;
     ContainerFactory::copyAndInitChip<GenericDataArray<uint16_t, NMPAROWS + 1>>(*fDetectorContainer, theMPADelayRingOscillatorContained);
 
-    std::vector<std::string> listOfRingOscillatorControls {"RingOscillator", "RingOscillator_ALL"};
+    std::vector<std::string> listOfRingOscillatorControls{"RingOscillator", "RingOscillator_ALL"};
 
     for(auto registerName: listOfRingOscillatorControls)
     {
@@ -105,14 +91,14 @@ void OTPSringOscillatorTest::runMPAringOscillatorTest()
 
     usleep(100);
 
-    std::vector<std::string> listOfRingOscillatorInverter {"RO_Inverter_LSB", "RO_Inverter_MSB"};
+    std::vector<std::string> listOfRingOscillatorInverter{"RO_Inverter_LSB", "RO_Inverter_MSB"};
     for(int row = 0; row < NMPAROWS; ++row)
     {
         listOfRingOscillatorInverter.push_back(MPA2::getRowRegisterName("RO_Inverter_LSB", row));
         listOfRingOscillatorInverter.push_back(MPA2::getRowRegisterName("RO_Inverter_MSB", row));
     }
 
-    std::vector<std::string> listOfRingOscillatorDelay {"RO_Delay_LSB", "RO_Delay_MSB"};
+    std::vector<std::string> listOfRingOscillatorDelay{"RO_Delay_LSB", "RO_Delay_MSB"};
     for(int row = 0; row < NMPAROWS; ++row)
     {
         listOfRingOscillatorDelay.push_back(MPA2::getRowRegisterName("RO_Delay_LSB", row));
@@ -122,10 +108,11 @@ void OTPSringOscillatorTest::runMPAringOscillatorTest()
     auto getOscillatorCounts = [this](ReadoutChip* theChip, const std::vector<std::string>& theRegisterList, DetectorDataContainer& theOutputContainer)
     {
         auto registerValues = this->fReadoutChipInterface->ReadChipMultReg(theChip, theRegisterList);
-        for(int registerIndex = 0; registerIndex < NMPAROWS+1; ++registerIndex)
+        for(int registerIndex = 0; registerIndex < NMPAROWS + 1; ++registerIndex)
         {
-            uint16_t totalCount = registerValues[registerIndex*2].second | (registerValues[registerIndex*2 + 1].second << 8);
-            theOutputContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<GenericDataArray<uint16_t, NMPAROWS + 1>>()[registerIndex] = totalCount;
+            uint16_t totalCount = registerValues[registerIndex * 2].second | (registerValues[registerIndex * 2 + 1].second << 8);
+            theOutputContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())
+                ->getSummary<GenericDataArray<uint16_t, NMPAROWS + 1>>()[registerIndex] = totalCount;
         }
     };
 
@@ -168,26 +155,41 @@ void OTPSringOscillatorTest::runSSAringOscillatorTest()
     fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
 
     DetectorDataContainer theSSAInverterRingOscillatorContained;
-    ContainerFactory::copyAndInitChip<GenericDataArray<uint16_t,4>>(*fDetectorContainer, theSSAInverterRingOscillatorContained);
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint16_t, 4>>(*fDetectorContainer, theSSAInverterRingOscillatorContained);
 
     DetectorDataContainer theSSADelayRingOscillatorContained;
-    ContainerFactory::copyAndInitChip<GenericDataArray<uint16_t,4>>(*fDetectorContainer, theSSADelayRingOscillatorContained);
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint16_t, 4>>(*fDetectorContainer, theSSADelayRingOscillatorContained);
 
     setSameDac("Ring_oscillator_ctrl", 0x00);
-    setSameDac("Ring_oscillator_ctrl",  0x1 << 7 | fNumberOfClockCycles);
+    setSameDac("Ring_oscillator_ctrl", 0x1 << 7 | fNumberOfClockCycles);
 
     usleep(100);
 
-    std::vector<std::string> listOfRingOscillatorInverter {"Ring_oscillator_out_locBL_T1_L", "Ring_oscillator_out_locBL_T1_H", "Ring_oscillator_out_locBC_T1_L", "Ring_oscillator_out_locBC_T1_H", "Ring_oscillator_out_locBR_T1_L", "Ring_oscillator_out_locBR_T1_H", "Ring_oscillator_out_locTR_T1_L", "Ring_oscillator_out_locTR_T1_H"};
-    std::vector<std::string> listOfRingOscillatorDelay    {"Ring_oscillator_out_locBL_T2_L", "Ring_oscillator_out_locBL_T2_H", "Ring_oscillator_out_locBC_T2_L", "Ring_oscillator_out_locBC_T2_H", "Ring_oscillator_out_locBR_T2_L", "Ring_oscillator_out_locBR_T2_H", "Ring_oscillator_out_locTR_T2_L", "Ring_oscillator_out_locTR_T2_H"};
+    std::vector<std::string> listOfRingOscillatorInverter{"Ring_oscillator_out_locBL_T1_L",
+                                                          "Ring_oscillator_out_locBL_T1_H",
+                                                          "Ring_oscillator_out_locBC_T1_L",
+                                                          "Ring_oscillator_out_locBC_T1_H",
+                                                          "Ring_oscillator_out_locBR_T1_L",
+                                                          "Ring_oscillator_out_locBR_T1_H",
+                                                          "Ring_oscillator_out_locTR_T1_L",
+                                                          "Ring_oscillator_out_locTR_T1_H"};
+    std::vector<std::string> listOfRingOscillatorDelay{"Ring_oscillator_out_locBL_T2_L",
+                                                       "Ring_oscillator_out_locBL_T2_H",
+                                                       "Ring_oscillator_out_locBC_T2_L",
+                                                       "Ring_oscillator_out_locBC_T2_H",
+                                                       "Ring_oscillator_out_locBR_T2_L",
+                                                       "Ring_oscillator_out_locBR_T2_H",
+                                                       "Ring_oscillator_out_locTR_T2_L",
+                                                       "Ring_oscillator_out_locTR_T2_H"};
 
     auto getOscillatorCounts = [this](ReadoutChip* theChip, const std::vector<std::string>& theRegisterList, DetectorDataContainer& theOutputContainer)
     {
         auto registerValues = this->fReadoutChipInterface->ReadChipMultReg(theChip, theRegisterList);
         for(int registerIndex = 0; registerIndex < 4; ++registerIndex)
         {
-            uint16_t totalCount = registerValues[registerIndex*2].second | (registerValues[registerIndex*2 + 1].second << 8);
-            theOutputContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<GenericDataArray<uint16_t, 4>>()[registerIndex] = totalCount;
+            uint16_t totalCount = registerValues[registerIndex * 2].second | (registerValues[registerIndex * 2 + 1].second << 8);
+            theOutputContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<GenericDataArray<uint16_t, 4>>()[registerIndex] =
+                totalCount;
         }
     };
 
