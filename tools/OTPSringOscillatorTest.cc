@@ -138,10 +138,10 @@ void OTPSringOscillatorTest::runMPAringOscillatorTest()
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theMPAringOscillatorInverterSerialization("OTPSringOscillatorTestMPAringOscillatorInverter");
-        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theMPAInverterRingOscillatorContained);
+        theMPAringOscillatorInverterSerialization.streamByHybridContainer(fDQMStreamer, theMPAInverterRingOscillatorContained);
 
         ContainerSerialization theMPAringOscillatorDelaySerialization("OTPSringOscillatorTestMPAringOscillatorDelay");
-        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theMPADelayRingOscillatorContained);
+        theMPAringOscillatorDelaySerialization.streamByHybridContainer(fDQMStreamer, theMPADelayRingOscillatorContained);
     }
 #endif
 
@@ -215,10 +215,10 @@ void OTPSringOscillatorTest::runSSAringOscillatorTest()
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theSSAringOscillatorInverterSerialization("OTPSringOscillatorTestSSAringOscillatorInverter");
-        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theSSAInverterRingOscillatorContained);
+        theSSAringOscillatorInverterSerialization.streamByHybridContainer(fDQMStreamer, theSSAInverterRingOscillatorContained);
 
         ContainerSerialization theSSAringOscillatorDelaySerialization("OTPSringOscillatorTestSSAringOscillatorDelay");
-        theOccupancyContainerSerialization.streamByHybridContainer(fDQMStreamer, theSSADelayRingOscillatorContained);
+        theSSAringOscillatorDelaySerialization.streamByHybridContainer(fDQMStreamer, theSSADelayRingOscillatorContained);
     }
 #endif
 
