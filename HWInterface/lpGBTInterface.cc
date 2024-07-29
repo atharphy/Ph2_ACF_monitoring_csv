@@ -408,7 +408,6 @@ void lpGBTInterface::ConfigureRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pChan
     uint8_t     cValueChnCntr = ReadChipReg(pChip, cRegName);
     cValueChnCntr             = (cValueChnCntr & ~(0xF << 4)) | (pPhase << 4);
     WriteChipReg(pChip, cRegName, cValueChnCntr);
-    // LOG(DEBUG) << BOLDMAGENTA << "lpGBT#" << +pChip->getId() << "Grp#" << +pGroup << " Chnl#" << +pChannel << " - phase " << +pPhase << RESET;
 }
 
 void lpGBTInterface::ConfigureAllRxPhase(Chip* pChip, uint8_t pPhase, std::map<uint8_t, std::vector<uint8_t>> theGroupsAndChannels)
@@ -477,7 +476,6 @@ bool lpGBTInterface::SetVrefTune(Ph2_HwDescription::Chip* pChip, uint8_t pVrefTu
     cMask.fNbits    = cNbits;
     pChip->setRegBits(cRegName, cMask, pVrefTune);
     WriteChipReg(pChip, cRegName, pVrefTune);
-    // std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
     auto cVrefTune = pChip->getRegItem(cRegName).fValue;
 
     return cVrefTune == pVrefTune;
@@ -1104,7 +1102,7 @@ double lpGBTInterface::GetBERTResult(Chip* pChip)
     return cErrors / cBitsChecked;
 }
 
-double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
+double lpGBTInterface::RunBERtest(Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
 // ####################
 // # frontendSpeed    #
 // # 1.28 Gbit/s  = 0 #
@@ -1133,8 +1131,11 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // ###############
     // # Configuring #
     // ###############
-    lpGBTInterface::ConfigureRxSource(pChip, pGroup, lpGBTconstants::PATTERN_NORMAL);
-    lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)], BERTMeasTime);
+    for(auto pGroup: pGroups)
+    {
+        lpGBTInterface::ConfigureRxSource(pChip, pGroup, lpGBTconstants::PATTERN_NORMAL);
+        lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)], BERTMeasTime);
+    }
 
     // #########
     // # Start #

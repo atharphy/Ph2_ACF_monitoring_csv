@@ -1,38 +1,31 @@
 /*
-
     \file                          Utilities.h
     \brief                         Some objects that might come in handy
     \author                        Nicolas PIERRE
     \version                       1.0
     \date                          10/06/14
     Support :                      mail to : nicolas.pierre@icloud.com
+*/
 
- */
-
-#ifndef __UTILITIES_H__
-#define __UTILITIES_H__
+#ifndef UTILITIES_H
+#define UTILITIES_H
 
 #include "HWDescription/Definition.h"
 #include "Utils/StartInfo.h"
+
 #include <algorithm>
 #include <bitset>
 #include <cstdio>
-#include <fstream>
 #include <ios>
 #include <iostream>
 #include <istream>
-#include <limits>
 #include <math.h>
 #include <memory>
 #include <numeric>
 #include <sstream>
 #include <stdint.h>
 #include <string>
-#include <sys/stat.h>
-#include <sys/time.h>
 #include <vector>
-
-#include <tuple> // new
 
 template <typename... Args>
 std::string string_format(const std::string& format, Args... args)
@@ -42,18 +35,14 @@ std::string string_format(const std::string& format, Args... args)
     snprintf(buf.get(), size, format.c_str(), args...);
     return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
-/*!
- * \brief Get time took since the start
- * \param pStart : Variable taking the start
- * \param pMili : Result in milliseconds/microseconds -> 1/0
- * \return The time took
- */
-long getTimeTook(struct timeval& pStart, bool pMili);
-/*!
- * \brief Flush the content of the input stream
- * \param in : input stream
- */
-void myflush(std::istream& in);
+
+template <class T, size_t N>
+auto parseString(const std::string& data)
+{
+    std::array<T, N> result;
+    std::transform(data.begin(), data.end(), result.begin(), [](char c) { return c - '0'; });
+    return result;
+}
 
 std::string getResultDirectoryName(const StartInfo& theStartInfo);
 
@@ -64,13 +53,10 @@ int returnPreviousRunNumber(std::string cFileName);
 int returnAndIncreaseRunNumber(std::string cFileName);
 
 /*!
- * \brief Wait for Enter key press
- */
-void mypause();
-/*!
  * \brief get Current Time & Date
  */
 const std::string currentDateTime();
+
 /*!
  * \brief Error Function for SCurve Fit
  * \param x: array of values
@@ -78,6 +64,7 @@ const std::string currentDateTime();
  * \return function value
  */
 double MyErf(double* x, double* par);
+
 /*!
  * \brief Gamma peak with charge sharing
  * \param x: array of values
@@ -85,26 +72,19 @@ double MyErf(double* x, double* par);
  * \return function value
  */
 double MyGammaSignal(double* x, double* par);
-/*!
- * \brief Exponentially Modified Gaussian
- * \param x: array of values
- * \param p: parameter array
- * \return function value
- */
-// double MyExGauss( double *x, double *par );
+
 /*!
  * \brief converts any char array to int by automatically detecting if it is hex or dec
  * \param pRegValue: parsed xml parmaeter char*
  * \return converted integer
  */
 uint32_t convertAnyInt(std::string pRegValue);
-// uint8_t convertAnyInt ( std::string pRegValue );
 
 double convertAnyDouble(std::string pRegValue);
 
 std::vector<float> convertStringToFloatList(std::string theListString);
 
-// tokenize string
+// Tokenize string
 void tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters);
 
 /*! \brief Expand environment variables in string
@@ -123,11 +103,8 @@ std::string convertToString(T value)
     return ss.str();
 }
 
-// get run number from file
+// Get run number from file
 void getRunNumber(const std::string& pPath, int& pRunNumber, bool pIncrement = true);
-
-// split int string list into int vector
-std::vector<uint8_t> splitToVector(const std::string& str, const char delimiter);
 
 // CM Noise fitting functions
 double hitProbability(double pThreshold);
@@ -157,7 +134,7 @@ uint8_t reverseBits(uint8_t cValue)
     return cReverseBiset.to_ulong();
 }
 
-// credit to A.Rossi
+// Credit to A.Rossi
 template <typename T>
 T getLeastSquareSlope(std::vector<T>& x, const std::vector<T>& y)
 {

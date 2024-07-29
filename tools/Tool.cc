@@ -1,4 +1,5 @@
 #include "tools/Tool.h"
+#include <future>
 #include <numeric>
 
 #include "HWDescription/Chip.h"
@@ -8,13 +9,11 @@
 #include "Utils/ContainerSerialization.h"
 #include "Utils/Utilities.h"
 
+#include "Utils/ConfigureInfo.h"
 #include "Utils/DataContainer.h"
 #include "Utils/EmptyContainer.h"
-#include "Utils/Occupancy.h"
-#include <future>
-
-#include "Utils/ConfigureInfo.h"
 #include "Utils/MPAChannelGroupHandler.h"
+#include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
 #include "Utils/StartInfo.h"
 

@@ -162,7 +162,7 @@ class lpGBTInterface : public ChipInterface
     bool     IsBERTEmptyData(Ph2_HwDescription::Chip* pChip);
     uint64_t GetBERTErrors(Ph2_HwDescription::Chip* pChip);
     double   GetBERTResult(Ph2_HwDescription::Chip* pChip);
-    double   RunBERtest(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed);
+    double   RunBERtest(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed);
 
     // ####################################
     // # LpGBT eye opening monitor tester #
@@ -205,7 +205,7 @@ class lpGBTInterface : public ChipInterface
                                                    {"VDDA", 13},
                                                    {"TEMP", 14},
                                                    {"VREF/2", 15}};
-    std::map<uint8_t, std::string> fADCGainMap  = {{0, "X2"}, {1, "X8"}, {2, "X16"}, {3, "X32"}}; // WARNING: for X32 no calibration!
+    std::map<uint8_t, std::string> fADCGainMap  = {{0, "X2"}, {1, "X8"}, {2, "X16"}, {3, "X32"}}; // WARNING: for X32 no calibration
 
     // # The calibration values in the dictionary below correspond to the average value
     // # of calibration coefficients (obtained for all chips) and will be used if

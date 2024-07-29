@@ -18,8 +18,6 @@
 #include "Utils/RD53Event.h"
 #include "Utils/RD53Shared.h"
 
-#include <iomanip>
-
 // ##################
 // # Default values #
 // ##################
@@ -173,6 +171,7 @@ class RD53 : public ReadoutChip
         size_t                          AutoIncrementMask;
         size_t                          broadcastChipId;
         std::map<std::string, uint16_t> GlobalPulseConfMap;
+        std::vector<std::string>        CoreColRegs;
     };
 
     struct SpecialRegInfo
@@ -186,6 +185,9 @@ class RD53 : public ReadoutChip
     // ####################################
     LaneConfig laneConfig;
 
+    // ############################
+    // # Virtual member functions #
+    // ############################
     virtual size_t                   getNRows() const                                                                                                     = 0;
     virtual size_t                   getNCols() const                                                                                                     = 0;
     virtual size_t                   getMaxBCIDvalue() const                                                                                              = 0;
@@ -198,6 +200,9 @@ class RD53 : public ReadoutChip
     virtual float                    Charge2VCal(float Charge) const                                                                                      = 0;
     virtual bool                     getUseGainDualSlope() const                                                                                          = 0;
 
+    // ################
+    // # Constructors #
+    // ################
     RD53() : ReadoutChip(0, 0, 0, 0, 0) {}
     RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
     RD53(const RD53&) = delete;
@@ -212,9 +217,8 @@ class RD53 : public ReadoutChip
     uint8_t           getNumberOfBits(const std::string& regName) override;
     // #############################
 
-    pixelMask& getPixelsMask() { return fPixelsMask; }
-    pixelMask& getPixelsMaskDefault() { return fPixelsMaskDefault; }
-
+    pixelMask&  getPixelsMask() { return fPixelsMask; }
+    pixelMask&  getPixelsMaskDefault() { return fPixelsMaskDefault; }
     void        copyMaskFromDefault(const std::string& which = "all");
     void        copyMaskToDefault(const std::string& which = "all");
     void        resetMask();
@@ -222,6 +226,8 @@ class RD53 : public ReadoutChip
     void        disableAllPixels();
     size_t      getNbMaskedPixels();
     void        enablePixel(unsigned int row, unsigned int col, bool enable);
+    void        enableDefaultPixel(unsigned int row, unsigned int col, bool enable);
+    void        maskCoreDefault(unsigned int row, unsigned int col);
     void        injectPixel(unsigned int row, unsigned int col, bool inject);
     void        setTDAC(unsigned int row, unsigned int col, uint8_t TDAC);
     void        resetTDAC(uint8_t TDAC);
@@ -232,7 +238,7 @@ class RD53 : public ReadoutChip
     // #################
     // # LpGBT mapping #
     // #################
-    void setRxGroup(uint8_t pRxGroup) { fLpGBTmap.RxGroup = pRxGroup; }
+    void addRxGroup(uint8_t pRxGroup, uint8_t chipLane) { fLpGBTmap.RxGroupsChipLanes.push_back(std::pair(pRxGroup, chipLane)); }
     void setRxChannel(uint8_t pRxChannel) { fLpGBTmap.RxChannel = pRxChannel; }
     void setRxPolarity(uint8_t pRxPolarity) { fLpGBTmap.RxPolarity = pRxPolarity; }
 
@@ -240,7 +246,13 @@ class RD53 : public ReadoutChip
     void setTxChannel(uint8_t pTxChannel) { fLpGBTmap.TxChannel = pTxChannel; }
     void setTxPolarity(uint8_t pTxPolarity) { fLpGBTmap.TxPolarity = pTxPolarity; }
 
-    uint8_t getRxGroup() { return fLpGBTmap.RxGroup; }
+    std::vector<std::pair<uint8_t, uint8_t>> getRxGroupsChipLanes() { return fLpGBTmap.RxGroupsChipLanes; }
+    std::vector<uint8_t>                     getRxGroups()
+    {
+        std::vector<uint8_t> RxGroups;
+        for(auto RxGroupChipLane: fLpGBTmap.RxGroupsChipLanes) RxGroups.push_back(RxGroupChipLane.second);
+        return RxGroups;
+    }
     uint8_t getRxChannel() { return fLpGBTmap.RxChannel; }
     uint8_t getRxPolarity() { return fLpGBTmap.RxPolarity; }
 
@@ -254,18 +266,19 @@ class RD53 : public ReadoutChip
   private:
     struct LpGBTmap
     {
-        uint8_t RxGroup;
-        uint8_t RxChannel;
-        uint8_t RxPolarity;
-        uint8_t TxGroup;
-        uint8_t TxChannel;
-        uint8_t TxPolarity;
+        std::vector<std::pair<uint8_t, uint8_t>> RxGroupsChipLanes;
+        uint8_t                                  RxChannel;
+        uint8_t                                  RxPolarity;
+        uint8_t                                  TxGroup;
+        uint8_t                                  TxChannel;
+        uint8_t                                  TxPolarity;
     } fLpGBTmap;
     pixelMask   fPixelsMask;
     pixelMask   fPixelsMaskDefault;
     std::string myComment;
     uint8_t     myChipLane;
 };
+
 } // namespace Ph2_HwDescription
 
 #endif

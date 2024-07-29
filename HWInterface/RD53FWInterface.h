@@ -30,6 +30,7 @@ class BeBoard;
 // #######################
 namespace RD53FWconstants
 {
+const uint8_t  NMAXCHIP_HYBRID      = 4;      // Maximum number of chips in a hybrid
 const uint8_t  NLANE_HYBRID         = 4;      // Number of lanes per hybrid
 const uint8_t  HEADEAR_WRTCMD       = 0xFF;   // Header of chip write command sequence
 const uint8_t  NBIT_FWVER           = 16;     // Number of bits for the firmware version
@@ -83,7 +84,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void SetOptoLinkVersion(uint8_t version) override;
     // #############################
 
-    bool silentRunning{false};
+    void ConfigurePCTestAdapter(const std::string& config);
     void SelectBERcheckBitORFrame(const uint8_t bitORframe);
     void WriteArbitraryRegister(const std::string&                regName,
                                 const uint32_t                    value,
@@ -95,6 +96,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void ResetSlowCmdFIFO();
     void ResetReadBkFIFO();
     void ResetReadoutBlk();
+    bool silentRunning{false};
 
     // ####################################
     // # Check AURORA lock on data stream #
@@ -110,7 +112,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // #############################################
     // # hybridId < 0 --> broadcast to all hybrids #
     // #############################################
-    bool                                       WriteChipCommand(const std::vector<uint16_t>& data, int hybridId);
+    bool                                       WriteChipCommands(const std::vector<uint16_t>& data, int hybridId);
     void                                       ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList);
     bool                                       SendChipCommands(const std::vector<uint32_t>& commandList);
     std::vector<std::pair<uint16_t, uint16_t>> ReadChipRegisters(Ph2_HwDescription::ReadoutChip* pChip);
@@ -127,8 +129,7 @@ class RD53FWInterface : public BeBoardFWInterface
         Undefined = 0
     };
 
-    // @TMP@
-    enum class AutozeroSource : uint32_t
+    enum class AutozeroSource : uint32_t // @TMP@
     {
         Software = 1,
         FastCMDFSM,
@@ -202,14 +203,13 @@ class RD53FWInterface : public BeBoardFWInterface
     // ###################################
     // # Read/Write Status Optical Group #
     // ###################################
-    void     ResetOptoLinkSlowControl();
-    void     StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady);
     void     ResetOptoLink() override;
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override;
     bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify = true) override;
     uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
+    void     ResetOptoLinkSlowControl();
     void     SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_t TxModuleId);
-    void     SetUpLinkMapping(uint8_t RxLink, uint8_t RxGroup, uint8_t RxModuleId, uint8_t lane);
+    void     SetUpLinkMapping(uint8_t RxLink, const std::vector<std::pair<uint8_t, uint8_t>>& RxGroups, uint8_t RxModuleId);
 
     // ####################################################
     // # Hybrid ADC measurements: temperature and voltage #

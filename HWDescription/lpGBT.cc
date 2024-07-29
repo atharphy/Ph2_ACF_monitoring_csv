@@ -15,7 +15,6 @@ lpGBT::lpGBT(uint8_t pBeId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChi
 {
     fConfigFileName = fileName;
     fConfigFilePath = pConfigFilePath;
-    phaseRxAligned  = false; // @TMP@
     setFrontEndType(FrontEndType::LpGBT);
     lpGBT::loadfRegMap(fConfigFileName);
 }

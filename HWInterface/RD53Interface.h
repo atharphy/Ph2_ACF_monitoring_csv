@@ -47,7 +47,7 @@ class RD53Interface : public ReadoutChipInterface
     void StopPRBSpattern(const Ph2_HwDescription::BeBoard* pBoard);
 
     virtual void InitRD53Downlink(const Ph2_HwDescription::BeBoard* pBoard)                                                                                                                    = 0;
-    virtual void InitRD53Uplinks(Ph2_HwDescription::ReadoutChip* pChip)                                                                                                                        = 0;
+    virtual void InitRD53Uplinks(Ph2_HwDescription::Chip* pChip)                                                                                                                               = 0;
     virtual void TAP0slaveOptimization(const Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwDescription::Hybrid* pHybrid)                                                                     = 0;
     virtual void PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true)                    = 0;
     virtual void PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) = 0;
@@ -56,7 +56,8 @@ class RD53Interface : public ReadoutChipInterface
     virtual void SendBoardClear(const Ph2_HwDescription::BeBoard* pBoard)                                                                                                                      = 0;
     virtual void SendRD53Clear(Ph2_HwDescription::RD53* pRD53)                                                                                                                                 = 0;
 
-    void ChipErrorReport(Ph2_HwDescription::ReadoutChip* pChip);
+    void EnDisChip(Ph2_HwDescription::Chip* pChip, std::vector<uint16_t>& chipCommandList, bool enable);
+    void ChipErrorReport(Ph2_HwDescription::Chip* pChip);
     void SendChipCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId);
     void PackHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId, std::vector<uint32_t>& hybridCommandList);
     void SendHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList);
@@ -71,13 +72,14 @@ class RD53Interface : public ReadoutChipInterface
 
     bool silentRunning{false};
 
-  protected:
+  private:
     virtual std::vector<std::pair<uint16_t, uint16_t>> ReadRD53Reg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& regName) = 0;
 
+  protected:
     template <typename T>
-    void SendCommand(Ph2_HwDescription::ReadoutChip* pChip, const T& cmd)
+    void SendCommand(Ph2_HwDescription::Chip* pChip, const T& cmd)
     {
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(cmd), pChip->getHybridId());
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(serialize(cmd), pChip->getHybridId());
     }
 
     uint16_t SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size);
