@@ -111,6 +111,8 @@ double MyErf(double* x, double* par)
     return fitval;
 }
 
+double MyErfc(double* x, double* par) { return 1 - MyErf(x, par); }
+
 double MyGammaSignal(double* x, double* par)
 {
     double VCth = x[0];
