@@ -3,7 +3,7 @@
 #include "MonitorUtils/DetectorMonitor.h"
 #include "NetworkUtils/TCPClient.h"
 #ifdef __USE_ROOT__
-#include "MonitorDQM/MonitorDQMPlotCBC.h"
+#include "MonitorDQM/MonitorDQMPlot2S.h"
 #include "MonitorDQM/MonitorDQMPlotSEH.h"
 #endif
 class SEHMonitor : public DetectorMonitor
@@ -24,7 +24,7 @@ class SEHMonitor : public DetectorMonitor
 // bool doMonitorInputCurrent{false};
 #ifdef __USE_ROOT__
     MonitorDQMPlotSEH* fMonitorPlotDQMSEH;
-    MonitorDQMPlotCBC* fMonitorDQMPlotCBC;
+    MonitorDQMPlot2S* fMonitorDQMPlot2S;
 #endif
 
     std::string getVariableValue(std::string variable, std::string buffer);

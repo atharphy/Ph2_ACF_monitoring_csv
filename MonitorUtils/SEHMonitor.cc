@@ -30,9 +30,9 @@ SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, 
 #ifdef __USE_ROOT__
     fMonitorPlotDQMSEH = new MonitorDQMPlotSEH();
     fMonitorPlotDQMSEH->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
-    fMonitorPlotDQM    = new MonitorDQMPlotCBC();
-    fMonitorDQMPlotCBC = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
-    fMonitorDQMPlotCBC->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
+    fMonitorPlotDQM    = new MonitorDQMPlot2S();
+    fMonitorDQMPlot2S = static_cast<MonitorDQMPlot2S*>(fMonitorPlotDQM);
+    fMonitorDQMPlot2S->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif
 }
 // Maybe not ideal here (but needed to avoid memory leak)?? Could be moved to ~DetectorMonitor() if fPowerSupplyClient is also used for other devices?
@@ -86,7 +86,7 @@ void SEHMonitor::runLpGBTRegisterMonitor(std::string registerName)
     }
 
 #ifdef __USE_ROOT__
-    fMonitorDQMPlotCBC->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
+    fMonitorDQMPlot2S->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
 #else
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {

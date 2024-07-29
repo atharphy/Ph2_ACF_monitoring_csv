@@ -1,13 +1,13 @@
 /*!
-        \file                MonitorDQMPlotCBC.h
+        \file                MonitorDQMPlot2S.h
         \brief               DQM class for DQM example -> use it as a templare
         \author              Fabio Ravera
         \date                25/7/19
         Support :            mail to : fabio.ravera@cern.ch
 */
 
-#ifndef __MonitorDQMPlotCBC_H__
-#define __MonitorDQMPlotCBC_H__
+#ifndef __MonitorDQMPlot2S_H__
+#define __MonitorDQMPlot2S_H__
 #include "MonitorDQM/MonitorDQMPlotBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -15,21 +15,21 @@
 class TFile;
 
 /*!
- * \class MonitorDQMPlotCBC
+ * \class MonitorDQMPlot2S
  * \brief Class for DQMExample monitoring Plots
  */
-class MonitorDQMPlotCBC : public MonitorDQMPlotBase
+class MonitorDQMPlot2S : public MonitorDQMPlotBase
 {
   public:
     /*!
      * constructor
      */
-    MonitorDQMPlotCBC();
+    MonitorDQMPlot2S();
 
     /*!
      * destructor
      */
-    ~MonitorDQMPlotCBC();
+    ~MonitorDQMPlot2S();
 
     /*!
      * \brief Book Plots

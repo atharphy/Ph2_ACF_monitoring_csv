@@ -3,13 +3,13 @@
 
 #include "MonitorUtils/DetectorMonitor.h"
 #ifdef __USE_ROOT__
-#include "MonitorDQM/MonitorDQMPlotCBC.h"
+#include "MonitorDQM/MonitorDQMPlot2S.h"
 #endif
 
-class CBCMonitor : public DetectorMonitor
+class Monitor2S : public DetectorMonitor
 {
   public:
-    CBCMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig);
+    Monitor2S(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig);
 
   protected:
     void runMonitor() override;
@@ -19,7 +19,7 @@ class CBCMonitor : public DetectorMonitor
     void runLpGBTRegisterMonitor(std::string registerName);
 
 #ifdef __USE_ROOT__
-    MonitorDQMPlotCBC* fMonitorDQMPlotCBC;
+    MonitorDQMPlot2S* fMonitorDQMPlot2S;
 #endif
 };
 

@@ -1,12 +1,12 @@
 /*!
-        \file                MonitorDQMPlotCBC.cc
+        \file                MonitorDQMPlot2S.cc
         \brief               DQM class for DQM example -> use it as a templare
         \author              Fabio Ravera
         \date                25/7/19
         Support :            mail to : fabio.ravera@cern.ch
 */
 
-#include "MonitorDQM/MonitorDQMPlotCBC.h"
+#include "MonitorDQM/MonitorDQMPlot2S.h"
 #include "RootUtils/GraphContainer.h"
 #include "RootUtils/RootContainerFactory.h"
 #include "TAxis.h"
@@ -19,13 +19,13 @@
 #include "Utils/ValueAndTime.h"
 
 //========================================================================================================================
-MonitorDQMPlotCBC::MonitorDQMPlotCBC() {}
+MonitorDQMPlot2S::MonitorDQMPlot2S() {}
 
 //========================================================================================================================
-MonitorDQMPlotCBC::~MonitorDQMPlotCBC() {}
+MonitorDQMPlot2S::~MonitorDQMPlot2S() {}
 
 //========================================================================================================================
-void MonitorDQMPlotCBC::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig)
+void MonitorDQMPlot2S::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
@@ -41,7 +41,7 @@ void MonitorDQMPlotCBC::book(TFile* theOutputFile, DetectorContainer& theDetecto
 }
 
 //========================================================================================================================
-void MonitorDQMPlotCBC::bookCBCPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
+void MonitorDQMPlot2S::bookCBCPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
 {
     // creating the histograms for all the chips:
     // create the GraphContainer<TGraph> as you would create a TGraph (it implements some feature needed to avoid memory
@@ -62,7 +62,7 @@ void MonitorDQMPlotCBC::bookCBCPlots(TFile* theOutputFile, const DetectorContain
 }
 
 //========================================================================================================================
-void MonitorDQMPlotCBC::bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
+void MonitorDQMPlot2S::bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
 {
     std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
     // creating the histograms for all the chips:
@@ -84,7 +84,7 @@ void MonitorDQMPlotCBC::bookLpGBTPlots(TFile* theOutputFile, const DetectorConta
 }
 
 //========================================================================================================================
-void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
+void MonitorDQMPlot2S::fillCBCRegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
 {
     // std::cout <<  __PRETTY_FUNCTION__ << __LINE__ << std::endl;
     if(fCBCRegisterMonitorPlotMap.find(registerName) == fCBCRegisterMonitorPlotMap.end())
@@ -126,7 +126,7 @@ void MonitorDQMPlotCBC::fillCBCRegisterPlots(DetectorDataContainer& theThreshold
 }
 
 //========================================================================================================================
-void MonitorDQMPlotCBC::fillLpGBTRegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
+void MonitorDQMPlot2S::fillLpGBTRegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
 {
     if(fLpGBTRegisterMonitorPlotMap.find(registerName) == fLpGBTRegisterMonitorPlotMap.end())
     {
@@ -151,23 +151,23 @@ void MonitorDQMPlotCBC::fillLpGBTRegisterPlots(DetectorDataContainer& theThresho
 }
 
 //========================================================================================================================
-void MonitorDQMPlotCBC::process() {}
+void MonitorDQMPlot2S::process() {}
 
 //========================================================================================================================
-void MonitorDQMPlotCBC::reset(void)
+void MonitorDQMPlot2S::reset(void)
 {
     // Clear histograms if needed
 }
 
 //========================================================================================================================
-bool MonitorDQMPlotCBC::fill(std::string& inputStream)
+bool MonitorDQMPlot2S::fill(std::string& inputStream)
 {
-    ContainerSerialization theCBCRegisterSerialization("CBCMonitorCBCRegister");
-    ContainerSerialization theLpGBTRegisterSerialization("CBCMonitorLpGBTRegister");
+    ContainerSerialization theCBCRegisterSerialization("Monitor2SCBCRegister");
+    ContainerSerialization theLpGBTRegisterSerialization("Monitor2SLpGBTRegister");
 
     if(theCBCRegisterSerialization.attachDeserializer(inputStream))
     {
-        // std::cout << "Matched CBCMonitor CBCRegister!!!!!\n";
+        // std::cout << "Matched Monitor2S CBCRegister!!!!!\n";
         std::string           registerName;
         DetectorDataContainer fDetectorData =
             theCBCRegisterSerialization.deserializeBoardContainer<EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer>(fDetectorContainer, registerName);
@@ -176,7 +176,7 @@ bool MonitorDQMPlotCBC::fill(std::string& inputStream)
     }
     if(theLpGBTRegisterSerialization.attachDeserializer(inputStream))
     {
-        // std::cout << "Matched CBCMonitor LpGBTRegister!!!!!\n";
+        // std::cout << "Matched Monitor2S LpGBTRegister!!!!!\n";
         std::string           registerName;
         DetectorDataContainer fDetectorData =
             theLpGBTRegisterSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer>(fDetectorContainer, registerName);

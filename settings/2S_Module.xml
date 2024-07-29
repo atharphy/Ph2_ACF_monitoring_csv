@@ -194,7 +194,6 @@
 <MonitoringSettings>
 <Monitoring type="2S" enable="0">
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-    <MonitoringElement device="CBC"   register="VCth" enable="1"/>
     <MonitoringElement device="LpGBT" register="ADC0" enable="1"/>
     <MonitoringElement device="LpGBT" register="ADC1" enable="1"/>
     <MonitoringElement device="LpGBT" register="ADC3" enable="1"/>

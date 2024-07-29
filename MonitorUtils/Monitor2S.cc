@@ -1,4 +1,4 @@
-#include "MonitorUtils/CBCMonitor.h"
+#include "MonitorUtils/Monitor2S.h"
 #include "HWDescription/Definition.h"
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWInterface/D19clpGBTInterface.h"
@@ -13,16 +13,16 @@
 
 using namespace Ph2_HwInterface;
 
-CBCMonitor::CBCMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
+Monitor2S::Monitor2S(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
 #ifdef __USE_ROOT__
-    fMonitorPlotDQM    = new MonitorDQMPlotCBC();
-    fMonitorDQMPlotCBC = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
-    fMonitorDQMPlotCBC->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
+    fMonitorPlotDQM    = new MonitorDQMPlot2S();
+    fMonitorDQMPlot2S = static_cast<MonitorDQMPlot2S*>(fMonitorPlotDQM);
+    fMonitorDQMPlot2S->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif
 }
 
-void CBCMonitor::runMonitor()
+void Monitor2S::runMonitor()
 {
     std::recursive_mutex                  theMutex;
     std::lock_guard<std::recursive_mutex> theGuard(theMutex);
@@ -32,7 +32,7 @@ void CBCMonitor::runMonitor()
         if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
 }
 
-void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
+void Monitor2S::runCBCRegisterMonitor(std::string registerName)
 {
     DetectorDataContainer theCBCRegisterContainer;
     ContainerFactory::copyAndInitChip<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theCBCRegisterContainer);
@@ -56,17 +56,17 @@ void CBCMonitor::runCBCRegisterMonitor(std::string registerName)
     }
 
 #ifdef __USE_ROOT__
-    fMonitorDQMPlotCBC->fillCBCRegisterPlots(theCBCRegisterContainer, registerName);
+    fMonitorDQMPlot2S->fillCBCRegisterPlots(theCBCRegisterContainer, registerName);
 #else
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
-        ContainerSerialization theContainerSerialization("CBCMonitorCBCRegister");
+        ContainerSerialization theContainerSerialization("Monitor2SCBCRegister");
         theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theCBCRegisterContainer, registerName);
     }
 #endif
 }
 
-void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
+void Monitor2S::runLpGBTRegisterMonitor(std::string registerName)
 {
     DetectorDataContainer theLpGBTRegisterContainer;
     ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
@@ -92,11 +92,11 @@ void CBCMonitor::runLpGBTRegisterMonitor(std::string registerName)
     }
 
 #ifdef __USE_ROOT__
-    fMonitorDQMPlotCBC->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
+    fMonitorDQMPlot2S->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
 #else
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
-        ContainerSerialization theContainerSerialization("CBCMonitorLpGBTRegister");
+        ContainerSerialization theContainerSerialization("Monitor2SLpGBTRegister");
         theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theLpGBTRegisterContainer, registerName);
     }
 #endif

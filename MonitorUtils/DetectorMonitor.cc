@@ -48,6 +48,7 @@ DetectorMonitor::~DetectorMonitor()
     }
 #ifdef __USE_ROOT__
     fOutputFile->Write();
+    LOG(INFO) << GREEN << "Closing monitor result file: " << BOLDYELLOW << fMonitorFileName << RESET;
     // fOutputFile->Close();
     // delete fOutputFile;
     // fOutputFile = nullptr;
