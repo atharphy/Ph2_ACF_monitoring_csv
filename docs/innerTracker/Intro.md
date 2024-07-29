@@ -2,7 +2,7 @@
 
 ## Recommended software and firmware versions
 
-- Software git branch / tag : `Dev` / `v5-01`
+- Software git branch / tag : `Dev` / `v5-03`
 - Firmware tag: `v4-09`
 
 ## Important webpages and information

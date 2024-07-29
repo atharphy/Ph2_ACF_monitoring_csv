@@ -859,5 +859,5 @@ _I2CVTRxRegSEU3           0x31D         0d00              0d00                  
 
 _I2CMasterID              0x320         0d02              0d02                          8
 _I2CFreq                  0x321         0d02              0d02                          8
-_I2CSlaveAddress          0x322         0d40              0d40                          8
+_I2CSlaveAddress          0x322         0d80              0d80                          8
 _I2CRegAddress            0x323         0d00              0d00                          8

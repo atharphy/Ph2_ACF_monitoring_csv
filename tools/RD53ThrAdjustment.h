@@ -45,9 +45,14 @@ class ThrAdjustment : public PixelAlive
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override
     {
-        uint16_t nIterationsThr = floor(log2(stopValue - startValue + 1) + 2) + floor(log2(stopValue - startValue + 1) + 3);
-        uint16_t moreIterations = 1;
-        return PixelAlive::getNumberIterations() * (nIterationsThr + moreIterations);
+        uint16_t nIterationsChip = 0;
+        for(const auto cBoard: *fDetectorContainer)
+            for(const auto cOpticalGroup: *cBoard)
+                for(const auto cHybrid: *cOpticalGroup)
+                    if(cHybrid->fullSize() > nIterationsChip) nIterationsChip = cHybrid->fullSize();
+        const uint16_t nIterationsThrMax  = floor(log2(stopValue - startValue + 1) + 2);
+        const uint16_t nIterationsThrZero = floor(log2(stopValue - startValue + 1) + 3);
+        return PixelAlive::getNumberIterations() * (nIterationsThrMax * nIterationsChip + nIterationsThrZero);
     }
 
     void analyze();

@@ -31,6 +31,7 @@ class RD53RunProgress
     {
         RD53RunProgress::total()   = 0;
         RD53RunProgress::current() = 0;
+        RD53RunProgress::cursor()  = 0;
     }
 
     static bool& status()
@@ -39,12 +40,49 @@ class RD53RunProgress
         return value;
     }
 
+    static size_t& cursor()
+    {
+        static size_t value = 0;
+        return value;
+    }
+
     static void turnON() { RD53RunProgress::status() = true; }
     static void turnOFF() { RD53RunProgress::status() = false; }
 
+    static std::string makeProgressBar(const size_t nColumns)
+    {
+        static int        delta = 1;
+        std::stringstream myString("");
+
+        myString << BOLDBLUE << "[";
+        for(auto i = 1u; i <= nColumns; i++)
+        {
+            if(i == RD53RunProgress::cursor())
+                myString << BOLDYELLOW << "=";
+            else
+                myString << BOLDBLUE << "-";
+        }
+        myString << BOLDBLUE << "]";
+
+        RD53RunProgress::cursor() += delta;
+        if(RD53RunProgress::cursor() == nColumns + 1)
+        {
+            delta = -1;
+            RD53RunProgress::cursor() += delta;
+        }
+        else if(RD53RunProgress::cursor() == 0)
+        {
+            delta = 1;
+            RD53RunProgress::cursor() += delta;
+        }
+
+        return myString.str();
+    }
+
     static void update(size_t dataSize, bool display = false)
     {
-        const int nLines = 5; // Number of printed out lines
+        const unsigned int nLines   = 5;      // Number of printed lines
+        const unsigned int nColumns = 28 - 2; // Number of printed columns
 
         if(RD53RunProgress::status() == true)
         {
@@ -54,15 +92,16 @@ class RD53RunProgress
             {
                 float fraction = 1. * RD53RunProgress::current() / RD53RunProgress::total();
 
-                LOG(INFO) << CYAN << "---------------------------" << RESET;
-                LOG(INFO) << GREEN << "****** Reading  data ******" << RESET;
-                LOG(INFO) << GREEN << "n. 32-bit words : " << std::setw(9) << std::fixed << dataSize << RESET;
-                LOG(INFO) << BOLDMAGENTA << ">>>> Progress : " << std::setw(5) << std::setprecision(1) << std::fixed << fraction * 100 << "% <<<<" << std::setprecision(-1) << RESET;
-                LOG(INFO) << CYAN << "---------------------------" << RESET;
+                LOG(INFO) << CYAN << "******* " << GREEN << "Reading data" << CYAN << " *******" << RESET;
+                LOG(INFO) << GREEN << "n. 32-bit words: " << BOLDYELLOW << std::setw(11) << std::fixed << dataSize << RESET;
+                LOG(INFO) << BOLDMAGENTA << ">>> Progress: " << BOLDYELLOW << std::setw(9) << std::setprecision(1) << std::fixed << fraction * 100 << BOLDMAGENTA << "% <<<" << std::setprecision(-1)
+                          << RESET;
+                LOG(INFO) << BOLDBLUE << makeProgressBar(nColumns) << RESET;
+                LOG(INFO) << CYAN << "****************************" << RESET;
                 RD53Shared::resetDefaultFloat();
 
                 if(fraction < 1)
-                    for(auto i = 0; i < nLines; i++) std::cout << "\x1b[A";
+                    for(auto i = 0u; i < nLines; i++) std::cout << "\x1b[A";
             }
         }
     }
