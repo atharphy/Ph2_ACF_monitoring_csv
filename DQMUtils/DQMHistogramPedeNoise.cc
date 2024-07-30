@@ -884,16 +884,11 @@ void DQMHistogramPedeNoise::fitSCurves()
                                 // Fit
                                 cChannelSCurve->Fit(cFit, "RQM");
 
-<<<<<<< HEAD
-                            // Fit
-                            cChannelSCurve->Fit(cFit, "RQM");
-=======
                                 theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThreshold      = cFit->GetParameter(0);
                                 theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoise          = cFit->GetParameter(1);
                                 theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThresholdError = cFit->GetParError(0);
                                 theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoiseError     = cFit->GetParError(1);
                             }
->>>>>>> 0f4c67c58f9f6a0d9673f460fc0dc22643852298
 
                             // Fit the S-curve for the PS module
                             else if((cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS))
