@@ -874,18 +874,42 @@ void DQMHistogramPedeNoise::fitSCurves()
 
                             float cChannelPedestal = cChannelPedestalHistogram->GetBinContent(linearizeRowAndCols(row, col, cChip->getNumberOfCols()) + 1);
 
-                            TF1* cFit = new TF1("SCurveFit", MyErf, cChannelPedestal - (cChannelNoise * 5), cChannelPedestal + (cChannelNoise * 5), 2);
+                            // Fit the S-curve for the 2S module
+                            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
+                            {
+                                TF1* cFit = new TF1("SCurveFit", MyErf, cChannelPedestal - (cChannelNoise * 5), cChannelPedestal + (cChannelNoise * 5), 2);
+                                cFit->SetParameter(0, cChannelPedestal);
+                                cFit->SetParameter(1, cChannelNoise);
 
-                            cFit->SetParameter(0, cChannelPedestal);
-                            cFit->SetParameter(1, cChannelNoise);
+                                // Fit
+                                cChannelSCurve->Fit(cFit, "RQM");
 
+<<<<<<< HEAD
                             // Fit
                             cChannelSCurve->Fit(cFit, "RQM");
+=======
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThreshold      = cFit->GetParameter(0);
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoise          = cFit->GetParameter(1);
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThresholdError = cFit->GetParError(0);
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoiseError     = cFit->GetParError(1);
+                            }
+>>>>>>> 0f4c67c58f9f6a0d9673f460fc0dc22643852298
 
-                            theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThreshold      = cFit->GetParameter(0);
-                            theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoise          = cFit->GetParameter(1);
-                            theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThresholdError = cFit->GetParError(0);
-                            theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoiseError     = cFit->GetParError(1);
+                            // Fit the S-curve for the PS module
+                            else if((cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS))
+                            {
+                                TF1* cFit = new TF1("SCurveFit", MyErfc, cChannelPedestal - (cChannelNoise * 5), cChannelPedestal + (cChannelNoise * 5), 2);
+                                cFit->SetParameter(0, cChannelPedestal);
+                                cFit->SetParameter(1, cChannelNoise);
+
+                                // Fit
+                                cChannelSCurve->Fit(cFit, "RQM");
+
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThreshold      = cFit->GetParameter(0);
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoise          = cFit->GetParameter(1);
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThresholdError = cFit->GetParError(0);
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoiseError     = cFit->GetParError(1);
+                            }
                         }
                     }
                 }
