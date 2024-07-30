@@ -118,6 +118,8 @@ void SystemController::Destroy()
 
     RD53Event::JoinDecodingThreads();
 
+    fDetectorMonitor->stopRunning();
+    fDetectorMonitor->waitForMonitorToStop();
     delete fDetectorMonitor;
     fDetectorMonitor = nullptr;
 

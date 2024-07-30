@@ -1,24 +1,23 @@
 #include "MonitorUtils/Monitor2S.h"
 #include "HWDescription/Definition.h"
 #include "HWDescription/OuterTrackerHybrid.h"
-#include "HWInterface/D19clpGBTInterface.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/Utilities.h"
 #include "Utils/ValueAndTime.h"
 
 #ifdef __USE_ROOT__
+#include "MonitorDQM/MonitorDQMPlot2S.h"
 #include "TFile.h"
 #endif
 
 using namespace Ph2_HwInterface;
 
-Monitor2S::Monitor2S(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
+Monitor2S::Monitor2S(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : OTMonitor(theSystemController, theDetectorMonitorConfig)
 {
 #ifdef __USE_ROOT__
     fMonitorPlotDQM    = new MonitorDQMPlot2S();
-    fMonitorDQMPlot2S = static_cast<MonitorDQMPlot2S*>(fMonitorPlotDQM);
-    fMonitorDQMPlot2S->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
+    static_cast<MonitorDQMPlot2S*>(fMonitorPlotDQM)->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif
 }
 
@@ -26,78 +25,33 @@ void Monitor2S::runMonitor()
 {
     std::recursive_mutex                  theMutex;
     std::lock_guard<std::recursive_mutex> theGuard(theMutex);
-    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("CBC"))
-        if(registerName.second) runCBCRegisterMonitor(registerName.first);
-    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
-        if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
+    for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("CBC"))
+        if(monitorValueName.second) runMonitorCBC(monitorValueName.first);
+    for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
+        if(monitorValueName.second) runMonitorLpGBT(monitorValueName.first);
 }
 
-void Monitor2S::runCBCRegisterMonitor(std::string registerName)
+void Monitor2S::runMonitorCBC(const std::string& monitorValueName)
 {
-    DetectorDataContainer theCBCRegisterContainer;
-    ContainerFactory::copyAndInitChip<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theCBCRegisterContainer);
-
-    for(const auto& board: *fTheSystemController->fDetectorContainer)
-    {
-        for(const auto& opticalGroup: *board)
-        {
-            for(const auto& hybrid: *opticalGroup)
-            {
-                for(const auto& chip: *hybrid)
-                {
-                    uint16_t registerValue = fTheSystemController->fReadoutChipInterface->ReadChipReg(chip, registerName); // just to read something
-                    LOG(DEBUG) << BOLDMAGENTA << "CBC " << hybrid->getId() << " - " << registerName << " = " << registerValue << RESET;
-                    ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-                    theCBCRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<ValueAndTime<uint16_t>>() =
-                        theRegisterAndTime;
-                }
-            }
-        }
-    }
+    auto theCBCRegisterContainer = getReadoutChipMonitorValues(monitorValueName, FrontEndType::CBC3);
 
 #ifdef __USE_ROOT__
-    fMonitorDQMPlot2S->fillCBCRegisterPlots(theCBCRegisterContainer, registerName);
+    static_cast<MonitorDQMPlot2S*>(fMonitorPlotDQM)->fillCBCRegisterPlots(theCBCRegisterContainer, monitorValueName);
 #else
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
         ContainerSerialization theContainerSerialization("Monitor2SCBCRegister");
-        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theCBCRegisterContainer, registerName);
+        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theCBCRegisterContainer, monitorValueName);
     }
 #endif
 }
 
-void Monitor2S::runLpGBTRegisterMonitor(std::string registerName)
+void Monitor2S::readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer)
 {
-    DetectorDataContainer theLpGBTRegisterContainer;
-    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
-
-    for(const auto& board: *fTheSystemController->fDetectorContainer)
-    {
-        if(board->getFirstObject()->flpGBT == nullptr)
-        {
-            for(const auto& opticalGroup: *board)
-            {
-                ValueAndTime<uint16_t> theRegisterAndTime(0, getTimeStamp());
-                theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
-            }
-            continue;
-        }
-        for(const auto& opticalGroup: *board)
-        {
-            uint16_t               registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
-            ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-            LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << registerName << " = " << registerValue << RESET;
-            theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
-        }
-    }
-
-#ifdef __USE_ROOT__
-    fMonitorDQMPlot2S->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
-#else
-    if(fTheSystemController->fMonitorDQMStreamerEnabled)
-    {
-        ContainerSerialization theContainerSerialization("Monitor2SLpGBTRegister");
-        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theLpGBTRegisterContainer, registerName);
-    }
-#endif
+    uint16_t registerValue = fTheSystemController->fReadoutChipInterface->ReadChipReg(theChip, monitorValueName); // just to read something
+    LOG(DEBUG) << BOLDMAGENTA << "board " << theChip->getBeBoardId() << "opticalGroup " << theChip->getOpticalGroupId() << "hybrid " << theChip->getHybridId() << " - chip " << theChip->getId() << " " << monitorValueName << " = " << registerValue << RESET;
+    ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
+    theDataContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())
+        ->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
 }
+

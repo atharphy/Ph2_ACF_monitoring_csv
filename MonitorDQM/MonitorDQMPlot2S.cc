@@ -27,143 +27,43 @@ MonitorDQMPlot2S::~MonitorDQMPlot2S() {}
 //========================================================================================================================
 void MonitorDQMPlot2S::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig)
 {
-    // SoC utilities only - BEGIN
-    // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
-    // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR DQM YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
-    // make fDetectorData ready to receive the information fromm the stream
-    fDetectorContainer = &theDetectorStructure;
-    // SoC utilities only - END
+    MonitorDQMPlotOT::book(theOutputFile, theDetectorStructure, detectorMonitorConfig);
 
     for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("CBC"))
-        if(registerName.second) bookCBCPlots(theOutputFile, theDetectorStructure, registerName.first);
-    for(const auto& registerName: detectorMonitorConfig.fMonitorElementList.at("LpGBT"))
-        if(registerName.second) bookLpGBTPlots(theOutputFile, theDetectorStructure, registerName.first);
+        if(registerName.second) bookCBCPlots(theOutputFile, registerName.first);
 }
 
 //========================================================================================================================
-void MonitorDQMPlot2S::bookCBCPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
+void MonitorDQMPlot2S::bookCBCPlots(TFile* theOutputFile, std::string registerName)
 {
-    // creating the histograms for all the chips:
-    // create the GraphContainer<TGraph> as you would create a TGraph (it implements some feature needed to avoid memory
-    // leaks in copying histograms like the move constructor)
-    GraphContainer<TGraph> theTGraphPedestalContainer(0);
-    theTGraphPedestalContainer.setNameTitle("CBC_DQM_" + registerName, "CBC_DQM_" + registerName);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat(TIME_FORMAT);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
-    theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle(registerName.c_str());
-    theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
-    theTGraphPedestalContainer.fTheGraph->SetMarkerSize(0.4);
-    // create Histograms for all the chips, they will be automatically accosiated to the output file, no need to save
-    // them, change the name for every chip or set their directory
-    RootContainerFactory::bookChipHistograms<GraphContainer<TGraph>>(theOutputFile, theDetectorStructure, fCBCRegisterMonitorPlotMap[registerName], theTGraphPedestalContainer);
+    auto theTGraphHistogramContainer = producePlotTemplate(registerName, "CBC");
+    RootContainerFactory::bookChipHistograms<GraphContainer<TGraph>>(theOutputFile, *fDetectorContainer, fCBCRegisterMonitorPlotMap[registerName], theTGraphHistogramContainer);
 }
 
 //========================================================================================================================
-void MonitorDQMPlot2S::bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName)
+void MonitorDQMPlot2S::fillCBCRegisterPlots(DetectorDataContainer& theInputContainer, const std::string& registerName)
 {
-    std::cout << __PRETTY_FUNCTION__ << "Booking plot for register = " << registerName << std::endl;
-    // creating the histograms for all the chips:
-    // create the GraphContainer<TGraph> as you would create a TGraph (it implements some feature needed to avoid memory
-    // leaks in copying histograms like the move constructor)
-    GraphContainer<TGraph> theTGraphPedestalContainer(0);
-    theTGraphPedestalContainer.setNameTitle("LpGBT_DQM_" + registerName, "LpGBT_DQM_" + registerName);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat(TIME_FORMAT);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
-    theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((registerName + " [V]").c_str());
-    theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
-    theTGraphPedestalContainer.fTheGraph->SetMarkerSize(0.4);
-    // create Histograms for all the chips, they will be automatically accosiated to the output file, no need to save
-    // them, change the name for every chip or set their directory
-    RootContainerFactory::bookOpticalGroupHistograms<GraphContainer<TGraph>>(theOutputFile, theDetectorStructure, fLpGBTRegisterMonitorPlotMap[registerName], theTGraphPedestalContainer);
+    fillReadoutChipPlots(theInputContainer, registerName, fCBCRegisterMonitorPlotMap, FrontEndType::CBC3);
 }
 
 //========================================================================================================================
-void MonitorDQMPlot2S::fillCBCRegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
+void MonitorDQMPlot2S::process()
 {
-    // std::cout <<  __PRETTY_FUNCTION__ << __LINE__ << std::endl;
-    if(fCBCRegisterMonitorPlotMap.find(registerName) == fCBCRegisterMonitorPlotMap.end())
-    {
-        LOG(ERROR) << BOLDRED << "No plots for CBC register " << registerName << RESET;
-        LOG(ERROR) << BOLDRED << "Check that DQM and Monitor register names matches" << RESET;
-        std::string errorMessage = "No plots for CBC register " + registerName + " - Check that DQM and Monitor register names matches";
-        throw std::runtime_error(errorMessage);
-    }
-
-    for(auto board: theThresholdContainer) // for on boards - begin
-    {
-        size_t boardId = board->getId();
-        // std::cout <<  __PRETTY_FUNCTION__ << boardId << std::endl;
-        for(auto opticalGroup: *board) // for on opticalGroup - begin
-        {
-            size_t opticalGroupId = opticalGroup->getId();
-            // std::cout <<  __PRETTY_FUNCTION__ << opticalGroupId << std::endl;
-            for(auto hybrid: *opticalGroup) // for on hybrid - begin
-            {
-                size_t hybridId = hybrid->getId();
-                // std::cout <<  __PRETTY_FUNCTION__ << hybridId << std::endl;
-                for(auto chip: *hybrid) // for on chip - begin
-                {
-                    size_t chipId = chip->getId();
-                    // Retreive the corresponging chip histogram:
-                    TGraph* chipDQMPlot =
-                        fCBCRegisterMonitorPlotMap[registerName].getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
-
-                    // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
-                    // by chip and not in one shot)
-                    if(!chip->hasSummary()) continue;
-                    auto theValueAndTime = chip->getSummary<ValueAndTime<uint16_t>>();
-                    chipDQMPlot->SetPoint(chipDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue); // for on channel - end
-                }                                                                                                                   // for on chip - end
-            }                                                                                                                       // for on hybrid - end
-        }                                                                                                                           // for on opticalGroup - end
-    }                                                                                                                               // for on boards - end
+    MonitorDQMPlotOT::process();
 }
-
-//========================================================================================================================
-void MonitorDQMPlot2S::fillLpGBTRegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
-{
-    if(fLpGBTRegisterMonitorPlotMap.find(registerName) == fLpGBTRegisterMonitorPlotMap.end())
-    {
-        LOG(ERROR) << BOLDRED << "No plots for LpGBT register " << registerName << RESET;
-        LOG(ERROR) << BOLDRED << "Check that DQM and Monitor register names matches" << RESET;
-        std::string errorMessage = "No plots for LpGBT register " + registerName + " - Check that DQM and Monitor register names matches";
-        throw std::runtime_error(errorMessage);
-    }
-
-    for(auto board: theThresholdContainer) // for on boards - begin
-    {
-        size_t boardId = board->getId();
-        for(auto opticalGroup: *board) // for on opticalGroup - begin
-        {
-            if(!opticalGroup->hasSummary()) continue;
-            size_t  opticalGroupId  = opticalGroup->getId();
-            TGraph* LpGBTDQMPlot    = fLpGBTRegisterMonitorPlotMap[registerName].getObject(boardId)->getObject(opticalGroupId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
-            auto    theValueAndTime = opticalGroup->getSummary<ValueAndTime<uint16_t>>();
-            LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue * CONVERSION_FACTOR);
-        } // for on opticalGroup - end
-    }     // for on boards - end
-}
-
-//========================================================================================================================
-void MonitorDQMPlot2S::process() {}
 
 //========================================================================================================================
 void MonitorDQMPlot2S::reset(void)
 {
-    // Clear histograms if needed
+    MonitorDQMPlotOT::reset();
 }
 
 //========================================================================================================================
 bool MonitorDQMPlot2S::fill(std::string& inputStream)
 {
+    if(MonitorDQMPlotOT::fill(inputStream)) return true;
+
     ContainerSerialization theCBCRegisterSerialization("Monitor2SCBCRegister");
-    ContainerSerialization theLpGBTRegisterSerialization("Monitor2SLpGBTRegister");
 
     if(theCBCRegisterSerialization.attachDeserializer(inputStream))
     {
@@ -172,15 +72,6 @@ bool MonitorDQMPlot2S::fill(std::string& inputStream)
         DetectorDataContainer fDetectorData =
             theCBCRegisterSerialization.deserializeBoardContainer<EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer>(fDetectorContainer, registerName);
         fillCBCRegisterPlots(fDetectorData, registerName);
-        return true;
-    }
-    if(theLpGBTRegisterSerialization.attachDeserializer(inputStream))
-    {
-        // std::cout << "Matched Monitor2S LpGBTRegister!!!!!\n";
-        std::string           registerName;
-        DetectorDataContainer fDetectorData =
-            theLpGBTRegisterSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer>(fDetectorContainer, registerName);
-        fillLpGBTRegisterPlots(fDetectorData, registerName);
         return true;
     }
     return false;

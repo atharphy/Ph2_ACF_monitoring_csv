@@ -1,26 +1,20 @@
-#ifndef CBC_MONITOR_H
-#define CBC_MONITOR_H
+#ifndef MONITOR_2S_H
+#define MONITOR_2S_H
 
-#include "MonitorUtils/DetectorMonitor.h"
-#ifdef __USE_ROOT__
-#include "MonitorDQM/MonitorDQMPlot2S.h"
-#endif
+#include "MonitorUtils/OTMonitor.h"
 
-class Monitor2S : public DetectorMonitor
+class Monitor2S : public OTMonitor
 {
   public:
-    Monitor2S(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig);
+    Monitor2S(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig);
 
   protected:
     void runMonitor() override;
 
   private:
-    void runCBCRegisterMonitor(std::string registerName);
-    void runLpGBTRegisterMonitor(std::string registerName);
+    void runMonitorCBC(const std::string& monitorValueName);
+    void readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer) override;
 
-#ifdef __USE_ROOT__
-    MonitorDQMPlot2S* fMonitorDQMPlot2S;
-#endif
 };
 
 #endif

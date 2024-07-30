@@ -8,17 +8,17 @@
 #include "Utils/ValueAndTime.h"
 
 #ifdef __USE_ROOT__
+#include "MonitorDQM/MonitorDQMPlotPS.h"
 #include "TFile.h"
 #endif
 
 using namespace Ph2_HwInterface;
 
-PSMonitor::PSMonitor(Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
+PSMonitor::PSMonitor(Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : OTMonitor(theSystemController, theDetectorMonitorConfig)
 {
 #ifdef __USE_ROOT__
     fMonitorPlotDQM   = new MonitorDQMPlotPS();
-    fMonitorDQMPlotPS = static_cast<MonitorDQMPlotPS*>(fMonitorPlotDQM);
-    fMonitorDQMPlotPS->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
+    static_cast<MonitorDQMPlotPS*>(fMonitorPlotDQM)->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif
 }
 
@@ -26,138 +26,55 @@ void PSMonitor::runMonitor()
 {
     std::recursive_mutex                  theMutex;
     std::lock_guard<std::recursive_mutex> theGuard(theMutex);
-    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("SSA2"))
-        if(registerName.second) runSSA2RegisterMonitor(registerName.first);
-    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("MPA2"))
-        if(registerName.second) runMPA2RegisterMonitor(registerName.first);
-    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
-        if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
+    for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("SSA2"))
+        if(monitorValueName.second) runMonitorSSA(monitorValueName.first);
+    for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("MPA2"))
+        if(monitorValueName.second) runMonitorMPA(monitorValueName.first);
+    for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
+        if(monitorValueName.second) runMonitorLpGBT(monitorValueName.first);
 }
 
-void PSMonitor::runSSA2RegisterMonitor(std::string registerName)
+void PSMonitor::runMonitorSSA(const std::string& monitorValueName)
 {
-    DetectorDataContainer theSSA2RegisterContainer;
-    ContainerFactory::copyAndInitChip<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theSSA2RegisterContainer);
-
-    for(const auto& board: *fTheSystemController->fDetectorContainer)
-    {
-        for(const auto& opticalGroup: *board)
-        {
-            for(const auto& hybrid: *opticalGroup)
-            {
-                for(const auto& chip: *hybrid)
-                {
-                    if(chip->getFrontEndType() == FrontEndType::SSA2)
-                    {
-                        uint16_t registerValue = fTheSystemController->fReadoutChipInterface->readADC(chip, registerName);
-                        LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip " << chip->getId() << " " << registerName << " = " << registerValue << RESET;
-                        auto  theADCcalibrationMap = chip->getADCCalibrationMap();
-                        float theConversionFactor  = 1000;                                                                  // without the conversion factor the voltages are not visible
-                        if(registerName == "AVDD" || registerName == "DVDD") theConversionFactor = theConversionFactor * 2; // keep into account a voltage divider
-                        auto theSlope  = theADCcalibrationMap["ADC_SLOPE"] * theConversionFactor;
-                        auto theOffset = theADCcalibrationMap["ADC_OFFSET"] * theConversionFactor;
-                        registerValue  = registerValue * theSlope + theOffset;
-                        ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-                        theSSA2RegisterContainer.getObject(board->getId())
-                            ->getObject(opticalGroup->getId())
-                            ->getObject(hybrid->getId())
-                            ->getObject(chip->getId())
-                            ->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
-                    }
-                }
-            }
-        }
-    }
+    auto theSSA2RegisterContainer = getReadoutChipMonitorValues(monitorValueName, FrontEndType::SSA2);
 
 #ifdef __USE_ROOT__
-    fMonitorDQMPlotPS->fillSSA2RegisterPlots(theSSA2RegisterContainer, registerName);
+    static_cast<MonitorDQMPlotPS*>(fMonitorPlotDQM)->fillSSA2RegisterPlots(theSSA2RegisterContainer, monitorValueName);
 #else
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
         ContainerSerialization theContainerSerialization("PSMonitorSSA2Register");
-        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theSSA2RegisterContainer, registerName);
+        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theSSA2RegisterContainer, monitorValueName);
     }
 #endif
 }
 
-void PSMonitor::runMPA2RegisterMonitor(std::string registerName)
+void PSMonitor::runMonitorMPA(const std::string& monitorValueName)
 {
-    DetectorDataContainer theMPA2RegisterContainer;
-    ContainerFactory::copyAndInitChip<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theMPA2RegisterContainer);
-
-    for(const auto& board: *fTheSystemController->fDetectorContainer)
-    {
-        for(const auto& opticalGroup: *board)
-        {
-            for(const auto& hybrid: *opticalGroup)
-            {
-                for(const auto& chip: *hybrid)
-                {
-                    if(chip->getFrontEndType() == FrontEndType::MPA2)
-                    {
-                        uint16_t registerValue = fTheSystemController->fReadoutChipInterface->readADC(chip, registerName);
-                        LOG(DEBUG) << BOLDMAGENTA << "hybrid " << hybrid->getId() << " - chip " << chip->getId() << " " << registerName << " = " << registerValue << RESET;
-                        auto  theADCcalibrationMap = chip->getADCCalibrationMap();
-                        float theConversionFactor  = 1000;                                                                  // without the conversion factor the voltages are not visible
-                        if(registerName == "AVDD" || registerName == "DVDD") theConversionFactor = theConversionFactor * 2; // keep into account a voltage divider
-                        auto theSlope  = theADCcalibrationMap["ADC_SLOPE"] * theConversionFactor;
-                        auto theOffset = theADCcalibrationMap["ADC_OFFSET"] * theConversionFactor;
-                        registerValue  = registerValue * theSlope + theOffset;
-                        ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-                        theMPA2RegisterContainer.getObject(board->getId())
-                            ->getObject(opticalGroup->getId())
-                            ->getObject(hybrid->getId())
-                            ->getObject(chip->getId())
-                            ->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
-                    }
-                }
-            }
-        }
-    }
+    auto theMPA2RegisterContainer = getReadoutChipMonitorValues(monitorValueName, FrontEndType::MPA2);
 
 #ifdef __USE_ROOT__
-    fMonitorDQMPlotPS->fillMPA2RegisterPlots(theMPA2RegisterContainer, registerName);
+    static_cast<MonitorDQMPlotPS*>(fMonitorPlotDQM)->fillMPA2RegisterPlots(theMPA2RegisterContainer, monitorValueName);
 #else
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
         ContainerSerialization theContainerSerialization("PSMonitorMPA2Register");
-        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theMPA2RegisterContainer, registerName);
+        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theMPA2RegisterContainer, monitorValueName);
     }
 #endif
 }
 
-void PSMonitor::runLpGBTRegisterMonitor(std::string registerName)
+void PSMonitor::readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer)
 {
-    DetectorDataContainer theLpGBTRegisterContainer;
-    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
-
-    for(const auto& board: *fTheSystemController->fDetectorContainer)
-    {
-        if(board->getFirstObject()->flpGBT == nullptr)
-        {
-            for(const auto& opticalGroup: *board)
-            {
-                ValueAndTime<uint16_t> theRegisterAndTime(0, getTimeStamp());
-                theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
-            }
-            continue;
-        }
-        for(const auto& opticalGroup: *board)
-        {
-            uint16_t               registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
-            ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-            LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << registerName << " = " << registerValue << RESET;
-            theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
-        }
-    }
-
-#ifdef __USE_ROOT__
-    fMonitorDQMPlotPS->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
-#else
-    if(fTheSystemController->fMonitorDQMStreamerEnabled)
-    {
-        ContainerSerialization theContainerSerialization("PSMonitorLpGBTRegister");
-        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theLpGBTRegisterContainer, registerName);
-    }
-#endif
+    uint16_t registerValue = fTheSystemController->fReadoutChipInterface->readADC(theChip, monitorValueName);
+    LOG(DEBUG) << BOLDMAGENTA << "board " << theChip->getBeBoardId() << "opticalGroup " << theChip->getOpticalGroupId() << "hybrid " << theChip->getHybridId() << " - chip " << theChip->getId() << " " << monitorValueName << " = " << registerValue << RESET;
+    auto  theADCcalibrationMap = theChip->getADCCalibrationMap();
+    float theConversionFactor  = 1000;                                                                  // without the conversion factor the voltages are not visible
+    if(monitorValueName == "AVDD" || monitorValueName == "DVDD") theConversionFactor = theConversionFactor * 2; // keep into account a voltage divider
+    auto theSlope  = theADCcalibrationMap["ADC_SLOPE"] * theConversionFactor;
+    auto theOffset = theADCcalibrationMap["ADC_OFFSET"] * theConversionFactor;
+    registerValue  = registerValue * theSlope + theOffset;
+    ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
+    theDataContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())
+        ->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
 }

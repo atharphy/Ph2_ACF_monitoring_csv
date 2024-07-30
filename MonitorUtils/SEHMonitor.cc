@@ -14,7 +14,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
+SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
     // Add a new TCP Client to avoid conflicts in parallel process
     LOG(INFO) << BOLDYELLOW << "Trying to connect to the Power Supply Server..." << RESET;
@@ -64,7 +64,7 @@ void SEHMonitor::runMonitor()
         if(registerName.second) runTestCardMonitor(registerName.first);
 }
 
-void SEHMonitor::runLpGBTRegisterMonitor(std::string registerName)
+void SEHMonitor::runLpGBTRegisterMonitor(const std::string& registerName)
 {
     DetectorDataContainer theLpGBTRegisterContainer;
     ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
@@ -96,7 +96,7 @@ void SEHMonitor::runLpGBTRegisterMonitor(std::string registerName)
 #endif
 }
 
-void SEHMonitor::runPowerSupplyMonitor(std::string registerName)
+void SEHMonitor::runPowerSupplyMonitor(const std::string& registerName)
 {
     // LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName<< RESET;
     std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
@@ -124,7 +124,7 @@ void SEHMonitor::runPowerSupplyMonitor(std::string registerName)
 #endif
 }
 
-void SEHMonitor::runTestCardMonitor(std::string registerName)
+void SEHMonitor::runTestCardMonitor(const std::string& registerName)
 {
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName << RESET;
     float cValue = 0;
@@ -147,7 +147,7 @@ void SEHMonitor::runTestCardMonitor(std::string registerName)
 #endif
 }
 
-void SEHMonitor::runInputCurrentMonitor(std::string registerName)
+void SEHMonitor::runInputCurrentMonitor(const std::string& registerName)
 {
     LOG(INFO) << BOLDMAGENTA << "Running Input Current Monitor" << RESET;
 
@@ -169,7 +169,7 @@ void SEHMonitor::runInputCurrentMonitor(std::string registerName)
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement" << RESET;
 }
 
-std::string SEHMonitor::getVariableValue(std::string variable, std::string buffer)
+std::string SEHMonitor::getVariableValue(const std::string& variable, const std::string& buffer)
 {
     size_t begin = buffer.find(variable) + variable.size() + 1;
     size_t end   = buffer.find(',', begin);

@@ -9,7 +9,7 @@
 
 #include "MonitorUtils/RD53Monitor.h"
 
-RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
+RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
 #ifdef __USE_ROOT__
     fMonitorPlotDQM = new MonitorDQMPlotRD53();

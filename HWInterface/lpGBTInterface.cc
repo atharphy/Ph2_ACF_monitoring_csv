@@ -988,7 +988,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
                      << RESET;
         // LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         // ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
-        return 0;
+        throw std::runtime_error("LpGBT ADC conversion timed out");
     }
 
     // ##################
