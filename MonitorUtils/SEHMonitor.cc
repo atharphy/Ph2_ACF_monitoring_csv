@@ -30,7 +30,7 @@ SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, 
 #ifdef __USE_ROOT__
     fMonitorPlotDQMSEH = new MonitorDQMPlotSEH();
     fMonitorPlotDQMSEH->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
-    fMonitorPlotDQM    = new MonitorDQMPlot2S();
+    fMonitorPlotDQM   = new MonitorDQMPlot2S();
     fMonitorDQMPlot2S = static_cast<MonitorDQMPlot2S*>(fMonitorPlotDQM);
     fMonitorDQMPlot2S->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif

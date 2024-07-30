@@ -64,9 +64,7 @@ void MonitorDQMPlotOT::fillLpGBTRegisterPlots(DetectorDataContainer& theInputCon
 void MonitorDQMPlotOT::process() {}
 
 //========================================================================================================================
-void MonitorDQMPlotOT::reset(void)
-{
-}
+void MonitorDQMPlotOT::reset(void) {}
 
 //========================================================================================================================
 bool MonitorDQMPlotOT::fill(std::string& inputStream)
@@ -95,7 +93,7 @@ GraphContainer<TGraph> MonitorDQMPlotOT::producePlotTemplate(const std::string& 
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat(TIME_FORMAT);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
-    theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((monitorValueName + (yAxisUnits.length()>0 ? (" " + yAxisUnits) : "")).c_str());
+    theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((monitorValueName + (yAxisUnits.length() > 0 ? (" " + yAxisUnits) : "")).c_str());
     theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
     theTGraphPedestalContainer.fTheGraph->SetMarkerSize(0.4);
 
@@ -103,7 +101,10 @@ GraphContainer<TGraph> MonitorDQMPlotOT::producePlotTemplate(const std::string& 
 }
 
 //========================================================================================================================
-void MonitorDQMPlotOT::fillReadoutChipPlots(DetectorDataContainer& theInputContainer, const std::string& monitorValueName, const std::map<std::string, DetectorDataContainer>& theValueMonitorPlotMap, FrontEndType theFrontEndType)
+void MonitorDQMPlotOT::fillReadoutChipPlots(DetectorDataContainer&                              theInputContainer,
+                                            const std::string&                                  monitorValueName,
+                                            const std::map<std::string, DetectorDataContainer>& theValueMonitorPlotMap,
+                                            FrontEndType                                        theFrontEndType)
 {
     if(theValueMonitorPlotMap.find(monitorValueName) == theValueMonitorPlotMap.end())
     {
@@ -124,12 +125,17 @@ void MonitorDQMPlotOT::fillReadoutChipPlots(DetectorDataContainer& theInputConta
                 size_t hybridId = hybrid->getId();
                 for(auto chip: *hybrid) // for on chip - begin
                 {
-                    size_t chipId = chip->getId();
+                    size_t chipId       = chip->getId();
                     auto theReadoutChip = static_cast<const Ph2_HwDescription::ReadoutChip*>(fDetectorContainer->getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId));
                     if(theReadoutChip->getFrontEndType() != theFrontEndType) continue;
                     // Retreive the corresponging chip histogram:
-                    TGraph* chipDQMPlot =
-                        theValueMonitorPlotMap.at(monitorValueName).getObject(boardId)->getObject(opticalGroupId)->getObject(hybridId)->getObject(chipId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
+                    TGraph* chipDQMPlot = theValueMonitorPlotMap.at(monitorValueName)
+                                              .getObject(boardId)
+                                              ->getObject(opticalGroupId)
+                                              ->getObject(hybridId)
+                                              ->getObject(chipId)
+                                              ->getSummary<GraphContainer<TGraph>>()
+                                              .fTheGraph;
 
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)

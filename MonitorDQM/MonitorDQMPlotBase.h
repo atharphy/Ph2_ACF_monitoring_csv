@@ -44,9 +44,7 @@ class MonitorDQMPlotBase
     /*!
      * destructor
      */
-    virtual ~MonitorDQMPlotBase() { 
-      std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-       }
+    virtual ~MonitorDQMPlotBase() { std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl; }
 
     /*!
      * \brief Book histograms

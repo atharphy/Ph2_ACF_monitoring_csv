@@ -74,16 +74,10 @@ void MonitorDQMPlotPS::fillMPA2RegisterPlots(DetectorDataContainer& theInputCont
 }
 
 //========================================================================================================================
-void MonitorDQMPlotPS::process()
-{
-    MonitorDQMPlotOT::process();
-}
+void MonitorDQMPlotPS::process() { MonitorDQMPlotOT::process(); }
 
 //========================================================================================================================
-void MonitorDQMPlotPS::reset(void)
-{
-    MonitorDQMPlotOT::reset();
-}
+void MonitorDQMPlotPS::reset(void) { MonitorDQMPlotOT::reset(); }
 
 //========================================================================================================================
 bool MonitorDQMPlotPS::fill(std::string& inputStream)

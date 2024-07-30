@@ -59,7 +59,7 @@ class MonitorDQMPlot2S : public MonitorDQMPlotOT
     void fillCBCRegisterPlots(DetectorDataContainer& theInputContainer, const std::string& registerName);
 
   private:
-    void bookCBCPlots(TFile* theOutputFile, std::string registerName);
+    void                                         bookCBCPlots(TFile* theOutputFile, std::string registerName);
     std::map<std::string, DetectorDataContainer> fCBCRegisterMonitorPlotMap;
 };
 #endif

@@ -1,14 +1,13 @@
 #include "MonitorUtils/OTMonitor.h"
+#include "HWInterface/D19clpGBTInterface.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ValueAndTime.h"
-#include "HWInterface/D19clpGBTInterface.h"
 
 #ifdef __USE_ROOT__
 #include "MonitorDQM/MonitorDQMPlotOT.h"
 #endif
 
-OTMonitor::OTMonitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
-{}
+OTMonitor::OTMonitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig) {}
 
 void OTMonitor::runMonitorLpGBT(const std::string& monitorValueName)
 {
@@ -28,7 +27,7 @@ void OTMonitor::runMonitorLpGBT(const std::string& monitorValueName)
             {
                 continue;
             }
-            
+
             ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
             LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << monitorValueName << " = " << registerValue << RESET;
             theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
@@ -59,14 +58,10 @@ DetectorDataContainer OTMonitor::getReadoutChipMonitorValues(const std::string& 
             {
                 for(const auto& chip: *hybrid)
                 {
-                    if(chip->getFrontEndType() == theFrontEndType)
-                    {
-                        readChipMonitorValue(monitorValueName, chip, theReadoutChipMonitorValueContainer);
-                    }
+                    if(chip->getFrontEndType() == theFrontEndType) { readChipMonitorValue(monitorValueName, chip, theReadoutChipMonitorValueContainer); }
                 }
             }
         }
     }
     return theReadoutChipMonitorValueContainer;
 }
-

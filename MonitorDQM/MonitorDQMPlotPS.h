@@ -60,10 +60,9 @@ class MonitorDQMPlotPS : public MonitorDQMPlotOT
     void fillMPA2RegisterPlots(DetectorDataContainer& theInputContainer, const std::string& registerName);
 
   private:
-    void bookMPA2Plots(TFile* theOutputFile, std::string registerName);
-    void bookSSA2Plots(TFile* theOutputFile, std::string registerName);
+    void                                         bookMPA2Plots(TFile* theOutputFile, std::string registerName);
+    void                                         bookSSA2Plots(TFile* theOutputFile, std::string registerName);
     std::map<std::string, DetectorDataContainer> fMPA2RegisterMonitorPlotMap;
     std::map<std::string, DetectorDataContainer> fSSA2RegisterMonitorPlotMap;
-
 };
 #endif

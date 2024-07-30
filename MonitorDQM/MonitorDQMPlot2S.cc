@@ -47,16 +47,10 @@ void MonitorDQMPlot2S::fillCBCRegisterPlots(DetectorDataContainer& theInputConta
 }
 
 //========================================================================================================================
-void MonitorDQMPlot2S::process()
-{
-    MonitorDQMPlotOT::process();
-}
+void MonitorDQMPlot2S::process() { MonitorDQMPlotOT::process(); }
 
 //========================================================================================================================
-void MonitorDQMPlot2S::reset(void)
-{
-    MonitorDQMPlotOT::reset();
-}
+void MonitorDQMPlot2S::reset(void) { MonitorDQMPlotOT::reset(); }
 
 //========================================================================================================================
 bool MonitorDQMPlot2S::fill(std::string& inputStream)

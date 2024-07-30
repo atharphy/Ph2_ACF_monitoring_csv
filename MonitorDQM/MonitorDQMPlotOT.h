@@ -12,7 +12,6 @@
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
 
-
 class TFile;
 
 /*!
@@ -60,14 +59,15 @@ class MonitorDQMPlotOT : public MonitorDQMPlotBase
     void fillLpGBTRegisterPlots(DetectorDataContainer& theInputContainer, const std::string& registerName);
 
   protected:
-    const DetectorContainer*                     fDetectorContainer;
-    GraphContainer<TGraph> producePlotTemplate(const std::string& registerName, const std::string& chipName, std::string yAxisUnits = "");
-    void fillReadoutChipPlots(DetectorDataContainer& theInputContainer, const std::string& monitorValueName, const std::map<std::string, DetectorDataContainer>& theValueMonitorPlotMap, FrontEndType theFrontEndType);
+    const DetectorContainer* fDetectorContainer;
+    GraphContainer<TGraph>   producePlotTemplate(const std::string& registerName, const std::string& chipName, std::string yAxisUnits = "");
+    void                     fillReadoutChipPlots(DetectorDataContainer&                              theInputContainer,
+                                                  const std::string&                                  monitorValueName,
+                                                  const std::map<std::string, DetectorDataContainer>& theValueMonitorPlotMap,
+                                                  FrontEndType                                        theFrontEndType);
 
   private:
-    void bookLpGBTPlots(TFile* theOutputFile, const std::string& registerName);
+    void                                         bookLpGBTPlots(TFile* theOutputFile, const std::string& registerName);
     std::map<std::string, DetectorDataContainer> fLpGBTRegisterMonitorPlotMap;
-    
-
 };
 #endif

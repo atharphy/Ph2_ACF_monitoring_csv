@@ -16,7 +16,7 @@ using namespace Ph2_HwInterface;
 Monitor2S::Monitor2S(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : OTMonitor(theSystemController, theDetectorMonitorConfig)
 {
 #ifdef __USE_ROOT__
-    fMonitorPlotDQM    = new MonitorDQMPlot2S();
+    fMonitorPlotDQM = new MonitorDQMPlot2S();
     static_cast<MonitorDQMPlot2S*>(fMonitorPlotDQM)->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif
 }
@@ -49,9 +49,8 @@ void Monitor2S::runMonitorCBC(const std::string& monitorValueName)
 void Monitor2S::readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer)
 {
     uint16_t registerValue = fTheSystemController->fReadoutChipInterface->ReadChipReg(theChip, monitorValueName); // just to read something
-    LOG(DEBUG) << BOLDMAGENTA << "board " << theChip->getBeBoardId() << "opticalGroup " << theChip->getOpticalGroupId() << "hybrid " << theChip->getHybridId() << " - chip " << theChip->getId() << " " << monitorValueName << " = " << registerValue << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "board " << theChip->getBeBoardId() << "opticalGroup " << theChip->getOpticalGroupId() << "hybrid " << theChip->getHybridId() << " - chip " << theChip->getId() << " "
+               << monitorValueName << " = " << registerValue << RESET;
     ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-    theDataContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())
-        ->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
+    theDataContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
 }
-

@@ -15,7 +15,6 @@ class PSMonitor : public OTMonitor
     void runMonitorSSA(const std::string& monitorValueName);
     void runMonitorMPA(const std::string& monitorValueName);
     void readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer) override;
-
 };
 
 #endif

@@ -17,7 +17,7 @@ using namespace Ph2_HwInterface;
 PSMonitor::PSMonitor(Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : OTMonitor(theSystemController, theDetectorMonitorConfig)
 {
 #ifdef __USE_ROOT__
-    fMonitorPlotDQM   = new MonitorDQMPlotPS();
+    fMonitorPlotDQM = new MonitorDQMPlotPS();
     static_cast<MonitorDQMPlotPS*>(fMonitorPlotDQM)->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif
 }
@@ -67,14 +67,14 @@ void PSMonitor::runMonitorMPA(const std::string& monitorValueName)
 void PSMonitor::readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer)
 {
     uint16_t registerValue = fTheSystemController->fReadoutChipInterface->readADC(theChip, monitorValueName);
-    LOG(DEBUG) << BOLDMAGENTA << "board " << theChip->getBeBoardId() << "opticalGroup " << theChip->getOpticalGroupId() << "hybrid " << theChip->getHybridId() << " - chip " << theChip->getId() << " " << monitorValueName << " = " << registerValue << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "board " << theChip->getBeBoardId() << "opticalGroup " << theChip->getOpticalGroupId() << "hybrid " << theChip->getHybridId() << " - chip " << theChip->getId() << " "
+               << monitorValueName << " = " << registerValue << RESET;
     auto  theADCcalibrationMap = theChip->getADCCalibrationMap();
-    float theConversionFactor  = 1000;                                                                  // without the conversion factor the voltages are not visible
+    float theConversionFactor  = 1000;                                                                          // without the conversion factor the voltages are not visible
     if(monitorValueName == "AVDD" || monitorValueName == "DVDD") theConversionFactor = theConversionFactor * 2; // keep into account a voltage divider
     auto theSlope  = theADCcalibrationMap["ADC_SLOPE"] * theConversionFactor;
     auto theOffset = theADCcalibrationMap["ADC_OFFSET"] * theConversionFactor;
     registerValue  = registerValue * theSlope + theOffset;
     ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-    theDataContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())
-        ->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
+    theDataContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
 }

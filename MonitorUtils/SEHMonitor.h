@@ -24,7 +24,7 @@ class SEHMonitor : public DetectorMonitor
 // bool doMonitorInputCurrent{false};
 #ifdef __USE_ROOT__
     MonitorDQMPlotSEH* fMonitorPlotDQMSEH;
-    MonitorDQMPlot2S* fMonitorDQMPlot2S;
+    MonitorDQMPlot2S*  fMonitorDQMPlot2S;
 #endif
 
     std::string getVariableValue(const std::string& variable, const std::string& buffer);
