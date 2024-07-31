@@ -16,6 +16,8 @@
 #define LPGBT_FILES_NODE_NAME "lpGBT_Files"
 #define LPGBT_CONFIGFILE_NODE_NAME "lpGBT_ConfigFile"
 #define LPGBT_NODE_NAME "lpGBT"
+#define VTRX_NODE_NAME "VTRx"
+#define VTRX_FILES_NODE_NAME "VTRx_Files"
 
 #define HYBRID_NODE_NAME "Hybrid"
 #define CHIP_FILES_APPEND_NODE_NAME "_Files"

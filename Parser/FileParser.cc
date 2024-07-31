@@ -7,6 +7,7 @@
 #include "HWDescription/RD53A.h"
 #include "HWDescription/RD53B.h"
 #include "HWDescription/SSA2.h"
+#include "HWDescription/VTRx.h"
 #include "HWDescription/lpGBT.h"
 #include "Parser/ParserDefinitions.h"
 #include "Utils/Utilities.h"
@@ -254,7 +255,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
     {
         if(static_cast<std::string>(theChild.name()) == HYBRID_NODE_NAME)
             parseHybridContainer(theChild, theOpticalGroup, os, pBoard);
-        else if(static_cast<std::string>(theChild.name()) == LPGBT_FILES_NODE_NAME)
+        else if(static_cast<std::string>(theChild.name()) == LPGBT_FILES_NODE_NAME || static_cast<std::string>(theChild.name()) == VTRX_FILES_NODE_NAME)
         {
             cFilePath = expandEnvironmentVariables(theChild.attribute(COMMON_PATH_ATTRIBUTE_NAME).value());
             if((cFilePath.empty() == false) && (cFilePath.at(cFilePath.length() - 1) != '/')) cFilePath.append("/");
@@ -333,6 +334,15 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                     os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
                 }
             }
+        }
+        else if(static_cast<std::string>(theChild.name()) == VTRX_NODE_NAME)
+        {
+            std::string chipFileName = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
+            uint8_t     cChipId      = theChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
+
+            VTRx* theVTRx = new VTRx(cBoardId, cFMCId, cOpticalGroupId, cChipId, chipFileName, theConfigFilePath, theOpticalGroup->flpGBT);
+
+            theOpticalGroup->addVTRx(theVTRx);
         }
         else if(static_cast<std::string>(theChild.name()) == NTCPROPERTIES_NODE_NAME)
         {
@@ -1431,6 +1441,10 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
                                                   "RegNameDAC2",
                                                   "DataOutputDir",
                                                   "KIRA_ID",
+                                                  "OTCICtoLpGBTecv_CICStrength",
+                                                  "OTCICtoLpGBTecv_ClockPolarity",
+                                                  "OTCICtoLpGBTecv_ClockStrength",
+                                                  "OTCICtoLpGBTecv_LpGBTPhase",
                                                   "OTinjectionOccupancyScan_ListOfInjectedPulses",
                                                   "OTMPAtoCICecv_ListOfMPAslvsCurrents",
                                                   "OTSSAtoMPAecv_ListOfSSAslvsCurrents",

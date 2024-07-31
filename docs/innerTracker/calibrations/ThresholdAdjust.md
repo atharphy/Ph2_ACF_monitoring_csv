@@ -5,8 +5,8 @@
 Moves the mean threshold of the pixel matrix to `TargetThreshold` defined in electrons.
 
 !!! warning "You have to update the config manually in the xml file"
-        * RD53B: `DAC_GDAC_{L,R,M}_LIN`
-        * RD53A: `Vthreshold_LIN`
+        - RD53B: `DAC_GDAC_{L,R,M}_LIN`
+        - RD53A: `Vthreshold_LIN`
 
 ## Configuration parameters
 

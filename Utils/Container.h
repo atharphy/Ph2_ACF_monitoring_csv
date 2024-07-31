@@ -27,6 +27,7 @@ class ChannelContainerBase;
 template <typename T>
 class ChannelContainer;
 class ChipContainer;
+class CalibBase;
 
 class BaseContainer
 {
@@ -40,7 +41,7 @@ class BaseContainer
         isEnabled_ = theCopyContainer.isEnabled_;
     }
 
-    virtual ~BaseContainer() { ; }
+    virtual ~BaseContainer() {}
     uint16_t                     getId(void) const { return id_; }
     virtual void                 cleanDataStored(void)            = 0;
     virtual const BaseContainer* getElement(uint16_t theId) const = 0;
@@ -349,6 +350,7 @@ template <typename T, typename HW>
 class HWDescriptionContainer : public Container<T>
 {
     friend DetectorContainer;
+    friend CalibBase;
 
   public:
     HWDescriptionContainer(uint16_t id) : Container<T>(id) {}
@@ -447,15 +449,15 @@ class HWDescriptionContainer : public Container<T>
         updateQueryFunction();
     }
 
+  protected:
+    QueryFunction fQueryFunction;
+
+  private:
     T*&      operator[](size_t pos) { return this->std::vector<T*>::operator[](pos); }
     const T& operator[](size_t pos) const { return this->std::vector<T*>::operator[](pos); }
     T*       at(size_t index) { return this->std::vector<T*>::at(index); }
     T*       at(size_t index) const { return this->std::vector<T*>::at(index); }
 
-  protected:
-    QueryFunction fQueryFunction;
-
-  private:
     std::map<std::string, std::function<bool(const T*)>> fQueryFunctionMap;
 
     void updateQueryFunction()

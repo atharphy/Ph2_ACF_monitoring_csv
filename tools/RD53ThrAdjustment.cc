@@ -222,32 +222,19 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                               << BOLDYELLOW << "VCAL_MED" << BOLDBLUE << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
                 }
 
-    // #####################
-    // # Disable all chips #
-    // #####################
-    // CalibBase::prepareChipQueryForEnDis("chipSubset"); // @TMP@
+    // #######################################################################
+    // # Prepare query, disable all chips, and set weak check of data status #
+    // #######################################################################
+    CalibBase::prepareChipQueryForEnDis("chipSubset");
     CalibBase::setChipEnDis(false);
+    RD53Event::weakCheckDataStatus = true;
 
-    for(auto it = 0u; it < RD53FWconstants::NMAXCHIP_HYBRID; it++)
+    for(auto indx = 0u; indx < RD53FWconstants::NMAXCHIP_HYBRID; indx++)
     {
-        // ######################################################
-        // # Enable one chip per hybrid at a time and set query #
-        // ######################################################
-        bool isDetectorEmpty = false;
-        fDetectorContainer->removeReadoutChipQueryFunction("chipSubset"); // @TMP@
-        for(const auto cBoard: *fDetectorContainer)
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                {
-                    if(it < cHybrid->fullSize()) cHybrid->at(it)->setEnabled(true);
-                    if((it > 0) && (it <= cHybrid->fullSize())) cHybrid->at(it - 1)->setEnabled(false);
-                    isDetectorEmpty |= (cHybrid->size() == 0);
-                }
-        if(isDetectorEmpty == true) break;
-        CalibBase::prepareChipQueryForEnDis("chipSubset"); // @TMP@
+        if(CalibBase::shiftEnable(indx) == true) break;
 
         LOG(INFO) << RESET;
-        LOG(INFO) << BOLDMAGENTA << ">>> Optimizing all frontend chips #" << BOLDYELLOW << it << BOLDMAGENTA << " <<<" << RESET;
+        LOG(INFO) << BOLDMAGENTA << ">>> Optimizing all frontend chips #" << BOLDYELLOW << indx << BOLDMAGENTA << " <<<" << RESET;
 
         for(auto i = 0u; i <= numberOfBits + 1u; i++)
         {
@@ -319,8 +306,8 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
             // ################
             // # Run analysis #
             // ################
-            CalibBase::SilentRunning(true);
             CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames);
+            CalibBase::SilentRunning(true);
             PixelAlive::run();
             CalibBase::SilentRunning(false);
             auto output = PixelAlive::analyze();
@@ -385,11 +372,12 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
         }
     }
 
-    // ################################
-    // # Restore query and enable all #
-    // ################################
+    // ########################################################################
+    // # Restore query, enable all chips, and reset weak check of data status #
+    // ########################################################################
     fDetectorContainer->resetReadoutChipQueryFunction();
-    fDetectorContainer->setEnabledAll(true);
+    CalibBase::setChipEnDis(true);
+    RD53Event::weakCheckDataStatus = false;
 
     // ###########################
     // # Download new DAC values #

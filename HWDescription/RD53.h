@@ -18,8 +18,6 @@
 #include "Utils/RD53Event.h"
 #include "Utils/RD53Shared.h"
 
-#include <iomanip>
-
 // ##################
 // # Default values #
 // ##################
@@ -173,6 +171,7 @@ class RD53 : public ReadoutChip
         size_t                          AutoIncrementMask;
         size_t                          broadcastChipId;
         std::map<std::string, uint16_t> GlobalPulseConfMap;
+        std::vector<std::string>        CoreColRegs;
     };
 
     struct SpecialRegInfo

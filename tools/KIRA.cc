@@ -62,47 +62,52 @@ void KIRA::Initialise(int pKiraPort, std::string pKiraId)
     fDQMHistogrammer.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
-    PrepareForExternal(fDetectorContainer->getFirstObject());
+    PrepareForExternal();
 }
 
-void KIRA::PrepareForExternal(BeBoard* pBoard)
+void KIRA::PrepareForExternal()
 {
-    LOG(INFO) << BOLDBLUE << "Prepare external triggers" << RESET;
-    // configure trigger
-    // make sure I am accepting all triggers
-    BeBoardRegMap cRegMap = pBoard->getBeBoardRegMap();
-    // trigger config
-    uint32_t cTriggerMult = cRegMap["fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity"].fValue;
-
-    uint8_t                                       cTriggerSource = 5;
-    std::vector<std::string>                      cFcmdRegs{"trigger_source", "triggers_to_accept"};
-    std::vector<uint32_t>                         cFcmdRegVals{cTriggerSource, 0}; // fNevents};
-    std::vector<uint32_t>                         cFcmdRegOrigVals(cFcmdRegs.size(), 0);
-    std::vector<std::pair<std::string, uint32_t>> cRegVec;
-    cRegVec.clear();
-    for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
+    LOG(INFO) << BOLDBLUE << "Prepare for external triggers" << RESET;
+    this->enableTestPulse(false);
+    for(auto cBoard: *fDetectorContainer)
     {
-        std::string cRegName    = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
-        cFcmdRegOrigVals[cIndx] = fBeBoardInterface->ReadBoardReg(pBoard, cRegName);
-        cRegVec.push_back({cRegName, cFcmdRegVals[cIndx]});
+        uint8_t                                       cTriggerSource = 5;
+        std::vector<std::string>                      cFcmdRegs{"trigger_source", "triggers_to_accept"};
+        std::vector<uint32_t>                         cFcmdRegVals{cTriggerSource, 0}; // fNevents};
+        std::vector<uint32_t>                         cFcmdRegOrigVals(cFcmdRegs.size(), 0);
+        std::vector<std::pair<std::string, uint32_t>> cRegVec;
+        cRegVec.clear();
+        for(size_t cIndx = 0; cIndx < cFcmdRegs.size(); cIndx++)
+        {
+            std::string cRegName    = "fc7_daq_cnfg.fast_command_block." + cFcmdRegs[cIndx];
+            cFcmdRegOrigVals[cIndx] = fBeBoardInterface->ReadBoardReg(cBoard, cRegName);
+            cRegVec.push_back({cRegName, cFcmdRegVals[cIndx]});
+        }
+        cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
+        cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+        // enable DIO5
+        LOG(INFO) << "\tTrigger source: 5" << RESET;
+        LOG(INFO) << "\tEnable DIO5 Block" << RESET;
+        LOG(INFO) << "\tDisable output on channel 2" << RESET;
+        LOG(INFO) << "\tEnable termination on channel 2" << RESET;
+        LOG(INFO) << "\tSet threshold on channel to 0" << RESET;
+
+        cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x0});
+        cRegVec.push_back({"fc7_daq_cnfg.dio5_block.dio5_en", 0x1});
+        cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.out_enable", 0});
+        // SET TERMINATION TO ZERO, BEACUSE THE PULSE HEIGHT OF THE ARDUINO IS RATHER SMALL!!!
+        cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.term_enable", 0});
+        cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.threshold", 0});
+
+        fBeBoardInterface->WriteBoardMultReg(cBoard, cRegVec);
+        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
+
+        // stop triggers
+        fBeBoardInterface->Stop(cBoard);
+        // send a ReSync
+        fBeBoardInterface->ChipReSync(cBoard);
     }
-    cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", cTriggerMult});
-    cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
-    // enable DIO5
-    cRegVec.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x0});
-    cRegVec.push_back({"fc7_daq_cnfg.dio5_block.dio5_en", 0x1});
-    cRegVec.push_back({"fc7_daq_cnfg.dio5_block.ch2.threshold", 0});
-    fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.tlu_block.tlu_enabled", 0);
-
-    // stop triggers
-    fBeBoardInterface->Stop(pBoard);
-    // update registers
-    UpdateFromRegMap(pBoard);
-    // send a ReSync
-    fBeBoardInterface->ChipReSync(pBoard);
 }
-
 void KIRA::determineLatency()
 {
     auto cBoard = fDetectorContainer->getFirstObject();
