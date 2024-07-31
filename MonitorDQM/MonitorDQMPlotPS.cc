@@ -102,7 +102,7 @@ bool MonitorDQMPlotPS::fill(std::string& inputStream)
         std::string           registerName;
         DetectorDataContainer fDetectorData =
             theLpGBTRegisterSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer>(fDetectorContainer, registerName);
-        fillLpGBTRegisterPlots(fDetectorData, registerName);
+        fillLpGBTmonitorPlots(fDetectorData, registerName);
         return true;
     }
     return false;

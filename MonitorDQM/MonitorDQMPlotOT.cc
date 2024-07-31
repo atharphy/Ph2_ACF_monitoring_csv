@@ -36,7 +36,7 @@ void MonitorDQMPlotOT::bookLpGBTPlots(TFile* theOutputFile, const std::string& m
 }
 
 //========================================================================================================================
-void MonitorDQMPlotOT::fillLpGBTRegisterPlots(DetectorDataContainer& theInputContainer, const std::string& monitorValueName)
+void MonitorDQMPlotOT::fillLpGBTmonitorPlots(DetectorDataContainer& theInputContainer, const std::string& monitorValueName)
 {
     if(fLpGBTRegisterMonitorPlotMap.find(monitorValueName) == fLpGBTRegisterMonitorPlotMap.end())
     {
@@ -69,7 +69,7 @@ void MonitorDQMPlotOT::reset(void) {}
 //========================================================================================================================
 bool MonitorDQMPlotOT::fill(std::string& inputStream)
 {
-    ContainerSerialization theLpGBTRegisterSerialization("MonitorOTLpGBTRegister");
+    ContainerSerialization theLpGBTRegisterSerialization("MonitorOTLpGBTMonitor");
 
     if(theLpGBTRegisterSerialization.attachDeserializer(inputStream))
     {
@@ -77,7 +77,7 @@ bool MonitorDQMPlotOT::fill(std::string& inputStream)
         std::string           monitorValueName;
         DetectorDataContainer fDetectorData =
             theLpGBTRegisterSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer>(fDetectorContainer, monitorValueName);
-        fillLpGBTRegisterPlots(fDetectorData, monitorValueName);
+        fillLpGBTmonitorPlots(fDetectorData, monitorValueName);
         return true;
     }
     return false;

@@ -86,7 +86,7 @@ void SEHMonitor::runLpGBTRegisterMonitor(const std::string& registerName)
     }
 
 #ifdef __USE_ROOT__
-    fMonitorDQMPlot2S->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
+    fMonitorDQMPlot2S->fillLpGBTmonitorPlots(theLpGBTRegisterContainer, registerName);
 #else
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {

@@ -11,36 +11,36 @@ OTMonitor::OTMonitor(const Ph2_System::SystemController* theSystemController, co
 
 void OTMonitor::runMonitorLpGBT(const std::string& monitorValueName)
 {
-    DetectorDataContainer theLpGBTRegisterContainer;
-    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
+    DetectorDataContainer theLpGBTmonitorValueContainer;
+    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTmonitorValueContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
         for(const auto& opticalGroup: *board)
         {
-            uint16_t registerValue = 0;
+            uint16_t monitorValue = 0;
             try
             {
-                registerValue = static_cast<Ph2_HwInterface::D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, monitorValueName);
+                monitorValue = static_cast<Ph2_HwInterface::D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, monitorValueName);
             }
             catch(const std::exception& e)
             {
                 continue;
             }
 
-            ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-            LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << monitorValueName << " = " << registerValue << RESET;
-            theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
+            ValueAndTime<uint16_t> theMonitorValueAndTime(monitorValue, getTimeStamp());
+            LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << monitorValueName << " = " << monitorValue << RESET;
+            theLpGBTmonitorValueContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = theMonitorValueAndTime;
         }
     }
 
 #ifdef __USE_ROOT__
-    static_cast<MonitorDQMPlotOT*>(fMonitorPlotDQM)->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, monitorValueName);
+    static_cast<MonitorDQMPlotOT*>(fMonitorPlotDQM)->fillLpGBTmonitorPlots(theLpGBTmonitorValueContainer, monitorValueName);
 #else
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
-        ContainerSerialization theContainerSerialization("MonitorOTLpGBTRegister");
-        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theLpGBTRegisterContainer, monitorValueName);
+        ContainerSerialization theContainerSerialization("MonitorOTLpGBTMonitor");
+        theContainerSerialization.streamByBoardContainer(fTheSystemController->fMonitorDQMStreamer, theLpGBTmonitorValueContainer, monitorValueName);
     }
 #endif
 }

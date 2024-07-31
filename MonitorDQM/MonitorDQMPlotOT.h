@@ -56,7 +56,7 @@ class MonitorDQMPlotOT : public MonitorDQMPlotBase
      */
     virtual void reset(void) override;
 
-    void fillLpGBTRegisterPlots(DetectorDataContainer& theInputContainer, const std::string& registerName);
+    void fillLpGBTmonitorPlots(DetectorDataContainer& theInputContainer, const std::string& registerName);
 
   protected:
     const DetectorContainer* fDetectorContainer;
