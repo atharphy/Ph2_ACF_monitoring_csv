@@ -13,6 +13,7 @@
 #include "DQMUtils/DQMHistogramOTMPAtoCICecv.h"
 #include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
 #include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
+#include "DQMUtils/DQMHistogramOTPSringOscillatorTest.h"
 #include "DQMUtils/DQMHistogramOTRegisterTester.h"
 #include "DQMUtils/DQMHistogramOTSSAtoMPAecv.h"
 #include "DQMUtils/DQMHistogramOTSSAtoSSAecv.h"
@@ -197,6 +198,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
         "SSAtoMPAecv");
     Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCICphaseAlignment, DQMHistogramOTCICwordAlignment, DQMHistogramOTSSAtoSSAecv>(
         "SSAtoSSAecv");
+    Register<DQMHistogramOTPSringOscillatorTest>("ringOscillatorTest");
 
     // ###################
     // # IT calibrations #
