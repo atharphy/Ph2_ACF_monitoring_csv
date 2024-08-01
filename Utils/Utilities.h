@@ -71,6 +71,13 @@ double MyErf(double* x, double* par);
  * \param p: parameter array
  * \return function value
  */
+double MyErfc(double* x, double* par);
+/*!
+ * \brief Gamma peak with charge sharing, compliment of MyErf
+ * \param x: array of values
+ * \param p: parameter array
+ * \return function value
+ */
 double MyGammaSignal(double* x, double* par);
 
 /*!
