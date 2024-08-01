@@ -739,7 +739,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     // #################
     // # Show progress #
     // #################
-    RD53RunProgress::update(pData.size(), true);
+    RD53RunProgress::update(pData.size(), showRunProgress);
 }
 
 void RD53FWInterface::SendBoardCommandWithStrobe(const std::string& cmdReg)

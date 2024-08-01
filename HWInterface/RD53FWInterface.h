@@ -97,6 +97,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void ResetReadBkFIFO();
     void ResetReadoutBlk();
     bool silentRunning{false};
+    bool showRunProgress{false};
 
     // ####################################
     // # Check AURORA lock on data stream #
