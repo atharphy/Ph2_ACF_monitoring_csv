@@ -139,7 +139,7 @@ run:IT:
     - CMSITminiDAQ -f CMSIT_CI.xml -c pixelalive
     - CMSITminiDAQ -f CMSIT_CI.xml -c threqu
     - CMSITminiDAQ -f CMSIT_CI.xml -c scurve
-      #- CMSITminiDAQ -f CMSIT_CI.xml -c physics
+    - CMSITminiDAQ -f CMSIT_CI.xml -c physics -t 10
     - CMSITminiDAQ -f CMSIT_CI.xml -c injdelay
   after_script:
     - cp Results/Run000000_PixelAlive.root .
