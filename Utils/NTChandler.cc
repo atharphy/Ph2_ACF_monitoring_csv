@@ -1,6 +1,6 @@
 #include "Utils/NTChandler.h"
-#include "Utils/easylogging++.h"
 #include "Utils/ConsoleColor.h"
+#include "Utils/easylogging++.h"
 #include <algorithm>
 #include <fstream>
 #include <vector>
@@ -11,19 +11,20 @@ void NTChandler::addNTCtable(const std::string& theNTCtype, const std::string& t
     {
         if(fNTCtypeAndFilename[theNTCtype] != theNTCtableFileName)
         {
-            LOG(ERROR) << BOLDRED << "Error: NTC type " << theNTCtype << " already loaded from file " << fNTCtypeAndFilename[theNTCtype] << " but trying to reload it from the file " << theNTCtableFileName << ", throwing exception";
+            LOG(ERROR) << BOLDRED << "Error: NTC type " << theNTCtype << " already loaded from file " << fNTCtypeAndFilename[theNTCtype] << " but trying to reload it from the file "
+                       << theNTCtableFileName << ", throwing exception";
             throw std::runtime_error("Trying to reload NTC from a different file");
         }
         return;
     }
     fNTCtypeAndFilename[theNTCtype] = theNTCtableFileName;
-    NTCtable& theNTCtable = fNTCtableMap[theNTCtype];
+    NTCtable& theNTCtable           = fNTCtableMap[theNTCtype];
 
     std::ifstream file(theNTCtableFileName);
     if(file.is_open())
     {
         std::string line;
-        std::string delimiter       = ",";
+        std::string delimiter = ",";
         while(std::getline(file, line))
         {
             // get temp and resistance from line string
@@ -75,7 +76,7 @@ float NTChandler::getTemperature(const std::string& theNTCtype, float resistance
             break;
         }
     }
-    
+
     if(upperPoint == lowerPoint) return upperPoint.second;
 
     float slope     = (upperPoint.second - lowerPoint.second) / (upperPoint.first - lowerPoint.first);
@@ -83,7 +84,4 @@ float NTChandler::getTemperature(const std::string& theNTCtype, float resistance
     return slope * kiloOhmResistance + intercept;
 }
 
-std::string NTChandler::getNTCfile(const std::string& theNTCtype)
-{
-    return fNTCtypeAndFilename[theNTCtype];
-}
+std::string NTChandler::getNTCfile(const std::string& theNTCtype) { return fNTCtypeAndFilename[theNTCtype]; }

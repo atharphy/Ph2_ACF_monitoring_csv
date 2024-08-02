@@ -39,8 +39,8 @@ void OTTemperature::ReadThermistors(const OpticalGroup* pOpticalGroup)
     // std::map<std::string, std::string>::iterator it;
     for(auto it = cNTCMap.begin(); it != cNTCMap.end(); it++)
     {
-        std::string theNTCtype        = it->first;
-        std::string adc               = it->second;
+        std::string theNTCtype  = it->first;
+        std::string adc         = it->second;
         float       temperature = ReadThermistor(pOpticalGroup, adc, theNTCtype);
         LOG(INFO) << BOLDBLUE << theNTCtype << " (" << adc << ") Temperature: " << temperature << "°C" << RESET;
     }

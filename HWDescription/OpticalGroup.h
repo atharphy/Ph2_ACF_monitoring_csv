@@ -86,7 +86,7 @@ class OpticalGroup
   private:
     static std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> f2SgroupsAndChannelToCIClineMap;
     static std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> fPSgroupsAndChannelToCIClineMap;
-    std::map<std::string, std::string> fNTCMap;
+    std::map<std::string, std::string>                                        fNTCMap;
 };
 } // namespace Ph2_HwDescription
 

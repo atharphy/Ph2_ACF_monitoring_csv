@@ -1,6 +1,6 @@
 #include "tools/TuneLpGBTVref.h"
-#include "System/RegisterHelper.h"
 #include "MonitorUtils/DetectorMonitor.h"
+#include "System/RegisterHelper.h"
 
 std::string TuneLpGBTVref::fCalibrationDescription = "Tune Vref value for LpGBT ADC";
 

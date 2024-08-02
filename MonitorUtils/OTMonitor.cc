@@ -1,9 +1,9 @@
 #include "MonitorUtils/OTMonitor.h"
+#include "HWDescription/lpGBT.h"
 #include "HWInterface/D19clpGBTInterface.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/ValueAndTime.h"
-#include "HWDescription/lpGBT.h"
 #include "Utils/NTChandler.h"
+#include "Utils/ValueAndTime.h"
 
 #ifdef __USE_ROOT__
 #include "MonitorDQM/MonitorDQMPlotOT.h"
@@ -18,7 +18,7 @@ void OTMonitor::runMonitor()
     {
         for(const auto& opticalGroup: *board)
         {
-            auto theLpGBT = static_cast<Ph2_HwDescription::lpGBT*>(opticalGroup->flpGBT);
+            auto  theLpGBT    = static_cast<Ph2_HwDescription::lpGBT*>(opticalGroup->flpGBT);
             float temperature = fTheSystemController->flpGBTInterface->MeasureTemperature(theLpGBT);
             theLpGBT->setTemperature(temperature);
         }
@@ -88,31 +88,22 @@ DetectorDataContainer OTMonitor::getReadoutChipMonitorValues(const std::string& 
 
 float OTMonitor::readLpGBTmonitorValue(Ph2_HwDescription::OpticalGroup* theOpticalGroup, const std::string& monitorValueName)
 {
-    auto theLpGBT = static_cast<Ph2_HwDescription::lpGBT*>(theOpticalGroup->flpGBT);
+    auto theLpGBT          = static_cast<Ph2_HwDescription::lpGBT*>(theOpticalGroup->flpGBT);
     auto theLpGBRInterface = fTheSystemController->flpGBTInterface;
 
     float monitorValue = -999.;
-    if(std::regex_match(monitorValueName, std::regex("^ADC[0-7]$")))
-    {
-        monitorValue = theLpGBRInterface->AdcGetVin(theLpGBT, monitorValueName, "VREF/2", 0);
-    }
-    else if(std::regex_match(monitorValueName, std::regex("^VDD.*")))
-    {
-        monitorValue = theLpGBRInterface->MeasurePowerSupplyVoltage(theLpGBT, monitorValueName);
-    }
-    else if(monitorValueName == "LpGBTtemp")
-    {
-        monitorValue = theLpGBRInterface->MeasureTemperature(theLpGBT);
-    }
+    if(std::regex_match(monitorValueName, std::regex("^ADC[0-7]$"))) { monitorValue = theLpGBRInterface->AdcGetVin(theLpGBT, monitorValueName, "VREF/2", 0); }
+    else if(std::regex_match(monitorValueName, std::regex("^VDD.*"))) { monitorValue = theLpGBRInterface->MeasurePowerSupplyVoltage(theLpGBT, monitorValueName); }
+    else if(monitorValueName == "LpGBTtemp") { monitorValue = theLpGBRInterface->MeasureTemperature(theLpGBT); }
     else if(monitorValueName == "SensorTemp")
     {
-        std::string theNTCtype = "Sensor";
+        std::string theNTCtype           = "Sensor";
         std::string sensorTemperatureADC = theOpticalGroup->getNTCMap()[theNTCtype];
         theLpGBRInterface->CdacSetCurrent(theLpGBT, sensorTemperatureADC, theLpGBRInterface->_CdacCodeToCurrent(theLpGBT, sensorTemperatureADC, 0xaa));
         float resistance = theLpGBRInterface->MeasureResistance(theLpGBT, sensorTemperatureADC, 1000, false);
-        
+
         monitorValue = NTChandler::getInstance().getTemperature("Sensor", resistance);
     }
-    
+
     return monitorValue;
 }
