@@ -3,6 +3,10 @@
 
 #include "MonitorUtils/DetectorMonitor.h"
 
+namespace Ph2_HwDescription
+{
+    class lpGBT;
+}
 class OTMonitor : public DetectorMonitor
 {
   public:
@@ -12,6 +16,9 @@ class OTMonitor : public DetectorMonitor
     void                  runMonitorLpGBT(const std::string& monitorValueName);
     virtual void          readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer) = 0;
     DetectorDataContainer getReadoutChipMonitorValues(const std::string& monitorValueName, FrontEndType theFrontEndType);
+
+  private:
+    float readLpGBTmonitorValue(Ph2_HwDescription::OpticalGroup* theOpticalGroup, const std::string& monitorValueName);
 };
 
 #endif

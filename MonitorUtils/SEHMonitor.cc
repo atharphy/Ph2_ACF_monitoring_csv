@@ -67,21 +67,21 @@ void SEHMonitor::runMonitor()
 void SEHMonitor::runLpGBTRegisterMonitor(const std::string& registerName)
 {
     DetectorDataContainer theLpGBTRegisterContainer;
-    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
+    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
         if(board->getFirstObject()->flpGBT == nullptr)
         {
             for(const auto& opticalGroup: *board)
-                theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(0, getTimeStamp());
+                theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(0, getTimeStamp());
             continue;
         }
         for(const auto& opticalGroup: *board)
         {
             uint16_t registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
             LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << registerName << " = " << registerValue << RESET;
-            theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
+            theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStamp());
         }
     }
 
@@ -152,7 +152,7 @@ void SEHMonitor::runInputCurrentMonitor(const std::string& registerName)
     LOG(INFO) << BOLDMAGENTA << "Running Input Current Monitor" << RESET;
 
     DetectorDataContainer theLpGBTRegisterContainer;
-    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
+    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
@@ -163,7 +163,7 @@ void SEHMonitor::runInputCurrentMonitor(const std::string& registerName)
             LOG(INFO) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - "
                       << "ADC1"
                       << " = " << registerValue << RESET;
-            // theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
+            // theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStamp());
         }
     }
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement" << RESET;

@@ -54,8 +54,8 @@ void MonitorDQMPlotOT::fillLpGBTmonitorPlots(DetectorDataContainer& theInputCont
             if(!opticalGroup->hasSummary()) continue;
             size_t  opticalGroupId  = opticalGroup->getId();
             TGraph* LpGBTDQMPlot    = fLpGBTRegisterMonitorPlotMap[monitorValueName].getObject(boardId)->getObject(opticalGroupId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
-            auto    theValueAndTime = opticalGroup->getSummary<ValueAndTime<uint16_t>>();
-            LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue * CONVERSION_FACTOR);
+            auto    theValueAndTime = opticalGroup->getSummary<ValueAndTime<float>>();
+            LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue);
         } // for on opticalGroup - end
     }     // for on boards - end
 }
@@ -76,7 +76,7 @@ bool MonitorDQMPlotOT::fill(std::string& inputStream)
         // std::cout << "Matched MonitorOT LpGBTRegister!!!!!\n";
         std::string           monitorValueName;
         DetectorDataContainer fDetectorData =
-            theLpGBTRegisterSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer>(fDetectorContainer, monitorValueName);
+            theLpGBTRegisterSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, ValueAndTime<float>, EmptyContainer>(fDetectorContainer, monitorValueName);
         fillLpGBTmonitorPlots(fDetectorData, monitorValueName);
         return true;
     }
@@ -140,7 +140,7 @@ void MonitorDQMPlotOT::fillReadoutChipPlots(DetectorDataContainer&              
                     // Check if the chip data are there (it is needed in the case of the SoC when data may be sent chip
                     // by chip and not in one shot)
                     if(!chip->hasSummary()) continue;
-                    auto theValueAndTime = chip->getSummary<ValueAndTime<uint16_t>>();
+                    auto theValueAndTime = chip->getSummary<ValueAndTime<float>>();
                     chipDQMPlot->SetPoint(chipDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue); // for on channel - end
                 }                                                                                                                   // for on chip - end
             }                                                                                                                       // for on hybrid - end

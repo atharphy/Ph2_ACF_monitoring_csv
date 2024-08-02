@@ -36,7 +36,7 @@ class OTSensorTemperature : public OTTool
   protected:
   private:
     void                 ReadThermistors(const OpticalGroup* pOpticalGroup);
-    float                ReadThermistor(const OpticalGroup* pOpticalGroup, std::string pADC, std::string pLUT);
+    float                ReadThermistor(const OpticalGroup* pOpticalGroup, std::string pADC, std::string theNTCtype);
     void                 ReadModuleTemperatures();
     float                fVref{1};        // reference voltage for lpgBT
     uint8_t              fGain{0};        // gain

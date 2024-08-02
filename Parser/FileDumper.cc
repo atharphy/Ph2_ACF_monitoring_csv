@@ -12,6 +12,7 @@
 #include "Parser/ParserDefinitions.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Container.h"
+#include "Utils/NTChandler.h"
 #include <math.h>
 
 using namespace Ph2_HwDescription;
@@ -134,8 +135,8 @@ void FileDumper::dumpOpticalGroupConfigurationFile(pugi::xml_node theMotherNode,
     {
         auto theNTCptopertiesNode                                                       = theOpticalGroupNode.append_child(NTCPROPERTIES_NODE_NAME);
         theNTCptopertiesNode.append_attribute(NTCPROPERTIES_TYPE_ATTRIBUTE_NAME)        = theNTC.first.c_str();
-        theNTCptopertiesNode.append_attribute(NTCPROPERTIES_ADC_ATTRIBUTE_NAME)         = theNTC.second.first.c_str();
-        theNTCptopertiesNode.append_attribute(NTCPROPERTIES_LOOKUPTABLE_ATTRIBUTE_NAME) = theNTC.second.second.c_str();
+        theNTCptopertiesNode.append_attribute(NTCPROPERTIES_ADC_ATTRIBUTE_NAME)         = theNTC.second.c_str();
+        theNTCptopertiesNode.append_attribute(NTCPROPERTIES_LOOKUPTABLE_ATTRIBUTE_NAME) = NTChandler::getInstance().getNTCfile(theNTC.first).c_str();
     }
 
     auto& clpGBT = theOpticalGroup->flpGBT;

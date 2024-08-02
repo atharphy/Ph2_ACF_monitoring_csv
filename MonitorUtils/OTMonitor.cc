@@ -2,6 +2,8 @@
 #include "HWInterface/D19clpGBTInterface.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ValueAndTime.h"
+#include "HWDescription/lpGBT.h"
+#include "Utils/NTChandler.h"
 
 #ifdef __USE_ROOT__
 #include "MonitorDQM/MonitorDQMPlotOT.h"
@@ -12,25 +14,25 @@ OTMonitor::OTMonitor(const Ph2_System::SystemController* theSystemController, co
 void OTMonitor::runMonitorLpGBT(const std::string& monitorValueName)
 {
     DetectorDataContainer theLpGBTmonitorValueContainer;
-    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTmonitorValueContainer);
+    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theLpGBTmonitorValueContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
         for(const auto& opticalGroup: *board)
         {
-            uint16_t monitorValue = 0;
+            float monitorValue = 0;
             try
             {
-                monitorValue = static_cast<Ph2_HwInterface::D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, monitorValueName);
+                monitorValue = readLpGBTmonitorValue(opticalGroup, monitorValueName);
             }
             catch(const std::exception& e)
             {
                 continue;
             }
 
-            ValueAndTime<uint16_t> theMonitorValueAndTime(monitorValue, getTimeStamp());
+            ValueAndTime<float> theMonitorValueAndTime(monitorValue, getTimeStamp());
             LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << monitorValueName << " = " << monitorValue << RESET;
-            theLpGBTmonitorValueContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = theMonitorValueAndTime;
+            theLpGBTmonitorValueContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = theMonitorValueAndTime;
         }
     }
 
@@ -48,7 +50,7 @@ void OTMonitor::runMonitorLpGBT(const std::string& monitorValueName)
 DetectorDataContainer OTMonitor::getReadoutChipMonitorValues(const std::string& monitorValueName, FrontEndType theFrontEndType)
 {
     DetectorDataContainer theReadoutChipMonitorValueContainer;
-    ContainerFactory::copyAndInitChip<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theReadoutChipMonitorValueContainer);
+    ContainerFactory::copyAndInitChip<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theReadoutChipMonitorValueContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
@@ -64,4 +66,34 @@ DetectorDataContainer OTMonitor::getReadoutChipMonitorValues(const std::string& 
         }
     }
     return theReadoutChipMonitorValueContainer;
+}
+
+float OTMonitor::readLpGBTmonitorValue(Ph2_HwDescription::OpticalGroup* theOpticalGroup, const std::string& monitorValueName)
+{
+    float monitorValue = -999.;
+    auto theLpGBT = static_cast<Ph2_HwDescription::lpGBT*>(theOpticalGroup->flpGBT);
+    auto theLpGBRInterface = fTheSystemController->flpGBTInterface;
+    if(std::regex_match(monitorValueName, std::regex("^ADC[0-7]$")))
+    {
+        monitorValue = theLpGBRInterface->AdcGetVin(theLpGBT, monitorValueName, "VREF/2", 1);
+    }
+    else if(std::regex_match(monitorValueName, std::regex("^VDD.*")))
+    {
+        monitorValue = theLpGBRInterface->MeasurePowerSupplyVoltage(theLpGBT, monitorValueName);
+    }
+    else if(monitorValueName == "LpGBTtemp")
+    {
+        monitorValue = theLpGBRInterface->MeasureTemperature(theLpGBT);
+    }
+    else if(monitorValueName == "SensorTemp")
+    {
+        std::string theNTCtype = "Sensor";
+        std::string sensorTemperatureADC = theOpticalGroup->getNTCMap()[theNTCtype];
+        theLpGBRInterface->CdacSetCurrent(theLpGBT, sensorTemperatureADC, theLpGBRInterface->_CdacCodeToCurrent(theLpGBT, sensorTemperatureADC, 0xaa));
+        float resistance = theLpGBRInterface->MeasureResistance(theLpGBT, sensorTemperatureADC, 1000, false);
+        
+        monitorValue = NTChandler::getInstance().getTemperature("Sensor", resistance);
+    }
+    
+    return monitorValue;
 }

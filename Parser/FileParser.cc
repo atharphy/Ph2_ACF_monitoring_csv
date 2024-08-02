@@ -11,6 +11,7 @@
 #include "HWDescription/lpGBT.h"
 #include "Parser/ParserDefinitions.h"
 #include "Utils/Utilities.h"
+#include "Utils/NTChandler.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -348,8 +349,9 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         {
             std::string cNTCType        = std::string(theChild.attribute(NTCPROPERTIES_TYPE_ATTRIBUTE_NAME).value());
             std::string cNTCADC         = std::string(theChild.attribute(NTCPROPERTIES_ADC_ATTRIBUTE_NAME).value());
-            std::string cNTCLookUpTable = expandEnvironmentVariables(std::string(theChild.attribute(NTCPROPERTIES_LOOKUPTABLE_ATTRIBUTE_NAME).value()));
-            theOpticalGroup->addNTC(cNTCType, cNTCADC, cNTCLookUpTable);
+            std::string cNTCTableFileName = expandEnvironmentVariables(std::string(theChild.attribute(NTCPROPERTIES_LOOKUPTABLE_ATTRIBUTE_NAME).value()));
+            theOpticalGroup->addNTC(cNTCType, cNTCADC);
+            NTChandler::getInstance().addNTCtable(cNTCType, cNTCTableFileName);
         }
     }
 }

@@ -21,6 +21,8 @@ class DetectorMonitor
     void        operator()();
     void        startMonitoring() { startMonitor = true; }
     void        stopMonitoring() { startMonitor = false; }
+    void        resumeMonitoring() { startMonitor = true; }
+    void        pauseMonitoring() { startMonitor = false; }
     void        stopRunning() { fKeepRunning = false; }
     void        waitForMonitorToStop();
     std::string getMonitorFileName();

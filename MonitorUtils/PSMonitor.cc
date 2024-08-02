@@ -75,6 +75,6 @@ void PSMonitor::readChipMonitorValue(const std::string& monitorValueName, Ph2_Hw
     auto theSlope  = theADCcalibrationMap["ADC_SLOPE"] * theConversionFactor;
     auto theOffset = theADCcalibrationMap["ADC_OFFSET"] * theConversionFactor;
     registerValue  = registerValue * theSlope + theOffset;
-    ValueAndTime<uint16_t> theRegisterAndTime(registerValue, getTimeStamp());
-    theDataContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<ValueAndTime<uint16_t>>() = theRegisterAndTime;
+    ValueAndTime<float> theRegisterAndTime(registerValue, getTimeStamp());
+    theDataContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<ValueAndTime<float>>() = theRegisterAndTime;
 }

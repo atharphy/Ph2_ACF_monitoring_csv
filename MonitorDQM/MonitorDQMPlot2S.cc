@@ -64,7 +64,7 @@ bool MonitorDQMPlot2S::fill(std::string& inputStream)
         // std::cout << "Matched Monitor2S CBCRegister!!!!!\n";
         std::string           registerName;
         DetectorDataContainer fDetectorData =
-            theCBCRegisterSerialization.deserializeBoardContainer<EmptyContainer, ValueAndTime<uint16_t>, EmptyContainer, EmptyContainer, EmptyContainer>(fDetectorContainer, registerName);
+            theCBCRegisterSerialization.deserializeBoardContainer<EmptyContainer, ValueAndTime<float>, EmptyContainer, EmptyContainer, EmptyContainer>(fDetectorContainer, registerName);
         fillCBCRegisterPlots(fDetectorData, registerName);
         return true;
     }
