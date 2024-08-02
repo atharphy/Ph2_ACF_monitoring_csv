@@ -11,6 +11,24 @@
 
 OTMonitor::OTMonitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig) {}
 
+void OTMonitor::runMonitor()
+{
+    // measure temperature for correct ADC calibration
+    for(const auto& board: *fTheSystemController->fDetectorContainer)
+    {
+        for(const auto& opticalGroup: *board)
+        {
+            auto theLpGBT = static_cast<Ph2_HwDescription::lpGBT*>(opticalGroup->flpGBT);
+            float temperature = fTheSystemController->flpGBTInterface->MeasureTemperature(theLpGBT);
+            theLpGBT->setTemperature(temperature);
+        }
+    }
+    std::recursive_mutex                  theMutex;
+    std::lock_guard<std::recursive_mutex> theGuard(theMutex);
+    for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
+        if(monitorValueName.second) runMonitorLpGBT(monitorValueName.first);
+}
+
 void OTMonitor::runMonitorLpGBT(const std::string& monitorValueName)
 {
     DetectorDataContainer theLpGBTmonitorValueContainer;
@@ -70,12 +88,13 @@ DetectorDataContainer OTMonitor::getReadoutChipMonitorValues(const std::string& 
 
 float OTMonitor::readLpGBTmonitorValue(Ph2_HwDescription::OpticalGroup* theOpticalGroup, const std::string& monitorValueName)
 {
-    float monitorValue = -999.;
     auto theLpGBT = static_cast<Ph2_HwDescription::lpGBT*>(theOpticalGroup->flpGBT);
     auto theLpGBRInterface = fTheSystemController->flpGBTInterface;
+
+    float monitorValue = -999.;
     if(std::regex_match(monitorValueName, std::regex("^ADC[0-7]$")))
     {
-        monitorValue = theLpGBRInterface->AdcGetVin(theLpGBT, monitorValueName, "VREF/2", 1);
+        monitorValue = theLpGBRInterface->AdcGetVin(theLpGBT, monitorValueName, "VREF/2", 0);
     }
     else if(std::regex_match(monitorValueName, std::regex("^VDD.*")))
     {

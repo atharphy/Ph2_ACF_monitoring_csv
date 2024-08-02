@@ -78,43 +78,43 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 
         // Fabio's comment: auto tune should not be done here because if it gets calibrated and you try to reload again the registers
         // it will be overwritten
-        auto theLpGBT = static_cast<lpGBT*>(pChip);
-        AutoTuneVref(theLpGBT);
+        // auto theLpGBT = static_cast<lpGBT*>(pChip);
+        // AutoTuneVref(theLpGBT);
 
-        LOG(INFO) << BOLDBLUE << "Reading ADC channels" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC0\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC0", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC1\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC1", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC2\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC2", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC3\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC3", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC4\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC4", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC5\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC5", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC6\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC6", "VREF/2", 0) << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC7\", \"VREF/2\", 0) " << RESET;
-        LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC7", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDBLUE << "Reading ADC channels" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC0\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC0", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC1\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC1", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC2\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC2", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC3\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC3", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC4\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC4", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC5\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC5", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC6\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC6", "VREF/2", 0) << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "AdcGetVin(theLpGBT, \"ADC7\", \"VREF/2\", 0) " << RESET;
+        // LOG(INFO) << BOLDGREEN << AdcGetVin(theLpGBT, "ADC7", "VREF/2", 0) << " V" << RESET;
         // Example on how to use the current source to measure resistance
         // Only for OT-2S
         // if(theLpGBT->getFrontEndType() == FrontEndType::OuterTracker2S) {
         // CdacSetCurrent(theLpGBT, "ADC4", _CdacCodeToCurrent(theLpGBT, "ADC4", 0xaa));
         // LOG(INFO) << BOLDGREEN << "MeasureResistance(theLpGBT,\"ADC4\", 1000, false) " << RESET;
         // LOG(INFO) << BOLDGREEN << MeasureResistance(theLpGBT, "ADC4", 1000, false) << " Ohms" << RESET;}
-        LOG(INFO) << BOLDGREEN << "MeasureTemperature(theLpGBT) " << RESET;
-        LOG(INFO) << BOLDGREEN << MeasureTemperature(theLpGBT) << " C" << RESET;
+        // LOG(INFO) << BOLDGREEN << "MeasureTemperature(theLpGBT) " << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasureTemperature(theLpGBT) << " C" << RESET;
 
-        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(theLpGBT, \"VDDTX\")" << RESET;
-        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(theLpGBT, "VDDTX") << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(theLpGBT, \"VDDRX\")" << RESET;
-        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(theLpGBT, "VDDRX") << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(theLpGBT, \"VDD\")" << RESET;
-        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(theLpGBT, "VDD") << " V" << RESET;
-        LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(theLpGBT, \"VDDA\")" << RESET;
-        LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(theLpGBT, "VDDA") << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(theLpGBT, \"VDDTX\")" << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(theLpGBT, "VDDTX") << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(theLpGBT, \"VDDRX\")" << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(theLpGBT, "VDDRX") << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(theLpGBT, \"VDD\")" << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(theLpGBT, "VDD") << " V" << RESET;
+        // LOG(INFO) << BOLDGREEN << "MeasurePowerSupplyVoltage(theLpGBT, \"VDDA\")" << RESET;
+        // LOG(INFO) << BOLDGREEN << MeasurePowerSupplyVoltage(theLpGBT, "VDDA") << " V" << RESET;
     }
     return cReady;
 } //

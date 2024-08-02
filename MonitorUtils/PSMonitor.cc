@@ -30,8 +30,7 @@ void PSMonitor::runMonitor()
         if(monitorValueName.second) runMonitorSSA(monitorValueName.first);
     for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("MPA2"))
         if(monitorValueName.second) runMonitorMPA(monitorValueName.first);
-    for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
-        if(monitorValueName.second) runMonitorLpGBT(monitorValueName.first);
+    OTMonitor::runMonitor();
 }
 
 void PSMonitor::runMonitorSSA(const std::string& monitorValueName)

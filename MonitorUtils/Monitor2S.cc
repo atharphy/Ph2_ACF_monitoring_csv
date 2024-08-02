@@ -27,8 +27,7 @@ void Monitor2S::runMonitor()
     std::lock_guard<std::recursive_mutex> theGuard(theMutex);
     for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("CBC"))
         if(monitorValueName.second) runMonitorCBC(monitorValueName.first);
-    for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
-        if(monitorValueName.second) runMonitorLpGBT(monitorValueName.first);
+    OTMonitor::runMonitor();
 }
 
 void Monitor2S::runMonitorCBC(const std::string& monitorValueName)
