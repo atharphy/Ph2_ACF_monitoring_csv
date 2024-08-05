@@ -3,6 +3,7 @@
 
 #include "tools/Tool.h"
 #include <iostream>
+#include "MetadataHandlerOT.h"
 
 #if __cplusplus < 201402
 namespace std
@@ -55,6 +56,7 @@ struct CombinedCalibration : public Tool
     void start_single(T& tool)
     {
         std::cout << __PRETTY_FUNCTION__ << " Starting calibration" << std::endl;
+        fMetadataHandler->fillSubCalibrationNameAndTimeContainer(tool.getCalibrationName());
         tool.Inherit(current_tool);
         tool.ConfigureCalibration();
         tool.Running();

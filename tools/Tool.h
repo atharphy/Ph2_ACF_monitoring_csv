@@ -349,6 +349,7 @@ class Tool : public Ph2_System::SystemController
 
     void           setOfStream(std::ofstream* pOfStream) { fOfStream = pOfStream; };
     std::ofstream* getOfStream() { return fOfStream; };
+    std::string    getCalibrationName() const;
 
   private:
     void doScanOnAllGroupsBeBoard(uint16_t boardId, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* scanFunctor);
@@ -357,7 +358,6 @@ class Tool : public Ph2_System::SystemController
     DetectorDataContainer* fDetectorDataContainer{nullptr};
 
     uint16_t    getMaxNumberOfGroups();
-    std::string getCalibrationName();
 
 #ifdef __USE_ROOT__
     CanvasMap           fCanvasMap;
