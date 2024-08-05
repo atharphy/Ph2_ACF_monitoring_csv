@@ -26,6 +26,7 @@ void CalibBase::ConfigureCalibration()
     nEvtsBurst    = this->findValueInSettings<double>("nEvtsBurst", 1) < nEvents ? this->findValueInSettings<double>("nEvtsBurst") : nEvents;
     nTRIGxEvent   = this->findValueInSettings<double>("nTRIGxEvent");
     dataOutputDir = this->findValueInSettings<std::string>("DataOutputDir", "");
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->showRunProgress = this->findValueInSettings<double>("ShowRunProgress", 1);
 }
 
 void CalibBase::Stop()

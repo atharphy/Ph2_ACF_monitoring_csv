@@ -1634,6 +1634,7 @@ float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::lpGBT* pChip, const std
         Returns:
             Estimate of the output resistance in Ohms
     """ */
+
     uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
     {
@@ -1662,6 +1663,7 @@ uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::lpGBT* 
         Raises:
             LpGBTOutOfRangeError: If the requested current cannot be achieved
     """ */
+
     uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
     {
@@ -1709,6 +1711,7 @@ void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::lpGBT* pChip, const std::
             pChannel: ADC channel to connect to current DAC to
             pCurrentA: Output current in Amps
     """ */
+
     uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
     {
@@ -1832,6 +1835,7 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
         Raises:
             LpGBTException: in case the conversion timeout is exceeded
     """ */
+
     if(pResetTempSensor)
     {
         auto cVal = ReadChipReg(pChip, "ADCMon");
@@ -1875,6 +1879,7 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip,
         Raises:
             LpGBTException: in case the conversion timeout is exceeded
     """ */
+
     if(!(pPowerSupply != "VDDTX" or pPowerSupply != "VDDRX" or pPowerSupply != "VDD" or pPowerSupply != "VDDA"))
     {
         LOG(ERROR) << BOLDRED << "[lpGBTInterface::MeasurePowerSupplyVoltage] Invalid pPowerSupply" << RESET;
