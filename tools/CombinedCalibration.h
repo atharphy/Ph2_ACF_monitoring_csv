@@ -1,9 +1,9 @@
 #ifndef __COMBINED_CALIBRATION__
 #define __COMBINED_CALIBRATION__
 
+#include "MetadataHandlerOT.h"
 #include "tools/Tool.h"
 #include <iostream>
-#include "MetadataHandlerOT.h"
 
 #if __cplusplus < 201402
 namespace std

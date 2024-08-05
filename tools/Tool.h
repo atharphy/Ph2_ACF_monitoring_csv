@@ -357,7 +357,7 @@ class Tool : public Ph2_System::SystemController
   protected:
     DetectorDataContainer* fDetectorDataContainer{nullptr};
 
-    uint16_t    getMaxNumberOfGroups();
+    uint16_t getMaxNumberOfGroups();
 
 #ifdef __USE_ROOT__
     CanvasMap           fCanvasMap;

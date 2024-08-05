@@ -302,7 +302,7 @@ void MetadataHandler::fillSubCalibrationNameAndTimeContainer(std::string subCali
     ContainerFactory::copyAndInitDetector<std::pair<std::string, std::string>>(*fDetectorContainer, theSubCalibrationNameAndTimeContainer);
 
     theSubCalibrationNameAndTimeContainer.getSummary<std::pair<std::string, std::string>>() = std::make_pair(subCalibrationName, getTimeStampString());
-    
+
 #ifdef __USE_ROOT__
     fDQMMetadata->fillSubCalibrationNameAndTime(theSubCalibrationNameAndTimeContainer);
 #else

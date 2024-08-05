@@ -79,7 +79,6 @@ void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStruc
 
     StringContainer theSubCalibrationNameAndTimeStringContainer("SubCalibrationNameAndTime");
     RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fSubCalibrationNameAndTimeContainer, theSubCalibrationNameAndTimeStringContainer);
-
 }
 
 void DQMMetadata::fillObjectNames(const DetectorDataContainer& theNameContainer)
@@ -272,11 +271,10 @@ void DQMMetadata::fillVTRxFuseId(const DetectorDataContainer& theVTRxFuseIdConta
 
 void DQMMetadata::fillSubCalibrationNameAndTime(const DetectorDataContainer& theSubCalibrationNameAndTimeContainer)
 {
-    auto theSubCalibrationNameAndTimePair = theSubCalibrationNameAndTimeContainer.getSummary<std::pair<std::string, std::string>>();
+    auto        theSubCalibrationNameAndTimePair   = theSubCalibrationNameAndTimeContainer.getSummary<std::pair<std::string, std::string>>();
     std::string theSubCalibrationNameAndTimeString = theSubCalibrationNameAndTimePair.first + " " + theSubCalibrationNameAndTimePair.second;
     fSubCalibrationNameAndTimeContainer.getSummary<StringContainer>().appendString(theSubCalibrationNameAndTimeString);
 }
-
 
 void DQMMetadata::process() {}
 
@@ -413,7 +411,9 @@ bool DQMMetadata::fill(std::string& inputStream)
     if(theSubCalibrationNameAndTimeSerialization.attachDeserializer(inputStream))
     {
         // std::cout << "Matched Metadata SubCalibrationNameAndTime!!!!!\n";
-        DetectorDataContainer theDetectorData = theSubCalibrationNameAndTimeSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::pair<std::string, std::string>>(fDetectorContainer);
+        DetectorDataContainer theDetectorData =
+            theSubCalibrationNameAndTimeSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::pair<std::string, std::string>>(
+                fDetectorContainer);
         fillSubCalibrationNameAndTime(theDetectorData);
         return true;
     }
