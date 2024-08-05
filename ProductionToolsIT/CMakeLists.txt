@@ -100,7 +100,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         string(REPLACE ".cc" "" name ${sourcefile})
         message(STATUS "    ${name}")
         add_executable(${name} ${sourcefile})
-        target_link_libraries(${name} ${LIBS} Ph2_ProductionToolsIT Ph2_Interface Ph2_System Ph2_Tools)
+        target_link_libraries(${name} ${LIBS} Ph2_ProductionToolsIT Ph2_Interface Ph2_System Ph2_Tools Ph2_Utils Ph2_Parser)
     endforeach(sourcefile ${BINARIES})
 
     include_directories(${CACTUS_INCLUDEDIR})

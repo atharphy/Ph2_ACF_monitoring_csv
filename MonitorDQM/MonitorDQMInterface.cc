@@ -4,7 +4,7 @@
 #include "Utils/Container.h"
 
 #include "MonitorDQM/MonitorDQMInterface.h"
-#include "MonitorDQM/MonitorDQMPlotCBC.h"
+#include "MonitorDQM/MonitorDQMPlot2S.h"
 #include "MonitorDQM/MonitorDQMPlotPS.h"
 #include "Parser/DetectorMonitorConfig.h"
 #include "Utils/ConfigureInfo.h"
@@ -77,7 +77,7 @@ void MonitorDQMInterface::configure(const ConfigureInfo& theConfigureInfo)
     DetectorMonitorConfig theDetectorMonitorConfig;
     theFileParser.parseMonitor(configurationFilePath, theDetectorMonitorConfig, out);
 
-    if(theDetectorMonitorConfig.fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_2S_VALUE) fMonitorDQMVector.push_back(new MonitorDQMPlotCBC());
+    if(theDetectorMonitorConfig.fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_2S_VALUE) fMonitorDQMVector.push_back(new MonitorDQMPlot2S());
     if(theDetectorMonitorConfig.fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_PS_VALUE) fMonitorDQMVector.push_back(new MonitorDQMPlotPS());
 
     fOutputFile = new TFile("Monitor_tmp.root", "RECREATE");

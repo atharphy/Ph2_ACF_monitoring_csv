@@ -15,13 +15,16 @@ class TFile;
 class DetectorMonitor
 {
   public:
-    DetectorMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig);
+    DetectorMonitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig);
     virtual ~DetectorMonitor();
     void        forkMonitor();
     void        operator()();
     void        startMonitoring() { startMonitor = true; }
     void        stopMonitoring() { startMonitor = false; }
+    void        resumeMonitoring() { startMonitor = true; }
+    void        pauseMonitoring() { startMonitor = false; }
     void        stopRunning() { fKeepRunning = false; }
+    void        waitForMonitorToStop();
     std::string getMonitorFileName();
 #if defined(__TCUSB__)
     void setTestCardPointer(TC_2SSEH* cTC_2SSEH) { pTC_2SSEH = cTC_2SSEH; };

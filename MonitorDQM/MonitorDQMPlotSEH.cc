@@ -106,7 +106,7 @@ void MonitorDQMPlotSEH::bookTestCardPlots(TFile* theOutputFile, const DetectorCo
 }
 
 // //========================================================================================================================
-// void MonitorDQMPlotSEH::fillLpGBTRegisterPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
+// void MonitorDQMPlotSEH::fillLpGBTmonitorPlots(DetectorDataContainer& theThresholdContainer, const std::string& registerName)
 // {
 //     if(fLpGBTRegisterMonitorPlotMap.find(registerName) == fLpGBTRegisterMonitorPlotMap.end())
 //     {

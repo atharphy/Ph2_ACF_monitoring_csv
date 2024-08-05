@@ -46,7 +46,7 @@ class OTTemperature : public OTTool
   private:
     bool                 fLoopReadout{false};
     void                 ReadThermistors(const OpticalGroup* pOpticalGroup);
-    float                ReadThermistor(const OpticalGroup* pOpticalGroup, std::string pADC, std::string pLUT);
+    float                ReadThermistor(const OpticalGroup* pOpticalGroup, std::string pADC, std::string theNTCtype);
     float                ReadInternalThermistor(const OpticalGroup* pOpticalGroup);
     void                 ReadModuleTemperatures();
     float                fVref{1};        // reference voltage for lpgBT

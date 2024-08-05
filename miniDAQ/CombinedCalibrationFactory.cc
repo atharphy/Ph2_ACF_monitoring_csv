@@ -81,7 +81,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
     Register<OTalignBoardDataWord, OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");
     Register<OTalignBoardDataWord, OTalignStubPackage>("Outer Tracker", "OTalignStubPackage");
-    Register<OTalignLpGBTinputs,
+    Register<TuneLpGBTVref,
+             OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
              OTalignStubPackage,
@@ -96,7 +97,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignBoardDataWord, OTMeasureOccupancy>("Outer Tracker", "measureOccupancy");
     Register<OTalignBoardDataWord, OTinjectionOccupancyScan>("Outer Tracker", "injectionOccupancyScan");
 
-    Register<OTalignLpGBTinputs,
+    Register<TuneLpGBTVref,
+             OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
              OTalignStubPackage,
@@ -138,7 +140,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              KIRA>("Outer Tracker", "calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, PedeNoise>(
         "Outer Tracker", "pedenoise");
-    Register<OTalignLpGBTinputs,
+    Register<TuneLpGBTVref,
+             OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
              OTalignStubPackage,
