@@ -104,6 +104,7 @@ float OTMonitor::readLpGBTmonitorValue(Ph2_HwDescription::OpticalGroup* theOptic
 
         monitorValue = NTChandler::getInstance().getTemperature("Sensor", resistance);
     }
+    else if(monitorValueName == "1V25_Left") { monitorValue = theLpGBRInterface->AdcGetVin(theLpGBT, "ADC1", "VREF/2", 0) * (310. / 200.); }
 
     return monitorValue;
 }

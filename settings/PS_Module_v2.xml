@@ -6,6 +6,9 @@
     <CDCE configure="0" clockRate="320"/>
         
      <OpticalGroup Id="0" enable="1" FMCId="L12" reset="1">
+        <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
+        <NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
+        
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
         <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
           <Settings/>
@@ -298,9 +301,6 @@
     <MonitoringElement device="SSA2"  register="DVDD" enable="1"/>
     <MonitoringElement device="SSA2"  register="VBG" enable="1"/>
     <MonitoringElement device="SSA2"  register="ADC_VREF" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC0" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC1" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC3" enable="1"/>
     <MonitoringElement device="LpGBT" register="VDD"  enable="1"/>
     <MonitoringElement device="LpGBT" register="VDDA" enable="1"/>
     <MonitoringElement device="LpGBT" register="LpGBTtemp" enable="1"/>

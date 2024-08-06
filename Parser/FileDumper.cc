@@ -168,7 +168,7 @@ void FileDumper::dumpOpticalGroupConfigurationFile(pugi::xml_node theMotherNode,
         auto        theVTRxFilePathNode                                  = theOpticalGroupNode.append_child(theVTRxFilePathNodeName.c_str());
         theVTRxFilePathNode.append_attribute(COMMON_PATH_ATTRIBUTE_NAME) = fOutputDirectory.c_str();
 
-        auto theVTRxNode                                       = theOpticalGroupNode.append_child(LPGBT_NODE_NAME);
+        auto theVTRxNode                                       = theOpticalGroupNode.append_child(VTRX_NODE_NAME);
         theVTRxNode.append_attribute(COMMON_ID_ATTRIBUTE_NAME) = std::to_string(theVTRx->getId()).c_str();
 
         auto cRegMap = theVTRx->getRegMap();
