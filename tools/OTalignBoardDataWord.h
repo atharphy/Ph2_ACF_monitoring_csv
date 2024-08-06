@@ -19,8 +19,6 @@
 
 namespace Ph2_HwInterface
 {
-class AlignerObject;
-class LineConfiguration;
 class D19cBackendAlignmentFWInterface;
 class D19cDebugFWInterface;
 } // namespace Ph2_HwInterface
@@ -52,20 +50,21 @@ class OTalignBoardDataWord : public Tool
     DetectorDataContainer fAlignmentRetryContainer;
 
     void wordAlignBEdata();
-    void stubAndL1WordAlignment(Ph2_HwDescription::BeBoard* theBoard);
-    bool stubWordAlignment(const Ph2_HwDescription::OpticalGroup*            theOpticalGroup,
-                           Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
-                           Ph2_HwInterface::D19cDebugFWInterface*            theDebugInterface);
-    bool L1WordAlignment(const Ph2_HwDescription::OpticalGroup*            pOpticalGroup,
-                         Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
-                         Ph2_HwInterface::D19cDebugFWInterface*            theDebugInterface);
-    void manuallyConfigureLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip);
-    bool tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
-                          uint8_t                                           lineId,
-                          Ph2_HwInterface::AlignerObject&                   theAlignerObject,
-                          Ph2_HwInterface::LineConfiguration&               theLineConfiguration,
-                          std::vector<uint8_t>&                             theHybridBitSlipVector,
-                          std::vector<uint8_t>&                             theHybridAlignmentRetryVector);
+    void boardWordAlignment(Ph2_HwDescription::BeBoard* theBoard);
+    bool opticalGroupWordAlignment(const Ph2_HwDescription::OpticalGroup*            theOpticalGroup,
+                                   Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
+                                   Ph2_HwInterface::D19cDebugFWInterface*            theDebugInterface);
+    bool tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::Hybrid* theHybrid, uint8_t lineId);
+    bool tryAllLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::Hybrid* theHybrid);
+    bool tryAllHybridAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::BeBoard* theBoard);
+
+    bool skip2SkickOff(uint16_t hybridId, uint8_t lineId, bool is2Smodule);
+
+    int     fBroadcastAlignSetting{0}; // 0 = one line at a time - 1 = one hybrid at a time - 2 = all hybrids in parallel
+    int     fMaxNumberOfIterations{10};
+    uint8_t fNumberOfLines;
+
+    void disableUnalignedHybrid(Ph2_HwDescription::Hybrid* theHybrid);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
