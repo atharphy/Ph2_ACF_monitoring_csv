@@ -853,7 +853,7 @@ void SystemController::ConfigureHw(bool pReInitialize)
         exit(EXIT_FAILURE);
     }
 
-    LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from xml file @@@" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from XML file @@@" << RESET;
     for(const auto cBoard: *fDetectorContainer)
     {
         cBoard->printBoardType();
