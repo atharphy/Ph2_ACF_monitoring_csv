@@ -4,6 +4,7 @@
 #include "DQMUtils/DQMHistogramCalibrationExample.h"
 #include "DQMUtils/DQMHistogramKira.h"
 #include "DQMUtils/DQMHistogramLatencyScan.h"
+#include "DQMUtils/DQMHistogramOTBitErrorRateTest.h"
 #include "DQMUtils/DQMHistogramOTCICBX0Alignment.h"
 #include "DQMUtils/DQMHistogramOTCICphaseAlignment.h"
 #include "DQMUtils/DQMHistogramOTCICtoLpGBTecv.h"
@@ -45,7 +46,6 @@
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
 #include "DQMUtils/RD53VoltageTuningHistograms.h"
-#include "DQMUtils/DQMHistogramOTBitErrorRateTest.h"
 
 using namespace MessageUtils;
 

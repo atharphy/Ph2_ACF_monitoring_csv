@@ -10,6 +10,7 @@
 #include "tools/ExtTriggerLatencyScan.h"
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
+#include "tools/OTBitErrorRateTest.h"
 #include "tools/OTCICBX0Alignment.h"
 #include "tools/OTCICphaseAlignment.h"
 #include "tools/OTCICtoLpGBTecv.h"
@@ -51,7 +52,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/OTBitErrorRateTest.h"
 
 using namespace MessageUtils;
 

@@ -125,7 +125,6 @@ void OTalignBoardDataWord::wordAlignBEdata()
 
 void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
 {
-
     std::string controlPhaseRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
     std::string statusPhaseRegisterName  = "fc7_daq_stat.physical_interface_block.phase_tuning_reply";
 
@@ -156,13 +155,13 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
     fBeBoardInterface->ChipReSync(theBoard);
     fBeBoardInterface->Start(theBoard);
 
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
+    auto                             cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
     D19cBackendAlignmentFWInterface* theAlignerInterface = cInterface->getBackendAlignmentInterface();
     if(fBroadcastAlignSetting == 2)
         tryAllHybridAlignment(theAlignerInterface, theBoard);
     else
     {
-       D19cDebugFWInterface*            theDebugInterface   = cInterface->getDebugInterface();
+        D19cDebugFWInterface* theDebugInterface = cInterface->getDebugInterface();
         for(auto theOpticalGroup: *theBoard)
         {
             // uint8_t hybdridShift = 27;
@@ -262,51 +261,49 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
     fBeBoardInterface->WriteBoardMultReg(theBoard, alignedBitslipRegisters);
 
     readBitslipRegs();
-    
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Pre-reset" << std::endl;
-    
-    for(uint8_t line=0; line<7; ++line)
+
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Pre-reset" << std::endl;
+
+    for(uint8_t line = 0; line < 7; ++line)
     {
         uint32_t value = (0x60010000 | (line << 20));
         fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, value);
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing = 0x" << std::hex << value << std::dec << std::endl;
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusPhaseRegisterName) << std::dec << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing = 0x" << std::hex << value << std::dec << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusPhaseRegisterName) << std::dec << std::endl;
     }
 
     fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0xfff50008);
 
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] after-reset" << std::endl;
-    for(uint8_t line=0; line<7; ++line)
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] after-reset" << std::endl;
+    for(uint8_t line = 0; line < 7; ++line)
     {
         uint32_t value = (0x60010000 | (line << 20));
         fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, value);
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing = 0x" << std::hex << value << std::dec << std::endl;
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusPhaseRegisterName) << std::dec << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing = 0x" << std::hex << value << std::dec << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusPhaseRegisterName) << std::dec << std::endl;
     }
 
     fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0xfff25100);
-    
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] after mode" << std::endl;
-    for(uint8_t line=0; line<7; ++line)
+
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] after mode" << std::endl;
+    for(uint8_t line = 0; line < 7; ++line)
     {
         uint32_t value = (0x60010000 | (line << 20));
         fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, value);
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing = 0x" << std::hex << value << std::dec << std::endl;
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusPhaseRegisterName) << std::dec << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing = 0x" << std::hex << value << std::dec << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusPhaseRegisterName) << std::dec << std::endl;
     }
 
     fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0xfff50004);
 
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] after manual" << std::endl;
-    for(uint8_t line=0; line<7; ++line)
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] after manual" << std::endl;
+    for(uint8_t line = 0; line < 7; ++line)
     {
         uint32_t value = (0x60010000 | (line << 20));
         fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, value);
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing = 0x" << std::hex << value << std::dec << std::endl;
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusPhaseRegisterName) << std::dec << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing = 0x" << std::hex << value << std::dec << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusPhaseRegisterName) << std::dec << std::endl;
     }
-
-
 }
 
 bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface, D19cDebugFWInterface* theDebugInterface)

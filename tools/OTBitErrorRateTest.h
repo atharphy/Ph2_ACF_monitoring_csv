@@ -19,7 +19,7 @@
 
 namespace Ph2_HwDescription
 {
-    class OpticalGroup;
+class OpticalGroup;
 }
 
 class OTBitErrorRateTest : public Tool
@@ -39,11 +39,11 @@ class OTBitErrorRateTest : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
     void bitErrorRateTest();
     bool prepareLpGBTforBERT(Ph2_HwDescription::OpticalGroup* theOpticalGroup);
-    
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTBitErrorRateTest fDQMHistogramOTBitErrorRateTest;
