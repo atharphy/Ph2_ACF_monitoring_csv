@@ -102,8 +102,9 @@ void PSPhysics::Running()
 
     if(saveRawData == true)
     {
-        char runString[7];
-        sprintf(runString, "%06d", (fRunNumber));
+        char      runString[7];
+        const int theRunNumber = Tool::fRunNumber;
+        sprintf(runString, "%06d", theRunNumber);
         this->addFileHandler(std::string(RESULTDIR) + "/run_" + runString + ".raw", 'w');
         this->initializeWriteFileHandler();
     }

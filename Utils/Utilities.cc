@@ -1,47 +1,18 @@
 /*
-
   FileName :                     Utilities.cc
   Content :                      Some objects that might come in handy
   Programmer :                   Nicolas PIERRE
   Version :                      1.0
   Date of creation :             10/06/14
   Support :                      mail to : nicolas.pierre@icloud.com
-
 */
 
 #include "Utils/Utilities.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/easylogging++.h"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/math/special_functions/binomial.hpp>
-
-long getTimeTook(struct timeval& pStart, bool pMili)
-{
-    struct timeval end;
-    long           seconds(0), useconds(0);
-
-    gettimeofday(&end, 0);
-    seconds  = end.tv_sec - pStart.tv_sec;
-    useconds = end.tv_usec - pStart.tv_usec;
-
-    if(pMili)
-        return (long)(seconds * 1e3 + useconds / 1000);
-
-    else
-        return (long)(seconds * 1e6 + useconds);
-}
-
-void myflush(std::istream& in)
-{
-    in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    in.clear();
-}
-
-void mypause()
-{
-    std::cout << "Press [Enter] to continue ...";
-    std::cin.get();
-}
 
 std::string getResultDirectoryName(const StartInfo& theStartInfo)
 {
@@ -111,6 +82,8 @@ double MyErf(double* x, double* par)
     return fitval;
 }
 
+double MyErfc(double* x, double* par) { return 1 - MyErf(x, par); }
+
 double MyGammaSignal(double* x, double* par)
 {
     double VCth = x[0];
@@ -123,25 +96,23 @@ double MyGammaSignal(double* x, double* par)
     return fitval;
 }
 
-uint32_t convertAnyInt(const char* pRegValue)
+uint32_t convertAnyInt(std::string pRegValue)
 {
-    int         baseType = 0;
-    std::string myRegValue(pRegValue);
-    if(myRegValue.find("0x") != std::string::npos)
+    int baseType = 0;
+    if(pRegValue.find("0x") != std::string::npos)
         baseType = 16;
-    else if(myRegValue.find("0d") != std::string::npos)
+    else if(pRegValue.find("0d") != std::string::npos)
         baseType = 10;
-    else if(myRegValue.find("0b") != std::string::npos)
+    else if(pRegValue.find("0b") != std::string::npos)
         baseType = 2;
-    if(baseType != 0) myRegValue.erase(0, 2);
-    return static_cast<uint32_t>(strtoul(myRegValue.c_str(), 0, (baseType != 0 ? baseType : 10)));
+    if(baseType != 0) pRegValue.erase(0, 2);
+    return static_cast<uint32_t>(strtoul(pRegValue.c_str(), 0, (baseType != 0 ? baseType : 10)));
 }
 
-double convertAnyDouble(const char* pRegValue)
+double convertAnyDouble(std::string pRegValue)
 {
-    int         baseType = 0;
-    std::string myRegValue(pRegValue);
-    if(myRegValue.find("0x") != std::string::npos)
+    int baseType = 0;
+    if(pRegValue.find("0x") != std::string::npos)
     {
         baseType = 16;
         unsigned int      x;
@@ -150,24 +121,35 @@ double convertAnyDouble(const char* pRegValue)
         ss >> x;
         return x;
     }
-    else if(myRegValue.find("0d") != std::string::npos)
+    else if(pRegValue.find("0d") != std::string::npos)
         baseType = 10;
-    else if(myRegValue.find("0b") != std::string::npos)
+    else if(pRegValue.find("0b") != std::string::npos)
         baseType = 2;
-    if(baseType != 0) myRegValue.erase(0, 2);
-    return strtod(myRegValue.c_str(), 0);
+    if(baseType != 0) pRegValue.erase(0, 2);
+    return strtod(pRegValue.c_str(), 0);
 }
 
 std::vector<float> convertStringToFloatList(std::string theListString)
 {
     boost::erase_all(theListString, " ");
-
-    std::vector<std::string> subStringList;
-    boost::algorithm::split(subStringList, theListString, boost::algorithm::is_any_of(","));
-
     std::vector<float> theListOfFloats;
-    for(auto subString: subStringList) theListOfFloats.push_back(strtof(subString.c_str(), nullptr));
 
+    if(theListString.find('-') != std::string::npos)
+    {
+        size_t            dashPosition = theListString.find('-');
+        std::stringstream startString(theListString.substr(0, dashPosition));
+        std::stringstream endString(theListString.substr(dashPosition + 1));
+        float             startFloat, endFloat;
+        startString >> startFloat;
+        endString >> endFloat;
+        for(float i = startFloat; i <= endFloat; i++) theListOfFloats.push_back(i);
+    }
+    else
+    {
+        std::vector<std::string> subStringList;
+        boost::algorithm::split(subStringList, theListString, boost::algorithm::is_any_of(","));
+        for(auto subString: subStringList) theListOfFloats.push_back(strtof(subString.c_str(), nullptr));
+    }
     return theListOfFloats;
 }
 
@@ -250,19 +232,6 @@ std::string expandEnvironmentVariables(std::string s)
     if(getenv(variable.c_str()) != NULL) value = std::string(getenv(variable.c_str()));
 
     return expandEnvironmentVariables(pre + value + post);
-}
-
-std::vector<uint8_t> splitToVector(const std::string& str, const char delimiter)
-{
-    std::vector<uint8_t> v;
-    std::stringstream    ss(str);
-    while(ss.good())
-    {
-        std::string substr;
-        std::getline(ss, substr, delimiter);
-        v.push_back(std::stoi(substr));
-    }
-    return v;
 }
 
 double hitProbability(double pThreshold)
@@ -373,9 +342,6 @@ std::vector<uint32_t> applyByteShift(const std::vector<uint32_t>& theWordVector,
                 continue;
             }
             longIntWord = longIntWord | (((tmpLongIntWord >> (readSinglePatterShift * 8 * numberOfBytesInSinglePacket)) & mask) << (writeSinglePatternShift * numberOfBytesInSinglePacket * 8));
-            // std::cout << "Adding " << std::hex << ((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << std::dec << " with shift of " << +(writeSinglePatternShift * 8) << " bits which is "
-            // << std::hex <<
-            // (((tmpLongIntWord >> (readSinglePatterShift * 8)) & 0xFF) << (writeSinglePatternShift * 8)) << " -> " << longIntWord << std::dec << std::endl;
             --writeSinglePatternShift;
             if(writeSinglePatternShift < 0)
             {
@@ -468,7 +434,7 @@ std::pair<bool, size_t> matchPattern(const std::vector<uint32_t>& theWordVector,
         }
     }
 
-    return {false, 0}; // pattern not found
+    return {false, 0}; // Pattern not found
 }
 
 uint16_t linearizeRowAndCols(uint16_t row, uint16_t col, uint16_t numberOfCols) { return col + row * numberOfCols; }
@@ -513,11 +479,9 @@ std::vector<uint32_t> getPossiblePatterns(uint8_t injectedPattern, bool is10Gmod
     std::vector<uint32_t> possiblePatternList;
     for(uint8_t bitShift = 0; bitShift < 32; ++bitShift) { possiblePatternList.push_back((fullPattern >> bitShift) & 0xFFFFFFFF); }
 
-    // remove duplicates
+    // Remove duplicates
     sort(possiblePatternList.begin(), possiblePatternList.end());
     possiblePatternList.erase(unique(possiblePatternList.begin(), possiblePatternList.end()), possiblePatternList.end());
-
-    // for(auto pattern: possiblePatternList) std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pattern = " << std::hex << pattern << std::dec << std::endl;
 
     return possiblePatternList;
 }

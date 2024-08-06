@@ -106,8 +106,8 @@ void Physics::Stop()
     CalibBase::saveChipRegisters(doUpdateChip);
 
     LOG(INFO) << GREEN << "[Physics::Stop] Stopped" << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers (i.e. events): " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded events (i.e. bunch crossings): " << BOLDYELLOW << numberOfEventsPerRun << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Total number of received triggers: " << BOLDYELLOW << numberOfEventsPerRun / nTRIGxEvent << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Total number of corrupted bunch crossings: " << BOLDYELLOW << std::setprecision(3) << corruptedEventCounter << " ("
               << 1. * corruptedEventCounter / numberOfEventsPerRun * 100. << "%)" << std::setprecision(-1) << RESET;
 }
@@ -124,15 +124,15 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 
     LOG(INFO) << GREEN << "[Physics::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
-    // ###############################
-    // # Initialize output directory #
-    // ###############################
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
-
     // ##########################
     // # Initialize calibration #
     // ##########################
     Physics::ConfigureCalibration();
+
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
 
     // #########################################
     // # Initialize histogram and binary files #
@@ -140,7 +140,7 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 #ifdef __USE_ROOT__
     if(this->fResultFile != nullptr) this->fResultFile->Close();
 #endif
-    CalibBase::initializeFiles<PhysicsHistograms>(histoFileName, "Physics", histos, currentRun);
+    CalibBase::initializeFiles(histoFileName, "Physics", histos, currentRun);
 }
 
 void Physics::run()
@@ -158,13 +158,13 @@ void Physics::run()
             for(const auto cBoard: *fDetectorContainer)
             {
                 static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
-                    ->WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
-                                                                 RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
-                                                                 RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
-                                       -1);
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId, 6}), -1);
+                    ->WriteChipCommands(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
+                                                                  RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
+                                                                  RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
+                                        -1);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommands(serialize(RD53ACmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId, 6}), -1);
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::ECR{}), -1);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommands(serialize(RD53ACmd::ECR{}), -1);
                 std::this_thread::sleep_for(std::chrono::microseconds(20));
             }
 
@@ -246,7 +246,7 @@ void Physics::fillDataContainer(BeBoard& theBoard)
 
         if(RD53Event::EvtErrorHandler(static_cast<RD53Event*>(event)->eventStatus) == false)
         {
-            LOG(ERROR) << BOLDBLUE << "\t--> Corrupted event n. " << BOLDYELLOW << evtCounter << RESET;
+            LOG(ERROR) << BOLDBLUE << "\t--> Corrupted bunch crossing n. " << BOLDYELLOW << evtCounter << RESET;
             corruptedEventCounter++;
             RD53Event::PrintEvents({*static_cast<RD53Event*>(event)});
         }

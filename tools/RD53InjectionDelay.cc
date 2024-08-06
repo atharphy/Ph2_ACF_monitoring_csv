@@ -97,26 +97,28 @@ void InjectionDelay::localConfigure(const std::string& histoFileName, int curren
 
     LOG(INFO) << GREEN << "[InjectionDelay::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
-    // ###############################
-    // # Initialize output directory #
-    // ###############################
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
-
     // ##########################
     // # Initialize calibration #
     // ##########################
     InjectionDelay::ConfigureCalibration();
 
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<InjectionDelayHistograms>(histoFileName, "InjectionDelay", histos, currentRun, PixelAlive::saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "InjectionDelay", histos, currentRun, PixelAlive::saveBinaryData);
+
     // ######################
     // # Initialize Latency #
     // ######################
     std::string fileName = histoFileName;
     fileName.replace(fileName.find("_InjectionDelay"), 15, "_Latency");
-    la.initializeFiles<LatencyHistograms>(fileName, "Latency", la.histos);
+    la.CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+    la.initializeFiles(fileName, "Latency", la.histos);
 }
 
 void InjectionDelay::run()

@@ -84,6 +84,12 @@ git lfs fetch cms_tk_ph2
 git lfs pull cms_tk_ph2
 ```
 
+You might need to configuring the `git-lfs smudge`:
+```bash
+git config --global filter.lfs.smudge "git-lfs smudge --skip -- %f"
+git config --global filter.lfs.process "git-lfs filter-process --skip"
+```
+
 
 ##
 ### Known issues
@@ -109,4 +115,4 @@ For any support/suggestions, send an email to fabio.raveraSPAMNOT@cern.ch, mauro
 
 ##
 ### Firmware repository for OT tracker
-`https://udtc-ot-firmware.web.cern.ch/`
+[https://udtc-ot-firmware.web.cern.ch/](https://udtc-ot-firmware.web.cern.ch/)

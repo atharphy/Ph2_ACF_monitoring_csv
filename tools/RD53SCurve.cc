@@ -29,7 +29,6 @@ void SCurve::ConfigureCalibration()
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip   = this->findValueInSettings<double>("UpdateChipCfg");
     saveBinaryData = this->findValueInSettings<double>("SaveBinaryData");
-    dataOutputDir  = this->findValueInSettings<std::string>("DataOutputDir", "");
     frontEnd       = RD53Shared::firstChip->getFEtype(colStart, colStop);
 
     // ########################
@@ -89,8 +88,8 @@ void SCurve::sendData()
         ContainerSerialization theOccupancySerialization("SCurveOccupancy");
         for(const auto theOccContainer: detectorContainerVector)
         {
-            int deltaVacl = dacList[index++] - offset;
-            theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer, deltaVacl);
+            uint16_t deltaVcal = dacList[index++] - offset + (stopValue - startValue) / (2 * nSteps);
+            theOccupancySerialization.streamByChipContainer(fDQMStreamer, *theOccContainer, deltaVcal);
         }
     }
 }
@@ -112,20 +111,20 @@ void SCurve::localConfigure(const std::string& histoFileName, int currentRun)
 
     LOG(INFO) << GREEN << "[SCurve::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
-    // ###############################
-    // # Initialize output directory #
-    // ###############################
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
-
     // ##########################
     // # Initialize calibration #
     // ##########################
     SCurve::ConfigureCalibration();
 
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<SCurveHistograms>(histoFileName, "SCurve", histos, currentRun, saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "SCurve", histos, currentRun, saveBinaryData);
 }
 
 void SCurve::run()
@@ -154,14 +153,14 @@ void SCurve::run()
                 for(const auto cChip: *cHybrid)
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                            if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
-                                                                                                                     ->getObject(cBoard->getId())
-                                                                                                                     ->getObject(cOpticalGroup->getId())
-                                                                                                                     ->getObject(cHybrid->getId())
-                                                                                                                     ->getObject(cChip->getId())
-                                                                                                                     ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
-                                                                                                                     ->allChannelGroup()
-                                                                                                                     ->isChannelEnabled(row, col))
+                            if(!cChip->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
+                                                                                                 ->getObject(cBoard->getId())
+                                                                                                 ->getObject(cOpticalGroup->getId())
+                                                                                                 ->getObject(cHybrid->getId())
+                                                                                                 ->getObject(cChip->getId())
+                                                                                                 ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                                 ->allChannelGroup()
+                                                                                                 ->isChannelEnabled(row, col))
                                 for(auto i = 0u; i < dacList.size(); i++)
                                     detectorContainerVector[i]
                                         ->getObject(cBoard->getId())
@@ -223,14 +222,14 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
                 {
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                   ->getObject(cBoard->getId())
-                                                                                                                   ->getObject(cOpticalGroup->getId())
-                                                                                                                   ->getObject(cHybrid->getId())
-                                                                                                                   ->getObject(cChip->getId())
-                                                                                                                   ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
-                                                                                                                   ->allChannelGroup()
-                                                                                                                   ->isChannelEnabled(row, col))
+                            if(cChip->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
+                                                                                               ->getObject(cBoard->getId())
+                                                                                               ->getObject(cOpticalGroup->getId())
+                                                                                               ->getObject(cHybrid->getId())
+                                                                                               ->getObject(cChip->getId())
+                                                                                               ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                               ->allChannelGroup()
+                                                                                               ->isChannelEnabled(row, col))
                             {
                                 for(auto i = 0u; i < dacList.size(); i++)
                                     measurements[i] = detectorContainerVector[i]
@@ -316,7 +315,7 @@ std::shared_ptr<DetectorDataContainer> SCurve::analyze()
 void SCurve::fillHisto()
 {
 #ifdef __USE_ROOT__
-    for(auto i = 0u; i < dacList.size(); i++) histos->fillOccupancy(*detectorContainerVector[i], dacList[i] - offset);
+    for(auto i = 0u; i < dacList.size(); i++) histos->fillOccupancy(*detectorContainerVector[i], dacList[i] - offset + (stopValue - startValue) / (2 * nSteps));
     histos->fillThrAndNoise(*theThresholdAndNoiseContainer);
 #endif
 }

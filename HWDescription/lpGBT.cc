@@ -13,11 +13,10 @@ namespace Ph2_HwDescription
 {
 lpGBT::lpGBT(uint8_t pBeId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName, const std::string& pConfigFilePath) : Chip(pBeId, FMCId, pOpticalGroupId, 0, pChipId)
 {
-    configFileName  = fileName;
+    fConfigFileName = fileName;
     fConfigFilePath = pConfigFilePath;
-    phaseRxAligned  = false; // @TMP@
     setFrontEndType(FrontEndType::LpGBT);
-    lpGBT::loadfRegMap(configFileName);
+    lpGBT::loadfRegMap(fConfigFileName);
 }
 
 void lpGBT::initializeFreeRegisters()
@@ -77,11 +76,11 @@ void lpGBT::loadfRegMap(const std::string& fileName)
 
     if(file.good() == true)
     {
-        initializeFreeRegisters();
         std::string line, fName, fAddress_str, fDefValue_str, fValue_str, fBitSize_str;
         int         cLineCounter = 0;
         ChipRegItem fRegItem;
 
+        initializeFreeRegisters();
         while(getline(file, line))
         {
             if(line.find_first_not_of(" \t") == std::string::npos || line.at(0) == '#' || line.at(0) == '*' || line.empty())

@@ -1,26 +1,25 @@
 /*!
-  \file                MonitorDQMPlotBase.h
-  \brief               base class to create and fill monitoring histograms
-  \author              Fabio Ravera, Lorenzo Uplegger
-  \version             1.0
-  \date                6/5/19
-  Support :            mail to : fabio.ravera@cern.ch
-
+  \file                  MonitorDQMPlotBase.h
+  \brief                 base class to create and fill monitoring histograms
+  \author                Fabio Ravera, Lorenzo Uplegger
+  \version               1.0
+  \date                  6/5/19
+  Support:               email to fabio.ravera@cern.ch
 */
 
 #ifndef __MonitorDQMPlotBASE_H__
 #define __MonitorDQMPlotBASE_H__
-
-#include <memory>
-#include <string>
-#include <unistd.h>
-#include <vector>
 
 #include "Parser/DetectorMonitorConfig.h"
 #include "Parser/FileParser.h"
 #include "RootUtils/GraphContainer.h"
 #include "RootUtils/RootContainerFactory.h"
 #include "Utils/Container.h"
+
+#include <memory>
+#include <string>
+#include <unistd.h>
+#include <vector>
 
 #include <TAxis.h>
 #include <TDatime.h>
@@ -45,7 +44,7 @@ class MonitorDQMPlotBase
     /*!
      * destructor
      */
-    virtual ~MonitorDQMPlotBase() { ; }
+    virtual ~MonitorDQMPlotBase() { std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl; }
 
     /*!
      * \brief Book histograms
@@ -77,8 +76,9 @@ class MonitorDQMPlotBase
         struct tm* timeinfo = localtime(&rawTime);
         char       timeStampString[80];
         strftime(timeStampString, sizeof(timeStampString), TIME_FORMAT, timeinfo);
+        std::string tmpTime{std::to_string(1) + timeStampString};
 
-        TDatime rootTime(timeStampString);
+        TDatime rootTime(tmpTime.c_str());
         return rootTime.Convert();
     }
 
@@ -101,7 +101,7 @@ class MonitorDQMPlotBase
             graphContainer.fTheGraph->GetYaxis()->SetTitle(YTitle);
         }
         graphContainer.fTheGraph->SetMarkerStyle(20);
-        graphContainer.fTheGraph->SetMarkerSize(0.4);
+        graphContainer.fTheGraph->SetMarkerSize(0.8);
 
         if(type == "chip")
             RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, graphContainer);

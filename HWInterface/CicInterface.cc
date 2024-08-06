@@ -12,7 +12,6 @@
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/D19clpGBTInterface.h"
 #include "HWInterface/ExceptionHandler.h"
-#include "HWInterface/ReadoutChipInterface.h"
 #include "Utils/GenericDataArray.h"
 #include "boost/format.hpp"
 #include <numeric>
@@ -185,7 +184,7 @@ bool CicInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std
         auto cIterator = cRegMap.find(cReq.first);
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "D19clpGBTInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
+            LOG(ERROR) << BOLDRED << "CicInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq.first << RESET;
             continue;
         }
 
@@ -218,7 +217,7 @@ std::vector<std::pair<std::string, uint16_t>> CicInterface::ReadChipMultReg(Ph2_
         auto cIterator = cRegMap.find(cReq);
         if(cIterator == cRegMap.end())
         {
-            LOG(ERROR) << BOLDRED << "SSA2Interface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq << RESET;
+            LOG(ERROR) << BOLDRED << "CicInterface::WriteChipMultReg trying to write to a register that doesn't exist in the map : " << cReq << RESET;
             abort();
         }
 
@@ -1386,7 +1385,7 @@ bool CicInterface::ConfigureDriveStrength(Chip* pChip, uint8_t pDriveStrength)
     {
         auto cValue = (cRegValue & 0xF8) | cIterator->second; //(cRxTermination << 4) | (cClkTermination << 3) | cIterator->second;
         cSuccess    = this->WriteChipReg(pChip, cRegName, cValue);
-        LOG(INFO) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec << RESET;
+        LOG(DEBUG) << BOLDBLUE << "Configuring drive strength on CIC output pads: 0x" << std::hex << +cValue << std::dec << RESET;
         if(!cSuccess)
         {
             LOG(INFO) << BOLDRED << "Could not configure drive strength on CIC output pads on Board id " << +pChip->getBeBoardId() << " OpticalGroup id" << +pChip->getOpticalGroupId() << " Hybrid id "
@@ -1395,8 +1394,8 @@ bool CicInterface::ConfigureDriveStrength(Chip* pChip, uint8_t pDriveStrength)
             return false;
         }
         cRegValue = this->ReadChipReg(pChip, cRegName);
-        LOG(INFO) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec << "[ drive strength set to "
-                  << +pDriveStrength << " ]" << RESET;
+        LOG(DEBUG) << BOLDGREEN << "SUCCESSFULLY " << BOLDBLUE << " configured drive strength on CIC output pads: 0x" << std::hex << +cRegValue << std::dec << "[ drive strength set to "
+                   << +pDriveStrength << " ]" << RESET;
     }
     return cSuccess;
 }

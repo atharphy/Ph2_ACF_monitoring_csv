@@ -101,7 +101,7 @@ struct RD53ChipEvent
     uint16_t hybrid_id;
     uint16_t chip_id;
     uint16_t chip_lane;
-    uint16_t l1a_data_size;
+    uint16_t l1a_size;
     uint16_t chip_type;
     uint16_t frame_delay;
 
@@ -152,7 +152,7 @@ class RD53Event : public Ph2_HwInterface::Event
     static void DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint32_t& eventStatus, bool silentRunning = false);
     static bool EvtErrorHandler(uint32_t status);
     static void PrintEvents(const std::vector<RD53Event>& events, const std::vector<uint32_t>& pData = {});
-    static void MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events);
+    static bool MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events);
 
     // ################
     // # Event format #
@@ -170,6 +170,7 @@ class RD53Event : public Ph2_HwInterface::Event
     // # Vector containing the decoded events #
     // ########################################
     static std::vector<RD53Event> decodedEvents;
+    static bool                   weakCheckDataStatus;
 
   private:
     bool        isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const;

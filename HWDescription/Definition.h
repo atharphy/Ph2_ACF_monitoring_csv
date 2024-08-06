@@ -131,7 +131,8 @@ enum class FrontEndType
     InnerTrackerQuad,
     HYBRID2S,
     HYBRIDPS,
-    LpGBT
+    LpGBT,
+    VTRx
 };
 enum class SLinkDebugMode
 {
@@ -141,15 +142,16 @@ enum class SLinkDebugMode
 };
 enum class EventType
 {
-    ZS   = 1, // ZeroSuppression
-    VR   = 2, // VirginRaw
-    PSAS = 3,
-    VR2S = 4
+    ZS              = 1, // ZeroSuppression
+    VR              = 2, // VirginRaw
+    PSAS            = 3,
+    VR2S            = 4,
+    VRPCTestAdapter = 5 // VirginRaw with IT PortCard test adapter
 };
 
 #define NUMBER_OF_CIC_PORTS 8
 #define NUMBER_OF_LINES_PER_CIC_PORTS 6
 
-#define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
+#define TIME_FORMAT "%y-%m-%d %H:%M:%S"
 
 #endif

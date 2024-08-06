@@ -1,4 +1,5 @@
 #include "tools/Tool.h"
+#include <future>
 #include <numeric>
 
 #include "HWDescription/Chip.h"
@@ -8,13 +9,11 @@
 #include "Utils/ContainerSerialization.h"
 #include "Utils/Utilities.h"
 
+#include "Utils/ConfigureInfo.h"
 #include "Utils/DataContainer.h"
 #include "Utils/EmptyContainer.h"
-#include "Utils/Occupancy.h"
-#include <future>
-
-#include "Utils/ConfigureInfo.h"
 #include "Utils/MPAChannelGroupHandler.h"
+#include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
 #include "Utils/StartInfo.h"
 
@@ -27,7 +26,8 @@ using namespace Ph2_System;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-std::atomic<bool> Tool::fKeepRunning(false);
+std::atomic<bool> Tool::fKeepRunning{false};
+std::atomic<int>  Tool::fRunNumber{0};
 
 Tool::Tool()
     : SystemController()
@@ -55,13 +55,12 @@ Tool::Tool()
     , fDoHybridBroadcast(false)
     , fOfStream(nullptr)
 {
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
     fHttpServer = nullptr;
 #endif
 }
 
-#ifdef __USE_ROOT__
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
 Tool::Tool(THttpServer* pHttpServer)
     : SystemController()
     , fCanvasMap()
@@ -72,7 +71,6 @@ Tool::Tool(THttpServer* pHttpServer)
     , fDirectoryName("")
     , fResultFile(nullptr)
     , fHttpServer(pHttpServer)
-    , fRunNumber(0)
     , fSkipMaskedChannels(false)
     , fAllChan(false)
     , fMaskChannelsFromOtherGroups(false)
@@ -81,7 +79,6 @@ Tool::Tool(THttpServer* pHttpServer)
     , fDoHybridBroadcast(false)
 {
 }
-#endif
 #endif
 
 Tool::Tool(const Tool& pTool) { this->Inherit(&pTool); }
@@ -282,7 +279,6 @@ void Tool::Inherit(const Tool* pTool)
     fSummaryTreeValue     = pTool->fSummaryTreeValue;
 #endif
     fTestGroupChannelMap         = pTool->fTestGroupChannelMap;
-    fRunNumber                   = pTool->fRunNumber;
     fSkipMaskedChannels          = pTool->fSkipMaskedChannels;
     fAllChan                     = pTool->fAllChan;
     fMaskForTestGroupChannelMap  = pTool->fMaskForTestGroupChannelMap;
@@ -298,7 +294,7 @@ void Tool::Inherit(const Tool* pTool)
     fOfStream                    = pTool->fOfStream;
     fMetadataHandler             = pTool->fMetadataHandler;
 
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
     fHttpServer = pTool->fHttpServer;
 #endif
 }
@@ -310,7 +306,7 @@ void Tool::resetPointers() {}
 void Tool::Destroy()
 {
     LOG(INFO) << BOLDRED << "Destroying memory objects" << RESET;
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
     LOG(INFO) << BOLDRED << "Destroying HttpServer" << RESET;
     if(fHttpServer)
     {
@@ -452,8 +448,7 @@ void Tool::bookHistogram(ChipContainer* pChip, std::string pName, TObject* pObje
     if(cHisto != std::end(cChipHistMap->second)) cChipHistMap->second.erase(cHisto);
 
     cChipHistMap->second[pName] = pObject;
-
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
     if(fHttpServer) fHttpServer->Register("/Histograms", pObject);
 #endif
 }
@@ -481,7 +476,7 @@ void Tool::bookHistogram(HybridContainer* pHybrid, std::string pName, TObject* p
     if(cHisto != std::end(cHybridHistMap->second)) cHybridHistMap->second.erase(cHisto);
 
     cHybridHistMap->second[pName] = pObject;
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
     if(fHttpServer) fHttpServer->Register("/Histograms", pObject);
 #endif
 }
@@ -509,7 +504,7 @@ void Tool::bookHistogram(BoardContainer* pBeBoard, std::string pName, TObject* p
     if(cHisto != std::end(cBeBoardHistMap->second)) cBeBoardHistMap->second.erase(cHisto);
 
     cBeBoardHistMap->second[pName] = pObject;
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
     if(fHttpServer) fHttpServer->Register("/Histograms", pObject);
 #endif
 }
@@ -521,7 +516,7 @@ TObject* Tool::getHist(ChipContainer* pChip, std::string pName)
     if(cChipHistMap == std::end(fChipHistMap))
     {
         // Fabio: CBC specific -> to be moved out from Tool
-        LOG(ERROR) << RED << "Error: could not find the Histograms for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getHybridId()) << ")" << RESET;
+        LOG(ERROR) << BOLDRED << "Error: could not find the Histograms for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getHybridId()) << ")" << RESET;
         return nullptr;
     }
     else
@@ -530,7 +525,7 @@ TObject* Tool::getHist(ChipContainer* pChip, std::string pName)
 
         if(cHisto == std::end(cChipHistMap->second))
         {
-            LOG(ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET;
+            LOG(ERROR) << BOLDRED << "Error: could not find the Histogram with the name " << BOLDYELLOW << pName << RESET;
             return nullptr;
         }
         else
@@ -544,7 +539,7 @@ TObject* Tool::getHist(HybridContainer* pHybrid, std::string pName)
 
     if(cHybridHistMap == std::end(fHybridHistMap))
     {
-        LOG(ERROR) << RED << "Error: could not find the Histograms for Hybrid " << int(pHybrid->getId()) << RESET;
+        LOG(ERROR) << BOLDRED << "Error: could not find the Histograms for Hybrid " << BOLDYELLOW << int(pHybrid->getId()) << RESET;
         return nullptr;
     }
     else
@@ -553,7 +548,7 @@ TObject* Tool::getHist(HybridContainer* pHybrid, std::string pName)
 
         if(cHisto == std::end(cHybridHistMap->second))
         {
-            LOG(ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET;
+            LOG(ERROR) << BOLDRED << "Error: could not find the Histogram with the name " << BOLDYELLOW << pName << RESET;
             return nullptr;
         }
         else
@@ -567,7 +562,7 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
 
     if(cBeBoardHistMap == std::end(fBeBoardHistMap))
     {
-        LOG(ERROR) << RED << "Error: could not find the Histograms for Hybrid " << int(pBeBoard->getId()) << RESET;
+        LOG(ERROR) << BOLDRED << "Error: could not find the Histograms for Hybrid " << BOLDYELLOW << int(pBeBoard->getId()) << RESET;
         return nullptr;
     }
     else
@@ -576,7 +571,7 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
 
         if(cHisto == std::end(cBeBoardHistMap->second))
         {
-            LOG(ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET;
+            LOG(ERROR) << BOLDRED << "Error: could not find the Histogram with the name " << BOLDYELLOW << pName << RESET;
             return nullptr;
         }
         else
@@ -667,7 +662,8 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
         LOG(INFO) << "OTSDAQ result directory environmental variable set: " << std::getenv("OTSDAQ_RESULTS_FOLDER");
         nDirname = std::string(std::getenv("OTSDAQ_RESULTS_FOLDER")) + "/" + pDirname + "/";
     }
-    else { nDirname = pDirname; }
+    else
+        nDirname = pDirname;
     if(pDate) nDirname += currentDateTime();
 
     std::string cCommand = "mkdir -p " + nDirname;
@@ -678,7 +674,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
     }
     catch(std::exception& e)
     {
-        LOG(ERROR) << BOLDRED << "Exception when trying to create Result Directory: " << e.what() << RESET;
+        LOG(ERROR) << BOLDRED << "Exception when trying to create Result Directory: " << BOLDYELLOW << e.what() << RESET;
     }
 
     fDirectoryName = nDirname;
@@ -704,11 +700,11 @@ void Tool::InitResultFile(const std::string& pFilename)
         }
         catch(std::exception& e)
         {
-            LOG(ERROR) << "Exceptin when trying to create Result File: " << e.what();
+            LOG(ERROR) << BOLDRED << "Exceptin when trying to create Result File: " << BOLDYELLOW << e.what() << RESET;
         }
     }
     else
-        LOG(INFO) << RED << "ERROR: " << RESET << "No result directory initialized - not saving results!";
+        LOG(WARNING) << BOLDRED << "Error: " << BOLDYELLOW << "no result directory initialized - not saving results" << RESET;
 #endif
 }
 
@@ -787,7 +783,7 @@ void Tool::AddMetadata()
 
 void Tool::StartHttpServer(const int pPort, bool pReadonly)
 {
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
 
     if(fHttpServer)
     {
@@ -813,7 +809,7 @@ void Tool::StartHttpServer(const int pPort, bool pReadonly)
     }
     catch(std::exception& e)
     {
-        LOG(ERROR) << "Exception when trying to start THttpServer: " << e.what();
+        LOG(ERROR) << BOLDRED << "Exception when trying to start THttpServer: " << BOLDYELLOW << e.what() << RESET;
     }
 
     LOG(INFO) << "Opening THttpServer on port " << pPort << ". Point your browser to: " << GREEN << hostname << ":" << pPort << RESET;
@@ -826,7 +822,7 @@ void Tool::StartHttpServer(const int pPort, bool pReadonly)
 
 void Tool::HttpServerProcess()
 {
-#ifdef __HTTP__
+#if defined __USE_ROOT__ && defined __HTTP__
 
     if(fHttpServer)
     {
@@ -913,7 +909,7 @@ void Tool::dumpConfigFiles()
     }
     else
     {
-        LOG(ERROR) << "Error: no results Directory initialized" << RESET;
+        LOG(ERROR) << BOLDRED << "Error: " << BOLDYELLOW << "no results Directory initialized" << RESET;
         abort();
     }
 }
@@ -2345,7 +2341,7 @@ void Tool::setSameDac(const std::string& dacName, const uint16_t dacValue)
     for(auto cBoard: *fDetectorContainer) { setSameDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue); }
 }
 
-std::string Tool::getCalibrationName(void)
+std::string Tool::getCalibrationName(void) const
 {
     int32_t     status;
     std::string className     = abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);

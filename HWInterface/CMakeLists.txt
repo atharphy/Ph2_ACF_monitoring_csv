@@ -5,11 +5,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     MESSAGE(STATUS "    ${BoldYellow}HW INTERFACE${Reset} [stand-alone]: [${BoldCyan}Ph2_ACF/HWInterface/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
-    # Includes
+    ############
+    # Includes #
+    ############
     include_directories(${PROJECT_SOURCE_DIR})
 
     # Boost also needs to be linked
-    #    include_directories(${Boost_INCLUDE_DIRS})
+    # include_directories(${Boost_INCLUDE_DIRS})
     # link_directories(${Boost_LIBRARY_DIRS})
     set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY} ${Boost_IOSTREAMS_LIBRARY})
 
@@ -38,9 +40,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
     endif(${PH2_TCUSB_FOUND})
 
-    ####################################
-    ## EXECUTABLES
-    ####################################
+    #################
+    ## EXECUTABLES ##
+    #################
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/HWInterface *.cc)
 
@@ -62,7 +64,7 @@ else()
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
     MESSAGE(STATUS "    ${BoldYellow}HW INTERFACE${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/HWInterface/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
-    
+
     cet_make(LIBRARY_NAME Ph2_Interface
             LIBRARIES
             Ph2_Description

@@ -1,13 +1,13 @@
 /*!
-        \file                MonitorDQMPlotCBC.h
+        \file                MonitorDQMPlotOT.h
         \brief               DQM class for DQM example -> use it as a templare
         \author              Fabio Ravera
-        \date                25/7/19
+        \date                29/7/24
         Support :            mail to : fabio.ravera@cern.ch
 */
 
-#ifndef __MonitorDQMPlotCBC_H__
-#define __MonitorDQMPlotCBC_H__
+#ifndef __MonitorDQMPlotOT_H__
+#define __MonitorDQMPlotOT_H__
 #include "MonitorDQM/MonitorDQMPlotBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -15,21 +15,21 @@
 class TFile;
 
 /*!
- * \class MonitorDQMPlotCBC
+ * \class MonitorDQMPlotOT
  * \brief Class for DQMExample monitoring Plots
  */
-class MonitorDQMPlotCBC : public MonitorDQMPlotBase
+class MonitorDQMPlotOT : public MonitorDQMPlotBase
 {
   public:
     /*!
      * constructor
      */
-    MonitorDQMPlotCBC();
+    MonitorDQMPlotOT();
 
     /*!
      * destructor
      */
-    ~MonitorDQMPlotCBC();
+    ~MonitorDQMPlotOT();
 
     /*!
      * \brief Book Plots
@@ -44,32 +44,30 @@ class MonitorDQMPlotCBC : public MonitorDQMPlotBase
      * \brief fill : fill Plots from TCP stream, need to be overwritten to avoid compilation errors, but it is not
      * needed if you do not fo into the SoC \param dataBuffer : vector of char with the TCP datastream
      */
-    bool fill(std::string& inputStream) override;
+    virtual bool fill(std::string& inputStream) override;
 
     /*!
      * \brief process : do something with the Plot like colors, fit, drawing canvases, etc
      */
-    void process() override;
+    virtual void process() override;
 
     /*!
      * \brief Reset Plot
      */
-    void reset(void) override;
+    virtual void reset(void) override;
 
-    /*!
-     * \brief fillCBCRegisterPlots
-     * \param theCBCRegisterContainer : Container with the hits you want to plot
-     * \param timeStamp : timeStamp
-     */
-    void fillCBCRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
-    void fillLpGBTRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
+    void fillLpGBTmonitorPlots(DetectorDataContainer& theInputContainer, const std::string& registerName);
+
+  protected:
+    const DetectorContainer* fDetectorContainer;
+    GraphContainer<TGraph>   producePlotTemplate(const std::string& registerName, const std::string& chipName, std::string yAxisUnits = "");
+    void                     fillReadoutChipPlots(DetectorDataContainer&                              theInputContainer,
+                                                  const std::string&                                  monitorValueName,
+                                                  const std::map<std::string, DetectorDataContainer>& theValueMonitorPlotMap,
+                                                  FrontEndType                                        theFrontEndType);
 
   private:
-    std::map<std::string, DetectorDataContainer> fCBCRegisterMonitorPlotMap;
+    void                                         bookLpGBTPlots(TFile* theOutputFile, const std::string& registerName);
     std::map<std::string, DetectorDataContainer> fLpGBTRegisterMonitorPlotMap;
-    const DetectorContainer*                     fDetectorContainer;
-
-    void bookCBCPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
-    void bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
 };
 #endif

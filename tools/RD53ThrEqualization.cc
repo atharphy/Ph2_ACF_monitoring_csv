@@ -120,21 +120,21 @@ void ThrEqualization::localConfigure(const std::string& histoFileName, int curre
 
     LOG(INFO) << GREEN << "[ThrEqualization::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
-    // ###############################
-    // # Initialize output directory #
-    // ###############################
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
-
     // ##########################
     // # Initialize calibration #
     // ##########################
     ThrEqualization::ConfigureCalibration();
 
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<ThrEqualizationHistograms>(histoFileName, "ThrEqualization", histos, currentRun, PixelAlive::saveBinaryData);
-    CalibBase::initializeFiles<PixelAliveHistograms>(histoFileName, "PixelAlive", PixelAlive::histos);
+    CalibBase::initializeFiles(histoFileName, "ThrEqualization", histos, currentRun, PixelAlive::saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "PixelAlive", PixelAlive::histos);
 }
 
 void ThrEqualization::run()
@@ -180,14 +180,14 @@ void ThrEqualization::run()
 
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                            if(!static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
-                                                                                                                     ->getObject(cBoard->getId())
-                                                                                                                     ->getObject(cOpticalGroup->getId())
-                                                                                                                     ->getObject(cHybrid->getId())
-                                                                                                                     ->getObject(cChip->getId())
-                                                                                                                     ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
-                                                                                                                     ->allChannelGroup()
-                                                                                                                     ->isChannelEnabled(row, col))
+                            if(!cChip->getChipOriginalMask()->isChannelEnabled(row, col) || !this->getChannelGroupHandlerContainer()
+                                                                                                 ->getObject(cBoard->getId())
+                                                                                                 ->getObject(cOpticalGroup->getId())
+                                                                                                 ->getObject(cHybrid->getId())
+                                                                                                 ->getObject(cChip->getId())
+                                                                                                 ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                                 ->allChannelGroup()
+                                                                                                 ->isChannelEnabled(row, col))
                             {
                                 theOccContainer->getObject(cBoard->getId())
                                     ->getObject(cOpticalGroup->getId())
@@ -241,14 +241,14 @@ void ThrEqualization::analyze()
 
                     for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
                         for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                            if(static_cast<RD53*>(cChip)->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
-                                                                                                                   ->getObject(cBoard->getId())
-                                                                                                                   ->getObject(cOpticalGroup->getId())
-                                                                                                                   ->getObject(cHybrid->getId())
-                                                                                                                   ->getObject(cChip->getId())
-                                                                                                                   ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
-                                                                                                                   ->allChannelGroup()
-                                                                                                                   ->isChannelEnabled(row, col))
+                            if(cChip->getChipOriginalMask()->isChannelEnabled(row, col) && this->getChannelGroupHandlerContainer()
+                                                                                               ->getObject(cBoard->getId())
+                                                                                               ->getObject(cOpticalGroup->getId())
+                                                                                               ->getObject(cHybrid->getId())
+                                                                                               ->getObject(cChip->getId())
+                                                                                               ->getSummary<std::shared_ptr<ChannelGroupHandler>>()
+                                                                                               ->allChannelGroup()
+                                                                                               ->isChannelEnabled(row, col))
                             {
                                 static_cast<RD53*>(cChip)->setTDAC(row,
                                                                    col,
@@ -513,6 +513,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
     // ###########################
     // # Download new DAC values #
     // ###########################
+    LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
     CalibBase::downloadNewDACvalues(bestDACcontainer, {regName.c_str()}, true, 0);
 
     // #################################

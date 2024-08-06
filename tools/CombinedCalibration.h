@@ -1,6 +1,7 @@
 #ifndef __COMBINED_CALIBRATION__
 #define __COMBINED_CALIBRATION__
 
+#include "MetadataHandlerOT.h"
 #include "tools/Tool.h"
 #include <iostream>
 
@@ -55,6 +56,7 @@ struct CombinedCalibration : public Tool
     void start_single(T& tool)
     {
         std::cout << __PRETTY_FUNCTION__ << " Starting calibration" << std::endl;
+        fMetadataHandler->fillSubCalibrationNameAndTimeContainer(tool.getCalibrationName());
         tool.Inherit(current_tool);
         tool.ConfigureCalibration();
         tool.Running();

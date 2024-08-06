@@ -35,13 +35,13 @@ class ThrMinimization : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
+    void   localConfigure(const std::string& histoFileName, int currentRun) override;
     void   run() override;
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override
     {
-        uint16_t nIterationsThr = floor(log2(stopValue - startValue + 1) + 2);
-        uint16_t moreIterations = 1;
+        const uint16_t nIterationsThr = floor(log2(stopValue - startValue + 1) + 2);
+        const uint16_t moreIterations = 1;
         return PixelAlive::getNumberIterations() * (nIterationsThr + moreIterations);
     }
 

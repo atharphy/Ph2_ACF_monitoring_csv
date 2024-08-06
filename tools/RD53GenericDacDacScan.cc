@@ -102,20 +102,20 @@ void GenericDacDacScan::localConfigure(const std::string& histoFileName, int cur
 
     LOG(INFO) << GREEN << "[GenericDacDacScan::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
-    // ###############################
-    // # Initialize output directory #
-    // ###############################
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
-
     // ##########################
     // # Initialize calibration #
     // ##########################
     GenericDacDacScan::ConfigureCalibration();
 
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<GenericDacDacScanHistograms>(histoFileName, "GenericDacDacScan", histos, currentRun, PixelAlive::saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "GenericDacDacScan", histos, currentRun, PixelAlive::saveBinaryData);
 }
 
 void GenericDacDacScan::run()

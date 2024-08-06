@@ -52,8 +52,8 @@ MPA2::MPA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartner
     fMaxRegValue      = 255; // 8 bit registers in MPA
     fChipOriginalMask = std::make_shared<ChannelGroup<NMPAROWS, NSSACHANNELS>>();
     fChipOriginalMask->enableAllChannels();
-    fPartnerId     = pPartnerId;
-    configFileName = filename;
+    fPartnerId      = pPartnerId;
+    fConfigFileName = filename;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::MPA2);
     for(auto& cMapItem: fRegMap)
@@ -75,6 +75,8 @@ void MPA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^L1_.*_.*"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^OF_.*_count$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex(".*BIST_.*"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^RO_Delay_.*"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^RO_Inverter_.*"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EfuseProg[0-3]$"), RegisterType::Utility));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^Mask$"), RegisterType::Utility));
     // Brodcast registers cannot be reset to avoid overriding local changes

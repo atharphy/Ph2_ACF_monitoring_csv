@@ -35,13 +35,14 @@ class InjectionDelay : public PixelAlive
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
+    void   localConfigure(const std::string& histoFileName, int currentRun) override;
     void   run() override;
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override
     {
-        return PixelAlive::getNumberIterations() *
-               (stopValue - startValue + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+        const uint16_t nIterations =
+            (stopValue - startValue + 1 <= RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1 ? stopValue - startValue + 1 : RD53Shared::setBits(RD53Shared::MAXBITCHIPREG) + 1);
+        return PixelAlive::getNumberIterations() * nIterations;
     }
 
     void analyze();

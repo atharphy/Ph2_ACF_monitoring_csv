@@ -9,7 +9,6 @@
 
 #include "System/SystemController.h"
 #include "Utils/ConfigureInfo.h"
-#include "Utils/StartInfo.h"
 #include "Utils/argvparser.h"
 #include "tools/RD53BERtest.h"
 #include "tools/RD53ClockDelay.h"
@@ -43,7 +42,6 @@
 INITIALIZE_EASYLOGGINGPP
 
 using namespace Ph2_System;
-using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
 void introBanner()
@@ -98,8 +96,7 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
     }
 
     std::string fileName(binaryFile);
-    RD53Event::MakeNtuple(fileName.replace(fileName.find(".raw"), 4, ".root"), decodedEvents);
-    LOG(INFO) << GREEN << "Saving raw data into ROOT ntuple: " << BOLDYELLOW << fileName << RESET;
+    if(RD53Event::MakeNtuple(fileName.replace(fileName.find(".raw"), 4, ".root"), decodedEvents) == true) LOG(INFO) << GREEN << "Saving raw data into ROOT ntuple: " << BOLDYELLOW << fileName << RESET;
 
     mySysCntr.closeFileHandler();
 }
@@ -179,6 +176,7 @@ int main(int argc, char** argv)
     std::string whichCalib        = cmd.foundOption("calib") == true ? cmd.optionValue("calib") : "";
     std::string EUDAQproducerNAME = cmd.foundOption("prodName") == true ? cmd.optionValue("prodName") : "";
     std::string binaryFile        = cmd.foundOption("binary") == true ? cmd.optionValue("binary") : "";
+    std::string eudaqRunCtr       = cmd.foundOption("eudaqRunCtr") == true ? cmd.optionValue("eudaqRunCtr") : "tcp://localhost:44000";
     bool        program           = cmd.foundOption("prog") == true ? true : false;
     bool        skipcfg           = cmd.foundOption("skipcfg") == true ? true : false;
     bool        reset             = cmd.foundOption("reset") == true ? true : false;
@@ -188,7 +186,6 @@ int main(int argc, char** argv)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
     else if(cmd.foundOption("replay") == true)
         RegManager::enableReplay(cmd.optionValue("replay"));
-    std::string eudaqRunCtr = cmd.foundOption("eudaqRunCtr") == true ? cmd.optionValue("eudaqRunCtr") : "tcp://localhost:44000";
 
     // ########################
     // # Configure the logger #
@@ -328,7 +325,7 @@ int main(int argc, char** argv)
                 else if(pa.fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->size() != 1)
                 {
                     auto chipSubset = [evenORodd](const ChipContainer* theChip) { return (theChip->getId() % 2 == evenORodd); };
-                    pa.fDetectorContainer->addReadoutChipQueryFunction(chipSubset, "readoutChipSubset");
+                    pa.fDetectorContainer->addReadoutChipQueryFunction(chipSubset, "chipSubset");
                     doTwice = true;
                 }
             }
@@ -556,7 +553,7 @@ int main(int argc, char** argv)
         {
             std::string fileName(binaryFile);
             fileName.erase(0, (fileName.find_last_of("/\\") == std::string::npos ? 0 : fileName.find_last_of("/\\")));
-            fileName  = fileName.erase(fileName.find(".raw") - 8, 12) + "fromBin";
+            fileName  = fileName.erase(fileName.find(".raw") - 8, 12) + "fromRaw";
             runNumber = atof(fileName.substr(fileName.find("Run") + 3, 6).c_str());
             ph.setValueInSettings<double>("SaveBinaryData", false);
 

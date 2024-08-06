@@ -7,27 +7,12 @@
     <CDCE configure="0" clockRate="320"/>
 
     <!-- skeleton -->
-    <OpticalGroup Id="0" FMCId="L12" reset="1">
+     <OpticalGroup Id="0" enable="1" FMCId="L12" reset="1">
         <lpGBT_Interface useOpticalLink="1" useCPB="1"/>
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
         <lpGBT Id="0" version="0" optical="1" configFile="lpGBT_v0_2S.txt">
-          <Settings
-          />
         </lpGBT>
         <Hybrid Id="0" enable="1" reset="1">
-            <Global>
-                <Settings threshold="560" latency="99"/>
-                <TestPulse enable="1" polarity="0" amplitude="0xC0" channelgroup="0" delay="0" groundothers="0"/>
-                <ClusterStub clusterwidth="4" ptwidth="14" layerswap="0" off1="0" off2="0" off3="0" off4="0"/>
-                <Misc analogmux="0b00000" pipelogic="0" stublogic="0" or254="0" tpgclock="1" testclock="0" dll="10" hipCount="2"/>
-                <ChannelMask disable=""/>
-                <CIC enableBend="1" enableLastLine="0" enableSparsification="0" clockFrequency="320" driveStrength="3" edgeSelect="0"/>
-                <!-- <MaskedStrips
-                    CBCId="0;1"
-                    Rows="241, 240,225,224,209,208,193,192,177,176,161,160,145,144,129,128,113,112,97,96,81,80,65,64,49,48,33,32,17,16;241,240,225,224,209,208,193,192,177,176,161,160,145,144,129,128,113,112,97,96,81,80,65,64,49,48,33,32,17,16"
-                />  -->
-            </Global>
-
             <CBC_Files path="${PH2ACF_BASE_DIR}/settings/CbcFiles/" />
             <CBC Id="0" enable="1" configFile="CBC3_default.txt" />
             <CBC Id="1" enable="1" configFile="CBC3_default.txt" />
@@ -152,13 +137,13 @@
 <MonitoringSettings>
     <Monitoring type="2S" enable="1">
         <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-        <MonitoringElement device="CBC"   register="VCth" enable="1"/>
         <MonitoringElement device="LpGBT" register="ADC0" enable="1"/>
-        <MonitoringElement device="LpGBT" register="ADC1" enable="1"/>
+        <MonitoringElement device="LpGBT" register="1V25_Left" enable="1"/>
         <MonitoringElement device="LpGBT" register="ADC3" enable="1"/>
         <MonitoringElement device="LpGBT" register="VDD"  enable="1"/>
         <MonitoringElement device="LpGBT" register="VDDA" enable="1"/>
-        <MonitoringElement device="LpGBT" register="TEMP" enable="1"/>
+        <MonitoringElement device="LpGBT" register="LpGBTtemp" enable="1"/>
+    <MonitoringElement device="LpGBT" register="SensorTemp" enable="1"/>
     </Monitoring>
 </MonitoringSettings>
 

@@ -42,7 +42,8 @@ void RD53Event::fillChipDataContainer(ChipDataContainer* chipContainer, const st
     bool   vectorRequired = chipContainer->isSummaryContainerType<Summary<GenericDataVector, OccupancyAndPh>>();
     size_t chipIndx;
 
-    if((eventStatus == RD53FWEvtEncoder::GOOD) && (RD53Event::isHittedChip(hybridId, chipContainer->getId(), chipIndx) == true))
+    if(((RD53Event::weakCheckDataStatus == false) && (eventStatus == RD53FWEvtEncoder::GOOD) && (RD53Event::isHittedChip(hybridId, chipContainer->getId(), chipIndx) == true)) ||
+       ((RD53Event::weakCheckDataStatus == true) && (RD53Event::isHittedChip(hybridId, chipContainer->getId(), chipIndx) == true) && (chip_events[chipIndx].eventStatus == RD53FWEvtEncoder::GOOD)))
     {
         if(vectorRequired == true)
         {
@@ -118,6 +119,7 @@ void RD53Event::clearEventContainer(BeBoard& theBoard, DetectorDataContainer& th
 // # Event static data member instantiation #
 // ##########################################
 std::vector<RD53Event> RD53Event::decodedEvents;
+bool                   RD53Event::weakCheckDataStatus(false);
 
 std::vector<std::thread>            RD53Event::decodingThreads;
 std::vector<std::vector<RD53Event>> RD53Event::vecEvents(RD53Shared::NTHREADS);
@@ -168,7 +170,7 @@ void RD53Event::PrintEvents(const std::vector<RD53Event>& events, const std::vec
             LOG(INFO) << CYAN << "error_code      = " << event.error_code << RESET;
             LOG(INFO) << CYAN << "hybrid_id       = " << event.hybrid_id << RESET;
             LOG(INFO) << CYAN << "chip_lane       = " << event.chip_lane << RESET;
-            LOG(INFO) << CYAN << "l1a_data_size   = " << event.l1a_data_size << RESET;
+            LOG(INFO) << CYAN << "l1a_size        = " << event.l1a_size << RESET;
             LOG(INFO) << CYAN << "chip_type       = " << event.chip_type << RESET;
             LOG(INFO) << CYAN << "frame_delay     = " << event.frame_delay << RESET;
 
@@ -580,7 +582,7 @@ void RD53Event::DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std:
 
 void RD53ChipEvent::decodeChipFrame(const uint32_t data0, const uint32_t data1, RD53ChipEvent& event)
 {
-    std::tie(event.error_code, event.hybrid_id, event.chip_lane, event.l1a_data_size) =
+    std::tie(event.error_code, event.hybrid_id, event.chip_lane, event.l1a_size) =
         bits::unpack<RD53FWEvtEncoder::NBIT_ERR, RD53FWEvtEncoder::NBIT_HYBRID, RD53FWEvtEncoder::NBIT_CHIPID, RD53FWEvtEncoder::NBIT_L1ASIZE>(data0);
     std::tie(event.chip_type, event.frame_delay) = bits::unpack<RD53FWEvtEncoder::NBIT_CHIPTYPE, RD53FWEvtEncoder::NBIT_DELAY>(data1);
 }
@@ -724,7 +726,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
         // # Decode event preamble #
         // #########################
         bits.skip(RD53FWEvtEncoder::NBIT_EVTHEAD);
-        size_t block_size  = bits.pop(RD53FWEvtEncoder::NBIT_BLOCKSIZE);
+        evt.block_size     = bits.pop(RD53FWEvtEncoder::NBIT_BLOCKSIZE);
         evt.tlu_trigger_id = bits.pop(RD53FWEvtEncoder::NBIT_TRIGID);
         evt.trigger_tag    = bits.pop(RD53FWEvtEncoder::NBIT_TRGTAG);
         size_t dummy_size  = bits.pop(RD53FWEvtEncoder::NBIT_DUMMY);
@@ -735,7 +737,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
         // ##############################
         // # Decode frame and chip data #
         // ##############################
-        auto event_bits = bits.pop_slice(NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD * (block_size - 1 - dummy_size));
+        auto event_bits = bits.pop_slice(NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD * (evt.block_size - 1 - dummy_size));
         while(event_bits.size() != 0)
         {
             if(event_bits.pop(RD53FWEvtEncoder::NBIT_FRAMEHEAD) != RD53FWEvtEncoder::FRAME_HEADER)
@@ -753,7 +755,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
             chipEvt.error_code = event_bits.pop(RD53FWEvtEncoder::NBIT_ERR);
             chipEvt.hybrid_id  = event_bits.pop(RD53FWEvtEncoder::NBIT_HYBRID);
             chipEvt.chip_lane  = event_bits.pop(RD53FWEvtEncoder::NBIT_CHIPID);
-            size_t l1a_size    = event_bits.pop(RD53FWEvtEncoder::NBIT_L1ASIZE);
+            chipEvt.l1a_size   = event_bits.pop(RD53FWEvtEncoder::NBIT_L1ASIZE);
             event_bits.skip(RD53FWEvtEncoder::NBIT_PADDING);
             event_bits.skip(RD53FWEvtEncoder::NBIT_CHIPTYPE);
             event_bits.skip(RD53FWEvtEncoder::NBIT_DELAY);
@@ -761,14 +763,14 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
             if(chipEvt.error_code != 0)
             {
                 chipEvt.eventStatus |= RD53EvtEncoder::CHIPFWERR;
-                event_bits.skip(l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64);
+                event_bits.skip(chipEvt.l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64);
                 continue;
             }
 
             // ####################
             // # Decode chip data #
             // ####################
-            RD53B::decodeChipData(event_bits.pop_slice(l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64), chipEvt, options);
+            RD53B::decodeChipData(event_bits.pop_slice(chipEvt.l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64), chipEvt, options);
             evt.eventStatus |= chipEvt.eventStatus;
             if((chipEvt.eventStatus & (RD53FWEvtEncoder::MISSCHIP | RD53EvtEncoder::CHIPNS_WAS0 | RD53EvtEncoder::CHIPNS_WAS1)) != 0) break;
             evt.chip_events.push_back(std::move(chipEvt));
@@ -799,7 +801,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
     return events.size();
 }
 
-void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events)
+bool RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events)
 {
 #ifdef __USE_ROOT__
     TFile theFile(fileName.c_str(), "RECREATE");
@@ -821,7 +823,7 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     std::vector<uint16_t> FW_frame_event_error_code;
     std::vector<uint16_t> FW_frame_event_hybrid_id;
     std::vector<uint16_t> FW_frame_event_chip_lane;
-    std::vector<uint16_t> FW_frame_event_l1a_data_size;
+    std::vector<uint16_t> FW_frame_event_l1a_size;
     std::vector<uint16_t> FW_frame_event_chip_type;
     std::vector<uint16_t> FW_frame_event_frame_delay;
 
@@ -835,7 +837,7 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
     theTree.Branch("FW_frame_event_error_code", &FW_frame_event_error_code);
     theTree.Branch("FW_frame_event_hybrid_id", &FW_frame_event_hybrid_id);
     theTree.Branch("FW_frame_event_chip_lane", &FW_frame_event_chip_lane);
-    theTree.Branch("FW_frame_event_l1a_data_size", &FW_frame_event_l1a_data_size);
+    theTree.Branch("FW_frame_event_l1a_size", &FW_frame_event_l1a_size);
     theTree.Branch("FW_frame_event_chip_type", &FW_frame_event_chip_type);
     theTree.Branch("FW_frame_event_frame_delay", &FW_frame_event_frame_delay);
 
@@ -878,7 +880,7 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
         FW_frame_event_error_code.clear();
         FW_frame_event_hybrid_id.clear();
         FW_frame_event_chip_lane.clear();
-        FW_frame_event_l1a_data_size.clear();
+        FW_frame_event_l1a_size.clear();
         FW_frame_event_chip_type.clear();
         FW_frame_event_frame_delay.clear();
 
@@ -898,7 +900,7 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
             FW_frame_event_error_code.push_back(event.error_code);
             FW_frame_event_hybrid_id.push_back(event.hybrid_id);
             FW_frame_event_chip_lane.push_back(event.chip_lane);
-            FW_frame_event_l1a_data_size.push_back(event.l1a_data_size);
+            FW_frame_event_l1a_size.push_back(event.l1a_size);
             FW_frame_event_chip_type.push_back(event.chip_type);
             FW_frame_event_frame_delay.push_back(event.frame_delay);
 
@@ -933,8 +935,11 @@ void RD53Event::MakeNtuple(const std::string& fileName, const std::vector<RD53Ev
 
     theTree.Write();
     theFile.Close();
+
+    return true;
 #else
-    LOG(WARNING) << BOLDBLUE << "[RD53Event::MakeNtuple] The function to translate raw data into ROOT ntuple was not compiled" << RESET;
+    LOG(WARNING) << BOLDRED << ">>> The function to translate raw data into ROOT ntuple was not compiled <<<" << RESET;
+    return false;
 #endif
 }
 
