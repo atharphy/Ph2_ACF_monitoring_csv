@@ -5,7 +5,7 @@
 #include <TFile.h>
 #endif
 
-DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : fDetectorMonitorConfig(theDetectorMonitorConfig)
+DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : fDetectorMonitorConfig(theDetectorMonitorConfig)
 {
 #ifdef __USE_ROOT__
     std::string monitorOutputDir = "MonitorResults";
@@ -31,14 +31,6 @@ DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemCo
 DetectorMonitor::~DetectorMonitor()
 {
     LOG(INFO) << BOLDRED << ">>> Destroying monitoring <<<" << RESET;
-    DetectorMonitor::stopRunning();
-    u_int8_t cCounter = 0;
-    while((fMonitorFuture.wait_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs)) != std::future_status::ready) & (cCounter < fClose))
-    {
-        LOG(INFO) << GREEN << "\t--> Waiting for monitoring to be completed..." << RESET;
-        cCounter++;
-    }
-
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
         std::string  doneWithRunMessage = END_OF_TRANSMISSION_MESSAGE;
@@ -48,6 +40,7 @@ DetectorMonitor::~DetectorMonitor()
     }
 #ifdef __USE_ROOT__
     fOutputFile->Write();
+    LOG(INFO) << GREEN << "Closing monitor result file: " << BOLDYELLOW << fMonitorFileName << RESET;
     // fOutputFile->Close();
     // delete fOutputFile;
     // fOutputFile = nullptr;
@@ -87,4 +80,14 @@ std::string DetectorMonitor::getMonitorFileName()
 #else
     return "";
 #endif
+}
+
+void DetectorMonitor::waitForMonitorToStop()
+{
+    u_int8_t cCounter = 0;
+    while((fMonitorFuture.wait_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs)) != std::future_status::ready) & (cCounter < fClose))
+    {
+        LOG(INFO) << GREEN << "\t--> Waiting for monitoring to be completed..." << RESET;
+        cCounter++;
+    }
 }

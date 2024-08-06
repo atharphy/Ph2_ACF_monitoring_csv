@@ -2313,7 +2313,7 @@ void Tool::setSameDac(const std::string& dacName, const uint16_t dacValue)
     for(auto cBoard: *fDetectorContainer) { setSameDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue); }
 }
 
-std::string Tool::getCalibrationName(void)
+std::string Tool::getCalibrationName(void) const
 {
     int32_t     status;
     std::string className     = abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);

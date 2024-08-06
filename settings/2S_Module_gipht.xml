@@ -276,6 +276,7 @@
     <Setting name="PulseShape_PulseAmplitude">200</Setting>
     <Setting name="PulseShape_ChannelGroup"  >  0</Setting>
 
+    <Setting name="DoManualVrefTuning"      >  0</Setting>
 
     <Setting name="OTverifyBoardDataWord_NumberOfIterations">100</Setting>
     <Setting name="OTCICtoLpGBTecv_CICStrength">1-5</Setting>
@@ -312,13 +313,13 @@
 <MonitoringSettings>
 <Monitoring type="2S" enable="0">
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-    <MonitoringElement device="CBC"   register="VCth" enable="1"/>
     <MonitoringElement device="LpGBT" register="ADC0" enable="1"/>
     <MonitoringElement device="LpGBT" register="ADC1" enable="1"/>
     <MonitoringElement device="LpGBT" register="ADC3" enable="1"/>
     <MonitoringElement device="LpGBT" register="VDD"  enable="1"/>
     <MonitoringElement device="LpGBT" register="VDDA" enable="1"/>
-    <MonitoringElement device="LpGBT" register="TEMP" enable="1"/>
+    <MonitoringElement device="LpGBT" register="LpGBTtemp" enable="1"/>
+    <MonitoringElement device="LpGBT" register="SensorTemp" enable="1"/>
 </Monitoring>
 </MonitoringSettings>
 

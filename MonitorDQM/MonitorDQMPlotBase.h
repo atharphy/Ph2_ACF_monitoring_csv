@@ -44,7 +44,7 @@ class MonitorDQMPlotBase
     /*!
      * destructor
      */
-    virtual ~MonitorDQMPlotBase() { ; }
+    virtual ~MonitorDQMPlotBase() {}
 
     /*!
      * \brief Book histograms

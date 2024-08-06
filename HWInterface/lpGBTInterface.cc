@@ -988,7 +988,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
                      << RESET;
         // LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         // ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
-        return 0;
+        throw std::runtime_error("LpGBT ADC conversion timed out");
     }
 
     // ##################
@@ -1522,6 +1522,8 @@ void lpGBTInterface::TuneVrefControlLib(Ph2_HwDescription::lpGBT* pChip, bool pE
 
 void lpGBTInterface::AutoTuneVref(Ph2_HwDescription::lpGBT* pChip, bool pResetTempSensor)
 {
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+
     /*  Auto tune VREF based on the internal temperature sensor.
 
         WARNING: this routine WILL NOT WORK for irradiated chips (TID>0)

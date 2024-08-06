@@ -17,8 +17,8 @@
 #include "HWInterface/RD53BInterface.h"
 #include "HWInterface/RD53FWInterface.h"
 #include "HWInterface/VTRxInterface.h"
-#include "MonitorUtils/CBCMonitor.h"
 #include "MonitorUtils/DetectorMonitor.h"
+#include "MonitorUtils/Monitor2S.h"
 #include "MonitorUtils/PSMonitor.h"
 #include "MonitorUtils/RD53Monitor.h"
 #include "MonitorUtils/SEHMonitor.h"
@@ -118,6 +118,11 @@ void SystemController::Destroy()
 
     RD53Event::JoinDecodingThreads();
 
+    if(fDetectorMonitor != nullptr)
+    {
+        fDetectorMonitor->stopRunning();
+        fDetectorMonitor->waitForMonitorToStop();
+    }
     delete fDetectorMonitor;
     fDetectorMonitor = nullptr;
 
@@ -346,7 +351,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(fDetectorMonitorConfig->fEnable == true)
     {
         if(fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_2S_VALUE)
-            fDetectorMonitor = new CBCMonitor(this, *fDetectorMonitorConfig);
+            fDetectorMonitor = new Monitor2S(this, *fDetectorMonitorConfig);
         else if((fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_RD53A_VALUE) || (fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_RD53B_VALUE))
             fDetectorMonitor = new RD53Monitor(this, *fDetectorMonitorConfig);
         else if(fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_2SSEH_VALUE)
@@ -848,7 +853,7 @@ void SystemController::ConfigureHw(bool pReInitialize)
         exit(EXIT_FAILURE);
     }
 
-    LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from xml file @@@" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from XML file @@@" << RESET;
     for(const auto cBoard: *fDetectorContainer)
     {
         cBoard->printBoardType();

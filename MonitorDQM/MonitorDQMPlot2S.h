@@ -1,13 +1,13 @@
 /*!
-        \file                MonitorDQMPlotPS.h
+        \file                MonitorDQMPlot2S.h
         \brief               DQM class for DQM example -> use it as a templare
         \author              Fabio Ravera
         \date                25/7/19
         Support :            mail to : fabio.ravera@cern.ch
 */
 
-#ifndef __MonitorDQMPlotPS_H__
-#define __MonitorDQMPlotPS_H__
+#ifndef __MonitorDQMPlot2S_H__
+#define __MonitorDQMPlot2S_H__
 #include "MonitorDQM/MonitorDQMPlotOT.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -15,21 +15,21 @@
 class TFile;
 
 /*!
- * \class MonitorDQMPlotPS
+ * \class MonitorDQMPlot2S
  * \brief Class for DQMExample monitoring Plots
  */
-class MonitorDQMPlotPS : public MonitorDQMPlotOT
+class MonitorDQMPlot2S : public MonitorDQMPlotOT
 {
   public:
     /*!
      * constructor
      */
-    MonitorDQMPlotPS();
+    MonitorDQMPlot2S();
 
     /*!
      * destructor
      */
-    ~MonitorDQMPlotPS();
+    ~MonitorDQMPlot2S();
 
     /*!
      * \brief Book Plots
@@ -56,13 +56,10 @@ class MonitorDQMPlotPS : public MonitorDQMPlotOT
      */
     void reset(void) override;
 
-    void fillSSA2RegisterPlots(DetectorDataContainer& theInputContainer, const std::string& registerName);
-    void fillMPA2RegisterPlots(DetectorDataContainer& theInputContainer, const std::string& registerName);
+    void fillCBCRegisterPlots(DetectorDataContainer& theInputContainer, const std::string& registerName);
 
   private:
-    void                                         bookMPA2Plots(TFile* theOutputFile, std::string registerName);
-    void                                         bookSSA2Plots(TFile* theOutputFile, std::string registerName);
-    std::map<std::string, DetectorDataContainer> fMPA2RegisterMonitorPlotMap;
-    std::map<std::string, DetectorDataContainer> fSSA2RegisterMonitorPlotMap;
+    void                                         bookCBCPlots(TFile* theOutputFile, std::string registerName);
+    std::map<std::string, DetectorDataContainer> fCBCRegisterMonitorPlotMap;
 };
 #endif
