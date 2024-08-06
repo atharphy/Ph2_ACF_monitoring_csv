@@ -240,6 +240,9 @@
     <Setting name="PSOccupancyPulseAmplitude">200</Setting>
 
     <Setting name="DoManualVrefTuning"      >  0</Setting>
+
+    <Setting name="OTalignBoardDataWord_BroadcastAlignSetting">0</Setting> <!-- 0 = One line at a time - 1 = One hybrid at a time = 2 = all hybrids together -->
+
     <Setting name="OTRegisterTester_NumberOfIterations">1000</Setting>
     <Setting name="OTRegisterTester_Pattern">0xAA</Setting>
     <Setting name="OTverifyBoardDataWord_NumberOfIterations">100</Setting>

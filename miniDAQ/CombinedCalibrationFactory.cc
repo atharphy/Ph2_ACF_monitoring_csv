@@ -85,6 +85,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<TuneLpGBTVref,
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
+             OTverifyBoardDataWord,
              OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
