@@ -298,9 +298,6 @@
     <MonitoringElement device="SSA2"  register="DVDD" enable="1"/>
     <MonitoringElement device="SSA2"  register="VBG" enable="1"/>
     <MonitoringElement device="SSA2"  register="ADC_VREF" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC0" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC1" enable="1"/>
-    <MonitoringElement device="LpGBT" register="ADC3" enable="1"/>
     <MonitoringElement device="LpGBT" register="VDD"  enable="1"/>
     <MonitoringElement device="LpGBT" register="VDDA" enable="1"/>
     <MonitoringElement device="LpGBT" register="LpGBTtemp" enable="1"/>
