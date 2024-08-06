@@ -85,13 +85,12 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<TuneLpGBTVref,
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
-             OTverifyBoardDataWord>("Outer Tracker", "alignment");
-            //  OTalignStubPackage,
-            //  OTCICphaseAlignment,
-            //  OTCICwordAlignment,
-            //  //  OTCICBX0Alignment,
-            //  OTverifyCICdataWord,
-            //  OTverifyMPASSAdataWord>("Outer Tracker", "alignment");
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             //  OTCICBX0Alignment,
+             OTverifyCICdataWord,
+             OTverifyMPASSAdataWord>("Outer Tracker", "alignment");
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTCicBypassTest>("Outer Tracker", "testCICbypass");
 
     Register<OTalignBoardDataWord, OTinjectionDelayOptimization>("Outer Tracker", "injectionDelayOptimization");
