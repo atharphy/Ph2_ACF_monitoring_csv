@@ -7,6 +7,9 @@
     <CDCE configure="0" clockRate="320"/>
         
      <OpticalGroup Id="1" enable="1" FMCId="L8" reset="1">
+        <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
+        <NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
+        
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
         <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
           <Settings/>
