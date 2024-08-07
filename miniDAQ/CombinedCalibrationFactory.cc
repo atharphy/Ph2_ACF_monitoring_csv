@@ -10,6 +10,7 @@
 #include "tools/ExtTriggerLatencyScan.h"
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
+#include "tools/OTBitErrorRateTest.h"
 #include "tools/OTCICBX0Alignment.h"
 #include "tools/OTCICphaseAlignment.h"
 #include "tools/OTCICtoLpGBTecv.h"
@@ -199,6 +200,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTTemperature>("Outer Tracker", "cmNoise");
 
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass>("Outer Tracker", "alignLpGBTinputsForBypass");
+
+    Register<OTBitErrorRateTest>("Outer Tracker", "bert");
 
     // 2S specific calibrations
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(

@@ -13,7 +13,6 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/Occupancy.h"
 #include "Utils/StartInfo.h"
-#include "tools/BackEndAlignment.h"
 #include "tools/Channel.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"

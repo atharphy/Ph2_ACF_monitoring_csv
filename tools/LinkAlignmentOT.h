@@ -32,7 +32,6 @@ class LinkAlignmentOT : public OTTool
     // get alignment results
     bool getStatus() const { return fSuccess; }
 
-    bool    WordAlignBEdata(const Ph2_HwDescription::BeBoard* pBoard);
     bool    PhaseAlignBEdata(const Ph2_HwDescription::BeBoard* pBoard);
     uint8_t getBeSamplingDelay(uint8_t pBoardIndx, uint8_t pOGIndx, uint8_t pHybridIndx, uint8_t pLineIndx)
     {
@@ -41,13 +40,7 @@ class LinkAlignmentOT : public OTTool
         auto cBeSamplingDelayHybrd = cBeSamplingDelayOG->getObject(pHybridIndx);
         return cBeSamplingDelayHybrd->getSummary<std::vector<uint8_t>>()[pLineIndx];
     }
-    uint8_t getBeBitSlip(uint8_t pBoardIndx, uint8_t pOGIndx, uint8_t pHybridIndx, uint8_t pLineIndx)
-    {
-        auto cBeBitSlip      = fBeBitSlip.getObject(pBoardIndx);
-        auto cBeBitSlipOG    = cBeBitSlip->getObject(pOGIndx);
-        auto cBeBitSlipHybrd = cBeBitSlipOG->getObject(pHybridIndx);
-        return cBeBitSlipHybrd->getSummary<std::vector<uint8_t>>()[pLineIndx];
-    }
+
     void    AlignStubPackage();
     uint8_t GetLpGBTDelay(const OpticalGroup* pOpticalGroup) const
     {
@@ -55,13 +48,7 @@ class LinkAlignmentOT : public OTTool
         auto cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
         return fLpGBTSamplingDelay.getObject((*cBoardIter)->getId())->getObject(pOpticalGroup->getId())->getFirstObject()->getSummary<uint8_t>();
     }
-    std::pair<bool, uint8_t> PhaseTuneLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId);                                             // generic
-    std::pair<bool, uint8_t> WordAlignLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod); // generic
-    bool                     L1WordAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pScope, uint8_t pSkipLine = 0);
-    void                     ManuallyConfigureLine(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pPhase, uint8_t pBitslip); // generic
-    bool                     LineTuning(const Ph2_HwDescription::Chip* pChip, uint8_t pLineId, uint8_t pAlignmentPattern, uint8_t pPeriod);  // electrical
-    void                     LegacyAlignmentMPA(const Ph2_HwDescription::Chip* pChip);
-    void                     CheckLpgbtOutputs(uint8_t pPattern = 0xAA);
+    bool L1WordAlignment(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pScope, uint8_t pSkipLine = 0);
 
   protected:
     // Alignment parameters
@@ -72,7 +59,6 @@ class LinkAlignmentOT : public OTTool
     bool                  fL1Debug{false};
     bool                  fAllowZeroBitslip{true};
 
-    bool CheckLpgbtOutputs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, uint8_t pPattern = 0xAA);
     bool AlignLpGBTInputs(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool PhaseAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     bool WordAlignBEdata(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, bool pDisableUnsresponsiveHybrids = true);

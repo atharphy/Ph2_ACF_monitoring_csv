@@ -4,7 +4,6 @@
 #include "Utils/Utilities.h"
 #include "Utils/argvparser.h"
 #include "boost/format.hpp"
-#include "tools/BackEndAlignment.h"
 #include "tools/BeamTestCheck.h"
 #include "tools/CBCPulseShape.h"
 #include "tools/CheckCbcNeighbors.h"
@@ -773,15 +772,6 @@ int main(int argc, char* argv[])
         t.show("Time to tune the front-ends on the system: ");
         // // reset
         // cTool.fDetectorContainer->resetReadoutChipQueryFunction();
-    }
-    if(!cmd.foundOption("read") && cmd.foundOption("checkLink"))
-    {
-        uint8_t         cPattern = (cmd.foundOption("checkLink")) ? convertAnyInt(cmd.optionValue("checkLink").c_str()) : 0xEA;
-        LinkAlignmentOT cLinkAlignment;
-        cLinkAlignment.Inherit(&cTool);
-        cLinkAlignment.Initialise();
-        cLinkAlignment.CheckLpgbtOutputs(cPattern);
-        cLinkAlignment.Reset();
     }
 
     if(cmd.foundOption("injectionTest") && !cmd.foundOption("read"))

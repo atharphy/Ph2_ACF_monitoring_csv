@@ -4,6 +4,7 @@
 #include "DQMUtils/DQMHistogramCalibrationExample.h"
 #include "DQMUtils/DQMHistogramKira.h"
 #include "DQMUtils/DQMHistogramLatencyScan.h"
+#include "DQMUtils/DQMHistogramOTBitErrorRateTest.h"
 #include "DQMUtils/DQMHistogramOTCICBX0Alignment.h"
 #include "DQMUtils/DQMHistogramOTCICphaseAlignment.h"
 #include "DQMUtils/DQMHistogramOTCICtoLpGBTecv.h"
@@ -188,6 +189,9 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise,
              DQMHistogramOTCMNoise>("cmNoise");
+
+    Register<DQMMetadata, DQMHistogramOTBitErrorRateTest>("bert");
+
     Register<DQMMetadataOT, PSPhysicsHistograms>("psphysics");
     Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
 
