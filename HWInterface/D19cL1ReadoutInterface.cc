@@ -157,7 +157,11 @@ bool D19cL1ReadoutInterface::CheckReadoutReq()
         cIterations++;
     } while(cReadoutReq == 0 && cDuration < 100000);
     // } while(cReadoutReq == 0 && cDuration < fTimeout_us);
-    if(cReadoutReq == 0) { LOG(INFO) << BOLDRED << "Readout request 0 [i.e words missing in the readout] ...[ReadoutAttempt#" << fReadoutAttempt << "]" << RESET; }
+    if(cReadoutReq == 0)
+    {
+        LOG(ERROR) << BOLDRED << "Readout request 0 [i.e words missing in the readout] ...[ReadoutAttempt#" << fReadoutAttempt << "]" << RESET;
+        LOG(ERROR) << BOLDRED << "Read request FSM status = 0x" << std::hex << fTheRegManager->ReadReg("fc7_daq_stat.readout_block.general.fsm_status") << std::dec << RESET;
+    }
     // else
     //     LOG(DEBUG) << BOLDGREEN << "ReadoutReq fullfilled.... " << RESET;
     return (cReadoutReq == 1);
@@ -244,9 +248,6 @@ bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
         fData.clear();
         // configure readout
         fHandshake                      = 1;
-        auto cOriginalNtriggersToAccept = fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept");
-        auto cOriginalHandshakeMode     = fTheRegManager->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
-        auto cOriginalPackNbr           = fTheRegManager->ReadReg("fc7_daq_cnfg.readout_block.packet_nbr");
         fTheRegManager->WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", fHandshake);
         // auto cHandshake = fTheRegManager->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
         // write number of triggers to accept
@@ -269,9 +270,7 @@ bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
             CountFwEvents();
             // LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvent " << fData.size() << " valid 32 bit words .. which are " << +fNReadoutEvents << " events." << RESET;
         }
-        fTheRegManager->WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", cOriginalHandshakeMode);
-        fTheRegManager->WriteReg("fc7_daq_cnfg.readout_block.packet_nbr", cOriginalPackNbr);
-        fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.triggers_to_accept", cOriginalNtriggersToAccept);
+        
         fReadoutAttempt++;
     } while(fReadoutAttempt < fMaxAttempts && !cSuccess);
 
