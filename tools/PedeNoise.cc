@@ -171,10 +171,10 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     // for now.. force to use async mode here
     bool cForcePSasync = true;
     // event types
-    fEventTypes.clear();
+    ContainerFactory::copyAndInitBoard<EventType>(*fDetectorContainer, fEventTypes);
     for(auto cBoard: *fDetectorContainer)
     {
-        fEventTypes.push_back(cBoard->getEventType());
+        fEventTypes.getObject(cBoard->getId())->getSummary<EventType>() = cBoard->getEventType();
         if(!fWithSSA && !fWithMPA) continue;
         if(!cForcePSasync) continue;
         cBoard->setEventType(EventType::PSAS);
@@ -194,6 +194,15 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
 void PedeNoise::Reset()
 {
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto theEventType = fEventTypes.getObject(cBoard->getId())->getSummary<EventType>();
+        cBoard->setEventType(theEventType);
+        if(theEventType != EventType::PSAS)
+        {
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitalizeL1ReadoutInterface(cBoard);
+        }
+    }
     fRegisterHelper->restoreSnapshot();
     resetPointers();
 }

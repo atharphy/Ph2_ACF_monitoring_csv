@@ -144,7 +144,7 @@ class D19cFWInterface : public BeBoardFWInterface
 
     // initialize interfaces to handle communication with certain blocks
     void InitializePSCounterFWInterface(const Ph2_HwDescription::BeBoard* pBoard);
-    void IniitalizeL1ReadoutInterface(const Ph2_HwDescription::BeBoard* pBoard);
+    void InitalizeL1ReadoutInterface(const Ph2_HwDescription::BeBoard* pBoard);
 
     // uint16_t ParseEvents(const std::vector<uint32_t>& pData) override;
     /*! \brief Read a block of a given size

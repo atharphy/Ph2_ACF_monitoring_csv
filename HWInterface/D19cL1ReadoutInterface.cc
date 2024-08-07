@@ -155,7 +155,8 @@ bool D19cL1ReadoutInterface::CheckReadoutReq()
         cEndTime  = std::chrono::high_resolution_clock::now();
         cDuration = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
         cIterations++;
-    } while(cReadoutReq == 0 && cDuration < fTimeout_us);
+    } while(cReadoutReq == 0 && cDuration < 100000);
+    // } while(cReadoutReq == 0 && cDuration < fTimeout_us);
     if(cReadoutReq == 0) { LOG(INFO) << BOLDRED << "Readout request 0 [i.e words missing in the readout] ...[ReadoutAttempt#" << fReadoutAttempt << "]" << RESET; }
     // else
     //     LOG(DEBUG) << BOLDGREEN << "ReadoutReq fullfilled.... " << RESET;

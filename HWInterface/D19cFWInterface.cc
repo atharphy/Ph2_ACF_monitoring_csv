@@ -509,7 +509,7 @@ void D19cFWInterface::InitializePSCounterFWInterface(const BeBoard* pBoard)
     fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
     fL1ReadoutInterface->LinkFastCommandInterface(fFastCommandInterface);
 }
-void D19cFWInterface::IniitalizeL1ReadoutInterface(const BeBoard* pBoard)
+void D19cFWInterface::InitalizeL1ReadoutInterface(const BeBoard* pBoard)
 {
     fL1ReadoutInterface = nullptr;
     delete fL1ReadoutInterface;
@@ -558,7 +558,7 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
         if(pBoard->getEventType() == EventType::PSAS)
             InitializePSCounterFWInterface(pBoard);
         else
-            IniitalizeL1ReadoutInterface(pBoard);
+            InitalizeL1ReadoutInterface(pBoard);
     }
 }
 void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)

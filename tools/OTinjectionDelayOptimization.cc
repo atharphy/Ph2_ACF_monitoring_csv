@@ -324,7 +324,7 @@ void OTinjectionDelayOptimization::prepareInjectionDelayScanPS()
     ChannelGroup<NMPAROWS, NSSACHANNELS> theMPAChannelGroup;
     theMPAChannelGroup.disableAllChannels();
     uint16_t initialCol                 = 2;
-    uint16_t colsToSkip                 = 20;
+    uint16_t colsToSkip                 = 60;
     uint16_t currentRow                 = 1;
     uint16_t rowsToSkip                 = 1;
     uint16_t totalNumberOfPixelClusters = 0;
@@ -349,7 +349,7 @@ void OTinjectionDelayOptimization::prepareInjectionDelayScanPS()
     ChannelGroup<1, NSSACHANNELS> theSSAChannelGroup;
     theSSAChannelGroup.disableAllChannels();
     uint16_t initialStrip               = 3;
-    uint16_t stripsToSkip               = 20;
+    uint16_t stripsToSkip               = 60;
     uint16_t totalNumberOfStripClusters = 0;
     for(uint16_t col = initialStrip; col < NSSACHANNELS; col += stripsToSkip)
     {
