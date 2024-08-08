@@ -31,7 +31,9 @@ void MonitorDQMPlotOT::book(TFile* theOutputFile, DetectorContainer& theDetector
 //========================================================================================================================
 void MonitorDQMPlotOT::bookLpGBTPlots(TFile* theOutputFile, const std::string& monitorValueName)
 {
-    auto theTGraphHistogramContainer = producePlotTemplate(monitorValueName, "LpGBT", "[V]");
+    std::string yAxisUnits = "V";
+    if(monitorValueName == "LpGBTtemp" || monitorValueName == "SensorTemp") yAxisUnits = "#circC";
+    auto theTGraphHistogramContainer = producePlotTemplate(monitorValueName, "LpGBT", yAxisUnits);
     RootContainerFactory::bookOpticalGroupHistograms<GraphContainer<TGraph>>(theOutputFile, *fDetectorContainer, fLpGBTRegisterMonitorPlotMap[monitorValueName], theTGraphHistogramContainer);
 }
 
@@ -93,7 +95,7 @@ GraphContainer<TGraph> MonitorDQMPlotOT::producePlotTemplate(const std::string& 
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat(TIME_FORMAT);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
-    theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((monitorValueName + (yAxisUnits.length() > 0 ? (" " + yAxisUnits) : "")).c_str());
+    theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((monitorValueName + (yAxisUnits.length() > 0 ? (" [" + yAxisUnits) + "]" : "")).c_str());
     theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
     theTGraphPedestalContainer.fTheGraph->SetMarkerSize(0.4);
 
