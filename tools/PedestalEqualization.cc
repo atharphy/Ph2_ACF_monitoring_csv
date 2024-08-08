@@ -195,10 +195,7 @@ void PedestalEqualization::Reset()
     {
         auto theEventType = fEventTypes.getObject(cBoard->getId())->getSummary<EventType>();
         cBoard->setEventType(theEventType);
-        if(theEventType != EventType::PSAS)
-        {
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitalizeL1ReadoutInterface(cBoard);
-        }
+        if(theEventType != EventType::PSAS) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitalizeL1ReadoutInterface(cBoard); }
     }
     fRegisterHelper->restoreSnapshot();
     resetPointers();

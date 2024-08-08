@@ -247,7 +247,7 @@ bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
         // clear internal data vector
         fData.clear();
         // configure readout
-        fHandshake                      = 1;
+        fHandshake = 1;
         fTheRegManager->WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", fHandshake);
         // auto cHandshake = fTheRegManager->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
         // write number of triggers to accept
@@ -270,7 +270,7 @@ bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
             CountFwEvents();
             // LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvent " << fData.size() << " valid 32 bit words .. which are " << +fNReadoutEvents << " events." << RESET;
         }
-        
+
         fReadoutAttempt++;
     } while(fReadoutAttempt < fMaxAttempts && !cSuccess);
 

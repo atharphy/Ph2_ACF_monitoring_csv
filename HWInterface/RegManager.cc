@@ -13,8 +13,8 @@
 #include "Utils/ConsoleColor.h"
 #include "Utils/Utilities.h"
 #include "Utils/easylogging++.h"
-#include <uhal/uhal.hpp>
 #include <thread>
+#include <uhal/uhal.hpp>
 
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -312,9 +312,9 @@ bool RegManager::pollRegister(const std::string& pRegisterName, uint32_t pValue,
     bool  cStopCondition  = false;
     while(!cStopCondition)
     {
-        auto cRegValue            = ReadReg(pRegisterName);
+        auto cRegValue = ReadReg(pRegisterName);
         // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << cRegValue << " / " << pValue << std::endl;
-        cStopCondition            = (pMaxWaitTime_s == 0) ? (cRegValue == pValue && cElapsedTime_s >= pMaxWaitTime_s) : (cRegValue >= pValue);
+        cStopCondition = (pMaxWaitTime_s == 0) ? (cRegValue == pValue && cElapsedTime_s >= pMaxWaitTime_s) : (cRegValue >= pValue);
         if(cStopCondition) std::this_thread::sleep_for(std::chrono::microseconds(100));
         auto currentTimeUTC_us    = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         cElapsedTime_s            = (float)(currentTimeUTC_us - startTimeUTC_us) * 1e-6;
