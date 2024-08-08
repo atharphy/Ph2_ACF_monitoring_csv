@@ -106,6 +106,9 @@ float OTMonitor::readLpGBTmonitorValue(Ph2_HwDescription::OpticalGroup* theOptic
     }
     else if(monitorValueName == "1V25_Left") { monitorValue = theLpGBRInterface->AdcGetVin(theLpGBT, "ADC1", "VREF/2", 0) * (310. / 200.); }
     else if(monitorValueName == "VIN") { monitorValue = theLpGBRInterface->AdcGetVin(theLpGBT, "ADC2", "VREF/2", 0) * (95.6 / 4.7); }
+    else if(monitorValueName == "VTRxLeakageCurr") { monitorValue = 2.5 - theLpGBRInterface->AdcGetVin(theLpGBT, "ADC5", "VREF/2", 0) * (146 / 47); }
+    else if(monitorValueName == "BPOL2V5temp") { monitorValue = (theLpGBRInterface->AdcGetVin(theLpGBT, "ADC6", "VREF/2", 0) - 0.285) / 0.004; }
+    else if(monitorValueName == "BPOL12Vtemp") { monitorValue = (theLpGBRInterface->AdcGetVin(theLpGBT, "ADC7", "VREF/2", 0) - 0.6976) / 0.00302; }
 
     return monitorValue;
 }

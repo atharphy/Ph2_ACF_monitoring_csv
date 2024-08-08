@@ -32,7 +32,8 @@ void MonitorDQMPlotOT::book(TFile* theOutputFile, DetectorContainer& theDetector
 void MonitorDQMPlotOT::bookLpGBTPlots(TFile* theOutputFile, const std::string& monitorValueName)
 {
     std::string yAxisUnits = "V";
-    if(monitorValueName == "LpGBTtemp" || monitorValueName == "SensorTemp") yAxisUnits = "#circC";
+    if(monitorValueName == "LpGBTtemp" || monitorValueName == "SensorTemp" || monitorValueName == "BPOL12Vtemp" || monitorValueName == "BPOL2V5temp") yAxisUnits = "#circC";
+    if(monitorValueName == "VTRxLeakageCurr") yAxisUnits = "mA";
     auto theTGraphHistogramContainer = producePlotTemplate(monitorValueName, "LpGBT", yAxisUnits);
     RootContainerFactory::bookOpticalGroupHistograms<GraphContainer<TGraph>>(theOutputFile, *fDetectorContainer, fLpGBTRegisterMonitorPlotMap[monitorValueName], theTGraphHistogramContainer);
 }
