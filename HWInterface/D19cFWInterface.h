@@ -55,7 +55,6 @@ class D19clpGBTSlowControlWorkerInterface;
 class D19cFWInterface : public BeBoardFWInterface
 {
   private:
-    // std::recursive_mutex                     fMutex;
     FEConfigurationInterface*            fFEConfigurationInterface{nullptr};
     L1ReadoutInterface*                  fL1ReadoutInterface{nullptr};
     TriggerInterface*                    fTriggerInterface{nullptr};
