@@ -13,14 +13,11 @@ D19cCommandProcessorInterface::D19cCommandProcessorInterface(RegManager* theRegM
 
 D19cCommandProcessorInterface::~D19cCommandProcessorInterface() {}
 
-void D19cCommandProcessorInterface::WriteCommand(const std::vector<uint32_t>& pCommand)
-{
-    fTheRegManager->WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", pCommand);
-}
+void D19cCommandProcessorInterface::WriteCommand(const std::vector<uint32_t>& pCommand) { fTheRegManager->WriteBlockReg("fc7_daq_ctrl.command_processor_block.cpb_command_fifo", pCommand); }
 
 std::vector<uint32_t> D19cCommandProcessorInterface::ReadReply(int pNWords)
 {
-    std::vector<uint32_t>                 cReply = fTheRegManager->ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", pNWords);
+    std::vector<uint32_t> cReply = fTheRegManager->ReadBlockReg("fc7_daq_ctrl.command_processor_block.cpb_reply_fifo", pNWords);
     return cReply;
 }
 } // namespace Ph2_HwInterface

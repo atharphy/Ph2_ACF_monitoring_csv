@@ -472,10 +472,7 @@ void D19cI2CInterface::ReadChipBlockReg(std::vector<uint32_t>& pVecReg)
     pVecReg = cReplies;
 }
 
-void D19cI2CInterface::ChipI2CRefresh()
-{
-    fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1);
-}
+void D19cI2CInterface::ChipI2CRefresh() { fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1); }
 
 void D19cI2CInterface::BCEncodeReg(const ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
 {

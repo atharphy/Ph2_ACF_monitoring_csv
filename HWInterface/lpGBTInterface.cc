@@ -1526,7 +1526,6 @@ void lpGBTInterface::TuneVrefControlLib(Ph2_HwDescription::lpGBT* pChip, bool pE
 
 void lpGBTInterface::AutoTuneVref(Ph2_HwDescription::lpGBT* pChip, bool pResetTempSensor)
 {
-
     /*  Auto tune VREF based on the internal temperature sensor.
 
         WARNING: this routine WILL NOT WORK for irradiated chips (TID>0)

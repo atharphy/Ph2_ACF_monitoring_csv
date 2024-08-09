@@ -153,7 +153,7 @@ uint32_t SSA2Interface::ReadChipFuseID(Chip* pSSA2)
 
 uint32_t SSA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {
-    auto                                  theRegister = SSA2_ADC_CONTROL_TABLE.find(pRegName);
+    auto theRegister = SSA2_ADC_CONTROL_TABLE.find(pRegName);
     if(theRegister == SSA2_ADC_CONTROL_TABLE.end())
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << " not found for this chip type - aborting." << RESET;
@@ -202,7 +202,7 @@ uint32_t SSA2Interface::readADCGround(ReadoutChip* pSSA2)
 
 uint32_t SSA2Interface::readADCBandGap(ReadoutChip* pSSA2)
 {
-    auto                                  theBandGap = this->readADC(static_cast<ReadoutChip*>(pSSA2), "VBG");
+    auto theBandGap = this->readADC(static_cast<ReadoutChip*>(pSSA2), "VBG");
     LOG(DEBUG) << BOLDMAGENTA << "VBG  " << theBandGap << RESET;
     return theBandGap;
 }
@@ -216,20 +216,18 @@ uint32_t SSA2Interface::readADCVref(ReadoutChip* pSSA2)
 
 uint32_t SSA2Interface::readVrefRegister(ReadoutChip* pSSA2)
 {
-    uint8_t                               theVrefADC = ReadChipReg(pSSA2, "ADC_VREF");
+    uint8_t theVrefADC = ReadChipReg(pSSA2, "ADC_VREF");
     LOG(INFO) << BOLDMAGENTA << "ADC_VREF  " << +theVrefADC << RESET;
     return theVrefADC;
 }
 
 bool SSA2Interface::setVrefFromFuseID(ReadoutChip* pSSA2)
 {
-
     LOG(INFO) << BOLDMAGENTA << "Set Vref from value stored in fuse id " << +pSSA2->pChipFuseID.ADCRef() << RESET;
     return this->WriteChipReg(pSSA2, "ADC_VREF", pSSA2->pChipFuseID.ADCRef());
 }
 bool SSA2Interface::setVref(ReadoutChip* pSSA2, uint16_t theVrefRegisterValue)
 {
-
     LOG(DEBUG) << BOLDMAGENTA << "Set Vref to desired value " << +theVrefRegisterValue << RESET;
     return this->WriteChipReg(pSSA2, "ADC_VREF", theVrefRegisterValue);
 }

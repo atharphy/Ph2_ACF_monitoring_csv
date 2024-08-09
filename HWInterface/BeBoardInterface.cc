@@ -21,7 +21,7 @@ void BeBoardInterface::setBoard(uint16_t pBoardIdentifier)
 {
     if(fPrevBoardIdentifier != pBoardIdentifier)
     {
-        fBoardFW = fBoardMap.at(pBoardIdentifier);
+        fBoardFW             = fBoardMap.at(pBoardIdentifier);
         fPrevBoardIdentifier = pBoardIdentifier;
     }
 }
@@ -68,7 +68,7 @@ uint32_t BeBoardInterface::ReadBoardReg(BeBoard* pBoard, const std::string& pReg
 {
     setBoard(pBoard->getId());
     std::unique_lock<std::recursive_mutex> theGuard(fBoardFW->fMutex);
-    uint32_t cRegValue = static_cast<uint32_t>(fBoardFW->ReadReg(pRegNode));
+    uint32_t                               cRegValue = static_cast<uint32_t>(fBoardFW->ReadReg(pRegNode));
     return cRegValue;
 }
 

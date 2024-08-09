@@ -26,7 +26,7 @@ void ChipInterface::setBoard(uint16_t pBoardIdentifier)
 {
     if(fPrevBoardIdentifier != pBoardIdentifier)
     {
-        fBoardFW = fBoardMap.at(pBoardIdentifier);
+        fBoardFW             = fBoardMap.at(pBoardIdentifier);
         fPrevBoardIdentifier = pBoardIdentifier;
     }
 }

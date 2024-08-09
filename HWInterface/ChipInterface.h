@@ -42,10 +42,10 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
 class ChipInterface
 {
   protected:
-    BeBoardFWMap         fBoardMap;            /*!< Map of Board connected */
-    BeBoardFWInterface*  fBoardFW;             /*!< Board loaded */
-    uint16_t             fPrevBoardIdentifier; /*!< Id of the previous board */
-    bool                 fWithlpGBT = false;   /*!< lpGBT is used for configuration */
+    BeBoardFWMap        fBoardMap;            /*!< Map of Board connected */
+    BeBoardFWInterface* fBoardFW;             /*!< Board loaded */
+    uint16_t            fPrevBoardIdentifier; /*!< Id of the previous board */
+    bool                fWithlpGBT = false;   /*!< lpGBT is used for configuration */
 
     /*!
      * \brief Set the board to talk with
