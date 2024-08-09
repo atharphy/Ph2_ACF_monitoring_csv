@@ -198,8 +198,6 @@ bool PSInterface::injectNoiseStubs(ReadoutChip* pMPA, ReadoutChip* pSSA, std::ve
 // One should first tune Vref using the BandGap as reference to tune it and then tune the different bias registers.
 uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpectedValue, std::string theDACtoTuneName, uint8_t theDACValue, bool isVref)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-
     LOG(INFO) << CYAN << "Register being tuned: " << theDACtoTuneName << RESET;
 
     uint32_t theGroundADCValue = this->readADCGround(theChip);

@@ -76,15 +76,19 @@ void BeBoardInterface::ReadBoardMultReg(BeBoard* pBoard, std::vector<std::pair<s
 {
     setBoard(pBoard->getId());
     std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
-    for(auto& cReg: pRegVec) try
+    for(auto& cReg: pRegVec)
+    {
+        try
         {
             cReg.second = static_cast<uint32_t>(fBoardFW->ReadReg(cReg.first));
         }
         catch(...)
         {
-            std::cerr << "Error while reading: " + cReg.first;
-            throw;
+            std::string errorMessage = "Error while reading: " + cReg.first;
+            std::cerr << errorMessage << std::endl;
+            throw std::runtime_error(errorMessage);
         }
+    }
 }
 
 std::vector<uint32_t> BeBoardInterface::ReadBlockBoardReg(BeBoard* pBoard, const std::string& pRegNode, uint32_t pSize)

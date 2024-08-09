@@ -1138,7 +1138,6 @@ bool D19cFWInterface::WriteBlockReg(const std::string& pRegNode, const std::vect
 
 void D19cFWInterface::ReadoutChipReset()
 {
-    // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     LOG(INFO) << BOLDRED << "Sending HARD RESET to ReadoutChips" << RESET;
     WriteReg("fc7_daq_ctrl.physical_interface_block.control.chip_hard_reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));

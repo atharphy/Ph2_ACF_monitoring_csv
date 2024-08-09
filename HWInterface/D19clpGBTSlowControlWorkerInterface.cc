@@ -64,7 +64,6 @@ void D19clpGBTSlowControlWorkerInterface::Reset()
 
 void D19clpGBTSlowControlWorkerInterface::SelectLink(uint8_t pLinkId)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fTheRegManager->fMutex);
     fTheRegManager->WriteReg("fc7_daq_cnfg.optical_block.link_select", pLinkId);
 }
 std::vector<uint32_t>

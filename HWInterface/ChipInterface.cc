@@ -26,15 +26,8 @@ void ChipInterface::setBoard(uint16_t pBoardIdentifier)
 {
     if(fPrevBoardIdentifier != pBoardIdentifier)
     {
-        BeBoardFWMap::iterator i = fBoardMap.find(pBoardIdentifier);
-
-        if(i == fBoardMap.end())
-            LOG(ERROR) << BOLDRED << "The Board: " << +pBoardIdentifier << "  doesn't exist" << RESET;
-        else
-        {
-            fBoardFW             = i->second;
-            fPrevBoardIdentifier = pBoardIdentifier;
-        }
+        fBoardFW = fBoardMap.at(pBoardIdentifier);
+        fPrevBoardIdentifier = pBoardIdentifier;
     }
 }
 

@@ -786,7 +786,6 @@ bool MPA2Interface::setAllBiasBlockRegisters(Chip* pMPA2, std::string registerNa
 
 uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     auto                                  theRegister = ADC_CONTROL_TABLE.find(pRegName);
     if(theRegister == ADC_CONTROL_TABLE.end())
     {
@@ -802,7 +801,6 @@ uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
 
 uint32_t MPA2Interface::readADCGround(Ph2_HwDescription::ReadoutChip* pChip)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     // It seems to be more precise for the ground...
     this->WriteChipReg(pChip, "ADC_TEST_selection", 0, true);
     uint32_t sumData = 0;
@@ -819,7 +817,6 @@ uint32_t MPA2Interface::readADCGround(Ph2_HwDescription::ReadoutChip* pChip)
 
 uint32_t MPA2Interface::readADCBandGap(Ph2_HwDescription::ReadoutChip* pChip)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     return readADC(pChip, "VBG");
 }
 
@@ -831,7 +828,6 @@ uint32_t MPA2Interface::readADCVref(Ph2_HwDescription::ReadoutChip* pChip)
 
 uint32_t MPA2Interface::readVrefRegister(Ph2_HwDescription::ReadoutChip* pChip)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint32_t                              theVrefADC = ReadChipReg(pChip, "ADC_VREF");
     return theVrefADC;
 }
@@ -865,7 +861,6 @@ float MPA2Interface::calculateADCLSB(ReadoutChip* pMPA2, float theVrefValue)
 
 bool MPA2Interface::selectBlock(Chip* pMPA2, uint8_t block, uint8_t testPoint, uint8_t swEn)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     auto                                  theCurrentMask = this->ReadChipReg(pMPA2, "Mask");
 
     std::vector<std::pair<std::string, uint16_t>> registerList;
@@ -908,7 +903,6 @@ uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2)
 
 bool MPA2Interface::setVrefFromFuseID(ReadoutChip* pMPA2)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
 
     // Set the Vref from the fuse
     // this->ReadChipFuseID(pMPA2);
@@ -918,7 +912,6 @@ bool MPA2Interface::setVrefFromFuseID(ReadoutChip* pMPA2)
 
 bool MPA2Interface::setVref(ReadoutChip* pMPA2, uint16_t VREFvalue)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
 
     // Set the Vref to a desired value
     LOG(DEBUG) << BOLDMAGENTA << " loading VREF " << VREFvalue << RESET;

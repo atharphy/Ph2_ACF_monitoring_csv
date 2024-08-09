@@ -42,7 +42,6 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
 class ChipInterface
 {
   protected:
-    std::recursive_mutex fMutex;
     BeBoardFWMap         fBoardMap;            /*!< Map of Board connected */
     BeBoardFWInterface*  fBoardFW;             /*!< Board loaded */
     uint16_t             fPrevBoardIdentifier; /*!< Id of the previous board */

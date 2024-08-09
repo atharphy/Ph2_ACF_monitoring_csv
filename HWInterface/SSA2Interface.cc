@@ -153,7 +153,6 @@ uint32_t SSA2Interface::ReadChipFuseID(Chip* pSSA2)
 
 uint32_t SSA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     auto                                  theRegister = SSA2_ADC_CONTROL_TABLE.find(pRegName);
     if(theRegister == SSA2_ADC_CONTROL_TABLE.end())
     {
@@ -197,14 +196,12 @@ uint32_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
 
 uint32_t SSA2Interface::readADCGround(ReadoutChip* pSSA2)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     LOG(DEBUG) << BOLDMAGENTA << "GND  " << +this->readADC(static_cast<ReadoutChip*>(pSSA2), "GND") << RESET;
     return this->readADC(static_cast<ReadoutChip*>(pSSA2), "GND");
 }
 
 uint32_t SSA2Interface::readADCBandGap(ReadoutChip* pSSA2)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     auto                                  theBandGap = this->readADC(static_cast<ReadoutChip*>(pSSA2), "VBG");
     LOG(DEBUG) << BOLDMAGENTA << "VBG  " << theBandGap << RESET;
     return theBandGap;
@@ -219,7 +216,6 @@ uint32_t SSA2Interface::readADCVref(ReadoutChip* pSSA2)
 
 uint32_t SSA2Interface::readVrefRegister(ReadoutChip* pSSA2)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     uint8_t                               theVrefADC = ReadChipReg(pSSA2, "ADC_VREF");
     LOG(INFO) << BOLDMAGENTA << "ADC_VREF  " << +theVrefADC << RESET;
     return theVrefADC;
@@ -227,14 +223,12 @@ uint32_t SSA2Interface::readVrefRegister(ReadoutChip* pSSA2)
 
 bool SSA2Interface::setVrefFromFuseID(ReadoutChip* pSSA2)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
 
     LOG(INFO) << BOLDMAGENTA << "Set Vref from value stored in fuse id " << +pSSA2->pChipFuseID.ADCRef() << RESET;
     return this->WriteChipReg(pSSA2, "ADC_VREF", pSSA2->pChipFuseID.ADCRef());
 }
 bool SSA2Interface::setVref(ReadoutChip* pSSA2, uint16_t theVrefRegisterValue)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
 
     LOG(DEBUG) << BOLDMAGENTA << "Set Vref to desired value " << +theVrefRegisterValue << RESET;
     return this->WriteChipReg(pSSA2, "ADC_VREF", theVrefRegisterValue);
