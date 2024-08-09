@@ -23,8 +23,6 @@ void OTMonitor::runMonitor()
             theLpGBT->setTemperature(temperature);
         }
     }
-    std::recursive_mutex                  theMutex;
-    std::lock_guard<std::recursive_mutex> theGuard(theMutex);
     for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
         if(monitorValueName.second) runMonitorLpGBT(monitorValueName.first);
 }

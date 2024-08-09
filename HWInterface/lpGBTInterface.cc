@@ -969,7 +969,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     // # Start ADC conversion #
     // ########################
     lpGBTInterface::ConfigureADC(pChip, pGain, true, true);
-
+    
     // ###########################
     // # Check conversion status #
     // ###########################
@@ -981,6 +981,11 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
         cIter++;
     } while((cIter < lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
+    if(!cSuccess)
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::ReadADC timed out" << RESET;
+        return 65535;
+    }
 
     if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
@@ -1575,6 +1580,7 @@ void lpGBTInterface::VdacSetVout(Ph2_HwDescription::lpGBT* pChip, float pVoltage
 
 float lpGBTInterface::AdcGetVin(Ph2_HwDescription::lpGBT* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain, uint8_t pSamples)
 {
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] monitoring " << pADCInputP << std::endl;
     /* Get input voltage.
 
         Prerequisites:
@@ -1588,7 +1594,11 @@ float lpGBTInterface::AdcGetVin(Ph2_HwDescription::lpGBT* pChip, const std::stri
     */
 
     std::vector<uint16_t> cMeasurements(0);
-    for(uint8_t cIndx = 0; cIndx < pSamples; cIndx++) { cMeasurements.push_back(ReadADC(pChip, pADCInputP, pADCInputN, pGain)); }
+    for(uint8_t cIndx = 0; cIndx < pSamples; cIndx++)
+    {
+        cMeasurements.push_back(ReadADC(pChip, pADCInputP, pADCInputN, pGain));
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] ADC = " << cMeasurements.back() << std::endl;
+    }
     uint16_t cResult = (uint16_t)std::round(std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size());
 
     std::string cAdcStr = "ADC_" + fADCGainMap[pGain];
@@ -1800,7 +1810,7 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const s
         float iout = _CdacCodeToCurrent(pChip, pChannel, cdac_code);
         float rout = _CdacCodeToRout(pChip, pChannel, cdac_code);
 
-        float vadc = AdcGetVin(pChip, pChannel, "VREF/2", 0, 10);
+        float vadc = AdcGetVin(pChip, pChannel, "VREF/2", 0, 1);
 
         float rmeas = vadc / iout;
         LOG(DEBUG) << BOLDBLUE << "VADC: " << vadc << " V" << RESET;

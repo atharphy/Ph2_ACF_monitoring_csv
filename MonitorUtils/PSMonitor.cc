@@ -24,8 +24,6 @@ PSMonitor::PSMonitor(Ph2_System::SystemController* theSystemController, const De
 
 void PSMonitor::runMonitor()
 {
-    std::recursive_mutex                  theMutex;
-    std::lock_guard<std::recursive_mutex> theGuard(theMutex);
     for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("SSA2"))
         if(monitorValueName.second) runMonitorSSA(monitorValueName.first);
     for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("MPA2"))

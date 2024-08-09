@@ -61,7 +61,7 @@ float NTChandler::getTemperature(const std::string& theNTCtype, float resistance
     NTCtable& theNTCtable = fNTCtableMap[theNTCtype];
     if(kiloOhmResistance < theNTCtable.begin()->first || kiloOhmResistance > theNTCtable.rbegin()->first)
     {
-        LOG(WARNING) << BOLDRED << "Out of range resistence = " << kiloOhmResistance << " for NTC type " << theNTCtype;
+        LOG(WARNING) << BOLDRED << "Out of range resistence = " << kiloOhmResistance << " for NTC type " << theNTCtype << RESET;
         return 999.;
     }
 
