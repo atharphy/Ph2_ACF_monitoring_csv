@@ -969,7 +969,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     // # Start ADC conversion #
     // ########################
     lpGBTInterface::ConfigureADC(pChip, pGain, true, true);
-    
+
     // ###########################
     // # Check conversion status #
     // ###########################
@@ -1580,7 +1580,7 @@ void lpGBTInterface::VdacSetVout(Ph2_HwDescription::lpGBT* pChip, float pVoltage
 
 float lpGBTInterface::AdcGetVin(Ph2_HwDescription::lpGBT* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain, uint8_t pSamples)
 {
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] monitoring " << pADCInputP << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] monitoring " << pADCInputP << std::endl;
     /* Get input voltage.
 
         Prerequisites:
@@ -1597,7 +1597,7 @@ float lpGBTInterface::AdcGetVin(Ph2_HwDescription::lpGBT* pChip, const std::stri
     for(uint8_t cIndx = 0; cIndx < pSamples; cIndx++)
     {
         cMeasurements.push_back(ReadADC(pChip, pADCInputP, pADCInputN, pGain));
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] ADC = " << cMeasurements.back() << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] ADC = " << cMeasurements.back() << std::endl;
     }
     uint16_t cResult = (uint16_t)std::round(std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size());
 

@@ -10,9 +10,9 @@ ConfigureOnly::~ConfigureOnly() {}
 void ConfigureOnly::Running()
 {
     int secondToSleep = 0;
-    for(int second = 0; second< secondToSleep; ++second)
+    for(int second = 0; second < secondToSleep; ++second)
     {
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] sleeping for other " << secondToSleep - second << " seconds" << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] sleeping for other " << secondToSleep - second << " seconds" << std::endl;
         usleep(1000000);
     }
 }
