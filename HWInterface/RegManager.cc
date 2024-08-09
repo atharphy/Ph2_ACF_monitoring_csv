@@ -65,7 +65,7 @@ RegManager::~RegManager() { delete fBoard; }
 
 bool RegManager::WriteReg(const std::string& pRegNode, const uint32_t& pVal)
 {
-    std::unique_lock<std::recursive_mutex> theGuard(fMutex, std::defer_lock);
+    std::unique_lock<std::recursive_mutex> theGuard(fMutex);
     if(mode == Mode::Replay) return true;
 
     fBoard->getNode(pRegNode).write(pVal);
@@ -94,7 +94,7 @@ bool RegManager::WriteReg(const std::string& pRegNode, const uint32_t& pVal)
 
 bool RegManager::WriteStackReg(const std::vector<std::pair<std::string, uint32_t>>& pVecReg)
 {
-    std::unique_lock<std::recursive_mutex> theGuard(fMutex, std::defer_lock);
+    std::unique_lock<std::recursive_mutex> theGuard(fMutex);
     if(mode == Mode::Replay) return true;
 
     for(auto const& v: pVecReg)
@@ -134,7 +134,7 @@ bool RegManager::WriteStackReg(const std::vector<std::pair<std::string, uint32_t
 
 bool RegManager::WriteBlockReg(const std::string& pRegNode, const std::vector<uint32_t>& pValues)
 {
-    std::unique_lock<std::recursive_mutex> theGuard(fMutex, std::defer_lock);
+    std::unique_lock<std::recursive_mutex> theGuard(fMutex);
     if(mode == Mode::Replay) return true;
 
     fBoard->getNode(pRegNode).writeBlock(pValues);
@@ -168,7 +168,7 @@ bool RegManager::WriteBlockReg(const std::string& pRegNode, const std::vector<ui
 
 bool RegManager::WriteBlockAtAddress(uint32_t uAddr, const std::vector<uint32_t>& pValues, bool bNonInc)
 {
-    std::unique_lock<std::recursive_mutex> theGuard(fMutex, std::defer_lock);
+    std::unique_lock<std::recursive_mutex> theGuard(fMutex);
     if(mode == Mode::Replay) return true;
 
     fBoard->getClient().writeBlock(uAddr, pValues, bNonInc ? uhal::defs::NON_INCREMENTAL : uhal::defs::INCREMENTAL);
@@ -202,7 +202,7 @@ bool RegManager::WriteBlockAtAddress(uint32_t uAddr, const std::vector<uint32_t>
 
 uint32_t RegManager::ReadReg(const std::string& pRegNode)
 {
-    std::unique_lock<std::recursive_mutex> theGuard(fMutex, std::defer_lock);
+    std::unique_lock<std::recursive_mutex> theGuard(fMutex);
     if(mode == Mode::Replay) return replayRead();
 
     uhal::ValWord<uint32_t> cValRead = fBoard->getNode(pRegNode).read();
@@ -223,7 +223,7 @@ uint32_t RegManager::ReadReg(const std::string& pRegNode)
 
 uint32_t RegManager::ReadAtAddress(uint32_t uAddr, uint32_t uMask)
 {
-    std::unique_lock<std::recursive_mutex> theGuard(fMutex, std::defer_lock);
+    std::unique_lock<std::recursive_mutex> theGuard(fMutex);
     if(mode == Mode::Replay) return replayRead();
 
     uhal::ValWord<uint32_t> cValRead = fBoard->getClient().read(uAddr, uMask);
@@ -242,7 +242,7 @@ uint32_t RegManager::ReadAtAddress(uint32_t uAddr, uint32_t uMask)
 
 std::vector<uint32_t> RegManager::ReadBlockReg(const std::string& pRegNode, const uint32_t& pBlockSize)
 {
-    std::unique_lock<std::recursive_mutex> theGuard(fMutex, std::defer_lock);
+    std::unique_lock<std::recursive_mutex> theGuard(fMutex);
     if(mode == Mode::Replay) return replayBlockRead(pBlockSize);
 
     uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode(pRegNode).readBlock(pBlockSize);
@@ -266,7 +266,7 @@ std::vector<uint32_t> RegManager::ReadBlockReg(const std::string& pRegNode, cons
 
 std::vector<uint32_t> RegManager::ReadBlockRegOffset(const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset)
 {
-    std::unique_lock<std::recursive_mutex> theGuard(fMutex, std::defer_lock);
+    std::unique_lock<std::recursive_mutex> theGuard(fMutex);
     if(mode == Mode::Replay) return replayBlockRead(pBlocksize);
 
     uhal::ValVector<uint32_t> cBlockRead = fBoard->getNode(pRegNode).readBlockOffset(pBlocksize, pBlockOffset);

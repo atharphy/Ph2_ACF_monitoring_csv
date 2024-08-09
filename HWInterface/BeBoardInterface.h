@@ -68,7 +68,7 @@ class BeBoardInterface
     BeBoardFWMap         fBoardMap;
     BeBoardFWInterface*  fBoardFW;
     uint16_t             fPrevBoardIdentifier;
-    std::recursive_mutex theMtx;
+    std::recursive_mutex fTheMutex;
     /*!
      * \brief Set the board to talk with
      * \param pBoardId
@@ -233,25 +233,25 @@ class BeBoardInterface
     // ########################
     void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args, bool silentRunning = false)
     {
-        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+        std::lock_guard<std::recursive_mutex> theGuard(fTheMutex);
         static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, args, silentRunning);
     }
 
     float ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const std::string& arg, bool silentRunning = false)
     {
-        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+        std::lock_guard<std::recursive_mutex> theGuard(fTheMutex);
         return static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, arg, silentRunning);
     }
 
     float ReadHybridVoltageMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, bool silentRunning = false)
     {
-        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+        std::lock_guard<std::recursive_mutex> theGuard(fTheMutex);
         return pReadoutChipInterface->ReadHybridVoltage(pChip, silentRunning);
     }
 
     float ReadHybridTemperatureMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, bool silentRunning = false)
     {
-        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+        std::lock_guard<std::recursive_mutex> theGuard(fTheMutex);
         return pReadoutChipInterface->ReadHybridTemperature(pChip, silentRunning);
     }
 
