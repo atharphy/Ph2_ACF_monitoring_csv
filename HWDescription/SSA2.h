@@ -73,7 +73,7 @@ class SSA2 : public ReadoutChip
     static std::string            getStripRegisterName(const std::string& theRegisterName, uint16_t strip);
     static uint8_t                convertMIPtoInjectedCharge(float numberOfMIPs);
 
-    void setADCCalibrationValue(const std::string& theCalibrationName, float theCalibrationValue) override;
+    void  setADCCalibrationValue(const std::string& theCalibrationName, float theCalibrationValue) override;
     float getADCCalibrationValue(const std::string& theCalibrationName) const override;
 
   protected:

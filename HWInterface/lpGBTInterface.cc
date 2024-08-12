@@ -1590,10 +1590,7 @@ float lpGBTInterface::AdcGetVin(Ph2_HwDescription::lpGBT* pChip, const std::stri
     */
 
     std::vector<uint16_t> cMeasurements(0);
-    for(uint8_t cIndx = 0; cIndx < pSamples; cIndx++)
-    {
-        cMeasurements.push_back(ReadADC(pChip, pADCInputP, pADCInputN, pGain));
-    }
+    for(uint8_t cIndx = 0; cIndx < pSamples; cIndx++) { cMeasurements.push_back(ReadADC(pChip, pADCInputP, pADCInputN, pGain)); }
     uint16_t cResult = (uint16_t)std::round(std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size());
 
     std::string cAdcStr = "ADC_" + fADCGainMap[pGain];

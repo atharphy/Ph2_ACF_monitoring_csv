@@ -50,16 +50,16 @@ void MonitorDQMPlotPS::book(TFile* theOutputFile, DetectorContainer& theDetector
 //========================================================================================================================
 void MonitorDQMPlotPS::bookSSA2Plots(TFile* theOutputFile, std::string registerName)
 {
-    std::string yAxisUnits = "V";
-    auto theTGraphHistogramContainer = producePlotTemplate(registerName, "SSA", yAxisUnits);
+    std::string yAxisUnits                  = "V";
+    auto        theTGraphHistogramContainer = producePlotTemplate(registerName, "SSA", yAxisUnits);
     RootContainerFactory::bookChipHistograms<GraphContainer<TGraph>>(theOutputFile, *fDetectorContainer, fSSA2RegisterMonitorPlotMap[registerName], theTGraphHistogramContainer);
 }
 
 //========================================================================================================================
 void MonitorDQMPlotPS::bookMPA2Plots(TFile* theOutputFile, std::string registerName)
 {
-    std::string yAxisUnits = "V";
-    auto theTGraphHistogramContainer = producePlotTemplate(registerName, "MPA", yAxisUnits);
+    std::string yAxisUnits                  = "V";
+    auto        theTGraphHistogramContainer = producePlotTemplate(registerName, "MPA", yAxisUnits);
     RootContainerFactory::bookChipHistograms<GraphContainer<TGraph>>(theOutputFile, *fDetectorContainer, fMPA2RegisterMonitorPlotMap[registerName], theTGraphHistogramContainer);
 }
 

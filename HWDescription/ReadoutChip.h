@@ -127,10 +127,10 @@ class ReadoutChip
     std::shared_ptr<ChannelGroupBase> fChipOriginalMask{nullptr};
     float                             fAverageNoise{-1.};
     std::map<std::string, float>      fADCcalibrationMap = {
-        {"ADC_SLOPE", 0.0002}, // In volts, calculated as the target Vref (0.850 V) / ADC range (4095)
-        {"ADC_OFFSET", 0.},    // In volts, assumed 0. It depends on the ground value
+        {"ADC_SLOPE", 0.0002},    // In volts, calculated as the target Vref (0.850 V) / ADC range (4095)
+        {"ADC_OFFSET", 0.},       // In volts, assumed 0. It depends on the ground value
         {"TEMP_SLOPE", -0.00103}, // mV / C
-        {"TEMP_OFFSET", 0.154} // Voltage in mV at 25C 
+        {"TEMP_OFFSET", 0.154}    // Voltage in mV at 25C
     };
 };
 } // namespace Ph2_HwDescription
