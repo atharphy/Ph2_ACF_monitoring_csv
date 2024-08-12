@@ -160,10 +160,12 @@ void D19clpGBTSlowControlWorkerInterface::PrintState()
 
 bool D19clpGBTSlowControlWorkerInterface::WaitDone(uint8_t pFunctionId)
 {
+    // int cWaitCounter = 1500; // Irene checking connection
     int cWaitCounter = 150000;
     while(!IsDone(pFunctionId) && (cWaitCounter != 0))
     {
         cWaitCounter--;
+        // usleep(1000); // Irene checking connection
         continue;
     }
     if(cWaitCounter == 0)
