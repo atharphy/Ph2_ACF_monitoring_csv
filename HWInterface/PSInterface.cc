@@ -342,4 +342,18 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
     return theDACValue;
 }
 
+float PSInterface::readADCVoltage(Ph2_HwDescription::ReadoutChip* pPS, std::string theADCName)
+{
+    float adcValue = readADC(pPS, theADCName);
+    float theConversionFactor  = 1;                                             // without the conversion factor the voltages are not visible
+    if(theADCName == "AVDD" || theADCName == "DVDD") theConversionFactor *=  2; // keep into account a voltage divider
+    return (adcValue * pPS->getADCCalibrationValue("ADC_SLOPE") + pPS->getADCCalibrationValue("ADC_OFFSET")) * theConversionFactor;
+}
+
+float PSInterface::measureTemperature(Ph2_HwDescription::ReadoutChip* pPS)
+{
+    return (readADCVoltage(pPS, "temperature") - pPS->getADCCalibrationValue("TEMP_OFFSET"))/pPS->getADCCalibrationValue("TEMP_SLOPE") + 25;
+}
+
+
 } // namespace Ph2_HwInterface
