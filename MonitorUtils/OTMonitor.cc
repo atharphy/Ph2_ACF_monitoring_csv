@@ -86,8 +86,8 @@ DetectorDataContainer OTMonitor::getReadoutChipMonitorValues(const std::string& 
 
 float OTMonitor::readLpGBTmonitorValue(Ph2_HwDescription::OpticalGroup* theOpticalGroup, const std::string& monitorValueName)
 {
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] monitorValueName = " << monitorValueName << std::endl;
-    
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] monitorValueName = " << monitorValueName << std::endl;
+
     auto theLpGBT          = static_cast<Ph2_HwDescription::lpGBT*>(theOpticalGroup->flpGBT);
     auto theLpGBRInterface = fTheSystemController->flpGBTInterface;
 
@@ -112,7 +112,7 @@ float OTMonitor::readLpGBTmonitorValue(Ph2_HwDescription::OpticalGroup* theOptic
     else if(monitorValueName == "BPOL12Vtemp") { monitorValue = (theLpGBRInterface->AdcGetVin(theLpGBT, "ADC7", "VREF/2", 0) - 0.6976) / 0.00302; }
     else if(monitorValueName == "2V55") { monitorValue = theLpGBRInterface->AdcGetVin(theLpGBT, "ADC7", "VREF/2", 0) * (161. / 51.); }
 
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] monitorValue = " << monitorValue << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] monitorValue = " << monitorValue << std::endl;
 
     return monitorValue;
 }
