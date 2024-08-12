@@ -1,4 +1,6 @@
 #include "tools/MetadataHandler.h"
+#include "HWDescription/VTRx.h"
+#include "HWInterface/VTRxInterface.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
@@ -103,7 +105,7 @@ void MetadataHandler::fillInitialConditions()
     fDQMMetadata->fillGitCommitHash(theGitCommitHashContainer);
     fDQMMetadata->fillCalibrationName(theCalibrationNameContainer);
     fDQMMetadata->fillDetectorConfiguration(theDetectorInitialConfigurationContainer, isInitialValue);
-    fDQMMetadata->fillCalibrationTimestamp(theCalibrationTimestampContainer, isInitialValue);
+    fDQMMetadata->fillRunTimestamp(theCalibrationTimestampContainer, isInitialValue);
     fDQMMetadata->fillBoardConfiguration(theBoardConfigurationContainer, isInitialValue);
     fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isInitialValue);
     fDQMMetadata->fillLpGBTConfiguration(theLpGBTConfigurationContainer, isInitialValue);
@@ -181,7 +183,7 @@ void MetadataHandler::fillFinalConditions()
     fDQMMetadata->fillBoardConfiguration(theBoardConfigurationContainer, isInitialValue);
     fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isInitialValue);
     fDQMMetadata->fillLpGBTConfiguration(theLpGBTConfigurationContainer, isInitialValue);
-    fDQMMetadata->fillCalibrationTimestamp(theCalibrationTimestampContainer, isInitialValue);
+    fDQMMetadata->fillRunTimestamp(theCalibrationTimestampContainer, isInitialValue);
 #else
     if(fDQMStreamerEnabled)
     {
@@ -281,10 +283,9 @@ void MetadataHandler::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuse
     {
         for(auto cOpticalGroup: *cBoard)
         {
-            auto theLpGBT = cOpticalGroup->flpGBT;
-            if(theLpGBT == nullptr) continue;
-            uint32_t chipFuseId = 0; // flpGBTInterface->ReadVTRxChipFuseID(theLpGBT);
-            // Temporary function in lpgbt interface until VTRx interface is implemented
+            auto theVTRx = cOpticalGroup->fVTRx;
+            if(theVTRx == nullptr) continue;
+            uint32_t chipFuseId                                                                                                             = fVTRxInterface->ReadChipFuseID(theVTRx);
             theVTRxFuseIdContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertToString(chipFuseId);
         }
     }
@@ -293,6 +294,24 @@ void MetadataHandler::fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuse
 void MetadataHandler::fillBoardConfigurationContainer(DetectorDataContainer& theBoardConfigurationContainer)
 {
     for(auto cBoard: *fDetectorContainer) { theBoardConfigurationContainer.getObject(cBoard->getId())->getSummary<std::string, EmptyContainer>() = cBoard->getRegMapStream().str(); }
+}
+
+void MetadataHandler::fillSubCalibrationNameAndTimeContainer(std::string subCalibrationName)
+{
+    DetectorDataContainer theSubCalibrationNameAndTimeContainer;
+    ContainerFactory::copyAndInitDetector<std::pair<std::string, std::string>>(*fDetectorContainer, theSubCalibrationNameAndTimeContainer);
+
+    theSubCalibrationNameAndTimeContainer.getSummary<std::pair<std::string, std::string>>() = std::make_pair(subCalibrationName, getTimeStampString());
+
+#ifdef __USE_ROOT__
+    fDQMMetadata->fillSubCalibrationNameAndTime(theSubCalibrationNameAndTimeContainer);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theSubCalibrationNameAndTimeSerialization("MetadataSubCalibrationNameAndTime");
+        theSubCalibrationNameAndTimeSerialization.streamByDetectorContainer(fDQMStreamer, theSubCalibrationNameAndTimeContainer);
+    }
+#endif
 }
 
 void MetadataHandler::justBookDQMMetadata()

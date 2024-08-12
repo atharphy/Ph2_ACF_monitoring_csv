@@ -27,6 +27,8 @@ settings/connections_186.xml
 consoledump.log
 src/test.cc
 build/
+myBuild/
+runDir/
 rundir*
 ReadRootFile.py
 core.*

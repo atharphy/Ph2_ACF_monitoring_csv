@@ -170,6 +170,7 @@ class RD53Event : public Ph2_HwInterface::Event
     // # Vector containing the decoded events #
     // ########################################
     static std::vector<RD53Event> decodedEvents;
+    static bool                   weakCheckDataStatus;
 
   private:
     bool        isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const;

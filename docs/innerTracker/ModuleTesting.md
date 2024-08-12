@@ -6,7 +6,7 @@ In particular you need to set the **chip ID** and the **lane** for every chip.
 The `Number of active data` printed out on screen during the initialisation
 process indicates which chips are sending the default signal pattern to the FC7. It doesn’t
 necessary mean that you properly matched **chip ID** and **lane**, i.e. you might have set a
-wrong **chip ID** and yet you might still get that all **lanes** are active. 
+wrong **chip ID** and yet you might still get that all **lanes** are active.
 The **chip ID** is only needed to address the chip in the programming process
 
 ## Lane mapping

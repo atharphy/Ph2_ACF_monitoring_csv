@@ -104,9 +104,9 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // #########################
     RegManager::WriteStackReg({{"user.ctrl_regs.gtx_drp.aurora_speed", RD53FWconstants::AURORA_SPEED}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 1}, {"user.ctrl_regs.gtx_drp.set_aurora_speed", 0}});
 
-    // ##########
-    // # Resets #
-    // ##########
+    // ################
+    // # Board resets #
+    // ################
     RD53FWInterface::ResetFastCmdBlk();
     RD53FWInterface::ResetSlowCmdFIFO();
     RD53FWInterface::ResetReadBkFIFO();
@@ -141,7 +141,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 // ###################################
                 // # Check if DataMerging is enabled #
                 // ###################################
-                auto lane = static_cast<RD53*>(cChip)->getChipLane();
+                const auto lane = static_cast<RD53*>(cChip)->getChipLane();
                 if(static_cast<RD53*>(cChip)->laneConfig.isPrimary == false)
                 {
                     enableDataMerging = true;
@@ -153,18 +153,16 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
                 // # Check if ChipID is enabled #
                 // ##############################
                 if(static_cast<RD53*>(cChip)->getDataFormatOptions().enableChipId == true) enableChipID = true;
+
+                // ###############################
+                // # Map chips into the firmware #
+                // ###############################
+                RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_id", cChip->getId() & 3);
+                RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_primary", primaries[lane]);
             }
 
-    RegManager::WriteStackReg({{"user.ctrl_regs.Aurora_block.data_merging_en", enableDataMerging}, {"user.ctrl_regs.i2c_block.chip_id_en", enableChipID}});
-
-    for(const auto cChip: *pBoard->getFirstObject()->getFirstObject())
-    {
-        auto lane = static_cast<RD53*>(cChip)->getChipLane();
-        RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_id", cChip->getId() & 3);
-        RegManager::WriteReg("user.ctrl_regs.i2c_block.chip" + std::to_string(lane) + "_primary", primaries[lane]);
-    }
-
-    RegManager::WriteReg("user.ctrl_regs.Aurora_block.slave_en", slaveEn);
+    RegManager::WriteStackReg(
+        {{"user.ctrl_regs.Aurora_block.data_merging_en", enableDataMerging}, {"user.ctrl_regs.i2c_block.chip_id_en", enableChipID}, {"user.ctrl_regs.Aurora_block.slave_en", slaveEn}});
 
     // ################################
     // # Enabling hybrids and chips   #
@@ -188,8 +186,16 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // #########################################
     // # Read optical link slow control status #
     // #########################################
-    uint32_t txIsReady, rxIsReady;
-    RD53FWInterface::StatusOptoLinkSlowControl(txIsReady, rxIsReady);
+    uint32_t txIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.tx_ready");
+    uint32_t rxIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
+    if(txIsReady == true)
+        LOG(INFO) << GREEN << "Optical link tx slow control status: " << BOLDYELLOW << "ready" << RESET;
+    else
+        LOG(WARNING) << GREEN << "Optical link tx slow control status: " << BOLDRED << "not ready" << RESET;
+    if(rxIsReady == true)
+        LOG(INFO) << GREEN << "Optical link rx slow control status: " << BOLDYELLOW << "ready" << RESET;
+    else
+        LOG(WARNING) << GREEN << "Optical link rx slow control status: " << BOLDRED << "not ready" << RESET;
 
     // ###########################
     // # Check RD53 AURORA speed #
@@ -214,6 +220,11 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ##################
     RD53FWInterface::resetNcorruptedNevents();
     RD53FWInterface::resetNtrialsNevents();
+
+    // #########################
+    // # PortCard Test Adapter #
+    // #########################
+    if(pBoard->getEventType() == EventType::VRPCTestAdapter) RD53FWInterface::ConfigurePCTestAdapter(pBoard->getComment());
 }
 
 void RD53FWInterface::PrintFWstatus()
@@ -314,7 +325,7 @@ void RD53FWInterface::ConfigureFromXML(const BeBoard* pBoard)
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 }
 
-bool RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hybridId)
+bool RD53FWInterface::WriteChipCommands(const std::vector<uint16_t>& data, int hybridId)
 {
     std::vector<uint32_t> commandList;
 
@@ -324,6 +335,7 @@ bool RD53FWInterface::WriteChipCommand(const std::vector<uint16_t>& data, int hy
 
 void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList)
 {
+    if(data.size() == 0) return;
     const size_t n32bitWords = (data.size() / 2) + (data.size() % 2);
 
     // ##########
@@ -342,6 +354,7 @@ void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& da
 
 bool RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
 {
+    if(commandList.size() == 0) return true;
     bool returnValue = true;
 
     // ############################
@@ -352,14 +365,14 @@ bool RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
            true) &&
           (nAttempts < RD53Shared::MAXATTEMPTS))
     {
-        if(RegManager::ReadReg("user.stat_regs.slow_cmd.error_flag") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
-        if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false) LOG(ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
-        if(RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
+        if((RD53FWInterface::silentRunning == false) && (RegManager::ReadReg("user.stat_regs.slow_cmd.error_flag") == true)) LOG(ERROR) << BOLDRED << "Write-command FIFO error" << RESET;
+        if((RD53FWInterface::silentRunning == false) && (RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_empty") == false)) LOG(ERROR) << BOLDRED << "Write-command FIFO not empty" << RESET;
+        if(((RD53FWInterface::silentRunning == false) && RegManager::ReadReg("user.stat_regs.slow_cmd.fifo_full") == true)) LOG(ERROR) << BOLDRED << "Write-command FIFO full" << RESET;
 
         nAttempts++;
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
-    if(nAttempts == RD53Shared::MAXATTEMPTS)
+    if((RD53FWInterface::silentRunning == false) && (nAttempts == RD53Shared::MAXATTEMPTS))
     {
         LOG(ERROR) << BOLDRED << "Error in the write-command FIFO, reached maximum number of attempts (" << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED << ")" << RESET;
         returnValue = false;
@@ -380,7 +393,7 @@ bool RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
         nAttempts++;
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     }
-    if(nAttempts == RD53Shared::MAXATTEMPTSCMDDISPATCH)
+    if((RD53FWInterface::silentRunning == false) && (nAttempts == RD53Shared::MAXATTEMPTSCMDDISPATCH))
     {
         LOG(ERROR) << BOLDRED << "Error while dispatching chip register program, reached maximum number of attempts (" << BOLDYELLOW << RD53Shared::MAXATTEMPTSCMDDISPATCH << BOLDRED << ")" << RESET;
         returnValue = false;
@@ -402,7 +415,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
     // #####################
     // # Read the register #
     // #####################
-    if(RegManager::ReadReg("user.stat_regs.readout1.register_fifo_full") == true) LOG(ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
+    if((RD53FWInterface::silentRunning == false) && (RegManager::ReadReg("user.stat_regs.readout1.register_fifo_full") == true)) LOG(ERROR) << BOLDRED << "Read-command FIFO full" << RESET;
 
     while(RegManager::ReadReg("user.stat_regs.readout1.register_fifo_empty") == false)
     {
@@ -414,7 +427,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
         if(chipAddress == chipLane) regReadback.emplace_back(regAddress, regValue);
     }
 
-    if(regReadback.size() == 0) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
+    if((regReadback.size() == 0) && (RD53FWInterface::silentRunning == false)) LOG(ERROR) << BOLDRED << "Read-command FIFO empty" << RESET;
 
     return regReadback;
 }
@@ -446,7 +459,7 @@ bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
         // ###############################################
         if(initSequence.size() != 0)
             for(const auto cOpticalGroup: *pBoard)
-                for(const auto cHybrid: *cOpticalGroup) RD53FWInterface::WriteChipCommand(initSequence, cHybrid->getId());
+                for(const auto cHybrid: *cOpticalGroup) RD53FWInterface::WriteChipCommands(initSequence, cHybrid->getId());
 
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
         channel_up = RegManager::ReadReg("user.stat_regs.aurora_rx_channel_up");
@@ -652,21 +665,21 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
 
     RD53FWInterface::WriteArbitraryRegister("user.ctrl_regs.fast_cmd_reg_3.triggers_to_accept", RD53FWInterface::localCfgFastCmd.n_triggers = pNEvents);
 
-    // @TMP@
+    // @TMP@ : Autozero
     if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::FastCMDFSM)
-        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
-                                                                    RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
-                                                                    RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
-                                          -1);
+        RD53FWInterface::WriteChipCommands(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
+                                                                     RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
+                                                                     RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
+                                           -1);
     else if(RD53FWInterface::localCfgFastCmd.autozero_source == AutozeroSource::Software)
     {
-        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
-                                                                    RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
-                                                                    RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
-                                          -1);
-        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId, 6}), -1);
+        RD53FWInterface::WriteChipCommands(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
+                                                                     RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
+                                                                     RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
+                                           -1);
+        RD53FWInterface::WriteChipCommands(serialize(RD53ACmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId, 6}), -1);
         std::this_thread::sleep_for(std::chrono::microseconds(10));
-        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::ECR{}), -1);
+        RD53FWInterface::WriteChipCommands(serialize(RD53ACmd::ECR{}), -1);
         std::this_thread::sleep_for(std::chrono::microseconds(20));
     }
 
@@ -726,7 +739,7 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     // #################
     // # Show progress #
     // #################
-    RD53RunProgress::update(pData.size(), true);
+    RD53RunProgress::update(pData.size(), showRunProgress);
 }
 
 void RD53FWInterface::SendBoardCommandWithStrobe(const std::string& cmdReg)
@@ -748,10 +761,10 @@ void RD53FWInterface::SendFastCommands(const FastCommandsConfig* config)
 
     // @TMP@ : Prepare GlobalPulseConf to acquire zero level in SYNC FE
     if(config->autozero_source != AutozeroSource::Disabled)
-        RD53FWInterface::WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
-                                                                    RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
-                                                                    RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
-                                          -1);
+        RD53FWInterface::WriteChipCommands(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
+                                                                     RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
+                                                                     RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
+                                           -1);
 
     // ##################################
     // # Configuring fast command block #
@@ -904,8 +917,7 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
     else
         LOG(ERROR) << BOLDRED << "Option not recognized " << BOLDYELLOW << +static_cast<uint8_t>(injType) << RESET;
 
-    // @TMP@
-    if(enableAutozero == true)
+    if(enableAutozero == true) // @TMP@
     {
         if(RD53FWInterface::localCfgFastCmd.trigger_source != TriggerSource::FastCMDFSM)
             RD53FWInterface::localCfgFastCmd.autozero_source = AutozeroSource::Software;
@@ -1039,22 +1051,6 @@ void RD53FWInterface::ResetOptoLinkSlowControl()
     RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_tx_reset", 0x0}, {"user.ctrl_regs.lpgbt_1.ic_rx_reset", 0x0}});
 }
 
-void RD53FWInterface::StatusOptoLinkSlowControl(uint32_t& txIsReady, uint32_t& rxIsReady)
-{
-    txIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.tx_ready");
-    rxIsReady = RegManager::ReadReg("user.stat_regs.lpgbt_sc_1.rx_empty");
-
-    if(txIsReady == true)
-        LOG(INFO) << GREEN << "Optical link tx slow control status: " << BOLDYELLOW << "ready" << RESET;
-    else
-        LOG(WARNING) << GREEN << "Optical link tx slow control status: " << BOLDRED << "not ready" << RESET;
-
-    if(rxIsReady == true)
-        LOG(INFO) << GREEN << "Optical link rx slow control status: " << BOLDYELLOW << "ready" << RESET;
-    else
-        LOG(WARNING) << GREEN << "Optical link rx slow control status: " << BOLDRED << "not ready" << RESET;
-}
-
 void RD53FWInterface::ResetOptoLink()
 {
     RegManager::WriteReg("user.ctrl_regs.lpgbt_1.mgt_reset", 0x1);
@@ -1134,18 +1130,24 @@ void RD53FWInterface::SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_
                                {"user.ctrl_regs.lpgbt_mapping.update_downlink", 0}});
 }
 
-void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, uint8_t RxGroup, uint8_t RxModuleId, uint8_t lane)
+void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, const std::vector<std::pair<uint8_t, uint8_t>>& RxGroupsChipLanes, uint8_t RxModuleId)
 {
-    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.uplink_map_id", RxLink},
-                               {"user.ctrl_regs.lpgbt_mapping.upgroup_map_id", RxGroup},
-                               {"user.ctrl_regs.lpgbt_mapping.module_map_id", RxModuleId},
-                               {"user.ctrl_regs.lpgbt_mapping.chip_map_id", lane},
-                               {"user.ctrl_regs.lpgbt_mapping.update_uplink", 1},
-                               {"user.ctrl_regs.lpgbt_mapping.update_uplink", 0}});
+    for(auto RxGroupChipLane: RxGroupsChipLanes) // @TMP@ : Yiannis
+        RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.uplink_map_id", RxLink},
+                                   {"user.ctrl_regs.lpgbt_mapping.upgroup_map_id", RxGroupChipLane.first},
+                                   {"user.ctrl_regs.lpgbt_mapping.module_map_id", RxModuleId},
+                                   {"user.ctrl_regs.lpgbt_mapping.chip_map_id", RxGroupChipLane.second},
+                                   {"user.ctrl_regs.lpgbt_mapping.update_uplink", 1},
+                                   {"user.ctrl_regs.lpgbt_mapping.update_uplink", 0}});
 }
 
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
 void RD53FWInterface::SetOptoLinkVersion(uint8_t version) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.lpgbt_version", version); }
+
+void RD53FWInterface::ConfigurePCTestAdapter(const std::string& config)
+{
+    LOG(INFO) << GREEN << "Starting configuration of PortCard Test Adapter with configuration: " << BOLDYELLOW << config << RESET;
+}
 
 void RD53FWInterface::SelectBERcheckBitORFrame(const uint8_t bitORframe) { RegManager::WriteReg("user.ctrl_regs.PRBS_checker.error_cntr_sel", bitORframe); }
 

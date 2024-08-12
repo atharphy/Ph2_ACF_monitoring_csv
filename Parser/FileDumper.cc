@@ -5,12 +5,14 @@
 #include "HWDescription/OpticalGroup.h"
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWDescription/ReadoutChip.h"
+#include "HWDescription/VTRx.h"
 #include "HWDescription/lpGBT.h"
 #include "Parser/CommunicationSettingConfig.h"
 #include "Parser/FileParser.h"
 #include "Parser/ParserDefinitions.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Container.h"
+#include "Utils/NTChandler.h"
 #include <math.h>
 
 using namespace Ph2_HwDescription;
@@ -133,8 +135,8 @@ void FileDumper::dumpOpticalGroupConfigurationFile(pugi::xml_node theMotherNode,
     {
         auto theNTCptopertiesNode                                                       = theOpticalGroupNode.append_child(NTCPROPERTIES_NODE_NAME);
         theNTCptopertiesNode.append_attribute(NTCPROPERTIES_TYPE_ATTRIBUTE_NAME)        = theNTC.first.c_str();
-        theNTCptopertiesNode.append_attribute(NTCPROPERTIES_ADC_ATTRIBUTE_NAME)         = theNTC.second.first.c_str();
-        theNTCptopertiesNode.append_attribute(NTCPROPERTIES_LOOKUPTABLE_ATTRIBUTE_NAME) = theNTC.second.second.c_str();
+        theNTCptopertiesNode.append_attribute(NTCPROPERTIES_ADC_ATTRIBUTE_NAME)         = theNTC.second.c_str();
+        theNTCptopertiesNode.append_attribute(NTCPROPERTIES_LOOKUPTABLE_ATTRIBUTE_NAME) = NTChandler::getInstance().getNTCfile(theNTC.first).c_str();
     }
 
     auto& clpGBT = theOpticalGroup->flpGBT;
@@ -157,6 +159,26 @@ void FileDumper::dumpOpticalGroupConfigurationFile(pugi::xml_node theMotherNode,
         clpGBT->saveRegMap(theFullFileName);
 
         theLpGBTNode.append_attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME) = theFileName.c_str();
+    }
+
+    auto& theVTRx = theOpticalGroup->fVTRx;
+    if(theVTRx != nullptr)
+    {
+        std::string theVTRxFilePathNodeName                              = std::string(VTRX_NODE_NAME) + CHIP_FILES_APPEND_NODE_NAME;
+        auto        theVTRxFilePathNode                                  = theOpticalGroupNode.append_child(theVTRxFilePathNodeName.c_str());
+        theVTRxFilePathNode.append_attribute(COMMON_PATH_ATTRIBUTE_NAME) = fOutputDirectory.c_str();
+
+        auto theVTRxNode                                       = theOpticalGroupNode.append_child(VTRX_NODE_NAME);
+        theVTRxNode.append_attribute(COMMON_ID_ATTRIBUTE_NAME) = std::to_string(theVTRx->getId()).c_str();
+
+        auto cRegMap = theVTRx->getRegMap();
+
+        std::string theFileName     = "BE" + std::to_string(theOpticalGroup->getBeBoardId()) + "_OG" + std::to_string(theOpticalGroup->getId()) + "_VTRx" + std::to_string(theVTRx->getId()) + ".txt";
+        std::string theFullFileName = fOutputDirectory + theFileName;
+        LOG(DEBUG) << BOLDBLUE << "Dumping VTRx configuration to " << theFullFileName << RESET;
+        theVTRx->saveRegMap(theFullFileName);
+
+        theVTRxNode.append_attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME) = theFileName.c_str();
     }
 
     for(auto hybrid: *theOpticalGroup) { dumpHybridConfigurationFile(theOpticalGroupNode, hybrid); }

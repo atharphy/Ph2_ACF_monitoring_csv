@@ -18,11 +18,17 @@ RD53Interface::RD53Interface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterfa
 bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
+    auto pRD53 = static_cast<RD53*>(pChip);
 
-    auto                  nameAndValue(SetSpecialRegister(regName, data, pChip->getRegMap()));
+    const auto            nameAndValue(SetSpecialRegister(regName, data, pChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
     PackWriteCommand(pChip, nameAndValue.first, nameAndValue.second, cmdStream, pVerify);
-    if(static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId()) == false) static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO();
+    if(static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdStream, pChip->getHybridId()) == false)
+    {
+        static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO(); // @TMP@ : Temporary fix to avoid FIFO empty at readback
+        SendRD53Clear(pRD53);                                       // @TMP@ : Temporary fix to avoid FIFO empty at readback
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+    }
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
@@ -36,7 +42,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
             auto pixMode = RD53Interface::ReadChipReg(pChip, "PIX_MODE");
             if((pixMode & RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->AutoIncrementMask) == 0) // Check only auto-increment bits
             {
-                auto regReadback = ReadRD53Reg(static_cast<RD53*>(pChip), regName);
+                auto regReadback = ReadRD53Reg(pRD53, regName);
                 actualValue      = regReadback[0].second;
                 auto row         = RD53Interface::ReadChipReg(pChip, "REGION_ROW");
                 if((regReadback.size() == 0) || (regReadback[0].first != row) || (regReadback[0].second != data)) status = false;
@@ -49,11 +55,14 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
         }
     }
 
-    if(status == false)
-        LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 id " << BOLDYELLOW << pChip->getId() << BOLDRED << " reg. " << BOLDYELLOW << regName << BOLDRED
-                   << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED << ", read = " << BOLDYELLOW << actualValue << RESET;
-    else if((pVerify == true) && (status == true))
-        LOG(DEBUG) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
+    if(RD53Interface::silentRunning == false)
+    {
+        if(status == false)
+            LOG(ERROR) << BOLDRED << "Error when reading back what was written into RD53 id " << BOLDYELLOW << pChip->getId() << BOLDRED << " reg. " << BOLDYELLOW << regName << BOLDRED
+                       << ": wrote = " << BOLDYELLOW << nameAndValue.second << BOLDRED << ", read = " << BOLDYELLOW << actualValue << RESET;
+        else if((pVerify == true) && (status == true))
+            LOG(DEBUG) << BOLDBLUE << "\t--> Succesfully configured chip register " << BOLDYELLOW << regName << RESET;
+    }
 
     // #######################################
     // # Update both real and fake registers #
@@ -71,7 +80,7 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
     auto                  nameAndValue(SetSpecialRegister(regName, data, RD53Shared::firstChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
     PackWriteBroadcastCommand(pBoard, nameAndValue.first, nameAndValue.second, cmdStream);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdStream, -1);
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
@@ -87,16 +96,19 @@ int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
         auto regReadback = ReadRD53Reg(pRD53, regName);
         if(regReadback.size() == 0)
         {
-            LOG(WARNING) << BLUE << "Empty register readback from chip id " << BOLDYELLOW << pChip->getId() << BLUE << ", attempt n. " << BOLDYELLOW << attempt + 1 << BLUE << "/" << BOLDYELLOW
-                         << +RD53Shared::MAXATTEMPTS << RESET;
-            SendRD53Clear(pRD53);
+            if(RD53Interface::silentRunning == false)
+                LOG(WARNING) << BLUE << "Empty register readback from chip id " << BOLDYELLOW << pChip->getId() << BLUE << ", attempt n. " << BOLDYELLOW << attempt + 1 << BLUE << "/" << BOLDYELLOW
+                             << +RD53Shared::MAXATTEMPTS << RESET;
+            static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO(); // @TMP@ : Temporary fix to avoid FIFO empty at readback
+            SendRD53Clear(pRD53);                                       // @TMP@ : Temporary fix to avoid FIFO empty at readback
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
         }
         else
             return regReadback[0].second;
     }
 
-    LOG(ERROR) << BOLDRED << "Empty register (" << BOLDYELLOW << regName << BOLDRED << ") readback FIFO after " << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED " attempts" << RESET;
+    if(RD53Interface::silentRunning == false)
+        LOG(ERROR) << BOLDRED << "Empty register (" << BOLDYELLOW << regName << BOLDRED << ") readback FIFO after " << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << BOLDRED " attempts" << RESET;
 
     return -1;
 }
@@ -169,36 +181,55 @@ void RD53Interface::DumpChipRegisters(ReadoutChip* pChip)
     }
 }
 
-void RD53Interface::ChipErrorReport(ReadoutChip* pChip)
+void RD53Interface::EnDisChip(Chip* pChip, std::vector<uint16_t>& chipCommandList, bool enable)
+{
+    for(const auto& regName: static_cast<RD53*>(pChip)->getFEtype()->CoreColRegs)
+    {
+        const uint16_t value = (enable == true ? RD53Shared::setBits(pChip->getNumberOfBits(regName)) & pChip->getRegItem(regName).fDefValue : 0);
+        PackWriteCommand(pChip, regName, value, chipCommandList, true);
+    }
+}
+
+void RD53Interface::ChipErrorReport(Chip* pChip)
 {
     const uint16_t baseAddrFakeCNT = 0x200; // @CONST@
 
     this->setBoard(pChip->getBeBoardId());
 
-    if(pChip->getRegItem("BCID_CNT").fAddress < baseAddrFakeCNT) LOG(INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BCID_CNT") << RESET;
-    if(pChip->getRegItem("TRIG_CNT").fAddress < baseAddrFakeCNT) LOG(INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "TRIG_CNT") << RESET;
-    if(pChip->getRegItem("READTRIG_CNT").fAddress < baseAddrFakeCNT) LOG(INFO) << BOLDBLUE << "READTRIG_CNT        = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "READTRIG_CNT") << RESET;
-    if(pChip->getRegItem("LOCKLOSS_CNT").fAddress < baseAddrFakeCNT) LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "LOCKLOSS_CNT") << RESET;
+    if(pChip->getRegItem("BCID_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "BCID_CNT") << RESET;
+    if(pChip->getRegItem("TRIG_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "TRIG_CNT            = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "TRIG_CNT") << RESET;
+    if(pChip->getRegItem("READTRIG_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "READTRIG_CNT        = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "READTRIG_CNT") << RESET;
+    if(pChip->getRegItem("LOCKLOSS_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "LOCKLOSS_CNT        = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "LOCKLOSS_CNT") << RESET;
     if(pChip->getRegItem("BITFLIP_WNG_CNT").fAddress < baseAddrFakeCNT)
-        LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BITFLIP_WNG_CNT") << RESET;
+        LOG(INFO) << BOLDBLUE << "BITFLIP_WNG_CNT     = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "BITFLIP_WNG_CNT") << RESET;
     if(pChip->getRegItem("BITFLIP_ERR_CNT").fAddress < baseAddrFakeCNT)
-        LOG(INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "BITFLIP_ERR_CNT") << RESET;
-    if(pChip->getRegItem("CMDERR_CNT").fAddress < baseAddrFakeCNT) LOG(INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "CMDERR_CNT") << RESET;
+        LOG(INFO) << BOLDBLUE << "BITFLIP_ERR_CNT     = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "BITFLIP_ERR_CNT") << RESET;
+    if(pChip->getRegItem("CMDERR_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "CMDERR_CNT          = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "CMDERR_CNT") << RESET;
     if(pChip->getRegItem("RDWRFIFOERROR_CNT").fAddress < baseAddrFakeCNT)
-        LOG(INFO) << BOLDBLUE << "RDWRFIFOERROR_CNT   = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "RDWRFIFOERROR_CNT") << RESET;
-    if(pChip->getRegItem("HITOR_0_CNT").fAddress < baseAddrFakeCNT) LOG(INFO) << BOLDBLUE << "HITOR_0_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << RESET;
-    if(pChip->getRegItem("HITOR_1_CNT").fAddress < baseAddrFakeCNT) LOG(INFO) << BOLDBLUE << "HITOR_1_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_1_CNT") << RESET;
-    if(pChip->getRegItem("HITOR_2_CNT").fAddress < baseAddrFakeCNT) LOG(INFO) << BOLDBLUE << "HITOR_2_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_2_CNT") << RESET;
-    if(pChip->getRegItem("HITOR_3_CNT").fAddress < baseAddrFakeCNT) LOG(INFO) << BOLDBLUE << "HITOR_3_CNT         = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "HITOR_3_CNT") << RESET;
+        LOG(INFO) << BOLDBLUE << "RDWRFIFOERROR_CNT   = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "RDWRFIFOERROR_CNT") << RESET;
+    if(pChip->getRegItem("HITOR_0_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "HITOR_0_CNT         = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "HITOR_0_CNT") << RESET;
+    if(pChip->getRegItem("HITOR_1_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "HITOR_1_CNT         = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "HITOR_1_CNT") << RESET;
+    if(pChip->getRegItem("HITOR_2_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "HITOR_2_CNT         = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "HITOR_2_CNT") << RESET;
+    if(pChip->getRegItem("HITOR_3_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "HITOR_3_CNT         = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "HITOR_3_CNT") << RESET;
     if(pChip->getRegItem("GatedHITOR_0_CNT").fAddress < baseAddrFakeCNT)
-        LOG(INFO) << BOLDBLUE << "GatedHITOR_0_CNT    = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "GatedHITOR_0_CNT") << RESET;
+        LOG(INFO) << BOLDBLUE << "GatedHITOR_0_CNT    = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "GatedHITOR_0_CNT") << RESET;
     if(pChip->getRegItem("GatedHITOR_1_CNT").fAddress < baseAddrFakeCNT)
-        LOG(INFO) << BOLDBLUE << "GatedHITOR_1_CNT    = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "GatedHITOR_1_CNT") << RESET;
-    if(pChip->getRegItem("PIXELSEU_CNT").fAddress < baseAddrFakeCNT) LOG(INFO) << BOLDBLUE << "PIXELSEU_CNT        = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "PIXELSEU_CNT") << RESET;
+        LOG(INFO) << BOLDBLUE << "GatedHITOR_1_CNT    = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "GatedHITOR_1_CNT") << RESET;
+    if(pChip->getRegItem("PIXELSEU_CNT").fAddress < baseAddrFakeCNT)
+        LOG(INFO) << BOLDBLUE << "PIXELSEU_CNT        = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "PIXELSEU_CNT") << RESET;
     if(pChip->getRegItem("GLOBALCONFIGSEU_CNT").fAddress < baseAddrFakeCNT)
-        LOG(INFO) << BOLDBLUE << "GLOBALCONFIGSEU_CNT = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "GLOBALCONFIGSEU_CNT") << RESET;
+        LOG(INFO) << BOLDBLUE << "GLOBALCONFIGSEU_CNT = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "GLOBALCONFIGSEU_CNT") << RESET;
     if(pChip->getRegItem("SKIPPED_TRIGGER_CNT").fAddress < baseAddrFakeCNT)
-        LOG(INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "SKIPPED_TRIGGER_CNT") << RESET;
+        LOG(INFO) << BOLDBLUE << "SKIPPED_TRIGGER_CNT = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "SKIPPED_TRIGGER_CNT") << RESET;
 }
 
 uint16_t RD53Interface::SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size)
@@ -242,12 +273,11 @@ void RD53Interface::ReadChipAllLocalReg(ReadoutChip* pChip, const std::string& r
 void RD53Interface::SendChipCommands(const BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId)
 {
     this->setBoard(pBoard->getId());
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(chipCommandList, hybridId);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(chipCommandList, hybridId);
 }
 
 void RD53Interface::PackHybridCommands(const BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId, std::vector<uint32_t>& hybridCommandList)
 {
-    this->setBoard(pBoard->getId());
     static_cast<RD53FWInterface*>(fBoardFW)->ComposeAndPackChipCommands(chipCommandList, hybridId, hybridCommandList);
 }
 

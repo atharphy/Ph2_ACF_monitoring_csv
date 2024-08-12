@@ -11,7 +11,7 @@
 | `nEvents`        | 100           |             |
 | `nEvtsBurst`     | =`nEvents`    |             |
 | `nTRIGxEvent`    | 10            |             |
-| `INJtype `       | 1             |             |
+| `INJtype`        | 1             |             |
 | `VCalHStart`     | 100           |             |
 | `VCalHStop`      | 600           |             |
 | `VCalHnsteps`    | 50            |             |

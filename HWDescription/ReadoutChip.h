@@ -68,7 +68,8 @@ class ReadoutChip
     virtual bool isDACLocal(const std::string& dacName) = 0;
 
     const std::shared_ptr<ChannelGroupBase> getChipOriginalMask() const override { return fChipOriginalMask; }
-    // channels are encoded as columnNumber*Nrows + rowNumber
+
+    // Channels are encoded as columnNumber*Nrows + rowNumber
     void setChipOriginalMask(std::vector<uint16_t> pChannels)
     {
         fChipOriginalMask->enableAllChannels();

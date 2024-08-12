@@ -21,11 +21,12 @@ class DQMMetadata : public DQMHistogramBase
     void fillCalibrationName(const DetectorDataContainer& theCalibrationNameContainer);
     void fillDetectorConfiguration(const DetectorDataContainer& theDetectorConfigurationContainer, bool initialValue);
     void fillBoardConfiguration(const DetectorDataContainer& theBoardConfigurationContainer, bool initialValue);
-    void fillCalibrationTimestamp(const DetectorDataContainer& theCalibrationTimestampContainer, bool start);
+    void fillRunTimestamp(const DetectorDataContainer& theCalibrationTimestampContainer, bool start);
     void fillReadoutChipConfiguration(const DetectorDataContainer& theReadoutChipConfigurationContainer, bool initialValue);
     void fillLpGBTConfiguration(const DetectorDataContainer& theLpGBTConfigurationContainer, bool initialValue);
     void fillLpGBTFuseId(const DetectorDataContainer& theLpGBTFuseIdContainer);
     void fillVTRxFuseId(const DetectorDataContainer& theVTRxFuseIdContainer);
+    void fillSubCalibrationNameAndTime(const DetectorDataContainer& theSubCalibrationNameAndTimeContainer);
 
     virtual bool fill(std::string& inputStream) override;
     virtual void process() override;
@@ -53,6 +54,7 @@ class DQMMetadata : public DQMHistogramBase
     DetectorDataContainer fFinalLpGBTConfigurationContainer;
     DetectorDataContainer fLpGBTFuseIdContainer;
     DetectorDataContainer fVTRxFuseIdContainer;
+    DetectorDataContainer fSubCalibrationNameAndTimeContainer;
 };
 
 #endif

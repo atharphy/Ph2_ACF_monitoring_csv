@@ -58,13 +58,13 @@ markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
   - pymdownx.highlight:
-       anchor_linenums: true
+      anchor_linenums: true
   - pymdownx.superfences
   - tables
 
 extra_javascript:
   - javascript/config.js
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://polyfill-fastly.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 nav:
@@ -83,30 +83,31 @@ nav:
       - 'Software setup': innerTracker/SWsetup.md
       - 'FPGA configuration': innerTracker/FPGAcfg.md
       - 'Running Ph2_ACF': innerTracker/Running.md
-      - 'IT Configuration'
+      - 'IT Configuration':
         - 'Config file': innerTracker/ConfigFile.md
         - 'Voltage settings': innerTracker/VoltageSettings.md
-      - 'IT Calibrations':
-        - 'Scans':
-          - 'innerTracker/calibrations/PixelAlive.md'
-          - 'innerTracker/calibrations/SCurve.md'
-          - 'innerTracker/calibrations/Noise.md'
-          - 'innerTracker/calibrations/XTalk.md'
-          - 'innerTracker/calibrations/GainScan.md'
-        - 'Pixel tuning':
-          - innerTracker/calibrations/LatencyScan.md
-          - innerTracker/calibrations/InjectionDelayScan.md
-          - innerTracker/calibrations/ClockDelayScan.md
-          - innerTracker/calibrations/ThresholdAdjust.md
-          - innerTracker/calibrations/ThresholdEqualization.md
-          - innerTracker/calibrations/ThresholdMinimization.md
-          - innerTracker/calibrations/GainOptimization.md
-          - innerTracker/calibrations/VoltageTuning.md
-        - 'Other':
-          - innerTracker/calibrations/BERTest.md
-          - innerTracker/calibrations/GenericDacDac.md
-          - innerTracker/calibrations/Physics.md
-          - innerTracker/calibrations/DataReadBackOptimisation.md
+    - 'IT Calibrations':
+      - innerTracker/calibrations/index.md
+      - 'Scans':
+        - 'innerTracker/calibrations/PixelAlive.md'
+        - 'innerTracker/calibrations/SCurve.md'
+        - 'innerTracker/calibrations/Noise.md'
+        - 'innerTracker/calibrations/XTalk.md'
+        - 'innerTracker/calibrations/GainScan.md'
+      - 'Pixel tuning':
+        - innerTracker/calibrations/LatencyScan.md
+        - innerTracker/calibrations/InjectionDelayScan.md
+        - innerTracker/calibrations/ClockDelayScan.md
+        - innerTracker/calibrations/ThresholdAdjust.md
+        - innerTracker/calibrations/ThresholdEqualization.md
+        - innerTracker/calibrations/ThresholdMinimization.md
+        - innerTracker/calibrations/GainOptimization.md
+        - innerTracker/calibrations/VoltageTuning.md
+      - 'Other':
+        - innerTracker/calibrations/BERTest.md
+        - innerTracker/calibrations/GenericDacDac.md
+        - innerTracker/calibrations/Physics.md
+        - innerTracker/calibrations/DataReadBackOptimisation.md
       - 'Additional information/HOWTOs':
         - innerTracker/ModuleTesting.md
         - innerTracker/SCCTuning.md

@@ -21,6 +21,8 @@ class MetadataHandler : public Tool
 
     void setFinalConfigurationFileContent(const std::string& theConfigurationFileContent) { fFinalConfigurationFileContent = theConfigurationFileContent; }
 
+    void fillSubCalibrationNameAndTimeContainer(std::string subCalibrationName);
+
     void justBookDQMMetadata();
 
   protected:

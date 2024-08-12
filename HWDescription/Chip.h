@@ -219,7 +219,7 @@ class Chip : public FrontEndDescription
 
     std::string getFileName(const std::string& fName2Add = "") const
     {
-        std::string output = this->configFileName;
+        std::string output = this->fConfigFileName;
         output.insert(output.find_last_of("/\\") + 1, fName2Add);
         return output;
     }
@@ -241,7 +241,7 @@ class Chip : public FrontEndDescription
 
   protected:
     virtual void                                     initializeFreeRegisters(){};
-    std::string                                      configFileName;
+    std::string                                      fConfigFileName;
     uint8_t                                          fChipCode;
     uint8_t                                          fChipId;
     uint8_t                                          fChipAddress; // I2C addess of chip

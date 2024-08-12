@@ -84,11 +84,11 @@ void RD53AInterface::InitRD53Downlink(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::move(RD53Shared::firstChip->getLaneUpInitSequence()), -1);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::move(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53ACmd::RD53ACmdEncoder::SYNC)), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(std::move(RD53Shared::firstChip->getLaneUpInitSequence()), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(std::move(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53ACmd::RD53ACmdEncoder::SYNC)), -1);
 }
 
-void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
+void RD53AInterface::InitRD53Uplinks(Chip* pChip)
 {
     this->setBoard(pChip->getBeBoardId());
     auto pRD53 = static_cast<RD53*>(pChip);
@@ -291,7 +291,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
             auto n16bitWords = commandList.size() + nLongCommands * n16bitWordsWrtLong + 2 * n16bitWordsWrt;
             if((n16bitWords / 2 + n16bitWords % 2) > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
             {
-                static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+                static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pRD53->getHybridId());
                 commandList.clear();
             }
         }
@@ -335,7 +335,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
             auto n16bitWords = commandList.size() + (RD53A::NROWS * 2 + 1) * n16bitWordsWrt;
             if((n16bitWords / 2 + n16bitWords % 2) > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
             {
-                static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+                static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pRD53->getHybridId());
                 commandList.clear();
             }
         }
@@ -353,7 +353,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
     // ###################################
     // # Write commands to frontend chip #
     // ###################################
-    if(commandList.size() != 0) static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+    if(commandList.size() != 0) static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pRD53->getHybridId());
 }
 
 void RD53AInterface::PackWriteCommand(Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
@@ -378,7 +378,7 @@ void RD53AInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
     this->setBoard(pChip->getBeBoardId());
 
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, false);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, true);
 }
 
@@ -461,7 +461,7 @@ uint32_t RD53AInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x04}, commandList);
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GlbPulseAddr, GlbPulseVal}, commandList); // Restore value in Global Pulse Route
 
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getHybridId());
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pChip->getHybridId());
     return RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
 }
 

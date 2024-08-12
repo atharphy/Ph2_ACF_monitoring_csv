@@ -41,30 +41,8 @@ void lpGBTInterface::StopPRBSpattern(Chip* pChip)
 bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
-    auto           cBoardType       = fBoardFW->getBoardType();
-    auto           cAddress         = pChip->getRegItem(pDacName).fAddress;
-    const uint16_t maxRegValue      = 0xFF;                                                            // @CONST@
-    const uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F; // Setting highest write address possible (lpGBT version dependent)
-
-    // ######################################################
-    // # Checking that written value isn't more than 8 bits #
-    // ######################################################
-    if(pDacValue > maxRegValue)
-    {
-        LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address 0x" << BOLDYELLOW << std::hex << cAddress << std::dec
-                   << RESET;
-        return false;
-    }
-
-    // ##########################################################################
-    // # Checking that register address isn't higher than highest write address #
-    // ##########################################################################
-    if(cAddress > cMaxWriteAddress)
-    {
-        LOG(WARNING) << GREEN << "LpGBT read-write registers end at " << BOLDYELLOW << cMaxWriteAddress << RESET << GREEN << " ... impossible to write to address 0x" << BOLDYELLOW << std::hex
-                     << cAddress << std::dec << RESET;
-        return false;
-    }
+    auto cBoardType = fBoardFW->getBoardType();
+    auto cAddress   = pChip->getRegItem(pDacName).fAddress;
 
     bool cSuccess = false;
     if((cBoardType != BoardType::RD53) && (pChip->isOptical() == true))
@@ -430,7 +408,6 @@ void lpGBTInterface::ConfigureRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pChan
     uint8_t     cValueChnCntr = ReadChipReg(pChip, cRegName);
     cValueChnCntr             = (cValueChnCntr & ~(0xF << 4)) | (pPhase << 4);
     WriteChipReg(pChip, cRegName, cValueChnCntr);
-    // LOG(DEBUG) << BOLDMAGENTA << "lpGBT#" << +pChip->getId() << "Grp#" << +pGroup << " Chnl#" << +pChannel << " - phase " << +pPhase << RESET;
 }
 
 void lpGBTInterface::ConfigureAllRxPhase(Chip* pChip, uint8_t pPhase, std::map<uint8_t, std::vector<uint8_t>> theGroupsAndChannels)
@@ -499,7 +476,6 @@ bool lpGBTInterface::SetVrefTune(Ph2_HwDescription::Chip* pChip, uint8_t pVrefTu
     cMask.fNbits    = cNbits;
     pChip->setRegBits(cRegName, cMask, pVrefTune);
     WriteChipReg(pChip, cRegName, pVrefTune);
-    // std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
     auto cVrefTune = pChip->getRegItem(cRegName).fValue;
 
     return cVrefTune == pVrefTune;
@@ -1012,7 +988,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
                      << RESET;
         // LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         // ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
-        return 0;
+        throw std::runtime_error("LpGBT ADC conversion timed out");
     }
 
     // ##################
@@ -1126,7 +1102,7 @@ double lpGBTInterface::GetBERTResult(Chip* pChip)
     return cErrors / cBitsChecked;
 }
 
-double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
+double lpGBTInterface::RunBERtest(Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
 // ####################
 // # frontendSpeed    #
 // # 1.28 Gbit/s  = 0 #
@@ -1155,8 +1131,11 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // ###############
     // # Configuring #
     // ###############
-    lpGBTInterface::ConfigureRxSource(pChip, pGroup, lpGBTconstants::PATTERN_NORMAL);
-    lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)], BERTMeasTime);
+    for(auto pGroup: pGroups)
+    {
+        lpGBTInterface::ConfigureRxSource(pChip, pGroup, lpGBTconstants::PATTERN_NORMAL);
+        lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)], BERTMeasTime);
+    }
 
     // #########
     // # Start #
@@ -1543,6 +1522,8 @@ void lpGBTInterface::TuneVrefControlLib(Ph2_HwDescription::lpGBT* pChip, bool pE
 
 void lpGBTInterface::AutoTuneVref(Ph2_HwDescription::lpGBT* pChip, bool pResetTempSensor)
 {
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+
     /*  Auto tune VREF based on the internal temperature sensor.
 
         WARNING: this routine WILL NOT WORK for irradiated chips (TID>0)
@@ -1653,6 +1634,7 @@ float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::lpGBT* pChip, const std
         Returns:
             Estimate of the output resistance in Ohms
     """ */
+
     uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
     {
@@ -1681,6 +1663,7 @@ uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::lpGBT* 
         Raises:
             LpGBTOutOfRangeError: If the requested current cannot be achieved
     """ */
+
     uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
     {
@@ -1728,6 +1711,7 @@ void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::lpGBT* pChip, const std::
             pChannel: ADC channel to connect to current DAC to
             pCurrentA: Output current in Amps
     """ */
+
     uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
     {
@@ -1851,6 +1835,7 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
         Raises:
             LpGBTException: in case the conversion timeout is exceeded
     """ */
+
     if(pResetTempSensor)
     {
         auto cVal = ReadChipReg(pChip, "ADCMon");
@@ -1894,6 +1879,7 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip,
         Raises:
             LpGBTException: in case the conversion timeout is exceeded
     """ */
+
     if(!(pPowerSupply != "VDDTX" or pPowerSupply != "VDDRX" or pPowerSupply != "VDD" or pPowerSupply != "VDDA"))
     {
         LOG(ERROR) << BOLDRED << "[lpGBTInterface::MeasurePowerSupplyVoltage] Invalid pPowerSupply" << RESET;

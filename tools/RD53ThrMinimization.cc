@@ -268,6 +268,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames
     // ###########################
     // # Download new DAC values #
     // ###########################
+    LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
     CalibBase::downloadNewDACvalues(bestDACcontainer, regNames, true, 0);
 
     // ################
