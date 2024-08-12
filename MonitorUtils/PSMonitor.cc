@@ -63,13 +63,10 @@ void PSMonitor::runMonitorMPA(const std::string& monitorValueName)
 
 void PSMonitor::readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer)
 {
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << Ph2_HwDescription::ReadoutChip::getFrontEndName(theChip->getFrontEndType()) << "monitorValueName = " << monitorValueName
-              << std::endl;
     auto  thePSInterface = static_cast<PSInterface*>(fTheSystemController->fReadoutChipInterface);
     float monitorValue   = 0;
     if(monitorValueName == "temp") { monitorValue = thePSInterface->measureTemperature(theChip); }
     else { monitorValue = thePSInterface->readADCVoltage(theChip, monitorValueName); }
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] monitorValue = " << monitorValue << std::endl;
 
     ValueAndTime<float> theRegisterAndTime(monitorValue, getTimeStamp());
     theDataContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<ValueAndTime<float>>() = theRegisterAndTime;
