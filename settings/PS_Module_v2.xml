@@ -7,7 +7,7 @@
         
      <OpticalGroup Id="0" enable="1" FMCId="L12" reset="1">
         <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
-        <NTCProperties type="VTRX+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
+        <NTCProperties type="VTRx+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
         
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
         <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
@@ -292,22 +292,22 @@
     <Setting name="OTPSringOscillatorTest_NumberOfClockCycles">100</Setting>
 </Settings>
 
-
 <MonitoringSettings>
-<Monitoring type="PS" enable="0">
+<Monitoring type="PS" enable="1">
     <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-    <MonitoringElement device="MPA2"  register="CalDAC7" enable="1"/>
-    <MonitoringElement device="MPA2"  register="bandgap" enable="1"/>
     <MonitoringElement device="MPA2"  register="AVDD" enable="1"/> 
     <MonitoringElement device="MPA2"  register="DVDD" enable="1"/>    
+    <MonitoringElement device="MPA2"  register="temp" enable="1"/>    
     <MonitoringElement device="SSA2"  register="AVDD" enable="1"/>
     <MonitoringElement device="SSA2"  register="DVDD" enable="1"/>
-    <MonitoringElement device="SSA2"  register="VBG" enable="1"/>
-    <MonitoringElement device="SSA2"  register="ADC_VREF" enable="1"/>
+    <MonitoringElement device="SSA2"  register="temp" enable="1"/>    
     <MonitoringElement device="LpGBT" register="VDD"  enable="1"/>
     <MonitoringElement device="LpGBT" register="VDDA" enable="1"/>
     <MonitoringElement device="LpGBT" register="LpGBTtemp" enable="1"/>
     <MonitoringElement device="LpGBT" register="SensorTemp" enable="1"/>
+    <MonitoringElement device="LpGBT" register="VTRxLeakageCurr" enable="1"/>
+    <MonitoringElement device="LpGBT" register="VTRxTemp" enable="1"/>
+    <MonitoringElement device="LpGBT" register="2V55" enable="1"/>
 </Monitoring>
 </MonitoringSettings>
 

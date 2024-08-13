@@ -62,11 +62,7 @@ void D19clpGBTSlowControlWorkerInterface::Reset()
     usleep(sleepTimeInUs);
 }
 
-void D19clpGBTSlowControlWorkerInterface::SelectLink(uint8_t pLinkId)
-{
-    std::lock_guard<std::recursive_mutex> theGuard(fTheRegManager->fMutex);
-    fTheRegManager->WriteReg("fc7_daq_cnfg.optical_block.link_select", pLinkId);
-}
+void D19clpGBTSlowControlWorkerInterface::SelectLink(uint8_t pLinkId) { fTheRegManager->WriteReg("fc7_daq_cnfg.optical_block.link_select", pLinkId); }
 std::vector<uint32_t>
 D19clpGBTSlowControlWorkerInterface::EncodeCommand(uint8_t pFunctionId, Ph2_HwDescription::Chip* pChip, const std::vector<Ph2_HwDescription::ChipRegItem>& pRegisterItems, bool pVerify)
 {

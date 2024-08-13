@@ -93,6 +93,8 @@ class FileParser
 
     void parseLpGBTphasesForBypass(pugi::xml_node lpgbtPhasesForBypassNode, Ph2_HwDescription::Hybrid* cHybrid, std::ostream& os);
 
+    void setChipADCParameters(pugi::xml_node pChipNode, Ph2_HwDescription::ReadoutChip* cChip);
+
     // ########################
     // # RD53 specific parser #
     // ########################

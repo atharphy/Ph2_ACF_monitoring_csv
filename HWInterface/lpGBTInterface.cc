@@ -939,7 +939,6 @@ float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
 
 uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     // ########################################################
     // # Read differential (converted) data on two ADC inputs #
     // ########################################################
@@ -981,6 +980,11 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
         cIter++;
     } while((cIter < lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
+    if(!cSuccess)
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::ReadADC timed out" << RESET;
+        return 65535;
+    }
 
     if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
@@ -1522,8 +1526,6 @@ void lpGBTInterface::TuneVrefControlLib(Ph2_HwDescription::lpGBT* pChip, bool pE
 
 void lpGBTInterface::AutoTuneVref(Ph2_HwDescription::lpGBT* pChip, bool pResetTempSensor)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-
     /*  Auto tune VREF based on the internal temperature sensor.
 
         WARNING: this routine WILL NOT WORK for irradiated chips (TID>0)
@@ -1800,7 +1802,7 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const s
         float iout = _CdacCodeToCurrent(pChip, pChannel, cdac_code);
         float rout = _CdacCodeToRout(pChip, pChannel, cdac_code);
 
-        float vadc = AdcGetVin(pChip, pChannel, "VREF/2", 0, 10);
+        float vadc = AdcGetVin(pChip, pChannel, "VREF/2", 0, 1);
 
         float rmeas = vadc / iout;
         LOG(DEBUG) << BOLDBLUE << "VADC: " << vadc << " V" << RESET;

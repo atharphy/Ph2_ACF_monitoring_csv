@@ -92,7 +92,8 @@ FC7FpgaConfig MiddlewareStateMachine::getFpgaConfig(const std::string& configura
     }
     catch(const std::exception& e)
     {
-        std::string errorMessage = "Board with id " + std::to_string(boardId) + " does not exist in file " + configurationFile;
+        std::cerr << __PRETTY_FUNCTION__ << " caught exception " << e.what() << std::endl;
+        std::string errorMessage = "Impossible to create FC7FpgaConfig fpr Board with id " + std::to_string(boardId) + " from file " + configurationFile;
         throw std::runtime_error(errorMessage);
     }
 }

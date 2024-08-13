@@ -219,10 +219,9 @@ std::string SSA2::getStripRegisterName(const std::string& theRegisterName, uint1
     return stripRegisterName;
 }
 
-void SSA2::setADCCalibrationMap(const std::map<std::string, float>& theInputMap)
-{
-    for(const auto& theInput: theInputMap) fADCcalibrationMap[theInput.first] = theInput.second;
-}
+void SSA2::setADCCalibrationValue(const std::string& theCalibrationName, float theCalibrationValue) { fADCcalibrationMap.at(theCalibrationName) = theCalibrationValue; }
+
+float SSA2::getADCCalibrationValue(const std::string& theCalibrationName) const { return fADCcalibrationMap.at(theCalibrationName); }
 
 uint8_t SSA2::convertMIPtoInjectedCharge(float numberOfMIPs)
 {
