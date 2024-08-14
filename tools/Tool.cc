@@ -2134,7 +2134,7 @@ class MeasureBeBoardDataPerGroup : public ScanBase
                     {
                         for(const auto cChip: *cHybrid)
                         {
-                            auto channelGroup = fTool->getChannelGroup(fGroupNumber, fDetectorDataContainer->getObject(fBoardId)->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
+                            auto channelGroup = fTool->getChannelGroup(fGroupNumber, fDetectorDataContainer->getObject(fBoardId)->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId()); 
                             if(!channelGroup) continue;
                             for(auto& event: events) event->fillChipDataContainer(cChip, channelGroup, cHybrid->getId());
                         }
