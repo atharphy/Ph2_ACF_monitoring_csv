@@ -205,7 +205,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
             auto lineOutputVector = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
             for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
             {
-               std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVector[lineIndex], 1, true) << std::endl;
+                std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVector[lineIndex], 1, true) << std::endl;
             }
 
             // flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain10", 0x00);
@@ -254,7 +254,6 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
             writeWithComment("fc7_daq_ctrl.physical_interface_block.link0_hybrid0_stub_bitslip", 0x00005A, "test");
 
-
             writeWithComment(theBertRegisterControl, 0x00050004, "Sample PRBS data – DATA_LD = 1");
 
             readForAllLines(theBertRegisterControl, 0x00070000, "Select PRBS SAMPLED DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS SAMPLED DATA");
@@ -294,7 +293,6 @@ void OTBitErrorRateTest::bitErrorRateTest()
             usleep(1000000);
 
             readForAllLines(phaseTuningControlRegisterName, 0x00010000, "Select phase tuning status", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "Phase tuning reply");
-
 
             std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Sample PRBS Data" << std::endl;
 
