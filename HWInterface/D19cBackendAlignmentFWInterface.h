@@ -149,6 +149,7 @@ class PhaseTuningReply
 
 struct AlignmentResult
 {
+    AlignmentResult() {}
     AlignmentResult(const PhaseTuningReply& thePhaseTuningReply);
     bool        fDone{false};
     bool        fWordAlignmentSuccess{false};

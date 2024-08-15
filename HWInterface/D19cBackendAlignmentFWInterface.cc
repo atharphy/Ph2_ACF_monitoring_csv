@@ -191,7 +191,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::tunePhase(uint8_t hybridId, uin
     LOG(WARNING) << BOLDYELLOW << "Attention!!! D19cBackendAlignmentFWInterface::tunePhase not tested since FEH hybrid testing not supported by main Ph2_ACF repository" << RESET;
     if(fIsOptical)
     {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " does not support optical modules, aborting" << RESET;
+        LOG(ERROR) << ERROR_FORMAT << __PRETTY_FUNCTION__ << " does not support optical modules, aborting" << RESET;
         abort();
     }
     PhaseTuningControl thePhaseTuningControl(fIsOptical);
@@ -217,7 +217,7 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
 {
     if(!fIsOptical)
     {
-        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " does not support not optical modules, aborting" << RESET;
+        LOG(ERROR) << ERROR_FORMAT << __PRETTY_FUNCTION__ << " does not support not optical modules, aborting" << RESET;
         abort();
     }
     PhaseTuningControl thePhaseTuningControl(fIsOptical);
@@ -253,30 +253,46 @@ AlignmentResult D19cBackendAlignmentFWInterface::alignWord(uint8_t hybridId, uin
 
 AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t hybridId, uint8_t lineId)
 {
-    PhaseTuningControl thePhaseTuningControl(fIsOptical);
-    thePhaseTuningControl.setHybridId(hybridId);
-    thePhaseTuningControl.setLineId(lineId);
-    thePhaseTuningControl.setCommand(PhaseTuningControl::Command::ReturnResult);
-    writeCommand(thePhaseTuningControl.encodeCommand());
+    int retryCounter = 0;
+    int maximumRetryNumber = 10;
+    while(retryCounter < maximumRetryNumber)
+    {
+        PhaseTuningControl thePhaseTuningControl(fIsOptical);
+        thePhaseTuningControl.setHybridId(hybridId);
+        thePhaseTuningControl.setLineId(lineId);
+        thePhaseTuningControl.setCommand(PhaseTuningControl::Command::ReturnResult);
+        writeCommand(thePhaseTuningControl.encodeCommand());
 
-    uint32_t reply = fTheRegManager->ReadReg(fPhaseTuningResultRegisterName);
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reply 0x" << std::hex << reply << std::dec << std::endl;
-    PhaseTuningReply thePhaseTuningReply;
-    thePhaseTuningReply.decodeReply(reply, thePhaseTuningControl);
-    AlignmentResult theAlignmentResults(thePhaseTuningReply);
+        uint32_t reply = fTheRegManager->ReadReg(fPhaseTuningResultRegisterName);
+        PhaseTuningReply thePhaseTuningReply;
+        try
+        {
+            thePhaseTuningReply.decodeReply(reply, thePhaseTuningControl);
+            AlignmentResult theAlignmentResults(thePhaseTuningReply);
 
-    LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << lineId;
-    LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET << ", WA FSM: " << BOLDGREEN
-              << theAlignmentResults.fWordAlignmentFSMstate << RESET;
-    LOG(INFO) << "\t\t Delay: " << +theAlignmentResults.fDelay << ", Bitslip: " << +theAlignmentResults.fBitslip;
+            LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << lineId;
+            LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET << ", WA FSM: " << BOLDGREEN
+                    << theAlignmentResults.fWordAlignmentFSMstate << RESET;
+            LOG(INFO) << "\t\t Delay: " << +theAlignmentResults.fDelay << ", Bitslip: " << +theAlignmentResults.fBitslip;
 
+            return theAlignmentResults;
+        }
+        catch(const std::exception& e)
+        {
+           LOG(WARNING) << WARNING_FORMAT << "D19cBackendAlignmentFWInterface::retrieveAlignmentResult failed, retrying..." << RESET;
+           ++retryCounter;
+        }
+    }
+
+    LOG(ERROR) << ERROR_FORMAT << "D19cBackendAlignmentFWInterface::retrieveAlignmentResult failed to read results after " << maximumRetryNumber << " tries, assuming failed alignment" << RESET;
+    AlignmentResult theAlignmentResults;
     return theAlignmentResults;
+
 }
 
 void D19cBackendAlignmentFWInterface::writeCommand(uint32_t phaseTunerCommand)
 {
     fTheRegManager->WriteReg(fPhaseTuningControlRegisterName, phaseTunerCommand);
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << phaseTunerCommand << std::dec << std::endl;
     std::this_thread::sleep_for(std::chrono::microseconds(100));
 }
 
