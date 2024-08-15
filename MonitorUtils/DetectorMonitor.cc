@@ -58,10 +58,7 @@ void DetectorMonitor::operator()()
             fIsMonitorRunning = true;
             runMonitor();
         }
-        else
-        {
-            fIsMonitorRunning = false;
-        }
+        else { fIsMonitorRunning = false; }
         std::this_thread::sleep_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs));
     }
 }
