@@ -51,13 +51,7 @@ class SSA2 : public ReadoutChip
     uint32_t          getNumberOfChannels() const override { return NSSACHANNELS; }
     bool              isDACLocal(const std::string& dacName) override // FIXME: what does thsi do? Ask Kevin.
     {
-        if(dacName.find("THTRIMMING_S", 0, 12) != std::string::npos)
-            return true;
-        else if(dacName.find("ThresholdTrim") != std::string::npos)
-            return true;
-        else if(dacName.find("StripControl2", 0, 13) != std::string::npos)
-            return true;
-        else if(dacName.find("DigCalibPattern", 0, 15) != std::string::npos)
+        if( (dacName.find("THTRIMMING_S", 0, 12) != std::string::npos) or (dacName.find("ThresholdTrim") != std::string::npos) or (dacName.find("DigCalibPattern", 0, 15) != std::string::npos))
             return true;
         else
             return false;
