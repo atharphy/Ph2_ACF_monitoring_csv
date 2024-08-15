@@ -95,6 +95,7 @@
 
 // Chip attibutes
 #define CHIP_NOISE_ATTRIBUTE_NAME "noise"
+#define CHIP_PEDESTAL_ATTRIBUTE_NAME "pedestal"
 #define CHIP_ADC_SLOPE_ATTRIBUTE_NAME "ADCslope"                   // for PS chips only
 #define CHIP_ADC_OFFSET_ATTRIBUTE_NAME "ADCoffset"                 // for PS chips only
 #define CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME "TemperatureSlope"   // for PS chips only

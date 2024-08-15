@@ -58,7 +58,7 @@ class MPA2 : public ReadoutChip
 
     bool isDACLocal(const std::string& dacName) override
     {
-        if((dacName.find("TrimDAC", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim") != std::string::npos))
+        if((dacName.find("TrimDAC", 0, 7) != std::string::npos) or (dacName.find("ThresholdTrim") != std::string::npos) or (dacName.find("DigPattern", 0, 10) != std::string::npos))
             return true;
         else
             return false;

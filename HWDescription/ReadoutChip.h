@@ -112,6 +112,17 @@ class ReadoutChip
      */
     float getAverageNoise() const { return fAverageNoise; }
 
+    /*!
+     * \brief Set chip average pedestal
+     * \param thePedestal
+     */
+    void setAveragePedestal(float thePedestal) { fAveragePedestal = thePedestal; }
+    /*!
+     * \brief Get chip average pedestal
+     * \return thePedestal
+     */
+    float getAveragePedestal() const { return fAveragePedestal; }
+
     virtual void setADCCalibrationValue(const std::string& theCalibrationName, float theCalibrationValue)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
@@ -126,6 +137,7 @@ class ReadoutChip
   protected:
     std::shared_ptr<ChannelGroupBase> fChipOriginalMask{nullptr};
     float                             fAverageNoise{-1.};
+    float                             fAveragePedestal{-1.};
     std::map<std::string, float>      fADCcalibrationMap = {
         {"ADC_SLOPE", 0.0002},    // In volts, calculated as the target Vref (0.850 V) / ADC range (4095)
         {"ADC_OFFSET", 0.},       // In volts, assumed 0. It depends on the ground value

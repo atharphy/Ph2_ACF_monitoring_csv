@@ -34,7 +34,8 @@ Cbc::Cbc(const FrontEndDescription& pFeDesc, uint8_t pChipId, const std::string&
     fConfigFileName = filename;
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CBC3);
-    fAverageNoise = 6.7;
+    fAverageNoise    = 6.7;
+    fAveragePedestal = 590.0; // FIXME
 }
 
 // C'tors which take BeBoardId, FMCId, HybridId, CbcId
@@ -48,7 +49,8 @@ Cbc::Cbc(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pH
     fChipOriginalMask->enableAllChannels();
     loadfRegMap(filename);
     setFrontEndType(FrontEndType::CBC3);
-    fAverageNoise = 6.7;
+    fAverageNoise    = 6.7;
+    fAveragePedestal = 590.0; // FIXME
 }
 
 void Cbc::initializeFreeRegisters()

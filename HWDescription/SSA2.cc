@@ -42,7 +42,8 @@ SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartner
         cMapItem.second.fControlReg = 1;
     }
     setFrontEndType(FrontEndType::SSA2);
-    fAverageNoise = 4.0;
+    fAverageNoise    = 4.0;
+    fAveragePedestal = 8.0;
 }
 
 SSA2::SSA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename)
@@ -63,7 +64,8 @@ SSA2::SSA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
         cMapItem.second.fControlReg = 1;
     }
     setFrontEndType(FrontEndType::SSA2);
-    fAverageNoise = 4.0;
+    fAverageNoise    = 4.0;
+    fAveragePedestal = 8.0;
 }
 
 void SSA2::initializeFreeRegisters()
