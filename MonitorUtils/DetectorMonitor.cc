@@ -25,7 +25,8 @@ DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemCo
 
     fTheSystemController = theSystemController;
     fKeepRunning         = true;
-    startMonitor         = false;
+    fEnableMonitor       = false;
+    fIsMonitorRunning    = false;
 }
 
 DetectorMonitor::~DetectorMonitor()
@@ -52,7 +53,15 @@ void DetectorMonitor::operator()()
 {
     while(fKeepRunning == true)
     {
-        if(startMonitor == true) runMonitor();
+        if(fEnableMonitor == true)
+        {
+            fIsMonitorRunning = true;
+            runMonitor();
+        }
+        else
+        {
+            fIsMonitorRunning = false;
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs));
     }
 }
@@ -84,10 +93,25 @@ std::string DetectorMonitor::getMonitorFileName()
 
 void DetectorMonitor::waitForMonitorToStop()
 {
-    u_int8_t cCounter = 0;
-    while((fMonitorFuture.wait_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs)) != std::future_status::ready) & (cCounter < fClose))
+    int cCounter = 0;
+    while((fMonitorFuture.wait_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs)) != std::future_status::ready) & (cCounter < fMaximumStopTentatives))
     {
         LOG(INFO) << GREEN << "\t--> Waiting for monitoring to be completed..." << RESET;
         cCounter++;
     }
+    if(cCounter >= fMaximumStopTentatives) throw std::runtime_error("Failed to stop monitoring process");
+}
+
+void DetectorMonitor::pauseMonitoring()
+{
+    fEnableMonitor = false;
+
+    int cCounter = 0;
+    while(fIsMonitorRunning & (cCounter < fMaximumStopTentatives))
+    {
+        LOG(INFO) << GREEN << "\t--> Waiting for monitoring to pause..." << RESET;
+        cCounter++;
+        std::this_thread::sleep_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs));
+    }
+    if(cCounter >= fMaximumStopTentatives) throw std::runtime_error("Failed to pause monitoring process");
 }
