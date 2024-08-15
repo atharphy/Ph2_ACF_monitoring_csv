@@ -253,7 +253,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::alignWord(uint8_t hybridId, uin
 
 AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t hybridId, uint8_t lineId)
 {
-    int retryCounter = 0;
+    int retryCounter       = 0;
     int maximumRetryNumber = 10;
     while(retryCounter < maximumRetryNumber)
     {
@@ -263,7 +263,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
         thePhaseTuningControl.setCommand(PhaseTuningControl::Command::ReturnResult);
         writeCommand(thePhaseTuningControl.encodeCommand());
 
-        uint32_t reply = fTheRegManager->ReadReg(fPhaseTuningResultRegisterName);
+        uint32_t         reply = fTheRegManager->ReadReg(fPhaseTuningResultRegisterName);
         PhaseTuningReply thePhaseTuningReply;
         try
         {
@@ -272,22 +272,21 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
 
             LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << lineId;
             LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET << ", WA FSM: " << BOLDGREEN
-                    << theAlignmentResults.fWordAlignmentFSMstate << RESET;
+                      << theAlignmentResults.fWordAlignmentFSMstate << RESET;
             LOG(INFO) << "\t\t Delay: " << +theAlignmentResults.fDelay << ", Bitslip: " << +theAlignmentResults.fBitslip;
 
             return theAlignmentResults;
         }
         catch(const std::exception& e)
         {
-           LOG(WARNING) << WARNING_FORMAT << "D19cBackendAlignmentFWInterface::retrieveAlignmentResult failed, retrying..." << RESET;
-           ++retryCounter;
+            LOG(WARNING) << WARNING_FORMAT << "D19cBackendAlignmentFWInterface::retrieveAlignmentResult failed, retrying..." << RESET;
+            ++retryCounter;
         }
     }
 
     LOG(ERROR) << ERROR_FORMAT << "D19cBackendAlignmentFWInterface::retrieveAlignmentResult failed to read results after " << maximumRetryNumber << " tries, assuming failed alignment" << RESET;
     AlignmentResult theAlignmentResults;
     return theAlignmentResults;
-
 }
 
 void D19cBackendAlignmentFWInterface::writeCommand(uint32_t phaseTunerCommand)
