@@ -20,6 +20,7 @@
 #include "tools/OTMPAtoCICecv.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
+#include "tools/OTPScommonNoise.h"
 #include "tools/OTPSringOscillatorTest.h"
 #include "tools/OTRegisterTester.h"
 #include "tools/OTSSAtoMPAecv.h"
@@ -186,6 +187,15 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyMPASSAdataWord,
              ExtTriggerLatencyScan>("Outer Tracker", "exttriggerotlatency");
 
+
+    Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass>("Outer Tracker", "alignLpGBTinputsForBypass");
+
+    Register<OTBitErrorRateTest>("Outer Tracker", "bert");
+
+    // 2S specific calibrations
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(
+        "2S Module", "cbcpulseshape");
+    Register<Physics2S>("2S Module", "physics2s");
     Register<TuneLpGBTVref,
              OTTemperature,
              OTalignLpGBTinputs,
@@ -198,20 +208,12 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              PedeNoise,
              TuneLpGBTVref,
              OTCMNoise,
-             OTTemperature>("Outer Tracker", "cmNoise");
-
-    Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass>("Outer Tracker", "alignLpGBTinputsForBypass");
-
-    Register<OTBitErrorRateTest>("Outer Tracker", "bert");
-
-    // 2S specific calibrations
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(
-        "2S Module", "cbcpulseshape");
-    Register<Physics2S>("2S Module", "physics2s");
+             OTTemperature>("2S Module", "commonNoise2S");
 
     // PS specific calibrations
     Register<PSPhysics>("PS Module", "psphysics");
     Register<OTalignBoardDataWord, OTPSADCCalibration>("PS Module", "ADCBiasCalibration");
+    Register<OTalignBoardDataWord, OTPScommonNoise>("PS Module", "commonNoisePS");
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTMPAtoCICecv>("PS Module", "MPAtoCICecv");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoMPAecv>("PS Module", "SSAtoMPAecv");

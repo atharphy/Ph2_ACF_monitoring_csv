@@ -3,6 +3,7 @@
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
 
+std::string OTCMNoise::fCalibrationDescription = "Measure common noise in 2S modules";
 // PUBLIC METHODS
 OTCMNoise::OTCMNoise() : Tool() {}
 
@@ -315,6 +316,11 @@ void OTCMNoise::ConfigureCalibration() {}
 
 void OTCMNoise::Running()
 {
+    if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS)
+    { 
+        LOG(ERROR) << ERROR_FORMAT << " Running a PS calibration on a PS module! " << RESET;
+        return;
+    }
     LOG(INFO) << "Starting CM noise measurement";
     Initialize();
     SetThresholds();
