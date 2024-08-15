@@ -185,7 +185,7 @@ void OTMeasureOccupancy::prepareOccupancyMeasurementPS()
     setSameDac("StripControl2", 0x07);              // disable HIP cut
     setSameDac("control_2", 0x1F);                  // maximize cluster cut and set calpulse duration to 1 40MHz clock cycle
     setSameDac("control_1", 0x00);                  // normal readout mode
-    setSameDac("ENFLAGS", 0x40);                    // use level sampling mode
+    setSameDac("ENFLAGS", 0x41);                    // use level sampling mode and enable channels
     fDetectorContainer->removeReadoutChipQueryFunction(theSSAqueryFunctionString);
 
     bool injectPulse       = injectSSApulse || injectMPApulse;
