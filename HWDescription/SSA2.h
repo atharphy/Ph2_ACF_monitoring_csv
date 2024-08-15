@@ -55,6 +55,10 @@ class SSA2 : public ReadoutChip
             return true;
         else if(dacName.find("ThresholdTrim") != std::string::npos)
             return true;
+        else if(dacName.find("StripControl2", 0, 13) != std::string::npos)
+            return true;
+        else if(dacName.find("DigCalibPattern", 0, 15) != std::string::npos)
+            return true;
         else
             return false;
     }
