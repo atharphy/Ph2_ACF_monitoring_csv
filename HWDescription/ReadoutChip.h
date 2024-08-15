@@ -123,18 +123,15 @@ class ReadoutChip
      */
     float getAveragePedestal() const { return fAveragePedestal; }
 
-
-    virtual void setADCCalibrationMap(const std::map<std::string, float>& theInputMap)
+    virtual void setADCCalibrationValue(const std::string& theCalibrationName, float theCalibrationValue)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
     }
 
-    virtual std::map<std::string, float> getADCCalibrationMap() const
+    virtual float getADCCalibrationValue(const std::string& theCalibrationName) const
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-        std::map<std::string, float> theSlope;
-        theSlope["empty"] = 0;
-        return theSlope;
+        return 999.;
     }
 
   protected:
@@ -142,8 +139,10 @@ class ReadoutChip
     float                             fAverageNoise{-1.};
     float                             fAveragePedestal{-1.};
     std::map<std::string, float>      fADCcalibrationMap = {
-        {"ADC_SLOPE", 0.0002}, // In volts, calculated as the target Vref (0.850 V) / ADC range (4095)
-        {"ADC_OFFSET", 0.},    // In volts, assumed 0. It depends on the ground value
+        {"ADC_SLOPE", 0.0002},    // In volts, calculated as the target Vref (0.850 V) / ADC range (4095)
+        {"ADC_OFFSET", 0.},       // In volts, assumed 0. It depends on the ground value
+        {"TEMP_SLOPE", -0.00103}, // mV / C
+        {"TEMP_OFFSET", 0.154}    // Voltage in mV at 25C
     };
 };
 } // namespace Ph2_HwDescription

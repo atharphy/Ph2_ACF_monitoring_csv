@@ -118,11 +118,11 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     }
 
     // event types
-    fEventTypes.clear();
+    ContainerFactory::copyAndInitBoard<EventType>(*fDetectorContainer, fEventTypes);
     bool cForcePSasync = true;
     for(auto cBoard: *fDetectorContainer)
     {
-        fEventTypes.push_back(cBoard->getEventType());
+        fEventTypes.getObject(cBoard->getId())->getSummary<EventType>() = cBoard->getEventType();
         if(!fWithSSA && !fWithMPA) continue;
         if(!cForcePSasync) continue;
         cBoard->setEventType(EventType::PSAS);
@@ -191,6 +191,12 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 }
 void PedestalEqualization::Reset()
 {
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto theEventType = fEventTypes.getObject(cBoard->getId())->getSummary<EventType>();
+        cBoard->setEventType(theEventType);
+        if(theEventType != EventType::PSAS) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitalizeL1ReadoutInterface(cBoard); }
+    }
     fRegisterHelper->restoreSnapshot();
     resetPointers();
 }

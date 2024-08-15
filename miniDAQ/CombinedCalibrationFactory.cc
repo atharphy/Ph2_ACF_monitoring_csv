@@ -59,7 +59,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 {
     // Common calibrations
     Register<TuneLpGBTVref>("Common", "tunelpgbtvref");
-    Register<ConfigureOnly>("Common", "configureonly");
+    Register<TuneLpGBTVref, ConfigureOnly>("Common", "configureonly");
 
     // OT calibrations
 
@@ -152,7 +152,9 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyMPASSAdataWord,
              PedestalEqualization,
              PedeNoise>("Outer Tracker", "calibrationandpedenoise");
-    Register<OTalignLpGBTinputs,
+    Register<TuneLpGBTVref,
+             OTPSADCCalibration,
+             OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
              OTalignStubPackage,
@@ -160,7 +162,6 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTCICwordAlignment,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
-             OTPSADCCalibration,
              PedestalEqualization,
              PedeNoise>("Outer Tracker", "adccalibrationandpedenoise");
 

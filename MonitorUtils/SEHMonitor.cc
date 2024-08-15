@@ -54,8 +54,6 @@ SEHMonitor::~SEHMonitor()
 
 void SEHMonitor::runMonitor()
 {
-    std::recursive_mutex                  theMutex;
-    std::lock_guard<std::recursive_mutex> theGuard(theMutex);
     for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
         if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
     for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("PowerSupply"))

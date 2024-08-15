@@ -276,9 +276,10 @@ void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, Readout
     theReadoutChipNode.append_attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)     = std::to_string(theReadoutChip->getAveragePedestal()).c_str();
     if(theReadoutChip->getFrontEndType() == FrontEndType::SSA2 || theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
     {
-        std::map<std::string, float> theADCmap                          = theReadoutChip->getADCCalibrationMap();
-        theReadoutChipNode.append_attribute(CHIP_SLOPE_ATTRIBUTE_NAME)  = std::to_string(theADCmap["ADC_SLOPE"]).c_str();
-        theReadoutChipNode.append_attribute(CHIP_OFFSET_ATTRIBUTE_NAME) = std::to_string(theADCmap["ADC_OFFSET"]).c_str();
+        theReadoutChipNode.append_attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME)          = std::to_string(theReadoutChip->getADCCalibrationValue("ADC_SLOPE")).c_str();
+        theReadoutChipNode.append_attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME)         = std::to_string(theReadoutChip->getADCCalibrationValue("ADC_OFFSET")).c_str();
+        theReadoutChipNode.append_attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME)  = std::to_string(theReadoutChip->getADCCalibrationValue("TEMP_SLOPE")).c_str();
+        theReadoutChipNode.append_attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME) = std::to_string(theReadoutChip->getADCCalibrationValue("TEMP_OFFSET")).c_str();
     }
 }
 

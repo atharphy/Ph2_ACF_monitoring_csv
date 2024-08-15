@@ -65,10 +65,9 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
 class BeBoardInterface
 {
   private:
-    BeBoardFWMap         fBoardMap;
-    BeBoardFWInterface*  fBoardFW;
-    uint16_t             fPrevBoardIdentifier;
-    std::recursive_mutex theMtx;
+    BeBoardFWMap        fBoardMap;
+    BeBoardFWInterface* fBoardFW;
+    uint16_t            fPrevBoardIdentifier;
     /*!
      * \brief Set the board to talk with
      * \param pBoardId
@@ -233,25 +232,29 @@ class BeBoardInterface
     // ########################
     void ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const std::vector<std::string>& args, bool silentRunning = false)
     {
-        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+        setBoard(pChip->getBeBoardId());
+        std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
         static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, args, silentRunning);
     }
 
     float ReadChipMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, const std::string& arg, bool silentRunning = false)
     {
-        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+        setBoard(pChip->getBeBoardId());
+        std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
         return static_cast<Ph2_HwInterface::RD53Interface*>(pReadoutChipInterface)->ReadChipMonitor(pChip, arg, silentRunning);
     }
 
     float ReadHybridVoltageMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, bool silentRunning = false)
     {
-        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+        setBoard(pChip->getBeBoardId());
+        std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
         return pReadoutChipInterface->ReadHybridVoltage(pChip, silentRunning);
     }
 
     float ReadHybridTemperatureMonitor(Ph2_HwInterface::ReadoutChipInterface* pReadoutChipInterface, Ph2_HwDescription::ReadoutChip* pChip, bool silentRunning = false)
     {
-        std::lock_guard<std::recursive_mutex> theGuard(theMtx);
+        setBoard(pChip->getBeBoardId());
+        std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
         return pReadoutChipInterface->ReadHybridTemperature(pChip, silentRunning);
     }
 

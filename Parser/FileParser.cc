@@ -518,6 +518,7 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
 
         cSSA2->setADCCalibrationMap(theADCcalibration);
     }
+    setChipADCParameters(pSSAnode, cSSA2);
 }
 
 void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os)
@@ -670,8 +671,7 @@ void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, st
         theADCcalibration["ADC_SLOPE"]  = pMPANode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME).as_float();
         theADCcalibration["ADC_OFFSET"] = pMPANode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME).as_float();
 
-        cMPA->setADCCalibrationMap(theADCcalibration);
-    }
+    setChipADCParameters(pMPANode, cMPA);
 
     os << BOLDCYAN << "|"
        << "  "
@@ -1768,6 +1768,14 @@ void FileParser::parseLpGBTphasesForBypass(pugi::xml_node lpgbtPhasesForBypassNo
             theCic->setLpGBTphaseForCICbypass(phyPort, stubLine, convertAnyInt(theStubAttribute.value()));
         }
     }
+}
+
+void FileParser::setChipADCParameters(pugi::xml_node pChipNode, Ph2_HwDescription::ReadoutChip* cChip)
+{
+    if(pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("ADC_SLOPE", pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("ADC_OFFSET", pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("TEMP_SLOPE", pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("TEMP_OFFSET", pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME).as_float());
 }
 
 } // namespace Ph2_Parser
