@@ -508,6 +508,9 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
     cSSA2->setNumberOfChannels(1, NSSACHANNELS);
     cSSA2->setMasterId(pHybrid->getMasterId());
 
+    if(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cSSA2->setAverageNoise(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
+    if(pSSAnode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)) { cSSA2->setAveragePedestal(pSSAnode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME).as_float()); }
+
     setChipADCParameters(pSSAnode, cSSA2);
 }
 
@@ -654,6 +657,7 @@ void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, st
     cMPA->setMasterId(pHybrid->getMasterId());
 
     if(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cMPA->setAverageNoise(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
+    if(pMPANode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)) { cMPA->setAveragePedestal(pMPANode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME).as_float()); }
 
     setChipADCParameters(pMPANode, cMPA);
 
@@ -1202,6 +1206,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
     cCbc->setMasterId(cHybrid->getMasterId());
 
     if(pCbcNode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cCbc->setAverageNoise(pCbcNode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
+    if(pCbcNode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)) { cCbc->setAveragePedestal(pCbcNode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME).as_float()); }
 
     os << BOLDCYAN << "|"
        << "  "

@@ -197,7 +197,7 @@ void OTalignStubPackage::AlignStubPackage()
                 auto numberOfBestPackageDelays = std::count(theBestPackageDelayVector.begin(), theBestPackageDelayVector.end(), true);
                 if(numberOfBestPackageDelays != 1)
                 {
-                    LOG(ERROR) << BOLDRED << "ERROR for Board " << +theBoard->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId()
+                    LOG(ERROR) << ERROR_FORMAT << "ERROR for Board " << +theBoard->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId()
                                << ": number of best package delay = " << numberOfBestPackageDelays << ", expected to be 1" << RESET;
                     continue;
                 }

@@ -150,7 +150,9 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
                                 if(theChipFrontEndType == FrontEndType::CBC3) distanceFromThreshold = -expectedNoise * fCBCnumberOfSigmaNoiseAwayFromPedestal;
                                 if(theChipFrontEndType == FrontEndType::SSA2) distanceFromThreshold = expectedNoise * fSSAnumberOfSigmaNoiseAwayFromPedestal;
                                 if(theChipFrontEndType == FrontEndType::MPA2) distanceFromThreshold = expectedNoise * fMPAnumberOfSigmaNoiseAwayFromPedestal;
-                                float theBestThreshold             = float(theChipBestThresholdAndDelay.first) / numberOfIterations + distanceFromThreshold;
+                                float thePedestal      = float(theChipBestThresholdAndDelay.first) / numberOfIterations;
+                                float theBestThreshold = thePedestal + distanceFromThreshold;
+                                theChip->setAveragePedestal(thePedestal);
                                 theChipBestThresholdAndDelay.first = std::round(theBestThreshold);
                             }
                         }
