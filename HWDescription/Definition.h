@@ -24,8 +24,6 @@
 #define NSSACHANNELS 120
 #define NMPAROWS 16
 #define NCHIPS_OT 8
-#define HYBRID_CHANNELS_OT NCHIPS_OT* NCHANNELS
-#define TOTAL_CHANNELS_OT NCHIPS_OT* NCHANNELS * 2
 
 // Fix issue if HOST_NAME_MAX is not declared
 #ifndef HOST_NAME_MAX
