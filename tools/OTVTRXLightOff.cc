@@ -30,14 +30,7 @@ void OTVTRXLightOff::Running()
 
 void OTVTRXLightOff::TurnOffLight()
 {
-    // this->ConfigureHw();
-    if(fDetectorMonitor != nullptr)
-    {
-        fDetectorMonitor->stopRunning();
-        fDetectorMonitor->waitForMonitorToStop();
-    }
-    delete fDetectorMonitor;
-    fDetectorMonitor = nullptr;
+    if(fDetectorMonitor != nullptr) fDetectorMonitor->pauseMonitoring();
     for(const auto cBoard: *fDetectorContainer)
     {
         D19cFWInterface*      pInterface        = static_cast<D19cFWInterface*>(fBeBoardFWMap.find(cBoard->getId())->second);
