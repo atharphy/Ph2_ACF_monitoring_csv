@@ -36,8 +36,9 @@ class OTPScommonNoise : public Tool
     static std::string fCalibrationDescription;
 
   protected:
-    void SetThresholds();
-    void TakeData();
+    uint32_t fNumberOfEvents{10000};
+    void     SetThresholds();
+    void     TakeData();
 
   private:
     
