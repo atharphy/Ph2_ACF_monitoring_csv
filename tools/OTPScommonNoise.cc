@@ -133,6 +133,7 @@ void OTPScommonNoise::TakeData()
     {
         // FIXME ! This part needs to be checked and fixed for PS modules
         // See what is inside the Start function etc. and how Fabio prepares the chips in the occupancy measurement without injection
+        // because now I get: D19cL1ReadoutInterface::WaitForReadout no words in the readout ..[ReadoutAttempt#0]
         fBeBoardInterface->Start(theBoard);
         uint32_t theEventCounter = fNumberOfEvents;
         while(theEventCounter != 0)
