@@ -72,30 +72,21 @@ void OTPScommonNoise::TakeData()
 
     DetectorDataContainer theStripHitContainer;
     DetectorDataContainer thePixelHitContainer;
-    // DetectorDataContainer theStripHybridHitContainer;
-    // DetectorDataContainer thePixelHybridHitContainer;
-    // DetectorDataContainer theStripModuleHitContainer;
-    // DetectorDataContainer thePixelModuleHitContainer;
+    DetectorDataContainer theStripHybridHitContainer;
+    DetectorDataContainer thePixelHybridHitContainer;
+    DetectorDataContainer theStripModuleHitContainer;
+    DetectorDataContainer thePixelModuleHitContainer;
 
     // DetectorDataContainer the2DHitContainer;
 
     ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS + 1)>>(*fDetectorContainer, theStripHitContainer);
     ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS + 1)>>(*fDetectorContainer, thePixelHitContainer);
 
-    // FIXME finish implement these in the container serialization
-    // channel, chip, hybrid, optical group, board, detector
-    // ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1)>, EmptyContainer, EmptyContainer, EmptyContainer>(
-    //     *fDetectorContainer, theStripHybridHitContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1)>>( *fDetectorContainer, theStripHybridHitContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1)>>( *fDetectorContainer, thePixelHybridHitContainer);
 
-    // ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1)>, EmptyContainer, EmptyContainer, EmptyContainer>(
-    //     *fDetectorContainer, thePixelHybridHitContainer);
-
-
-    // ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT * 2 + 1)>, EmptyContainer, EmptyContainer>(
-    //     *fDetectorContainer, theStripModuleHitContainer);
-
-    // ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1)>, EmptyContainer, EmptyContainer>(
-    //     *fDetectorContainer, thePixelModuleHitContainer);
+    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT * 2 + 1)>>( *fDetectorContainer, theStripModuleHitContainer);
+    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1)>>( *fDetectorContainer, thePixelModuleHitContainer);
 
     /*
     // 2D arrays for module-level and hybrid-level correlation
