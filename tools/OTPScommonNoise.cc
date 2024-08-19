@@ -1,4 +1,5 @@
 #include <boost/math/distributions/normal.hpp>
+#include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPScommonNoise.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
@@ -122,7 +123,13 @@ void OTPScommonNoise::TakeData()
     */
     
     // Prepare SSA and MPA for measurement
-
+    //FIXME This does not work for now FIXME
+    OTMeasureOccupancy measureOccupancy;
+    measureOccupancy.fSSAtestPulseValue = 0;
+    measureOccupancy.fMPAtestPulseValue = 0;
+    measureOccupancy.prepareOccupancyMeasurementPS();
+    /*
+    // This works!!!
     SSAChannelGroupHandler theSSAChannelGroupHandler;
     theSSAChannelGroupHandler.setChannelGroupParameters(15, 1, 1);
     setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA2);
@@ -164,7 +171,9 @@ void OTPScommonNoise::TakeData()
     setFWTestPulse(false);
     this->setTestAllChannels(true);
     this->fMaskChannelsFromOtherGroups = true;
+    */
 
+    //FIXME this works but should be fixed, I do no really need the occupancy ?!
     DetectorDataContainer theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, theOccupancyContainer);
     fDetectorDataContainer = &theOccupancyContainer;
