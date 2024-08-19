@@ -3,6 +3,8 @@
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
+#include "Utils/MPAChannelGroupHandler.h"
+#include "Utils/SSAChannelGroupHandler.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -119,58 +121,106 @@ void OTPScommonNoise::TakeData()
         *fDetectorContainer, the2DSensorChipCorrelationContainer);
     */
     
-    /*
+    // Prepare SSA and MPA for measurement
+
+    SSAChannelGroupHandler theSSAChannelGroupHandler;
+    theSSAChannelGroupHandler.setChannelGroupParameters(15, 1, 1);
+    setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA2);
+
+    MPAChannelGroupHandler theMPAChannelGroupHandler;
+    theMPAChannelGroupHandler.setChannelGroupParameters(15, 1, 1);
+    setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA2);
+    auto        MPAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
+    std::string theMPAqueryFunctionString = "MPAqueryFunction";
+    // settings for MPAs
+    fDetectorContainer->addReadoutChipQueryFunction(MPAqueryFunction, theMPAqueryFunctionString);
+    auto thePSinterface = static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface;
+    for(auto theBoard: *fDetectorContainer)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                for(auto theMPA: *theHybrid) { thePSinterface->WriteChipRegBits(theMPA, "Control_1", 0x0, "Mask", 0x03); }
+            }
+        }
+    }
+    setSameDac("PixelControl_ALL", 0x1E);           // disable Hip cut, cluster cut to the maximum, mode select to or
+    setSameDac("ENFLAGS_ALL", 0x0F);                // Enable all channels
+    setSameDac("InjectedCharge", 0);                // injected charge
+    fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
+
+    auto        SSAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
+    std::string theSSAqueryFunctionString = "SSAqueryFunction";
+    // settings for SSAs
+    fDetectorContainer->addReadoutChipQueryFunction(SSAqueryFunction, theSSAqueryFunctionString);
+    setSameDac("InjectedCharge", 0);                // injected charge
+    setSameDac("ReadoutMode", 0x0);                 // normal readout mode
+    setSameDac("StripControl2", 0x07);              // disable HIP cut
+    setSameDac("control_2", 0x1F);                  // maximize cluster cut and set calpulse duration to 1 40MHz clock cycle
+    setSameDac("ENFLAGS", 0x41);                    // use level sampling mode
+    fDetectorContainer->removeReadoutChipQueryFunction(theSSAqueryFunctionString);
+
+    setFWTestPulse(false);
+    this->setTestAllChannels(true);
+    this->fMaskChannelsFromOtherGroups = true;
+
+    DetectorDataContainer theOccupancyContainer;
+    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, theOccupancyContainer);
+    fDetectorDataContainer = &theOccupancyContainer;
+
     for(auto theBoard: *fDetectorContainer)
     {
         // FIXME ! This part needs to be checked and fixed for PS modules
         // See what is inside the Start function etc. and how Fabio prepares the chips in the occupancy measurement without injection
         // because now I get: D19cL1ReadoutInterface::WaitForReadout no words in the readout ..[ReadoutAttempt#0]
-        fBeBoardInterface->Start(theBoard);
+
+        // fBeBoardInterface->Start(theBoard);
         uint32_t theEventCounter = fNumberOfEvents;
         while(theEventCounter != 0)
         {
+
+            
             uint32_t cNEventToRead = theEventCounter;
             theEventCounter -= cNEventToRead;
-            ReadNEvents(theBoard, cNEventToRead);
+            uint32_t numberOfEventsPerBurst = 65535;
+            measureBeBoardData(theBoard->getId(), cNEventToRead, numberOfEventsPerBurst);
+            std::cout << " measured BeBoard" << std::endl;
+            // ReadNEvents(theBoard, cNEventToRead);
             const std::vector<Event*>& events = GetEvents();
             setNReadbackEvents(events.size());
             LOG(INFO) << "Reading out " << events.size() << "events, " << theEventCounter << " events remaining.";
- 
 
-            for(auto cOpticalGroup: *cBoard)
+            for(auto cOpticalGroup: *theBoard)
             {
                 for(auto& cEvent: events)
                 {
                     if(theEventCounter > fNumberOfEvents) continue;
 
-                    uint32_t cModuleHits     = 0;
-                    uint32_t cModuleHitsEven = 0;
-                    uint32_t cModuleHitsOdd  = 0;
+                    //uint32_t cModuleHits     = 0;
 
                     std::vector<uint32_t>             hit_channels;
-                    std::map<int, std::map<int, int>> cChipCorrelationMap;
-                    std::map<int, int>                cHybridCorrelationMap;
+                    // std::map<int, std::map<int, int>> cChipCorrelationMap;
+                    // std::map<int, int>                cHybridCorrelationMap;
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        uint32_t cHybridHits     = 0;
-                        uint32_t cHybridHitsEven = 0;
-                        uint32_t cHybridHitsOdd  = 0;
+                        //uint32_t cHybridHits     = 0;
+
                         for(auto cChip: *cHybrid)
                         {
-                            uint32_t chipOffset_module = (cHybrid->getId() * HYBRID_CHANNELS_OT) + (cChip->getId() * NCHANNELS);
+                            // uint32_t chipOffset_module = (cHybrid->getId() * HYBRID_CHANNELS_OT) + (cChip->getId() * NCHANNELS);
                             auto     hit_vec           = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                            uint32_t cEventHitsEven    = 0;
-                            uint32_t cEventHitsOdd     = 0;
-                            for(auto hit: hit_vec)
-                            {
-                                if(hit.second % 2)
-                                    cEventHitsEven++;
-                                else
-                                    cEventHitsOdd++;
-                            }
-                            uint32_t cEventHits                                   = cEventHitsEven + cEventHitsOdd;
-                            cChipCorrelationMap[cHybrid->getId()][cChip->getId()] = cEventHits;
 
+                            uint32_t cEventHits  =    hit_vec.size(); //
+                            std::cout << " cEventHits " << cEventHits << std::endl; //                              = cEventHitsEven + cEventHitsOdd;
+                            //cChipCorrelationMap[cHybrid->getId()][cChip->getId()] = cEventHits;
+                        } //tmp
+                    } // tmp
+                } //tmp
+            } //tmp
+        } // tmp
+    } // tmp
+                            /*
                             auto theChipHitContainerValues = &(theChipHitContainer.getObject(cBoard->getId())
                                                                    ->getObject(cOpticalGroup->getId())
                                                                    ->getObject(cHybrid->getId())
