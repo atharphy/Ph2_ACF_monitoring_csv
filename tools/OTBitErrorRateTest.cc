@@ -228,15 +228,18 @@ void OTBitErrorRateTest::bitErrorRateTest()
                 // auto readBack = this->fBeBoardInterface->ReadBoardReg(theBoard, registerName);
                 // std::cout << "Reading back register " << registerName << " value 0x" << std::hex << readBack << std::dec << std::endl;
                 // if(registerValue != readBack) std::cout << BOLDRED << "Readback does not match!!!" << RESET << std::endl;
+                std::cout << std::endl;
             };
 
             auto readForAllLines =
                 [this, theBoard, theOpticalGroup, &writeWithComment](
                     const std::string& controlRegisterName, uint32_t controlRegisterValue, const std::string& controlComment, const std::string& statusRegisterName, const std::string& statusComment)
             {
-                for(auto theHybrid: *theOpticalGroup)
+                for(int hybridId = 0; hybridId < 16; ++hybridId)
+                // for(auto theHybrid: *theOpticalGroup)
                 {
-                    uint8_t hybridId = theHybrid->getId();
+                    if(hybridId != 1) continue;
+                    // uint8_t hybridId = theHybrid->getId();
                     for(uint32_t line = 0; line < 7; ++line)
                     {
                         std::string lineComment           = " for hybrid " + std::to_string(+hybridId) + " line " + std::to_string(line);
@@ -248,33 +251,43 @@ void OTBitErrorRateTest::bitErrorRateTest()
                         std::cout << statusComment << lineComment << " = 0x" << std::hex << readValue << std::dec << std::endl;
                     }
                 }
+                std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
             };
 
-            // writeWithComment(theBertRegisterControl, 0x00020005, "Set mode = PRBS");
 
-            writeWithComment("fc7_daq_ctrl.physical_interface_block.link0_hybrid0_stub_bitslip", 0x00005A, "test");
+            writeWithComment(theBertRegisterControl, 0xFFF20005, "Set mode = PRBS");
 
-            writeWithComment(theBertRegisterControl, 0x00050004, "Sample PRBS data – DATA_LD = 1");
+            // writeWithComment(theBertRegisterControl, 0xFFF3FEDE, "Set mode = PRBS");
 
-            readForAllLines(theBertRegisterControl, 0x00070000, "Select PRBS SAMPLED DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS SAMPLED DATA");
+            writeWithComment(theBertRegisterControl, 0xFFF50004, "Sample PRBS data – DATA_LD = 1");
+
+            readForAllLines(theBertRegisterControl, 0x00000000, "Select PRBS status 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 0");
+
+            readForAllLines(theBertRegisterControl, 0x00010000, "Select PRBS status 1", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 1");
+
 
             readForAllLines(theBertRegisterControl, 0x00060000, "Select PRBS FIRST DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS FIRST DATA");
 
-            writeWithComment(theBertRegisterControl, 0x00030080, "Configure BERT – CNTR_THR = 0x80");
 
-            writeWithComment(theBertRegisterControl, 0x00020035, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1");
+            readForAllLines(theBertRegisterControl, 0x00070000, "Select PRBS SAMPLED DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS SAMPLED DATA");
+
+
+            writeWithComment(theBertRegisterControl, 0xFFF30080, "Configure BERT – CNTR_THR = 0x80");
+
+            writeWithComment(theBertRegisterControl, 0xFFF20035, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1");
 
             std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Configure Word Alignment (WA)" << std::endl;
 
-            writeWithComment(phaseTuningControlRegisterName, 0x00047b6b, "Configure WA – SYNC_PATTERN = 0x4030");
+            // writeWithComment(phaseTuningControlRegisterName, 0xFFF44030, "Configure WA – SYNC_PATTERN = 0x4030");
+            writeWithComment(phaseTuningControlRegisterName, 0xFFF4cea7, "Configure WA – SYNC_PATTERN = 0x4030");
 
-            writeWithComment(phaseTuningControlRegisterName, 0x00050008, "Reset WA FSM – FSM_RST = 1");
+            writeWithComment(phaseTuningControlRegisterName, 0xFFF50008, "Reset WA FSM – FSM_RST = 1");
 
-            writeWithComment(phaseTuningControlRegisterName, 0x00020300, "Configure WA – MODE = 00 (auto), PRBS_EN = 1, SYNC_EN = 1");
+            writeWithComment(phaseTuningControlRegisterName, 0xFFF20300, "Configure WA – MODE = 00 (auto), PRBS_EN = 1, SYNC_EN = 1");
 
             usleep(1000000);
 
-            writeWithComment(phaseTuningControlRegisterName, 0x00020002, " Do Word Alignment – DO_WA = 1");
+            writeWithComment(phaseTuningControlRegisterName, 0xFFF50002, " Do Word Alignment – DO_WA = 1");
 
             for(int sleepSec = 0; sleepSec < 5; ++sleepSec)
             {
@@ -282,31 +295,37 @@ void OTBitErrorRateTest::bitErrorRateTest()
                 usleep(1000000);
             }
 
+
+            readForAllLines(phaseTuningControlRegisterName, 0x00000000, "Select phase tuning status", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "Phase tuning reply");
+
+
             std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read WA Status (loop on hybrids and lines)" << std::endl;
-
             readForAllLines(phaseTuningControlRegisterName, 0x00010000, "Select phase tuning status", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "Phase tuning reply");
 
             usleep(1000000);
-
-            writeWithComment(phaseTuningControlRegisterName, 0x00050008, "Reset WA FSM – FSM_RST = 1");
-
-            usleep(1000000);
-
-            readForAllLines(phaseTuningControlRegisterName, 0x00010000, "Select phase tuning status", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "Phase tuning reply");
 
             std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Sample PRBS Data" << std::endl;
 
-            writeWithComment(theBertRegisterControl, 0x00050004, "Sample PRBS data – DATA_LD = 1");
+            // writeWithComment(theBertRegisterControl, 0x00050004, "Sample PRBS data – DATA_LD = 1");
 
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS First Data (loop on hybrids and lines)" << std::endl;
+            // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS First Data (loop on hybrids and lines)" << std::endl;
 
-            readForAllLines(theBertRegisterControl, 0x00060000, "Select PRBS FIRST DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS FIRST DATA");
+            // readForAllLines(theBertRegisterControl, 0x00060000, "Select PRBS FIRST DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS FIRST DATA");
 
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS Sampled Data (loop on hybrids and lines" << std::endl;
+            // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS Sampled Data (loop on hybrids and lines" << std::endl;
 
-            readForAllLines(theBertRegisterControl, 0x00070000, "Select PRBS SAMPLED DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS SAMPLED DATA");
+            // readForAllLines(theBertRegisterControl, 0x00070000, "Select PRBS SAMPLED DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS SAMPLED DATA");
 
-            writeWithComment(theBertRegisterControl, 0x00020037, "Start PRBS Test");
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
+            
+            readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
+
+            writeWithComment(theBertRegisterControl, 0xFFF20037, "Start PRBS Test");
+
+            readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
 
             uint32_t numberOfIterations = 5;
             std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Start BER Test with error injection (repeat " << numberOfIterations << " times)" << std::endl;
@@ -315,18 +334,18 @@ void OTBitErrorRateTest::bitErrorRateTest()
             {
                 std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] !!!!!!!!!!! Start injecting errors - iteration " << iteration << std::endl;
 
-                writeWithComment(theBertRegisterControl, 0x0002003B, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 1, INJ_ERR = 1");
+                writeWithComment(theBertRegisterControl, 0xFFF200B7, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 1, INJ_ERR = 1");
 
                 std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Stop injecting errors" << std::endl;
 
-                writeWithComment(theBertRegisterControl, 0x00020037, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 1, INJ_ERR = 0");
+                writeWithComment(theBertRegisterControl, 0xFFF20037, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 1, INJ_ERR = 0");
 
                 std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read BER counters (loop on hybrids and lines)" << std::endl;
 
                 readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
             }
 
-            writeWithComment(theBertRegisterControl, 0x00020035, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1");
+            writeWithComment(theBertRegisterControl, 0x00020035, "Stop PRBS test");
         }
     }
 }
