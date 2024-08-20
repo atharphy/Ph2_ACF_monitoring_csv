@@ -363,7 +363,6 @@ void OTCBCtoCICecv::runSmallEcv()
 
 #ifdef __USE_ROOT__
         LOG(INFO) << "Using ROOT to save OTCBCtoCICecv matching efficiency." << RESET;
-        //fDQMHistogramOTCBCtoCICecv.diagnosticCheckForMatchingEfficiency(matchingEfficiencyContainer, phyPort);
         fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, phyPort);
 #else
         if(fDQMStreamer)
