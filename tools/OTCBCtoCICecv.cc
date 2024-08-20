@@ -404,12 +404,12 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
         }
 
 #ifdef __USE_ROOT__
-        LOG(INFO) << "Using ROOT to save OTCBCtoCICecv matching efficiency." << RESET;
+        //LOG(INFO) << "Using ROOT to save OTCBCtoCICecv matching efficiency." << RESET;
         fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, phyPort, cbcStrength, cicSlvsCurrent);
 #else
         if(fDQMStreamer)
         {
-            LOG(INFO) << "Using DQMStreamer to save OTCBCtoCICecv matching efficiency." << RESET;
+            //LOG(INFO) << "Using DQMStreamer to save OTCBCtoCICecv matching efficiency." << RESET;
             ContainerSerialization theMatchingEfficiencySerialization("OTCBCtoCICecvMatchingEfficiency");
             theMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, matchingEfficiencyContainer, phyPort);
         }
