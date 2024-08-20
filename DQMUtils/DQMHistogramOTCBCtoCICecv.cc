@@ -73,8 +73,8 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
     uint8_t cbcStrengthCount = 16;
     for (uint8_t cicSlvsCurrent = 1; cicSlvsCurrent <= 5; cicSlvsCurrent++)
     {
-        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("CBCtoCICecvEfficiency_CIC-SLVScurrent_%d", int(cicSlvsCurrent)),
-                                                        Form("CBC to CIC ecv Efficiency CIC-SLVScurrent %d", int(cicSlvsCurrent)),
+        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("CBCtoCICecvEfficiency_CICSLVScurrent%d", int(cicSlvsCurrent)),
+                                                        Form("CBC to CIC ecv Efficiency CICSLVScurrent %d", int(cicSlvsCurrent)),
                                                         numberOfPhyPorts * numberOfLines, //x-axis
                                                         0,
                                                         numberOfPhyPorts * numberOfLines,
