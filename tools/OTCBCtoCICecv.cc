@@ -361,18 +361,18 @@ void OTCBCtoCICecv::runSmallEcv()
             fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
         }
 
-//#ifdef __USE_ROOT__
-//        LOG(INFO) << "Using ROOT to save OTCBCtoCICecv matching efficiency." << RESET;
-//        fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, phyPort);
-//#else
-//        if(fDQMStreamer)
-//        {
-//            LOG(INFO) << "Using DQMStreamer to save OTCBCtoCICecv matching efficiency." << RESET;
-//            ContainerSerialization theMatchingEfficiencySerialization("OTCBCtoCICecvMatchingEfficiency");
-//            theMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, matchingEfficiencyContainer, phyPort);
-//        }
-//#endif
-
+#ifdef __USE_ROOT__
+        LOG(INFO) << "Using ROOT to save OTCBCtoCICecv matching efficiency." << RESET;
+        fDQMHistogramOTCBCtoCICecv.diagnosticCheckForMatchingEfficiency(matchingEfficiencyContainer, phyPort);
+        //fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, phyPort);
+#else
+        if(fDQMStreamer)
+        {
+            LOG(INFO) << "Using DQMStreamer to save OTCBCtoCICecv matching efficiency." << RESET;
+            ContainerSerialization theMatchingEfficiencySerialization("OTCBCtoCICecvMatchingEfficiency");
+            theMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, matchingEfficiencyContainer, phyPort);
+        }
+#endif
 
     }
 }
