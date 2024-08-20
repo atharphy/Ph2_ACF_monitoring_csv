@@ -302,10 +302,14 @@ void OTCBCtoCICecv::itrOverCBCStrength()
 
 void OTCBCtoCICecv::runSmallEcv()
 {
+    uint8_t cicSLVSCurrentStart    = 1, cicSLVSCurrentEnd     = 5 ;
+    //uint8_t cbcStrengthStart        = 0, cbcStrengthEnd         = 15 ;
+    uint8_t cbcStrength = 5;
     prepareForLpGBTalignment2Sstubs();
     prepareForLpGBTalignment2SL1();
     uint8_t numberOfLines = 4;
 
+    for(uint8_t cicSlvsCurrent = cicSLVSCurrentStart; cicSlvsCurrent <= cicSLVSCurrentEnd; cicSlvsCurrent++)
     for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
     {
         setCICBypass(phyPort);
@@ -318,6 +322,11 @@ void OTCBCtoCICecv::runSmallEcv()
             {
                 for(auto theHybrid: *theOpticalGroup)
                 {
+                    //setting CIC strength
+                    auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                    LOG(INFO) << "Setting CIC strength to FEH" << theHybrid->getId() << RESET;
+                    fCicInterface->ConfigureDriveStrength(cCic, cicSlvsCurrent);
+
                     std::vector<std::vector<uint32_t>> phyPortDataVector(numberOfLines);
                     fBeBoardInterface->WriteBoardReg(
                         fDetectorContainer->getObject(theHybrid->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
@@ -363,7 +372,7 @@ void OTCBCtoCICecv::runSmallEcv()
 
 #ifdef __USE_ROOT__
         LOG(INFO) << "Using ROOT to save OTCBCtoCICecv matching efficiency." << RESET;
-        fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, phyPort);
+        fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, phyPort, cbcStrength, cicSlvsCurrent);
 #else
         if(fDQMStreamer)
         {
@@ -372,7 +381,6 @@ void OTCBCtoCICecv::runSmallEcv()
             theMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, matchingEfficiencyContainer, phyPort);
         }
 #endif
-
     }
 }
 

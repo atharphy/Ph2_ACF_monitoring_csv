@@ -69,20 +69,30 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
 //    }
 
     uint8_t numberOfLines = 4;
-    HistContainer<TH2F> phaseScanMatchingEfficiency("OTCBCtoCICecv_efficiency",
-                                                    "CBC to CIC ecv Efficiency",
-                                                    12,
-                                                    -0.5,
-                                                    11.5,
-                                                    numberOfLines,
-                                                    -0.5,
-                                                    numberOfLines - 0.5);
-    phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("phyPort");
-    for(uint8_t line = 0; line < numberOfLines; ++line) phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel(line + 1, Form("line%d", line));
-    phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
-    phaseScanMatchingEfficiency.fTheHistogram->SetMaximum(1);
-    phaseScanMatchingEfficiency.fTheHistogram->SetStats(false);
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanMatchingEfficiencies[0], phaseScanMatchingEfficiency);
+    uint8_t numberOfPhyPorts = 12;
+    uint8_t cbcStrengthCount = 16;
+    for (uint8_t cicSlvsCurrent = 1; cicSlvsCurrent <= 5; cicSlvsCurrent++)
+    {
+        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("CBCtoCICecvEfficiency_CIC-SLVScurrent_%d", int(cicSlvsCurrent)),
+                                                        Form("CBC to CIC ecv Efficiency CIC-SLVScurrent %d", int(cicSlvsCurrent)),
+                                                        numberOfPhyPorts * numberOfLines, //x-axis
+                                                        0,
+                                                        numberOfPhyPorts * numberOfLines,
+                                                        cbcStrengthCount,
+                                                        -0.5,
+                                                        cbcStrengthCount - 0.5);
+        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("phyPort:line");
+        phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetTitle("CBC strength");
+
+        for(uint8_t phyPort = 0; phyPort < numberOfPhyPorts; phyPort++)
+            for (uint8_t line = 0; line < numberOfLines; line++)
+                phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel( 4 * phyPort + line + 1, Form("%d:%d", phyPort, line));
+
+        phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
+        phaseScanMatchingEfficiency.fTheHistogram->SetMaximum(1);
+        phaseScanMatchingEfficiency.fTheHistogram->SetStats(false);
+        RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanMatchingEfficiencies[cicSlvsCurrent], phaseScanMatchingEfficiency);
+    }
 
 //        HistContainer<TH1I> bestPhase(Form("LpGBTforCICbypassBestPhase_phyPort%d", phyPort), Form("LpGBT for CIC Bypass best phase - phyPort %d", phyPort), numberOfLines, -0.5, numberOfLines - 0.5);
 //        bestPhase.fTheHistogram->GetXaxis()->SetTitle("line");
@@ -148,7 +158,7 @@ bool DQMHistogramOTCBCtoCICecv::fill(std::string& inputStream)
 }
 
 //========================================================================================================================
-void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort)
+void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort, uint8_t cbcStrength, uint8_t cicSlvsCurrent)
 {
     for(auto theBoard: matchingEfficiencyContainer)
     {
@@ -158,9 +168,9 @@ void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& ma
             {
                 if(!theHybrid->hasSummary()) continue;
                 auto thePhaseScanHistogram =
-                    fPhaseScanMatchingEfficiencies[0].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    fPhaseScanMatchingEfficiencies[cicSlvsCurrent].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 auto theEfficiencyArray = theHybrid->getSummary<GenericDataArray<float, 4>>();
-                for(size_t line = 0; line < 4; ++line) thePhaseScanHistogram->SetBinContent(phyPort + 1, line + 1, theEfficiencyArray[line]);
+                for(size_t line = 0; line < 4; ++line) thePhaseScanHistogram->SetBinContent(4 * phyPort + line + 1, cbcStrength + 1, theEfficiencyArray[line]);
             }
         }
     }
