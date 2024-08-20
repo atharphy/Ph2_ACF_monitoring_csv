@@ -123,68 +123,14 @@ void OTPScommonNoise::TakeData()
     */
     
     // Prepare SSA and MPA for measurement
-    //FIXME This does not work for now FIXME
     OTMeasureOccupancy measureOccupancy;
+    measureOccupancy.Inherit(this);
     measureOccupancy.fSSAtestPulseValue = 0;
     measureOccupancy.fMPAtestPulseValue = 0;
     measureOccupancy.prepareOccupancyMeasurementPS();
-    /*
-    // This works!!!
-    SSAChannelGroupHandler theSSAChannelGroupHandler;
-    theSSAChannelGroupHandler.setChannelGroupParameters(15, 1, 1);
-    setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA2);
-
-    MPAChannelGroupHandler theMPAChannelGroupHandler;
-    theMPAChannelGroupHandler.setChannelGroupParameters(15, 1, 1);
-    setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA2);
-    auto        MPAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
-    std::string theMPAqueryFunctionString = "MPAqueryFunction";
-    // settings for MPAs
-    fDetectorContainer->addReadoutChipQueryFunction(MPAqueryFunction, theMPAqueryFunctionString);
-    auto thePSinterface = static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface;
-    for(auto theBoard: *fDetectorContainer)
-    {
-        for(auto theOpticalGroup: *theBoard)
-        {
-            for(auto theHybrid: *theOpticalGroup)
-            {
-                for(auto theMPA: *theHybrid) { thePSinterface->WriteChipRegBits(theMPA, "Control_1", 0x0, "Mask", 0x03); }
-            }
-        }
-    }
-    setSameDac("PixelControl_ALL", 0x1E);           // disable Hip cut, cluster cut to the maximum, mode select to or
-    setSameDac("ENFLAGS_ALL", 0x0F);                // Enable all channels
-    setSameDac("InjectedCharge", 0);                // injected charge
-    fDetectorContainer->removeReadoutChipQueryFunction(theMPAqueryFunctionString);
-
-    auto        SSAqueryFunction          = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
-    std::string theSSAqueryFunctionString = "SSAqueryFunction";
-    // settings for SSAs
-    fDetectorContainer->addReadoutChipQueryFunction(SSAqueryFunction, theSSAqueryFunctionString);
-    setSameDac("InjectedCharge", 0);                // injected charge
-    setSameDac("ReadoutMode", 0x0);                 // normal readout mode
-    setSameDac("StripControl2", 0x07);              // disable HIP cut
-    setSameDac("control_2", 0x1F);                  // maximize cluster cut and set calpulse duration to 1 40MHz clock cycle
-    setSameDac("ENFLAGS", 0x41);                    // use level sampling mode
-    fDetectorContainer->removeReadoutChipQueryFunction(theSSAqueryFunctionString);
-
-    setFWTestPulse(false);
-    this->setTestAllChannels(true);
-    this->fMaskChannelsFromOtherGroups = true;
-    */
-
-    //FIXME this works but should be fixed, I do no really need the occupancy ?!
-    DetectorDataContainer theOccupancyContainer;
-    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, theOccupancyContainer);
-    fDetectorDataContainer = &theOccupancyContainer;
 
     for(auto theBoard: *fDetectorContainer)
     {
-        // FIXME ! This part needs to be checked and fixed for PS modules
-        // See what is inside the Start function etc. and how Fabio prepares the chips in the occupancy measurement without injection
-        // because now I get: D19cL1ReadoutInterface::WaitForReadout no words in the readout ..[ReadoutAttempt#0]
-
-        // fBeBoardInterface->Start(theBoard);
         uint32_t theEventCounter = fNumberOfEvents;
         while(theEventCounter != 0)
         {
@@ -192,10 +138,9 @@ void OTPScommonNoise::TakeData()
             
             uint32_t cNEventToRead = theEventCounter;
             theEventCounter -= cNEventToRead;
-            uint32_t numberOfEventsPerBurst = 65535;
-            measureBeBoardData(theBoard->getId(), cNEventToRead, numberOfEventsPerBurst);
-            std::cout << " measured BeBoard" << std::endl;
-            // ReadNEvents(theBoard, cNEventToRead);
+            std::cout << " preparing to read " << cNEventToRead << std::endl;
+            ReadNEvents(theBoard, cNEventToRead);
+            std::cout << " done ReadNEvents " << std::endl;
             const std::vector<Event*>& events = GetEvents();
             setNReadbackEvents(events.size());
             LOG(INFO) << "Reading out " << events.size() << "events, " << theEventCounter << " events remaining.";
@@ -206,14 +151,14 @@ void OTPScommonNoise::TakeData()
                 {
                     if(theEventCounter > fNumberOfEvents) continue;
 
-                    //uint32_t cModuleHits     = 0;
+                    // uint32_t cModuleHits     = 0;
 
                     std::vector<uint32_t>             hit_channels;
                     // std::map<int, std::map<int, int>> cChipCorrelationMap;
                     // std::map<int, int>                cHybridCorrelationMap;
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        //uint32_t cHybridHits     = 0;
+                        // uint32_t cHybridHits     = 0;
 
                         for(auto cChip: *cHybrid)
                         {
@@ -224,11 +169,11 @@ void OTPScommonNoise::TakeData()
                             std::cout << " cEventHits " << cEventHits << std::endl; //                              = cEventHitsEven + cEventHitsOdd;
                             //cChipCorrelationMap[cHybrid->getId()][cChip->getId()] = cEventHits;
                         } //tmp
-                    } // tmp
+                    }// tmp
                 } //tmp
             } //tmp
-        } // tmp
-    } // tmp
+        }//tmp
+    }     //tmp   
                             /*
                             auto theChipHitContainerValues = &(theChipHitContainer.getObject(cBoard->getId())
                                                                    ->getObject(cOpticalGroup->getId())
@@ -236,13 +181,9 @@ void OTPScommonNoise::TakeData()
                                                                    ->getObject(cChip->getId())
                                                                    ->getSummary<GenericDataArray<uint32_t, 3 * (NCHANNELS + 1)>>());
 
-                            (*theChipHitContainerValues)[cEventHitsEven]++;
-                            (*theChipHitContainerValues)[(NCHANNELS + 1) + cEventHitsOdd]++;
                             (*theChipHitContainerValues)[2 * (NCHANNELS + 1) + cEventHits]++;
 
                             cHybridHits += cEventHits;
-                            cHybridHitsEven += cEventHitsEven;
-                            cHybridHitsOdd += cEventHitsOdd;
                             cHybridCorrelationMap[cHybrid->getId()] = cHybridHits;
 
                             the2DSensorChipCorrelationContainer.getObject(cBoard->getId())
@@ -260,8 +201,7 @@ void OTPScommonNoise::TakeData()
 
                         // save per hybrid
                         cModuleHits += cHybridHits;
-                        cModuleHitsEven += cHybridHitsEven;
-                        cModuleHitsOdd += cHybridHitsOdd;
+
 
                         // Re-looping on chips...
                         for(auto cChip: *cHybrid)
