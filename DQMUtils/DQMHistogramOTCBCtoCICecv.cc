@@ -157,18 +157,10 @@ void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& ma
             for(auto theHybrid: *theOpticalGroup)
             {
                 if(!theHybrid->hasSummary()) continue;
-                LOG(INFO) << "Board " << theBoard->getId() << " OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << RESET;
                 auto thePhaseScanHistogram =
                     fPhaseScanMatchingEfficiencies[0].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                LOG(INFO) << "ThePhaseScanHistogram loaded" << RESET;
                 auto theEfficiencyArray = theHybrid->getSummary<GenericDataArray<float, 4>>();
-                LOG(INFO) << "TheEfficiencyArray loaded" << RESET;
-                for(size_t line = 0; line < 4; ++line)
-                {
-                    thePhaseScanHistogram->SetBinContent(phyPort + 1, line + 1, theEfficiencyArray[line]);
-                    LOG(INFO) << "The efficiency line " << line + 1 << " is " << theEfficiencyArray[line] << RESET;
-                }
-                //LOG(INFO) << "SetBinContent Done" << RESET;
+                for(size_t line = 0; line < 4; ++line) thePhaseScanHistogram->SetBinContent(phyPort + 1, line + 1, theEfficiencyArray[line]);
             }
         }
     }
