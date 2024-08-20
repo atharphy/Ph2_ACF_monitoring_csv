@@ -121,3 +121,22 @@ bool DQMHistogramOTCBCtoCICecv::fill(std::string& inputStream)
     return false;
     // SoC utilities only - END
 }
+
+//========================================================================================================================
+void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort)
+{
+    for(auto theBoard: matchingEfficiencyContainer)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                if(!theHybrid->hasSummary()) continue;
+                auto thePhaseScanHistogram =
+                    fPhaseScanMatchingEfficiencies[phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                auto theEfficiencyArray = theHybrid->getSummary<GenericDataArray<float, 4>>();
+                for(size_t line = 0; line < 4; ++line) { thePhaseScanHistogram->SetBinContent(line + 1, theEfficiencyArray[line]); }
+            }
+        }
+    }
+}
