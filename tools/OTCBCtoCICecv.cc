@@ -45,7 +45,7 @@ void OTCBCtoCICecv::Running()
     //printCICStrengthAndPhase();
     //itrOverCBCStrength();
     LOG(INFO) << BOLDRED << "========== Starting OTCBC2CICalignment test ==========" << RESET;
-    runSmallEcv();
+    runOTCBCtoCICecv();
     LOG(INFO) << BOLDRED << "========== End OTCBC2CICalignment test ==========" << RESET;
     LOG(INFO) << "Done with OTCBCtoCICecv.";
     Reset();
@@ -300,7 +300,7 @@ void OTCBCtoCICecv::itrOverCBCStrength()
     }
 }
 
-void OTCBCtoCICecv::runSmallEcv()
+void OTCBCtoCICecv::runOTCBCtoCICecv()
 {
     uint8_t cicSLVSCurrentStart    = 1, cicSLVSCurrentEnd     = 5 ;
     uint8_t cbcStrengthStart        = 0, cbcStrengthEnd         = 15 ;

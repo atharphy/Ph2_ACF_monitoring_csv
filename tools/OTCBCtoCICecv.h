@@ -53,7 +53,7 @@ class OTCBCtoCICecv : public OTCicBypassTest
     void itrOverCBCStrength();
     void                               setCBCshiftRegister();
     void                               runElectricChainValidation();
-    void                               runSmallEcv();
+    void                               runOTCBCtoCICecv();
     std::vector<std::vector<uint32_t>> readCICbypassOutput(Ph2_HwDescription::Hybrid* theHybrid, Ph2_HwInterface::D19cFWInterface* theFWinterface, uint8_t phyPort);
 
     uint8_t            fShiftRegisterPattern{0xAA};
