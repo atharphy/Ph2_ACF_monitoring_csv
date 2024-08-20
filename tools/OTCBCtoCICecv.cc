@@ -387,7 +387,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                         if(phyPort >= 10) // L1 for 2S case
                         {
                             matchingEfficiency = getMatchingEfficiency2SL1(phyPortDataVector[line]);
-                            LOG(INFO) << "kpal: phyPort: " << +phyPort << " line: " << +line << " matchingEfficiency: " << matchingEfficiency << RESET;
+                            //LOG(INFO) << "kpal: phyPort: " << +phyPort << " line: " << +line << " matchingEfficiency: " << matchingEfficiency << RESET;
                         }
                         else
                         {
@@ -395,7 +395,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                             thePattern = fStubPattern2S[(phyPort * 4 + line) % 5];
                             auto possiblePatternList = getPossiblePatterns(thePattern, static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10);
                             matchingEfficiency       = countMatchingBits(phyPortDataVector[line], possiblePatternList);
-                            LOG(INFO) << "kpal: phyPort: " << +phyPort << " line: " << +line << " matchingEfficiency: " << matchingEfficiency << RESET;
+                            //LOG(INFO) << "kpal: phyPort: " << +phyPort << " line: " << +line << " matchingEfficiency: " << matchingEfficiency << RESET;
                         }
                     }
                 }
