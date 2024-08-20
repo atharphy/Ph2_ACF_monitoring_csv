@@ -304,6 +304,8 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
 {
     uint8_t cicSLVSCurrentStart    = 1, cicSLVSCurrentEnd     = 5 ;
     uint8_t cbcStrengthStart        = 0, cbcStrengthEnd         = 15 ;
+    //uint8_t cicSLVSCurrentStart    = 1, cicSLVSCurrentEnd     = 1 ;
+    //uint8_t cbcStrengthStart        = 0, cbcStrengthEnd         = 0 ;
     uint8_t numberOfLines = 4;
     uint8_t numberOfPhyPorts = 12;
     uint8_t defaultSLVS = 1;
@@ -315,13 +317,12 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
     for(auto theOpticalGroup: *theBoard)
     for(auto theHybrid: *theOpticalGroup)
     {
-        LOG(INFO) << "kpal: for FEH " << theHybrid->getId() << RESET;
         for(auto theCBC: *theHybrid)
         {
             // itr over BetaMult&SLVS from 0x01 to 0xF1 with sum of 0x10
             uint8_t cReg      = fReadoutChipInterface->ReadChipReg(theCBC, "BetaMult&SLVS");
             defaultSLVS = cReg & 0x0F;
-            LOG(INFO) << "kpal: CBC number: " << theCBC->getId() << " BetaMult&SLVS: 0x" << std::hex << +cReg << std::dec << " defaultSLVS: " << std::hex << +defaultSLVS << std::dec <<RESET;
+            LOG(INFO) << "Deafult BetaMult&SLVS: 0x" << std::hex << +cReg << std::dec << " defaultSLVS: " << std::hex << +defaultSLVS << std::dec <<RESET;
             break;
         }
         break;
@@ -332,88 +333,95 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
 
     for(uint8_t cicSlvsCurrent = cicSLVSCurrentStart; cicSlvsCurrent <= cicSLVSCurrentEnd; cicSlvsCurrent++)
     for(uint8_t cbcStrength = cbcStrengthStart; cbcStrength <= cbcStrengthEnd; cbcStrength++)  //itr over BetaMult&SLVS from 0x0? to 0xF? with sum of 0x10
-    for(uint8_t phyPort = 0; phyPort < numberOfPhyPorts; ++phyPort)
     {
-        setCICBypass(phyPort);
-        DetectorDataContainer matchingEfficiencyContainer;
-        ContainerFactory::copyAndInitHybrid<GenericDataArray<float, 4>>(*fDetectorContainer, matchingEfficiencyContainer);
         for(auto theBoard: *fDetectorContainer)
+        for(auto theOpticalGroup: *theBoard)
+        for(auto theHybrid: *theOpticalGroup)
         {
-            auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
-            for(auto theOpticalGroup: *theBoard)
+            //setting CIC strength
+            auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+            fCicInterface->ConfigureDriveStrength(cCic, cicSlvsCurrent);
+
+            //setting CBC strength
+            for(auto theCBC: *theHybrid)
             {
-                for(auto theHybrid: *theOpticalGroup)
+                BetaMultAndSLVSbyte = (cbcStrength << 4 | defaultSLVS);
+                pVerifyBit = fReadoutChipInterface->WriteChipReg(theCBC, "BetaMult&SLVS", BetaMultAndSLVSbyte , true);
+                if(!pVerifyBit)
+                    LOG(ERROR) << "Error in setting BetaMult&SLVS value of 0x" << std::hex << +BetaMultAndSLVSbyte << std::dec << " for CIC,CBC: " << theHybrid->getId() << "," << theCBC->getId() << "[ cbc strength set to " << +cbcStrength << " ]" <<  RESET;
+
+                if(pVerifyBit && theCBC->getId() == 7)
+                    LOG(INFO) << "Successfully set BetaMult&SLVS value of 0x" << std::hex << +BetaMultAndSLVSbyte << std::dec << " for CIC,CBC: " << theHybrid->getId() << "," << theCBC->getId() << "[ cbc strength set to " << +cbcStrength << " ]" <<  RESET;
+            }
+        }
+
+        for(uint8_t phyPort = 0; phyPort < numberOfPhyPorts; ++phyPort)
+        {
+            setCICBypass(phyPort);
+            DetectorDataContainer matchingEfficiencyContainer;
+            ContainerFactory::copyAndInitHybrid<GenericDataArray<float, 4>>(*fDetectorContainer, matchingEfficiencyContainer);
+            for(auto theBoard: *fDetectorContainer)
+            {
+                auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
+                for(auto theOpticalGroup: *theBoard)
                 {
-                    //setting CIC strength
-                    auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                    fCicInterface->ConfigureDriveStrength(cCic, cicSlvsCurrent);
-
-                    //setting CBC strength
-                    for(auto theCBC: *theHybrid)
+                    for(auto theHybrid: *theOpticalGroup)
                     {
-                        BetaMultAndSLVSbyte = (cbcStrength << 4 | defaultSLVS);
-                        pVerifyBit = fReadoutChipInterface->WriteChipReg(theCBC, "BetaMult&SLVS", BetaMultAndSLVSbyte , true);
-                        if(!pVerifyBit)
-                            LOG(ERROR) << "Error in setting cbcStrength " << +cbcStrength << ", BetaMult&SLVS value of 0x" << std::hex << +BetaMultAndSLVSbyte << std::dec << " for CIC,CBC: " << theHybrid->getId() << "," << theCBC->getId() << "\t Current phyPort: " << +phyPort << RESET;
+                        std::vector<std::vector<uint32_t>> phyPortDataVector(numberOfLines);
+                        fBeBoardInterface->WriteBoardReg(
+                            fDetectorContainer->getObject(theHybrid->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
+                        fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theHybrid->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
 
-                        if(pVerifyBit && theCBC->getId() == 7)
-                            LOG(INFO) << "Successfully set cbcStrength " << +cbcStrength << ", BetaMult&SLVS value of 0x" << std::hex << +BetaMultAndSLVSbyte << std::dec << " for CIC,CBC: " << theHybrid->getId() << "," << theCBC->getId() << "\t Current phyPort: " << +phyPort << RESET;
-                    }
-
-                    std::vector<std::vector<uint32_t>> phyPortDataVector(numberOfLines);
-                    fBeBoardInterface->WriteBoardReg(
-                        fDetectorContainer->getObject(theHybrid->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
-                    fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theHybrid->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-
-                    for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
-                    {
-                        if(phyPort >= 10)
+                        for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
                         {
-                            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-                            usleep(10);
-                            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+                            if(phyPort >= 10)
+                            {
+                                fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
+                                usleep(10);
+                                fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+                            }
+                            auto lineOutputVector = theFWinterface->StubDebug(true, numberOfLines, false);
+                            for(uint8_t line = 0; line < numberOfLines; ++line)
+                            {
+                                phyPortDataVector[line].insert(phyPortDataVector[line].end(), lineOutputVector[line].begin(), lineOutputVector[line].end());
+                            }
                         }
-                        auto lineOutputVector = theFWinterface->StubDebug(true, numberOfLines, false);
+
                         for(uint8_t line = 0; line < numberOfLines; ++line)
                         {
-                            phyPortDataVector[line].insert(phyPortDataVector[line].end(), lineOutputVector[line].begin(), lineOutputVector[line].end());
-                        }
-                    }
-
-                    for(uint8_t line = 0; line < numberOfLines; ++line)
-                    {
-                        auto& matchingEfficiency =
-                            matchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 5>>()[line];
-                        if(phyPort >= 10) // L1 for 2S case
-                        {
-                            matchingEfficiency = getMatchingEfficiency2SL1(phyPortDataVector[line]);
-                            //LOG(INFO) << "kpal: phyPort: " << +phyPort << " line: " << +line << " matchingEfficiency: " << matchingEfficiency << RESET;
-                        }
-                        else
-                        {
-                            uint8_t thePattern;
-                            thePattern = fStubPattern2S[(phyPort * 4 + line) % 5];
-                            auto possiblePatternList = getPossiblePatterns(thePattern, static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10);
-                            matchingEfficiency       = countMatchingBits(phyPortDataVector[line], possiblePatternList);
-                            //LOG(INFO) << "kpal: phyPort: " << +phyPort << " line: " << +line << " matchingEfficiency: " << matchingEfficiency << RESET;
+                            auto& matchingEfficiency =
+                                matchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 5>>()[line];
+                            if(phyPort >= 10) // L1 for 2S case
+                            {
+                                matchingEfficiency = getMatchingEfficiency2SL1(phyPortDataVector[line]);
+                                //LOG(INFO) << "kpal: phyPort: " << +phyPort << " line: " << +line << " matchingEfficiency: " << matchingEfficiency << RESET;
+                            }
+                            else
+                            {
+                                uint8_t thePattern;
+                                thePattern = fStubPattern2S[(phyPort * 4 + line) % 5];
+                                auto possiblePatternList = getPossiblePatterns(thePattern, static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10);
+                                matchingEfficiency       = countMatchingBits(phyPortDataVector[line], possiblePatternList);
+                                //LOG(INFO) << "kpal: phyPort: " << +phyPort << " line: " << +line << " matchingEfficiency: " << matchingEfficiency << RESET;
+                            }
                         }
                     }
                 }
+                fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
             }
-            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-        }
 
 #ifdef __USE_ROOT__
-        //LOG(INFO) << "Using ROOT to save OTCBCtoCICecv matching efficiency." << RESET;
-        fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, phyPort, cbcStrength, cicSlvsCurrent);
+            //LOG(INFO) << "Using ROOT to save OTCBCtoCICecv matching efficiency." << RESET;
+            fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, phyPort, cbcStrength, cicSlvsCurrent);
 #else
-        if(fDQMStreamer)
-        {
-            //LOG(INFO) << "Using DQMStreamer to save OTCBCtoCICecv matching efficiency." << RESET;
-            ContainerSerialization theMatchingEfficiencySerialization("OTCBCtoCICecvMatchingEfficiency");
-            theMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, matchingEfficiencyContainer, phyPort);
-        }
+            if(fDQMStreamer)
+            {
+                //LOG(INFO) << "Using DQMStreamer to save OTCBCtoCICecv matching efficiency." << RESET;
+                ContainerSerialization theMatchingEfficiencySerialization("OTCBCtoCICecvMatchingEfficiency");
+                theMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, matchingEfficiencyContainer, phyPort);
+            }
 #endif
+        }
     }
 }
 
