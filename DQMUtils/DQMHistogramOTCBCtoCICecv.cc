@@ -82,12 +82,13 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
                                                         0.5,
                                                         cbcStrengthCount + 0.5);
         phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("phyPort:line");
-        phaseScanMatchingEfficiency.fTheHistogram->LabelsOption("v");
+        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitleOffset(1.3);
         phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetTitle("CBC strength");
 
         for(uint8_t phyPort = 0; phyPort < numberOfPhyPorts; phyPort++)
             for (uint8_t line = 0; line < numberOfLines; line++)
                 phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel( 4 * phyPort + line + 1, Form("%d:%d", phyPort, line));
+        phaseScanMatchingEfficiency.fTheHistogram->LabelsOption("v", "X");
 
         phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
         phaseScanMatchingEfficiency.fTheHistogram->SetMaximum(1);
