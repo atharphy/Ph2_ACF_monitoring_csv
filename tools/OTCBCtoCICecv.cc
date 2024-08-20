@@ -303,14 +303,35 @@ void OTCBCtoCICecv::itrOverCBCStrength()
 void OTCBCtoCICecv::runSmallEcv()
 {
     uint8_t cicSLVSCurrentStart    = 1, cicSLVSCurrentEnd     = 5 ;
-    //uint8_t cbcStrengthStart        = 0, cbcStrengthEnd         = 15 ;
-    uint8_t cbcStrength = 5;
+    uint8_t cbcStrengthStart        = 0, cbcStrengthEnd         = 15 ;
+    uint8_t numberOfLines = 4;
+    uint8_t numberOfPhyPorts = 12;
+    uint8_t defaultSLVS = 1;
+    uint8_t pVerifyBit;
+
+    //get default SLVS from BetaMult&SLVS stored in settings/CbcFiles/CBC3_default.txt
+    for(auto theBoard: *fDetectorContainer)
+    for(auto theOpticalGroup: *theBoard)
+    for(auto theHybrid: *theOpticalGroup)
+    {
+        LOG(INFO) << "kpal: for FEH " << theHybrid->getId() << RESET;
+        for(auto theCBC: *theHybrid)
+        {
+            // itr over BetaMult&SLVS from 0x01 to 0xF1 with sum of 0x10
+            uint8_t cReg      = fReadoutChipInterface->ReadChipReg(theCBC, "BetaMult&SLVS");
+            defaultSLVS = cReg & 0x0F;
+            LOG(INFO) << "kpal: CBC number: " << theCBC->getId() << " BetaMult&SLVS: 0x" << std::hex << +cReg << std::dec << " defaultSLVS: " << std::hex << +defaultSLVS << std::dec <<RESET;
+            break;
+        }
+        break;
+    }
+
     prepareForLpGBTalignment2Sstubs();
     prepareForLpGBTalignment2SL1();
-    uint8_t numberOfLines = 4;
 
     for(uint8_t cicSlvsCurrent = cicSLVSCurrentStart; cicSlvsCurrent <= cicSLVSCurrentEnd; cicSlvsCurrent++)
-    for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
+    for(uint8_t cbcStrength = cbcStrengthStart; cbcStrength <= cbcStrengthEnd; cbcStrength++)
+    for(uint8_t phyPort = 0; phyPort < numberOfPhyPorts; ++phyPort)
     {
         setCICBypass(phyPort);
         DetectorDataContainer matchingEfficiencyContainer;
@@ -326,6 +347,17 @@ void OTCBCtoCICecv::runSmallEcv()
                     auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                     LOG(INFO) << "Setting CIC strength to FEH" << theHybrid->getId() << RESET;
                     fCicInterface->ConfigureDriveStrength(cCic, cicSlvsCurrent);
+
+                    //setting CBC strength
+                    for(auto theCBC: *theHybrid)
+                    {
+                        // itr over BetaMult&SLVS from 0x01 to 0xF1 with sum of 0x10
+                        pVerifyBit = fReadoutChipInterface->WriteChipReg(theCBC, "BetaMult&SLVS", (cbcStrength << 4 | defaultSLVS), true);
+                        if (pVerifyBit)
+                        {
+                            LOG(ERROR) << "Error in setting BetaMult&SLVS value of 0x" << std::hex << (cbcStrength << 4 | defaultSLVS) << std::dec << " for CIC,CBC: " << theCBC->getId() << "," << theHybrid->getId() << RESET;
+                        }
+                    }
 
                     std::vector<std::vector<uint32_t>> phyPortDataVector(numberOfLines);
                     fBeBoardInterface->WriteBoardReg(
