@@ -28,9 +28,7 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    uint8_t numberOfStubs = 6; //including L1 (as Stub6)
-                               //using line would have been more accurate, but that would create confusion with phyPort's line
-                               //so L1 is known as Stub6 from hereon
+    uint8_t numberOfStubs = 6; // Stub 1 to 5 and L1 is filled as Stub0
     uint8_t numberOfCBC = 8;
     uint8_t cbcStrengthCount = 16;
     for (uint8_t cicSlvsCurrent = 1; cicSlvsCurrent <= 5; cicSlvsCurrent++)
@@ -49,12 +47,12 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
         phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("CBC strength");
 
         for(uint8_t cbcId = 1; cbcId <= numberOfCBC; ++cbcId) //itr from 1 to 8
-            for (uint8_t stub = 1; stub <= numberOfStubs; ++stub) //itr from 1 to 6
+            for (uint8_t stub = 0; stub < numberOfStubs; ++stub) //itr from 0 to 5
             {
-                if(stub == 6)
-                    phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel( 6 * (cbcId - 1) + stub, Form("CBC%d_L1", cbcId));
+                if(stub == 0)
+                    phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel( 6 * (cbcId - 1) + stub + 1, Form("CBC%d_L1", cbcId));
                 else
-                    phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel( 6 * (cbcId - 1) + stub, Form("CBC%d_Stub%d", cbcId, stub));
+                    phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel( 6 * (cbcId - 1) + stub + 1, Form("CBC%d_Stub%d", cbcId, stub));
             }
 
         phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
@@ -135,8 +133,8 @@ void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& ma
                 {
                     auto cbcId = phyPortAndlineToCbcIdAndStubMap[{phyPort, line}].first;
                     auto stub = phyPortAndlineToCbcIdAndStubMap[{phyPort, line}].second;
-                    thePhaseScanHistogram->SetBinContent( cbcStrength + 1, 6 * (cbcId -1) + stub, theEfficiencyArray[line]);
-                    //LOG(INFO) << "Setting Y Bin No " << 6 * (cbcId -1) + stub << " with Label " << thePhaseScanHistogram->GetYaxis()->GetBinLabel(6 * (cbcId -1) + stub) << ", cbcStrength" << cbcStrength + 1 << " with efficiency" << theEfficiencyArray[line] << RESET;
+                    thePhaseScanHistogram->SetBinContent( cbcStrength + 1, 6 * (cbcId -1) + stub + 1, theEfficiencyArray[line]);
+                    //LOG(INFO) << "Setting Y Bin No " << 6 * (cbcId -1) + stub + 1 << " with Label " << thePhaseScanHistogram->GetYaxis()->GetBinLabel(6 * (cbcId -1) + stub + 1) << ", cbcStrength" << cbcStrength + 1 << " with efficiency" << theEfficiencyArray[line] << RESET;
                 }
             }
         }

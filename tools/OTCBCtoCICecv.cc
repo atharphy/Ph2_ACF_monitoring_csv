@@ -318,11 +318,9 @@ std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OTCBCtoCICecv
             std::pair<uint8_t, uint8_t> phyPortAndLine(phyPort, line);
             auto chipIdAndLine = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
             chipIdAndLine.first += 1; // first contain cbcId from 1 to 8
-            if(phyPort >= 10)
-                chipIdAndLine.second = uint8_t(6);
-                //second contain Stub value from 1 to 5
-                //Setting line value to 6 for L1
-                //but that would be helpful with histograms filling logic
+            //second contain Stub value from 1 to 5
+            //second value == 0 means L1
+            //this would be helpful when booking histograms
             phyPortAndLineToCbcIdAndStubMap[phyPortAndLine] = chipIdAndLine;
         }
         return phyPortAndLineToCbcIdAndStubMap;
