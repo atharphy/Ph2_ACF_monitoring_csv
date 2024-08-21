@@ -38,25 +38,24 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
         HistContainer<TH2F> phaseScanMatchingEfficiency(
                 Form("CBCtoCICecvEfficiency_CICSLVScurrent%d", int(cicSlvsCurrent)),
                 Form("CBC to CIC ecv Efficiency CICSLVScurrent %d", int(cicSlvsCurrent)),
-                numberOfCBC * numberOfStubs, //x-axis
-                0,
-                numberOfCBC * numberOfStubs,
                 cbcStrengthCount,
                 0.5,
-                cbcStrengthCount + 0.5
+                cbcStrengthCount + 0.5,
+                numberOfCBC * numberOfStubs, //y-axis
+                0,
+                numberOfCBC * numberOfStubs
                                                         );
-        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("");
-        phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetTitle("CBC strength");
+        phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetTitle("");
+        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("CBC strength");
 
         for(uint8_t cbcId = 1; cbcId <= numberOfCBC; ++cbcId) //itr from 1 to 8
             for (uint8_t stub = 1; stub <= numberOfStubs; ++stub) //itr from 1 to 6
             {
                 if(stub == 6)
-                    phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel( 6 * (cbcId - 1) + stub, Form("CBC%d_L1", cbcId));
+                    phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel( 6 * (cbcId - 1) + stub, Form("CBC%d_L1", cbcId));
                 else
-                    phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel( 6 * (cbcId - 1) + stub, Form("CBC%d_Stub%d", cbcId, stub));
+                    phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel( 6 * (cbcId - 1) + stub, Form("CBC%d_Stub%d", cbcId, stub));
             }
-        phaseScanMatchingEfficiency.fTheHistogram->LabelsOption("v", "X");
 
         phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
         phaseScanMatchingEfficiency.fTheHistogram->SetMaximum(1);
@@ -136,8 +135,8 @@ void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& ma
                 {
                     auto cbcId = phyPortAndlineToCbcIdAndStubMap[{phyPort, line}].first;
                     auto stub = phyPortAndlineToCbcIdAndStubMap[{phyPort, line}].second;
-                    thePhaseScanHistogram->SetBinContent( 6 * (cbcId -1) + stub, cbcStrength + 1, theEfficiencyArray[line]);
-                    //LOG(INFO) << "Setting Bin No " << 6 * (cbcId -1) + stub << " with Label " << thePhaseScanHistogram->GetXaxis()->GetBinLabel(6 * (cbcId -1) + stub) << ", cbcStrength" << cbcStrength + 1 << " with efficiency" << theEfficiencyArray[line] << RESET;
+                    thePhaseScanHistogram->SetBinContent( cbcStrength + 1, 6 * (cbcId -1) + stub, theEfficiencyArray[line]);
+                    //LOG(INFO) << "Setting Y Bin No " << 6 * (cbcId -1) + stub << " with Label " << thePhaseScanHistogram->GetYaxis()->GetBinLabel(6 * (cbcId -1) + stub) << ", cbcStrength" << cbcStrength + 1 << " with efficiency" << theEfficiencyArray[line] << RESET;
                 }
             }
         }
