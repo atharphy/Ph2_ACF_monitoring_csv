@@ -58,7 +58,8 @@ class DQMHistogramOTPScommonNoise : public DQMHistogramBase
     void reset(void) override;
     void fillChipHitPlots(DetectorDataContainer& theHitData);
     void fillChipHitPlots(DetectorDataContainer& theHitData, bool pFitDistributions);
-    void fillHybridHitPlots(DetectorDataContainer& theHitData, const int cNChannels);
+    void fillHybridHitPlots(DetectorDataContainer& theHitData, bool isStrip);
+    void fillModuleHitPlots(DetectorDataContainer& theHitData, bool isStrip);
 
     template <size_t T2>
     void fillEventsVsHitsHist(const BaseDataContainer* ChipContainer, TH1F& theHistogram)
@@ -75,8 +76,9 @@ class DQMHistogramOTPScommonNoise : public DQMHistogramBase
     DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fStripHitHistograms;
     DetectorDataContainer fPixelHitHistograms;
-    DetectorDataContainer fHybridHitHistograms;
-    // DetectorDataContainer fStripHybridHitHistograms;
-    // DetectorDataContainer fPixelHybridHitHistograms;
+    DetectorDataContainer fStripHybridHitHistograms;
+    DetectorDataContainer fPixelHybridHitHistograms;
+    DetectorDataContainer fStripModuleHitHistograms;
+    DetectorDataContainer fPixelModuleHitHistograms;
 };
 #endif

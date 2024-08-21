@@ -160,7 +160,8 @@ void OTPScommonNoise::TakeData()
                     LOG(DEBUG) << BOLDYELLOW << " Event number " << cEvent->GetEventCount() << RESET;
                     if(theEventCounter > fNumberOfEvents) continue;
 
-                    // uint32_t cModuleHits     = 0;
+                    uint32_t cStripModuleHits = 0;
+                    uint32_t cPixelModuleHits = 0;                    
 
                     std::vector<uint32_t>             hit_channels;
                     // std::map<int, std::map<int, int>> cChipCorrelationMap;
@@ -223,13 +224,6 @@ void OTPScommonNoise::TakeData()
 
                         (*thePixelHybridContainerValues)[cPixelHybridHits]++;
 
-
-                    }     // hybrid loop
-                } //tmp
-            } //tmp
-        }//tmp
-    }     //tmp 
-    /*
                                 // cHybridCorrelationMap[cHybrid->getId()] = cHybridHits;
 
                             // the2DSensorChipCorrelationContainer.getObject(cBoard->getId())
@@ -243,72 +237,79 @@ void OTPScommonNoise::TakeData()
                             // {
                             //     for(auto hit: hit_vec) { hit_channels.push_back(hit.second + chipOffset_module); }
                             // }
-                        }
+                    
 
                         // save per hybrid
-                        cModuleHits += cHybridHits;
+                        cStripModuleHits += cStripHybridHits;
+                        cPixelModuleHits += cPixelHybridHits;
 
 
                         // Re-looping on chips...
-                        for(auto cChip: *cHybrid)
-                        {
-                            the2DHybridCorrelationContainer.getObject(cBoard->getId())
-                                ->getObject(cOpticalGroup->getId())
-                                ->getObject(cHybrid->getId())
-                                ->getObject(cChip->getId())
-                                ->getSummary<GenericDataArray<uint32_t, NCHANNELS + 1, HYBRID_CHANNELS_OT + 1>>()[cChipCorrelationMap[cHybrid->getId()][cChip->getId()]][cHybridHits] += 1;
-                        }
+                        // for(auto cChip: *cHybrid)
+                        // {
+                        //     the2DHybridCorrelationContainer.getObject(cBoard->getId())
+                        //         ->getObject(cOpticalGroup->getId())
+                        //         ->getObject(cHybrid->getId())
+                        //         ->getObject(cChip->getId())
+                        //         ->getSummary<GenericDataArray<uint32_t, NCHANNELS + 1, HYBRID_CHANNELS_OT + 1>>()[cChipCorrelationMap[cHybrid->getId()][cChip->getId()]][cHybridHits] += 1;
+                        // }
 
-                        the2DSensorHybridCorrelationContainer.getObject(cBoard->getId())
-                            ->getObject(cOpticalGroup->getId())
-                            ->getObject(cHybrid->getId())
-                            ->getSummary<GenericDataArray<uint32_t, (HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1)>>()[cHybridHitsEven][cHybridHitsOdd] += 1;
+                        // the2DSensorHybridCorrelationContainer.getObject(cBoard->getId())
+                        //     ->getObject(cOpticalGroup->getId())
+                        //     ->getObject(cHybrid->getId())
+                        //     ->getSummary<GenericDataArray<uint32_t, (HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1)>>()[cHybridHitsEven][cHybridHitsOdd] += 1;
 
-                        
-                    }
+                    }    
 
-                    auto theModuleContainerValues =
-                        &(theModuleHitContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, 3 * (TOTAL_CHANNELS_OT + 1)>>());
+                auto theStripModuleContainerValues =
+                        &(theStripModuleHitContainer.getObject(theBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, NSSACHANNELS * NCHIPS_OT * 2 + 1>>());
 
 
-                    (*theModuleContainerValues)[2 * (TOTAL_CHANNELS_OT + 1) + cModuleHits]++;
+                (*theStripModuleContainerValues)[cStripModuleHits]++;
 
-                    the2DSensorModuleCorrelationContainer.getObject(cBoard->getId())
-                        ->getObject(cOpticalGroup->getId())
-                        ->getSummary<GenericDataArray<uint32_t, (TOTAL_CHANNELS_OT / 2 + 1), (TOTAL_CHANNELS_OT / 2 + 1)>>()[cModuleHitsEven][cModuleHitsOdd] += 1;
+                auto thePixelModuleContainerValues =
+                        &(thePixelModuleHitContainer.getObject(theBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, NSSACHANNELS * NCHIPS_OT * NMPAROWS * 2 + 1>>());
 
-                    the2DHybridCorrelationContainer.getObject(cBoard->getId())
-                        ->getObject(cOpticalGroup->getId())
-                        ->getSummary<GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1, HYBRID_CHANNELS_OT + 1>>()[cHybridCorrelationMap.begin()->second][cHybridCorrelationMap.rbegin()->second] += 1;
 
-                    if(f2DHistograms)
-                    {
-                        // per module correlation also tells us per hybrid correlation
-                        for(size_t iCh1 = 0; iCh1 < hit_channels.size(); iCh1++)
-                        {
-                            for(size_t iCh2 = 0; iCh2 < hit_channels.size(); iCh2++)
-                            {
-                                the2DHitContainer.getObject(cBoard->getId())
-                                    ->getObject(cOpticalGroup->getId())
-                                    ->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[hit_channels[iCh1]][hit_channels[iCh2]] += 1;
-                            }
-                        }
-                    }
+                (*thePixelModuleContainerValues)[cPixelModuleHits]++;
+
+
+                    // the2DSensorModuleCorrelationContainer.getObject(cBoard->getId())
+                    //     ->getObject(cOpticalGroup->getId())
+                    //     ->getSummary<GenericDataArray<uint32_t, (TOTAL_CHANNELS_OT / 2 + 1), (TOTAL_CHANNELS_OT / 2 + 1)>>()[cModuleHitsEven][cModuleHitsOdd] += 1;
+
+                    // the2DHybridCorrelationContainer.getObject(cBoard->getId())
+                    //     ->getObject(cOpticalGroup->getId())
+                    //     ->getSummary<GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1, HYBRID_CHANNELS_OT + 1>>()[cHybridCorrelationMap.begin()->second][cHybridCorrelationMap.rbegin()->second] += 1;
+
+                    // if(f2DHistograms)
+                    // {
+                    //     // per module correlation also tells us per hybrid correlation
+                    //     for(size_t iCh1 = 0; iCh1 < hit_channels.size(); iCh1++)
+                    //     {
+                    //         for(size_t iCh2 = 0; iCh2 < hit_channels.size(); iCh2++)
+                    //         {
+                    //             the2DHitContainer.getObject(cBoard->getId())
+                    //                 ->getObject(cOpticalGroup->getId())
+                    //                 ->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[hit_channels[iCh1]][hit_channels[iCh2]] += 1;
+                    //         }
+                    //     }
+                    // }
 
                 } // end events loop
 
             } // end module loop
         }     // end acquisition loop
     }
-*/
+
 #ifdef __USE_ROOT__
     bool doFit = false;
     fDQMHistogramOTPScommonNoise.fillChipHitPlots(theStripHitContainer, doFit);
     fDQMHistogramOTPScommonNoise.fillChipHitPlots(thePixelHitContainer, doFit);
-    // fDQMHistogramOTPScommonNoise.fillHybridHitPlots(theStripHybridHitContainer, NSSACHANNELS * NCHIPS_OT);
-    // fDQMHistogramOTPScommonNoise.fillHybridHitPlots(thePixelHybridHitContainer, NSSACHANNELS * NMPAROWS * NCHIPS_OT);
-    // fDQMHistogramOTCMNoise.fillModuleHitPlots(theModuleHitContainer);
-
+    fDQMHistogramOTPScommonNoise.fillHybridHitPlots(theStripHybridHitContainer, true);
+    fDQMHistogramOTPScommonNoise.fillHybridHitPlots(thePixelHybridHitContainer, false);
+    fDQMHistogramOTPScommonNoise.fillModuleHitPlots(theStripModuleHitContainer, true);
+    fDQMHistogramOTPScommonNoise.fillModuleHitPlots(thePixelModuleHitContainer, false);
     // fDQMHistogramOTCMNoise.fillHybridCorrelationPlots(the2DHybridCorrelationContainer);
     // fDQMHistogramOTCMNoise.fillSensorChipCorrelationPlots(the2DSensorChipCorrelationContainer);
     // fDQMHistogramOTCMNoise.fillSensorHybridCorrelationPlots(the2DSensorHybridCorrelationContainer);

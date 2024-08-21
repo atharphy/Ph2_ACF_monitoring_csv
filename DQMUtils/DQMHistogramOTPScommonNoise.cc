@@ -44,8 +44,13 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
     HistContainer<TH1F> hStripHybridHits("StripHybridHits", "StripHybridHits", NSSACHANNELS * NCHIPS_OT + 2, -0.5, NSSACHANNELS * NCHIPS_OT + 1 + 0.5);
     hStripHybridHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits ");
     hStripHybridHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHybridHitHistograms, hStripHybridHits);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStripHybridHitHistograms, hStripHybridHits);
     
+    HistContainer<TH1F> hStripModuleHits("StripModuleHits", "StripModuleHits", NSSACHANNELS * NCHIPS_OT * 2 + 2, -0.5, NSSACHANNELS * NCHIPS_OT * 2 + 1 + 0.5);
+    hStripModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits ");
+    hStripModuleHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fStripModuleHitHistograms, hStripModuleHits);
+
     fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
@@ -58,7 +63,13 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
     HistContainer<TH1F> hPixelHybridHits("PixelHybridHits", "PixelHybridHits", NSSACHANNELS * NMPAROWS * NCHIPS_OT + 2, -0.5, NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1 + 0.5);
     hPixelHybridHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits ");
     hPixelHybridHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");    
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHybridHitHistograms, hPixelHybridHits);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPixelHybridHitHistograms, hPixelHybridHits);
+
+    HistContainer<TH1F> hPixelModuleHits("PixelModuleHits", "PixelModuleHits", NSSACHANNELS * NCHIPS_OT * NMPAROWS * 2 + 2, -0.5, NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1 + 0.5);
+    hPixelModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits ");
+    hPixelModuleHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fPixelModuleHitHistograms, hPixelModuleHits);
+
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
     // SoC utilities only - END
     
@@ -163,30 +174,47 @@ void DQMHistogramOTPScommonNoise::fillChipHitPlots(DetectorDataContainer& theHit
     }
 }
 
-// void DQMHistogramOTPScommonNoise::fillHybridHitPlots(DetectorDataContainer& theHitData, bool isStrip)
-// {
-//     for(auto board: theHitData)
-//     {
-//         for(auto opticalGroup: *board)
-//         {
-//             for(auto hybrid: *opticalGroup)
-//             {
-//                 TH1F* theHistogram = fHybridHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+void DQMHistogramOTPScommonNoise::fillHybridHitPlots(DetectorDataContainer& theHitData, bool isStrip)
+{
+    for(auto board: theHitData)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+               if(isStrip)
+                {
+                    TH1F* theHistogram = fStripHybridHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    fillEventsVsHitsHist<NSSACHANNELS * NCHIPS_OT + 1>(hybrid, *theHistogram);
+                }
+                else
+                {
+                    TH1F* theHistogram = fPixelHybridHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    fillEventsVsHitsHist<NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1>(hybrid, *theHistogram);
+                }
+            }
+        }
+    }
+}
 
+void DQMHistogramOTPScommonNoise::fillModuleHitPlots(DetectorDataContainer& theHitData, bool isStrip)
+{
+    for(auto board: theHitData)
+    {
+        for(auto opticalGroup: *board)
+        {
 
-//                 // fill the histogram from the vector
-//                 fillEventsVsHitsHist<theChannels>(*hybrid, *theHistogram);
-
-//             //     auto cDataSummary = fillEventsVsHitsHist(hybrid, cNChannels);
-//             //     // auto cDataSummary = hybrid->getSummary<GenericDataArray<uint32_t, (cNChannels + 1)>>();
-//             //     for(uint16_t iChan = 0; iChan < cNChannels + 1; iChan++)
-//             //     {
-
-//             //         theHistogramSum->SetBinContent(iChan + 1, cDataSummary[iChan]);
-//             //     }
-
-//             //     theHistogramSum->Sumw2();
-//             }
-//         }
-//     }
-// }
+            if(isStrip)
+            {
+                TH1F* theHistogram = fStripModuleHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                fillEventsVsHitsHist<NSSACHANNELS * NCHIPS_OT * 2 + 1>(opticalGroup, *theHistogram);
+            }
+            else
+            {
+                TH1F* theHistogram = fPixelModuleHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                fillEventsVsHitsHist<NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1>(opticalGroup, *theHistogram);
+            }
+            
+        }
+    }
+}
