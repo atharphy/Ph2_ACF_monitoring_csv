@@ -116,45 +116,28 @@ void DQMHistogramOTPScommonNoise::fillChipHitPlots(DetectorDataContainer& theHit
             {
                 for(auto chip: *hybrid)
                 {
-
-                    TH1F* theHistogram = nullptr; 
-
-                    // fill the histogram from the vector
                     ReadoutChip* theReadoutChip = fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
-
                     if(theReadoutChip->getFrontEndType() == FrontEndType::SSA2)
                     {
-                        theHistogram = fStripHitHistograms.getObject(board->getId())
+                        TH1F*  theHistogram = fStripHitHistograms.getObject(board->getId())
                                                 ->getObject(opticalGroup->getId())
                                                 ->getObject(hybrid->getId())
                                                 ->getObject(chip->getId())
                                                 ->getSummary<HistContainer<TH1F>>()
                                                 .fTheHistogram;
 
-                        // auto cDataSummary = chip->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS + 1)>>();
-                        GenericDataArray<uint32_t, (NSSACHANNELS + 1)> cDataSummary = fillEventsVsHitsChipHist<NSSACHANNELS + 1>(*chip);
-                        for(uint16_t iChan = 0; iChan < NSSACHANNELS + 1; iChan++)
-                        {
-                            theHistogram->SetBinContent(iChan + 1, cDataSummary[iChan]);
-                        }
-                        theHistogram->Sumw2();
+                        fillEventsVsHitsHist<NSSACHANNELS + 1>(chip, *theHistogram);
                     }
                     else if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
                     {
-                        theHistogram = fPixelHitHistograms.getObject(board->getId())
+                        TH1F* theHistogram = fPixelHitHistograms.getObject(board->getId())
                                             ->getObject(opticalGroup->getId())
                                             ->getObject(hybrid->getId())
                                             ->getObject(chip->getId())
                                             ->getSummary<HistContainer<TH1F>>()
                                             .fTheHistogram;
 
-                        // auto cDataSummary = chip->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS + 1)>>();
-                        GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS + 1)> cDataSummary = fillEventsVsHitsChipHist<NSSACHANNELS * NMPAROWS + 1 >(*chip);
-                        for(uint16_t iChan = 0; iChan < NSSACHANNELS * NMPAROWS + 1; iChan++)
-                        {
-                            theHistogram->SetBinContent(iChan + 1, cDataSummary[iChan]);
-                        }
-                        theHistogram->Sumw2();
+                        fillEventsVsHitsHist<NSSACHANNELS * NMPAROWS + 1 >(chip, *theHistogram);
                     }
                     
                     
@@ -180,7 +163,7 @@ void DQMHistogramOTPScommonNoise::fillChipHitPlots(DetectorDataContainer& theHit
     }
 }
 
-// void DQMHistogramOTPScommonNoise::fillHybridHitPlots(DetectorDataContainer& theHitData, const int theChannels)
+// void DQMHistogramOTPScommonNoise::fillHybridHitPlots(DetectorDataContainer& theHitData, bool isStrip)
 // {
 //     for(auto board: theHitData)
 //     {
@@ -188,19 +171,21 @@ void DQMHistogramOTPScommonNoise::fillChipHitPlots(DetectorDataContainer& theHit
 //         {
 //             for(auto hybrid: *opticalGroup)
 //             {
-//                 TH1F* theHistogramSum = fHybridHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+//                 TH1F* theHistogram = fHybridHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
 
 //                 // fill the histogram from the vector
-//                 auto cDataSummary = fillEventsVsHitsHist(hybrid, cNChannels);
-//                 // auto cDataSummary = hybrid->getSummary<GenericDataArray<uint32_t, (cNChannels + 1)>>();
-//                 for(uint16_t iChan = 0; iChan < cNChannels + 1; iChan++)
-//                 {
+//                 fillEventsVsHitsHist<theChannels>(*hybrid, *theHistogram);
 
-//                     theHistogramSum->SetBinContent(iChan + 1, cDataSummary[iChan]);
-//                 }
+//             //     auto cDataSummary = fillEventsVsHitsHist(hybrid, cNChannels);
+//             //     // auto cDataSummary = hybrid->getSummary<GenericDataArray<uint32_t, (cNChannels + 1)>>();
+//             //     for(uint16_t iChan = 0; iChan < cNChannels + 1; iChan++)
+//             //     {
 
-//                 theHistogramSum->Sumw2();
+//             //         theHistogramSum->SetBinContent(iChan + 1, cDataSummary[iChan]);
+//             //     }
+
+//             //     theHistogramSum->Sumw2();
 //             }
 //         }
 //     }

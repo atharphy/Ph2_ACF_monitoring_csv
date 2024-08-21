@@ -11,6 +11,7 @@
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
 #include "Utils/GenericDataArray.h"
+#include "TH1F.h"
 
 class TFile;
 
@@ -60,9 +61,14 @@ class DQMHistogramOTPScommonNoise : public DQMHistogramBase
     void fillHybridHitPlots(DetectorDataContainer& theHitData, const int cNChannels);
 
     template <size_t T2>
-    GenericDataArray<uint32_t, T2> fillEventsVsHitsChipHist(const ChipDataContainer& ChipContainer)
+    void fillEventsVsHitsHist(const BaseDataContainer* ChipContainer, TH1F& theHistogram)
     {
-      return (ChipContainer.getSummary<GenericDataArray<uint32_t, T2>>());
+      GenericDataArray<uint32_t, T2> cDataSummary = ChipContainer->getSummary<GenericDataArray<uint32_t, T2>>();
+      for(uint16_t iChan = 0; iChan < T2; iChan++)
+      {
+        theHistogram.SetBinContent(iChan + 1, cDataSummary[iChan]);
+      }
+      theHistogram.Sumw2();
     }
 
   private:
