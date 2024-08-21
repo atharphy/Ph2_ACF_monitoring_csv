@@ -43,7 +43,7 @@ class VoltageTuning : public CalibBase
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
+    void localConfigure(const std::string& histoFileName, int currentRun) override;
     void run() override;
     void draw(bool saveData = true) override;
 

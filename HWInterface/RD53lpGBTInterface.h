@@ -35,11 +35,6 @@ class RD53lpGBTInterface : public lpGBTInterface
     // ###################################
     void SetDownLinkMapping(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
     void SetUpLinkMapping(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
-    bool ExternalPhaseAlignRx(Ph2_HwDescription::Chip*               pChip,
-                              const Ph2_HwDescription::BeBoard*      pBoard,
-                              const Ph2_HwDescription::OpticalGroup* pOpticalGroup,
-                              Ph2_HwInterface::BeBoardFWInterface*   pBeBoardFWInterface,
-                              ReadoutChipInterface*                  pReadoutChipInterface);
 
   private:
     bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify = true);

@@ -107,8 +107,8 @@ void GainOptimization::localConfigure(const std::string& histoFileName, int curr
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<GainOptimizationHistograms>(histoFileName, "GainOptimization", histos, currentRun, Gain::saveBinaryData);
-    CalibBase::initializeFiles<GainHistograms>(histoFileName, "Gain", Gain::histos);
+    CalibBase::initializeFiles(histoFileName, "GainOptimization", histos, currentRun, Gain::saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "Gain", Gain::histos);
 }
 
 void GainOptimization::run()
@@ -275,6 +275,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, float targe
     // ###########################
     // # Download new DAC values #
     // ###########################
+    LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
     CalibBase::downloadNewDACvalues(bestDACcontainer, {regName.c_str()}, true, 0);
 
     // ################

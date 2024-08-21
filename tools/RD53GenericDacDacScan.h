@@ -38,7 +38,12 @@ class GenericDacDacScan : public PixelAlive
     void   localConfigure(const std::string& histoFileName, int currentRun) override;
     void   run() override;
     void   draw(bool saveData = true) override;
-    size_t getNumberIterations() override { return PixelAlive::getNumberIterations() * ((stopValueDAC1 - startValueDAC1) / stepDAC1 + 1) * ((stopValueDAC2 - startValueDAC2) / stepDAC2 + 1); }
+    size_t getNumberIterations() override
+    {
+        const uint16_t nIterationsDAC1 = (stopValueDAC1 - startValueDAC1) / stepDAC1 + 1;
+        const uint16_t nIterationsDAC2 = (stopValueDAC2 - startValueDAC2) / stepDAC2 + 1;
+        return PixelAlive::getNumberIterations() * nIterationsDAC1 * nIterationsDAC2;
+    }
 
     void analyze();
 

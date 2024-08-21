@@ -13,7 +13,6 @@ In default settings scans:
 * `VCAL_HIGH` from 250 to 500 with step 50
 * `user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse` from 25 to 50 with step 1
 
-
 ## Configuration parameters
 
 | Name             | Typical value | Description |

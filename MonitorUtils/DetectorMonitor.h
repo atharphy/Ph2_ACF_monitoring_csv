@@ -15,13 +15,16 @@ class TFile;
 class DetectorMonitor
 {
   public:
-    DetectorMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig);
+    DetectorMonitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig);
     virtual ~DetectorMonitor();
     void        forkMonitor();
     void        operator()();
-    void        startMonitoring() { startMonitor = true; }
-    void        stopMonitoring() { startMonitor = false; }
+    void        startMonitoring() { fEnableMonitor = true; }
+    void        stopMonitoring() { fEnableMonitor = false; }
+    void        resumeMonitoring() { startMonitoring(); }
+    void        pauseMonitoring();
     void        stopRunning() { fKeepRunning = false; }
+    void        waitForMonitorToStop();
     std::string getMonitorFileName();
 #if defined(__TCUSB__)
     void setTestCardPointer(TC_2SSEH* cTC_2SSEH) { pTC_2SSEH = cTC_2SSEH; };
@@ -43,10 +46,11 @@ class DetectorMonitor
 
   private:
     std::atomic<bool> fKeepRunning;
-    std::atomic<bool> startMonitor;
+    std::atomic<bool> fEnableMonitor;
+    std::atomic<bool> fIsMonitorRunning;
     std::future<void> fMonitorFuture;
 
-    u_int8_t fClose = 20;
+    int fMaximumStopTentatives = 20;
 };
 
 #endif

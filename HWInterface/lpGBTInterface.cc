@@ -41,30 +41,8 @@ void lpGBTInterface::StopPRBSpattern(Chip* pChip)
 bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint16_t pDacValue, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
-    auto           cBoardType       = fBoardFW->getBoardType();
-    auto           cAddress         = pChip->getRegItem(pDacName).fAddress;
-    const uint16_t maxRegValue      = 0xFF;                                                            // @CONST@
-    const uint16_t cMaxWriteAddress = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F; // Setting highest write address possible (lpGBT version dependent)
-
-    // ######################################################
-    // # Checking that written value isn't more than 8 bits #
-    // ######################################################
-    if(pDacValue > maxRegValue)
-    {
-        LOG(ERROR) << BOLDRED << "LpGBT registers are 8 bits, impossible to write " << BOLDYELLOW << pDacValue << BOLDRED << " to address 0x" << BOLDYELLOW << std::hex << cAddress << std::dec
-                   << RESET;
-        return false;
-    }
-
-    // ##########################################################################
-    // # Checking that register address isn't higher than highest write address #
-    // ##########################################################################
-    if(cAddress > cMaxWriteAddress)
-    {
-        LOG(WARNING) << GREEN << "LpGBT read-write registers end at " << BOLDYELLOW << cMaxWriteAddress << RESET << GREEN << " ... impossible to write to address 0x" << BOLDYELLOW << std::hex
-                     << cAddress << std::dec << RESET;
-        return false;
-    }
+    auto cBoardType = fBoardFW->getBoardType();
+    auto cAddress   = pChip->getRegItem(pDacName).fAddress;
 
     bool cSuccess = false;
     if((cBoardType != BoardType::RD53) && (pChip->isOptical() == true))
@@ -430,7 +408,6 @@ void lpGBTInterface::ConfigureRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pChan
     uint8_t     cValueChnCntr = ReadChipReg(pChip, cRegName);
     cValueChnCntr             = (cValueChnCntr & ~(0xF << 4)) | (pPhase << 4);
     WriteChipReg(pChip, cRegName, cValueChnCntr);
-    // LOG(DEBUG) << BOLDMAGENTA << "lpGBT#" << +pChip->getId() << "Grp#" << +pGroup << " Chnl#" << +pChannel << " - phase " << +pPhase << RESET;
 }
 
 void lpGBTInterface::ConfigureAllRxPhase(Chip* pChip, uint8_t pPhase, std::map<uint8_t, std::vector<uint8_t>> theGroupsAndChannels)
@@ -499,7 +476,6 @@ bool lpGBTInterface::SetVrefTune(Ph2_HwDescription::Chip* pChip, uint8_t pVrefTu
     cMask.fNbits    = cNbits;
     pChip->setRegBits(cRegName, cMask, pVrefTune);
     WriteChipReg(pChip, cRegName, pVrefTune);
-    // std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
     auto cVrefTune = pChip->getRegItem(cRegName).fValue;
 
     return cVrefTune == pVrefTune;
@@ -963,7 +939,6 @@ float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
 
 uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     // ########################################################
     // # Read differential (converted) data on two ADC inputs #
     // ########################################################
@@ -1005,6 +980,11 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
         cIter++;
     } while((cIter < lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
+    if(!cSuccess)
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::ReadADC timed out" << RESET;
+        return 65535;
+    }
 
     if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
@@ -1012,7 +992,7 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
                      << RESET;
         // LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         // ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
-        return 0;
+        throw std::runtime_error("LpGBT ADC conversion timed out");
     }
 
     // ##################
@@ -1126,7 +1106,7 @@ double lpGBTInterface::GetBERTResult(Chip* pChip)
     return cErrors / cBitsChecked;
 }
 
-double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
+double lpGBTInterface::RunBERtest(Chip* pChip, const std::vector<uint8_t>& pGroups, uint8_t pChannel, bool given_time, double frames_or_time, uint8_t frontendSpeed)
 // ####################
 // # frontendSpeed    #
 // # 1.28 Gbit/s  = 0 #
@@ -1155,8 +1135,11 @@ double lpGBTInterface::RunBERtest(Chip* pChip, uint8_t pGroup, uint8_t pChannel,
     // ###############
     // # Configuring #
     // ###############
-    lpGBTInterface::ConfigureRxSource(pChip, pGroup, lpGBTconstants::PATTERN_NORMAL);
-    lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)], BERTMeasTime);
+    for(auto pGroup: pGroups)
+    {
+        lpGBTInterface::ConfigureRxSource(pChip, pGroup, lpGBTconstants::PATTERN_NORMAL);
+        lpGBTInterface::ConfigureBERT(pChip, fGroup2BERTsourceCourse[pGroup], fChannelSpeed2BERTsourceFine[pChannel + 4 * (2 - frontendSpeed)], BERTMeasTime);
+    }
 
     // #########
     // # Start #
@@ -1309,13 +1292,11 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
 
     if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
-        LOG(INFO) << BOLDRED << "I2C Write transaction FAILED" << RESET;
+        LOG(INFO) << BOLDRED << "I2C Write transaction failed" << RESET;
 #if defined(__TCUSB__)
         // In the test system a run time error is undesired
         return false;
 #else
-        LOG(WARNING) << BOLDRED << "LpGBT BERT: All zeros at input on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
-                     << RESET;
         LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return false;
@@ -1349,15 +1330,14 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
         // LOG(DEBUG) << GREEN << "Waiting for I2C Read transaction to finisih" << RESET;
         cIter++;
     } while(cIter < lpGBTconstants::MAXATTEMPTS && !lpGBTInterface::IsI2CSuccess(pChip, pMaster));
+
     if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
-        LOG(INFO) << BOLDRED << "I2C Read Transaction FAILED" << RESET;
+        LOG(INFO) << BOLDRED << "I2C Read Transaction failed" << RESET;
 #if defined(__TCUSB__)
         // In the test system a run time error is undesired
         return false;
 #else
-        LOG(WARNING) << BOLDRED << "LpGBT BERT: All zeros at input on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
-                     << RESET;
         LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
         ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         return false;
@@ -1656,6 +1636,7 @@ float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::lpGBT* pChip, const std
         Returns:
             Estimate of the output resistance in Ohms
     """ */
+
     uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
     {
@@ -1684,6 +1665,7 @@ uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::lpGBT* 
         Raises:
             LpGBTOutOfRangeError: If the requested current cannot be achieved
     """ */
+
     uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
     {
@@ -1731,6 +1713,7 @@ void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::lpGBT* pChip, const std::
             pChannel: ADC channel to connect to current DAC to
             pCurrentA: Output current in Amps
     """ */
+
     uint8_t cChannel = fADCInputMap[pChannel];
     if(cChannel > 8)
     {
@@ -1819,7 +1802,7 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const s
         float iout = _CdacCodeToCurrent(pChip, pChannel, cdac_code);
         float rout = _CdacCodeToRout(pChip, pChannel, cdac_code);
 
-        float vadc = AdcGetVin(pChip, pChannel, "VREF/2", 0, 10);
+        float vadc = AdcGetVin(pChip, pChannel, "VREF/2", 0, 1);
 
         float rmeas = vadc / iout;
         LOG(DEBUG) << BOLDBLUE << "VADC: " << vadc << " V" << RESET;
@@ -1854,6 +1837,7 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
         Raises:
             LpGBTException: in case the conversion timeout is exceeded
     """ */
+
     if(pResetTempSensor)
     {
         auto cVal = ReadChipReg(pChip, "ADCMon");
@@ -1897,6 +1881,7 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip,
         Raises:
             LpGBTException: in case the conversion timeout is exceeded
     """ */
+
     if(!(pPowerSupply != "VDDTX" or pPowerSupply != "VDDRX" or pPowerSupply != "VDD" or pPowerSupply != "VDDA"))
     {
         LOG(ERROR) << BOLDRED << "[lpGBTInterface::MeasurePowerSupplyVoltage] Invalid pPowerSupply" << RESET;

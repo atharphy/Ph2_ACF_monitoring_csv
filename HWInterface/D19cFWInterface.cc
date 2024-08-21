@@ -14,6 +14,7 @@
 #include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Hybrid.h"
 #include "HWDescription/OuterTrackerHybrid.h"
+#include "HWDescription/lpGBT.h"
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
 #include "HWInterface/D19cDebugFWInterface.h"
 #include "HWInterface/D19cFastCommandInterface.h"
@@ -508,7 +509,7 @@ void D19cFWInterface::InitializePSCounterFWInterface(const BeBoard* pBoard)
     fL1ReadoutInterface->LinkTriggerInterface(fTriggerInterface);
     fL1ReadoutInterface->LinkFastCommandInterface(fFastCommandInterface);
 }
-void D19cFWInterface::IniitalizeL1ReadoutInterface(const BeBoard* pBoard)
+void D19cFWInterface::InitalizeL1ReadoutInterface(const BeBoard* pBoard)
 {
     fL1ReadoutInterface = nullptr;
     delete fL1ReadoutInterface;
@@ -557,7 +558,7 @@ void D19cFWInterface::ConfigureInterfaces(const BeBoard* pBoard)
         if(pBoard->getEventType() == EventType::PSAS)
             InitializePSCounterFWInterface(pBoard);
         else
-            IniitalizeL1ReadoutInterface(pBoard);
+            InitalizeL1ReadoutInterface(pBoard);
     }
 }
 void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
@@ -640,9 +641,21 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // power on FMCs
     this->InitFMCPower();
 
+    // make effective the bitslip registers
+    for(uint32_t hybridId = 0; hybridId < 16; hybridId++)
+    {
+        for(uint32_t lineId = 0; lineId < 7; lineId++)
+        {
+            uint32_t command = 0x20002000 | (hybridId << 16) | (lineId << 20);
+            cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", command});
+        }
+    }
+    cBoardRegs.push_back({"fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl", 0xFFF50002});
+
     // configure FC7 after the fast reset
     LOG(INFO) << BOLDBLUE << "Configuring FC7..." << RESET;
     this->WriteStackReg(cBoardRegs);
+
     cBoardRegs.clear();
     // load dio5 configuration
     if(cEnableDIO5 && cWithDIO5)
@@ -739,13 +752,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         }
     }
     if(cWithlpGBT) LOG(INFO) << BOLDBLUE << "D19cFWInterface::ConfigureBoard with lpGBT" << RESET;
-    if(pBoard->isOptical())
-    {
-        LOG(INFO) << BOLDBLUE << "D19cFWInterface::ConfigureBoard for optical readout" << RESET;
-        LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 3 bits for bitslip " << RESET;
-    }
-    else { LOG(INFO) << BOLDYELLOW << "Configuring BackEndAligner assuming maximum 4 bits for bitslip " << RESET; }
-    fOptical = pBoard->isOptical() && !cWithlpGBT;
+    fOptical = pBoard->isOptical() && cWithlpGBT;
+
     // if optical readout .. then configure links
     if(pBoard->isOptical() && cWithlpGBT)
     {
@@ -838,6 +846,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     // reset trigger
     this->WriteReg("fc7_daq_ctrl.fast_command_block.control.reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
+    fBackendAlignmentInterface->setIsOptical(fOptical);
 }
 
 void D19cFWInterface::EnableFrontEnds(const Ph2_HwDescription::BeBoard* pBoard)
@@ -1129,7 +1138,6 @@ bool D19cFWInterface::WriteBlockReg(const std::string& pRegNode, const std::vect
 
 void D19cFWInterface::ReadoutChipReset()
 {
-    // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     LOG(INFO) << BOLDRED << "Sending HARD RESET to ReadoutChips" << RESET;
     WriteReg("fc7_daq_ctrl.physical_interface_block.control.chip_hard_reset", 0x1);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));

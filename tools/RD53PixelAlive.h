@@ -40,7 +40,7 @@ class PixelAlive : public CalibBase
     void ConfigureCalibration() override;
     void sendData() override;
 
-    void   localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
+    void   localConfigure(const std::string& histoFileName, int currentRun) override;
     void   run() override;
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override { return theChnGroupHandler->getNumberOfGroups() * nEvents / nEvtsBurst; }
@@ -72,6 +72,7 @@ class PixelAlive : public CalibBase
     bool                saveBinaryData;
 
     bool                                     doSaveData;
+    bool                                     doSilentRunning{false};
     const Ph2_HwDescription::RD53::FrontEnd* frontEnd;
     std::shared_ptr<RD53ChannelGroupHandler> theChnGroupHandler;
 };

@@ -6,6 +6,7 @@ using namespace Ph2_HwDescription;
 #include "HWDescription/OpticalGroup.h"
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWInterface/RegManager.h"
+#include "Utils/Utilities.h"
 #include <thread>
 namespace Ph2_HwInterface
 {
@@ -298,7 +299,6 @@ bool D19cI2CInterface::SingleRead(Chip* pChip, ChipRegItem& pRegisterItem)
 // D19c I2C write and read
 bool D19cI2CInterface::WriteI2C(std::vector<uint32_t>& pVecSend, std::vector<uint32_t>& pReplies, bool pReadback, bool pBroadcast)
 {
-    // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     bool cFailed(false);
     // reset the I2C controller
     fTheRegManager->WriteReg("fc7_daq_ctrl.command_processor_block.i2c.control.reset_fifos", 0x1);
@@ -472,11 +472,7 @@ void D19cI2CInterface::ReadChipBlockReg(std::vector<uint32_t>& pVecReg)
     pVecReg = cReplies;
 }
 
-void D19cI2CInterface::ChipI2CRefresh()
-{
-    // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-    fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1);
-}
+void D19cI2CInterface::ChipI2CRefresh() { fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_i2c_refresh", 0x1); }
 
 void D19cI2CInterface::BCEncodeReg(const ChipRegItem& pRegItem, uint8_t pNCbc, std::vector<uint32_t>& pVecReq, bool pReadBack, bool pWrite)
 {
@@ -487,8 +483,6 @@ void D19cI2CInterface::BCEncodeReg(const ChipRegItem& pRegItem, uint8_t pNCbc, s
 
 bool D19cI2CInterface::BCWriteChipBlockReg(std::vector<uint32_t>& pVecReg, bool pReadback)
 {
-    // std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-
     std::vector<uint32_t> cReplies;
     bool                  cSuccess = !WriteI2C(pVecReg, cReplies, false, true);
 

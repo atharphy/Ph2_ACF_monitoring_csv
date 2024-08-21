@@ -3,13 +3,13 @@
 #include "MonitorUtils/DetectorMonitor.h"
 #include "NetworkUtils/TCPClient.h"
 #ifdef __USE_ROOT__
-#include "MonitorDQM/MonitorDQMPlotCBC.h"
+#include "MonitorDQM/MonitorDQMPlot2S.h"
 #include "MonitorDQM/MonitorDQMPlotSEH.h"
 #endif
 class SEHMonitor : public DetectorMonitor
 {
   public:
-    SEHMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig);
+    SEHMonitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig);
     virtual ~SEHMonitor();
     TCPClient* fPowerSupplyClient{nullptr};
 
@@ -17,17 +17,17 @@ class SEHMonitor : public DetectorMonitor
     void runMonitor() override;
 
   private:
-    void runInputCurrentMonitor(std::string registerName);
-    void runLpGBTRegisterMonitor(std::string registerName);
-    void runPowerSupplyMonitor(std::string registerName);
-    void runTestCardMonitor(std::string registerName);
+    void runInputCurrentMonitor(const std::string& registerName);
+    void runLpGBTRegisterMonitor(const std::string& registerName);
+    void runPowerSupplyMonitor(const std::string& registerName);
+    void runTestCardMonitor(const std::string& registerName);
 // bool doMonitorInputCurrent{false};
 #ifdef __USE_ROOT__
     MonitorDQMPlotSEH* fMonitorPlotDQMSEH;
-    MonitorDQMPlotCBC* fMonitorDQMPlotCBC;
+    MonitorDQMPlot2S*  fMonitorDQMPlot2S;
 #endif
 
-    std::string getVariableValue(std::string variable, std::string buffer);
+    std::string getVariableValue(const std::string& variable, const std::string& buffer);
 };
 
 #endif

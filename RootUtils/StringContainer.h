@@ -61,6 +61,14 @@ class StringContainer : public PlotContainer
         write();
     }
 
+    void appendString(std::string theString)
+    {
+        std::string currentString = fTObjString->GetString().Data();
+        currentString += "\n";
+        setString(currentString + theString);
+        write();
+    }
+
     TObjString* fTObjString;
 
     std::string fDirectoryPath{""};

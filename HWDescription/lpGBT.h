@@ -22,14 +22,15 @@ namespace Ph2_HwDescription
 class lpGBT : public Chip
 {
   public:
-    struct eportProperties
+    struct eportProperty
     {
         uint8_t Group;
         uint8_t Channel;
         uint8_t Polarity;
+        bool    isPhaseAligned;
     };
 
-    lpGBT(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName, const std::string& fConfigFilePath);
+    lpGBT(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName, const std::string& configFilePath);
 
     lpGBT(const lpGBT&) = delete;
 
@@ -44,25 +45,38 @@ class lpGBT : public Chip
     uint8_t getVersion() const { return fVersion; }
     void    setInvertClock(uint8_t hybridId, bool pInvertClock);
 
-    void setPhaseRxAligned(const bool done) { phaseRxAligned = done; };
-    bool getPhaseRxAligned() { return phaseRxAligned; };
+    void setPhaseRxAligned(uint8_t RxGroup, bool value)
+    {
+        for(auto& RxProperty: fRxProperties)
+            if(RxProperty.Group == RxGroup) RxProperty.isPhaseAligned = value;
+    }
+    bool getPhaseRxAligned(uint8_t RxGroup)
+    {
+        for(const auto& RxProperty: fRxProperties)
+            if(RxProperty.Group == RxGroup) return RxProperty.isPhaseAligned;
+        return false;
+    };
 
     void setRxHSLPolarity(uint8_t pRxHSLPolarity) { fRxHSLPolarity = pRxHSLPolarity; }
     void setTxHSLPolarity(uint8_t pTxHSLPolarity) { fTxHSLPolarity = pTxHSLPolarity; }
 
-    void addRxGroups(const std::vector<uint8_t>& pRxGroups) { addNoDuplicate<uint8_t>(fRxGroups, pRxGroups); }
-    void addRxProperty(uint8_t pRxGroup, uint8_t pRxChannel, uint8_t pRxPolarity) { fRxProperties.push_back({pRxGroup, pRxChannel, pRxPolarity}); };
+    void addRxProperty(uint8_t pRxGroup, uint8_t pRxChannel, uint8_t pRxPolarity) { fRxProperties.push_back({pRxGroup, pRxChannel, pRxPolarity, false}); };
     void setRxDataRate(uint16_t pRxDataRate) { fRxDataRate = pRxDataRate; }
 
-    void addTxProperty(uint8_t pTxGroup, uint8_t pTxChannel, uint8_t pTxPolarity) { fTxProperties.push_back({pTxGroup, pTxChannel, pTxPolarity}); };
+    void addTxProperty(uint8_t pTxGroup, uint8_t pTxChannel, uint8_t pTxPolarity) { fTxProperties.push_back({pTxGroup, pTxChannel, pTxPolarity, true}); };
     void setTxDataRate(uint16_t pTxDataRate) { fTxDataRate = pTxDataRate; }
 
-    std::vector<uint8_t>         getRxGroups() { return fRxGroups; }
-    std::vector<eportProperties> getRxProperties() { return fRxProperties; }
-    uint16_t                     getRxDataRate() { return fRxDataRate; }
+    std::vector<uint8_t> getRxGroups()
+    {
+        std::vector<uint8_t> RxGroups;
+        for(auto RxProperty: fRxProperties) RxGroups.push_back(RxProperty.Group);
+        return RxGroups;
+    }
+    std::vector<eportProperty> getRxProperties() { return fRxProperties; }
+    uint16_t                   getRxDataRate() { return fRxDataRate; }
 
-    std::vector<eportProperties> getTxProperties() { return fTxProperties; }
-    uint16_t                     getTxDataRate() { return fTxDataRate; }
+    std::vector<eportProperty> getTxProperties() { return fTxProperties; }
+    uint16_t                   getTxDataRate() { return fTxDataRate; }
 
     uint8_t getRxHSLPolarity() { return fRxHSLPolarity; }
     uint8_t getTxHSLPolarity() { return fTxHSLPolarity; }
@@ -94,12 +108,11 @@ class lpGBT : public Chip
     std::string getConfigFilePath() const { return fConfigFilePath; }
 
   private:
-    bool                         phaseRxAligned; // @TMP@
-    uint16_t                     fRxDataRate, fTxDataRate;
-    uint8_t                      fVersion, fRxHSLPolarity, fTxHSLPolarity;
-    std::vector<uint8_t>         fRxGroups;
-    std::vector<eportProperties> fRxProperties, fTxProperties;
-    std::string                  fConfigFilePath;
+    uint16_t                   fRxDataRate, fTxDataRate;
+    uint8_t                    fVersion, fRxHSLPolarity, fTxHSLPolarity;
+    std::vector<uint8_t>       fRxGroups;
+    std::vector<eportProperty> fRxProperties, fTxProperties;
+    std::string                fConfigFilePath;
 
     // #########################################################
     // # Number of write transactions - one element per master #

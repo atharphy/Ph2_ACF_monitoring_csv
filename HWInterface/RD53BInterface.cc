@@ -77,8 +77,8 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
-    static const std::set<std::string> registerClkDataDelayList = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
-    bool                               doWriteClkDataDelay      = false;
+    const std::set<std::string> registerClkDataDelayList = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"}; // @CONST@
+    bool                        doWriteClkDataDelay      = false;
 
     for(auto i = 0u; i < registerClkDataDelayList.size(); i++)
     {
@@ -97,7 +97,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // #############################################
     // # Programmig global registers: pre-emphasis #
     // #############################################
-    static const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
+    const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
         if((cRegItem.second.fPrmptCfg == true) && (registerPreEmphasisWhiteList.find(cRegItem.first) != registerPreEmphasisWhiteList.end()))
@@ -106,35 +106,35 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const std::set<std::string> registerBlackList = {"RESISTORI2V",
-                                                            "ADC_OFFSET_VOLT",
-                                                            "ADC_MAXIMUM_VOLT",
-                                                            "TEMPSENS_IDEAL_FACTOR",
-                                                            "TEMPSENS_IDEAL_FACTOR_ANA",
-                                                            "TEMPSENS_IDEAL_FACTOR_DIG",
-                                                            "RADSENS_IDEAL_FACTOR",
-                                                            "RADSENS_IDEAL_FACTOR_ANA",
-                                                            "RADSENS_IDEAL_FACTOR_DIG",
-                                                            "TEMPSENS_OFFSET_TOP",
-                                                            "TEMPSENS_OFFSET_BOTTOM",
-                                                            "SAMPLE_N_TIMES",
-                                                            "WAIT_MUX_CONFIG",
-                                                            "VREF_ADC"}; // @CONST@
-    static const std::set<std::string> registerWhiteList = {"DAC_PREAMP_L_LIN",
-                                                            "DAC_PREAMP_R_LIN",
-                                                            "DAC_PREAMP_TL_LIN",
-                                                            "DAC_PREAMP_TR_LIN",
-                                                            "DAC_PREAMP_T_LIN",
-                                                            "DAC_PREAMP_M_LIN",
-                                                            "DAC_FC_LIN",
-                                                            "DAC_KRUM_CURR_LIN",
-                                                            "DAC_REF_KRUM_LIN",
-                                                            "DAC_COMP_LIN",
-                                                            "DAC_COMP_TA_LIN",
-                                                            "DAC_GDAC_L_LIN",
-                                                            "DAC_GDAC_R_LIN",
-                                                            "DAC_GDAC_M_LIN",
-                                                            "DAC_LDAC_LIN"}; // @CONST@
+    const std::set<std::string> registerBlackList = {"RESISTORI2V",
+                                                     "ADC_OFFSET_VOLT",
+                                                     "ADC_MAXIMUM_VOLT",
+                                                     "TEMPSENS_IDEAL_FACTOR",
+                                                     "TEMPSENS_IDEAL_FACTOR_ANA",
+                                                     "TEMPSENS_IDEAL_FACTOR_DIG",
+                                                     "RADSENS_IDEAL_FACTOR",
+                                                     "RADSENS_IDEAL_FACTOR_ANA",
+                                                     "RADSENS_IDEAL_FACTOR_DIG",
+                                                     "TEMPSENS_OFFSET_TOP",
+                                                     "TEMPSENS_OFFSET_BOTTOM",
+                                                     "SAMPLE_N_TIMES",
+                                                     "WAIT_MUX_CONFIG",
+                                                     "VREF_ADC"}; // @CONST@
+    const std::set<std::string> registerWhiteList = {"DAC_PREAMP_L_LIN",
+                                                     "DAC_PREAMP_R_LIN",
+                                                     "DAC_PREAMP_TL_LIN",
+                                                     "DAC_PREAMP_TR_LIN",
+                                                     "DAC_PREAMP_T_LIN",
+                                                     "DAC_PREAMP_M_LIN",
+                                                     "DAC_FC_LIN",
+                                                     "DAC_KRUM_CURR_LIN",
+                                                     "DAC_REF_KRUM_LIN",
+                                                     "DAC_COMP_LIN",
+                                                     "DAC_COMP_TA_LIN",
+                                                     "DAC_GDAC_L_LIN",
+                                                     "DAC_GDAC_R_LIN",
+                                                     "DAC_GDAC_M_LIN",
+                                                     "DAC_LDAC_LIN"}; // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
         if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&
@@ -163,7 +163,7 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
     RD53Interface::WriteBoardBroadcastChipReg(pBoard, "GCR_DEFAULT_CONFIG_B", 0x538A);
 }
 
-void RD53BInterface::InitRD53Uplinks(ReadoutChip* pChip)
+void RD53BInterface::InitRD53Uplinks(Chip* pChip)
 {
     this->setBoard(pChip->getBeBoardId());
     auto        pRD53  = static_cast<RD53*>(pChip);
@@ -283,8 +283,7 @@ void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* 
             {
                 RD53Interface::WriteChipReg(cChip, "EnServiceData", 1, false);
 
-                LOG(INFO) << GREEN << "Optimizing " << BOLDYELLOW << "TAP0" << RESET << GREEN << " setting for chip ID " << BOLDYELLOW << cChip->getId() << RESET << GREEN << " lane " << BOLDYELLOW
-                          << +static_cast<RD53*>(cChip)->getChipLane() << RESET;
+                LOG(INFO) << GREEN << "Optimizing " << BOLDYELLOW << "TAP0" << RESET << GREEN << " setting for chip ID " << BOLDYELLOW << cChip->getId() << RESET;
 
                 const auto            maxTAP0value = RD53Shared::setBits(cChip->getNumberOfBits("DAC_CML_BIAS_0"));
                 const float           timeLimit    = 1;   // @CONST@
@@ -545,7 +544,7 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
     RD53Interface::WriteChipReg(pRD53, "PIX_MODE", pixMode);
 }
 
-void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>& cmdStream)
+void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, const std::vector<uint16_t>& cmdStream)
 {
     // #################################################################################################################################################################
     // # Compute number of 16-bit words to which we add NSYNC_WORDS sync words every RD53Constants::NWORDS_TO_SYNC:                                                    #
@@ -569,7 +568,7 @@ void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, std::vector<uint16_t>
             for(auto i = 0; i < RD53Constants::NSYNC_WORDS_S; i++) RD53BCmd::serialize(RD53BCmd::Sync{}, cmdPacket);
         }
 
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdPacket, pRD53->getHybridId());
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdPacket, pRD53->getHybridId());
         begin = it;
     }
 }
@@ -596,7 +595,7 @@ void RD53BInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
     this->setBoard(pChip->getBeBoardId());
 
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, false);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53BCmd::RD53BCmdEncoder::SYNC), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53BCmd::RD53BCmdEncoder::SYNC), -1);
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, true);
 }
 
@@ -615,7 +614,7 @@ void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
     this->setBoard(pBoard->getId());
 
     if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53Bv1)
-        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53BCmd::Clear{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(serialize(RD53BCmd::Clear{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
     else
         RD53BInterface::SendGlobalPulseBroadcast(pBoard);
 }
@@ -637,7 +636,7 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
                                          (theMap.find("RstSerializerV1") != theMap.end() ? theMap.find("RstSerializerV1")->second : 0) |
                                          (theMap.find("RstBCIDCnt") != theMap.end() ? theMap.find("RstBCIDCnt")->second : 0),
                                      cmdStream);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(cmdStream, pChip->getHybridId());
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdStream, pChip->getHybridId());
 
     std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
 }
@@ -646,7 +645,7 @@ void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(serialize(RD53BCmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(serialize(RD53BCmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
 
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }

@@ -16,6 +16,8 @@
 #define LPGBT_FILES_NODE_NAME "lpGBT_Files"
 #define LPGBT_CONFIGFILE_NODE_NAME "lpGBT_ConfigFile"
 #define LPGBT_NODE_NAME "lpGBT"
+#define VTRX_NODE_NAME "VTRx"
+#define VTRX_FILES_NODE_NAME "VTRx_Files"
 
 #define HYBRID_NODE_NAME "Hybrid"
 #define CHIP_FILES_APPEND_NODE_NAME "_Files"
@@ -24,6 +26,7 @@
 #define MPA2_NODE_NAME "MPA2"
 #define SSA2_NODE_NAME "SSA2"
 #define RD53_NODE_NAME "RD53"
+#define RD53_LANECONFIG_NAME "LaneConfig"
 #define RD53A_NODE_NAME "RD53A"
 #define RD53Bv1_NODE_NAME "RD53Bv1"
 #define RD53Bv2_NODE_NAME "RD53Bv2"
@@ -61,6 +64,7 @@
 #define BEBOARD_LINKRESET_ATTRIBUTE_NAME "linkReset"
 #define BEBOARD_BOARDRESET_ATTRIBUTE_NAME "boardReset"
 #define BEBOARD_CONFIGURE_ATTRIBUTE_NAME "configure"
+#define BEBOARD_COMMENT_ATTRIBUTE_NAME "comment"
 
 // BeBoard connection attributes
 #define BEBOARD_CONNECTION_ID_ATTRIBUTE_NAME "id"
@@ -91,8 +95,11 @@
 
 // Chip attibutes
 #define CHIP_NOISE_ATTRIBUTE_NAME "noise"
-#define CHIP_SLOPE_ATTRIBUTE_NAME "ADCslope"   // for PS chips only
-#define CHIP_OFFSET_ATTRIBUTE_NAME "ADCoffset" // for PS chips only
+#define CHIP_PEDESTAL_ATTRIBUTE_NAME "pedestal"
+#define CHIP_ADC_SLOPE_ATTRIBUTE_NAME "ADCslope"                   // for PS chips only
+#define CHIP_ADC_OFFSET_ATTRIBUTE_NAME "ADCoffset"                 // for PS chips only
+#define CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME "TemperatureSlope"   // for PS chips only
+#define CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME "TemperatureOffset" // for PS chips only
 
 // Monitoring attributes
 #define MONITORING_NODE_TYPE_ATTRIBUTE_NAME "type"
@@ -113,6 +120,7 @@
 #define BEBOARD_EVENT_TYPE_ATTRIBUTE_PSAS_VALUE "PSAS"
 #define BEBOARD_EVENT_TYPE_ATTRIBUTE_VR2S_VALUE "VR2S"
 #define BEBOARD_EVENT_TYPE_ATTRIBUTE_VR_VALUE "VR"
+#define BEBOARD_EVENT_TYPE_ATTRIBUTE_VRPCTestAdapter_VALUE "VRPCTestAdapter"
 
 // OpticalGroup values
 #define OPTICALGROUP_FMCID_ATTRIBUTE_L12_VALUE "L12"

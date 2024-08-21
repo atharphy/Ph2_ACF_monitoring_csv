@@ -7,7 +7,9 @@
   Support :                               mail to : lorenzo.bidegain@gmail.com
 */
 
-#include "OpticalGroup.h"
+#include "HWDescription/OpticalGroup.h"
+#include "HWDescription/VTRx.h"
+#include "lpGBT.h"
 
 namespace Ph2_HwDescription
 {
@@ -17,6 +19,18 @@ OpticalGroup::OpticalGroup() : FrontEndDescription(), OpticalGroupContainer(0) {
 OpticalGroup::OpticalGroup(const FrontEndDescription& pFeDesc, uint8_t pOpticalGroupId) : FrontEndDescription(pFeDesc), OpticalGroupContainer(pOpticalGroupId) {}
 
 OpticalGroup::OpticalGroup(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId) : FrontEndDescription(pBeBoardId, pFMCId, pOpticalGroupId, 0), OpticalGroupContainer(pOpticalGroupId) {}
+
+OpticalGroup::~OpticalGroup()
+{
+    delete flpGBT;
+    flpGBT = nullptr;
+    delete fVTRx;
+    fVTRx = nullptr;
+}
+
+void OpticalGroup::addlpGBT(lpGBT* plpGBT) { flpGBT = plpGBT; }
+
+void OpticalGroup::addVTRx(VTRx* pVTRx) { fVTRx = pVTRx; }
 
 std::map<uint8_t, std::vector<uint8_t>> OpticalGroup::getLpGBTrxGroupsAndChannels() const
 {

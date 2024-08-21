@@ -12,10 +12,11 @@
 
 #include "HWDescription/RD53.h"
 #include "MetadataHandlerIT.h"
+#include "Tool.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/RD53ChannelGroupHandler.h"
-#include "tools/Tool.h"
 
 #ifdef __USE_ROOT__
 #include "TApplication.h"
@@ -37,14 +38,17 @@ class CalibBase : public Tool
     void    saveSCurveOrGaindValues(const std::vector<DetectorDataContainer*>& detectorContainerVector, const std::vector<uint16_t>& dacList, size_t offset, size_t nEvents, const std::string& name);
     uint8_t assignGroupType(RD53Shared::INJtype injType) const;
     void    prepareChipQueryForEnDis(const std::string& queryName);
+    void    setChipEnDis(bool enable);
+    bool    shiftEnable(size_t indx);
     void    setSinglePixel(Ph2_HwDescription::ReadoutChip* pChip, size_t row, size_t col, bool enable, bool inject);
     void    ResetBoardsReadBkFIFO();
     void    ResetBoards();
+    void    SilentRunning(bool doSilentRunning);
 
     void Stop() override;
     void ConfigureCalibration() override;
 
-    virtual void   localConfigure(const std::string& histoFileName = "", int currentRun = -1);
+    virtual void   localConfigure(const std::string& histoFileName, int currentRun);
     virtual void   run()                      = 0;
     virtual void   draw(bool saveData = true) = 0;
     virtual size_t getNumberIterations() { return 0; };

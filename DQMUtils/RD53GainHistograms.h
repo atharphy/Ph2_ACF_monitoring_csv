@@ -35,7 +35,7 @@ class GainHistograms : public DQMHistogramBase
     bool fill(std::string& inputStream) override;
     void reset() override{};
 
-    void fillOccupancy(const DetectorDataContainer& OccupancyContainer, int DELTA_VCAL);
+    void fillOccupancy(const DetectorDataContainer& OccupancyContainer, uint16_t DELTA_VCAL);
     void fillGain(const DetectorDataContainer& GainContainer);
 
     bool AreHistoBooked = false;

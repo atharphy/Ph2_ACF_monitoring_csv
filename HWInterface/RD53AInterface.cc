@@ -24,8 +24,8 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // #######################################
     // # Programming CLK_DATA_DELAY register #
     // #######################################
-    static const std::set<std::string> registerClkDataDelayList = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK", "CLK_DATA_DELAY_2INV"}; // @CONST@
-    bool                               doWriteClkDataDelay      = false;
+    const std::set<std::string> registerClkDataDelayList = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK", "CLK_DATA_DELAY_2INV"}; // @CONST@
+    bool                        doWriteClkDataDelay      = false;
 
     for(auto i = 0u; i < registerClkDataDelayList.size(); i++)
     {
@@ -44,7 +44,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // #############################################
     // # Programmig global registers: pre-emphasis #
     // #############################################
-    static const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
+    const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
         if((cRegItem.second.fPrmptCfg == true) && (registerPreEmphasisWhiteList.find(cRegItem.first) != registerPreEmphasisWhiteList.end()))
@@ -53,8 +53,8 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    static const std::set<std::string> registerBlackList = {"HighGain_LIN", "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "SAMPLE_N_TIMES", "VREF_ADC"}; // @CONST@
-    static const std::set<std::string> registerWhiteList = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"};                  // @CONST@
+    const std::set<std::string> registerBlackList = {"HighGain_LIN", "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "SAMPLE_N_TIMES", "VREF_ADC"}; // @CONST@
+    const std::set<std::string> registerWhiteList = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"};                  // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
         if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&
@@ -84,11 +84,11 @@ void RD53AInterface::InitRD53Downlink(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());
 
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::move(RD53Shared::firstChip->getLaneUpInitSequence()), -1);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::move(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53ACmd::RD53ACmdEncoder::SYNC)), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(std::move(RD53Shared::firstChip->getLaneUpInitSequence()), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(std::move(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53ACmd::RD53ACmdEncoder::SYNC)), -1);
 }
 
-void RD53AInterface::InitRD53Uplinks(ReadoutChip* pChip)
+void RD53AInterface::InitRD53Uplinks(Chip* pChip)
 {
     this->setBoard(pChip->getBeBoardId());
     auto pRD53 = static_cast<RD53*>(pChip);
@@ -291,7 +291,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
             auto n16bitWords = commandList.size() + nLongCommands * n16bitWordsWrtLong + 2 * n16bitWordsWrt;
             if((n16bitWords / 2 + n16bitWords % 2) > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
             {
-                static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+                static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pRD53->getHybridId());
                 commandList.clear();
             }
         }
@@ -335,7 +335,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
             auto n16bitWords = commandList.size() + (RD53A::NROWS * 2 + 1) * n16bitWordsWrt;
             if((n16bitWords / 2 + n16bitWords % 2) > (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO))
             {
-                static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+                static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pRD53->getHybridId());
                 commandList.clear();
             }
         }
@@ -353,7 +353,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
     // ###################################
     // # Write commands to frontend chip #
     // ###################################
-    if(commandList.size() != 0) static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pRD53->getHybridId());
+    if(commandList.size() != 0) static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pRD53->getHybridId());
 }
 
 void RD53AInterface::PackWriteCommand(Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
@@ -378,7 +378,7 @@ void RD53AInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
     this->setBoard(pChip->getBeBoardId());
 
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, false);
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(std::vector<uint16_t>(RD53Constants::NSYNC_WORDS_L, RD53ACmd::RD53ACmdEncoder::SYNC), -1);
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, true);
 }
 
@@ -461,7 +461,7 @@ uint32_t RD53AInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     RD53ACmd::serialize(RD53ACmd::GlobalPulse{pChip->getId(), 0x04}, commandList);
     RD53ACmd::serialize(RD53ACmd::WrReg{chipID, GlbPulseAddr, GlbPulseVal}, commandList); // Restore value in Global Pulse Route
 
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommand(commandList, pChip->getHybridId());
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pChip->getHybridId());
     return RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
 }
 

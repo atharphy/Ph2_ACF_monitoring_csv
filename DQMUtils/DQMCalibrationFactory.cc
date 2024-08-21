@@ -4,6 +4,7 @@
 #include "DQMUtils/DQMHistogramCalibrationExample.h"
 #include "DQMUtils/DQMHistogramKira.h"
 #include "DQMUtils/DQMHistogramLatencyScan.h"
+#include "DQMUtils/DQMHistogramOTBitErrorRateTest.h"
 #include "DQMUtils/DQMHistogramOTCICBX0Alignment.h"
 #include "DQMUtils/DQMHistogramOTCICphaseAlignment.h"
 #include "DQMUtils/DQMHistogramOTCICtoLpGBTecv.h"
@@ -13,6 +14,7 @@
 #include "DQMUtils/DQMHistogramOTMPAtoCICecv.h"
 #include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
 #include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
+#include "DQMUtils/DQMHistogramOTPSringOscillatorTest.h"
 #include "DQMUtils/DQMHistogramOTRegisterTester.h"
 #include "DQMUtils/DQMHistogramOTSSAtoMPAecv.h"
 #include "DQMUtils/DQMHistogramOTSSAtoSSAecv.h"
@@ -187,6 +189,9 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise,
              DQMHistogramOTCMNoise>("cmNoise");
+
+    Register<DQMMetadata, DQMHistogramOTBitErrorRateTest>("bert");
+
     Register<DQMMetadataOT, PSPhysicsHistograms>("psphysics");
     Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
 
@@ -197,6 +202,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
         "SSAtoMPAecv");
     Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCICphaseAlignment, DQMHistogramOTCICwordAlignment, DQMHistogramOTSSAtoSSAecv>(
         "SSAtoSSAecv");
+    Register<DQMHistogramOTPSringOscillatorTest>("ringOscillatorTest");
 
     // ###################
     // # IT calibrations #

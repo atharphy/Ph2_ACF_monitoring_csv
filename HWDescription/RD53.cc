@@ -67,10 +67,10 @@ LaneConfig::LaneConfig(bool                                   isPrimary,
 RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
     : ReadoutChip(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id)
 {
-    fMaxRegValue   = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
-    configFileName = fileName;
-    myComment      = cfgComment;
-    myChipLane     = pRD53Lane;
+    fMaxRegValue    = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
+    fConfigFileName = fileName;
+    myComment       = cfgComment;
+    myChipLane      = pRD53Lane;
 }
 
 void RD53::loadfRegMap(const std::string& fileName)
@@ -411,11 +411,33 @@ void RD53::enablePixel(unsigned int row, unsigned int col, bool enable)
     fPixelsMask.HitBus[row + this->getNRows() * col] = enable;
 }
 
+void RD53::enableDefaultPixel(unsigned int row, unsigned int col, bool enable)
+{
+    fPixelsMaskDefault.Enable[row + this->getNRows() * col] = enable;
+    fPixelsMaskDefault.HitBus[row + this->getNRows() * col] = enable;
+
+    if(enable == true)
+        fChipOriginalMask->enableChannel(row, col);
+    else
+        fChipOriginalMask->disableChannel(row, col);
+}
+
 void     RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixelsMask.InjEn[row + this->getNRows() * col] = inject; }
 void     RD53::setTDAC(unsigned int row, unsigned int col, uint8_t TDAC) { fPixelsMask.TDAC[row + this->getNRows() * col] = TDAC; }
 void     RD53::resetTDAC(uint8_t TDAC) { std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), TDAC); }
 uint8_t  RD53::getTDAC(unsigned int row, unsigned int col) { return fPixelsMask.TDAC[row + this->getNRows() * col]; }
 uint32_t RD53::getNumberOfChannels() const { return this->getNRows() * this->getNCols(); }
+
+void RD53::maskCoreDefault(unsigned int row, unsigned int col)
+{
+    const unsigned int rowStart = RD53Constants::NROW_CORE * (row / RD53Constants::NROW_CORE);
+    const unsigned int rowStop  = rowStart + RD53Constants::NROW_CORE;
+    const unsigned int colStart = RD53Constants::NROW_CORE * (col / RD53Constants::NROW_CORE);
+    const unsigned int colStop  = colStart + RD53Constants::NROW_CORE;
+
+    for(auto r = rowStart; r < rowStop; r++)
+        for(auto c = colStart; c < colStop; c++) RD53::enableDefaultPixel(r, c, false);
+}
 
 bool RD53::isDACLocal(const std::string& regName)
 {

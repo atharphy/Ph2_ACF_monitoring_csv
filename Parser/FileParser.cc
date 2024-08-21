@@ -7,8 +7,10 @@
 #include "HWDescription/RD53A.h"
 #include "HWDescription/RD53B.h"
 #include "HWDescription/SSA2.h"
+#include "HWDescription/VTRx.h"
 #include "HWDescription/lpGBT.h"
 #include "Parser/ParserDefinitions.h"
+#include "Utils/NTChandler.h"
 #include "Utils/Utilities.h"
 
 using namespace Ph2_HwDescription;
@@ -149,8 +151,10 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
             cBeBoard->setEventType(EventType::PSAS);
         else if(cEventTypeString == BEBOARD_EVENT_TYPE_ATTRIBUTE_VR2S_VALUE)
             cBeBoard->setEventType(EventType::VR2S);
-        else
+        else if(cEventTypeString == BEBOARD_EVENT_TYPE_ATTRIBUTE_VR_VALUE)
             cBeBoard->setEventType(EventType::VR);
+        else
+            cBeBoard->setEventType(EventType::VRPCTestAdapter);
     }
 
     uint8_t cBoardReset = convertAnyInt(pBeBordNode.attribute(BEBOARD_BOARDRESET_ATTRIBUTE_NAME).value());
@@ -162,10 +166,13 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
     uint8_t cReset = convertAnyInt(pBeBordNode.attribute(BEBOARD_LINKRESET_ATTRIBUTE_NAME).value());
     cBeBoard->setLinkReset(cReset);
 
+    std::string cComment = (pBeBordNode.attribute(BEBOARD_COMMENT_ATTRIBUTE_NAME) ? pBeBordNode.attribute(BEBOARD_COMMENT_ATTRIBUTE_NAME).value() : "");
+    cBeBoard->setComment(cComment);
+
     os << BOLDBLUE << "|"
        << "----" << pBeBordNode.name() << " --> " << pBeBordNode.first_attribute().name() << ": " << BOLDYELLOW << pBeBordNode.attribute(COMMON_ID_ATTRIBUTE_NAME).value() << BOLDBLUE
-       << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDBLUE << ", EventType: " << BOLDYELLOW << cEventTypeString << BOLDBLUE << ", Configure: " << BOLDYELLOW << +configureBoardFlag << RESET
-       << std::endl;
+       << ", BoardType: " << BOLDYELLOW << cBoardType << BOLDBLUE << ", EventType: " << BOLDYELLOW << cEventTypeString << BOLDBLUE << ", Configure: " << BOLDYELLOW << +configureBoardFlag << BOLDBLUE
+       << ", Comment: " << BOLDYELLOW << cComment << RESET << std::endl;
 
     pugi::xml_node cBeBoardConnectionNode = pBeBordNode.child(BEBOARD_CONNECTION_NODE_NAME);
 
@@ -249,7 +256,7 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
     {
         if(static_cast<std::string>(theChild.name()) == HYBRID_NODE_NAME)
             parseHybridContainer(theChild, theOpticalGroup, os, pBoard);
-        else if(static_cast<std::string>(theChild.name()) == LPGBT_FILES_NODE_NAME)
+        else if(static_cast<std::string>(theChild.name()) == LPGBT_FILES_NODE_NAME || static_cast<std::string>(theChild.name()) == VTRX_FILES_NODE_NAME)
         {
             cFilePath = expandEnvironmentVariables(theChild.attribute(COMMON_PATH_ATTRIBUTE_NAME).value());
             if((cFilePath.empty() == false) && (cFilePath.at(cFilePath.length() - 1) != '/')) cFilePath.append("/");
@@ -259,7 +266,8 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         else if(static_cast<std::string>(theChild.name()) == LPGBT_NODE_NAME)
         {
             std::string chipFileName = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
-            os << BOLDBLUE << "|\t|----OpticalGroup --> Id: " << BOLDYELLOW << cOpticalGroupId << BOLDBLUE << ", FMC Id: " << BOLDYELLOW << cFMCId << RESET << std::endl;
+            os << BOLDBLUE << "|\t|----OpticalGroup --> Id: " << BOLDYELLOW << cOpticalGroupId << BOLDBLUE << ", Enable: " << BOLDYELLOW << cEnable << BOLDBLUE << ", FMC Id: " << BOLDYELLOW << cFMCId
+               << RESET << std::endl;
             os << BOLDBLUE << "|\t|----" << theChild.name() << " --> File: " << BOLDYELLOW << chipFileName << RESET << std::endl;
             os << BOLDBLUE << "|\t|\t|---- ADC Config. File: " << BOLDYELLOW << theConfigFilePath << RESET << std::endl;
             uint8_t cChipId      = theChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
@@ -328,12 +336,22 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                 }
             }
         }
+        else if(static_cast<std::string>(theChild.name()) == VTRX_NODE_NAME)
+        {
+            std::string chipFileName = cFilePath + expandEnvironmentVariables(theChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value());
+            uint8_t     cChipId      = theChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
+
+            VTRx* theVTRx = new VTRx(cBoardId, cFMCId, cOpticalGroupId, cChipId, chipFileName, theConfigFilePath, theOpticalGroup->flpGBT);
+
+            theOpticalGroup->addVTRx(theVTRx);
+        }
         else if(static_cast<std::string>(theChild.name()) == NTCPROPERTIES_NODE_NAME)
         {
-            std::string cNTCType        = std::string(theChild.attribute(NTCPROPERTIES_TYPE_ATTRIBUTE_NAME).value());
-            std::string cNTCADC         = std::string(theChild.attribute(NTCPROPERTIES_ADC_ATTRIBUTE_NAME).value());
-            std::string cNTCLookUpTable = expandEnvironmentVariables(std::string(theChild.attribute(NTCPROPERTIES_LOOKUPTABLE_ATTRIBUTE_NAME).value()));
-            theOpticalGroup->addNTC(cNTCType, cNTCADC, cNTCLookUpTable);
+            std::string cNTCType          = std::string(theChild.attribute(NTCPROPERTIES_TYPE_ATTRIBUTE_NAME).value());
+            std::string cNTCADC           = std::string(theChild.attribute(NTCPROPERTIES_ADC_ATTRIBUTE_NAME).value());
+            std::string cNTCTableFileName = expandEnvironmentVariables(std::string(theChild.attribute(NTCPROPERTIES_LOOKUPTABLE_ATTRIBUTE_NAME).value()));
+            theOpticalGroup->addNTC(cNTCType, cNTCADC);
+            NTChandler::getInstance().addNTCtable(cNTCType, cNTCTableFileName);
         }
     }
 }
@@ -491,14 +509,9 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
     cSSA2->setMasterId(pHybrid->getMasterId());
 
     if(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cSSA2->setAverageNoise(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
-    if(pSSAnode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME) && pSSAnode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME))
-    {
-        std::map<std::string, float> theADCcalibration;
-        theADCcalibration["ADC_SLOPE"]  = pSSAnode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME).as_float();
-        theADCcalibration["ADC_OFFSET"] = pSSAnode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME).as_float();
+    if(pSSAnode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)) { cSSA2->setAveragePedestal(pSSAnode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME).as_float()); }
 
-        cSSA2->setADCCalibrationMap(theADCcalibration);
-    }
+    setChipADCParameters(pSSAnode, cSSA2);
 }
 
 void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os)
@@ -518,8 +531,8 @@ void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription
                 if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 unsigned cStripThreshold     = convertAnyInt(cThresholdNode.attribute("stripThreshold").value());
                 unsigned cStripThresholdHigh = convertAnyInt(cThresholdNode.attribute("stripThresholdHigh").value());
-                if(cStripThreshold > 0xFF) { throw std::runtime_error("The stripThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255."); }
-                if(cStripThresholdHigh > 0xFF) { throw std::runtime_error("The cStripThresholdHigh register set in the xml is greater than 255. Acceptable values are between 0 and 255."); }
+                if(cStripThreshold > 0xFF) { throw std::runtime_error("The stripThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255"); }
+                if(cStripThresholdHigh > 0xFF) { throw std::runtime_error("The cStripThresholdHigh register set in the xml is greater than 255. Acceptable values are between 0 and 255"); }
 
                 cChip->setReg("Bias_THDAC", cStripThreshold);
                 cChip->setReg("Bias_THDACHIGH", cStripThresholdHigh);
@@ -553,7 +566,7 @@ void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription
             {
                 if(cChip->getFrontEndType() != FrontEndType::SSA2) continue;
                 int cInjStrps = convertAnyInt(cInjectionNode.attribute("stripCharge").value()); // / SSA2_ELECTRON_CALDAC; // conversion factor to electron with 1 CalDAC = 0.039 fC
-                if(cInjStrps > 0xFF) { throw std::runtime_error("The maximum strip charge that can be injected is 255. Acceptable values are between 0 and 255."); }
+                if(cInjStrps > 0xFF) { throw std::runtime_error("The maximum strip charge that can be injected is 255. Acceptable values are between 0 and 255"); }
                 cChip->setReg("Bias_CALDAC", cInjStrps);
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA injection settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Injected Charge is  0x" << std::hex << +cInjStrps
                    << std::dec << RESET << std::endl;
@@ -615,7 +628,7 @@ void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription
                 cChip->setRegBits("ClockDeskewing_fine", cMask, cFine);
 
                 os << BOLDCYAN << "|\t|\t|----Applying global SSA Sampling Delay settings to SSA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
-                   << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET << std::endl;
+                   << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns" << RESET << std::endl;
             }
         }
     }
@@ -644,14 +657,9 @@ void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, st
     cMPA->setMasterId(pHybrid->getMasterId());
 
     if(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cMPA->setAverageNoise(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
-    if(pMPANode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME) && pMPANode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME))
-    {
-        std::map<std::string, float> theADCcalibration;
-        theADCcalibration["ADC_SLOPE"]  = pMPANode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME).as_float();
-        theADCcalibration["ADC_OFFSET"] = pMPANode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME).as_float();
+    if(pMPANode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)) { cMPA->setAveragePedestal(pMPANode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME).as_float()); }
 
-        cMPA->setADCCalibrationMap(theADCcalibration);
-    }
+    setChipADCParameters(pMPANode, cMPA);
 
     os << BOLDCYAN << "|"
        << "  "
@@ -680,7 +688,7 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cThresholdPxls = convertAnyInt(cThresholdNode.attribute("pixelThreshold").value());
-                if(cThresholdPxls > 0xFF) { throw std::runtime_error("The pixelThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255."); }
+                if(cThresholdPxls > 0xFF) { throw std::runtime_error("The pixelThreshold register set in the xml is greater than 255. Acceptable values are between 0 and 255"); }
 
                 for(size_t cIndx = 0; cIndx < 7; cIndx++)
                 {
@@ -738,7 +746,7 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
             {
                 if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                 int cInjPxls = convertAnyInt(cInjectionNode.attribute("pixelCharge").value()); // / MPA2_ELECTRON_CALDAC. conversion factor from DAQ to electrons;
-                if(cInjPxls > 0xFF) { throw std::runtime_error("The maximum pixel charge that can be injected is 255. Acceptable values are between 0 and 255."); }
+                if(cInjPxls > 0xFF) { throw std::runtime_error("The maximum pixel charge that can be injected is 255. Acceptable values are between 0 and 255"); }
                 for(size_t cIndx = 0; cIndx < 7; cIndx++)
                 {
                     std::stringstream cRegName;
@@ -822,7 +830,7 @@ void FileParser::parseMPA2Settings(pugi::xml_node pHybridNode, Hybrid* pHybrid, 
                 cChip->setReg("ConfDLL", cFine);
 
                 os << BOLDCYAN << "|\t|\t|----Applying global MPA Sampling Delay settings to MPA# " << +cChip->getId() << RESET << GREEN << "|\t|\t|\t|---- Coarse delay will be set to "
-                   << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns." << RESET << std::endl;
+                   << cCoarse * 3.125 << " ns " << GREEN << " Fine delay will be set to " << cFine * 0.2 << " ns" << RESET << std::endl;
             }
         }
     }
@@ -1198,6 +1206,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
     cCbc->setMasterId(cHybrid->getMasterId());
 
     if(pCbcNode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cCbc->setAverageNoise(pCbcNode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
+    if(pCbcNode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)) { cCbc->setAveragePedestal(pCbcNode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME).as_float()); }
 
     os << BOLDCYAN << "|"
        << "  "
@@ -1425,6 +1434,10 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
                                                   "RegNameDAC2",
                                                   "DataOutputDir",
                                                   "KIRA_ID",
+                                                  "OTCICtoLpGBTecv_CICStrength",
+                                                  "OTCICtoLpGBTecv_ClockPolarity",
+                                                  "OTCICtoLpGBTecv_ClockStrength",
+                                                  "OTCICtoLpGBTecv_LpGBTPhase",
                                                   "OTinjectionOccupancyScan_ListOfInjectedPulses",
                                                   "OTMPAtoCICecv_ListOfMPAslvsCurrents",
                                                   "OTSSAtoMPAecv_ListOfSSAslvsCurrents",
@@ -1470,7 +1483,7 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
     }
 }
 
-void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, Ph2_HwDescription::lpGBT* plpGBT, std::ostream& os)
+void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* cHybrid, Ph2_HwDescription::lpGBT* pLpGBT, std::ostream& os)
 {
     for(pugi::xml_node cChild: pHybridNode.children())
     {
@@ -1479,49 +1492,45 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
 
         if(cChildName.find(RD53_NODE_NAME) != std::string::npos)
         {
+            for(pugi::xml_node theChild: cChild.children())
+            {
+                std::string theChildName = theChild.name();
+                if((theChildName.find(RD53_LANECONFIG_NAME) != std::string::npos) && (theChild.attribute("isPrimary").as_bool(true) == true)) continue;
+            }
+
             // ###################
             // # Specific for IT #
             // ###################
-            std::vector<uint8_t> cRxGroups     = splitToVector(cChild.attribute("RxGroups").value(), ',');
-            std::vector<uint8_t> cRxChannels   = splitToVector(cChild.attribute("RxChannels").value(), ',');
-            std::vector<uint8_t> cRxPolarities = splitToVector(cChild.attribute("RxPolarities").value(), ',');
-            std::vector<uint8_t> cTxGroups     = splitToVector(cChild.attribute("TxGroups").value(), ',');
-            std::vector<uint8_t> cTxChannels   = splitToVector(cChild.attribute("TxChannels").value(), ',');
-            std::vector<uint8_t> cTxPolarities = splitToVector(cChild.attribute("TxPolarities").value(), ',');
+            const std::string RxGroupsConfig = cChild.attribute("RxGroups").as_string("0000");
+            if(RxGroupsConfig.size() != NCHIPLANES) throw std::runtime_error("The \"RxGroups\" attribute of RD53 should contain 4 characters ('0' up to '9')");
+            auto    cRxGroups   = parseString<uint8_t, NCHIPLANES>(RxGroupsConfig);
+            uint8_t cRxChannel  = (cChild.attribute("RxChannel") ? convertAnyInt(cChild.attribute("RxChannel").value()) : 0);
+            uint8_t cRxPolarity = convertAnyInt(cChild.attribute("RxPolarity").value());
+            uint8_t cTxGroup    = convertAnyInt(cChild.attribute("TxGroup").value());
+            uint8_t cTxChannel  = convertAnyInt(cChild.attribute("TxChannel").value());
+            uint8_t cTxPolarity = convertAnyInt(cChild.attribute("TxPolarity").value());
 
             // ################################################################################
             // # Retrieve links, groups, channels and polarities and propagate to LpGBT class #
             // ################################################################################
-            plpGBT->addRxGroups(cRxGroups);
-            plpGBT->addRxProperty(cRxGroups[0], cRxChannels[0], cRxPolarities[0]);
-
-            plpGBT->addTxProperty(cTxGroups[0], cTxChannels[0], cTxPolarities[0]);
+            for(auto RxGroup: cRxGroups) pLpGBT->addRxProperty(RxGroup, cRxChannel, cRxPolarity);
+            pLpGBT->addTxProperty(cTxGroup, cTxChannel, cTxPolarity);
 
             // ###################################################################
             // # In the case of IT propagate LpGBT mapping to the front-end chip #
             // ###################################################################
             uint8_t cChipId = cChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
 
-            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxGroup(cRxGroups[0]);
-            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxChannel(cRxChannels[0]);
-            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxPolarity(cRxPolarities[0]);
+            for(auto i = 0u; i < cRxGroups.size(); i++)
+                if(cRxGroups[i] != 0) static_cast<RD53*>(cHybrid->getObject(cChipId))->addRxGroup(cRxGroups[i], NCHIPLANES - i);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxChannel(cRxChannel);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxPolarity(cRxPolarity);
 
-            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxGroup(cTxGroups[0]);
-            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannels[0]);
-            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxPolarity(cTxPolarities[0]);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxGroup(cTxGroup);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxChannel(cTxChannel);
+            static_cast<RD53*>(cHybrid->getObject(cChipId))->setTxPolarity(cTxPolarity);
         }
     }
-}
-
-// ########################
-// # RD53 specific parser #
-// ########################
-template <class T, size_t N>
-auto parseString(const std::string& data)
-{
-    std::array<T, N> result;
-    std::transform(data.begin(), data.end(), result.begin(), [](char c) { return c - '0'; });
-    return result;
 }
 
 void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::string cFilePrefix, std::ostream& os, const FrontEndType& frontEndType)
@@ -1538,16 +1547,16 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
 
     const uint32_t    chipId      = theChipNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
     const uint32_t    chipLane    = theChipNode.attribute("Lane").as_uint();
-    const uint8_t     cRxGroup    = theChipNode.attribute("RxGroups").as_uint();
-    const uint8_t     cRxChannel  = theChipNode.attribute("RxChannels").as_uint();
-    const uint8_t     cRxPolarity = theChipNode.attribute("RxPolarities").as_uint();
-    const uint8_t     cTxGroup    = theChipNode.attribute("TxGroups").as_uint();
-    const uint8_t     cTxChannel  = theChipNode.attribute("TxChannels").as_uint();
-    const uint8_t     cTxPolarity = theChipNode.attribute("TxPolarities").as_uint();
+    const std::string cRxGroups   = theChipNode.attribute("RxGroups").as_string();
+    const uint8_t     cRxChannel  = (theChipNode.attribute("RxChannel") ? theChipNode.attribute("RxChannel").as_uint() : 0);
+    const uint8_t     cRxPolarity = theChipNode.attribute("RxPolarity").as_uint();
+    const uint8_t     cTxGroup    = theChipNode.attribute("TxGroup").as_uint();
+    const uint8_t     cTxChannel  = theChipNode.attribute("TxChannel").as_uint();
+    const uint8_t     cTxPolarity = theChipNode.attribute("TxPolarity").as_uint();
     const std::string cfgComment  = theChipNode.attribute("Comment").as_string();
 
     os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << chipId << BOLDBLUE << ", Lane: " << BOLDYELLOW << chipLane << BOLDBLUE << ", File: " << BOLDYELLOW
-       << cFileName << BOLDBLUE << ", RxGroup: " << BOLDYELLOW << +cRxGroup << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel << BOLDBLUE << ", RxPolarity: " << BOLDYELLOW << +cRxPolarity
+       << cFileName << BOLDBLUE << ", RxGroups: " << BOLDYELLOW << cRxGroups << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel << BOLDBLUE << ", RxPolarity: " << BOLDYELLOW << +cRxPolarity
        << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << BOLDBLUE << ", TxPolarity: " << BOLDYELLOW << +cTxPolarity << BOLDBLUE
        << ", Comment: " << BOLDYELLOW << cfgComment << RESET << std::endl;
 
@@ -1598,22 +1607,22 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
     // #########################################
     // # Load frontend chip lane configuration #
     // #########################################
-    pugi::xml_node laneConfigNode = theChipNode.child("LaneConfig");
+    pugi::xml_node laneConfigNode = theChipNode.child(RD53_LANECONFIG_NAME);
     if(laneConfigNode != nullptr)
     {
         const bool    isPrimary  = laneConfigNode.attribute("isPrimary").as_bool(true);
         const uint8_t masterLane = laneConfigNode.attribute("masterLane").as_uint(0);
 
         const std::string outputLanesConfig = laneConfigNode.attribute("outputLanes").as_string("0001");
-        if(outputLanesConfig.size() != NCHIPLANES) throw std::runtime_error("The \"outputLanes\" attribute of LaneConfig should contain 4 characters ('0' up to '4').");
+        if(outputLanesConfig.size() != NCHIPLANES) throw std::runtime_error("The \"outputLanes\" attribute of LaneConfig should contain 4 characters ('0' up to '4')");
         auto outputLanesEnabled = parseString<uint8_t, NCHIPLANES>(outputLanesConfig);
 
         const std::string singleChannelInputsConfig = laneConfigNode.attribute("singleChannelInputs").as_string("0000");
-        if(singleChannelInputsConfig.size() != NCHIPLANES) throw std::runtime_error("The \"singleChannelInputs\" attribute of LaneConfig should contain 4 characters ('0' or '1').");
+        if(singleChannelInputsConfig.size() != NCHIPLANES) throw std::runtime_error("The \"singleChannelInputs\" attribute of LaneConfig should contain 4 characters ('0' or '1')");
         auto singleChannelInputs = parseString<bool, NCHIPLANES>(singleChannelInputsConfig);
 
         const std::string dualChannelInputConfig = laneConfigNode.attribute("dualChannelInput").as_string("0000");
-        if(dualChannelInputConfig.size() != NCHIPLANES) throw std::runtime_error("The \"dualChannelInput\" attribute of LaneConfig should contain 4 characters ('0' or '1').");
+        if(dualChannelInputConfig.size() != NCHIPLANES) throw std::runtime_error("The \"dualChannelInput\" attribute of LaneConfig should contain 4 characters ('0' or '1')");
         auto dualChannelInput = parseString<bool, NCHIPLANES>(dualChannelInputConfig);
 
         static_cast<RD53*>(theChip)->laneConfig = LaneConfig(isPrimary, masterLane, outputLanesEnabled, singleChannelInputs, dualChannelInput);
@@ -1747,6 +1756,14 @@ void FileParser::parseLpGBTphasesForBypass(pugi::xml_node lpgbtPhasesForBypassNo
             theCic->setLpGBTphaseForCICbypass(phyPort, stubLine, convertAnyInt(theStubAttribute.value()));
         }
     }
+}
+
+void FileParser::setChipADCParameters(pugi::xml_node pChipNode, Ph2_HwDescription::ReadoutChip* cChip)
+{
+    if(pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("ADC_SLOPE", pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("ADC_OFFSET", pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("TEMP_SLOPE", pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("TEMP_OFFSET", pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME).as_float());
 }
 
 } // namespace Ph2_Parser

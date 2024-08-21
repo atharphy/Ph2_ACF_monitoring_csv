@@ -1,11 +1,11 @@
 /*!
-        \file                                            ChipInterface.h
-        \brief                                           User Interface to the Chip, base class for, CBC, MPA, SSA, RD53
-        \author                                          Fabio RAVERA
-        \version                                         1.0
-        \date                        25/02/19
-        Support :                    mail to : fabio.ravera@cern.ch
- */
+  \file                  ChipInterface.h
+  \brief                 User Interface to the Chip, base class for, CBC, MPA, SSA, RD53
+  \author                Fabio RAVERA
+  \version               1.0
+  \date                  25/02/19
+  Support:               email to fabio.ravera@cern.ch
+*/
 
 #include "HWInterface/ChipInterface.h"
 #include "HWDescription/BeBoard.h"
@@ -26,15 +26,8 @@ void ChipInterface::setBoard(uint16_t pBoardIdentifier)
 {
     if(fPrevBoardIdentifier != pBoardIdentifier)
     {
-        BeBoardFWMap::iterator i = fBoardMap.find(pBoardIdentifier);
-
-        if(i == fBoardMap.end())
-            LOG(ERROR) << BOLDRED << "The Board: " << +pBoardIdentifier << "  doesn't exist" << RESET;
-        else
-        {
-            fBoardFW             = i->second;
-            fPrevBoardIdentifier = pBoardIdentifier;
-        }
+        fBoardFW             = fBoardMap.at(pBoardIdentifier);
+        fPrevBoardIdentifier = pBoardIdentifier;
     }
 }
 

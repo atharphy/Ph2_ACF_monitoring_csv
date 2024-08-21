@@ -14,6 +14,7 @@
 #define OTVTRXLightOff_h__
 
 #include "OTTool.h"
+#include "MonitorUtils/DetectorMonitor.h"
 
 #ifdef __USE_ROOT__
 #endif

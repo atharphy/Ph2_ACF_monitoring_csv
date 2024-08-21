@@ -45,7 +45,7 @@ class Physics : public CalibBase
     void Stop() override;
     void ConfigureCalibration() override;
 
-    void localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
+    void localConfigure(const std::string& histoFileName, int currentRun) override;
     void run() override;
     void draw(bool saveData = true) override;
 

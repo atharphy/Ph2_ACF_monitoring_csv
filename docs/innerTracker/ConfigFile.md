@@ -120,7 +120,7 @@ occupancy that meets `TargetOcc`.
 <Setting name="UnstuckPixels">         0 </Setting>
 ```
 
-* In a `noise` run, whose purpose is to find noisy 
+* In a `noise` run, whose purpose is to find noisy
 pixels, any pixel which has an occupancy greater
 than `OccPerPixel` is consequently masked
 * In a `pixelalive` run, whose purpose is to test

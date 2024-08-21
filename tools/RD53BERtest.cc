@@ -79,7 +79,7 @@ void BERtest::localConfigure(const std::string& histoFileName, int currentRun)
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<BERtestHistograms>(histoFileName, "BERtest", histos);
+    CalibBase::initializeFiles(histoFileName, "BERtest", histos);
 }
 
 void BERtest::run()
@@ -157,10 +157,10 @@ void BERtest::run()
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
-                        const uint8_t cGroup   = static_cast<RD53*>(cChip)->getRxGroup();
                         const uint8_t cChannel = static_cast<RD53*>(cChip)->getRxChannel();
+                        const auto    cGroups  = static_cast<RD53*>(cChip)->getRxGroups();
 
-                        const auto value = flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, cGroup, cChannel, given_time, frames_or_time, frontendSpeed);
+                        const auto value = flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, cGroups, cChannel, given_time, frames_or_time, frontendSpeed);
                         theBERtestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<double>() = value;
                     }
 

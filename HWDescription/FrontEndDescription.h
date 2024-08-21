@@ -96,8 +96,9 @@ class FrontEndDescription
         if(theFrontEndType == FrontEndType::InnerTrackerQuad) return "InnerTrackerQuad";
         if(theFrontEndType == FrontEndType::HYBRID2S) return "HYBRID2S";
         if(theFrontEndType == FrontEndType::HYBRIDPS) return "HYBRIDPS";
-        if(theFrontEndType == FrontEndType::LpGBT)
-            return "LpGBT";
+        if(theFrontEndType == FrontEndType::LpGBT) return "LpGBT";
+        if(theFrontEndType == FrontEndType::VTRx)
+            return "VTRx";
         else
             return "UNDEFINED";
     }

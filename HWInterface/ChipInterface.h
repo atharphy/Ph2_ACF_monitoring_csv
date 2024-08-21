@@ -1,11 +1,11 @@
 /*!
-        \file                                            ChipInterface.h
-        \brief                                           User Interface to the Chip, base class for, CBC, MPA, SSA, RD53
-        \author                                          Fabio RAVERA
-        \version                                         1.0
-        \date                        25/02/19
-        Support :                    mail to : fabio.ravera@cern.ch
- */
+  \file                  ChipInterface.h
+  \brief                 User Interface to the Chip, base class for, CBC, MPA, SSA, RD53
+  \author                Fabio RAVERA
+  \version               1.0
+  \date                  25/02/19
+  Support:               email to fabio.ravera@cern.ch
+*/
 
 #ifndef __CHIPINTERFACE_H__
 #define __CHIPINTERFACE_H__
@@ -42,11 +42,10 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
 class ChipInterface
 {
   protected:
-    std::recursive_mutex fMutex;
-    BeBoardFWMap         fBoardMap;            /*!< Map of Board connected */
-    BeBoardFWInterface*  fBoardFW;             /*!< Board loaded */
-    uint16_t             fPrevBoardIdentifier; /*!< Id of the previous board */
-    bool                 fWithlpGBT = false;   /*!< lpGBT is used for configuration */
+    BeBoardFWMap        fBoardMap;            /*!< Map of Board connected */
+    BeBoardFWInterface* fBoardFW;             /*!< Board loaded */
+    uint16_t            fPrevBoardIdentifier; /*!< Id of the previous board */
+    bool                fWithlpGBT = false;   /*!< lpGBT is used for configuration */
 
     /*!
      * \brief Set the board to talk with

@@ -1,4 +1,5 @@
 #include "tools/Tool.h"
+#include <future>
 #include <numeric>
 
 #include "HWDescription/Chip.h"
@@ -8,13 +9,11 @@
 #include "Utils/ContainerSerialization.h"
 #include "Utils/Utilities.h"
 
+#include "Utils/ConfigureInfo.h"
 #include "Utils/DataContainer.h"
 #include "Utils/EmptyContainer.h"
-#include "Utils/Occupancy.h"
-#include <future>
-
-#include "Utils/ConfigureInfo.h"
 #include "Utils/MPAChannelGroupHandler.h"
+#include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
 #include "Utils/StartInfo.h"
 
@@ -196,6 +195,34 @@ void Tool::Start(const StartInfo& theStartInfo)
 //     wakeUp.notify_one();
 // }
 
+void Tool::readBitslipRegs()
+{
+    auto getRegisterName = [](const std::string& type, size_t linkNumber, size_t hybridId)
+    {
+        std::stringstream registerNameStream;
+        registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.link" << std::uppercase << linkNumber << "_hybrid" << hybridId << "_" << type << "_bitslip" << std::dec;
+        return registerNameStream.str();
+    };
+
+    std::vector<std::pair<std::string, uint32_t>> alignedBitslipRegisters;
+    for(size_t linkNumber = 0; linkNumber < 12; ++linkNumber)
+    {
+        for(size_t hybridId = 0; hybridId < 2; ++hybridId)
+        {
+            alignedBitslipRegisters.push_back({getRegisterName("stub", linkNumber, hybridId), 0xFFFFFFFF});
+            alignedBitslipRegisters.push_back({getRegisterName("L1A", linkNumber, hybridId), 0xFFFFFFFF});
+        }
+    }
+
+    // Reading all bitslip registers
+    fBeBoardInterface->ReadBoardMultReg(fDetectorContainer->getFirstObject(), alignedBitslipRegisters);
+
+    for(const auto& registerNameAndValue: alignedBitslipRegisters)
+    {
+        std::cout << "Reading  " << registerNameAndValue.first << " = 0x" << std::hex << registerNameAndValue.second << std::dec << std::endl;
+    }
+}
+
 void Tool::Stop()
 {
     if(Tool::fKeepRunning == true)
@@ -215,8 +242,8 @@ void Tool::Stop()
         {
             throw std::runtime_error(e.what());
         }
-        SystemController::Stop();
 
+        SystemController::Stop();
         Tool::dumpConfigFiles();
         if(fMetadataHandler != nullptr) fMetadataHandler->fillFinalConditions();
 
@@ -489,7 +516,7 @@ TObject* Tool::getHist(ChipContainer* pChip, std::string pName)
     if(cChipHistMap == std::end(fChipHistMap))
     {
         // Fabio: CBC specific -> to be moved out from Tool
-        LOG(ERROR) << RED << "Error: could not find the Histograms for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getHybridId()) << ")" << RESET;
+        LOG(ERROR) << BOLDRED << "Error: could not find the Histograms for CBC " << int(pChip->getId()) << " (FE " << int(static_cast<ReadoutChip*>(pChip)->getHybridId()) << ")" << RESET;
         return nullptr;
     }
     else
@@ -498,7 +525,7 @@ TObject* Tool::getHist(ChipContainer* pChip, std::string pName)
 
         if(cHisto == std::end(cChipHistMap->second))
         {
-            LOG(ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET;
+            LOG(ERROR) << BOLDRED << "Error: could not find the Histogram with the name " << BOLDYELLOW << pName << RESET;
             return nullptr;
         }
         else
@@ -512,7 +539,7 @@ TObject* Tool::getHist(HybridContainer* pHybrid, std::string pName)
 
     if(cHybridHistMap == std::end(fHybridHistMap))
     {
-        LOG(ERROR) << RED << "Error: could not find the Histograms for Hybrid " << int(pHybrid->getId()) << RESET;
+        LOG(ERROR) << BOLDRED << "Error: could not find the Histograms for Hybrid " << BOLDYELLOW << int(pHybrid->getId()) << RESET;
         return nullptr;
     }
     else
@@ -521,7 +548,7 @@ TObject* Tool::getHist(HybridContainer* pHybrid, std::string pName)
 
         if(cHisto == std::end(cHybridHistMap->second))
         {
-            LOG(ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET;
+            LOG(ERROR) << BOLDRED << "Error: could not find the Histogram with the name " << BOLDYELLOW << pName << RESET;
             return nullptr;
         }
         else
@@ -535,7 +562,7 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
 
     if(cBeBoardHistMap == std::end(fBeBoardHistMap))
     {
-        LOG(ERROR) << RED << "Error: could not find the Histograms for Hybrid " << int(pBeBoard->getId()) << RESET;
+        LOG(ERROR) << BOLDRED << "Error: could not find the Histograms for Hybrid " << BOLDYELLOW << int(pBeBoard->getId()) << RESET;
         return nullptr;
     }
     else
@@ -544,7 +571,7 @@ TObject* Tool::getHist(BoardContainer* pBeBoard, std::string pName)
 
         if(cHisto == std::end(cBeBoardHistMap->second))
         {
-            LOG(ERROR) << RED << "Error: could not find the Histogram with the name " << pName << RESET;
+            LOG(ERROR) << BOLDRED << "Error: could not find the Histogram with the name " << BOLDYELLOW << pName << RESET;
             return nullptr;
         }
         else
@@ -635,7 +662,8 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
         LOG(INFO) << "OTSDAQ result directory environmental variable set: " << std::getenv("OTSDAQ_RESULTS_FOLDER");
         nDirname = std::string(std::getenv("OTSDAQ_RESULTS_FOLDER")) + "/" + pDirname + "/";
     }
-    else { nDirname = pDirname; }
+    else
+        nDirname = pDirname;
     if(pDate) nDirname += currentDateTime();
 
     std::string cCommand = "mkdir -p " + nDirname;
@@ -646,7 +674,7 @@ void Tool::CreateResultDirectory(const std::string& pDirname, bool pMode, bool p
     }
     catch(std::exception& e)
     {
-        LOG(ERROR) << BOLDRED << "Exception when trying to create Result Directory: " << e.what() << RESET;
+        LOG(ERROR) << BOLDRED << "Exception when trying to create Result Directory: " << BOLDYELLOW << e.what() << RESET;
     }
 
     fDirectoryName = nDirname;
@@ -672,11 +700,11 @@ void Tool::InitResultFile(const std::string& pFilename)
         }
         catch(std::exception& e)
         {
-            LOG(ERROR) << "Exceptin when trying to create Result File: " << e.what();
+            LOG(ERROR) << BOLDRED << "Exceptin when trying to create Result File: " << BOLDYELLOW << e.what() << RESET;
         }
     }
     else
-        LOG(INFO) << RED << "ERROR: " << RESET << "No result directory initialized - not saving results!";
+        LOG(WARNING) << BOLDRED << "Error: " << BOLDYELLOW << "no result directory initialized - not saving results" << RESET;
 #endif
 }
 
@@ -781,7 +809,7 @@ void Tool::StartHttpServer(const int pPort, bool pReadonly)
     }
     catch(std::exception& e)
     {
-        LOG(ERROR) << "Exception when trying to start THttpServer: " << e.what();
+        LOG(ERROR) << BOLDRED << "Exception when trying to start THttpServer: " << BOLDYELLOW << e.what() << RESET;
     }
 
     LOG(INFO) << "Opening THttpServer on port " << pPort << ". Point your browser to: " << GREEN << hostname << ":" << pPort << RESET;
@@ -881,7 +909,7 @@ void Tool::dumpConfigFiles()
     }
     else
     {
-        LOG(ERROR) << "Error: no results Directory initialized" << RESET;
+        LOG(ERROR) << BOLDRED << "Error: " << BOLDYELLOW << "no results Directory initialized" << RESET;
         abort();
     }
 }
@@ -1312,7 +1340,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
             setAllGlobalDacBeBoard(boardId, dacName, *currentDacList);
 
         Occupancy noOccupancy;
-        ContainerFactory::reinitializeContainer(currentStepOccupancyContainer, noOccupancy);
+        ContainerFactory::reinitializeContainer(*currentStepOccupancyContainer, noOccupancy);
         fDetectorDataContainer = currentStepOccupancyContainer;
         measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
         // TO-DO.. generalize so that I don't need the MPA/SSA
@@ -1566,7 +1594,7 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
             setAllGlobalDacBeBoard(boardId, dacName, *currentDacList);
 
         Occupancy noOccupancy;
-        ContainerFactory::reinitializeContainer(currentStepOccupancyContainer, noOccupancy);
+        ContainerFactory::reinitializeContainer(*currentStepOccupancyContainer, noOccupancy);
         fDetectorDataContainer = currentStepOccupancyContainer;
         measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
 
@@ -2313,7 +2341,7 @@ void Tool::setSameDac(const std::string& dacName, const uint16_t dacValue)
     for(auto cBoard: *fDetectorContainer) { setSameDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue); }
 }
 
-std::string Tool::getCalibrationName(void)
+std::string Tool::getCalibrationName(void) const
 {
     int32_t     status;
     std::string className     = abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);

@@ -32,7 +32,7 @@ SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartner
     fMaxRegValue      = 255; // 8 bit registers in SSA2
     fChipOriginalMask = std::make_shared<ChannelGroup<1, NSSACHANNELS>>();
     fPartnerId        = pPartnerId;
-    configFileName    = filename;
+    fConfigFileName   = filename;
     loadfRegMap(filename);
     // select control regs
     for(auto& cMapItem: fRegMap)
@@ -42,7 +42,8 @@ SSA2::SSA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartner
         cMapItem.second.fControlReg = 1;
     }
     setFrontEndType(FrontEndType::SSA2);
-    fAverageNoise = 4.0;
+    fAverageNoise    = 4.0;
+    fAveragePedestal = 8.0;
 }
 
 SSA2::SSA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pChipId, uint8_t pPartnerId, uint8_t pSSASide, const std::string& filename)
@@ -63,7 +64,8 @@ SSA2::SSA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
         cMapItem.second.fControlReg = 1;
     }
     setFrontEndType(FrontEndType::SSA2);
-    fAverageNoise = 4.0;
+    fAverageNoise    = 4.0;
+    fAveragePedestal = 8.0;
 }
 
 void SSA2::initializeFreeRegisters()
@@ -219,10 +221,9 @@ std::string SSA2::getStripRegisterName(const std::string& theRegisterName, uint1
     return stripRegisterName;
 }
 
-void SSA2::setADCCalibrationMap(const std::map<std::string, float>& theInputMap)
-{
-    for(const auto& theInput: theInputMap) fADCcalibrationMap[theInput.first] = theInput.second;
-}
+void SSA2::setADCCalibrationValue(const std::string& theCalibrationName, float theCalibrationValue) { fADCcalibrationMap.at(theCalibrationName) = theCalibrationValue; }
+
+float SSA2::getADCCalibrationValue(const std::string& theCalibrationName) const { return fADCcalibrationMap.at(theCalibrationName); }
 
 uint8_t SSA2::convertMIPtoInjectedCharge(float numberOfMIPs)
 {

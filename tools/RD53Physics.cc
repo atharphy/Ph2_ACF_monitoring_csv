@@ -140,7 +140,7 @@ void Physics::localConfigure(const std::string& histoFileName, int currentRun)
 #ifdef __USE_ROOT__
     if(this->fResultFile != nullptr) this->fResultFile->Close();
 #endif
-    CalibBase::initializeFiles<PhysicsHistograms>(histoFileName, "Physics", histos, currentRun);
+    CalibBase::initializeFiles(histoFileName, "Physics", histos, currentRun);
 }
 
 void Physics::run()
@@ -158,13 +158,13 @@ void Physics::run()
             for(const auto cBoard: *fDetectorContainer)
             {
                 static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])
-                    ->WriteChipCommand(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
-                                                                 RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
-                                                                 RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
-                                       -1);
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId, 6}), -1);
+                    ->WriteChipCommands(serialize(RD53ACmd::WrReg{RD53Shared::firstChip->getFEtype()->broadcastChipId,
+                                                                  RD53Shared::firstChip->getRegItem("GlobalPulseConf").fAddress,
+                                                                  RD53Shared::firstChip->getFEtype()->GlobalPulseConfMap.find("AcqureZeroSyncFE")->second}),
+                                        -1);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommands(serialize(RD53ACmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId, 6}), -1);
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
-                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommand(serialize(RD53ACmd::ECR{}), -1);
+                static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommands(serialize(RD53ACmd::ECR{}), -1);
                 std::this_thread::sleep_for(std::chrono::microseconds(20));
             }
 

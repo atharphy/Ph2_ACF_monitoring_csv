@@ -52,7 +52,8 @@ const RD53::FrontEnd  RD53B::RD53Bv1 = {"RD53Bv1",
                                          {"ADCstatConversion", 0x1000},
                                          {"SendStartRingOscA", 0x2000},
                                          {"SendStartRingOscB", 0x4000},
-                                         {"SendStartEfusesPrg", 0x800}}};
+                                         {"SendStartEfusesPrg", 0x800}},
+                                        {"EN_CORE_COL_0", "EN_CORE_COL_1", "EN_CORE_COL_2", "EN_CORE_COL_3"}};
 const RD53::FrontEnd  RD53B::RD53Bv2 = {"RD53Bv2",
                                         {"DAC_GDAC_M_LIN", "DAC_GDAC_L_LIN", "DAC_GDAC_R_LIN"},
                                         "DAC_KRUM_CURR_LIN",
@@ -86,7 +87,8 @@ const RD53::FrontEnd  RD53B::RD53Bv2 = {"RD53Bv2",
                                          {"ADCstatConversion", 0x1000},
                                          {"SendStartRingOscA", 0x2000},
                                          {"SendStartRingOscB", 0x4000},
-                                         {"SendStartEfusesPrg", 0x8000}}};
+                                         {"SendStartEfusesPrg", 0x8000}},
+                                        {"EN_CORE_COL_0", "EN_CORE_COL_1", "EN_CORE_COL_2", "EN_CORE_COL_3"}};
 const RD53::FrontEnd* RD53B::RD53Bvx = &RD53B::RD53Bv2;
 
 std::map<std::string, RD53::SpecialRegInfo> RD53B::specialRegMap = {{"CDR_CONFIG_SEL_SER_CLK", {"CDR_CONFIG", 0}},

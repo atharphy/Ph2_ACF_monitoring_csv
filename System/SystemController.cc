@@ -8,6 +8,7 @@
 */
 
 #include "System/SystemController.h"
+#include "HWDescription/VTRx.h"
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/ExceptionHandler.h"
@@ -15,8 +16,9 @@
 #include "HWInterface/RD53AInterface.h"
 #include "HWInterface/RD53BInterface.h"
 #include "HWInterface/RD53FWInterface.h"
-#include "MonitorUtils/CBCMonitor.h"
+#include "HWInterface/VTRxInterface.h"
 #include "MonitorUtils/DetectorMonitor.h"
+#include "MonitorUtils/Monitor2S.h"
 #include "MonitorUtils/PSMonitor.h"
 #include "MonitorUtils/RD53Monitor.h"
 #include "MonitorUtils/SEHMonitor.h"
@@ -37,6 +39,7 @@ SystemController::SystemController()
     : fBeBoardInterface(nullptr)
     , fReadoutChipInterface(nullptr)
     , flpGBTInterface(nullptr)
+    , fVTRxInterface(nullptr)
     , fCicInterface(nullptr)
     , fDetectorContainer(nullptr)
     , fSettingsMap()
@@ -60,6 +63,7 @@ void SystemController::Inherit(const SystemController* pController)
     fBeBoardInterface     = pController->fBeBoardInterface;
     fReadoutChipInterface = pController->fReadoutChipInterface;
     flpGBTInterface       = pController->flpGBTInterface;
+    fVTRxInterface        = pController->fVTRxInterface;
     fBeBoardFWMap         = pController->fBeBoardFWMap;
     fSettingsMap          = pController->fSettingsMap;
     fFileHandler          = pController->fFileHandler;
@@ -114,6 +118,11 @@ void SystemController::Destroy()
 
     RD53Event::JoinDecodingThreads();
 
+    if(fDetectorMonitor != nullptr)
+    {
+        fDetectorMonitor->stopRunning();
+        fDetectorMonitor->waitForMonitorToStop();
+    }
     delete fDetectorMonitor;
     fDetectorMonitor = nullptr;
 
@@ -125,6 +134,9 @@ void SystemController::Destroy()
 
     delete flpGBTInterface;
     flpGBTInterface = nullptr;
+
+    delete fVTRxInterface;
+    fVTRxInterface = nullptr;
 
     delete fDetectorContainer;
     fDetectorContainer = nullptr;
@@ -265,6 +277,12 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                     LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for lpGBT" << RESET;
                     flpGBTInterface = new D19clpGBTInterface(fBeBoardFWMap, cFirstOpticalGroup->flpGBT->isOptical());
                 }
+                bool cWithVTRx = (cFirstOpticalGroup->fVTRx != nullptr);
+                if(cWithVTRx)
+                {
+                    LOG(INFO) << BOLDBLUE << "\t\t\t.. Initializing HwInterface for VTRx" << RESET;
+                    fVTRxInterface = new VTRxInterface(fBeBoardFWMap, flpGBTInterface);
+                }
 
                 LOG(INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;
                 if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
@@ -333,7 +351,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(fDetectorMonitorConfig->fEnable == true)
     {
         if(fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_2S_VALUE)
-            fDetectorMonitor = new CBCMonitor(this, *fDetectorMonitorConfig);
+            fDetectorMonitor = new Monitor2S(this, *fDetectorMonitorConfig);
         else if((fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_RD53A_VALUE) || (fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_RD53B_VALUE))
             fDetectorMonitor = new RD53Monitor(this, *fDetectorMonitorConfig);
         else if(fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_2SSEH_VALUE)
@@ -370,7 +388,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         }
     }
 
-    fRegisterHelper = new RegisterHelper(fDetectorContainer, fBeBoardInterface, fReadoutChipInterface, flpGBTInterface, fCicInterface, &fBeBoardFWMap);
+    fRegisterHelper = new RegisterHelper(fDetectorContainer, fBeBoardInterface, fReadoutChipInterface, fVTRxInterface, flpGBTInterface, fCicInterface, &fBeBoardFWMap);
 }
 
 void SystemController::InitializeSettings(const std::string& pFilename, std::ostream& os) { this->fParser.parseSettings(pFilename, fSettingsMap, os); }
@@ -434,7 +452,6 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
             LOG(INFO) << BOLDBLUE << "\t--> Configured up and down link mapping in firmware" << RESET;
 
             if(flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT) == true)
-            // && (static_cast<RD53lpGBTInterface*>(flpGBTInterface)->ExternalPhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, theBeBoardFW, fReadoutChipInterface) == true)) // @TMP@
             {
                 static_cast<RD53lpGBTInterface*>(flpGBTInterface)->PhaseAlignRx(cOpticalGroup->flpGBT, pBoard, cOpticalGroup, fReadoutChipInterface);
                 LOG(INFO) << CYAN << "=== LpGBT chip " << BOLDYELLOW << +cOpticalGroup->getId() << RESET << CYAN << " configured ===" << RESET;
@@ -551,6 +568,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             LOG(INFO) << BOLDRED << "SOMETHING FUNNY" << RESET;
             continue;
         }
+        if(cOpticalGroup->fVTRx != nullptr) fVTRxInterface->ConfigureChip(cOpticalGroup->fVTRx);
     }
 
     // module start-up
@@ -835,7 +853,7 @@ void SystemController::ConfigureHw(bool pReInitialize)
         exit(EXIT_FAILURE);
     }
 
-    LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from xml file @@@" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from XML file @@@" << RESET;
     for(const auto cBoard: *fDetectorContainer)
     {
         cBoard->printBoardType();
@@ -1031,7 +1049,7 @@ uint32_t SystemController::ReadData(BeBoard* pBoard, std::vector<uint32_t>& pDat
 void SystemController::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents)
 {
     std::vector<uint32_t> cData;
-    return this->ReadNEvents(pBoard, pNEvents, cData, true);
+    this->ReadNEvents(pBoard, pNEvents, cData, true);
 }
 
 void SystemController::ReadNEvents(uint32_t pNEvents)

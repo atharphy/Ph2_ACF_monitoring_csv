@@ -27,7 +27,7 @@ class L1ReadoutInterface
     std::vector<uint32_t> fData;
     uint32_t              fNEvents{100};
     uint32_t              fNReadoutEvents;
-    uint32_t              fMaxAttempts{10};
+    uint32_t              fMaxAttempts{100};
     uint32_t              fReadoutAttempt{0};
     uint32_t              fTimeout_us{5000000}; // time-out after 5s
     RegManager*           fTheRegManager{nullptr};

@@ -79,7 +79,7 @@ void VoltageTuning::localConfigure(const std::string& histoFileName, int current
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles<VoltageTuningHistograms>(histoFileName, "VoltageTuning", histos);
+    CalibBase::initializeFiles(histoFileName, "VoltageTuning", histos);
 }
 
 void VoltageTuning::run()
@@ -99,6 +99,9 @@ void VoltageTuning::run()
 
     auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
+    // ################################
+    // # Prepare query and enable all #
+    // ################################
     CalibBase::prepareChipQueryForEnDis("chipSubset");
 
     for(auto nAttempt = 0; nAttempt < RD53Shared::MAXATTEMPTS; nAttempt++)
@@ -316,8 +319,10 @@ void VoltageTuning::run()
                               << (allEnabled_current - allDisabled_current) / (RD53Shared::firstChip->getNRows() * RD53Shared::firstChip->getNCols()) << BOLDBLUE << " uA" << RESET;
                 }
 
+    // ################################
+    // # Restore query and enable all #
+    // ################################
     fDetectorContainer->resetReadoutChipQueryFunction();
-    fDetectorContainer->setEnabledAll(true);
 }
 
 void VoltageTuning::draw(bool saveData)
@@ -361,10 +366,10 @@ std::vector<int> VoltageTuning::createScanRange(Chip* pChip, const std::string r
     std::vector<int> scanRange;
 
     if(initial <= target)
-        for(int vTrim = (RD53Shared::setBits(pChip->getRegItem(regName).fBitSize) + 1) / 2; vTrim <= static_cast<int>(RD53Shared::setBits(pChip->getRegItem(regName).fBitSize)); vTrim++)
+        for(int vTrim = (RD53Shared::setBits(pChip->getNumberOfBits(regName)) + 1) / 2; vTrim <= static_cast<int>(RD53Shared::setBits(pChip->getNumberOfBits(regName))); vTrim++)
             scanRange.push_back(vTrim);
     else if(initial > target)
-        for(int vTrim = (RD53Shared::setBits(pChip->getRegItem(regName).fBitSize) + 1) / 2; vTrim >= 0; vTrim--) scanRange.push_back(vTrim);
+        for(int vTrim = (RD53Shared::setBits(pChip->getNumberOfBits(regName)) + 1) / 2; vTrim >= 0; vTrim--) scanRange.push_back(vTrim);
 
     return scanRange;
 }

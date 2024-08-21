@@ -8,7 +8,7 @@
 
 #ifndef __MonitorDQMPlotPS_H__
 #define __MonitorDQMPlotPS_H__
-#include "MonitorDQM/MonitorDQMPlotBase.h"
+#include "MonitorDQM/MonitorDQMPlotOT.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
 
@@ -18,7 +18,7 @@ class TFile;
  * \class MonitorDQMPlotPS
  * \brief Class for DQMExample monitoring Plots
  */
-class MonitorDQMPlotPS : public MonitorDQMPlotBase
+class MonitorDQMPlotPS : public MonitorDQMPlotOT
 {
   public:
     /*!
@@ -56,26 +56,13 @@ class MonitorDQMPlotPS : public MonitorDQMPlotBase
      */
     void reset(void) override;
 
-    /*!
-     * \brief fillPSRegisterPlots
-     * \param thePSRegisterContainer : Container with the hits you want to plot
-     * \param timeStamp : timeStamp
-     */
-    void fillPSRegisterPlots(DetectorDataContainer& thePSRegisterContainer, const std::string& registerName);
-    void fillSSA2RegisterPlots(DetectorDataContainer& thePSRegisterContainer, const std::string& registerName);
-    void fillMPA2RegisterPlots(DetectorDataContainer& thePSRegisterContainer, const std::string& registerName);
-    void fillLpGBTRegisterPlots(DetectorDataContainer& thePSRegisterContainer, const std::string& registerName);
+    void fillSSA2RegisterPlots(DetectorDataContainer& theInputContainer, const std::string& registerName);
+    void fillMPA2RegisterPlots(DetectorDataContainer& theInputContainer, const std::string& registerName);
 
   private:
-    std::map<std::string, DetectorDataContainer> fPSRegisterMonitorPlotMap;
+    void                                         bookMPA2Plots(TFile* theOutputFile, std::string registerName);
+    void                                         bookSSA2Plots(TFile* theOutputFile, std::string registerName);
     std::map<std::string, DetectorDataContainer> fMPA2RegisterMonitorPlotMap;
     std::map<std::string, DetectorDataContainer> fSSA2RegisterMonitorPlotMap;
-    std::map<std::string, DetectorDataContainer> fLpGBTRegisterMonitorPlotMap;
-    const DetectorContainer*                     fDetectorContainer;
-
-    void bookPSPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
-    void bookMPA2Plots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
-    void bookSSA2Plots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
-    void bookLpGBTPlots(TFile* theOutputFile, const DetectorContainer& theDetectorStructure, std::string registerName);
 };
 #endif
