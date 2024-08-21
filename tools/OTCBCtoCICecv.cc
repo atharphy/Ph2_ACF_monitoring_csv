@@ -371,8 +371,8 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
         for(auto theHybrid: *theOpticalGroup)
         {
             //setting CIC strength
-            auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-            fCicInterface->ConfigureDriveStrength(cCic, cicSlvsCurrent);
+            auto& theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+            fCicInterface->ConfigureDriveStrength(theCic, cicSlvsCurrent);
 
             //setting CBC strength
             for(auto theCBC: *theHybrid)
