@@ -35,14 +35,16 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
     uint8_t cbcStrengthCount = 16;
     for (uint8_t cicSlvsCurrent = 1; cicSlvsCurrent <= 5; cicSlvsCurrent++)
     {
-        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("CBCtoCICecvEfficiency_CICSLVScurrent%d", int(cicSlvsCurrent)),
-                                                        Form("CBC to CIC ecv Efficiency CICSLVScurrent %d", int(cicSlvsCurrent)),
-                                                        numberOfCBC * numberOfStubs, //x-axis
-                                                        0,
-                                                        numberOfCBC * numberOfStubs,
-                                                        cbcStrengthCount,
-                                                        0.5,
-                                                        cbcStrengthCount + 0.5);
+        HistContainer<TH2F> phaseScanMatchingEfficiency(
+                Form("CBCtoCICecvEfficiency_CICSLVScurrent%d", int(cicSlvsCurrent)),
+                Form("CBC to CIC ecv Efficiency CICSLVScurrent %d", int(cicSlvsCurrent)),
+                numberOfCBC * numberOfStubs, //x-axis
+                0,
+                numberOfCBC * numberOfStubs,
+                cbcStrengthCount,
+                0.5,
+                cbcStrengthCount + 0.5
+                                                        );
         phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("");
         phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetTitle("CBC strength");
 
