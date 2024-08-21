@@ -59,6 +59,7 @@ class OTCBCtoCICecv : public OTCicBypassTest
     uint8_t            fShiftRegisterPattern{0xAA};
     uint32_t           fNumberOfIterations{100};
     std::vector<float> fListOfCBCslvsCurrents{1, 4, 7};
+    std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndlineToCbcIdAndStub();
 
     //////////////////////// From OTalignLpGBTinputsForBypass.cc //////////////////////////
     void    prepareForLpGBTalignment2Sstubs();

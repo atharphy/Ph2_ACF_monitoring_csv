@@ -300,6 +300,37 @@ void OTCBCtoCICecv::itrOverCBCStrength()
     }
 }
 
+std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OTCBCtoCICecv::phyPortAndlineToCbcIdAndStub()
+{
+    uint8_t numberOfLines = 4;
+    uint8_t numberOfPhyPorts = 12;
+
+    std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndLineToCbcIdAndStubMap;
+
+    for(auto theBoard: *fDetectorContainer)
+    for(auto theOpticalGroup: *theBoard)
+    for(auto theHybrid: *theOpticalGroup)
+    {
+        auto& theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+        for(uint8_t phyPort = 0; phyPort < numberOfPhyPorts; ++phyPort)
+        for(uint8_t line = 0; line < numberOfLines; ++line)
+        {
+            std::pair<uint8_t, uint8_t> phyPortAndLine(phyPort, line);
+            auto chipIdAndLine = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
+            chipIdAndLine.first += 1; // first contain cbcId from 1 to 8
+            if(phyPort >= 10)
+                chipIdAndLine.second = uint8_t(6);
+                //second contain Stub value from 1 to 5
+                //Setting line value to 6 for L1
+                //but that would be helpful with histograms filling logic
+            phyPortAndLineToCbcIdAndStubMap[phyPortAndLine] = chipIdAndLine;
+        }
+        return phyPortAndLineToCbcIdAndStubMap;
+    }
+
+    return phyPortAndLineToCbcIdAndStubMap; // this return is not used, just for the compiler to remove warning
+}
+
 void OTCBCtoCICecv::runOTCBCtoCICecv()
 {
     uint8_t cicSLVSCurrentStart    = 1, cicSLVSCurrentEnd     = 5 ;
@@ -328,6 +359,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
         break;
     }
 
+    auto phyPortAndLineToCbcIdAndStubMap = phyPortAndlineToCbcIdAndStub();
     prepareForLpGBTalignment2Sstubs();
     prepareForLpGBTalignment2SL1();
 
@@ -394,7 +426,6 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                             if(phyPort >= 10) // L1 for 2S case
                             {
                                 matchingEfficiency = getMatchingEfficiency2SL1(phyPortDataVector[line]);
-                                //LOG(INFO) << "kpal: phyPort: " << +phyPort << " line: " << +line << " matchingEfficiency: " << matchingEfficiency << RESET;
                             }
                             else
                             {
@@ -402,8 +433,8 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                                 thePattern = fStubPattern2S[(phyPort * 4 + line) % 5];
                                 auto possiblePatternList = getPossiblePatterns(thePattern, static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10);
                                 matchingEfficiency       = countMatchingBits(phyPortDataVector[line], possiblePatternList);
-                                //LOG(INFO) << "kpal: phyPort: " << +phyPort << " line: " << +line << " matchingEfficiency: " << matchingEfficiency << RESET;
                             }
+                            //LOG(INFO) << "kpal: phyPort: " << +phyPort << " channel: " << +line << " CBC" << +phyPortAndLineToCbcIdAndStubMap[{phyPort, line}].first << "_stub" << +phyPortAndLineToCbcIdAndStubMap[{phyPort, line}].second << " matchingEfficiency: " << matchingEfficiency << RESET;
                         }
                     }
                 }
@@ -412,7 +443,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
 
 #ifdef __USE_ROOT__
             //LOG(INFO) << "Using ROOT to save OTCBCtoCICecv matching efficiency." << RESET;
-            fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, phyPort, cbcStrength, cicSlvsCurrent);
+            fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, phyPort, cbcStrength, cicSlvsCurrent, phyPortAndLineToCbcIdAndStubMap);
 #else
             if(fDQMStreamer)
             {
