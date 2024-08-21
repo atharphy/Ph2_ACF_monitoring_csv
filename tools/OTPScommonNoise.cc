@@ -73,23 +73,30 @@ void OTPScommonNoise::SetThresholds()
 void OTPScommonNoise::TakeData()
 {
 
-    DetectorDataContainer theStripHitContainer;
-    DetectorDataContainer thePixelHitContainer;
-    DetectorDataContainer theStripHybridHitContainer;
-    DetectorDataContainer thePixelHybridHitContainer;
-    DetectorDataContainer theStripModuleHitContainer;
-    DetectorDataContainer thePixelModuleHitContainer;
+    auto        selectSSAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
+    std::string selectSSAfunctionName = "SelectSSAfunction";
+
+    auto        selectMPAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
+    std::string selectMPAfunctionName = "SelectMPAfunction";
 
     // DetectorDataContainer the2DHitContainer;
-
+    fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
+    DetectorDataContainer theStripHitContainer;
     ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS + 1)>>(*fDetectorContainer, theStripHitContainer);
-    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS + 1)>>(*fDetectorContainer, thePixelHitContainer);
-
+    DetectorDataContainer theStripHybridHitContainer;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1)>>( *fDetectorContainer, theStripHybridHitContainer);
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1)>>( *fDetectorContainer, thePixelHybridHitContainer);
-
+    DetectorDataContainer theStripModuleHitContainer;
     ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT * 2 + 1)>>( *fDetectorContainer, theStripModuleHitContainer);
+    fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
+
+    fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
+    DetectorDataContainer thePixelHitContainer;
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS + 1)>>(*fDetectorContainer, thePixelHitContainer);
+    DetectorDataContainer thePixelHybridHitContainer;
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1)>>( *fDetectorContainer, thePixelHybridHitContainer);
+    DetectorDataContainer thePixelModuleHitContainer;
     ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1)>>( *fDetectorContainer, thePixelModuleHitContainer);
+    fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
 
     /*
     // 2D arrays for module-level and hybrid-level correlation
@@ -128,9 +135,10 @@ void OTPScommonNoise::TakeData()
     measureOccupancy.fSSAtestPulseValue = 0;
     measureOccupancy.fMPAtestPulseValue = 0;
     measureOccupancy.prepareOccupancyMeasurementPS();
-
+    std::cout << " entering event loop " << std::endl;
     for(auto theBoard: *fDetectorContainer)
     {
+        std::cout << " loop on boards " << std::endl;
         uint32_t theEventCounter = fNumberOfEvents;
         while(theEventCounter != 0)
         {
@@ -143,12 +151,13 @@ void OTPScommonNoise::TakeData()
             std::cout << " done ReadNEvents " << std::endl;
             const std::vector<Event*>& events = GetEvents();
             setNReadbackEvents(events.size());
-            LOG(INFO) << "Reading out " << events.size() << "events, " << theEventCounter << " events remaining.";
+            LOG(INFO) << BOLDYELLOW << "Reading out " << events.size() << " events, " << theEventCounter << " events remaining."<< RESET;
 
             for(auto cOpticalGroup: *theBoard)
             {
                 for(auto& cEvent: events)
                 {
+                    LOG(INFO) << BOLDYELLOW << " Event number " << cEvent->GetEventCount() << RESET;
                     if(theEventCounter > fNumberOfEvents) continue;
 
                     // uint32_t cModuleHits     = 0;
@@ -158,7 +167,8 @@ void OTPScommonNoise::TakeData()
                     // std::map<int, int>                cHybridCorrelationMap;
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        // uint32_t cHybridHits     = 0;
+                        uint32_t cStripHybridHits     = 0;
+                        uint32_t cPixelHybridHits     = 0;
 
                         for(auto cChip: *cHybrid)
                         {
@@ -168,35 +178,73 @@ void OTPScommonNoise::TakeData()
                             uint32_t cEventHits  =    hit_vec.size(); //
                             std::cout << " cEventHits " << cEventHits << std::endl; //                              = cEventHitsEven + cEventHitsOdd;
                             //cChipCorrelationMap[cHybrid->getId()][cChip->getId()] = cEventHits;
-                        } //tmp
-                    }// tmp
-                } //tmp
-            } //tmp
-        }//tmp
-    }     //tmp   
-                            /*
-                            auto theChipHitContainerValues = &(theChipHitContainer.getObject(cBoard->getId())
+  
+                            if(cChip->getFrontEndType() == FrontEndType::SSA2)
+                            {
+                                std::cout << " SSA " << +cChip->getId() << std::endl;
+                                auto theStripHitContainerValues = &(theStripHitContainer.getObject(theBoard->getId())
                                                                    ->getObject(cOpticalGroup->getId())
                                                                    ->getObject(cHybrid->getId())
                                                                    ->getObject(cChip->getId())
-                                                                   ->getSummary<GenericDataArray<uint32_t, 3 * (NCHANNELS + 1)>>());
+                                                                   ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS + 1)>>());
 
-                            (*theChipHitContainerValues)[2 * (NCHANNELS + 1) + cEventHits]++;
+                                (*theStripHitContainerValues)[cEventHits]++;
 
-                            cHybridHits += cEventHits;
-                            cHybridCorrelationMap[cHybrid->getId()] = cHybridHits;
+                                cStripHybridHits += cEventHits;
 
-                            the2DSensorChipCorrelationContainer.getObject(cBoard->getId())
-                                ->getObject(cOpticalGroup->getId())
-                                ->getObject(cHybrid->getId())
-                                ->getObject(cChip->getId())
-                                ->getSummary<GenericDataArray<uint32_t, (NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1)>>()[cEventHitsEven][cEventHitsOdd] += 1;
+                            }
+                            if(cChip->getFrontEndType() == FrontEndType::MPA2)
+                            {
+                                std::cout << " MPA " << +cChip->getId() << std::endl;
+                                auto thePixelHitContainerValues = &(thePixelHitContainer.getObject(theBoard->getId())
+                                   ->getObject(cOpticalGroup->getId())
+                                   ->getObject(cHybrid->getId())
+                                   ->getObject(cChip->getId())
+                                   ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS + 1)>>());
+
+                                (*thePixelHitContainerValues)[cEventHits]++;
+
+                                cPixelHybridHits += cEventHits;
+                            }
+
+                            std::cout << "cStripHybridHits: "<< cStripHybridHits << " cPixelHybridHits: "<< cPixelHybridHits << std::endl;
+                        
+                        } //chip loop
+
+                        auto theStripHybridContainerValues = &(theStripHybridHitContainer.getObject(theBoard->getId())
+                                                              ->getObject(cOpticalGroup->getId())
+                                                              ->getObject(cHybrid->getId())
+                                                              ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1)>>());
+
+                        (*theStripHybridContainerValues)[cStripHybridHits]++;
+
+                        auto thePixelHybridContainerValues = &(thePixelHybridHitContainer.getObject(theBoard->getId())
+                                                              ->getObject(cOpticalGroup->getId())
+                                                              ->getObject(cHybrid->getId())
+                                                              ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1)>>());
+
+                        (*thePixelHybridContainerValues)[cPixelHybridHits]++;
+
+
+                    }     // hybrid loop
+                } //tmp
+            } //tmp
+        }//tmp
+    }     //tmp 
+    /*
+                                // cHybridCorrelationMap[cHybrid->getId()] = cHybridHits;
+
+                            // the2DSensorChipCorrelationContainer.getObject(cBoard->getId())
+                            //     ->getObject(cOpticalGroup->getId())
+                            //     ->getObject(cHybrid->getId())
+                            //     ->getObject(cChip->getId())
+                            //     ->getSummary<GenericDataArray<uint32_t, (NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1)>>()[cEventHitsEven][cEventHitsOdd] += 1;
 
                             // for 2d correlation, save channels with hits per chip
-                            if(f2DHistograms)
-                            {
-                                for(auto hit: hit_vec) { hit_channels.push_back(hit.second + chipOffset_module); }
-                            }
+                            // if(f2DHistograms)
+                            // {
+                            //     for(auto hit: hit_vec) { hit_channels.push_back(hit.second + chipOffset_module); }
+                            // }
                         }
 
                         // save per hybrid
@@ -218,20 +266,13 @@ void OTPScommonNoise::TakeData()
                             ->getObject(cHybrid->getId())
                             ->getSummary<GenericDataArray<uint32_t, (HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1)>>()[cHybridHitsEven][cHybridHitsOdd] += 1;
 
-                        auto theHybridContainerValues = &(theHybridHitContainer.getObject(cBoard->getId())
-                                                              ->getObject(cOpticalGroup->getId())
-                                                              ->getObject(cHybrid->getId())
-                                                              ->getSummary<GenericDataArray<uint32_t, 3 * (HYBRID_CHANNELS_OT + 1)>>());
-                        (*theHybridContainerValues)[cHybridHitsEven]++;
-                        (*theHybridContainerValues)[(HYBRID_CHANNELS_OT + 1) + cHybridHitsOdd]++;
-                        (*theHybridContainerValues)[2 * (HYBRID_CHANNELS_OT + 1) + cHybridHits]++;
+                        
                     }
 
                     auto theModuleContainerValues =
                         &(theModuleHitContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, 3 * (TOTAL_CHANNELS_OT + 1)>>());
 
-                    (*theModuleContainerValues)[cModuleHitsEven]++;
-                    (*theModuleContainerValues)[(TOTAL_CHANNELS_OT + 1) + cModuleHitsOdd]++;
+
                     (*theModuleContainerValues)[2 * (TOTAL_CHANNELS_OT + 1) + cModuleHits]++;
 
                     the2DSensorModuleCorrelationContainer.getObject(cBoard->getId())
@@ -261,28 +302,34 @@ void OTPScommonNoise::TakeData()
             } // end module loop
         }     // end acquisition loop
     }
+*/
 #ifdef __USE_ROOT__
-    fDQMHistogramOTCMNoise.fillChipHitPlots(theChipHitContainer, true);
-    fDQMHistogramOTCMNoise.fillHybridHitPlots(theHybridHitContainer);
-    fDQMHistogramOTCMNoise.fillModuleHitPlots(theModuleHitContainer);
+    bool doFit = false;
+    fDQMHistogramOTPScommonNoise.fillChipHitPlots(theStripHitContainer, doFit);
+    fDQMHistogramOTPScommonNoise.fillChipHitPlots(thePixelHitContainer, doFit);
+    // fDQMHistogramOTPScommonNoise.fillHybridHitPlots(theStripHybridHitContainer, NSSACHANNELS * NCHIPS_OT);
+    // fDQMHistogramOTPScommonNoise.fillHybridHitPlots(thePixelHybridHitContainer, NSSACHANNELS * NMPAROWS * NCHIPS_OT);
+    // fDQMHistogramOTCMNoise.fillModuleHitPlots(theModuleHitContainer);
 
-    fDQMHistogramOTCMNoise.fillHybridCorrelationPlots(the2DHybridCorrelationContainer);
-    fDQMHistogramOTCMNoise.fillSensorChipCorrelationPlots(the2DSensorChipCorrelationContainer);
-    fDQMHistogramOTCMNoise.fillSensorHybridCorrelationPlots(the2DSensorHybridCorrelationContainer);
-    fDQMHistogramOTCMNoise.fillSensorModuleCorrelationPlots(the2DSensorModuleCorrelationContainer);
-    if(f2DHistograms) fDQMHistogramOTCMNoise.fill2DHitPlots(the2DHitContainer);
+    // fDQMHistogramOTCMNoise.fillHybridCorrelationPlots(the2DHybridCorrelationContainer);
+    // fDQMHistogramOTCMNoise.fillSensorChipCorrelationPlots(the2DSensorChipCorrelationContainer);
+    // fDQMHistogramOTCMNoise.fillSensorHybridCorrelationPlots(the2DSensorHybridCorrelationContainer);
+    // fDQMHistogramOTCMNoise.fillSensorModuleCorrelationPlots(the2DSensorModuleCorrelationContainer);
+    // if(f2DHistograms) fDQMHistogramOTCMNoise.fill2DHitPlots(the2DHitContainer);
 
 #else
     if(fDQMStreamerEnabled)
     {
         std::map<std::string, DetectorDataContainer*> cStreamableMap;
-        cStreamableMap["OTCMNoiseChipHitStream"]                   = &theChipHitContainer;
-        cStreamableMap["OTCMNoiseHybridHitStream"]                 = &theHybridHitContainer;
-        cStreamableMap["OTCMNoiseModuleHitStream"]                 = &theModuleHitContainer;
-        cStreamableMap["OTCMNoise2DHybridCorrelationStream"]       = &the2DHybridCorrelationContainer;
-        cStreamableMap["OTCMNoise2DSensorModuleCorrelationStream"] = &the2DSensorModuleCorrelationContainer;
+        cStreamableMap["OTPScommonNoiseStripHitStream"]   = &theStripHitContainer;
+        cStreamableMap["OTPScommonNoisePixelHitStream"]   = &thePixelHitContainer;
+        cStreamableMap["OTPScommonStripHybridHitStream"]  = &theStripHybridHitContainer;
+        cStreamableMap["OTPScommonPixelHybridHitStream"]  = &thePixelHybridHitContainer;
+        // cStreamableMap["OTCMNoiseModuleHitStream"]                 = &theModuleHitContainer;
+        // cStreamableMap["OTCMNoise2DHybridCorrelationStream"]       = &the2DHybridCorrelationContainer;
+        // cStreamableMap["OTCMNoise2DSensorModuleCorrelationStream"] = &the2DSensorModuleCorrelationContainer;
         // cStreamableMap["OTCMNoise2DSensorHybridCorrelationStream"]     = &the2DSensorHybridCorrelationContainer; //Ignoring, causes a crash
-        cStreamableMap["OTCMNoise2DSensorChipCorrelationStream"] = &the2DSensorChipCorrelationContainer;
+        // cStreamableMap["OTCMNoise2DSensorChipCorrelationStream"] = &the2DSensorChipCorrelationContainer;
 
         for(auto cStreamable: cStreamableMap)
         {
@@ -299,15 +346,14 @@ void OTPScommonNoise::TakeData()
             }
         }
 
-        if(f2DHistograms)
-        {
-            LOG(DEBUG) << "Streaming OTCMNoise2DHitStream" << RESET;
-            ContainerSerialization the2DHitSerialization("OTCMNoise2DHitStream");
-            the2DHitSerialization.streamByOpticalGroupContainer(fDQMStreamer, the2DHitContainer);
-        }
+        // if(f2DHistograms)
+        // {
+        //     LOG(DEBUG) << "Streaming OTCMNoise2DHitStream" << RESET;
+        //     ContainerSerialization the2DHitSerialization("OTCMNoise2DHitStream");
+        //     the2DHitSerialization.streamByOpticalGroupContainer(fDQMStreamer, the2DHitContainer);
+        // }
     }
 #endif
-*/
 }
 
 void OTPScommonNoise::Running()

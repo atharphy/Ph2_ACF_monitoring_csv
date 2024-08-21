@@ -10,6 +10,7 @@
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
+#include "Utils/GenericDataArray.h"
 
 class TFile;
 
@@ -54,8 +55,22 @@ class DQMHistogramOTPScommonNoise : public DQMHistogramBase
      * \brief Reset histogram
      */
     void reset(void) override;
+    void fillChipHitPlots(DetectorDataContainer& theHitData);
+    void fillChipHitPlots(DetectorDataContainer& theHitData, bool pFitDistributions);
+    void fillHybridHitPlots(DetectorDataContainer& theHitData, const int cNChannels);
+
+    template <size_t T2>
+    GenericDataArray<uint32_t, T2> fillEventsVsHitsChipHist(const ChipDataContainer& ChipContainer)
+    {
+      return (ChipContainer.getSummary<GenericDataArray<uint32_t, T2>>());
+    }
 
   private:
     DetectorContainer*    fDetectorContainer;
+    DetectorDataContainer fStripHitHistograms;
+    DetectorDataContainer fPixelHitHistograms;
+    DetectorDataContainer fHybridHitHistograms;
+    // DetectorDataContainer fStripHybridHitHistograms;
+    // DetectorDataContainer fPixelHybridHitHistograms;
 };
 #endif
