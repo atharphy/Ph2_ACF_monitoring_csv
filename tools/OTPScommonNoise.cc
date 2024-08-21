@@ -157,7 +157,7 @@ void OTPScommonNoise::TakeData()
             {
                 for(auto& cEvent: events)
                 {
-                    LOG(INFO) << BOLDYELLOW << " Event number " << cEvent->GetEventCount() << RESET;
+                    LOG(DEBUG) << BOLDYELLOW << " Event number " << cEvent->GetEventCount() << RESET;
                     if(theEventCounter > fNumberOfEvents) continue;
 
                     // uint32_t cModuleHits     = 0;
@@ -176,12 +176,11 @@ void OTPScommonNoise::TakeData()
                             auto     hit_vec           = cEvent->GetHits(cHybrid->getId(), cChip->getId());
 
                             uint32_t cEventHits  =    hit_vec.size(); //
-                            std::cout << " cEventHits " << cEventHits << std::endl; //                              = cEventHitsEven + cEventHitsOdd;
+                            LOG(DEBUG) << BOLDBLUE << " cEventHits " << cEventHits << RESET; //                              = cEventHitsEven + cEventHitsOdd;
                             //cChipCorrelationMap[cHybrid->getId()][cChip->getId()] = cEventHits;
   
                             if(cChip->getFrontEndType() == FrontEndType::SSA2)
                             {
-                                std::cout << " SSA " << +cChip->getId() << std::endl;
                                 auto theStripHitContainerValues = &(theStripHitContainer.getObject(theBoard->getId())
                                                                    ->getObject(cOpticalGroup->getId())
                                                                    ->getObject(cHybrid->getId())
@@ -195,7 +194,6 @@ void OTPScommonNoise::TakeData()
                             }
                             if(cChip->getFrontEndType() == FrontEndType::MPA2)
                             {
-                                std::cout << " MPA " << +cChip->getId() << std::endl;
                                 auto thePixelHitContainerValues = &(thePixelHitContainer.getObject(theBoard->getId())
                                    ->getObject(cOpticalGroup->getId())
                                    ->getObject(cHybrid->getId())
@@ -207,7 +205,7 @@ void OTPScommonNoise::TakeData()
                                 cPixelHybridHits += cEventHits;
                             }
 
-                            std::cout << "cStripHybridHits: "<< cStripHybridHits << " cPixelHybridHits: "<< cPixelHybridHits << std::endl;
+                            LOG(DEBUG) << BOLDBLUE << "cStripHybridHits: "<< cStripHybridHits << " cPixelHybridHits: "<< cPixelHybridHits << RESET;
                         
                         } //chip loop
 
