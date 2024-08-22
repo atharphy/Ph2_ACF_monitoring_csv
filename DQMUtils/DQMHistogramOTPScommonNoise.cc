@@ -8,6 +8,7 @@
 
 #include "TFile.h"
 #include "TH1F.h"
+#include "TH2F.h"
 
 using namespace Ph2_HwDescription;
 
@@ -25,7 +26,7 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
     // make fDetectorContainer ready to receive the information fromm the stream
     fDetectorContainer = &theDetectorStructure;
-    std::cout << " booking hists " << std::endl;
+    
     // double theNumberOfEvents    = findValueInSettings<double>(pSettingsMap, "OTPScommonNoise_NumberOfEvents", 10000);
  
     auto        selectSSAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
@@ -69,6 +70,18 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
     hPixelModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits ");
     hPixelModuleHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fPixelModuleHitHistograms, hPixelModuleHits);
+
+    for(uint8_t chip = NCHIPS_OT; chip < 2*NCHIPS_OT; chip++)
+    {
+    
+        HistContainer<TH2F> hSSAtoMPAcorrelation(Form("SSA(%d)toMPA(%d)_correlation", chip-NCHIPS_OT, chip),
+                                                        Form("SSA(%d) to MPA(%d) correlation", chip-NCHIPS_OT, chip),
+                                                        NSSACHANNELS * NMPAROWS + 2, -0.5, NSSACHANNELS * NMPAROWS + 1 + 0.5,
+                                                        NSSACHANNELS + 2, -0.5, NSSACHANNELS + 1 + 0.5);
+        hSSAtoMPAcorrelation.fTheHistogram->GetXaxis()->SetTitle("Number of hits MPA");
+        hSSAtoMPAcorrelation.fTheHistogram->GetYaxis()->SetTitle("Number of hits SSA");
+        RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fSSAtoMPAcorrelation[chip], hSSAtoMPAcorrelation);
+    }
 
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
     // SoC utilities only - END
@@ -217,4 +230,31 @@ void DQMHistogramOTPScommonNoise::fillModuleHitPlots(DetectorDataContainer& theH
             
         }
     }
+}
+
+void DQMHistogramOTPScommonNoise::fillSSAtoMPACorrelationPlots(DetectorDataContainer& theSensorData)
+{
+    for(auto board: theSensorData)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                for(auto chip: *hybrid)
+                {
+                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
+                    if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
+                    {
+                        TH2F* h2DChipSensorCorrelation = fSSAtoMPAcorrelation[chip->getId()].getObject(board->getId())
+                                                         ->getObject(opticalGroup->getId())
+                                                         ->getObject(hybrid->getId())
+                                                         ->getSummary<HistContainer<TH2F>>()
+                                                         .fTheHistogram;
+                        fillCorrelationHist<NSSACHANNELS + 1, NSSACHANNELS * NMPAROWS + 1>(chip,*h2DChipSensorCorrelation);
+                    }
+                }
+            }
+        }
+    }
+
 }

@@ -98,9 +98,9 @@ void OTPScommonNoise::TakeData()
     ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1)>>( *fDetectorContainer, thePixelModuleHitContainer);
 
     // Correlation between SSA and MPA pairs, the container is created only for the MPAs and saved per hybrid  
-    DetectorDataContainer the2DSensorChipCorrelationContainer;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (NSSACHANNELS + 1), (NSSACHANNELS * NMPAROWS + 1)>>(
-        *fDetectorContainer, the2DSensorChipCorrelationContainer);
+    DetectorDataContainer the2DSSAMPACorrelationContainer;
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS + 1), (NSSACHANNELS * NMPAROWS + 1)>>(
+        *fDetectorContainer, the2DSSAMPACorrelationContainer);
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
 
     // // 2D arrays for module-level and hybrid-level correlation
@@ -134,10 +134,9 @@ void OTPScommonNoise::TakeData()
     measureOccupancy.fSSAtestPulseValue = 0;
     measureOccupancy.fMPAtestPulseValue = 0;
     measureOccupancy.prepareOccupancyMeasurementPS();
-    std::cout << " entering event loop " << std::endl;
+
     for(auto theBoard: *fDetectorContainer)
     {
-        std::cout << " loop on boards " << std::endl;
         uint32_t theEventCounter = fNumberOfEvents;
         while(theEventCounter != 0)
         {
@@ -145,9 +144,7 @@ void OTPScommonNoise::TakeData()
             
             uint32_t cNEventToRead = theEventCounter;
             theEventCounter -= cNEventToRead;
-            std::cout << " preparing to read " << cNEventToRead << std::endl;
             ReadNEvents(theBoard, cNEventToRead);
-            std::cout << " done ReadNEvents " << std::endl;
             const std::vector<Event*>& events = GetEvents();
             setNReadbackEvents(events.size());
             LOG(INFO) << BOLDYELLOW << "Reading out " << events.size() << " events, " << theEventCounter << " events remaining."<< RESET;
@@ -203,6 +200,14 @@ void OTPScommonNoise::TakeData()
                                 (*thePixelHitContainerValues)[cEventHits]++;
 
                                 cPixelHybridHits += cEventHits;
+
+                                auto strip_hit = cEvent->GetHits(cHybrid->getId(), cChip->getId()%8);
+                                uint32_t cStripEventHits = strip_hit.size();
+                                the2DSSAMPACorrelationContainer.getObject(theBoard->getId())
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
+                                    ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS + 1), (NSSACHANNELS * NMPAROWS + 1)>>()[cStripEventHits][cEventHits]+=1;
                             }
 
                             LOG(DEBUG) << BOLDBLUE << "cStripHybridHits: "<< cStripHybridHits << " cPixelHybridHits: "<< cPixelHybridHits << RESET;
@@ -224,13 +229,6 @@ void OTPScommonNoise::TakeData()
                         (*thePixelHybridContainerValues)[cPixelHybridHits]++;
 
                                 // cHybridCorrelationMap[cHybrid->getId()] = cHybridHits;
-
-                            // the2DSensorChipCorrelationContainer.getObject(cBoard->getId())
-                            //     ->getObject(cOpticalGroup->getId())
-                            //     ->getObject(cHybrid->getId())
-                            //     ->getObject(cChip->getId())
-                            //     ->getSummary<GenericDataArray<uint32_t, (NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1)>>()[cEventHitsEven][cEventHitsOdd] += 1;
-
                             // for 2d correlation, save channels with hits per chip
                             // if(f2DHistograms)
                             // {
@@ -310,7 +308,7 @@ void OTPScommonNoise::TakeData()
     fDQMHistogramOTPScommonNoise.fillModuleHitPlots(theStripModuleHitContainer, true);
     fDQMHistogramOTPScommonNoise.fillModuleHitPlots(thePixelModuleHitContainer, false);
     // fDQMHistogramOTCMNoise.fillHybridCorrelationPlots(the2DHybridCorrelationContainer);
-    // fDQMHistogramOTCMNoise.fillSensorChipCorrelationPlots(the2DSensorChipCorrelationContainer);
+    fDQMHistogramOTPScommonNoise.fillSSAtoMPACorrelationPlots(the2DSSAMPACorrelationContainer);
     // fDQMHistogramOTCMNoise.fillSensorHybridCorrelationPlots(the2DSensorHybridCorrelationContainer);
     // fDQMHistogramOTCMNoise.fillSensorModuleCorrelationPlots(the2DSensorModuleCorrelationContainer);
     // if(f2DHistograms) fDQMHistogramOTCMNoise.fill2DHitPlots(the2DHitContainer);
@@ -318,16 +316,17 @@ void OTPScommonNoise::TakeData()
 #else
     if(fDQMStreamerEnabled)
     {
+        //FIXME - this part needs to be checked
         std::map<std::string, DetectorDataContainer*> cStreamableMap;
         cStreamableMap["OTPScommonNoiseStripHitStream"]   = &theStripHitContainer;
         cStreamableMap["OTPScommonNoisePixelHitStream"]   = &thePixelHitContainer;
-        cStreamableMap["OTPScommonStripHybridHitStream"]  = &theStripHybridHitContainer;
-        cStreamableMap["OTPScommonPixelHybridHitStream"]  = &thePixelHybridHitContainer;
+        cStreamableMap["OTPScommonNoiseStripHybridHitStream"]  = &theStripHybridHitContainer;
+        cStreamableMap["OTPScommonNoisePixelHybridHitStream"]  = &thePixelHybridHitContainer;
         // cStreamableMap["OTCMNoiseModuleHitStream"]                 = &theModuleHitContainer;
         // cStreamableMap["OTCMNoise2DHybridCorrelationStream"]       = &the2DHybridCorrelationContainer;
         // cStreamableMap["OTCMNoise2DSensorModuleCorrelationStream"] = &the2DSensorModuleCorrelationContainer;
         // cStreamableMap["OTCMNoise2DSensorHybridCorrelationStream"]     = &the2DSensorHybridCorrelationContainer; //Ignoring, causes a crash
-        // cStreamableMap["OTCMNoise2DSensorChipCorrelationStream"] = &the2DSensorChipCorrelationContainer;
+        cStreamableMap["OTPScommonNoise2DSSAMPACorrelationStream"] = &the2DSSAMPACorrelationContainer;
 
         for(auto cStreamable: cStreamableMap)
         {
