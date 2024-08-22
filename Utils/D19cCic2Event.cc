@@ -127,6 +127,11 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint8_t  cStatusWord    = 0x00;
                         uint32_t cHitInfoHeader = *(cIterator);
                         uint32_t cGoodHitInfo   = (cHitInfoHeader & (0xF << 28)) >> 28;
+                        uint32_t errorFromFW    = (cHitInfoHeader & (0xF << 24)) >> 24;
+                        if(errorFromFW != 0)
+                        {
+                            LOG(WARNING) << WARNING_FORMAT << "Error from FW for Board " << pBoard->getId() << " OpticalGroup " << +cHybrid->getOpticalGroupId() << " Hybrid " << cHybrid->getId() << RESET;
+                        }
                         uint32_t cHitInfoSize   = (cHitInfoHeader & 0xFFF) * 4;
                         size_t   cOffset        = std::distance(pData.begin(), cIterator);
                         cStatusWord             = static_cast<uint8_t>(cGoodHitInfo == VALID_L1_HEADER);
@@ -222,7 +227,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         }
                         else
                         {
-                            LOG(INFO) << BOLDRED << "Incorrect statusWord " << RESET;
+                            LOG(INFO) << BOLDRED << "Incorrect L1 FW header " << RESET;
                             break;
                             // throw std::runtime_error(std::string("Incorrect statusWord when decoding data ... stopping"));
                         }
