@@ -96,38 +96,37 @@ void OTPScommonNoise::TakeData()
     ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1)>>( *fDetectorContainer, thePixelHybridHitContainer);
     DetectorDataContainer thePixelModuleHitContainer;
     ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1)>>( *fDetectorContainer, thePixelModuleHitContainer);
+
+    // Correlation between SSA and MPA pairs, the container is created only for the MPAs and saved per hybrid  
+    DetectorDataContainer the2DSensorChipCorrelationContainer;
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (NSSACHANNELS + 1), (NSSACHANNELS * NMPAROWS + 1)>>(
+        *fDetectorContainer, the2DSensorChipCorrelationContainer);
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
 
-    /*
-    // 2D arrays for module-level and hybrid-level correlation
-    if(f2DHistograms)
-        ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>, EmptyContainer, EmptyContainer>(
-            *fDetectorContainer, the2DHitContainer);
+    // // 2D arrays for module-level and hybrid-level correlation
+    // if(f2DHistograms)
+    //     ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>, EmptyContainer, EmptyContainer>(
+    //         *fDetectorContainer, the2DHitContainer);
 
     // Creating the correlation plots... Maybe a lot of RAM being used?
-    DetectorDataContainer the2DSensorModuleCorrelationContainer;
-    DetectorDataContainer the2DSensorHybridCorrelationContainer;
-    DetectorDataContainer the2DSensorChipCorrelationContainer;
-    DetectorDataContainer the2DHybridCorrelationContainer;
+    // DetectorDataContainer the2DSensorModuleCorrelationContainer;
+    // DetectorDataContainer the2DSensorHybridCorrelationContainer;
+    // DetectorDataContainer the2DHybridCorrelationContainer;
 
-    ContainerFactory::copyAndInitStructure<EmptyContainer,
-                                           GenericDataArray<uint32_t, NCHANNELS + 1, HYBRID_CHANNELS_OT + 1>,
-                                           EmptyContainer,
-                                           GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1, HYBRID_CHANNELS_OT + 1>,
-                                           EmptyContainer,
-                                           EmptyContainer>(*fDetectorContainer, the2DHybridCorrelationContainer);
+    // ContainerFactory::copyAndInitStructure<EmptyContainer,
+    //                                        GenericDataArray<uint32_t, NCHANNELS + 1, HYBRID_CHANNELS_OT + 1>,
+    //                                        EmptyContainer,
+    //                                        GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1, HYBRID_CHANNELS_OT + 1>,
+    //                                        EmptyContainer,
+    //                                        EmptyContainer>(*fDetectorContainer, the2DHybridCorrelationContainer);
 
-    ContainerFactory::
-        copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, TOTAL_CHANNELS_OT / 2 + 1, TOTAL_CHANNELS_OT / 2 + 1>, EmptyContainer, EmptyContainer>(
-            *fDetectorContainer, the2DSensorModuleCorrelationContainer);
+    // ContainerFactory::
+    //     copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, TOTAL_CHANNELS_OT / 2 + 1, TOTAL_CHANNELS_OT / 2 + 1>, EmptyContainer, EmptyContainer>(
+    //         *fDetectorContainer, the2DSensorModuleCorrelationContainer);
 
-    ContainerFactory::
-        copyAndInitStructure<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1)>, EmptyContainer, EmptyContainer, EmptyContainer>(
-            *fDetectorContainer, the2DSensorHybridCorrelationContainer);
-
-    ContainerFactory::copyAndInitStructure<EmptyContainer, GenericDataArray<uint32_t, (NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1)>, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer>(
-        *fDetectorContainer, the2DSensorChipCorrelationContainer);
-    */
+    // ContainerFactory::
+    //     copyAndInitStructure<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1)>, EmptyContainer, EmptyContainer, EmptyContainer>(
+    //         *fDetectorContainer, the2DSensorHybridCorrelationContainer);    
     
     // Prepare SSA and MPA for measurement
     OTMeasureOccupancy measureOccupancy;
