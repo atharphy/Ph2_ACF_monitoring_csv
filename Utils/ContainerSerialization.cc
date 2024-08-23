@@ -57,6 +57,10 @@ BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<std::vector<bool>, Emp
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, (NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1)>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, (NSSACHANNELS + 1), (NSSACHANNELS * NMPAROWS + 1)>, EmptyContainer>))) // SSA-MPA correlation
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS + 1), (NSSACHANNELS * NMPAROWS + 1)>>))) // SSA-MPA correlation
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1), (NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1)>, EmptyContainer>))) // Strip-Pixel hybrid correlation
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1), (NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1)>>))) // Strip-Pixel hybrid correlation
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT * 2 + 1), (NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1)>, EmptyContainer>))) // Strip-Pixel module correlation
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT * 2 + 1), (NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1)>>))) // Strip-Pixel module correlation
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, (NCHANNELS * NCHIPS_OT / 2 + 1), (NCHANNELS * NCHIPS_OT / 2 + 1)>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, 3 * (NCHANNELS + 1)>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, 3 * (NCHANNELS * NCHIPS_OT + 1)>, EmptyContainer>)))
