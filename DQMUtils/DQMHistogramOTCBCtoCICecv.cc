@@ -30,14 +30,14 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
 
     uint8_t numberOfStubs = 6; // Stub 1 to 5 and L1 is filled as Stub0
     uint8_t numberOfCBC = 8;
-    uint8_t cbcStrengthCount = 16; //each cbc strength in different histogram 1 to 16 (0 to F)
+    uint8_t cbcStrengthCount = 16; //each cbc strength in different histogram 0 to 15 (0 to F)
     uint8_t numberOfPhases = 15; // 0 to 14
 
     for (uint8_t cbcStrength = 0; cbcStrength < cbcStrengthCount; ++cbcStrength)
     {
         HistContainer<TH2F> phaseScanMatchingEfficiency(
-                Form("CBCtoCICecvEfficiency_CbcStrength%d", int(cbcStrength + 1)),
-                Form("CBC to CIC ecv Efficiency CbcStrength %d", int(cbcStrength + 1)),
+                Form("CBCtoCICecvEfficiency_CbcStrength%d", int(cbcStrength)),
+                Form("CBC to CIC ecv Efficiency CbcStrength %d", int(cbcStrength)),
                 numberOfPhases,
                 -0.5,
                 numberOfPhases - 0.5,
@@ -46,7 +46,7 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
                 numberOfCBC * numberOfStubs
                                                         );
         phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetTitle("");
-        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("phase");
+        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("Phase");
 
         for(uint8_t cbcId = 1; cbcId <= numberOfCBC; ++cbcId) //itr from 1 to 8
             for (uint8_t stub = 0; stub < numberOfStubs; ++stub) //itr from 0 to 5
@@ -136,7 +136,7 @@ void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& ma
                     auto cbcId = phyPortAndlineToCbcIdAndStubMap[{phyPort, line}].first;
                     auto stub = phyPortAndlineToCbcIdAndStubMap[{phyPort, line}].second;
                     thePhaseScanHistogram->SetBinContent( cicPhase + 1, 6 * (cbcId -1) + stub + 1, theEfficiencyArray[line]);
-                    //LOG(INFO) << "Setting X Bin " << cicPhase + 1 << ",  Y Bin " << 6 * (cbcId -1) + stub + 1 << " with Label " << thePhaseScanHistogram->GetYaxis()->GetBinLabel(6 * (cbcId -1) + stub + 1) << ", cbcStrength " << cbcStrength + 1 << " with efficiency " << theEfficiencyArray[line] << RESET;
+                    //LOG(INFO) << "Setting X Bin " << cicPhase + 1 << ",  Y Bin " << 6 * (cbcId -1) + stub + 1 << " with Label " << thePhaseScanHistogram->GetYaxis()->GetBinLabel(6 * (cbcId -1) + stub + 1) << ", cbcStrength " << cbcStrength << " with efficiency " << theEfficiencyArray[line] << RESET;
                 }
             }
         }

@@ -331,11 +331,12 @@ std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OTCBCtoCICecv
 
 void OTCBCtoCICecv::runOTCBCtoCICecv()
 {
-    //uint8_t cicCurrentStart  = 1, cicCurrentEnd   = 1 ;
-    //uint8_t cbcStrengthStart = 0, cbcStrengthEnd  = 0 ;
-    uint8_t cicCurrentStart  = 1, cicCurrentEnd   = 5 ;
+    uint8_t cicCurrentStart  = 1, cicCurrentEnd   = 1 ;
     uint8_t cbcStrengthStart = 0, cbcStrengthEnd  = 15 ;
     uint8_t cicPhaseStart    = 0, cicPhaseEnd     = 14 ;
+    //uint8_t cicPhaseStart    = 0, cicPhaseEnd     = 1 ;
+    //uint8_t cicCurrentStart  = 1, cicCurrentEnd   = 5 ;
+    //uint8_t cbcStrengthStart = 0, cbcStrengthEnd  = 15 ;
 
     uint8_t numberOfLines = 4;
     uint8_t numberOfPhyPorts = 12;
@@ -428,6 +429,15 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                         {
                             for(auto theHybrid: *theOpticalGroup)
                             {
+                                auto& theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                                // choosing best LpGBT phase for bypassing CIC
+                                for(uint8_t line = 0; line < 4; ++line)
+                                {
+                                    auto bestPhase       = theCic->getLpGBTphaseForCICbypass(phyPort, line);
+                                    auto groupAndChannel = theOpticalGroup->getGroupAndChannel(theHybrid->getId(), line + 1); // stub lines start from 1, line 0 is L1
+                                    flpGBTInterface->ConfigureRxPhase(theOpticalGroup->flpGBT, groupAndChannel.first, groupAndChannel.second, bestPhase);
+                                }
+
                                 std::vector<std::vector<uint32_t>> phyPortDataVector(numberOfLines);
                                 fBeBoardInterface->WriteBoardReg(
                                     fDetectorContainer->getObject(theHybrid->getBeBoardId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
