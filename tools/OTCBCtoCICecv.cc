@@ -331,10 +331,12 @@ std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OTCBCtoCICecv
 
 void OTCBCtoCICecv::runOTCBCtoCICecv()
 {
-    uint8_t cicCurrentStart    = 1, cicCurrentEnd     = 5 ;
-    uint8_t cbcStrengthStart        = 0, cbcStrengthEnd         = 15 ;
-    //uint8_t cicCurrentStart    = 1, cicCurrentEnd     = 1 ;
-    //uint8_t cbcStrengthStart        = 0, cbcStrengthEnd         = 0 ;
+    //uint8_t cicCurrentStart  = 1, cicCurrentEnd   = 1 ;
+    //uint8_t cbcStrengthStart = 0, cbcStrengthEnd  = 0 ;
+    uint8_t cicCurrentStart  = 1, cicCurrentEnd   = 5 ;
+    uint8_t cbcStrengthStart = 0, cbcStrengthEnd  = 15 ;
+    uint8_t cicPhaseStart    = 0, cicPhaseEnd     = 15 ;
+
     uint8_t numberOfLines = 4;
     uint8_t numberOfPhyPorts = 12;
     uint8_t defaultBetaMult = 1;
@@ -362,15 +364,32 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
     prepareForLpGBTalignment2SL1();
 
     for(uint8_t cicCurrent = cicCurrentStart; cicCurrent <= cicCurrentEnd; cicCurrent++)
-    for(uint8_t cbcStrength = cbcStrengthStart; cbcStrength <= cbcStrengthEnd; cbcStrength++)  //itr over BetaMult&SLVS from 0x0? to 0xF? with sum of 0x10
+    for(uint8_t cicPhase = cicPhaseStart; cicPhase < cicPhaseEnd; cicPhase++)
+    for(uint8_t cbcStrength = cbcStrengthStart; cbcStrength <= cbcStrengthEnd; cbcStrength++)  //itr over BetaMult&SLVS from 0x?0 to 0x?F with sum of 0x10
     {
+        if(cicPhase == 2 || cicPhase == 3) continue; //since Phase 2,3 doesn't work
         for(auto theBoard: *fDetectorContainer)
         for(auto theOpticalGroup: *theBoard)
         for(auto theHybrid: *theOpticalGroup)
         {
-            //setting CIC strength
             auto& theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+
+            //setting CIC strength
             fCicInterface->ConfigureDriveStrength(theCic, cicCurrent);
+
+            //setting CIC phase
+            std::vector<std::pair<std::string, uint16_t>> cicPhaseRegisterVector;
+            for(uint8_t phyPortPair = 0; phyPortPair < 6; ++phyPortPair)
+            {
+                for(uint8_t channel = 0; channel < 4; ++channel)
+                {
+                    std::stringstream cicPhaseRegisterName;
+                    cicPhaseRegisterName << "scPhaseSelectB" << +channel << "i" << +(phyPortPair);
+                    cicPhaseRegisterVector.push_back({cicPhaseRegisterName.str(), cicPhase | cicPhase << 4});
+                }
+            }
+            fCicInterface->WriteChipMultReg(theCic, cicPhaseRegisterVector);
+            LOG(INFO) << "Successfully set cicPhase value of 0x" << std::hex << +cicPhase << std::dec << " for CIC: " << theCic->getId() << RESET;
 
             //setting CBC strength
             for(auto theCBC: *theHybrid)
