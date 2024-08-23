@@ -337,7 +337,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
     //uint8_t cbcStrengthStart        = 0, cbcStrengthEnd         = 0 ;
     uint8_t numberOfLines = 4;
     uint8_t numberOfPhyPorts = 12;
-    uint8_t defaultSLVS = 1;
+    uint8_t defaultBetaMult = 1;
     uint8_t pVerifyBit;
     uint8_t BetaMultAndSLVSbyte;
 
@@ -350,8 +350,8 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
         {
             // itr over BetaMult&SLVS from 0x01 to 0xF1 with sum of 0x10
             uint8_t cReg      = fReadoutChipInterface->ReadChipReg(theCBC, "BetaMult&SLVS");
-            defaultSLVS = cReg & 0x0F;
-            LOG(INFO) << "Deafult BetaMult&SLVS: 0x" << std::hex << +cReg << std::dec << " defaultSLVS: " << std::hex << +defaultSLVS << std::dec <<RESET;
+            defaultBetaMult = cReg & 0xF0;
+            LOG(INFO) << "Deafult BetaMult&SLVS: 0x" << std::hex << +cReg << std::dec << " defaultBetaMult: " << std::hex << +defaultBetaMult << std::dec <<RESET;
             break;
         }
         break;
@@ -375,7 +375,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
             //setting CBC strength
             for(auto theCBC: *theHybrid)
             {
-                BetaMultAndSLVSbyte = (cbcStrength << 4 | defaultSLVS);
+                BetaMultAndSLVSbyte = (defaultBetaMult | cbcStrength);
                 pVerifyBit = fReadoutChipInterface->WriteChipReg(theCBC, "BetaMult&SLVS", BetaMultAndSLVSbyte , true);
                 if(!pVerifyBit)
                     LOG(ERROR) << "Error in setting BetaMult&SLVS value of 0x" << std::hex << +BetaMultAndSLVSbyte << std::dec << " for CIC,CBC: " << theHybrid->getId() << "," << theCBC->getId() << "[ cbc strength set to " << +cbcStrength << " ]" <<  RESET;

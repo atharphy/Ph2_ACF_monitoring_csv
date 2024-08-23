@@ -134,7 +134,7 @@ void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& ma
                     auto cbcId = phyPortAndlineToCbcIdAndStubMap[{phyPort, line}].first;
                     auto stub = phyPortAndlineToCbcIdAndStubMap[{phyPort, line}].second;
                     thePhaseScanHistogram->SetBinContent( cbcStrength + 1, 6 * (cbcId -1) + stub + 1, theEfficiencyArray[line]);
-                    //LOG(INFO) << "Setting Y Bin No " << 6 * (cbcId -1) + stub + 1 << " with Label " << thePhaseScanHistogram->GetYaxis()->GetBinLabel(6 * (cbcId -1) + stub + 1) << ", cbcStrength" << cbcStrength + 1 << " with efficiency" << theEfficiencyArray[line] << RESET;
+                    //LOG(INFO) << "Setting Y Bin No " << 6 * (cbcId -1) + stub + 1 << " with Label " << thePhaseScanHistogram->GetYaxis()->GetBinLabel(6 * (cbcId -1) + stub + 1) << ", cbcStrength " << cbcStrength + 1 << " with efficiency " << theEfficiencyArray[line] << RESET;
                 }
             }
         }
