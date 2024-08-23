@@ -8,11 +8,11 @@
 #ifndef DQMHistogramOTPScommonNoise_h_
 #define DQMHistogramOTPScommonNoise_h_
 #include "DQMUtils/DQMHistogramBase.h"
+#include "TH1F.h"
+#include "TH2F.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
 #include "Utils/GenericDataArray.h"
-#include "TH1F.h"
-#include "TH2F.h"
 
 class TFile;
 
@@ -68,38 +68,32 @@ class DQMHistogramOTPScommonNoise : public DQMHistogramBase
     template <size_t T2>
     void fillEventsVsHitsHist(const BaseDataContainer* ChipContainer, TH1F& theHistogram)
     {
-      GenericDataArray<uint32_t, T2> cDataSummary = ChipContainer->getSummary<GenericDataArray<uint32_t, T2>>();
-      for(uint16_t iChan = 0; iChan < T2; iChan++)
-      {
-        theHistogram.SetBinContent(iChan + 1, cDataSummary[iChan]);
-      }
-      theHistogram.Sumw2();
+        GenericDataArray<uint32_t, T2> cDataSummary = ChipContainer->getSummary<GenericDataArray<uint32_t, T2>>();
+        for(uint16_t iChan = 0; iChan < T2; iChan++) { theHistogram.SetBinContent(iChan + 1, cDataSummary[iChan]); }
+        theHistogram.Sumw2();
     }
 
     template <size_t T1, size_t T2>
     void fillCorrelationHist(const BaseDataContainer* ChipContainer, TH2F& theHistogram)
     {
-      GenericDataArray<uint32_t, T1, T2> cDataSummary = ChipContainer->getSummary<GenericDataArray<uint32_t, T1, T2>>();
-      for(uint16_t iChan2 = 0; iChan2 < T2; iChan2++)
-      {
-        for(uint16_t iChan1 = 0; iChan1 < T1; iChan1++)
+        GenericDataArray<uint32_t, T1, T2> cDataSummary = ChipContainer->getSummary<GenericDataArray<uint32_t, T1, T2>>();
+        for(uint16_t iChan2 = 0; iChan2 < T2; iChan2++)
         {
-          theHistogram.SetBinContent(iChan2, iChan1, cDataSummary[iChan1][iChan2]);
+            for(uint16_t iChan1 = 0; iChan1 < T1; iChan1++) { theHistogram.SetBinContent(iChan2, iChan1, cDataSummary[iChan1][iChan2]); }
         }
-      }
-      theHistogram.Sumw2();
+        theHistogram.Sumw2();
     }
 
   private:
-    DetectorContainer*    fDetectorContainer;
-    DetectorDataContainer fStripHitHistograms;
-    DetectorDataContainer fPixelHitHistograms;
-    DetectorDataContainer fStripHybridHitHistograms;
-    DetectorDataContainer fPixelHybridHitHistograms;
-    DetectorDataContainer fStripModuleHitHistograms;
-    DetectorDataContainer fPixelModuleHitHistograms;
+    DetectorContainer*                       fDetectorContainer;
+    DetectorDataContainer                    fStripHitHistograms;
+    DetectorDataContainer                    fPixelHitHistograms;
+    DetectorDataContainer                    fStripHybridHitHistograms;
+    DetectorDataContainer                    fPixelHybridHitHistograms;
+    DetectorDataContainer                    fStripModuleHitHistograms;
+    DetectorDataContainer                    fPixelModuleHitHistograms;
     std::map<uint8_t, DetectorDataContainer> fSSAtoMPAcorrelation;
-    DetectorDataContainer fStripPixelModuleHistograms;
-    DetectorDataContainer fStripPixelHybridHistograms;
+    DetectorDataContainer                    fStripPixelModuleHistograms;
+    DetectorDataContainer                    fStripPixelHybridHistograms;
 };
 #endif

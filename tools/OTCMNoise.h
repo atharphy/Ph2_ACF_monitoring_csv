@@ -51,7 +51,7 @@ class OTCMNoise : public Tool
     void Resume() override;
 
     static std::string fCalibrationDescription;
-    
+
   private:
     void parseSettings();
 

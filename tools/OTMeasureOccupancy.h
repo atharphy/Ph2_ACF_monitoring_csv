@@ -26,15 +26,15 @@ class OTMeasureOccupancy : public Tool
     void Initialise(void);
 
     // State machine
-    void Running() override;
-    void Stop() override;
-    void ConfigureCalibration() override;
-    void Pause() override;
-    void Resume() override;
-    void Reset();
-    void prepareOccupancyMeasurementPS();
-    float    fSSAtestPulseValue{1.};
-    float    fMPAtestPulseValue{1.};
+    void               Running() override;
+    void               Stop() override;
+    void               ConfigureCalibration() override;
+    void               Pause() override;
+    void               Resume() override;
+    void               Reset();
+    void               prepareOccupancyMeasurementPS();
+    float              fSSAtestPulseValue{1.};
+    float              fMPAtestPulseValue{1.};
     static std::string fCalibrationDescription;
 
   protected:
@@ -45,8 +45,8 @@ class OTMeasureOccupancy : public Tool
 
     uint32_t fNumberOfEvents{10000};
     float    fCBCtestPulseValue{1.};
-    // float    fSSAtestPulseValue{1.};
-    // float    fMPAtestPulseValue{1.};
+    float    fSSAtestPulseValue{1.};
+    float    fMPAtestPulseValue{1.};
     bool     fForceChannelGroup{false};
     int      fThresholdOffset{0};
 

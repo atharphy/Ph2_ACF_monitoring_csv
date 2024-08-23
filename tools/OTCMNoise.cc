@@ -81,8 +81,9 @@ void OTCMNoise::TakeData()
 
     // 2D arrays for module-level and hybrid-level correlation
     if(f2DHistograms)
-        ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2, NCHANNELS * NCHIPS_OT * 2>, EmptyContainer, EmptyContainer>(
-            *fDetectorContainer, the2DHitContainer);
+        ContainerFactory::
+            copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2, NCHANNELS * NCHIPS_OT * 2>, EmptyContainer, EmptyContainer>(
+                *fDetectorContainer, the2DHitContainer);
 
     // Creating the correlation plots... Maybe a lot of RAM being used?
     DetectorDataContainer the2DSensorModuleCorrelationContainer;
@@ -97,13 +98,19 @@ void OTCMNoise::TakeData()
                                            EmptyContainer,
                                            EmptyContainer>(*fDetectorContainer, the2DHybridCorrelationContainer);
 
-    ContainerFactory::
-        copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (NCHANNELS * NCHIPS_OT * 2) / 2 + 1, (NCHANNELS * NCHIPS_OT * 2) / 2 + 1>, EmptyContainer, EmptyContainer>(
-            *fDetectorContainer, the2DSensorModuleCorrelationContainer);
+    ContainerFactory::copyAndInitStructure<EmptyContainer,
+                                           EmptyContainer,
+                                           EmptyContainer,
+                                           GenericDataArray<uint32_t, (NCHANNELS * NCHIPS_OT * 2) / 2 + 1, (NCHANNELS * NCHIPS_OT * 2) / 2 + 1>,
+                                           EmptyContainer,
+                                           EmptyContainer>(*fDetectorContainer, the2DSensorModuleCorrelationContainer);
 
-    ContainerFactory::
-        copyAndInitStructure<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (NCHANNELS * NCHIPS_OT / 2 + 1), (NCHANNELS * NCHIPS_OT / 2 + 1)>, EmptyContainer, EmptyContainer, EmptyContainer>(
-            *fDetectorContainer, the2DSensorHybridCorrelationContainer);
+    ContainerFactory::copyAndInitStructure<EmptyContainer,
+                                           EmptyContainer,
+                                           GenericDataArray<uint32_t, (NCHANNELS * NCHIPS_OT / 2 + 1), (NCHANNELS * NCHIPS_OT / 2 + 1)>,
+                                           EmptyContainer,
+                                           EmptyContainer,
+                                           EmptyContainer>(*fDetectorContainer, the2DSensorHybridCorrelationContainer);
 
     ContainerFactory::copyAndInitStructure<EmptyContainer, GenericDataArray<uint32_t, (NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1)>, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer>(
         *fDetectorContainer, the2DSensorChipCorrelationContainer);
@@ -228,7 +235,8 @@ void OTCMNoise::TakeData()
 
                     the2DHybridCorrelationContainer.getObject(cBoard->getId())
                         ->getObject(cOpticalGroup->getId())
-                        ->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT + 1, NCHANNELS * NCHIPS_OT + 1>>()[cHybridCorrelationMap.begin()->second][cHybridCorrelationMap.rbegin()->second] += 1;
+                        ->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT + 1, NCHANNELS * NCHIPS_OT + 1>>()[cHybridCorrelationMap.begin()->second]
+                                                                                                                        [cHybridCorrelationMap.rbegin()->second] += 1;
 
                     if(f2DHistograms)
                     {
@@ -317,7 +325,7 @@ void OTCMNoise::ConfigureCalibration() {}
 void OTCMNoise::Running()
 {
     if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS)
-    { 
+    {
         LOG(ERROR) << ERROR_FORMAT << " Running a PS calibration on a PS module! " << RESET;
         return;
     }

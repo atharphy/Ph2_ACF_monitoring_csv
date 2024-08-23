@@ -119,8 +119,14 @@ void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDet
 
     if(f2DHistograms)
     {
-        HistContainer<TH2F> h2DModuleHits(
-            ("2DModuleHits" + suffix).c_str(), ("2DModuleHits" + suffix).c_str(), NCHANNELS * NCHIPS_OT * 2 + 2, -0.5, NCHANNELS * NCHIPS_OT * 2 + 1 + 0.5, NCHANNELS * NCHIPS_OT * 2 + 2, -0.5, NCHANNELS * NCHIPS_OT * 2 + 1 + 0.5);
+        HistContainer<TH2F> h2DModuleHits(("2DModuleHits" + suffix).c_str(),
+                                          ("2DModuleHits" + suffix).c_str(),
+                                          NCHANNELS * NCHIPS_OT * 2 + 2,
+                                          -0.5,
+                                          NCHANNELS * NCHIPS_OT * 2 + 1 + 0.5,
+                                          NCHANNELS * NCHIPS_OT * 2 + 2,
+                                          -0.5,
+                                          NCHANNELS * NCHIPS_OT * 2 + 1 + 0.5);
         RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, f2DModuleHitHistograms, h2DModuleHits);
 
         HistContainer<TH2F> h2DModuleHitsEven(("2DModuleHitsEven" + suffix).c_str(),
@@ -156,7 +162,8 @@ void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         HistContainer<TH2F> h2DChipHits(("2DChipHits" + suffix).c_str(), ("2DChipHits" + suffix).c_str(), NCHANNELS + 2, -0.5, NCHANNELS + 1 + 0.5, NCHANNELS + 2, -0.5, NCHANNELS + 1 + 0.5);
         RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, f2DChipHitHistograms, h2DChipHits);
 
-        HistContainer<TH2F> h2DHybridHits_chip(("2DHybridHits_chip" + suffix).c_str(), ("2DHybridHits_chip" + suffix).c_str(), NCHIPS_OT, 0, NCHANNELS * NCHIPS_OT, NCHIPS_OT, 0, NCHANNELS * NCHIPS_OT);
+        HistContainer<TH2F> h2DHybridHits_chip(
+            ("2DHybridHits_chip" + suffix).c_str(), ("2DHybridHits_chip" + suffix).c_str(), NCHIPS_OT, 0, NCHANNELS * NCHIPS_OT, NCHIPS_OT, 0, NCHANNELS * NCHIPS_OT);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, f2DHybridHitHistograms_chip, h2DHybridHits_chip);
 
         HistContainer<TH2F> h2DModuleHits_chip(
@@ -285,7 +292,8 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
                     auto bin_x     = moduleHitHistogram_chip->GetXaxis()->FindBin(iCh1);
                     auto bin_y     = moduleHitHistogram_chip->GetYaxis()->FindBin(iCh2);
                     auto prev_hits = moduleHitHistogram_chip->GetBinContent(bin_x, bin_y);
-                    moduleHitHistogram_chip->SetBinContent(bin_x, bin_y, prev_hits + opticalGroup->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2, NCHANNELS * NCHIPS_OT * 2>>()[iCh1][iCh2]);
+                    moduleHitHistogram_chip->SetBinContent(
+                        bin_x, bin_y, prev_hits + opticalGroup->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2, NCHANNELS * NCHIPS_OT * 2>>()[iCh1][iCh2]);
 
                     // Even/odd
                     if(iCh1 % 2 == 0 && iCh2 % 2 == 0)
@@ -326,7 +334,8 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
                             auto bin_y     = hybridHitHistogram_chip->GetYaxis()->FindBin(iCh2);
                             auto prev_hits = hybridHitHistogram_chip->GetBinContent(bin_x, bin_y);
                             hybridHitHistogram->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2, NCHANNELS * NCHIPS_OT * 2>>()[iCh1][iCh2]);
-                            hybridHitHistogram_chip->SetBinContent(bin_x, bin_y, prev_hits + opticalGroup->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2, NCHANNELS * NCHIPS_OT * 2>>()[iCh1][iCh2]);
+                            hybridHitHistogram_chip->SetBinContent(
+                                bin_x, bin_y, prev_hits + opticalGroup->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2, NCHANNELS * NCHIPS_OT * 2>>()[iCh1][iCh2]);
                         }
                         // on hybrid 1
                         else if(iCh1 >= hybridOffset && iCh2 >= hybridOffset && hybrid->getId() == 1)
@@ -337,7 +346,8 @@ bool DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
 
                             hybridHitHistogram->SetBinContent(
                                 iCh1 - hybridOffset, iCh2 - hybridOffset, opticalGroup->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2, NCHANNELS * NCHIPS_OT * 2>>()[iCh1][iCh2]);
-                            hybridHitHistogram_chip->SetBinContent(bin_x, bin_y, prev_hits + opticalGroup->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2, NCHANNELS * NCHIPS_OT * 2>>()[iCh1][iCh2]);
+                            hybridHitHistogram_chip->SetBinContent(
+                                bin_x, bin_y, prev_hits + opticalGroup->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2, NCHANNELS * NCHIPS_OT * 2>>()[iCh1][iCh2]);
                         }
                     }
                 }
@@ -588,7 +598,8 @@ bool DQMHistogramOTCMNoise::fillSensorModuleCorrelationPlots(DetectorDataContain
             {
                 for(uint16_t iCh2 = 0; iCh2 < (NCHANNELS * NCHIPS_OT * 2) / 2 + 1; iCh2++)
                 {
-                    h2DModuleSensorCorrelation->SetBinContent(iCh1, iCh2, opticalGroup->getSummary<GenericDataArray<uint32_t, (NCHANNELS * NCHIPS_OT * 2) / 2 + 1, (NCHANNELS * NCHIPS_OT * 2) / 2 + 1>>()[iCh1][iCh2]);
+                    h2DModuleSensorCorrelation->SetBinContent(
+                        iCh1, iCh2, opticalGroup->getSummary<GenericDataArray<uint32_t, (NCHANNELS * NCHIPS_OT * 2) / 2 + 1, (NCHANNELS * NCHIPS_OT * 2) / 2 + 1>>()[iCh1][iCh2]);
                 }
             }
             h2DModuleSensorCorrelation->Sumw2(0);
