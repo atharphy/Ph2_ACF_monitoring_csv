@@ -263,10 +263,10 @@ void OTCBCtoCICecv::printCICStrengthAndPhase()
 
 void OTCBCtoCICecv::itrOverCICStrength()
 {
-    uint8_t cicSLVSStrengthStart    = 1, cicSLVSStrengthEnd     = 5 ;
+    uint8_t cicStrengthStart    = 1, cicStrengthEnd     = 5 ;
     for(auto theBoard: *fDetectorContainer)
         for(auto theOpticalGroup: *theBoard)
-            for(uint8_t cicStrength = cicSLVSStrengthStart; cicStrength <= cicSLVSStrengthEnd; ++cicStrength)
+            for(uint8_t cicStrength = cicStrengthStart; cicStrength <= cicStrengthEnd; ++cicStrength)
                 for(auto theHybrid: *theOpticalGroup)
                 {
                     auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
@@ -331,9 +331,9 @@ std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OTCBCtoCICecv
 
 void OTCBCtoCICecv::runOTCBCtoCICecv()
 {
-    uint8_t cicSLVSCurrentStart    = 1, cicSLVSCurrentEnd     = 5 ;
+    uint8_t cicCurrentStart    = 1, cicCurrentEnd     = 5 ;
     uint8_t cbcStrengthStart        = 0, cbcStrengthEnd         = 15 ;
-    //uint8_t cicSLVSCurrentStart    = 1, cicSLVSCurrentEnd     = 1 ;
+    //uint8_t cicCurrentStart    = 1, cicCurrentEnd     = 1 ;
     //uint8_t cbcStrengthStart        = 0, cbcStrengthEnd         = 0 ;
     uint8_t numberOfLines = 4;
     uint8_t numberOfPhyPorts = 12;
@@ -361,7 +361,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
     prepareForLpGBTalignment2Sstubs();
     prepareForLpGBTalignment2SL1();
 
-    for(uint8_t cicSlvsCurrent = cicSLVSCurrentStart; cicSlvsCurrent <= cicSLVSCurrentEnd; cicSlvsCurrent++)
+    for(uint8_t cicCurrent = cicCurrentStart; cicCurrent <= cicCurrentEnd; cicCurrent++)
     for(uint8_t cbcStrength = cbcStrengthStart; cbcStrength <= cbcStrengthEnd; cbcStrength++)  //itr over BetaMult&SLVS from 0x0? to 0xF? with sum of 0x10
     {
         for(auto theBoard: *fDetectorContainer)
@@ -370,7 +370,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
         {
             //setting CIC strength
             auto& theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-            fCicInterface->ConfigureDriveStrength(theCic, cicSlvsCurrent);
+            fCicInterface->ConfigureDriveStrength(theCic, cicCurrent);
 
             //setting CBC strength
             for(auto theCBC: *theHybrid)
@@ -441,7 +441,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
 
 #ifdef __USE_ROOT__
             //LOG(INFO) << "Using ROOT to save OTCBCtoCICecv matching efficiency." << RESET;
-            fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, phyPort, cbcStrength, cicSlvsCurrent, phyPortAndLineToCbcIdAndStubMap);
+            fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, phyPort, cbcStrength, cicCurrent, phyPortAndLineToCbcIdAndStubMap);
 #else
             if(fDQMStreamer)
             {

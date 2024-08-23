@@ -31,11 +31,11 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
     uint8_t numberOfStubs = 6; // Stub 1 to 5 and L1 is filled as Stub0
     uint8_t numberOfCBC = 8;
     uint8_t cbcStrengthCount = 16;
-    for (uint8_t cicSlvsCurrent = 1; cicSlvsCurrent <= 5; cicSlvsCurrent++)
+    for (uint8_t cicCurrent = 1; cicCurrent <= 5; cicCurrent++)
     {
         HistContainer<TH2F> phaseScanMatchingEfficiency(
-                Form("CBCtoCICecvEfficiency_CICSLVScurrent%d", int(cicSlvsCurrent)),
-                Form("CBC to CIC ecv Efficiency CICSLVScurrent %d", int(cicSlvsCurrent)),
+                Form("CBCtoCICecvEfficiency_CicCurrent%d", int(cicCurrent)),
+                Form("CBC to CIC ecv Efficiency CicCurrent %d", int(cicCurrent)),
                 cbcStrengthCount,
                 0.5,
                 cbcStrengthCount + 0.5,
@@ -58,7 +58,7 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
         phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
         phaseScanMatchingEfficiency.fTheHistogram->SetMaximum(1);
         phaseScanMatchingEfficiency.fTheHistogram->SetStats(false);
-        RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanMatchingEfficiencies[cicSlvsCurrent], phaseScanMatchingEfficiency);
+        RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanMatchingEfficiencies[cicCurrent], phaseScanMatchingEfficiency);
     }
 }
 
@@ -117,7 +117,7 @@ bool DQMHistogramOTCBCtoCICecv::fill(std::string& inputStream)
 }
 
 //========================================================================================================================
-void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort, uint8_t cbcStrength, uint8_t cicSlvsCurrent, std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndlineToCbcIdAndStubMap)
+void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort, uint8_t cbcStrength, uint8_t cicCurrent, std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndlineToCbcIdAndStubMap)
 {
     for(auto theBoard: matchingEfficiencyContainer)
     {
@@ -127,7 +127,7 @@ void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& ma
             {
                 if(!theHybrid->hasSummary()) continue;
                 auto thePhaseScanHistogram =
-                    fPhaseScanMatchingEfficiencies[cicSlvsCurrent].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    fPhaseScanMatchingEfficiencies[cicCurrent].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 auto theEfficiencyArray = theHybrid->getSummary<GenericDataArray<float, 4>>();
                 for(uint8_t line = 0; line < 4; ++line)
                 {
