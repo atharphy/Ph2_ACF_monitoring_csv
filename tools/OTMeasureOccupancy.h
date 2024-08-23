@@ -45,8 +45,6 @@ class OTMeasureOccupancy : public Tool
 
     uint32_t fNumberOfEvents{10000};
     float    fCBCtestPulseValue{1.};
-    float    fSSAtestPulseValue{1.};
-    float    fMPAtestPulseValue{1.};
     bool     fForceChannelGroup{false};
     int      fThresholdOffset{0};
 
