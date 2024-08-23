@@ -256,30 +256,27 @@ void OTPScommonNoise::TakeData()
 #else
     if(fDQMStreamerEnabled)
     {
-        //FIXME - this part needs to be checked
-        std::map<std::string, DetectorDataContainer*> cStreamableMap;
-        cStreamableMap["OTPScommonNoiseStripHitStream"]   = &theStripHitContainer;
-        cStreamableMap["OTPScommonNoisePixelHitStream"]   = &thePixelHitContainer;
-        cStreamableMap["OTPScommonNoiseStripHybridHitStream"]  = &theStripHybridHitContainer;
-        cStreamableMap["OTPScommonNoisePixelHybridHitStream"]  = &thePixelHybridHitContainer;
-        cStreamableMap["OTPScommonNoise2DStripPixelModuleCorrelationStream"] = &the2DStripPixelModuleCorrelationContainer;
-        cStreamableMap["OTPScommonNoise2DStripPixelHybridCorrelationStream"]     = &the2DStripPixelHybridCorrelationContainer;
-        cStreamableMap["OTPScommonNoise2DSSAMPACorrelationStream"] = &the2DSSAMPACorrelationContainer;
+        ContainerSerialization theStripChipHitContainerSerialization("OTPScommonNoiseStripChipHit");
+        theStripChipHitContainerSerialization.streamByChipContainer(fDQMStreamer, theStripHitContainer, doFit);
+        ContainerSerialization thePixelChipHitContainerSerialization("OTPScommonNoisePixelChipHit");
+        thePixelChipHitContainerSerialization.streamByChipContainer(fDQMStreamer, thePixelHitContainer, doFit);
+        
+        ContainerSerialization theStripHybridHitContainerSerialization("OTPScommonNoiseStripHybridHit");
+        theStripHybridHitContainerSerialization.streamByHybridContainer(fDQMStreamer, theStripHybridHitContainer, true);
+        ContainerSerialization thePixelHybridHitContainerSerialization("OTPScommonNoisePixelHybridHit");
+        thePixelHybridHitContainerSerialization.streamByHybridContainer(fDQMStreamer, thePixelHybridHitContainer, false);
 
-        for(auto cStreamable: cStreamableMap)
-        {
-            try
-            {
-                LOG(DEBUG) << "Streaming " << cStreamable.first << RESET;
-                ContainerSerialization theHitSerializationSum(cStreamable.first);
-                theHitSerializationSum.streamByOpticalGroupContainer(fDQMStreamer, *(cStreamable.second));
-            }
-            catch(const std::exception& e) // reference to the base of a polymorphic object
-            {
-                LOG(INFO) << BOLDRED << " Unable to serialize " << cStreamable.first << RESET;
-                LOG(INFO) << e.what() << RESET;
-            }
-        }
+        ContainerSerialization theStripModuleHitContainerSerialization("OTPScommonNoiseStripModuleHit");
+        theStripModuleHitContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theStripModuleHitContainer, true);
+        ContainerSerialization thePixelModuleHitContainerSerialization("OTPScommonNoisePixelModuleHit");
+        thePixelModuleHitContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePixelModuleHitContainer, false);
+
+        ContainerSerialization theSSAMPACorrelationContainerSerialization("OTPScommonNoiseSSAMPACorrelation");
+        theSSAMPACorrelationContainerSerialization.streamByHybridContainer(fDQMStreamer, the2DSSAMPACorrelationContainer);
+        ContainerSerialization theStripPixelHybridContainerSerialization("OTPScommonNoiseStripPixelHybridCorrelation");
+        theStripPixelHybridContainerSerialization.streamByHybridContainer(fDQMStreamer, the2DStripPixelHybridCorrelationContainer);
+        ContainerSerialization theStripPixelModuleContainerSerialization("OTPScommonNoiseStripPixelModuleCorrelation");
+        theStripPixelModuleContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, the2DStripPixelModuleCorrelationContainer);
     }
 #endif
 }

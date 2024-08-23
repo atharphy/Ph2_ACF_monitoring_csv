@@ -116,22 +116,103 @@ void DQMHistogramOTPScommonNoise::reset(void)
 bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
 {
     // SoC utilities only - BEGIN
-    // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
-    // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
+    ContainerSerialization theStripChipHitContainerSerialization("OTPScommonNoiseStripChipHit");
+    if(theStripChipHitContainerSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched OTPScommonNoiseStripChipHit!!!!!\n";
+        bool doFit;
+        DetectorDataContainer theDetectorData = theStripChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS + 1)>>(fDetectorContainer, doFit);
+        // Filling the histograms
+        fillChipHitPlots(theDetectorData, doFit);
+        return true;
+    }
 
-    // As example, I'm expecting to receive a data stream from an uint32_t contained from calibration "OTPScommonNoise"
-    // ContainerSerialization myStreamer("OTPScommonNoise");
-    
-    // if(myStreamer.attachDeserializer(inputStream))
-    // {
-    //     // It matched! Decoding data
-    //     std::cout << "Matched OTPScommonNoise!!!!!\n";
-    //     // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
-    //     DetectorDataContainer theDetectorData = myStreamer.deserializeChannelContainer<MyType>(fDetectorContainer);
-    //     // Filling the histograms
-    //     myFillplotFunction(theDetectorData);
-    //     return true;
-    // }
+    ContainerSerialization thePixelChipHitContainerSerialization("OTPScommonNoisePixelChipHit");
+    if(thePixelChipHitContainerSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched OTPScommonNoisePixelChipHit!!!!!\n";
+        bool doFit;
+        DetectorDataContainer theDetectorData = thePixelChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS + 1)>>(fDetectorContainer, doFit);
+        // Filling the histograms
+        fillChipHitPlots(theDetectorData, doFit);
+        return true;
+    } 
+
+    ContainerSerialization theStripHybridHitContainerSerialization("OTPScommonNoiseStripHybridHit");
+    if(theStripHybridHitContainerSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched OTPScommonNoiseStripHybridHit!!!!!\n";
+        bool isSSA;
+        DetectorDataContainer theDetectorData = theStripHybridHitContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1)>>(fDetectorContainer, isSSA);
+        // Filling the histograms
+        fillHybridHitPlots(theDetectorData, isSSA);
+        return true;
+    }
+
+    ContainerSerialization thePixelHybridHitContainerSerialization("OTPScommonNoisePixelHybridHit");
+    if(thePixelHybridHitContainerSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched OTPScommonNoisePixelHybridHit!!!!!\n";
+        bool isSSA;
+        DetectorDataContainer theDetectorData = thePixelHybridHitContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1)>>(fDetectorContainer, isSSA);
+        // Filling the histograms
+        fillHybridHitPlots(theDetectorData, isSSA);
+        return true;
+    }
+
+    ContainerSerialization theStripModuleHitContainerSerialization("OTPScommonNoiseStripModuleHit");
+    if(theStripModuleHitContainerSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched OTPScommonNoiseStripModuleHit!!!!!\n";
+        bool isSSA;
+        DetectorDataContainer theDetectorData = theStripModuleHitContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT * 2 + 1)>>(fDetectorContainer, isSSA);
+        // Filling the histograms
+        fillModuleHitPlots(theDetectorData, isSSA);
+        return true;
+    }
+
+    ContainerSerialization thePixelModuleHitContainerSerialization("OTPScommonNoisePixelModuleHit");
+    if(thePixelModuleHitContainerSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched OTPScommonNoisePixelModuleHit!!!!!\n";
+        bool isSSA;
+        DetectorDataContainer theDetectorData = thePixelModuleHitContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1)>>(fDetectorContainer, isSSA);
+        // Filling the histograms
+        fillModuleHitPlots(theDetectorData, isSSA);
+        return true;
+    }
+
+    ContainerSerialization theSSAMPACorrelationContainerSerialization("OTPScommonNoiseSSAMPACorrelation");
+    if(theSSAMPACorrelationContainerSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched OTPScommonNoiseSSAMPACorrelation!!!!!\n";
+        DetectorDataContainer theDetectorData = theSSAMPACorrelationContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS + 1), (NSSACHANNELS * NMPAROWS + 1)>>(fDetectorContainer);
+        // Filling the histograms
+        fillSSAtoMPACorrelationPlots(theDetectorData);
+        return true;
+    }
+
+    ContainerSerialization theStripPixelHybridContainerSerialization("OTPScommonNoiseStripPixelHybridCorrelation");
+    if(theStripPixelHybridContainerSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched OTPScommonNoiseStripPixelHybridCorrelation!!!!!\n";
+        DetectorDataContainer theDetectorData = theStripPixelHybridContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1), (NSSACHANNELS * NCHIPS_OT * NMPAROWS + 1)>>(fDetectorContainer);
+        // Filling the histograms
+        fillStripPixelHybridCorrelationPlots(theDetectorData);
+        return true;
+    }
+
+    ContainerSerialization theStripPixelModuleContainerSerialization("OTPScommonNoiseStripPixelModuleCorrelation");
+    if(theStripPixelModuleContainerSerialization.attachDeserializer(inputStream))
+    {
+        std::cout << "Matched OTPScommonNoiseStripPixelModuleCorrelation!!!!!\n";
+        DetectorDataContainer theDetectorData = theStripPixelModuleContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT * 2 + 1), (NSSACHANNELS * NCHIPS_OT * NMPAROWS * 2 + 1)>>(fDetectorContainer);
+        // Filling the histograms
+        fillStripPixelModuleCorrelationPlots(theDetectorData);
+        return true;
+    }    
+
+
     //the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
     // for this stream)
     return false;
