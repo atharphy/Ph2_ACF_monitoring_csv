@@ -103,30 +103,15 @@ void OTPScommonNoise::TakeData()
         *fDetectorContainer, the2DSSAMPACorrelationContainer);
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
 
-    // // 2D arrays for module-level and hybrid-level correlation
-    // if(f2DHistograms)
-    //     ContainerFactory::copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>, EmptyContainer, EmptyContainer>(
-    //         *fDetectorContainer, the2DHitContainer);
+    // Correlation between strip and pixels on 1 hybrid
+    DetectorDataContainer the2DStripPixelHybridCorrelationContainer;
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1), (NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1)>>(
+        *fDetectorContainer, the2DStripPixelHybridCorrelationContainer);
+ 
 
-    // Creating the correlation plots... Maybe a lot of RAM being used?
-    // DetectorDataContainer the2DSensorModuleCorrelationContainer;
-    // DetectorDataContainer the2DSensorHybridCorrelationContainer;
-    // DetectorDataContainer the2DHybridCorrelationContainer;
-
-    // ContainerFactory::copyAndInitStructure<EmptyContainer,
-    //                                        GenericDataArray<uint32_t, NCHANNELS + 1, HYBRID_CHANNELS_OT + 1>,
-    //                                        EmptyContainer,
-    //                                        GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1, HYBRID_CHANNELS_OT + 1>,
-    //                                        EmptyContainer,
-    //                                        EmptyContainer>(*fDetectorContainer, the2DHybridCorrelationContainer);
-
-    // ContainerFactory::
-    //     copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, TOTAL_CHANNELS_OT / 2 + 1, TOTAL_CHANNELS_OT / 2 + 1>, EmptyContainer, EmptyContainer>(
-    //         *fDetectorContainer, the2DSensorModuleCorrelationContainer);
-
-    // ContainerFactory::
-    //     copyAndInitStructure<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1)>, EmptyContainer, EmptyContainer, EmptyContainer>(
-    //         *fDetectorContainer, the2DSensorHybridCorrelationContainer);    
+    DetectorDataContainer the2DStripPixelModuleCorrelationContainer;
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT * 2 + 1), (NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1)>>(
+        *fDetectorContainer, the2DStripPixelModuleCorrelationContainer);   
     
     // Prepare SSA and MPA for measurement
     OTMeasureOccupancy measureOccupancy;
@@ -159,9 +144,6 @@ void OTPScommonNoise::TakeData()
                     uint32_t cStripModuleHits = 0;
                     uint32_t cPixelModuleHits = 0;                    
 
-                    std::vector<uint32_t>             hit_channels;
-                    // std::map<int, std::map<int, int>> cChipCorrelationMap;
-                    // std::map<int, int>                cHybridCorrelationMap;
                     for(auto cHybrid: *cOpticalGroup)
                     {
                         uint32_t cStripHybridHits     = 0;
@@ -228,73 +210,34 @@ void OTPScommonNoise::TakeData()
 
                         (*thePixelHybridContainerValues)[cPixelHybridHits]++;
 
-                                // cHybridCorrelationMap[cHybrid->getId()] = cHybridHits;
-                            // for 2d correlation, save channels with hits per chip
-                            // if(f2DHistograms)
-                            // {
-                            //     for(auto hit: hit_vec) { hit_channels.push_back(hit.second + chipOffset_module); }
-                            // }
-                    
-
                         // save per hybrid
                         cStripModuleHits += cStripHybridHits;
                         cPixelModuleHits += cPixelHybridHits;
 
-
-                        // Re-looping on chips...
-                        // for(auto cChip: *cHybrid)
-                        // {
-                        //     the2DHybridCorrelationContainer.getObject(cBoard->getId())
-                        //         ->getObject(cOpticalGroup->getId())
-                        //         ->getObject(cHybrid->getId())
-                        //         ->getObject(cChip->getId())
-                        //         ->getSummary<GenericDataArray<uint32_t, NCHANNELS + 1, HYBRID_CHANNELS_OT + 1>>()[cChipCorrelationMap[cHybrid->getId()][cChip->getId()]][cHybridHits] += 1;
-                        // }
-
-                        // the2DSensorHybridCorrelationContainer.getObject(cBoard->getId())
-                        //     ->getObject(cOpticalGroup->getId())
-                        //     ->getObject(cHybrid->getId())
-                        //     ->getSummary<GenericDataArray<uint32_t, (HYBRID_CHANNELS_OT / 2 + 1), (HYBRID_CHANNELS_OT / 2 + 1)>>()[cHybridHitsEven][cHybridHitsOdd] += 1;
+                        the2DStripPixelHybridCorrelationContainer.getObject(theBoard->getId())
+                            ->getObject(cOpticalGroup->getId())
+                            ->getObject(cHybrid->getId())
+                            ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1), (NSSACHANNELS * NCHIPS_OT * NMPAROWS + 1)>>()[cStripHybridHits][cPixelHybridHits] += 1;
 
                     }    
 
-                auto theStripModuleContainerValues =
-                        &(theStripModuleHitContainer.getObject(theBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, NSSACHANNELS * NCHIPS_OT * 2 + 1>>());
+                    auto theStripModuleContainerValues =
+                            &(theStripModuleHitContainer.getObject(theBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, NSSACHANNELS * NCHIPS_OT * 2 + 1>>());
 
 
-                (*theStripModuleContainerValues)[cStripModuleHits]++;
+                    (*theStripModuleContainerValues)[cStripModuleHits]++;
 
-                auto thePixelModuleContainerValues =
-                        &(thePixelModuleHitContainer.getObject(theBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, NSSACHANNELS * NCHIPS_OT * NMPAROWS * 2 + 1>>());
+                    auto thePixelModuleContainerValues =
+                            &(thePixelModuleHitContainer.getObject(theBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, NSSACHANNELS * NCHIPS_OT * NMPAROWS * 2 + 1>>());
+    
+                    (*thePixelModuleContainerValues)[cPixelModuleHits]++;
 
 
-                (*thePixelModuleContainerValues)[cPixelModuleHits]++;
-
-
-                    // the2DSensorModuleCorrelationContainer.getObject(cBoard->getId())
-                    //     ->getObject(cOpticalGroup->getId())
-                    //     ->getSummary<GenericDataArray<uint32_t, (TOTAL_CHANNELS_OT / 2 + 1), (TOTAL_CHANNELS_OT / 2 + 1)>>()[cModuleHitsEven][cModuleHitsOdd] += 1;
-
-                    // the2DHybridCorrelationContainer.getObject(cBoard->getId())
-                    //     ->getObject(cOpticalGroup->getId())
-                    //     ->getSummary<GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1, HYBRID_CHANNELS_OT + 1>>()[cHybridCorrelationMap.begin()->second][cHybridCorrelationMap.rbegin()->second] += 1;
-
-                    // if(f2DHistograms)
-                    // {
-                    //     // per module correlation also tells us per hybrid correlation
-                    //     for(size_t iCh1 = 0; iCh1 < hit_channels.size(); iCh1++)
-                    //     {
-                    //         for(size_t iCh2 = 0; iCh2 < hit_channels.size(); iCh2++)
-                    //         {
-                    //             the2DHitContainer.getObject(cBoard->getId())
-                    //                 ->getObject(cOpticalGroup->getId())
-                    //                 ->getSummary<GenericDataArray<uint32_t, TOTAL_CHANNELS_OT, TOTAL_CHANNELS_OT>>()[hit_channels[iCh1]][hit_channels[iCh2]] += 1;
-                    //         }
-                    //     }
-                    // }
+                    the2DStripPixelModuleCorrelationContainer.getObject(theBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT * 2 + 1), (NSSACHANNELS * NCHIPS_OT * NMPAROWS * 2 + 1)>>()[cStripModuleHits][cPixelModuleHits] += 1;
 
                 } // end events loop
-
             } // end module loop
         }     // end acquisition loop
     }
@@ -307,12 +250,9 @@ void OTPScommonNoise::TakeData()
     fDQMHistogramOTPScommonNoise.fillHybridHitPlots(thePixelHybridHitContainer, false);
     fDQMHistogramOTPScommonNoise.fillModuleHitPlots(theStripModuleHitContainer, true);
     fDQMHistogramOTPScommonNoise.fillModuleHitPlots(thePixelModuleHitContainer, false);
-    // fDQMHistogramOTCMNoise.fillHybridCorrelationPlots(the2DHybridCorrelationContainer);
     fDQMHistogramOTPScommonNoise.fillSSAtoMPACorrelationPlots(the2DSSAMPACorrelationContainer);
-    // fDQMHistogramOTCMNoise.fillSensorHybridCorrelationPlots(the2DSensorHybridCorrelationContainer);
-    // fDQMHistogramOTCMNoise.fillSensorModuleCorrelationPlots(the2DSensorModuleCorrelationContainer);
-    // if(f2DHistograms) fDQMHistogramOTCMNoise.fill2DHitPlots(the2DHitContainer);
-
+    fDQMHistogramOTPScommonNoise.fillStripPixelHybridCorrelationPlots(the2DStripPixelHybridCorrelationContainer);
+    fDQMHistogramOTPScommonNoise.fillStripPixelModuleCorrelationPlots(the2DStripPixelModuleCorrelationContainer);
 #else
     if(fDQMStreamerEnabled)
     {
@@ -322,10 +262,8 @@ void OTPScommonNoise::TakeData()
         cStreamableMap["OTPScommonNoisePixelHitStream"]   = &thePixelHitContainer;
         cStreamableMap["OTPScommonNoiseStripHybridHitStream"]  = &theStripHybridHitContainer;
         cStreamableMap["OTPScommonNoisePixelHybridHitStream"]  = &thePixelHybridHitContainer;
-        // cStreamableMap["OTCMNoiseModuleHitStream"]                 = &theModuleHitContainer;
-        // cStreamableMap["OTCMNoise2DHybridCorrelationStream"]       = &the2DHybridCorrelationContainer;
-        // cStreamableMap["OTCMNoise2DSensorModuleCorrelationStream"] = &the2DSensorModuleCorrelationContainer;
-        // cStreamableMap["OTCMNoise2DSensorHybridCorrelationStream"]     = &the2DSensorHybridCorrelationContainer; //Ignoring, causes a crash
+        cStreamableMap["OTPScommonNoise2DStripPixelModuleCorrelationStream"] = &the2DStripPixelModuleCorrelationContainer;
+        cStreamableMap["OTPScommonNoise2DStripPixelHybridCorrelationStream"]     = &the2DStripPixelHybridCorrelationContainer;
         cStreamableMap["OTPScommonNoise2DSSAMPACorrelationStream"] = &the2DSSAMPACorrelationContainer;
 
         for(auto cStreamable: cStreamableMap)
@@ -342,13 +280,6 @@ void OTPScommonNoise::TakeData()
                 LOG(INFO) << e.what() << RESET;
             }
         }
-
-        // if(f2DHistograms)
-        // {
-        //     LOG(DEBUG) << "Streaming OTCMNoise2DHitStream" << RESET;
-        //     ContainerSerialization the2DHitSerialization("OTCMNoise2DHitStream");
-        //     the2DHitSerialization.streamByOpticalGroupContainer(fDQMStreamer, the2DHitContainer);
-        // }
     }
 #endif
 }

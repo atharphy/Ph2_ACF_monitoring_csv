@@ -62,6 +62,8 @@ class DQMHistogramOTPScommonNoise : public DQMHistogramBase
     void fillHybridHitPlots(DetectorDataContainer& theHitData, bool isStrip);
     void fillModuleHitPlots(DetectorDataContainer& theHitData, bool isStrip);
     void fillSSAtoMPACorrelationPlots(DetectorDataContainer& theHitData);
+    void fillStripPixelHybridCorrelationPlots(DetectorDataContainer& theHitData);
+    void fillStripPixelModuleCorrelationPlots(DetectorDataContainer& theHitData);
 
     template <size_t T2>
     void fillEventsVsHitsHist(const BaseDataContainer* ChipContainer, TH1F& theHistogram)
@@ -97,5 +99,7 @@ class DQMHistogramOTPScommonNoise : public DQMHistogramBase
     DetectorDataContainer fStripModuleHitHistograms;
     DetectorDataContainer fPixelModuleHitHistograms;
     std::map<uint8_t, DetectorDataContainer> fSSAtoMPAcorrelation;
+    DetectorDataContainer fStripPixelModuleHistograms;
+    DetectorDataContainer fStripPixelHybridHistograms;
 };
 #endif

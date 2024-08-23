@@ -84,6 +84,16 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
     }
 
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
+
+    HistContainer<TH2F> hStripPixelHybridHits("StripPixelHybridHits", "StripPixelHybridHits", NSSACHANNELS * NCHIPS_OT + 2, -0.5, NSSACHANNELS * NCHIPS_OT + 1 + 0.5,  NSSACHANNELS * NCHIPS_OT * NMPAROWS + 2, -0.5, NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1 + 0.5);
+    hStripPixelHybridHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits pixels");
+    hStripPixelHybridHits.fTheHistogram->GetYaxis()->SetTitle("Number of hits strips");    
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStripPixelHybridHistograms, hStripPixelHybridHits);
+
+    HistContainer<TH2F> hStripPixelModuleHits("StripPixelModuleHits", "StripPixelModuleHits", NSSACHANNELS * NCHIPS_OT * 2 + 2, -0.5, NSSACHANNELS * NCHIPS_OT * 2 + 1 + 0.5, NSSACHANNELS * NCHIPS_OT * NMPAROWS * 2 + 2, -0.5, NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1 + 0.5);
+    hStripPixelModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits pixels");
+    hStripPixelModuleHits.fTheHistogram->GetYaxis()->SetTitle("Number of hits strips");
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fStripPixelModuleHistograms, hStripPixelModuleHits);
     // SoC utilities only - END
     
 }
@@ -256,5 +266,38 @@ void DQMHistogramOTPScommonNoise::fillSSAtoMPACorrelationPlots(DetectorDataConta
             }
         }
     }
+}
 
+void DQMHistogramOTPScommonNoise::fillStripPixelHybridCorrelationPlots(DetectorDataContainer& theSensorData)
+{
+    for(auto board: theSensorData)
+    {
+        for(auto opticalGroup: *board)
+        {
+            for(auto hybrid: *opticalGroup)
+            {
+                TH2F* h2DHybridCorrelation = fStripPixelHybridHistograms.getObject(board->getId())
+                                                 ->getObject(opticalGroup->getId())
+                                                 ->getObject(hybrid->getId())
+                                                 ->getSummary<HistContainer<TH2F>>()
+                                                 .fTheHistogram;
+                fillCorrelationHist<NSSACHANNELS * NCHIPS_OT + 1, NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1>(hybrid,*h2DHybridCorrelation);
+            }
+        }
+    }
+}
+
+void DQMHistogramOTPScommonNoise::fillStripPixelModuleCorrelationPlots(DetectorDataContainer& theSensorData)
+{
+    for(auto board: theSensorData)
+    {
+        for(auto opticalGroup: *board)
+        {
+            TH2F* h2DModuleCorrelation = fStripPixelHybridHistograms.getObject(board->getId())
+                                             ->getObject(opticalGroup->getId())
+                                             ->getSummary<HistContainer<TH2F>>()
+                                             .fTheHistogram;
+            fillCorrelationHist<NSSACHANNELS * NCHIPS_OT * 2 + 1, NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1>(opticalGroup,*h2DModuleCorrelation);
+        }
+    }
 }
