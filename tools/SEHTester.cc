@@ -63,11 +63,11 @@ bool SEHTester::CheckShort(std::string powerSupplyId, std::string channelId)
         LOG(ERROR) << BOLDRED << "Not connected to the power supply!!!" << RESET;
         throw std::runtime_error("Not connected to the power supply!!!");
     }
-    std::string message = "GetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId  + ",";
-    std::string buffer = fPowerSupplyClient->sendAndReceivePacket(message);
+    std::string message = "GetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",";
+    std::string buffer  = fPowerSupplyClient->sendAndReceivePacket(message);
     LOG(INFO) << BOLDRED << message << buffer << RESET;
 
-    float       LvMea = std::stof(buffer);
+    float LvMea = std::stof(buffer);
     if(LvMea == 0)
     {
         LOG(ERROR) << BOLDRED << "No output voltage at power supply, possible short detected!" << RESET;
@@ -325,13 +325,13 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
         float IMea  = 0;
 
         clock_gettime(CLOCK_MONOTONIC, &timer);
-        std::string message = "GetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId  + ",";
-        std::string buffer = fPowerSupplyClient->sendAndReceivePacket(message);
+        std::string message = "GetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",";
+        std::string buffer  = fPowerSupplyClient->sendAndReceivePacket(message);
 
-        message = "GetCurrent,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId  + ",";
+        message             = "GetCurrent,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",";
         std::string current = fPowerSupplyClient->sendAndReceivePacket(message);
-        HvMea              = std::stof(buffer);
-        IMea               = 1e9 * std::stof(current);
+        HvMea               = std::stof(buffer);
+        IMea                = 1e9 * std::stof(current);
         // fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, UMon);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         fTC_2SSEH->read_hvmon(fTC_2SSEH->HV_meas, ILeak);
@@ -438,9 +438,9 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
         setVoltageMessage = "SetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",Voltage:" + std::to_string(-1 * cHvSet) + ",";
         fPowerSupplyClient->sendAndReceivePacket(setVoltageMessage);
         std::this_thread::sleep_for(std::chrono::milliseconds(4500));
-        std::string message = "GetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId  + ",";
-        std::string buffer = fPowerSupplyClient->sendAndReceivePacket(message);
-        cHvMea = std::stof(buffer);
+        std::string message = "GetVoltage,PowerSupplyId:" + powerSupplyId + ",ChannelId:" + channelId + ",";
+        std::string buffer  = fPowerSupplyClient->sendAndReceivePacket(message);
+        cHvMea              = std::stof(buffer);
         // fTC_2SSEH->read_hvmon(fTC_2SSEH->Mon, cUMon);
         fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ7, cVHVJ7);
         fTC_2SSEH->read_hvmon(fTC_2SSEH->VHVJ8, cVHVJ8);
