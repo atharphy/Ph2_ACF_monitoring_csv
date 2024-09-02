@@ -431,12 +431,15 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                             {
                                 auto& theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                                 // choosing best LpGBT phase for bypassing CIC
+                                std::cout << "Best LpGBT phase for hybrid " << theHybrid->getId() << ", phyPort " << +phyPort;
                                 for(uint8_t line = 0; line < 4; ++line)
                                 {
                                     auto bestPhase       = theCic->getLpGBTphaseForCICbypass(phyPort, line);
+                                    std::cout << ", line " << +line << " = " << +bestPhase;
                                     auto groupAndChannel = theOpticalGroup->getGroupAndChannel(theHybrid->getId(), line + 1); // stub lines start from 1, line 0 is L1
                                     flpGBTInterface->ConfigureRxPhase(theOpticalGroup->flpGBT, groupAndChannel.first, groupAndChannel.second, bestPhase);
                                 }
+                                std::cout << std::endl;
 
                                 std::vector<std::vector<uint32_t>> phyPortDataVector(numberOfLines);
                                 fBeBoardInterface->WriteBoardReg(
