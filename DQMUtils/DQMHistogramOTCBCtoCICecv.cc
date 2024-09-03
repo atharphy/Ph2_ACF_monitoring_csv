@@ -78,40 +78,18 @@ void DQMHistogramOTCBCtoCICecv::reset(void)
 }
 
 //========================================================================================================================
-void DQMHistogramOTCBCtoCICecv::fillPhaseScanMatchingEfficiency(DetectorDataContainer& thePhaseMatchingEfficiency, uint8_t phase, uint8_t slvsCurrent)
-{
-    for(auto theBoard: thePhaseMatchingEfficiency)
-    {
-        for(auto theOpticalGroup: *theBoard)
-        {
-            for(auto theHybrid: *theOpticalGroup)
-            {
-                auto thePhaseMatchingEfficiencyPlot =
-                    fPhaseScanMatchingEfficiencies[slvsCurrent].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-
-                for(auto theChip: *theHybrid)
-                {
-                    if(!theChip->hasSummary()) continue;
-                    auto theChipLineMatchingEfficiency = theChip->getSummary<GenericDataArray<float, 6>>();
-                    for(int line = 0; line < 6; ++line) { thePhaseMatchingEfficiencyPlot->SetBinContent(phase + 1, theChip->getId() % 8 * 6 + line + 1, theChipLineMatchingEfficiency[line]); }
-                }
-            }
-        }
-    }
-}
-
-//========================================================================================================================
 bool DQMHistogramOTCBCtoCICecv::fill(std::string& inputStream)
 {
     // SoC utilities only - BEGIN
-    ContainerSerialization thePhaseScanMatchingEfficiencySerialization("OTCBCtoCICecvPhaseScanMatchingEfficiency");
+    ContainerSerialization theMatchingEfficiencySerialization("OTCBCtoCICecvMatchingEfficiency");
 
-    if(thePhaseScanMatchingEfficiencySerialization.attachDeserializer(inputStream))
+    if(theMatchingEfficiencySerialization.attachDeserializer(inputStream))
     {
-        uint8_t               phase, slvsCurrent;
+        uint8_t               phyPort, cicCurrent, cicPhase, cbcStrength;
+        std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndlineToCbcIdAndStubMap;
         DetectorDataContainer theDetectorData =
-            thePhaseScanMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(fDetectorContainer, phase, slvsCurrent);
-        fillPhaseScanMatchingEfficiency(theDetectorData, phase, slvsCurrent);
+            theMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(fDetectorContainer, phyPort, cicCurrent, cicPhase, cbcStrength, phyPortAndlineToCbcIdAndStubMap);
+        fillMatchingEfficiency(theDetectorData, phyPort, cicCurrent, cicPhase, cbcStrength, phyPortAndlineToCbcIdAndStubMap);
         return true;
     }
     return false;
