@@ -227,7 +227,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                                         matchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 5>>()[line];
                                     if(phyPort >= 10) // L1 for 2S case
                                     {
-                                        matchingEfficiency = getMatchingEfficiency2SL1(phyPortDataVector[line]);
+                                        matchingEfficiency = getMatchingEfficiency2SL1(phyPortDataVector[line]); // PatternMatcher::countMatchingBits
                                     }
                                     else
                                     {

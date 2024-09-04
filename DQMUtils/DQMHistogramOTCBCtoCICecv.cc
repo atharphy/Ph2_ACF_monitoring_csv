@@ -54,7 +54,7 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
                 if(stub == 0)
                     phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel( 6 * (cbcId - 1) + stub + 1, Form("CBC%d_L1", cbcId));
                 else
-                    phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel( 6 * (cbcId - 1) + stub + 1, Form("CBC%d_Stub%d", cbcId, stub));
+                    phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel( 6 * (cbcId - 1) + stub + 1, Form("CBC%d_Stub%d", cbcId, stub-1));
             }
 
         phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
