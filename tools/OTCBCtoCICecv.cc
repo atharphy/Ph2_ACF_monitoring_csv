@@ -234,7 +234,9 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                                         uint8_t thePattern;
                                         thePattern = fStubPattern2S[(phyPort * 4 + line) % 5];
                                         auto possiblePatternList = getPossiblePatterns(thePattern, static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10);
-                                        matchingEfficiency       = countMatchingBits(phyPortDataVector[line], possiblePatternList);
+                                        //std::cout << "length of phyPortDataVector[" << +line << "] = " << phyPortDataVector[line].size()*32 << " bits" << std::endl;
+                                        std::cout << "phyPort " << +phyPort << ", line " << +line << " CBC" << +phyPortAndLineToCbcIdAndStubMap[{phyPort, line}].first << "_stub" << phyPortAndLineToCbcIdAndStubMap[{phyPort, line}].second - 1 << std::endl;
+                                        matchingEfficiency       = countMatchingBits(phyPortDataVector[line], possiblePatternList); // Utilities::countMatchingBits
                                     }
                                     //LOG(INFO) << "kpal: phyPort: " << +phyPort << " channel: " << +line << " CBC" << +phyPortAndLineToCbcIdAndStubMap[{phyPort, line}].first << "_stub" << +phyPortAndLineToCbcIdAndStubMap[{phyPort, line}].second << " matchingEfficiency: " << matchingEfficiency << RESET;
                                 }
