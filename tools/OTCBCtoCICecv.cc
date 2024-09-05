@@ -154,8 +154,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                 if(!pVerifyBit)
                     LOG(ERROR) << "Error in setting BetaMult&SLVS value of 0x" << std::hex << +BetaMultAndSLVSbyte << std::dec << " for CIC " << theHybrid->getId() << ", CBC " << theCBC->getId() << "[ cbc strength set to " << +cbcStrength << " ]" <<  RESET;
 
-                if(pVerifyBit && theCBC->getId() == 7)
-                    LOG(INFO) << "Successfully set BetaMult&SLVS value of 0x" << std::hex << +BetaMultAndSLVSbyte << std::dec << " for CIC " << theHybrid->getId() << ", CBC 0-" << theCBC->getId() << "[ cbc strength set to " << +cbcStrength << " ]" <<  RESET;
+                //if(pVerifyBit && theCBC->getId() == 7) LOG(INFO) << "Successfully set BetaMult&SLVS value of 0x" << std::hex << +BetaMultAndSLVSbyte << std::dec << " for CIC " << theHybrid->getId() << ", CBC 0-" << theCBC->getId() << "[ cbc strength set to " << +cbcStrength << " ]" <<  RESET;
             }
 
             for(uint8_t phyPort = 0; phyPort < numberOfPhyPorts; ++phyPort)
