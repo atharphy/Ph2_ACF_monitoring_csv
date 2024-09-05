@@ -176,7 +176,6 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                         {
                             auto& theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                             // choosing best LpGBT phase for bypassing CIC
-                            std::cout << "Best LpGBT phase for hybrid " << theHybrid->getId() << ", phyPort " << +phyPort;
                             for(uint8_t line = 0; line < 4; ++line)
                             {
                                 auto bestPhase       = theCic->getLpGBTphaseForCICbypass(phyPort, line);
@@ -219,8 +218,6 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                                     uint8_t thePattern;
                                     thePattern = fStubPattern2S[(phyPort * 4 + line) % 5];
                                     auto possiblePatternList = getPossiblePatterns(thePattern, static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10);
-                                    //std::cout << "length of phyPortDataVector[" << +line << "] = " << phyPortDataVector[line].size()*32 << " bits" << std::endl;
-                                    std::cout << "phyPort " << +phyPort << ", line " << +line << " CBC" << +phyPortAndLineToCbcIdAndStubMap[{phyPort, line}].first << "_stub" << phyPortAndLineToCbcIdAndStubMap[{phyPort, line}].second - 1 << std::endl;
                                     matchingEfficiency       = countMatchingBits(phyPortDataVector[line], possiblePatternList); // Utilities::countMatchingBits
                                 }
                             }
