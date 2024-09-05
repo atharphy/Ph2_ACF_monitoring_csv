@@ -10,8 +10,8 @@
 #ifndef OTCBCtoCICecv_h__
 #define OTCBCtoCICecv_h__
 
-#include "tools/Tool.h"
 #include "tools/OTCicBypassTest.h"
+#include "tools/Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
@@ -48,17 +48,17 @@ class OTCBCtoCICecv : public OTCicBypassTest
     static std::string fCalibrationDescription;
 
   private:
-    void               runOTCBCtoCICecv();
+    void runOTCBCtoCICecv();
 
-    uint8_t            fShiftRegisterPattern{0xAA};
-    uint32_t           fNumberOfIterations{100};
-    std::vector<float> fListOfCBCslvsCurrents{1, 4, 7};
+    uint8_t                                                            fShiftRegisterPattern{0xAA};
+    uint32_t                                                           fNumberOfIterations{100};
+    std::vector<float>                                                 fListOfCBCslvsCurrents{1, 4, 7};
     std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndlineToCbcIdAndStub();
 
-    void    prepareForLpGBTalignment2Sstubs();
-    void    prepareForLpGBTalignment2SL1();
-    float   getMatchingEfficiency2SL1(std::vector<uint32_t> inputDataVector);
-    void    setCICBypass(uint8_t phyPort);
+    void  prepareForLpGBTalignment2Sstubs();
+    void  prepareForLpGBTalignment2SL1();
+    float getMatchingEfficiency2SL1(std::vector<uint32_t> inputDataVector);
+    void  setCICBypass(uint8_t phyPort);
 
     uint8_t              fShiftRegisterPatternMPA{0xAA};
     std::vector<uint8_t> fStubPattern2S{0x33, 0x55, 0xAA, 0xAA, 0xAA}; // last two bytes cannot be changed here
