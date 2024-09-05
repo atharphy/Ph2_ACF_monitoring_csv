@@ -91,12 +91,10 @@ std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OTCBCtoCICecv
 
 void OTCBCtoCICecv::runOTCBCtoCICecv()
 {
-    uint8_t cicCurrentStart  = 1, cicCurrentEnd   = 1 ;
     uint8_t cbcStrengthStart = 0, cbcStrengthEnd  = 15 ;
     uint8_t cicPhaseStart    = 0, cicPhaseEnd     = 14 ;
+    //uint8_t cbcStrengthStart = 0, cbcStrengthEnd  = 0 ;
     //uint8_t cicPhaseStart    = 0, cicPhaseEnd     = 1 ;
-    //uint8_t cicCurrentStart  = 1, cicCurrentEnd   = 5 ;
-    //uint8_t cbcStrengthStart = 0, cbcStrengthEnd  = 15 ;
 
     uint8_t numberOfLines = 4;
     uint8_t numberOfPhyPorts = 12;
@@ -120,17 +118,6 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
     }
 
     auto phyPortAndLineToCbcIdAndStubMap = phyPortAndlineToCbcIdAndStub();
-
-    for(uint8_t cicCurrent = cicCurrentStart; cicCurrent <= cicCurrentEnd; cicCurrent++)
-    {
-//        for(auto theBoard: *fDetectorContainer)
-//        for(auto theOpticalGroup: *theBoard)
-//        for(auto theHybrid: *theOpticalGroup)
-//        {
-//            auto& theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-//            setting CIC strength
-//            fCicInterface->ConfigureDriveStrength(theCic, cicCurrent);
-//        }
 
         for(uint8_t cicPhase = cicPhaseStart; cicPhase <= cicPhaseEnd; cicPhase++)  // phase 0 to 14
         {
@@ -260,7 +247,6 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                 }
             }
         }
-    }
 }
 
 void OTCBCtoCICecv::setCICBypass(uint8_t phyPort)
