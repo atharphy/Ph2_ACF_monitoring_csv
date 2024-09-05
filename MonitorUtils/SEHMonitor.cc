@@ -5,6 +5,7 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/Utilities.h"
 #include "Utils/ValueAndTime.h"
+#include <boost/algorithm/string.hpp>
 
 #ifdef __USE_ROOT__
 #include "TFile.h"
@@ -96,17 +97,29 @@ void SEHMonitor::runLpGBTRegisterMonitor(const std::string& registerName)
 
 void SEHMonitor::runPowerSupplyMonitor(const std::string& registerName)
 {
-    // LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName<< RESET;
-    std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
-    LOG(INFO) << BOLDMAGENTA << buffer << RESET;
-    // while(!(buffer.find("TimeStamp") != std::string::npos))
-    // {
-    //     buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
-    //     LOG(INFO) << BOLDMAGENTA << buffer << RESET;
-    // }
-    float cValue = std::stof(getVariableValue(registerName, buffer));
-    LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
-    if((registerName.find("HV") != std::string::npos) & (registerName.find("Current") != std::string::npos)) { cValue *= 1e9; }
+    std::vector<std::string> seglist;
+    boost::split(seglist, registerName, boost::is_any_of("_"));
+    float cValue;
+
+    if((registerName.find("HV") != std::string::npos) & (registerName.find("Current") != std::string::npos))
+    {
+        std::string message = "GetCurrent,PowerSupplyId:" + seglist[0] + ",ChannelId:" + seglist[1] + "_" + seglist[2];
+        LOG(INFO) << BOLDMAGENTA << message << RESET;
+        std::string current = fPowerSupplyClient->sendAndReceivePacket(message);
+
+        cValue = std::stof(current);
+        LOG(INFO) << BOLDMAGENTA << registerName << " " << cValue << RESET;
+
+        cValue *= 1e9;
+    }
+    else
+    {
+        std::string message = "GetVoltage,PowerSupplyId:" + seglist[0] + ",ChannelId:" + seglist[1] + "_" + seglist[2];
+        LOG(INFO) << BOLDMAGENTA << message << RESET;
+        std::string voltage = fPowerSupplyClient->sendAndReceivePacket(message);
+        cValue              = std::stof(voltage);
+        LOG(INFO) << BOLDMAGENTA << registerName << " " << cValue << RESET;
+    }
     DetectorDataContainer thePowerSupplyContainer;
     ContainerFactory::copyAndInitDetector<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, thePowerSupplyContainer);
     thePowerSupplyContainer.getSummary<ValueAndTime<float>>() = ValueAndTime<float>(cValue, getTimeStamp());
