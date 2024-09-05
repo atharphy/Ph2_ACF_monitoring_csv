@@ -93,8 +93,6 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
 {
     uint8_t cbcStrengthStart = 0, cbcStrengthEnd  = 15 ;
     uint8_t cicPhaseStart    = 0, cicPhaseEnd     = 14 ;
-    //uint8_t cbcStrengthStart = 0, cbcStrengthEnd  = 0 ;
-    //uint8_t cicPhaseStart    = 0, cicPhaseEnd     = 1 ;
 
     uint8_t numberOfLines = 4;
     uint8_t numberOfPhyPorts = 12;
