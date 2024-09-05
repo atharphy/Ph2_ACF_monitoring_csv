@@ -111,7 +111,6 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
     {
         for(auto theCBC: *theHybrid)
         {
-            // itr over BetaMult&SLVS from 0x01 to 0xF1 with sum of 0x10
             uint8_t cReg      = fReadoutChipInterface->ReadChipReg(theCBC, "BetaMult&SLVS");
             defaultBetaMult = cReg & 0xF0;
             LOG(INFO) << "Deafult BetaMult&SLVS: 0x" << std::hex << +cReg << std::dec << " defaultBetaMult: " << std::hex << +defaultBetaMult << std::dec <<RESET;
