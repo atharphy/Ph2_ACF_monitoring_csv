@@ -44,7 +44,6 @@ class OTCicBypassTest : public Tool
     void runCICbypassTest();
     void injectStubs2S(Ph2_HwDescription::ReadoutChip* theCBC);
     void injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA);
-    float injectedAndOutputPacketEfficiency(std::string injectedPacket, std::string outputPacket);
 
     size_t fNumberOfIterations{1};
     // For simplicity, make sure bendind code is always greater than half value (0x7)
