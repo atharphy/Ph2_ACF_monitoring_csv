@@ -22,8 +22,7 @@ void OTCBCtoCICecv::Initialise(void)
     // free the registers in case any
 
     fNumberOfIterations    = findValueInSettings<double>("OTCBCtoCICecv_NumberOfIterations", 1000);
-    fShiftRegisterPattern  = findValueInSettings<double>("OTCBCtoCICecv_ShiftRegisterPattern", 0xAA);
-    fListOfCBCslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>("OTCBCtoCICecv_ListOfCBCslvsCurrents", "1, 4, 7"));
+    fListOfCBCslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>("OTCBCtoCICecv_ListOfCBCslvsCurrents", "0, 8, 14"));
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -91,7 +90,6 @@ std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OTCBCtoCICecv
 
 void OTCBCtoCICecv::runOTCBCtoCICecv()
 {
-    uint8_t cbcStrengthStart = 0, cbcStrengthEnd = 15;
     uint8_t cicPhaseStart = 0, cicPhaseEnd = 14;
 
     uint8_t numberOfLines    = 4;
@@ -141,14 +139,17 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                     LOG(INFO) << "Successfully set cicPhase value of " << +cicPhase << " for CIC " << theHybrid->getId() << RESET;
                 }
 
-        for(uint8_t cbcStrength = cbcStrengthStart; cbcStrength <= cbcStrengthEnd; cbcStrength++) // itr over BetaMult&SLVS from 0x?0 to 0x?F with sum of 0x01
+        for(uint8_t cbcStrength : fListOfCBCslvsCurrents) // itr over BetaMult&SLVS from 0x?0 to 0x?F with sum of 0x01
         {
             for(auto theBoard: *fDetectorContainer)
+            {
                 for(auto theOpticalGroup: *theBoard)
+                {
                     for(auto theHybrid: *theOpticalGroup)
+                    {
                         for(auto theCBC: *theHybrid)
                         {
-                            BetaMultAndSLVSbyte = (defaultBetaMult | cbcStrength);
+                            BetaMultAndSLVSbyte = (defaultBetaMult | (uint8_t(cbcStrength) & 0xF));
                             // setting CBC strength
                             pVerifyBit = fReadoutChipInterface->WriteChipReg(theCBC, "BetaMult&SLVS", BetaMultAndSLVSbyte, true);
                             if(!pVerifyBit)
@@ -158,7 +159,12 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                             // if(pVerifyBit && theCBC->getId() == 7) LOG(INFO) << "Successfully set BetaMult&SLVS value of 0x" << std::hex << +BetaMultAndSLVSbyte << std::dec << " for CIC " <<
                             // theHybrid->getId() << ", CBC 0-" << theCBC->getId() << "[ cbc strength set to " << +cbcStrength << " ]" <<  RESET;
                         }
+                    }
+                }
+            }
 
+            DetectorDataContainer matchingEfficiencyContainer;
+            ContainerFactory::copyAndInitChip<GenericDataArray<float, 6>>(*fDetectorContainer, matchingEfficiencyContainer);
             for(uint8_t phyPort = 0; phyPort < numberOfPhyPorts; ++phyPort)
             {
                 if(phyPort < 10)
@@ -166,8 +172,6 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                 else
                     prepareForLpGBTalignment2SL1();
                 setCICBypass(phyPort);
-                DetectorDataContainer matchingEfficiencyContainer;
-                ContainerFactory::copyAndInitHybrid<GenericDataArray<float, 4>>(*fDetectorContainer, matchingEfficiencyContainer);
                 for(auto theBoard: *fDetectorContainer)
                 {
                     auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
@@ -206,8 +210,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
 
                             for(uint8_t line = 0; line < numberOfLines; ++line)
                             {
-                                auto& matchingEfficiency =
-                                    matchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 5>>()[line];
+                                float matchingEfficiency = -1;
                                 if(phyPort >= 10) // L1 for 2S case
                                 {
                                     matchingEfficiency = getMatchingEfficiency2SL1(phyPortDataVector[line]); // PatternMatcher::countMatchingBits
@@ -219,24 +222,32 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                                     auto possiblePatternList = getPossiblePatterns(thePattern, static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10);
                                     matchingEfficiency       = countMatchingBits(phyPortDataVector[line], possiblePatternList); // Utilities::countMatchingBits
                                 }
+
+                                auto  chipIdAndLine      = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
+                                try // Handle disable chip
+                                {
+                                    matchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first)
+                                        ->getSummary<GenericDataArray<float, 6>>()[chipIdAndLine.second] = matchingEfficiency;
+                                }
+                                catch(const std::exception& e)
+                                {
+                                    continue;
+                                }
                             }
                         }
                     }
                     fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
                 }
-
-#ifdef __USE_ROOT__
-                // LOG(INFO) << "Using ROOT to save OTCBCtoCICecv matching efficiency." << RESET;
-                fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, phyPort, cicPhase, cbcStrength, phyPortAndLineToCbcIdAndStubMap);
-#else
-                if(fDQMStreamer)
-                {
-                    // LOG(INFO) << "Using DQMStreamer to save OTCBCtoCICecv matching efficiency." << RESET;
-                    ContainerSerialization theMatchingEfficiencySerialization("OTCBCtoCICecvMatchingEfficiency");
-                    theMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, matchingEfficiencyContainer, phyPort);
-                }
-#endif
             }
+#ifdef __USE_ROOT__
+            fDQMHistogramOTCBCtoCICecv.fillMatchingEfficiency(matchingEfficiencyContainer, cicPhase, cbcStrength);
+#else
+            if(fDQMStreamer)
+            {
+                ContainerSerialization theMatchingEfficiencySerialization("OTCBCtoCICecvMatchingEfficiency");
+                theMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, matchingEfficiencyContainer, cicPhase, cbcStrength);
+            }
+#endif
         }
     }
 }

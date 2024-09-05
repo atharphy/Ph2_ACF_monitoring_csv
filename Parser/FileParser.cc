@@ -1441,7 +1441,8 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
                                                   "OTinjectionOccupancyScan_ListOfInjectedPulses",
                                                   "OTMPAtoCICecv_ListOfMPAslvsCurrents",
                                                   "OTSSAtoMPAecv_ListOfSSAslvsCurrents",
-                                                  "OTSSAtoSSAecv_ListOfSSAslvsCurrents"};
+                                                  "OTSSAtoSSAecv_ListOfSSAslvsCurrents",
+                                                  "OTCBCtoCICecv_ListOfCBCslvsCurrents"};
     pugi::xml_document       doc;
     openHWconfig(pFilename, doc);
 

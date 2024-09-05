@@ -1,7 +1,7 @@
 /*!
         \file                DQMHistogramOTCBCtoCICecv.h
         \brief               DQM class for OTCBCtoCICecv
-        \author              Fabio Ravera
+        \author              Kuldeep Kumar
         \date                28/05/24
 */
 
@@ -56,10 +56,8 @@ class DQMHistogramOTCBCtoCICecv : public DQMHistogramBase
     void reset(void) override;
 
     void fillMatchingEfficiency(DetectorDataContainer&                                             matchingEfficiencyContainer,
-                                uint8_t                                                            phyPort,
                                 uint8_t                                                            cicPhase,
-                                uint8_t                                                            cbcStrength,
-                                std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndlineToCbcIdAndStubMap);
+                                uint8_t                                                            cbcStrength);
 
   private:
     DetectorContainer*                       fDetectorContainer;
