@@ -68,7 +68,7 @@ class RD53B : public RD53
           uint8_t             pHybridId,
           uint8_t             pRD53Id,
           uint8_t             pRD53Lane,
-          uint8_t             pRD53eFuseCode,
+          uint32_t            pRD53eFuseCode,
           const std::string&  fileName,
           const std::string&  cfgComment);
     RD53B(const RD53B&) = delete;

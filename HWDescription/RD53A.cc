@@ -141,7 +141,7 @@ RD53A::RD53A(uint8_t            pBeId,
              uint8_t            pHybridId,
              uint8_t            pRD53Id,
              uint8_t            pRD53Lane,
-             uint8_t            pRD53eFuseCode,
+             uint32_t           pRD53eFuseCode,
              const std::string& fileName,
              const std::string& cfgComment)
     : RD53(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id, pRD53Lane, pRD53eFuseCode, fileName, cfgComment)
