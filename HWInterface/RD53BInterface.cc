@@ -604,9 +604,18 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
     this->setBoard(pChip->getBeBoardId());
 
     RD53Interface::WriteChipReg(pChip, "EfusesConfig", 0x0F0F, false);
-    int16_t low  = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
-    int16_t high = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
-    return (low < 0 || high < 0 ? 0 : low | (high << pChip->getNumberOfBits("EfusesReadData0")));
+    int16_t  low       = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
+    int16_t  high      = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
+    uint32_t eFuseCode = (low < 0 || high < 0 ? 0 : low | (high << pChip->getNumberOfBits("EfusesReadData0")));
+
+    if(eFuseCode != static_cast<RD53*>(pChip)->geteFuseCode())
+    {
+        std::stringstream myString;
+        myString << "Readout chip E-fuse code " << eFuseCode << " does not match value in xml file " << +static_cast<RD53*>(pChip)->geteFuseCode();
+        throw std::runtime_error(myString.str());
+    }
+
+    return eFuseCode;
 }
 
 void RD53BInterface::SendBoardClear(const BeBoard* pBoard)

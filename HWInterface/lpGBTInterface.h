@@ -14,6 +14,7 @@
 #include "HWDescription/lpGBT.h"
 #include "HWInterface/ChipInterface.h"
 #include "HWInterface/ReadoutChipInterface.h"
+#include "Utils/NTChandler.h"
 
 #if defined(__TCUSB__)
 #include "HWInterface/TCInterface.h"
@@ -148,7 +149,7 @@ class lpGBTInterface : public ChipInterface
     float    GetRssiPower(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose = true);
     float    GetRssiPower(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, float cResponsivity, bool pVerbose = true);
     float    GetADCGain(Ph2_HwDescription::Chip* pChip, bool pVerbose = true);
-    uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0);
+    uint16_t ReadADC(Ph2_HwDescription::Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN = "VREF/2", uint8_t pGain = 0, bool silentRunning = false);
     bool     IsReadADCDone(Ph2_HwDescription::Chip* pChip);
 
     // #############################
