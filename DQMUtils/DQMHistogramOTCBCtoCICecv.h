@@ -55,9 +55,7 @@ class DQMHistogramOTCBCtoCICecv : public DQMHistogramBase
      */
     void reset(void) override;
 
-    void fillMatchingEfficiency(DetectorDataContainer&                                             matchingEfficiencyContainer,
-                                uint8_t                                                            cicPhase,
-                                uint8_t                                                            cbcStrength);
+    void fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t cicPhase, uint8_t cbcStrength);
 
   private:
     DetectorContainer*                       fDetectorContainer;

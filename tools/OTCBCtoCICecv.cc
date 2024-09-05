@@ -139,7 +139,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                     LOG(INFO) << "Successfully set cicPhase value of " << +cicPhase << " for CIC " << theHybrid->getId() << RESET;
                 }
 
-        for(uint8_t cbcStrength : fListOfCBCslvsCurrents) // itr over BetaMult&SLVS from 0x?0 to 0x?F with sum of 0x01
+        for(uint8_t cbcStrength: fListOfCBCslvsCurrents) // itr over BetaMult&SLVS from 0x?0 to 0x?F with sum of 0x01
         {
             for(auto theBoard: *fDetectorContainer)
             {
@@ -223,7 +223,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                                     matchingEfficiency       = countMatchingBits(phyPortDataVector[line], possiblePatternList); // Utilities::countMatchingBits
                                 }
 
-                                auto  chipIdAndLine      = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
+                                auto chipIdAndLine = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
                                 try // Handle disable chip
                                 {
                                     matchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first)

@@ -28,13 +28,13 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    uint8_t numberOfStubs    = 6; // Stub 1 to 5 and L1 is filled as Stub0
-    uint8_t numberOfCBC      = 8;
-    uint8_t numberOfPhases   = 15; // 0 to 14
+    uint8_t numberOfStubs  = 6; // Stub 1 to 5 and L1 is filled as Stub0
+    uint8_t numberOfCBC    = 8;
+    uint8_t numberOfPhases = 15; // 0 to 14
 
     std::vector<float> listOfCBCslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTCBCtoCICecv_ListOfCBCslvsCurrents", "0, 8, 14"));
 
-    for(auto cbcStrength : listOfCBCslvsCurrents)
+    for(auto cbcStrength: listOfCBCslvsCurrents)
     {
         HistContainer<TH2F> phaseScanMatchingEfficiency(Form("CBCtoCICecvEfficiency_CbcStrength%d", int(cbcStrength)),
                                                         Form("CBC to CIC ecv Efficiency CbcStrength %d", int(cbcStrength)),
@@ -84,9 +84,9 @@ bool DQMHistogramOTCBCtoCICecv::fill(std::string& inputStream)
 
     if(theMatchingEfficiencySerialization.attachDeserializer(inputStream))
     {
-        uint8_t                                                            cicPhase, cbcStrength;
-        DetectorDataContainer theDetectorData = theMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(
-            fDetectorContainer, cicPhase, cbcStrength);
+        uint8_t               cicPhase, cbcStrength;
+        DetectorDataContainer theDetectorData =
+            theMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(fDetectorContainer, cicPhase, cbcStrength);
         fillMatchingEfficiency(theDetectorData, cicPhase, cbcStrength);
         return true;
     }
@@ -95,9 +95,7 @@ bool DQMHistogramOTCBCtoCICecv::fill(std::string& inputStream)
 }
 
 //========================================================================================================================
-void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer&                                             matchingEfficiencyContainer,
-                                                       uint8_t                                                            cicPhase,
-                                                       uint8_t                                                            cbcStrength)
+void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t cicPhase, uint8_t cbcStrength)
 {
     for(auto theBoard: matchingEfficiencyContainer)
     {
@@ -111,10 +109,7 @@ void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer&   
                 {
                     if(!theChip->hasSummary()) continue;
                     auto theChipLineMatchingEfficiency = theChip->getSummary<GenericDataArray<float, 6>>();
-                    for(int line = 0; line < 6; ++line)
-                    {
-                        thePhaseScanHistogram->SetBinContent(cicPhase + 1, theChip->getId() * 6 + line + 1, theChipLineMatchingEfficiency[line]);
-                    }
+                    for(int line = 0; line < 6; ++line) { thePhaseScanHistogram->SetBinContent(cicPhase + 1, theChip->getId() * 6 + line + 1, theChipLineMatchingEfficiency[line]); }
                 }
             }
         }
