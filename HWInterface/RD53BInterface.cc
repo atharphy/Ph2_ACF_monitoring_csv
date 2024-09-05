@@ -611,7 +611,7 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
     if(eFuseCode != static_cast<RD53*>(pChip)->geteFuseCode())
     {
         std::stringstream myString;
-        myString << "Readout chip E-fuse code " << eFuseCode << " does not match value in xml file " << +static_cast<RD53*>(pChip)->geteFuseCode();
+        myString << "Readout chip e-fuse code " << eFuseCode << " does not match value in xml file " << +static_cast<RD53*>(pChip)->geteFuseCode();
         throw std::runtime_error(myString.str());
     }
 
