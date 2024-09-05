@@ -141,7 +141,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
             LOG(INFO) << "Successfully set cicPhase value of 0x" << std::hex << +cicPhase << std::dec << " for CIC " << theHybrid->getId() << RESET;
         }
 
-        for(uint8_t cbcStrength = cbcStrengthStart; cbcStrength <= cbcStrengthEnd; cbcStrength++)  //itr over BetaMult&SLVS from 0x?0 to 0x?F with sum of 0x10
+        for(uint8_t cbcStrength = cbcStrengthStart; cbcStrength <= cbcStrengthEnd; cbcStrength++)  //itr over BetaMult&SLVS from 0x?0 to 0x?F with sum of 0x01
         {
             for(auto theBoard: *fDetectorContainer)
             for(auto theOpticalGroup: *theBoard)
