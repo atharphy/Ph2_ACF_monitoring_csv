@@ -121,8 +121,6 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
     }
 
     auto phyPortAndLineToCbcIdAndStubMap = phyPortAndlineToCbcIdAndStub();
-    prepareForLpGBTalignment2Sstubs();
-    prepareForLpGBTalignment2SL1();
 
     for(uint8_t cicCurrent = cicCurrentStart; cicCurrent <= cicCurrentEnd; cicCurrent++)
     {
@@ -179,6 +177,10 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
 
                 for(uint8_t phyPort = 0; phyPort < numberOfPhyPorts; ++phyPort)
                 {
+                    if(phyPort < 10)
+                        prepareForLpGBTalignment2Sstubs();
+                    else
+                        prepareForLpGBTalignment2SL1();
                     setCICBypass(phyPort);
                     DetectorDataContainer matchingEfficiencyContainer;
                     ContainerFactory::copyAndInitHybrid<GenericDataArray<float, 4>>(*fDetectorContainer, matchingEfficiencyContainer);
