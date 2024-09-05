@@ -517,8 +517,6 @@ float countMatchingBits(const std::vector<uint32_t>& incomingData, const std::ve
     float maximumMatchingEfficiency = -1;
     for(auto possiblePattern: possiblePatternList)
     {
-        std::bitset<32> possiblePatternbitset(possiblePattern);
-        std::cout << "possiblePattern " << possiblePatternbitset.to_string() << std::endl;
         float currentEfficiency = 0;
         for(auto word: incomingData)
         {
@@ -529,15 +527,6 @@ float countMatchingBits(const std::vector<uint32_t>& incomingData, const std::ve
         }
         if(currentEfficiency > maximumMatchingEfficiency) maximumMatchingEfficiency = currentEfficiency;
     }
-    for(auto word: incomingData)
-    {
-        std::bitset<32> wordbitset(word);
-        std::cout << wordbitset.to_string() << " ";
-    }
-    std::cout << std::endl;
-
-    // print size of possiblePatternList
-    // std::cout << "Utilities::countMatchingBits " << possiblePatternList.size() << " " << incomingData.size() << std::endl;
     return maximumMatchingEfficiency / (incomingData.size() * 32);
 }
 
