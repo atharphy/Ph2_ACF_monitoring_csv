@@ -85,11 +85,11 @@ bool DQMHistogramOTCBCtoCICecv::fill(std::string& inputStream)
 
     if(theMatchingEfficiencySerialization.attachDeserializer(inputStream))
     {
-        uint8_t               phyPort, cicCurrent, cicPhase, cbcStrength;
+        uint8_t               phyPort, cicPhase, cbcStrength;
         std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndlineToCbcIdAndStubMap;
         DetectorDataContainer theDetectorData =
-            theMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(fDetectorContainer, phyPort, cicCurrent, cicPhase, cbcStrength, phyPortAndlineToCbcIdAndStubMap);
-        fillMatchingEfficiency(theDetectorData, phyPort, cicCurrent, cicPhase, cbcStrength, phyPortAndlineToCbcIdAndStubMap);
+            theMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(fDetectorContainer, phyPort, cicPhase, cbcStrength, phyPortAndlineToCbcIdAndStubMap);
+        fillMatchingEfficiency(theDetectorData, phyPort, cicPhase, cbcStrength, phyPortAndlineToCbcIdAndStubMap);
         return true;
     }
     return false;
@@ -97,7 +97,7 @@ bool DQMHistogramOTCBCtoCICecv::fill(std::string& inputStream)
 }
 
 //========================================================================================================================
-void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort, uint8_t cicCurrent, uint8_t cicPhase, uint8_t cbcStrength, std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndlineToCbcIdAndStubMap)
+void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort, uint8_t cicPhase, uint8_t cbcStrength, std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndlineToCbcIdAndStubMap)
 {
     for(auto theBoard: matchingEfficiencyContainer)
     {
