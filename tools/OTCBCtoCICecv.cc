@@ -91,7 +91,7 @@ std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OTCBCtoCICecv
 
 void OTCBCtoCICecv::runOTCBCtoCICecv()
 {
-    uint8_t cbcStrengthStart = 0, cbcStrengthEnd  = 15 ;
+    uint8_t cbcStrengthStart = 0, cbcStrengthEnd  = 0 ;
     uint8_t cicPhaseStart    = 0, cicPhaseEnd     = 14 ;
 
     uint8_t numberOfLines = 4;
@@ -223,7 +223,6 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                                     std::cout << "phyPort " << +phyPort << ", line " << +line << " CBC" << +phyPortAndLineToCbcIdAndStubMap[{phyPort, line}].first << "_stub" << phyPortAndLineToCbcIdAndStubMap[{phyPort, line}].second - 1 << std::endl;
                                     matchingEfficiency       = countMatchingBits(phyPortDataVector[line], possiblePatternList); // Utilities::countMatchingBits
                                 }
-                                //LOG(INFO) << "kpal: phyPort: " << +phyPort << " channel: " << +line << " CBC" << +phyPortAndLineToCbcIdAndStubMap[{phyPort, line}].first << "_stub" << +phyPortAndLineToCbcIdAndStubMap[{phyPort, line}].second << " matchingEfficiency: " << matchingEfficiency << RESET;
                             }
                         }
                     }
