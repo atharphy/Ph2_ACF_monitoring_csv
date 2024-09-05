@@ -138,7 +138,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                 }
             }
             fCicInterface->WriteChipMultReg(theCic, cicPhaseRegisterVector);
-            LOG(INFO) << "Successfully set cicPhase value of 0x" << std::hex << +cicPhase << std::dec << " for CIC " << theHybrid->getId() << RESET;
+            LOG(INFO) << "Successfully set cicPhase value of " << +cicPhase << " for CIC " << theHybrid->getId() << RESET;
         }
 
         for(uint8_t cbcStrength = cbcStrengthStart; cbcStrength <= cbcStrengthEnd; cbcStrength++)  //itr over BetaMult&SLVS from 0x?0 to 0x?F with sum of 0x01
