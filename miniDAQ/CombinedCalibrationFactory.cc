@@ -209,8 +209,9 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(
         "2S Module", "cbcpulseshape");
     Register<Physics2S>("2S Module", "physics2s");
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTalignLpGBTinputsForBypass, OTCBCtoCICecv>("2S Module",
-                                                                                                                                                                                       "CBCtoCICecv");
+    Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTCBCtoCICecv>("2S Module", "CBCtoCICecv");
+
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTalignLpGBTinputsForBypass, OTCBCtoCICecv>("2S Module", "2Secv");
 
     // PS specific calibrations
     Register<PSPhysics>("PS Module", "psphysics");

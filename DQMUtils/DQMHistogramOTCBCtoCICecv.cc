@@ -28,12 +28,13 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    uint8_t numberOfStubs    = 6; // Stub 1 to 5 and L1 is filled as Stub0
-    uint8_t numberOfCBC      = 8;
-    uint8_t cbcStrengthCount = 16; // each cbc strength in different histogram 0 to 15 (0 to F)
-    uint8_t numberOfPhases   = 15; // 0 to 14
+    uint8_t numberOfStubs  = 6; // Stub 1 to 5 and L1 is filled as Stub0
+    uint8_t numberOfCBC    = 8;
+    uint8_t numberOfPhases = 15; // 0 to 14
 
-    for(uint8_t cbcStrength = 0; cbcStrength < cbcStrengthCount; ++cbcStrength)
+    std::vector<float> listOfCBCslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTCBCtoCICecv_ListOfCBCslvsCurrents", "0, 8, 14"));
+
+    for(auto cbcStrength: listOfCBCslvsCurrents)
     {
         HistContainer<TH2F> phaseScanMatchingEfficiency(Form("CBCtoCICecvEfficiency_CbcStrength%d", int(cbcStrength)),
                                                         Form("CBC to CIC ecv Efficiency CbcStrength %d", int(cbcStrength)),
@@ -83,11 +84,10 @@ bool DQMHistogramOTCBCtoCICecv::fill(std::string& inputStream)
 
     if(theMatchingEfficiencySerialization.attachDeserializer(inputStream))
     {
-        uint8_t                                                            phyPort, cicPhase, cbcStrength;
-        std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndlineToCbcIdAndStubMap;
-        DetectorDataContainer theDetectorData = theMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(
-            fDetectorContainer, phyPort, cicPhase, cbcStrength, phyPortAndlineToCbcIdAndStubMap);
-        fillMatchingEfficiency(theDetectorData, phyPort, cicPhase, cbcStrength, phyPortAndlineToCbcIdAndStubMap);
+        uint8_t               cicPhase, cbcStrength;
+        DetectorDataContainer theDetectorData =
+            theMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 6>>(fDetectorContainer, cicPhase, cbcStrength);
+        fillMatchingEfficiency(theDetectorData, cicPhase, cbcStrength);
         return true;
     }
     return false;
@@ -95,11 +95,7 @@ bool DQMHistogramOTCBCtoCICecv::fill(std::string& inputStream)
 }
 
 //========================================================================================================================
-void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer&                                             matchingEfficiencyContainer,
-                                                       uint8_t                                                            phyPort,
-                                                       uint8_t                                                            cicPhase,
-                                                       uint8_t                                                            cbcStrength,
-                                                       std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndlineToCbcIdAndStubMap)
+void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t cicPhase, uint8_t cbcStrength)
 {
     for(auto theBoard: matchingEfficiencyContainer)
     {
@@ -107,18 +103,13 @@ void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer&   
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                if(!theHybrid->hasSummary()) continue;
                 auto thePhaseScanHistogram =
                     fPhaseScanMatchingEfficiencies[cbcStrength].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                auto theEfficiencyArray = theHybrid->getSummary<GenericDataArray<float, 4>>();
-                for(uint8_t line = 0; line < 4; ++line)
+                for(auto theChip: *theHybrid)
                 {
-                    auto cbcId      = phyPortAndlineToCbcIdAndStubMap[{phyPort, line}].first;
-                    auto stub       = phyPortAndlineToCbcIdAndStubMap[{phyPort, line}].second;
-                    auto efficiency = (int)(theEfficiencyArray[line] * 1000.0 + 0.5) / 1000.0; // round to 3 decimals, helpful when plotting with "COLZ TEXT"
-                    thePhaseScanHistogram->SetBinContent(cicPhase + 1, 6 * (cbcId - 1) + stub + 1, efficiency);
-                    // LOG(INFO) << "Setting X Bin " << cicPhase + 1 << ",  Y Bin " << 6 * (cbcId -1) + stub + 1 << " with Label " << thePhaseScanHistogram->GetYaxis()->GetBinLabel(6 * (cbcId -1) +
-                    // stub + 1) << ", cbcStrength " << cbcStrength << " with efficiency " << theEfficiencyArray[line] << RESET;
+                    if(!theChip->hasSummary()) continue;
+                    auto theChipLineMatchingEfficiency = theChip->getSummary<GenericDataArray<float, 6>>();
+                    for(int line = 0; line < 6; ++line) { thePhaseScanHistogram->SetBinContent(cicPhase + 1, theChip->getId() * 6 + line + 1, theChipLineMatchingEfficiency[line]); }
                 }
             }
         }
