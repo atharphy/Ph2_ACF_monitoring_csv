@@ -416,15 +416,21 @@ void RD53BInterface::ResetCoreColumns(RD53* pRD53)
         for(int i = 0; i < 2; i++)
         {
             const uint16_t value = 0x5555 << i;
+
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, value, false);
+            RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, value, false);
             RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
         }
         RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, 0, false);
+        RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, 0, false);
     }
 
     RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0x3F, false);
+    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0x3F, false);
     RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
+
     RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0, false);
+    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0, false);
 }
 
 void RD53BInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, size_t theRow, size_t theCol)
