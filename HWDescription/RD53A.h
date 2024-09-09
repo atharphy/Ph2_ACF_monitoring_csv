@@ -59,7 +59,15 @@ class RD53A : public RD53
     static const std::map<std::string, RD53::SpecialRegInfo> specialRegMap;
 
     RD53A() {}
-    RD53A(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
+    RD53A(uint8_t            pBeId,
+          uint8_t            pFMCId,
+          uint8_t            pOpticalGroupId,
+          uint8_t            pHybridId,
+          uint8_t            pRD53Id,
+          uint8_t            pRD53Lane,
+          uint32_t           pRD53eFuseCode,
+          const std::string& fileName,
+          const std::string& cfgComment);
     RD53A(const RD53A&) = delete;
 
     // #############################

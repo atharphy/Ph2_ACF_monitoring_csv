@@ -1548,6 +1548,7 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
 
     const uint32_t    chipId      = theChipNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
     const uint32_t    chipLane    = theChipNode.attribute("Lane").as_uint();
+    const uint32_t    eFuseCode   = (theChipNode.attribute("eFuseCode") ? theChipNode.attribute("eFuseCode").as_uint() : 0);
     const std::string cRxGroups   = theChipNode.attribute("RxGroups").as_string();
     const uint8_t     cRxChannel  = (theChipNode.attribute("RxChannel") ? theChipNode.attribute("RxChannel").as_uint() : 0);
     const uint8_t     cRxPolarity = theChipNode.attribute("RxPolarity").as_uint();
@@ -1556,17 +1557,18 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
     const uint8_t     cTxPolarity = theChipNode.attribute("TxPolarity").as_uint();
     const std::string cfgComment  = theChipNode.attribute("Comment").as_string();
 
-    os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << chipId << BOLDBLUE << ", Lane: " << BOLDYELLOW << chipLane << BOLDBLUE << ", File: " << BOLDYELLOW
-       << cFileName << BOLDBLUE << ", RxGroups: " << BOLDYELLOW << cRxGroups << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel << BOLDBLUE << ", RxPolarity: " << BOLDYELLOW << +cRxPolarity
-       << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << BOLDBLUE << ", TxPolarity: " << BOLDYELLOW << +cTxPolarity << BOLDBLUE
-       << ", Comment: " << BOLDYELLOW << cfgComment << RESET << std::endl;
+    os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << chipId << BOLDBLUE << ", Lane: " << BOLDYELLOW << chipLane << BOLDBLUE << ", eFuseCode: " << BOLDYELLOW
+       << eFuseCode << BOLDBLUE << ", File: " << BOLDYELLOW << cFileName << BOLDBLUE << ", RxGroups: " << BOLDYELLOW << cRxGroups << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel
+       << BOLDBLUE << ", RxPolarity: " << BOLDYELLOW << +cRxPolarity << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << BOLDBLUE
+       << ", TxPolarity: " << BOLDYELLOW << +cTxPolarity << BOLDBLUE << ", Comment: " << BOLDYELLOW << cfgComment << RESET << std::endl;
 
     ReadoutChip* theChip;
     if(frontEndType == FrontEndType::RD53A)
-        theChip = cHybrid->addChipContainer(chipId, new RD53A(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+        theChip = cHybrid->addChipContainer(
+            chipId, new RD53A(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, eFuseCode, cFileName, cfgComment));
     else
         theChip = cHybrid->addChipContainer(
-            chipId, new RD53B(frontEndType, cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+            chipId, new RD53B(frontEndType, cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, eFuseCode, cFileName, cfgComment));
     theChip->setNumberOfChannels(static_cast<RD53*>(theChip)->getNRows(), static_cast<RD53*>(theChip)->getNCols());
 
     parseRD53Settings(theChipNode, theChip, os);

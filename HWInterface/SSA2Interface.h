@@ -52,7 +52,7 @@ class SSA2Interface : public ReadoutChipInterface
     uint32_t readADCBandGap(Ph2_HwDescription::ReadoutChip* pSSA2);
     uint32_t readADCVref(Ph2_HwDescription::ReadoutChip* pSSA2);
     uint32_t readVrefRegister(Ph2_HwDescription::ReadoutChip* pSSA2);
-    uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pSSA2) override;
+    uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pSSA2, uint8_t version = 1) override;
     bool     setVrefFromFuseID(Ph2_HwDescription::ReadoutChip* pSSA2) override;
     bool     setVref(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t theVrefRegisterValue) override;
     float    calculateADCLSB(Ph2_HwDescription::ReadoutChip* pSSA2, float theVrefValue = SSA2_VREF_EXPECTED) override;
