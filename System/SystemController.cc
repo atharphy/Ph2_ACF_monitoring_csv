@@ -522,6 +522,8 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
             LOG(INFO) << GREEN << "Configuring chips of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+            bool   eFuseCodeCheck = true;
+            double eFuseCode;
 
             for(const auto cChip: *cHybrid)
             {
@@ -532,10 +534,23 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 static_cast<RD53*>(cChip)->copyMaskToDefault();
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
 
+                try
+                {
+                    eFuseCode = fReadoutChipInterface->ReadChipFuseID(cChip);
+                }
+                catch(const std::runtime_error& err)
+                {
+                    LOG(WARNING) << RED << err.what() << RESET;
+                    eFuseCode      = -1;
+                    eFuseCodeCheck = false;
+                }
+
                 LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
-                LOG(INFO) << GREEN << "e-Fuse code: " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET;
+                if(eFuseCode >= 0) LOG(INFO) << GREEN << "e-Fuse code: " << BOLDYELLOW << static_cast<uint32_t>(eFuseCode) << RESET;
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
+
+            if(eFuseCodeCheck == false) throw std::runtime_error("Please set the proper e-fuse code(s) in the xml file");
 
             LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases (if any and if needed) for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
             static_cast<RD53Interface*>(fReadoutChipInterface)->TAP0slaveOptimization(pBoard, cHybrid);
