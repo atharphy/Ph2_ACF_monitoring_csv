@@ -103,10 +103,19 @@ else() # ------------------------------- Compilation in the otsdaq environment -
     #Library dirs
     link_directories(${Protobuf_LIBRARIES})
 
+    cet_make(LIBRARY_NAME Ph2_MiniDAQ
+    SOURCES
+    MiddlewareController.cc MiddlewareMessageHandler.cc MiddlewareStateMachine.cc CombinedCalibrationFactory.cc
+    LIBRARIES
+    pthread
+    ${Boost_SYSTEM_LIBRARY}
+)
+
     cet_make_exec(NAME RunController
         SOURCE
-        RunController.cc MiddlewareController.cc MiddlewareMessageHandler.cc MiddlewareStateMachine.cc CombinedCalibrationFactory.cc
+        RunController.cc
         LIBRARIES
+        Ph2_MiniDAQ
         Ph2_Utils
         NetworkUtils
         Ph2_MessageUtils
@@ -117,10 +126,6 @@ else() # ------------------------------- Compilation in the otsdaq environment -
         Boost::program_options
         Boost::headers
         CACTUS::uhal
-        #LORE OLD WAY if uhal is compiled in OTSDAQ
-        #LORE cactus_uhal_uhal
-        #LORE cactus_uhal_log
-        #LORE cactus_uhal_grammars
         Ph2_Interface
         Ph2_System
         Ph2_Tools

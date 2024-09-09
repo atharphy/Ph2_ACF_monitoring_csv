@@ -42,7 +42,8 @@ MPA2::MPA2(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
         if(cMapItem.first.find("_ALL") == std::string::npos) continue;
         cMapItem.second.fControlReg = 1;
     }
-    fAverageNoise = 2.5;
+    fAverageNoise    = 2.5;
+    fAveragePedestal = 75.0;
 }
 
 MPA2::MPA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartnerId, const std::string& filename) : ReadoutChip(pFeDesc, pChipId)
@@ -61,7 +62,8 @@ MPA2::MPA2(const FrontEndDescription& pFeDesc, uint8_t pChipId, uint8_t pPartner
         if(cMapItem.first.find("_ALL") == std::string::npos) continue;
         cMapItem.second.fControlReg = 1;
     }
-    fAverageNoise = 2.5;
+    fAverageNoise    = 2.5;
+    fAveragePedestal = 75.0;
 }
 
 void MPA2::initializeFreeRegisters()
@@ -237,10 +239,9 @@ std::string MPA2::getRowRegisterName(const std::string& theRegisterName, uint16_
     return rowRegisterName;
 }
 
-void MPA2::setADCCalibrationMap(const std::map<std::string, float>& theInputMap)
-{
-    for(const auto& theInput: theInputMap) fADCcalibrationMap[theInput.first] = theInput.second;
-}
+void MPA2::setADCCalibrationValue(const std::string& theCalibrationName, float theCalibrationValue) { fADCcalibrationMap.at(theCalibrationName) = theCalibrationValue; }
+
+float MPA2::getADCCalibrationValue(const std::string& theCalibrationName) const { return fADCcalibrationMap.at(theCalibrationName); }
 
 uint8_t MPA2::convertMIPtoInjectedCharge(float numberOfMIPs)
 {

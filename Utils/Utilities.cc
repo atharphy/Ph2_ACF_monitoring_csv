@@ -453,6 +453,7 @@ float countMatchingBits(const std::vector<uint32_t>& incomingData, const std::ve
             currentEfficiency += possiblePatternXORbitset.count();
         }
         if(currentEfficiency > maximumMatchingEfficiency) maximumMatchingEfficiency = currentEfficiency;
+        if(maximumMatchingEfficiency == 32 * incomingData.size()) break;
     }
 
     return maximumMatchingEfficiency / (incomingData.size() * 32);

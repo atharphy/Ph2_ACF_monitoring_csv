@@ -23,8 +23,6 @@ Monitor2S::Monitor2S(const Ph2_System::SystemController* theSystemController, co
 
 void Monitor2S::runMonitor()
 {
-    std::recursive_mutex                  theMutex;
-    std::lock_guard<std::recursive_mutex> theGuard(theMutex);
     for(const auto& monitorValueName: fDetectorMonitorConfig.fMonitorElementList.at("CBC"))
         if(monitorValueName.second) runMonitorCBC(monitorValueName.first);
     OTMonitor::runMonitor();

@@ -1317,26 +1317,9 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
     LOG(DEBUG) << BOLDYELLOW << "OTHybridTester::PhaseTuneLineEleFC7#" << +pLineId << " for a Chip#" << +pChip << RESET;
     auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
 
-    D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
-    cAlignerInterface->InitializeConfiguration();
-    cAlignerInterface->InitializeAlignerObject();
-
-    AlignerObject cAlignerObjct;
-    cAlignerObjct.fHybrid = pHybrid;
-    cAlignerObjct.fChip   = 0;
-    cAlignerObjct.fLine   = pLineId;
-    LineConfiguration cLineCnfg;
-    cLineCnfg.fPatternPeriod = 8;
-    // LOG(INFO) << BOLDRED << +cAlignerInterface->GetLineConfiguration().fDelay << RESET;
-    cAlignerInterface->TunePhase(cAlignerObjct, cLineCnfg);
-    // cAlignerInterface->GetLineStatus(cAlignerObjct);
-    // LOG(INFO) << BOLDRED << +cAlignerInterface->GetLineConfiguration().fDelay << RESET;
-    // cLineCnfg.fDelay = 1;
-    // cLineCnfg.fMode  = 2;
-    // cAlignerInterface->SetLineConfiguration(cLineCnfg);
-    // cAlignerInterface->GetLineStatus(cAlignerObjct);
-    // LOG(INFO) << BOLDRED << +cAlignerInterface->GetLineConfiguration().fDelay << RESET;
-    cLineStatus.first = cAlignerInterface->IsLinePhaseAligned();
+    D19cBackendAlignmentFWInterface* cAlignerInterface   = cInterface->getBackendAlignmentInterface();
+    auto                             theAlignmentResults = cAlignerInterface->tunePhase(pHybrid, pLineId);
+    cLineStatus.first                                    = theAlignmentResults.fPhaseAlignmentSuccess;
     if(!cLineStatus.first)
     {
         LOG(INFO) << BOLDRED << "Could not phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET;
@@ -1344,38 +1327,8 @@ std::pair<bool, uint8_t> OTHybridTester::PhaseTuneLineEleFC7(uint8_t pHybrid, ui
     }
     else { LOG(INFO) << BOLDBLUE << "Could phase align-BE data for BeBoard#" << +cBoardId << " Hybrid#" << +pHybrid << " Chip#" << +pChip << " line# " << +pLineId << RESET; }
 
-    cLineStatus.second = cAlignerInterface->GetLineConfiguration().fDelay;
+    cLineStatus.second = theAlignmentResults.fDelay;
     return cLineStatus;
-}
-
-void OTHybridTester::SetPhaseLineEleFC7(uint8_t pHybrid, uint8_t pLineId, uint8_t pDelay)
-{
-    std::pair<bool, uint8_t> cLineStatus;
-    cLineStatus.first  = false;
-    cLineStatus.second = 0;
-    uint8_t pChip      = 0;
-    auto    cBoardId   = 1;
-    auto    cBoardIter = std::find_if(fDetectorContainer->begin(), fDetectorContainer->end(), [&cBoardId](Ph2_HwDescription::BeBoard* x) { return x->getId() == cBoardId; });
-    LOG(DEBUG) << BOLDYELLOW << "OTHybridTester::SetPhaseLineEleFC7#" << +pLineId << " for a Chip#" << +pChip << RESET;
-    auto cInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject(cBoardId)));
-
-    D19cBackendAlignmentFWInterface* cAlignerInterface = cInterface->getBackendAlignmentInterface();
-    cAlignerInterface->InitializeConfiguration();
-    cAlignerInterface->InitializeAlignerObject();
-
-    AlignerObject cAlignerObjct;
-    cAlignerObjct.fHybrid = pHybrid;
-    cAlignerObjct.fChip   = 0;
-    cAlignerObjct.fLine   = pLineId;
-    LineConfiguration cLineCnfg;
-    cLineCnfg.fMode  = 2;
-    cLineCnfg.fDelay = pDelay;
-    cAlignerInterface->SetLineConfiguration(cLineCnfg);
-    // LOG(INFO) << BOLDRED << +cAlignerInterface->GetLineConfiguration().fDelay << RESET;
-    cAlignerInterface->ManuallyConfigureLine(cAlignerObjct, cLineCnfg);
-    // cAlignerInterface->GetLineStatus(cAlignerObjct);
-
-    return;
 }
 
 uint16_t OTHybridTester::calibrateADC()

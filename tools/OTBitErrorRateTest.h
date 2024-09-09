@@ -1,32 +1,32 @@
 /*!
  *
- * \file OTalignStubPackage.h
- * \brief OTalignStubPackage class
+ * \file OTBitErrorRateTest.h
+ * \brief OTBitErrorRateTest class
  * \author Fabio Ravera
- * \date 26/01/24
+ * \date 02/07/24
  *
  */
 
-#ifndef OTalignStubPackage_h__
-#define OTalignStubPackage_h__
+#ifndef OTBitErrorRateTest_h__
+#define OTBitErrorRateTest_h__
 
 #include "tools/Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
-#include "DQMUtils/DQMHistogramOTalignStubPackage.h"
+#include "DQMUtils/DQMHistogramOTBitErrorRateTest.h"
 #endif
 
 namespace Ph2_HwDescription
 {
-class BeBoard;
+class OpticalGroup;
 }
 
-class OTalignStubPackage : public Tool
+class OTBitErrorRateTest : public Tool
 {
   public:
-    OTalignStubPackage();
-    ~OTalignStubPackage();
+    OTBitErrorRateTest();
+    ~OTBitErrorRateTest();
 
     void Initialise(void);
 
@@ -40,12 +40,13 @@ class OTalignStubPackage : public Tool
 
     static std::string fCalibrationDescription;
 
-    void AlignStubPackage();
-
   private:
+    void bitErrorRateTest();
+    bool prepareLpGBTforBERT(Ph2_HwDescription::OpticalGroup* theOpticalGroup);
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
-    DQMHistogramOTalignStubPackage fDQMHistogramOTalignStubPackage;
+    DQMHistogramOTBitErrorRateTest fDQMHistogramOTBitErrorRateTest;
 #endif
 };
 

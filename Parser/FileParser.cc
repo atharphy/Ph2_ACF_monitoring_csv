@@ -509,14 +509,9 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
     cSSA2->setMasterId(pHybrid->getMasterId());
 
     if(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cSSA2->setAverageNoise(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
-    if(pSSAnode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME) && pSSAnode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME))
-    {
-        std::map<std::string, float> theADCcalibration;
-        theADCcalibration["ADC_SLOPE"]  = pSSAnode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME).as_float();
-        theADCcalibration["ADC_OFFSET"] = pSSAnode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME).as_float();
+    if(pSSAnode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)) { cSSA2->setAveragePedestal(pSSAnode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME).as_float()); }
 
-        cSSA2->setADCCalibrationMap(theADCcalibration);
-    }
+    setChipADCParameters(pSSAnode, cSSA2);
 }
 
 void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os)
@@ -662,14 +657,9 @@ void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, st
     cMPA->setMasterId(pHybrid->getMasterId());
 
     if(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cMPA->setAverageNoise(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
-    if(pMPANode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME) && pMPANode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME))
-    {
-        std::map<std::string, float> theADCcalibration;
-        theADCcalibration["ADC_SLOPE"]  = pMPANode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME).as_float();
-        theADCcalibration["ADC_OFFSET"] = pMPANode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME).as_float();
+    if(pMPANode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)) { cMPA->setAveragePedestal(pMPANode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME).as_float()); }
 
-        cMPA->setADCCalibrationMap(theADCcalibration);
-    }
+    setChipADCParameters(pMPANode, cMPA);
 
     os << BOLDCYAN << "|"
        << "  "
@@ -1216,6 +1206,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
     cCbc->setMasterId(cHybrid->getMasterId());
 
     if(pCbcNode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cCbc->setAverageNoise(pCbcNode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
+    if(pCbcNode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)) { cCbc->setAveragePedestal(pCbcNode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME).as_float()); }
 
     os << BOLDCYAN << "|"
        << "  "
@@ -1450,7 +1441,8 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
                                                   "OTinjectionOccupancyScan_ListOfInjectedPulses",
                                                   "OTMPAtoCICecv_ListOfMPAslvsCurrents",
                                                   "OTSSAtoMPAecv_ListOfSSAslvsCurrents",
-                                                  "OTSSAtoSSAecv_ListOfSSAslvsCurrents"};
+                                                  "OTSSAtoSSAecv_ListOfSSAslvsCurrents",
+                                                  "OTCBCtoCICecv_ListOfCBCslvsCurrents"};
     pugi::xml_document       doc;
     openHWconfig(pFilename, doc);
 
@@ -1767,6 +1759,14 @@ void FileParser::parseLpGBTphasesForBypass(pugi::xml_node lpgbtPhasesForBypassNo
             theCic->setLpGBTphaseForCICbypass(phyPort, stubLine, convertAnyInt(theStubAttribute.value()));
         }
     }
+}
+
+void FileParser::setChipADCParameters(pugi::xml_node pChipNode, Ph2_HwDescription::ReadoutChip* cChip)
+{
+    if(pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("ADC_SLOPE", pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("ADC_OFFSET", pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("TEMP_SLOPE", pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("TEMP_OFFSET", pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME).as_float());
 }
 
 } // namespace Ph2_Parser

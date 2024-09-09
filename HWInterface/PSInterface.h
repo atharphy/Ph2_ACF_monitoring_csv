@@ -78,6 +78,8 @@ class PSInterface : public ReadoutChipInterface
 
     uint32_t readADCGround(Ph2_HwDescription::ReadoutChip* pPS);
     uint32_t readADC(Ph2_HwDescription::ReadoutChip* pPS, std::string theADCName);
+    float    readADCVoltage(Ph2_HwDescription::ReadoutChip* pPS, std::string theADCName);
+    float    measureTemperature(Ph2_HwDescription::ReadoutChip* pPS);
     uint32_t readADCBandGap(Ph2_HwDescription::ReadoutChip* pPS);
     uint32_t readADCVref(Ph2_HwDescription::ReadoutChip* pPS);
     uint32_t readVrefRegister(Ph2_HwDescription::ReadoutChip* pPS);

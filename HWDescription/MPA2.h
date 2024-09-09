@@ -58,7 +58,7 @@ class MPA2 : public ReadoutChip
 
     bool isDACLocal(const std::string& dacName) override
     {
-        if((dacName.find("TrimDAC", 0, 9) != std::string::npos) or (dacName.find("ThresholdTrim") != std::string::npos))
+        if((dacName.find("TrimDAC", 0, 7) != std::string::npos) or (dacName.find("ThresholdTrim") != std::string::npos) or (dacName.find("DigPattern", 0, 10) != std::string::npos))
             return true;
         else
             return false;
@@ -85,20 +85,8 @@ class MPA2 : public ReadoutChip
     static std::string getRowRegisterName(const std::string& theRegisterName, uint16_t row);
     static uint8_t     convertMIPtoInjectedCharge(float numberOfMIPs);
 
-    std::map<std::string, float> getADCCalibrationMap() const { return fADCcalibrationMap; }
-    void                         setADCCalibrationMap(const std::map<std::string, float>& theInputMap) override;
-
-  private:
-    // #############################################################
-    // # ADC Channel and Voltage to manually tune Vref to 0.850 mV #
-    // #############################################################
-    // Default values, will be overwritten once the calibration is performed
-    std::map<std::string, float> fADCcalibrationMap = {
-        {"ADC_SLOPE", 0.0002}, // In volts, calculated as the target Vref (0.850 V) / ADC range (4095)
-        {"ADC_OFFSET", 0.},    // In volts, assumed 0. It depends on the ground value
-        // {"VREF_VALUE", 0.850},  // In volts, default value
-        // {"VBG_VALUE",  0.250}   // In volts, default value
-    };
+    float getADCCalibrationValue(const std::string& theCalibrationName) const override;
+    void  setADCCalibrationValue(const std::string& theCalibrationName, float theCalibrationValue) override;
 
   protected:
     static std::vector<std::string> fListOfGlobalPixelRegisters;

@@ -38,11 +38,11 @@ void TuneLpGBTVref::tuneVref()
 
 void TuneLpGBTVref::Running()
 {
-    fDetectorMonitor->pauseMonitoring();
+    if(fDetectorMonitor != nullptr) fDetectorMonitor->pauseMonitoring();
     Initialise();
     tuneVref();
     reset();
-    fDetectorMonitor->resumeMonitoring();
+    if(fDetectorMonitor != nullptr) fDetectorMonitor->resumeMonitoring();
 }
 
 void TuneLpGBTVref::Stop() {}

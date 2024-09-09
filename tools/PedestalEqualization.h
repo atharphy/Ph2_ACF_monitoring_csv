@@ -44,7 +44,7 @@ class PedestalEqualization : public Tool
     static std::string fCalibrationDescription;
 
   private:
-    std::vector<EventType> fEventTypes;
+    DetectorDataContainer fEventTypes;
     // Settings
     bool     fTestPulse{false};
     uint8_t  fTestPulseAmplitude{0};
