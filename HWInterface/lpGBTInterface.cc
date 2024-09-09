@@ -11,6 +11,7 @@
 #include "HWInterface/lpGBTInterface.h"
 #include "HWDescription/lpGBT.h"
 #include "HWInterface/ExceptionHandler.h"
+#include "Utils/NTChandler.h"
 
 using namespace Ph2_HwDescription;
 

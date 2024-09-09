@@ -14,7 +14,6 @@
 #include "HWDescription/lpGBT.h"
 #include "HWInterface/ChipInterface.h"
 #include "HWInterface/ReadoutChipInterface.h"
-#include "Utils/NTChandler.h"
 
 #if defined(__TCUSB__)
 #include "HWInterface/TCInterface.h"
