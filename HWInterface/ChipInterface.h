@@ -90,7 +90,7 @@ class ChipInterface
      * \param pVecReq : Vector of pair: Node of the register to write versus value to write
      */
     virtual bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true);
-    virtual uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip);
+    virtual uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip, uint8_t version = 1);
 
     /*!
      * \brief Read the designated register in the Chip

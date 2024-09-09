@@ -889,7 +889,7 @@ uint32_t MPA2Interface::measureGround(ReadoutChip* pMPA2)
     return float(sumData) / 7.0;
 }
 
-uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2)
+uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2, uint8_t version)
 {
     this->WriteChipReg(pMPA2, "EfuseMode", 0x0);
     std::this_thread::sleep_for(std::chrono::microseconds(10));

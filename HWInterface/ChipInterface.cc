@@ -61,7 +61,7 @@ bool ChipInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::
     return false;
 }
 
-uint32_t ChipInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip)
+uint32_t ChipInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip, uint8_t version)
 {
     LOG(WARNING) << BOLDYELLOW << __PRETTY_FUNCTION__ << "\tWarning: implementation of virtual member function is absent" << RESET;
     return 0xFFFFFFFF;

@@ -134,7 +134,7 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
     return cSuccess;
 }
 
-uint32_t SSA2Interface::ReadChipFuseID(Chip* pSSA2)
+uint32_t SSA2Interface::ReadChipFuseID(Chip* pSSA2, uint8_t version)
 {
     this->WriteChipReg(pSSA2, "Fuse_Mode", 0x0);
     std::this_thread::sleep_for(std::chrono::microseconds(10));

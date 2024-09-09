@@ -37,7 +37,7 @@ void OTHybridTester::ReadChipIds()
         {
             if(static_cast<lpGBT*>(cOpticalGroup->flpGBT)->getVersion() == 1)
             {
-                uint32_t cChipID = clpGBTInterface->ReadChipID(cOpticalGroup->flpGBT, 1);
+                uint32_t cChipID = clpGBTInterface->ReadChipFuseID(cOpticalGroup->flpGBT);
 
                 LOG(INFO) << BOLDYELLOW << "lpgbt version 1" << RESET;
                 LOG(INFO) << BOLDYELLOW << "lpgbt ID: 0x" << std::hex << +cChipID << std::dec << RESET;

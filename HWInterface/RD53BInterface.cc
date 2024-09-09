@@ -605,14 +605,14 @@ void RD53BInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, true);
 }
 
-uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
+uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip, uint8_t version)
 {
     this->setBoard(pChip->getBeBoardId());
 
     RD53Interface::WriteChipReg(pChip, "EfusesConfig", 0x0F0F, false);
-    int16_t  low       = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
-    int16_t  high      = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
-    uint32_t eFuseCode = (low < 0 || high < 0 ? 0 : low | (high << pChip->getNumberOfBits("EfusesReadData0")));
+    uint16_t low       = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
+    uint16_t high      = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
+    uint32_t eFuseCode = low | (high << pChip->getNumberOfBits("EfusesReadData0"));
 
     if(eFuseCode != static_cast<RD53*>(pChip)->geteFuseCode())
     {
