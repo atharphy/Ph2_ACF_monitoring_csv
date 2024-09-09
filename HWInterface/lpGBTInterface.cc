@@ -87,8 +87,6 @@ int32_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
     return cValue;
 }
 
-uint32_t lpGBTInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip) { return ReadChipID(pChip, 1); }
-
 uint32_t lpGBTInterface::ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip)
 {
     uint32_t cChipId        = 0;
@@ -119,7 +117,7 @@ uint32_t lpGBTInterface::ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip)
     return cChipId;
 }
 
-uint32_t lpGBTInterface::ReadChipID(Ph2_HwDescription::Chip* pChip, uint8_t version)
+uint32_t lpGBTInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip, uint8_t version)
 {
     if(version == 1)
     {
@@ -493,9 +491,9 @@ uint8_t lpGBTInterface::GetVrefTune(Ph2_HwDescription::Chip* pChip)
 
 float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, uint16_t pVinput) // pVinput in mV!
 {
-    auto cGain   = GetADCGain(pChip, false);
-    auto cOffset = GetADCOffset(pChip, false);
-    auto cADC    = ReadADC(pChip, pADC);
+    auto cGain   = lpGBTInterface::GetADCGain(pChip, false);
+    auto cOffset = lpGBTInterface::GetADCOffset(pChip, false);
+    auto cADC    = lpGBTInterface::ReadADC(pChip, pADC);
     return ((int)pVinput / 1000. * cGain * 512) / (cADC - cOffset * (1 - cGain / 2.));
 }
 
@@ -821,7 +819,7 @@ float lpGBTInterface::GetInternalTemperature(Chip* pChip)
     WriteChipReg(pChip, "ADCMon", (0 << 4 | cVal));
 
     std::vector<float> cMeasurements(0);
-    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) cMeasurements.push_back(ReadADC(pChip, "TEMP", "VREF/2", 0));
+    for(uint8_t cIndx = 0; cIndx < 10; cIndx++) cMeasurements.push_back(lpGBTInterface::ReadADC(pChip, "TEMP", "VREF/2", 0));
     return std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size();
 }
 
@@ -838,7 +836,7 @@ float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const
 
         for(uint8_t cIndx = 0; cIndx < 10; cIndx++)
         {
-            auto cMeasurement = ReadADC(pChip, pADC, "VREF/2", pGain);
+            auto cMeasurement = lpGBTInterface::ReadADC(pChip, pADC, "VREF/2", pGain);
             if(cMeasurement != 1023)
             {
                 LOG(DEBUG) << BOLDBLUE << "Current DAC " << cCurrentDAC << " \t... " << cMeasurement << RESET;
@@ -866,7 +864,7 @@ float lpGBTInterface::ReadResistance(Chip* pChip, const std::string& pADC, const
 
 uint16_t lpGBTInterface::GetADCOffset(Chip* pChip, bool pVerbose)
 {
-    uint16_t cMeasurement = ReadADC(pChip, "VREF/2", "VREF/2");
+    uint16_t cMeasurement = lpGBTInterface::ReadADC(pChip, "VREF/2", "VREF/2");
     if(pVerbose) LOG(INFO) << BOLDBLUE << "Reading ADC Offset " << BOLDYELLOW << +cMeasurement << RESET;
     return cMeasurement;
 }
@@ -876,22 +874,22 @@ float lpGBTInterface::GetADCVoltage(Chip* pChip, const std::string& pADCInputP, 
 // # Implements the ADC master formula for the a basic measurement  assuming a calibrated Vref #
 // #############################################################################################
 {
-    uint16_t cMeasurement = ReadADC(pChip, pADCInputP, "VREF/2");
+    uint16_t cMeasurement = lpGBTInterface::ReadADC(pChip, pADCInputP, "VREF/2");
     return (cMeasurement - cOffset * (1. - cGain / 2.)) / cGain / 512.;
 }
 
 float lpGBTInterface::GetADCVoltage(Chip* pChip, const std::string& pADCInputP, bool pVerbose)
 {
-    uint16_t cOffset = GetADCOffset(pChip, pVerbose);
-    float    cGain   = GetADCGain(pChip, pVerbose);
+    uint16_t cOffset = lpGBTInterface::GetADCOffset(pChip, pVerbose);
+    float    cGain   = lpGBTInterface::GetADCGain(pChip, pVerbose);
     return GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
 }
 
 float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, bool pVerbose)
 {
-    uint16_t cOffset = GetADCOffset(pChip, pVerbose);
-    float    cGain   = GetADCGain(pChip, pVerbose);
-    return GetRssiPower(pChip, pADCInputP, cResponsivity, cOffset, cGain, pVerbose);
+    uint16_t cOffset = lpGBTInterface::GetADCOffset(pChip, pVerbose);
+    float    cGain   = lpGBTInterface::GetADCGain(pChip, pVerbose);
+    return lpGBTInterface::GetRssiPower(pChip, pADCInputP, cResponsivity, cOffset, cGain, pVerbose);
 }
 
 // Calculation vaild for 2S SEH v3.2 prototypes in W
@@ -901,7 +899,7 @@ float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, f
 // For SEHv5 its 47k and 100k
 float lpGBTInterface::GetRssiPower(Chip* pChip, const std::string& pADCInputP, float cResponsivity, uint16_t cOffset, float cGain, bool pVerbose)
 {
-    float cAdcMeasurement = GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
+    float cAdcMeasurement = lpGBTInterface::GetADCVoltage(pChip, pADCInputP, cOffset, cGain, pVerbose);
     float cCurrent        = 1. / 1000. * (2.5 - cAdcMeasurement * 1680. / 680.);
     float cResult         = cCurrent / cResponsivity;
     if(pVerbose) LOG(INFO) << BOLDBLUE << "Measured RSSI Power " << BOLDYELLOW << +cResult << BOLDBLUE << " W" << RESET;
@@ -916,7 +914,7 @@ float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
     // # Disable resistive divider, so "VDD" is actually GND #
     // #######################################################
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
-    uint16_t cMeasurement = ReadADC(pChip, "VDD", "VREF/2");
+    uint16_t cMeasurement = lpGBTInterface::ReadADC(pChip, "VDD", "VREF/2");
     cResult               = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2. * -1.;
 
     if(pVerbose)
@@ -925,7 +923,7 @@ float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
         LOG(INFO) << BOLDBLUE << "Reading ADC Gain via GND-Vref/2 " << BOLDYELLOW << +cResult << RESET;
     }
 
-    cMeasurement = ReadADC(pChip, "VREF/2", "VDD");
+    cMeasurement = lpGBTInterface::ReadADC(pChip, "VREF/2", "VDD");
     cResult      = ((cMeasurement * 1.) - (GetADCOffset(pChip, pVerbose) * 1.)) / 512. * 2.;
 
     if(pVerbose)
@@ -937,16 +935,15 @@ float lpGBTInterface::GetADCGain(Chip* pChip, bool pVerbose)
     return cResult;
 }
 
-uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain)
+uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain, bool silentRunning)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
     // ########################################################
     // # Read differential (converted) data on two ADC inputs #
     // ########################################################
     uint8_t cADCInputP = lpGBTInterface::fADCInputMap[pADCInputP];
     uint8_t cADCInputN = lpGBTInterface::fADCInputMap[pADCInputN];
 
-    LOG(DEBUG) << GREEN << "Reading ADC value from " << BOLDYELLOW << pADCInputP << RESET;
+    if(silentRunning == false) LOG(DEBUG) << GREEN << "Reading ADC value from " << BOLDYELLOW << pADCInputP << RESET;
 
     // ####################
     // # Select ADC Input #
@@ -976,17 +973,22 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
     uint8_t cIter    = 0;
     bool    cSuccess = false;
     do {
-        LOG(DEBUG) << GREEN << "Waiting for ADC conversion to end" << RESET;
+        if(silentRunning == false) LOG(DEBUG) << GREEN << "Waiting for ADC conversion to end" << RESET;
         usleep(10000);
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
         cIter++;
     } while((cIter < lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
+    if(!cSuccess)
+    {
+        LOG(ERROR) << BOLDRED << "lpGBTInterface::ReadADC timed out" << RESET;
+        return 65535;
+    }
 
     if(cIter == lpGBTconstants::MAXATTEMPTS)
     {
-        LOG(WARNING) << BOLDRED << "LpGBT ADC conversion timed out on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId()
-                     << RESET;
-        // LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
+        if(silentRunning == false)
+            LOG(WARNING) << BOLDRED << "LpGBT ADC conversion timed out on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW
+                         << +pChip->getOpticalGroupId() << RESET;
         // ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
         throw std::runtime_error("LpGBT ADC conversion timed out");
     }
@@ -1489,7 +1491,7 @@ float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::lpGBT* p
     std::vector<float> cMeasurements(0);
     for(uint8_t cIndx = 0; cIndx < 10; cIndx++)
     {
-        uint16_t cAdcVal = ReadADC(pChip, "TEMP", "VREF/2", 0);
+        uint16_t cAdcVal = lpGBTInterface::ReadADC(pChip, "TEMP", "VREF/2", 0);
         LOG(DEBUG) << GREEN << "Temperature readout: 0x" << BOLDYELLOW << std::hex << +cAdcVal << std::dec << RESET << GREEN << " LSB" << RESET;
 
         // Estimate the junction temperature
@@ -1522,8 +1524,6 @@ void lpGBTInterface::TuneVrefControlLib(Ph2_HwDescription::lpGBT* pChip, bool pE
 
 void lpGBTInterface::AutoTuneVref(Ph2_HwDescription::lpGBT* pChip, bool pResetTempSensor)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-
     /*  Auto tune VREF based on the internal temperature sensor.
 
         WARNING: this routine WILL NOT WORK for irradiated chips (TID>0)
@@ -1588,7 +1588,7 @@ float lpGBTInterface::AdcGetVin(Ph2_HwDescription::lpGBT* pChip, const std::stri
     */
 
     std::vector<uint16_t> cMeasurements(0);
-    for(uint8_t cIndx = 0; cIndx < pSamples; cIndx++) { cMeasurements.push_back(ReadADC(pChip, pADCInputP, pADCInputN, pGain)); }
+    for(uint8_t cIndx = 0; cIndx < pSamples; cIndx++) { cMeasurements.push_back(lpGBTInterface::ReadADC(pChip, pADCInputP, pADCInputN, pGain)); }
     uint16_t cResult = (uint16_t)std::round(std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size());
 
     std::string cAdcStr = "ADC_" + fADCGainMap[pGain];
@@ -1800,7 +1800,7 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const s
         float iout = _CdacCodeToCurrent(pChip, pChannel, cdac_code);
         float rout = _CdacCodeToRout(pChip, pChannel, cdac_code);
 
-        float vadc = AdcGetVin(pChip, pChannel, "VREF/2", 0, 10);
+        float vadc = AdcGetVin(pChip, pChannel, "VREF/2", 0, 1);
 
         float rmeas = vadc / iout;
         LOG(DEBUG) << BOLDBLUE << "VADC: " << vadc << " V" << RESET;
@@ -1912,7 +1912,7 @@ float lpGBTInterface::ReadChipMonitor(Ph2_HwDescription::lpGBT* pChip, const std
     if(registerName.find("TEMP") != std::string::npos)
     {
         value = lpGBTInterface::MeasureTemperature(pChip);
-        if(silentRunning == false) LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement: " BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
+        if(silentRunning == false) LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement " BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
     }
     else if((registerName.find("VDDTX") != std::string::npos) || (registerName.find("VDDRX") != std::string::npos) || (registerName.find("VDD") != std::string::npos) ||
             (registerName.find("VDDA") != std::string::npos))
@@ -1920,11 +1920,31 @@ float lpGBTInterface::ReadChipMonitor(Ph2_HwDescription::lpGBT* pChip, const std
         value = lpGBTInterface::MeasurePowerSupplyVoltage(pChip, registerName);
         if(silentRunning == false)
             LOG(INFO) << BOLDBLUE << "\t--> LpGBT voltage measurement from power supply " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE
-                      << " V" << std::setprecision(-13) << RESET;
+                      << " V" << std::setprecision(-1) << RESET;
+    }
+    // @TMP@ : To be completed
+    else if(registerName.find("ADC") != std::string::npos)
+    {
+        lpGBTInterface::CdacSetCurrent(pChip, registerName, lpGBTInterface::_CdacCodeToCurrent(pChip, registerName, 0xAA));
+        float resistance = lpGBTInterface::MeasureResistance(pChip, registerName, 1000, false);
+        try
+        {
+            value = NTChandler::getInstance().getTemperature("Sensor", resistance);
+            if(silentRunning == false)
+                LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement from sensor " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value
+                          << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
+        }
+        catch(const std::runtime_error& error)
+        {
+            value = lpGBTInterface::ReadADC(pChip, registerName, "VREF/2", 0, silentRunning);
+            if(silentRunning == false)
+                LOG(WARNING) << BOLDBLUE << "\t--> LpGBT sensor " << BOLDYELLOW << registerName << BOLDBLUE << " has no calibration file. Raw value is " << BOLDYELLOW << value << RESET;
+        }
     }
     else
-        value = lpGBTInterface::ReadADC(pChip, registerName);
+        value = lpGBTInterface::ReadADC(pChip, registerName, "VREF/2", 0, silentRunning);
 
     return value;
 }
+
 } // namespace Ph2_HwInterface

@@ -42,11 +42,10 @@ using BeBoardFWMap = std::map<uint16_t, BeBoardFWInterface*>; /*!< Map of Board 
 class ChipInterface
 {
   protected:
-    std::recursive_mutex fMutex;
-    BeBoardFWMap         fBoardMap;            /*!< Map of Board connected */
-    BeBoardFWInterface*  fBoardFW;             /*!< Board loaded */
-    uint16_t             fPrevBoardIdentifier; /*!< Id of the previous board */
-    bool                 fWithlpGBT = false;   /*!< lpGBT is used for configuration */
+    BeBoardFWMap        fBoardMap;            /*!< Map of Board connected */
+    BeBoardFWInterface* fBoardFW;             /*!< Board loaded */
+    uint16_t            fPrevBoardIdentifier; /*!< Id of the previous board */
+    bool                fWithlpGBT = false;   /*!< lpGBT is used for configuration */
 
     /*!
      * \brief Set the board to talk with
@@ -90,7 +89,7 @@ class ChipInterface
      * \param pVecReq : Vector of pair: Node of the register to write versus value to write
      */
     virtual bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify = true);
-    virtual uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip);
+    virtual uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip, uint8_t version = 1);
 
     /*!
      * \brief Read the designated register in the Chip

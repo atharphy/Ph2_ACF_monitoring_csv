@@ -26,15 +26,8 @@ void ChipInterface::setBoard(uint16_t pBoardIdentifier)
 {
     if(fPrevBoardIdentifier != pBoardIdentifier)
     {
-        BeBoardFWMap::iterator i = fBoardMap.find(pBoardIdentifier);
-
-        if(i == fBoardMap.end())
-            LOG(ERROR) << BOLDRED << "The Board: " << +pBoardIdentifier << "  doesn't exist" << RESET;
-        else
-        {
-            fBoardFW             = i->second;
-            fPrevBoardIdentifier = pBoardIdentifier;
-        }
+        fBoardFW             = fBoardMap.at(pBoardIdentifier);
+        fPrevBoardIdentifier = pBoardIdentifier;
     }
 }
 
@@ -61,7 +54,7 @@ bool ChipInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::
     return false;
 }
 
-uint32_t ChipInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip)
+uint32_t ChipInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip, uint8_t version)
 {
     LOG(WARNING) << BOLDYELLOW << __PRETTY_FUNCTION__ << "\tWarning: implementation of virtual member function is absent" << RESET;
     return 0xFFFFFFFF;

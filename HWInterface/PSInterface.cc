@@ -59,7 +59,7 @@ bool PSInterface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerifLoop,
 
 // To generalize
 int32_t  PSInterface::ReadChipReg(Chip* pPS, const std::string& pRegName) { return getInterface(pPS)->ReadChipReg(pPS, pRegName); }
-uint32_t PSInterface::ReadChipFuseID(Chip* pPS) { return getInterface(pPS)->ReadChipFuseID(pPS); }
+uint32_t PSInterface::ReadChipFuseID(Chip* pPS, uint8_t version) { return getInterface(pPS)->ReadChipFuseID(pPS); }
 
 std::vector<std::pair<std::string, uint16_t>> PSInterface::ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList)
 {
@@ -198,8 +198,6 @@ bool PSInterface::injectNoiseStubs(ReadoutChip* pMPA, ReadoutChip* pSSA, std::ve
 // One should first tune Vref using the BandGap as reference to tune it and then tune the different bias registers.
 uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpectedValue, std::string theDACtoTuneName, uint8_t theDACValue, bool isVref)
 {
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-
     LOG(INFO) << CYAN << "Register being tuned: " << theDACtoTuneName << RESET;
 
     uint32_t theGroundADCValue = this->readADCGround(theChip);
@@ -342,6 +340,19 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
     LOG(INFO) << BOLDGREEN << "Register: " << theDACtoTuneName << " -> New tuned value: " << theNewValue << " Expected value: " << theADCDExpectedValue << "+/-" << theLSB << RESET;
 
     return theDACValue;
+}
+
+float PSInterface::readADCVoltage(Ph2_HwDescription::ReadoutChip* pPS, std::string theADCName)
+{
+    float adcValue            = readADC(pPS, theADCName);
+    float theConversionFactor = 1;                                             // without the conversion factor the voltages are not visible
+    if(theADCName == "AVDD" || theADCName == "DVDD") theConversionFactor *= 2; // keep into account a voltage divider
+    return (adcValue * pPS->getADCCalibrationValue("ADC_SLOPE") + pPS->getADCCalibrationValue("ADC_OFFSET")) * theConversionFactor;
+}
+
+float PSInterface::measureTemperature(Ph2_HwDescription::ReadoutChip* pPS)
+{
+    return (readADCVoltage(pPS, "temperature") - pPS->getADCCalibrationValue("TEMP_OFFSET")) / pPS->getADCCalibrationValue("TEMP_SLOPE") + 25;
 }
 
 } // namespace Ph2_HwInterface

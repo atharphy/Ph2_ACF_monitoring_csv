@@ -40,8 +40,6 @@ class OTalignStubPackage : public Tool
 
     static std::string fCalibrationDescription;
 
-    void AlignStubPackageOld(Ph2_HwDescription::BeBoard* pBoard);
-    void AlignStubPackage(Ph2_HwDescription::BeBoard* theBoard);
     void AlignStubPackage();
 
   private:

@@ -4,7 +4,7 @@
 * RegName                 Addr          Defval            Value                           BitSize
 *-------------------------------------------------------------------------------------------------------
 GCD                       0x00          0x01              0x01                              8
-SDACNT                    0x02          0x00              0x00                              8
+SDACNT                    0x02          0x01              0x01                              8
 CH1BIAS                   0x03          0x30              0x30                              8
 CH1MOD                    0x04          0xA0              0xA0                              8
 CH1EMP                    0x05          0x00              0x00                              8

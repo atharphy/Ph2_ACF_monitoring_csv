@@ -533,7 +533,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
 
                 LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
-                LOG(INFO) << GREEN << "Fused ID: " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET;
+                LOG(INFO) << GREEN << "e-Fuse code: " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET;
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
 

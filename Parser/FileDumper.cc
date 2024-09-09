@@ -168,7 +168,7 @@ void FileDumper::dumpOpticalGroupConfigurationFile(pugi::xml_node theMotherNode,
         auto        theVTRxFilePathNode                                  = theOpticalGroupNode.append_child(theVTRxFilePathNodeName.c_str());
         theVTRxFilePathNode.append_attribute(COMMON_PATH_ATTRIBUTE_NAME) = fOutputDirectory.c_str();
 
-        auto theVTRxNode                                       = theOpticalGroupNode.append_child(LPGBT_NODE_NAME);
+        auto theVTRxNode                                       = theOpticalGroupNode.append_child(VTRX_NODE_NAME);
         theVTRxNode.append_attribute(COMMON_ID_ATTRIBUTE_NAME) = std::to_string(theVTRx->getId()).c_str();
 
         auto cRegMap = theVTRx->getRegMap();
@@ -273,11 +273,13 @@ void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, Readout
     theReadoutChipNode.append_attribute(COMMON_ENABLE_ATTRIBUTE_NAME)     = "1";
     theReadoutChipNode.append_attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME) = theFileName.c_str();
     theReadoutChipNode.append_attribute(CHIP_NOISE_ATTRIBUTE_NAME)        = std::to_string(theReadoutChip->getAverageNoise()).c_str();
+    theReadoutChipNode.append_attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)     = std::to_string(theReadoutChip->getAveragePedestal()).c_str();
     if(theReadoutChip->getFrontEndType() == FrontEndType::SSA2 || theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
     {
-        std::map<std::string, float> theADCmap                          = theReadoutChip->getADCCalibrationMap();
-        theReadoutChipNode.append_attribute(CHIP_SLOPE_ATTRIBUTE_NAME)  = std::to_string(theADCmap["ADC_SLOPE"]).c_str();
-        theReadoutChipNode.append_attribute(CHIP_OFFSET_ATTRIBUTE_NAME) = std::to_string(theADCmap["ADC_OFFSET"]).c_str();
+        theReadoutChipNode.append_attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME)          = std::to_string(theReadoutChip->getADCCalibrationValue("ADC_SLOPE")).c_str();
+        theReadoutChipNode.append_attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME)         = std::to_string(theReadoutChip->getADCCalibrationValue("ADC_OFFSET")).c_str();
+        theReadoutChipNode.append_attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME)  = std::to_string(theReadoutChip->getADCCalibrationValue("TEMP_SLOPE")).c_str();
+        theReadoutChipNode.append_attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME) = std::to_string(theReadoutChip->getADCCalibrationValue("TEMP_OFFSET")).c_str();
     }
 }
 

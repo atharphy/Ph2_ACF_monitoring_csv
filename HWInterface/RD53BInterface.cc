@@ -416,15 +416,21 @@ void RD53BInterface::ResetCoreColumns(RD53* pRD53)
         for(int i = 0; i < 2; i++)
         {
             const uint16_t value = 0x5555 << i;
+
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, value, false);
+            RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, value, false);
             RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
         }
         RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, 0, false);
+        RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, 0, false);
     }
 
     RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0x3F, false);
+    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0x3F, false);
     RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
+
     RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0, false);
+    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0, false);
 }
 
 void RD53BInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, size_t theRow, size_t theCol)
@@ -599,14 +605,23 @@ void RD53BInterface::WriteClockDataDelay(Chip* pChip, uint16_t value)
     RD53Interface::WriteChipReg(pChip, "CLK_DATA_DELAY", value, true);
 }
 
-uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip)
+uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip, uint8_t version)
 {
     this->setBoard(pChip->getBeBoardId());
 
     RD53Interface::WriteChipReg(pChip, "EfusesConfig", 0x0F0F, false);
-    int16_t low  = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
-    int16_t high = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
-    return (low < 0 || high < 0 ? 0 : low | (high << pChip->getNumberOfBits("EfusesReadData0")));
+    uint16_t low       = RD53Interface::ReadChipReg(pChip, "EfusesReadData0");
+    uint16_t high      = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
+    uint32_t eFuseCode = low | (high << pChip->getNumberOfBits("EfusesReadData0"));
+
+    if(eFuseCode != static_cast<RD53*>(pChip)->geteFuseCode())
+    {
+        std::stringstream myString;
+        myString << "Readout chip e-fuse code " << eFuseCode << " does not match value in xml file " << +static_cast<RD53*>(pChip)->geteFuseCode();
+        throw std::runtime_error(myString.str());
+    }
+
+    return eFuseCode;
 }
 
 void RD53BInterface::SendBoardClear(const BeBoard* pBoard)

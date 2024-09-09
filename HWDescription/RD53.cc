@@ -64,13 +64,22 @@ LaneConfig::LaneConfig(bool                                   isPrimary,
     }
 }
 
-RD53::RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment)
+RD53::RD53(uint8_t            pBeId,
+           uint8_t            pFMCId,
+           uint8_t            pOpticalGroupId,
+           uint8_t            pHybridId,
+           uint8_t            pRD53Id,
+           uint8_t            pRD53Lane,
+           uint32_t           pRD53eFuseCode,
+           const std::string& fileName,
+           const std::string& cfgComment)
     : ReadoutChip(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id)
 {
     fMaxRegValue    = RD53Shared::setBits(RD53Constants::NBIT_MAXREG);
     fConfigFileName = fileName;
     myComment       = cfgComment;
     myChipLane      = pRD53Lane;
+    myeFuseCode     = pRD53eFuseCode;
 }
 
 void RD53::loadfRegMap(const std::string& fileName)

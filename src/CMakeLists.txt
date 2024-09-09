@@ -170,6 +170,33 @@ else()
     MESSAGE(STATUS "    ${BoldYellow}SRC${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldRed}Begin...${Reset}")
     MESSAGE(STATUS " ")
 
+    #Include dirs
+    include_directories(${Protobuf_INCLUDE_DIRS})
+
+    #Library dirs
+    link_directories(${Protobuf_LIBRARIES})
+
+    cet_make_exec(NAME fpgaconfig
+        SOURCE
+        fpgaconfig.cc
+        LIBRARIES
+        Ph2_Utils
+        NetworkUtils
+        Ph2_MessageUtils
+        protobuf
+        Boost::iostreams
+        Boost::filesystem
+        Boost::regex
+        Boost::program_options
+        Boost::headers
+        CACTUS::uhal
+        Ph2_System
+        Ph2_Interface
+        Ph2_Tools
+        Ph2_MonitorUtils
+        Ph2_MiniDAQ
+    )
+
     MESSAGE(STATUS " ")
     MESSAGE(STATUS "    ${BoldYellow}SRC${Reset} [otsdaq]: [${BoldCyan}Ph2_ACF/src/CMakeLists.txt${Reset}]. ${BoldGreen}DONE!${Reset}")
     MESSAGE(STATUS "    ${BoldBlue}========================================================================================================${Reset}")
