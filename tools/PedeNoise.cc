@@ -745,6 +745,7 @@ void PedeNoise::extractPedeNoise()
                                                            ->getChannel<Occupancy>(row, col)
                                                            .fOccupancy;
                                     binCenter = (mStripIt->first + (previousStripIterator)->first) / 2.;
+                                    if (cType == FrontEndType::SSA2) if((previousOccupancy > currentOccupancy) || previousOccupancy >1 ) { continue; } // helps when trimming near the pedestal
                                 }
                                 else if(cType == FrontEndType::MPA2)
                                 {
