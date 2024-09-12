@@ -155,6 +155,8 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     LOG(INFO) << BOLDBLUE << "Parameters that the use should check from database" << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> VOLTAGE_TRIM_DIG = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "VOLTAGE_TRIM_DIG") << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> VOLTAGE_TRIM_ANA = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "VOLTAGE_TRIM_ANA") << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Wire bonded chip ID = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "ChipIdWireBonds") << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Wire bonded Iref = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "IrefWireBonds") << RESET;
 
     return true;
 }
