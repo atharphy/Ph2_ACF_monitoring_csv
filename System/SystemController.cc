@@ -544,9 +544,14 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                     eFuseCode      = -1;
                     eFuseCodeCheck = false;
                 }
+                catch(const std::out_of_range& err)
+                {
+                    LOG(WARNING) << RED << err.what() << RESET;
+                    eFuseCode = atoi(err.what());
+                }
 
                 LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
-                if(eFuseCode >= 0) LOG(INFO) << GREEN << "e-Fuse code: " << BOLDYELLOW << static_cast<uint32_t>(eFuseCode) << RESET;
+                if(eFuseCode >= 0) LOG(INFO) << GREEN << "e-fuse code: " << BOLDYELLOW << static_cast<uint32_t>(eFuseCode) << RESET;
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
 

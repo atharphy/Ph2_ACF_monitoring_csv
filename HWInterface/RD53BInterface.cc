@@ -149,6 +149,13 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###################################
     RD53BInterface::WriteRD53Mask(pRD53, false, true);
 
+    // #################################################
+    // # Important values to be checked before running #
+    // #################################################
+    LOG(INFO) << BOLDBLUE << "Parameters that the use should check from database" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> VOLTAGE_TRIM_DIG = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "VOLTAGE_TRIM_DIG") << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> VOLTAGE_TRIM_ANA = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "VOLTAGE_TRIM_ANA") << RESET;
+
     return true;
 }
 
@@ -614,7 +621,13 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip, uint8_t version)
     uint16_t high      = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
     uint32_t eFuseCode = low | (high << pChip->getNumberOfBits("EfusesReadData0"));
 
-    if(eFuseCode != static_cast<RD53*>(pChip)->geteFuseCode())
+    if(static_cast<RD53*>(pChip)->geteFuseCode() < 0)
+    {
+        std::stringstream myString;
+        myString << eFuseCode;
+        throw std::out_of_range(myString.str().c_str());
+    }
+    else if(eFuseCode != static_cast<RD53*>(pChip)->geteFuseCode())
     {
         std::stringstream myString;
         myString << "Readout chip e-fuse code " << eFuseCode << " does not match value in xml file " << +static_cast<RD53*>(pChip)->geteFuseCode();

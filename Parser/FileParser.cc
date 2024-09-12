@@ -1548,7 +1548,7 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
 
     const uint32_t    chipId      = theChipNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
     const uint32_t    chipLane    = theChipNode.attribute("Lane").as_uint();
-    const uint32_t    eFuseCode   = (theChipNode.attribute("eFuseCode") ? theChipNode.attribute("eFuseCode").as_uint() : 0);
+    const int64_t     eFuseCode   = (theChipNode.attribute("eFuseCode") ? theChipNode.attribute("eFuseCode").as_uint() : 0);
     const std::string cRxGroups   = theChipNode.attribute("RxGroups").as_string();
     const uint8_t     cRxChannel  = (theChipNode.attribute("RxChannel") ? theChipNode.attribute("RxChannel").as_uint() : 0);
     const uint8_t     cRxPolarity = theChipNode.attribute("RxPolarity").as_uint();
