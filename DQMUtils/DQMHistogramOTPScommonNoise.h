@@ -58,7 +58,6 @@ class DQMHistogramOTPScommonNoise : public DQMHistogramBase
      */
     void reset(void) override;
     void fillChipHitPlots(DetectorDataContainer& theHitData);
-    void fillChipHitPlots(DetectorDataContainer& theHitData, bool pFitDistributions);
     void fillHybridHitPlots(DetectorDataContainer& theHitData, bool isStrip);
     void fillModuleHitPlots(DetectorDataContainer& theHitData, bool isStrip);
     void fillSSAtoMPACorrelationPlots(DetectorDataContainer& theHitData);

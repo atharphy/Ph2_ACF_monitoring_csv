@@ -121,11 +121,10 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
     if(theStripChipHitContainerSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched OTPScommonNoiseStripChipHit!!!!!\n";
-        bool                  doFit;
         DetectorDataContainer theDetectorData =
-            theStripChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS + 1)>>(fDetectorContainer, doFit);
+            theStripChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS + 1)>>(fDetectorContainer);
         // Filling the histograms
-        fillChipHitPlots(theDetectorData, doFit);
+        fillChipHitPlots(theDetectorData);
         return true;
     }
 
@@ -133,11 +132,10 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
     if(thePixelChipHitContainerSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched OTPScommonNoisePixelChipHit!!!!!\n";
-        bool                  doFit;
         DetectorDataContainer theDetectorData =
-            thePixelChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(fDetectorContainer, doFit);
+            thePixelChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(fDetectorContainer);
         // Filling the histograms
-        fillChipHitPlots(theDetectorData, doFit);
+        fillChipHitPlots(theDetectorData);
         return true;
     }
 
@@ -233,8 +231,7 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
     // SoC utilities only - END
 }
 
-void DQMHistogramOTPScommonNoise::fillChipHitPlots(DetectorDataContainer& theHitData) { return fillChipHitPlots(theHitData, false); }
-void DQMHistogramOTPScommonNoise::fillChipHitPlots(DetectorDataContainer& theHitData, bool pFitDistributions)
+void DQMHistogramOTPScommonNoise::fillChipHitPlots(DetectorDataContainer& theHitData)
 {
     for(auto board: theHitData)
     {
@@ -266,23 +263,6 @@ void DQMHistogramOTPScommonNoise::fillChipHitPlots(DetectorDataContainer& theHit
                                                  .fTheHistogram;
 
                         fillEventsVsHitsHist<MAXCICCHANNELS + 1>(chip, *theHistogram);
-                    }
-
-                    if(pFitDistributions)
-                    {
-                        // do fitting
-                        LOG(INFO) << BOLDRED << " Fitting not implemented yet... FIXME " << RESET;
-                        // TF1* cChipFit = new TF1("chipFit", hitProbabilityFunction, 0, cNChannels + 1, 4);
-                        // fitCMNoise(theHistogramEven, cChipFit, cNChannels / 2);
-                        // LOG(INFO) << BOLDRED << "FE " << hybrid->getId() << " CBC " << chip->getId() << " even strip common mode is " << fabs(cChipFit->GetParameter(1)) << "+/-"
-                        //           << fabs(cChipFit->GetParError(1)) << "%" << RESET;
-                        // fitCMNoise(theHistogramOdd, cChipFit, cNChannels / 2);
-                        // LOG(INFO) << BOLDRED << "FE " << hybrid->getId() << " CBC " << chip->getId() << " odd strip common mode is " << fabs(cChipFit->GetParameter(1)) << "+/-"
-                        //           << fabs(cChipFit->GetParError(1)) << "%" << RESET;
-                        // fitCMNoise(theHistogramSum, cChipFit, cNChannels);
-                        // LOG(INFO) << BOLDRED << "FE " << hybrid->getId() << " CBC " << chip->getId() << " common mode is " << fabs(cChipFit->GetParameter(1)) << "+/-" <<
-                        // fabs(cChipFit->GetParError(1))
-                        //           << "%" << RESET;
                     }
                 }
             }

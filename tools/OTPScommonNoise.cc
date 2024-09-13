@@ -216,9 +216,8 @@ void OTPScommonNoise::TakeData()
     }
 
 #ifdef __USE_ROOT__
-    bool doFit = false;
-    fDQMHistogramOTPScommonNoise.fillChipHitPlots(theStripHitContainer, doFit);
-    fDQMHistogramOTPScommonNoise.fillChipHitPlots(thePixelHitContainer, doFit);
+    fDQMHistogramOTPScommonNoise.fillChipHitPlots(theStripHitContainer);
+    fDQMHistogramOTPScommonNoise.fillChipHitPlots(thePixelHitContainer);
     fDQMHistogramOTPScommonNoise.fillHybridHitPlots(theStripHybridHitContainer, true);
     fDQMHistogramOTPScommonNoise.fillHybridHitPlots(thePixelHybridHitContainer, false);
     fDQMHistogramOTPScommonNoise.fillModuleHitPlots(theStripModuleHitContainer, true);
@@ -229,11 +228,10 @@ void OTPScommonNoise::TakeData()
 #else
     if(fDQMStreamerEnabled)
     {
-        bool doFit = false;
         ContainerSerialization theStripChipHitContainerSerialization("OTPScommonNoiseStripChipHit");
-        theStripChipHitContainerSerialization.streamByChipContainer(fDQMStreamer, theStripHitContainer, doFit);
+        theStripChipHitContainerSerialization.streamByChipContainer(fDQMStreamer, theStripHitContainer);
         ContainerSerialization thePixelChipHitContainerSerialization("OTPScommonNoisePixelChipHit");
-        thePixelChipHitContainerSerialization.streamByChipContainer(fDQMStreamer, thePixelHitContainer, doFit);
+        thePixelChipHitContainerSerialization.streamByChipContainer(fDQMStreamer, thePixelHitContainer);
 
         bool isSSA = true;
         ContainerSerialization theStripHybridHitContainerSerialization("OTPScommonNoiseStripHybridHit");
