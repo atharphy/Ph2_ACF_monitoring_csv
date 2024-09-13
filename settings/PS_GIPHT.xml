@@ -237,6 +237,8 @@
     <Setting name="OTinjectionDelayOptimization_SSAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
     <Setting name="OTinjectionDelayOptimization_MPAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
 
+    <Setting name="OTPScommonNoise_NumberOfEvents">10000</Setting>    
+
     <Setting name="OTMeasureOccupancy_NumberOfEvents">100000</Setting>
     <Setting name="OTMeasureOccupancy_SSAtestPulseValue">1.</Setting> <!-- MIP units -->
     <Setting name="OTMeasureOccupancy_MPAtestPulseValue">1.</Setting> <!-- MIP units -->
