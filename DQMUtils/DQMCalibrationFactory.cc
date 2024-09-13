@@ -29,6 +29,8 @@
 #include "DQMUtils/DQMHistogramOTverifyMPASSAdataWord.h"
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #include "DQMUtils/DQMHistogramPedestalEqualization.h"
+#include "DQMUtils/DQMHistogramOTCBCtoCICecv.h"
+#include "DQMUtils/DQMHistogramOTVTRxLightYieldScan.h"
 #include "DQMUtils/DQMMetadataIT.h"
 #include "DQMUtils/DQMMetadataOT.h"
 #include "DQMUtils/PSPhysicsHistograms.h"
@@ -53,15 +55,28 @@ DQMCalibrationFactory::DQMCalibrationFactory()
 {
     // Common calibrations
     Register<DQMMetadataOT>("tunelpgbtvref");
+
     Register<DQMMetadataOT>("configureonly");
 
     // OT calibrations
     Register<DQMMetadataOT, DQMHistogramPedeNoise>("noiseOT");
+
     Register<DQMMetadataOT>("vtrxoff");
+
+    Register<DQMMetadataOT, DQMHistogramOTVTRxLightYieldScan>("vtrxLightYield");
+
+    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCICtoLpGBTecv>("OTCICtoLpGBTecv");
+
+    Register<DQMMetadataOT, DQMHistogramOTRegisterTester>("OTRegisterTester");
+
     Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs>("OTalignLpGBTinputs");
+
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord>("OTalignBoardDataWord");
+
     Register<DQMMetadataOT, DQMHistogramOTverifyBoardDataWord>("OTverifyBoardDataWord");
+
     Register<DQMMetadataOT, DQMHistogramOTalignStubPackage>("OTalignStubPackage");
+
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
@@ -73,14 +88,14 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord>("alignment");
 
-    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCICtoLpGBTecv>("OTCICtoLpGBTecv");
-    Register<DQMMetadataOT, DQMHistogramOTRegisterTester>("OTRegisterTester");
+    Register<DQMMetadataOT, DQMHistogramOTCICphaseAlignment, DQMHistogramOTalignLpGBTinputsForBypass, DQMHistogramOTCicBypassTest>("testCICbypass");
 
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTinjectionDelayOptimization>("injectionDelayOptimization");
-    Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTPSADCCalibration>("ADCBiasCalibration");
+
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTMeasureOccupancy>("measureOccupancy");
+    
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTinjectionOccupancyScan>("injectionOccupancyScan");
-    Register<DQMMetadataOT, DQMHistogramOTCICphaseAlignment, DQMHistogramOTalignLpGBTinputsForBypass, DQMHistogramOTCicBypassTest>("testCICbypass");
+    
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
@@ -91,17 +106,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramPedestalEqualization>("calibration");
-    Register<DQMMetadataOT,
-             DQMHistogramOTalignLpGBTinputs,
-             DQMHistogramOTalignBoardDataWord,
-             DQMHistogramOTverifyBoardDataWord,
-             DQMHistogramOTalignStubPackage,
-             DQMHistogramOTCICphaseAlignment,
-             DQMHistogramOTCICwordAlignment,
-             DQMHistogramOTverifyCICdataWord,
-             DQMHistogramOTverifyMPASSAdataWord,
-             DQMHistogramPedestalEqualization,
-             DQMHistogramBeamTestCheck>("takedata"); // will be used in future version of GIPHT
+
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
@@ -113,6 +118,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramPedestalEqualization,
              DQMHistogramKira>("calibrationandkira");
+
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
@@ -125,6 +131,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise,
              DQMHistogramKira>("calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
+    
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
@@ -135,6 +142,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramPedeNoise>("pedenoise");
+    
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
@@ -146,7 +154,8 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise>("calibrationandpedenoise");
-    Register<DQMMetadataOT,
+   
+   Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
              DQMHistogramOTverifyBoardDataWord,
@@ -158,8 +167,8 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTPSADCCalibration,
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise>("adccalibrationandpedenoise");
-    Register<DQMMetadataOT, DQMHistogramCalibrationExample>("calibrationexample");
-    Register<DQMMetadataOT,
+    
+    Register<DQMMetadataOT, 
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
              DQMHistogramOTverifyBoardDataWord,
@@ -168,7 +177,8 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCICwordAlignment,
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
-             CBCHistogramPulseShape>("cbcpulseshape");
+             DQMHistogramCalibrationExample>("calibrationexample");
+    
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
@@ -179,6 +189,17 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramLatencyScan>("otlatency");
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTverifyCICdataWord,
+             DQMHistogramOTverifyMPASSAdataWord>("exttriggerotlatency");
+    
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
@@ -190,18 +211,45 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramPedeNoise,
              DQMHistogramOTCMNoise>("cmNoise");
 
-    Register<DQMMetadata, DQMHistogramOTBitErrorRateTest>("bert");
-
-    Register<DQMMetadataOT, PSPhysicsHistograms>("psphysics");
-    Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTverifyCICdataWord,
+             DQMHistogramOTverifyMPASSAdataWord,
+             CBCHistogramPulseShape>("cbcpulseshape");
 
     Register<DQMMetadataOT, DQMHistogramOTCICphaseAlignment, DQMHistogramOTalignLpGBTinputsForBypass>("alignLpGBTinputsForBypass");
+
+    Register<DQMMetadata, DQMHistogramOTBitErrorRateTest>("bert");
+
+    // 2S specific calibrations
+
+    Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
+
+    Register<DQMMetadataOT,  DQMHistogramOTCICphaseAlignment,  DQMHistogramOTalignLpGBTinputsForBypass, DQMHistogramOTCBCtoCICecv>("CBCtoCICecv");
+    
+    Register<DQMMetadataOT,  DQMHistogramOTalignLpGBTinputs,  DQMHistogramOTalignBoardDataWord,  DQMHistogramOTCICphaseAlignment,  DQMHistogramOTCICwordAlignment,  DQMHistogramOTCICtoLpGBTecv,  DQMHistogramOTalignLpGBTinputsForBypass,  DQMHistogramOTCBCtoCICecv>("2Secv");
+
+    // PS specific calibrations
+
+    Register<DQMMetadataOT, PSPhysicsHistograms>("psphysics");
+    
+    Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTPSADCCalibration>("ADCBiasCalibration");
+
     Register<DQMMetadataOT, DQMHistogramOTCICphaseAlignment, DQMHistogramOTalignLpGBTinputsForBypass, DQMHistogramOTMPAtoCICecv>("MPAtoCICecv");
 
     Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCICphaseAlignment, DQMHistogramOTCICwordAlignment, DQMHistogramOTSSAtoMPAecv>(
         "SSAtoMPAecv");
+    
     Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCICphaseAlignment, DQMHistogramOTCICwordAlignment, DQMHistogramOTSSAtoSSAecv>(
         "SSAtoSSAecv");
+    
+    Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCICphaseAlignment, DQMHistogramOTCICwordAlignment, DQMHistogramOTCICtoLpGBTecv, DQMHistogramOTSSAtoMPAecv, DQMHistogramOTSSAtoSSAecv, DQMHistogramOTalignLpGBTinputsForBypass, DQMHistogramOTMPAtoCICecv>("PSecv");
+    
     Register<DQMHistogramOTPSringOscillatorTest>("ringOscillatorTest");
 
     // ###################

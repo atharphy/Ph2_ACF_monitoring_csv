@@ -363,8 +363,13 @@ class D19cFWInterface : public BeBoardFWInterface
     // fast command generic block
     void  ResetFCMDBram();
     void  ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
-    float GetSFPParameter_L8(std::string parameter, int channel);
-    float GetSFPParameter_L12(std::string parameter, int channel);
+    float GetSFPParameter(std::string parameter, int channel, bool isL8);
+    float GetSFPParameter_L8(std::string parameter, int channel)  { return GetSFPParameter(parameter, channel, true); };
+    float GetSFPParameter_L12(std::string parameter, int channel) { return GetSFPParameter(parameter, channel, false); };
+    float GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOpticalGroup, std::string parameter);
+
+    void vtrxHardReset(Ph2_HwDescription::OpticalGroup* theOpticalGroup);
+
 
     std::vector<uint32_t>              L1ADebug(uint8_t pWait_ms, bool pPrint);
     std::vector<std::vector<uint32_t>> StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint);
