@@ -23,7 +23,7 @@ void DQMHistogramOTVTRxLightYieldScan::book(TFile* theOutputFile, DetectorContai
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    HistContainer<TH2F> lightYieldHistogram("VTRxLightYieldScan", "VTRx Light Yield Scan - Power (#{mu}W)", 128, -0.5, 127.5, 128, -0.5, 127.5);
+    HistContainer<TH2F> lightYieldHistogram("VTRxLightYieldScan", "VTRx Light Yield Scan - Power (#{mu}W)", 8, 46, 82, 8, 30, 66);
     lightYieldHistogram.fTheHistogram->GetXaxis()->SetTitle("bias [DAC units]");
     lightYieldHistogram.fTheHistogram->GetYaxis()->SetTitle("modulation [DAC units]");
     lightYieldHistogram.fTheHistogram->SetStats(false);
@@ -52,7 +52,7 @@ void DQMHistogramOTVTRxLightYieldScan::fillOpticalPower(DetectorDataContainer& t
             if(!theOpticalGroup->hasSummary()) continue;
             float lightPower             = theOpticalGroup->getSummary<float>();
             TH2F* theLightYieldHistogram = fLightYieldScanContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-            theLightYieldHistogram->SetBinContent(biasValue + 1, modulationValue + 1, lightPower);
+            theLightYieldHistogram->SetBinContent(theLightYieldHistogram->GetXaxis()->FindBin(biasValue), theLightYieldHistogram->GetYaxis()->FindBin(modulationValue), lightPower);
         }
     }
 }

@@ -61,11 +61,11 @@ void OTVTRxLightYieldScan::scanVTRxLightYield()
 {
     if(fDetectorMonitor != nullptr) fDetectorMonitor->pauseMonitoring();
 
-    for(int biasValue = 0x30; biasValue < 0x50; biasValue += 0x4)
+    for(int biasValue = 48; biasValue <= 80; biasValue += 4)
     {
         LOG(INFO) << BOLDYELLOW << "Setting VTRx bias to 0x" << std::hex << +biasValue << std::dec << RESET;
 
-        for(int modulationValue = 0x20; modulationValue < 0x40; modulationValue += 0x4)
+        for(int modulationValue = 32; modulationValue <= 64; modulationValue += 4)
         {
             LOG(INFO) << BOLDMAGENTA << "    Setting VTRx modulation to 0x" << std::hex << +modulationValue << std::dec << RESET;
 
