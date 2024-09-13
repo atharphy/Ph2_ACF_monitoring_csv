@@ -237,7 +237,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTPSringOscillatorTest>("PS Module", "ringOscillatorTest");
 
     Register<OTalignBoardDataWord, OTPScommonNoise>("PS Module", "commonNoisePS");
-    
+
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");
     Register<PixelAlive>("Inner Tracker", "noise");
