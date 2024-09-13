@@ -33,9 +33,10 @@ void OTPScommonNoise::ConfigureCalibration() {}
 
 void OTPScommonNoise::SetThresholds()
 {
-    // For PS modules the CIC is in sparsified mode. Therefore we cannot have more 128 channel per hybrid on the strips and pixels sensor.
-    // Therefore we must set a threshold that allows around 64 channels per pixels and strips
-    uint8_t theMaximumChannelNumber  = 64;
+    // For PS modules the CIC is in sparsified mode. Therefore we cannot have more 128 clusters per hybrid on the strips and pixels sensor.
+    // Therefore we must set a threshold that allows around 64 clusters per pixels and strips. 
+    // The maximum number of channels is calculated as the maximum number of clisters * the maximum cluster size.
+    uint16_t theMaximumChannelNumber  = MAXCICCHANNELS/2;
     float   theStripAllowedOccupancy = float(theMaximumChannelNumber) / (NSSACHANNELS * NCHIPS_OT);
     float   thePixelAllowedOccupancy = float(theMaximumChannelNumber) / (NSSACHANNELS * NMPAROWS * NCHIPS_OT);
 
@@ -81,31 +82,31 @@ void OTPScommonNoise::TakeData()
     DetectorDataContainer theStripHitContainer;
     ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS + 1)>>(*fDetectorContainer, theStripHitContainer);
     DetectorDataContainer theStripHybridHitContainer;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1)>>(*fDetectorContainer, theStripHybridHitContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(*fDetectorContainer, theStripHybridHitContainer);
     DetectorDataContainer theStripModuleHitContainer;
-    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT * 2 + 1)>>(*fDetectorContainer, theStripModuleHitContainer);
+    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(*fDetectorContainer, theStripModuleHitContainer);
     fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
     DetectorDataContainer thePixelHitContainer;
-    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS + 1)>>(*fDetectorContainer, thePixelHitContainer);
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(*fDetectorContainer, thePixelHitContainer);
     DetectorDataContainer thePixelHybridHitContainer;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1)>>(*fDetectorContainer, thePixelHybridHitContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(*fDetectorContainer, thePixelHybridHitContainer);
     DetectorDataContainer thePixelModuleHitContainer;
-    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1)>>(*fDetectorContainer, thePixelModuleHitContainer);
+    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(*fDetectorContainer, thePixelModuleHitContainer);
 
     // Correlation between SSA and MPA pairs, the container is created only for the MPAs and saved per hybrid
     DetectorDataContainer the2DSSAMPACorrelationContainer;
-    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS + 1), (NSSACHANNELS * NMPAROWS + 1)>>(*fDetectorContainer, the2DSSAMPACorrelationContainer);
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS + 1), (MAXCICCHANNELS + 1)>>(*fDetectorContainer, the2DSSAMPACorrelationContainer);
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
 
     // Correlation between strip and pixels on 1 hybrid
     DetectorDataContainer the2DStripPixelHybridCorrelationContainer;
-    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1), (NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1)>>(*fDetectorContainer,
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>(*fDetectorContainer,
                                                                                                                                              the2DStripPixelHybridCorrelationContainer);
 
     DetectorDataContainer the2DStripPixelModuleCorrelationContainer;
-    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT * 2 + 1), (NSSACHANNELS * NMPAROWS * NCHIPS_OT * 2 + 1)>>(*fDetectorContainer,
+    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>(*fDetectorContainer,
                                                                                                                                                      the2DStripPixelModuleCorrelationContainer);
 
     // Prepare SSA and MPA for measurement
@@ -153,25 +154,21 @@ void OTPScommonNoise::TakeData()
 
                             if(cChip->getFrontEndType() == FrontEndType::SSA2)
                             {
-                                auto theStripHitContainerValues = &(theStripHitContainer.getObject(theBoard->getId())
+                                theStripHitContainer.getObject(theBoard->getId())
                                                                         ->getObject(cOpticalGroup->getId())
                                                                         ->getObject(cHybrid->getId())
                                                                         ->getObject(cChip->getId())
-                                                                        ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS + 1)>>());
-
-                                (*theStripHitContainerValues)[cEventHits]++;
+                                                                        ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS + 1)>>()[cEventHits]+=1;
 
                                 cStripHybridHits += cEventHits;
                             }
                             if(cChip->getFrontEndType() == FrontEndType::MPA2)
                             {
-                                auto thePixelHitContainerValues = &(thePixelHitContainer.getObject(theBoard->getId())
+                                thePixelHitContainer.getObject(theBoard->getId())
                                                                         ->getObject(cOpticalGroup->getId())
                                                                         ->getObject(cHybrid->getId())
                                                                         ->getObject(cChip->getId())
-                                                                        ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS + 1)>>());
-
-                                (*thePixelHitContainerValues)[cEventHits]++;
+                                                                        ->getSummary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>()[cEventHits]+=1;
 
                                 cPixelHybridHits += cEventHits;
 
@@ -181,26 +178,22 @@ void OTPScommonNoise::TakeData()
                                     ->getObject(cOpticalGroup->getId())
                                     ->getObject(cHybrid->getId())
                                     ->getObject(cChip->getId())
-                                    ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS + 1), (NSSACHANNELS * NMPAROWS + 1)>>()[cStripEventHits][cEventHits] += 1;
+                                    ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS + 1), (MAXCICCHANNELS + 1)>>()[cStripEventHits][cEventHits] += 1;
                             }
 
-                            LOG(DEBUG) << BOLDBLUE << "cStripHybridHits: " << cStripHybridHits << " cPixelHybridHits: " << cPixelHybridHits << RESET;
+                            LOG(INFO) << BOLDBLUE << "cStripHybridHits: " << cStripHybridHits << " cPixelHybridHits: " << cPixelHybridHits << RESET;
 
                         } // chip loop
 
-                        auto theStripHybridContainerValues = &(theStripHybridHitContainer.getObject(theBoard->getId())
+                        theStripHybridHitContainer.getObject(theBoard->getId())
                                                                    ->getObject(cOpticalGroup->getId())
                                                                    ->getObject(cHybrid->getId())
-                                                                   ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1)>>());
+                                                                   ->getSummary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>()[cStripHybridHits]+=1;
 
-                        (*theStripHybridContainerValues)[cStripHybridHits]++;
-
-                        auto thePixelHybridContainerValues = &(thePixelHybridHitContainer.getObject(theBoard->getId())
+                        thePixelHybridHitContainer.getObject(theBoard->getId())
                                                                    ->getObject(cOpticalGroup->getId())
                                                                    ->getObject(cHybrid->getId())
-                                                                   ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS * NMPAROWS * NCHIPS_OT + 1)>>());
-
-                        (*thePixelHybridContainerValues)[cPixelHybridHits]++;
+                                                                   ->getSummary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>()[cPixelHybridHits]+=1;
 
                         // save per hybrid
                         cStripModuleHits += cStripHybridHits;
@@ -209,23 +202,19 @@ void OTPScommonNoise::TakeData()
                         the2DStripPixelHybridCorrelationContainer.getObject(theBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
-                            ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT + 1), (NSSACHANNELS * NCHIPS_OT * NMPAROWS + 1)>>()[cStripHybridHits][cPixelHybridHits] += 1;
+                            ->getSummary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>()[cStripHybridHits][cPixelHybridHits] += 1;
                     }
 
-                    auto theStripModuleContainerValues =
-                        &(theStripModuleHitContainer.getObject(theBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, NSSACHANNELS * NCHIPS_OT * 2 + 1>>());
+                    theStripModuleHitContainer.getObject(theBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS + 1>>()[cStripModuleHits]+=1;
 
-                    (*theStripModuleContainerValues)[cStripModuleHits]++;
-
-                    auto thePixelModuleContainerValues = &(thePixelModuleHitContainer.getObject(theBoard->getId())
+                    thePixelModuleHitContainer.getObject(theBoard->getId())
                                                                ->getObject(cOpticalGroup->getId())
-                                                               ->getSummary<GenericDataArray<uint32_t, NSSACHANNELS * NCHIPS_OT * NMPAROWS * 2 + 1>>());
+                                                               ->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS + 1>>()[cPixelModuleHits]+=1;
 
-                    (*thePixelModuleContainerValues)[cPixelModuleHits]++;
 
                     the2DStripPixelModuleCorrelationContainer.getObject(theBoard->getId())
                         ->getObject(cOpticalGroup->getId())
-                        ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS * NCHIPS_OT * 2 + 1), (NSSACHANNELS * NCHIPS_OT * NMPAROWS * 2 + 1)>>()[cStripModuleHits][cPixelModuleHits] += 1;
+                        ->getSummary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>()[cStripModuleHits][cPixelModuleHits] += 1;
 
                 } // end events loop
             }     // end module loop

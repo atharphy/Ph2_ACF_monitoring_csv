@@ -24,6 +24,8 @@
 #define NSSACHANNELS 120
 #define NMPAROWS 16
 #define NCHIPS_OT 8
+#define MAXCICCLUSTERS 127 
+#define MAXCICCHANNELS 127 * 7 // cluster width is 3 bits so it can be maximum 7
 
 // Fix issue if HOST_NAME_MAX is not declared
 #ifndef HOST_NAME_MAX
