@@ -34,10 +34,10 @@ class OTVTRxLightYieldScan : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
     void scanVTRxLightYield();
-    
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTVTRxLightYieldScan fDQMHistogramOTVTRxLightYieldScan;

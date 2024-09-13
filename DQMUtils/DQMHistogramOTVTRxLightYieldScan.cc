@@ -28,7 +28,6 @@ void DQMHistogramOTVTRxLightYieldScan::book(TFile* theOutputFile, DetectorContai
     lightYieldHistogram.fTheHistogram->GetYaxis()->SetTitle("modulation [DAC units]");
     lightYieldHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fLightYieldScanContainer, lightYieldHistogram);
-
 }
 
 //========================================================================================================================
@@ -36,7 +35,6 @@ void DQMHistogramOTVTRxLightYieldScan::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================
@@ -52,13 +50,12 @@ void DQMHistogramOTVTRxLightYieldScan::fillOpticalPower(DetectorDataContainer& t
         for(auto theOpticalGroup: *theBoard)
         {
             if(!theOpticalGroup->hasSummary()) continue;
-            float lightPower = theOpticalGroup->getSummary<float>();
+            float lightPower             = theOpticalGroup->getSummary<float>();
             TH2F* theLightYieldHistogram = fLightYieldScanContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
             theLightYieldHistogram->SetBinContent(biasValue + 1, modulationValue + 1, lightPower);
         }
     }
 }
-
 
 //========================================================================================================================
 bool DQMHistogramOTVTRxLightYieldScan::fill(std::string& inputStream)
@@ -72,8 +69,7 @@ bool DQMHistogramOTVTRxLightYieldScan::fill(std::string& inputStream)
         // std::cout << "Matched OTSSAtoMPAecv L1PatternMatchingEfficiency!!!!\n";
         uint8_t               biasValue, modulationValue;
         DetectorDataContainer theDetectorData =
-            theLightYieldSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, float, EmptyContainer>(
-                fDetectorContainer, biasValue, modulationValue);
+            theLightYieldSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, float, EmptyContainer>(fDetectorContainer, biasValue, modulationValue);
         fillOpticalPower(theDetectorData, biasValue, modulationValue);
         return true;
     }

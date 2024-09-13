@@ -57,7 +57,6 @@ class DQMHistogramOTVTRxLightYieldScan : public DQMHistogramBase
 
     void fillOpticalPower(DetectorDataContainer& theOpticalPowerContainer, uint8_t biasValue, uint8_t modulationValue);
 
-
   private:
     DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fLightYieldScanContainer;

@@ -27,6 +27,7 @@
 #include "tools/OTSSAtoSSAecv.h"
 #include "tools/OTTemperature.h"
 #include "tools/OTVTRXLightOff.h"
+#include "tools/OTVTRxLightYieldScan.h"
 #include "tools/OTalignBoardDataWord.h"
 #include "tools/OTalignLpGBTinputs.h"
 #include "tools/OTalignLpGBTinputsForBypass.h"
@@ -53,7 +54,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/OTVTRxLightYieldScan.h"
 
 using namespace MessageUtils;
 
@@ -61,29 +61,29 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 {
     // Common calibrations
     Register<TuneLpGBTVref>("Common", "tunelpgbtvref");
-    
+
     Register<TuneLpGBTVref, ConfigureOnly>("Common", "configureonly");
 
     // OT calibrations
 
     Register<PedeNoise>("Outer Tracker", "noiseOT");
-    
+
     Register<OTVTRXLightOff>("Outer Tracker", "vtrxoff");
 
     Register<OTVTRxLightYieldScan>("Outer Tracker", "vtrxLightYield");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICtoLpGBTecv>("Outer Tracker", "OTCICtoLpGBTecv");
-    
+
     Register<OTRegisterTester>("Outer Tracker", "OTRegisterTester");
 
     Register<OTalignLpGBTinputs>("Outer Tracker", "OTalignLpGBTinputs");
-    
+
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
-    
+
     Register<OTalignBoardDataWord, OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");
-    
+
     Register<OTalignBoardDataWord, OTalignStubPackage>("Outer Tracker", "OTalignStubPackage");
-    
+
     Register<TuneLpGBTVref,
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
@@ -98,9 +98,9 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTCicBypassTest>("Outer Tracker", "testCICbypass");
 
     Register<OTalignBoardDataWord, OTinjectionDelayOptimization>("Outer Tracker", "injectionDelayOptimization");
-    
+
     Register<OTalignBoardDataWord, OTMeasureOccupancy>("Outer Tracker", "measureOccupancy");
-    
+
     Register<OTalignBoardDataWord, OTinjectionOccupancyScan>("Outer Tracker", "injectionOccupancyScan");
 
     Register<TuneLpGBTVref,
@@ -136,10 +136,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              PedestalEqualization,
              PedeNoise,
              KIRA>("Outer Tracker", "calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
-    
+
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, PedeNoise>(
         "Outer Tracker", "pedenoise");
-    
+
     Register<TuneLpGBTVref,
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
@@ -151,7 +151,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyMPASSAdataWord,
              PedestalEqualization,
              PedeNoise>("Outer Tracker", "calibrationandpedenoise");
-    
+
     Register<TuneLpGBTVref,
              OTPSADCCalibration,
              OTalignLpGBTinputs,
@@ -174,10 +174,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              CalibrationExample>("Outer Tracker", "calibrationexample");
-    
+
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, LatencyScan>(
         "Outer Tracker", "otlatency");
-    
+
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
@@ -204,7 +204,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(
         "2S Module", "cbcpulseshape");
-    
+
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass>("Outer Tracker", "alignLpGBTinputsForBypass");
 
     Register<OTBitErrorRateTest>("Outer Tracker", "bert");
@@ -212,7 +212,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     // 2S specific calibrations
 
     Register<Physics2S>("2S Module", "physics2s");
-    
+
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTCBCtoCICecv>("2S Module", "CBCtoCICecv");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTalignLpGBTinputsForBypass, OTCBCtoCICecv>("2S Module", "2Secv");
@@ -220,9 +220,9 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     // PS specific calibrations
 
     Register<PSPhysics>("PS Module", "psphysics");
-    
+
     Register<OTalignBoardDataWord, OTPSADCCalibration>("PS Module", "ADCBiasCalibration");
-    
+
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTMPAtoCICecv>("PS Module", "MPAtoCICecv");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoMPAecv>("PS Module", "SSAtoMPAecv");
@@ -231,7 +231,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTSSAtoMPAecv, OTSSAtoSSAecv, OTalignLpGBTinputsForBypass, OTMPAtoCICecv>("PS Module",
                                                                                                                                                                                            "PSecv");
-    
+
     Register<OTPSringOscillatorTest>("PS Module", "ringOscillatorTest");
 
     // IT calibrations

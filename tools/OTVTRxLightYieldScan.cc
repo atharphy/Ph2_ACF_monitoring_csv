@@ -1,11 +1,11 @@
 #include "tools/OTVTRxLightYieldScan.h"
+#include "HWDescription/VTRx.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19clpGBTInterface.h"
+#include "HWInterface/VTRxInterface.h"
+#include "MonitorUtils/DetectorMonitor.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
-#include "HWDescription/VTRx.h"
-#include "HWInterface/VTRxInterface.h"
-#include "HWInterface/D19cFWInterface.h"
-#include "MonitorUtils/DetectorMonitor.h"
-#include "HWInterface/D19clpGBTInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -22,16 +22,13 @@ void OTVTRxLightYieldScan::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTVTRxLightYieldScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 }
 
-void OTVTRxLightYieldScan::ConfigureCalibration()
-{
-
-}
+void OTVTRxLightYieldScan::ConfigureCalibration() {}
 
 void OTVTRxLightYieldScan::Running()
 {
@@ -45,43 +42,32 @@ void OTVTRxLightYieldScan::Running()
 void OTVTRxLightYieldScan::Stop(void)
 {
     LOG(INFO) << "Stopping OTVTRxLightYieldScan measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTVTRxLightYieldScan.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTVTRxLightYieldScan.process();
+#endif
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTVTRxLightYieldScan stopped.";
 }
 
-void OTVTRxLightYieldScan::Pause()
-{
+void OTVTRxLightYieldScan::Pause() {}
 
-}
+void OTVTRxLightYieldScan::Resume() {}
 
-
-void OTVTRxLightYieldScan::Resume()
-{
-
-}
-
-
-void OTVTRxLightYieldScan::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTVTRxLightYieldScan::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTVTRxLightYieldScan::scanVTRxLightYield()
 {
     if(fDetectorMonitor != nullptr) fDetectorMonitor->pauseMonitoring();
 
-    for(int biasValue=0x30; biasValue<0x50; biasValue += 0x4)
+    for(int biasValue = 0x30; biasValue < 0x50; biasValue += 0x4)
     {
-        LOG(INFO) << BOLDYELLOW << "Setting VTRx bias to 0x" << std:: hex << +biasValue << std::dec << RESET;
+        LOG(INFO) << BOLDYELLOW << "Setting VTRx bias to 0x" << std::hex << +biasValue << std::dec << RESET;
 
-        for(int modulationValue=0x20; modulationValue<0x40; modulationValue += 0x4)
+        for(int modulationValue = 0x20; modulationValue < 0x40; modulationValue += 0x4)
         {
-            LOG(INFO) << BOLDMAGENTA << "    Setting VTRx modulation to 0x" << std:: hex << +modulationValue << std::dec << RESET;
+            LOG(INFO) << BOLDMAGENTA << "    Setting VTRx modulation to 0x" << std::hex << +modulationValue << std::dec << RESET;
 
             DetectorDataContainer theOpticalPowerContainer;
             ContainerFactory::copyAndInitOpticalGroup<float>(*fDetectorContainer, theOpticalPowerContainer);
@@ -90,7 +76,7 @@ void OTVTRxLightYieldScan::scanVTRxLightYield()
             theRegisterValues.push_back({"CH1MOD", modulationValue | 0x80});
             for(auto theBoard: *fDetectorContainer)
             {
-                D19cFWInterface*  theFWinterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
+                D19cFWInterface* theFWinterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
                 for(auto theOpticalGroup: *theBoard)
                 {
                     fVTRxInterface->WriteChipMultReg(theOpticalGroup->fVTRx, theRegisterValues, false);
@@ -111,5 +97,4 @@ void OTVTRxLightYieldScan::scanVTRxLightYield()
     }
 
     if(fDetectorMonitor != nullptr) fDetectorMonitor->resumeMonitoring();
-
 }

@@ -572,7 +572,7 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
 
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     // this is where I should get all the clocking and FastCommandInterface settings
-    BeBoardRegMap                                 cRegMap = pBoard->getBeBoardRegMap();
+    BeBoardRegMap                                 cRegMap     = pBoard->getBeBoardRegMap();
     bool                                          cEnableDIO5 = false;
     std::vector<std::pair<std::string, uint32_t>> cBoardRegs;
     for(auto const& it: cRegMap)
@@ -763,7 +763,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             for(auto theOpticalGroup: *pBoard)
             {
                 float lighPower = GetSFPParameter(theOpticalGroup, "RX");
-                if(lighPower < 100.) LOG(ERROR) << ERROR_FORMAT << "Light from VTRx on opticalGroup " << theOpticalGroup->getId() << " is too low (" << lighPower << " uW). Check connection and module" << RESET; 
+                if(lighPower < 100.)
+                    LOG(ERROR) << ERROR_FORMAT << "Light from VTRx on opticalGroup " << theOpticalGroup->getId() << " is too low (" << lighPower << " uW). Check connection and module" << RESET;
             }
             fLinkInterface->GeneralLinkReset(pBoard);
         }
@@ -1848,7 +1849,7 @@ void D19cFWInterface::ConfigureFCMDBram(std::vector<uint8_t> pFastCommands)
 float D19cFWInterface::GetSFPParameter(std::string parameter, int channel, bool isL8)
 {
     std::string mezzanine = isL8 ? "l8" : "l12";
-    
+
     if(parameter == "T") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 96);
     if(parameter == "V") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 98);
     if(parameter == "I") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 100);
@@ -1886,7 +1887,7 @@ float D19cFWInterface::GetSFPParameter(std::string parameter, int channel, bool 
     else
     {
         float result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_" + mezzanine);
-        
+
         if(parameter == "T")
         {
             result = result / 256.0;
@@ -1918,7 +1919,6 @@ float D19cFWInterface::GetSFPParameter(std::string parameter, int channel, bool 
     return error;
 }
 
-
 float D19cFWInterface::GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOpticalGroup, std::string parameter)
 {
     uint32_t fmc2_card_type = ReadReg("fc7_daq_stat.general.info.fmc2_card_type");
@@ -1926,14 +1926,16 @@ float D19cFWInterface::GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOptic
     if(fFMCMap[fmc2_card_type] == "OPTO_QUAD") cLinkOffset = 4;
     if(fFMCMap[fmc2_card_type] == "OPTO_OCTA") cLinkOffset = 8;
 
-    bool isL8 = (theOpticalGroup->getFMCId() != 12);
-    auto        cOpticalGroupId = theOpticalGroup->getId();
+    bool isL8            = (theOpticalGroup->getFMCId() != 12);
+    auto cOpticalGroupId = theOpticalGroup->getId();
 
     int channelNumber = 0;
-    if(isL8) channelNumber = cOpticalGroupId;
-    else channelNumber = cOpticalGroupId - cLinkOffset;
+    if(isL8)
+        channelNumber = cOpticalGroupId;
+    else
+        channelNumber = cOpticalGroupId - cLinkOffset;
 
-    channelNumber =  3 - channelNumber % 4 + 4 * (channelNumber / 4);
+    channelNumber = 3 - channelNumber % 4 + 4 * (channelNumber / 4);
 
     return GetSFPParameter(parameter, channelNumber, isL8);
 }
@@ -1943,16 +1945,16 @@ void D19cFWInterface::vtrxHardReset(Ph2_HwDescription::OpticalGroup* theOpticalG
     flpGBTSlowControlWorkerInterface->SelectLink(theOpticalGroup->getId());
     auto theLpGBT = theOpticalGroup->flpGBT;
 
-    auto theRegItem = theOpticalGroup->flpGBT->getRegItem("PIOOutH");
+    auto theRegItem   = theOpticalGroup->flpGBT->getRegItem("PIOOutH");
     theRegItem.fValue = theRegItem.fValue | 0x80;
-    std::vector<ChipRegItem> theRegisterVectorResetElabled {theRegItem};
+    std::vector<ChipRegItem> theRegisterVectorResetElabled{theRegItem};
 
     auto resetEnableCommand = flpGBTSlowControlWorkerInterface->EncodeCommand(LpGBTSlowControlWorker::WRITE_IC, theLpGBT, theRegisterVectorResetElabled, false);
     flpGBTSlowControlWorkerInterface->WriteCommand(resetEnableCommand);
     flpGBTSlowControlWorkerInterface->Reset();
 
     theRegItem.fValue = theRegItem.fValue & 0x7F;
-    std::vector<ChipRegItem> theRegisterVectorResetDisabled {theRegItem};
+    std::vector<ChipRegItem> theRegisterVectorResetDisabled{theRegItem};
 
     usleep(100000);
 
@@ -1961,7 +1963,6 @@ void D19cFWInterface::vtrxHardReset(Ph2_HwDescription::OpticalGroup* theOpticalG
     flpGBTSlowControlWorkerInterface->Reset();
 
     usleep(100000);
-
 }
 
 std::vector<uint32_t> D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint) { return fDebugInterface->L1ADebug(pWait_ms, pPrint); }
