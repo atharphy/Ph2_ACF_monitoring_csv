@@ -11,6 +11,7 @@
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/OTBitErrorRateTest.h"
+#include "tools/OTCBCtoCICecv.h"
 #include "tools/OTCICBX0Alignment.h"
 #include "tools/OTCICphaseAlignment.h"
 #include "tools/OTCICtoLpGBTecv.h"
@@ -208,6 +209,18 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              TuneLpGBTVref,
              OTCMNoise,
              OTTemperature>("2S Module", "commonNoise2S");
+
+    Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass>("Outer Tracker", "alignLpGBTinputsForBypass");
+
+    Register<OTBitErrorRateTest>("Outer Tracker", "bert");
+
+    // 2S specific calibrations
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(
+        "2S Module", "cbcpulseshape");
+    Register<Physics2S>("2S Module", "physics2s");
+    Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTCBCtoCICecv>("2S Module", "CBCtoCICecv");
+
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTalignLpGBTinputsForBypass, OTCBCtoCICecv>("2S Module", "2Secv");
 
     // PS specific calibrations
     Register<PSPhysics>("PS Module", "psphysics");

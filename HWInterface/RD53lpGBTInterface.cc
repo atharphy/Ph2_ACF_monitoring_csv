@@ -245,7 +245,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
         LOG(WARNING) << BOLDBLUE << "\t--> Proceeding with the hardcoded path: " << BOLDYELLOW << configFilePathCSV << RESET;
     }
 
-    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), this->ReadChipID(static_cast<lpGBT*>(pChip), 1), configFilePathCSV);
+    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), this->ReadChipFuseID(static_cast<lpGBT*>(pChip), cChipVersion), configFilePathCSV);
     lpGBTInterface::EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
     lpGBTInterface::TuneVrefControlLib(static_cast<lpGBT*>(pChip));
     lpGBTInterface::AutoTuneVref(static_cast<lpGBT*>(pChip));

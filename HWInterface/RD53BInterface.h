@@ -32,7 +32,7 @@ class RD53BInterface : public RD53Interface
     void     PackWriteCommand(Ph2_HwDescription::Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
     void     PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) override;
     void     WriteClockDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;
-    uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip) override;
+    uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip, uint8_t version = 1) override;
     void     WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, int writeMode, bool doDefault, size_t theRow = 0, size_t theCol = 0) override;
     void     SendBoardClear(const Ph2_HwDescription::BeBoard* pBoard) override;
     void     SendRD53Clear(Ph2_HwDescription::RD53* pRD53) override { RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()}); }

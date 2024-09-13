@@ -934,7 +934,7 @@ void CbcInterface::produceBX0AlignmentPattern(ReadoutChip* pChip)
     std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{0x0A, 0}, {0x0A, 0}, {0x0A, 0}};
     injectStubs(pChip, stubSeedAndBend);
 }
-uint32_t CbcInterface::ReadChipFuseID(Chip* pCbc)
+uint32_t CbcInterface::ReadChipFuseID(Chip* pCbc, uint8_t version)
 {
     // make fuse read-able
     WriteChipReg(pCbc, "ChipIDFuse3", 8, false);

@@ -71,7 +71,7 @@ class CicInterface : public ChipInterface
 
     uint8_t ReadFCMDEdge(Ph2_HwDescription::Chip* pChip);
 
-    uint32_t                    ReadChipFuseID(Ph2_HwDescription::Chip* pCic);
+    uint32_t                    ReadChipFuseID(Ph2_HwDescription::Chip* pCic, uint8_t version = 1) override;
     bool                        SetFePhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pFeId, uint8_t pLineId, int pPhaseTap);
     bool                        SetPhaseTap(Ph2_HwDescription::Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortChannel, int pPhaseTap);
     std::pair<uint8_t, uint8_t> fromChipL1ToPhyPortAndChannel(Ph2_HwDescription::Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId);

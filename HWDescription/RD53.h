@@ -204,7 +204,15 @@ class RD53 : public ReadoutChip
     // # Constructors #
     // ################
     RD53() : ReadoutChip(0, 0, 0, 0, 0) {}
-    RD53(uint8_t pBeId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t pHybridId, uint8_t pRD53Id, uint8_t pRD53Lane, const std::string& fileName, const std::string& cfgComment);
+    RD53(uint8_t            pBeId,
+         uint8_t            pFMCId,
+         uint8_t            pOpticalGroupId,
+         uint8_t            pHybridId,
+         uint8_t            pRD53Id,
+         uint8_t            pRD53Lane,
+         uint32_t           pRD53eFuseCode,
+         const std::string& fileName,
+         const std::string& cfgComment);
     RD53(const RD53&) = delete;
 
     // #############################
@@ -233,6 +241,7 @@ class RD53 : public ReadoutChip
     void        resetTDAC(uint8_t TDAC);
     uint8_t     getTDAC(unsigned int row, unsigned int col);
     uint8_t     getChipLane() const { return myChipLane; }
+    uint32_t    geteFuseCode() const { return myeFuseCode; }
     std::string getComment() const { return myComment; }
 
     // #################
@@ -277,6 +286,7 @@ class RD53 : public ReadoutChip
     pixelMask   fPixelsMaskDefault;
     std::string myComment;
     uint8_t     myChipLane;
+    uint32_t    myeFuseCode;
 };
 
 } // namespace Ph2_HwDescription

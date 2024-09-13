@@ -274,14 +274,21 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
             std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Configure Word Alignment (WA)" << std::endl;
 
-            writeWithComment(phaseTuningControlRegisterName, 0xFFF44030, "Configure WA – SYNC_PATTERN = 0x4030");
-            // writeWithComment(phaseTuningControlRegisterName, 0xFFF4cea7, "Configure WA – SYNC_PATTERN = 0x4030");
+            // writeWithComment(phaseTuningControlRegisterName, 0xFFF44030, "Configure WA – SYNC_PATTERN = 0x4030");
+            // writeWithComment(phaseTuningControlRegisterName, 0xFFF4cea7, "Configure WA – SYNC_PATTERN = 0xcea7");
+            writeWithComment(phaseTuningControlRegisterName, 0xFFF42cea, "Configure WA – SYNC_PATTERN = 0x2cea");
 
             writeWithComment(phaseTuningControlRegisterName, 0xFFF50008, "Reset WA FSM – FSM_RST = 1");
 
             writeWithComment(phaseTuningControlRegisterName, 0xFFF20300, "Configure WA – MODE = 00 (auto), PRBS_EN = 1, SYNC_EN = 1");
 
             usleep(1000000);
+
+            auto lineOutputVectorBefore = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
+            for(size_t lineIndex = 0; lineIndex < lineOutputVectorBefore.size(); ++lineIndex)
+            {
+                std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVectorBefore[lineIndex], 1, true) << std::endl;
+            }
 
             writeWithComment(phaseTuningControlRegisterName, 0xFFF50002, " Do Word Alignment – DO_WA = 1");
 
@@ -291,12 +298,18 @@ void OTBitErrorRateTest::bitErrorRateTest()
                 usleep(1000000);
             }
 
-            readForAllLines(phaseTuningControlRegisterName, 0x00000000, "Select phase tuning status", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "Phase tuning reply");
+            // readForAllLines(phaseTuningControlRegisterName, 0x00000000, "Select phase tuning status", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "Phase tuning reply");
 
             std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read WA Status (loop on hybrids and lines)" << std::endl;
             readForAllLines(phaseTuningControlRegisterName, 0x00010000, "Select phase tuning status", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "Phase tuning reply");
 
             usleep(1000000);
+
+            auto lineOutputVectorAfter = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
+            for(size_t lineIndex = 0; lineIndex < lineOutputVectorAfter.size(); ++lineIndex)
+            {
+                std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVectorAfter[lineIndex], 1, true) << std::endl;
+            }
 
             std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Sample PRBS Data" << std::endl;
 
@@ -317,7 +330,11 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
             readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
 
+            readForAllLines(theBertRegisterControl, 0x00000000, "Select PRBS status 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 0");
+
             writeWithComment(theBertRegisterControl, 0xFFF20037, "Start PRBS Test");
+
+            readForAllLines(theBertRegisterControl, 0x00000000, "Select PRBS status 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 0");
 
             readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
 

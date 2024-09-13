@@ -46,7 +46,7 @@
   </BeBoard>
 
 <Settings>
-    <Setting name="isKickoff">1</Setting>
+    <Setting name="isKickoff">0</Setting>
     <!--PedestalEqualization-->
     <Setting name="Nevents">100</Setting>
     <Setting name="HoleMode">0</Setting>
@@ -164,6 +164,9 @@
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithInjection"> 1000</Setting>
 
     <Setting name="OTalignLpGBTinputsForBypass_NumberOfIterations"> 1000</Setting>
+
+    <Setting name="OTCBCtoCICecv_NumberOfIterations"> 1000</Setting>
+    <Setting name="OTCBCtoCICecv_ListOfCBCslvsCurrents"> 0, 8, 14</Setting>
 </Settings>
 
 <MonitoringSettings>
