@@ -181,7 +181,7 @@ void OTPScommonNoise::TakeData()
                                     ->getSummary<GenericDataArray<uint32_t, (NSSACHANNELS + 1), (MAXCICCHANNELS + 1)>>()[cStripEventHits][cEventHits] += 1;
                             }
 
-                            LOG(INFO) << BOLDBLUE << "cStripHybridHits: " << cStripHybridHits << " cPixelHybridHits: " << cPixelHybridHits << RESET;
+                            LOG(DEBUG) << BOLDBLUE << "cStripHybridHits: " << cStripHybridHits << " cPixelHybridHits: " << cPixelHybridHits << RESET;
 
                         } // chip loop
 
