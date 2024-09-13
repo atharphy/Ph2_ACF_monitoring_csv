@@ -229,20 +229,23 @@ void OTPScommonNoise::TakeData()
 #else
     if(fDQMStreamerEnabled)
     {
+        bool doFit = false;
         ContainerSerialization theStripChipHitContainerSerialization("OTPScommonNoiseStripChipHit");
         theStripChipHitContainerSerialization.streamByChipContainer(fDQMStreamer, theStripHitContainer, doFit);
         ContainerSerialization thePixelChipHitContainerSerialization("OTPScommonNoisePixelChipHit");
         thePixelChipHitContainerSerialization.streamByChipContainer(fDQMStreamer, thePixelHitContainer, doFit);
 
+        bool isSSA = true;
         ContainerSerialization theStripHybridHitContainerSerialization("OTPScommonNoiseStripHybridHit");
-        theStripHybridHitContainerSerialization.streamByHybridContainer(fDQMStreamer, theStripHybridHitContainer, true);
-        ContainerSerialization thePixelHybridHitContainerSerialization("OTPScommonNoisePixelHybridHit");
-        thePixelHybridHitContainerSerialization.streamByHybridContainer(fDQMStreamer, thePixelHybridHitContainer, false);
-
+        theStripHybridHitContainerSerialization.streamByHybridContainer(fDQMStreamer, theStripHybridHitContainer, isSSA);
         ContainerSerialization theStripModuleHitContainerSerialization("OTPScommonNoiseStripModuleHit");
-        theStripModuleHitContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theStripModuleHitContainer, true);
+        theStripModuleHitContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theStripModuleHitContainer, isSSA);
+
+        isSSA = false;
+        ContainerSerialization thePixelHybridHitContainerSerialization("OTPScommonNoisePixelHybridHit");
+        thePixelHybridHitContainerSerialization.streamByHybridContainer(fDQMStreamer, thePixelHybridHitContainer, isSSA);
         ContainerSerialization thePixelModuleHitContainerSerialization("OTPScommonNoisePixelModuleHit");
-        thePixelModuleHitContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePixelModuleHitContainer, false);
+        thePixelModuleHitContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePixelModuleHitContainer, isSSA);
 
         ContainerSerialization theSSAMPACorrelationContainerSerialization("OTPScommonNoiseSSAMPACorrelation");
         theSSAMPACorrelationContainerSerialization.streamByHybridContainer(fDQMStreamer, the2DSSAMPACorrelationContainer);
