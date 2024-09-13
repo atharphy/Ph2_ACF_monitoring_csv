@@ -35,8 +35,7 @@ void OTPScommonNoise::SetThresholds()
 {
     // For PS modules the CIC is in sparsified mode. Therefore we cannot have more 128 clusters per hybrid on the strips and pixels sensor.
     // Therefore we must set a threshold that allows around 64 clusters per pixels and strips.
-    // The maximum number of channels is calculated as the maximum number of clisters * the maximum cluster size.
-    uint16_t theMaximumChannelNumber  = MAXCICCHANNELS / 2;
+    uint16_t theMaximumChannelNumber  = MAXCICCLUSTERS / 2;
     float    theStripAllowedOccupancy = float(theMaximumChannelNumber) / (NSSACHANNELS * NCHIPS_OT);
     float    thePixelAllowedOccupancy = float(theMaximumChannelNumber) / (NSSACHANNELS * NMPAROWS * NCHIPS_OT);
 
