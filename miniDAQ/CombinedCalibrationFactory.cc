@@ -188,12 +188,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyMPASSAdataWord,
              ExtTriggerLatencyScan>("Outer Tracker", "exttriggerotlatency");
 
-    Register<OTBitErrorRateTest>("Outer Tracker", "bert");
-
     // 2S specific calibrations
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(
-        "2S Module", "cbcpulseshape");
-    Register<Physics2S>("2S Module", "physics2s");
     Register<TuneLpGBTVref,
              OTTemperature,
              OTalignLpGBTinputs,
