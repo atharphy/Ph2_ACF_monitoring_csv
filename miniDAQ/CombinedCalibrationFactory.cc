@@ -21,6 +21,7 @@
 #include "tools/OTMPAtoCICecv.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
+#include "tools/OTPScommonNoise.h"
 #include "tools/OTPSringOscillatorTest.h"
 #include "tools/OTRegisterTester.h"
 #include "tools/OTSSAtoMPAecv.h"
@@ -188,6 +189,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyMPASSAdataWord,
              ExtTriggerLatencyScan>("Outer Tracker", "exttriggerotlatency");
 
+    // 2S specific calibrations
     Register<TuneLpGBTVref,
              OTTemperature,
              OTalignLpGBTinputs,
@@ -200,7 +202,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              PedeNoise,
              TuneLpGBTVref,
              OTCMNoise,
-             OTTemperature>("Outer Tracker", "cmNoise");
+             OTTemperature>("2S Module", "commonNoise2S");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(
         "2S Module", "cbcpulseshape");
@@ -234,6 +236,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTPSringOscillatorTest>("PS Module", "ringOscillatorTest");
 
+    Register<OTalignBoardDataWord, OTPScommonNoise>("PS Module", "commonNoisePS");
+    
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");
     Register<PixelAlive>("Inner Tracker", "noise");

@@ -15,6 +15,7 @@
 #include "DQMUtils/DQMHistogramOTMPAtoCICecv.h"
 #include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
 #include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
+#include "DQMUtils/DQMHistogramOTPScommonNoise.h"
 #include "DQMUtils/DQMHistogramOTPSringOscillatorTest.h"
 #include "DQMUtils/DQMHistogramOTRegisterTester.h"
 #include "DQMUtils/DQMHistogramOTSSAtoMPAecv.h"
@@ -209,7 +210,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCICwordAlignment,
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise,
-             DQMHistogramOTCMNoise>("cmNoise");
+             DQMHistogramOTCMNoise>("commonNoise2S");
 
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
@@ -267,6 +268,8 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTMPAtoCICecv>("PSecv");
 
     Register<DQMHistogramOTPSringOscillatorTest>("ringOscillatorTest");
+
+    Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTPScommonNoise>("commonNoisePS");
 
     // ###################
     // # IT calibrations #
