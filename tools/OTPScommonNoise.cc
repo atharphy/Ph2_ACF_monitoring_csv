@@ -233,7 +233,7 @@ void OTPScommonNoise::TakeData()
         ContainerSerialization thePixelChipHitContainerSerialization("OTPScommonNoisePixelChipHit");
         thePixelChipHitContainerSerialization.streamByChipContainer(fDQMStreamer, thePixelHitContainer);
 
-        bool isSSA = true;
+        bool                   isSSA = true;
         ContainerSerialization theStripHybridHitContainerSerialization("OTPScommonNoiseStripHybridHit");
         theStripHybridHitContainerSerialization.streamByHybridContainer(fDQMStreamer, theStripHybridHitContainer, isSSA);
         ContainerSerialization theStripModuleHitContainerSerialization("OTPScommonNoiseStripModuleHit");

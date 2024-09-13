@@ -121,8 +121,7 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
     if(theStripChipHitContainerSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched OTPScommonNoiseStripChipHit!!!!!\n";
-        DetectorDataContainer theDetectorData =
-            theStripChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS + 1)>>(fDetectorContainer);
+        DetectorDataContainer theDetectorData = theStripChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (NSSACHANNELS + 1)>>(fDetectorContainer);
         // Filling the histograms
         fillChipHitPlots(theDetectorData);
         return true;
@@ -132,8 +131,7 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
     if(thePixelChipHitContainerSerialization.attachDeserializer(inputStream))
     {
         std::cout << "Matched OTPScommonNoisePixelChipHit!!!!!\n";
-        DetectorDataContainer theDetectorData =
-            thePixelChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(fDetectorContainer);
+        DetectorDataContainer theDetectorData = thePixelChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(fDetectorContainer);
         // Filling the histograms
         fillChipHitPlots(theDetectorData);
         return true;
