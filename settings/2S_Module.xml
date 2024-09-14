@@ -16,6 +16,8 @@
           <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
 
         </lpGBT>
+        <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
+        <VTRx Id="0" configFile="VTRx.txt"/>
         <Hybrid Id="0" enable="1" reset="1">
             <Global>
                 <Settings threshold="520" latency="108"/>

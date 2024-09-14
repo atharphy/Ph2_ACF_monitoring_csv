@@ -572,17 +572,13 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
 
     std::vector<std::pair<std::string, uint32_t>> cVecReg;
     // this is where I should get all the clocking and FastCommandInterface settings
-    BeBoardRegMap                                 cRegMap = pBoard->getBeBoardRegMap();
-    std::bitset<12>                               cL8Enable(0);
-    std::bitset<12>                               c12Enable(0);
+    BeBoardRegMap                                 cRegMap     = pBoard->getBeBoardRegMap();
     bool                                          cEnableDIO5 = false;
     std::vector<std::pair<std::string, uint32_t>> cBoardRegs;
     for(auto const& it: cRegMap)
     {
         cBoardRegs.push_back({it.first, it.second.fValue});
         if(it.first == "fc7_daq_cnfg.dio5_block.dio5_en") cEnableDIO5 = (bool)it.second.fValue;
-        if(it.first == "fc7_daq_cnfg.optical_block.enable.l8") { cL8Enable = std::bitset<12>(it.second.fValue); }
-        if(it.first == "fc7_daq_cnfg.optical_block.enable.l12") { c12Enable = std::bitset<12>(it.second.fValue); }
         if(it.first == "fc7_daq_cnfg.readout_block.global.zero_suppression_enable") { cBoardRegs.push_back({it.first, pBoard->getEventType() == EventType::ZS}); }
     }
     // configure CDCE - if needed
@@ -763,6 +759,13 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
         {
             LOG(INFO) << BOLDMAGENTA << "Resetting lpGBT-FPGA core on BeBoard#" << +pBoard->getId() << RESET;
             flpGBTSlowControlWorkerInterface->Reset();
+
+            for(auto theOpticalGroup: *pBoard)
+            {
+                float lighPower = GetSFPParameter(theOpticalGroup, "RX");
+                if(lighPower < 100.)
+                    LOG(ERROR) << ERROR_FORMAT << "Light from VTRx on opticalGroup " << theOpticalGroup->getId() << " is too low (" << lighPower << " uW). Check connection and module" << RESET;
+            }
             fLinkInterface->GeneralLinkReset(pBoard);
         }
         else
@@ -1842,9 +1845,11 @@ void D19cFWInterface::ConfigureFCMDBram(std::vector<uint8_t> pFastCommands)
     this->WriteReg("fc7_daq_cnfg.fast_command_block.generic_fcmd.number_of_repetitions", 0x0);
     LOG(DEBUG) << BOLDBLUE << "Configuring FCMD BRAM from sw..... done" << RESET;
 }
-// sfp_ddmi
-float D19cFWInterface::GetSFPParameter_L8(std::string parameter, int channel)
+
+float D19cFWInterface::GetSFPParameter(std::string parameter, int channel, bool isL8)
 {
+    std::string mezzanine = isL8 ? "l8" : "l12";
+
     if(parameter == "T") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 96);
     if(parameter == "V") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 98);
     if(parameter == "I") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 100);
@@ -1855,7 +1860,7 @@ float D19cFWInterface::GetSFPParameter_L8(std::string parameter, int channel)
     this->WriteReg("fc7_daq_cnfg.sfp_ddmi.enable", 1);
     int  error = 0, timer_sfp = 0;
     bool time_out = false;
-    while(this->ReadReg("fc7_daq_stat.sfp_ddmi_status.busy_l8"))
+    while(this->ReadReg("fc7_daq_stat.sfp_ddmi_status.busy_" + mezzanine))
     {
         this->WriteReg("fc7_daq_cnfg.sfp_ddmi.enable", 0);
         std::this_thread::sleep_for(std::chrono::microseconds(10));
@@ -1863,127 +1868,102 @@ float D19cFWInterface::GetSFPParameter_L8(std::string parameter, int channel)
         if(timer_sfp > 50)
         {
             time_out = true;
-            ;
             break;
         }
         else
             timer_sfp++;
     }
     // std::this_thread::sleep_for(std::chrono::seconds(1));
-    error = this->ReadReg("fc7_daq_stat.sfp_ddmi_status.error_l8");
-    if(error) { LOG(INFO) << "Error occurred during communication with the SFP. The error code is: " << error << RESET; }
+    error = this->ReadReg("fc7_daq_stat.sfp_ddmi_status.error_" + mezzanine);
+    if(error) { LOG(ERROR) << ERROR_FORMAT << "Error occurred during communication with the SFP. The error code is: " << error << RESET; }
     else if(error == 0 && time_out == true)
     {
-        if(parameter == "T") LOG(INFO) << "Time out in reading the temperature of the SFP for channel " << channel << "." << RESET;
-        if(parameter == "V") LOG(INFO) << "Time out in reading the SFP's voltage for channel " << channel << "." << RESET;
-        if(parameter == "I") LOG(INFO) << "Time out in reading the SFP's bias current for channel " << channel << "." << RESET;
-        if(parameter == "TX") LOG(INFO) << "Time out in reading the SFP's transmited power for channel " << channel << "." << RESET;
-        if(parameter == "RX") LOG(INFO) << "Time out in reading the SFP's received power for channel " << channel << "." << RESET;
+        if(parameter == "T") LOG(DEBUG) << "Time out in reading the temperature of the SFP for channel " << channel << "." << RESET;
+        if(parameter == "V") LOG(DEBUG) << "Time out in reading the SFP's voltage for channel " << channel << "." << RESET;
+        if(parameter == "I") LOG(DEBUG) << "Time out in reading the SFP's bias current for channel " << channel << "." << RESET;
+        if(parameter == "TX") LOG(DEBUG) << "Time out in reading the SFP's transmited power for channel " << channel << "." << RESET;
+        if(parameter == "RX") LOG(DEBUG) << "Time out in reading the SFP's received power for channel " << channel << "." << RESET;
     }
     else
     {
-        float result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_l8");
+        float result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_" + mezzanine);
+
         if(parameter == "T")
         {
             result = result / 256.0;
-            LOG(INFO) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
+            LOG(DEBUG) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
         }
         else if(parameter == "V")
         {
             result = result / 10.0;
-            LOG(INFO) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
+            LOG(DEBUG) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
         }
         else if(parameter == "I")
         {
             result = result * 0.002;
-            LOG(INFO) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
+            LOG(DEBUG) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
         }
         else if(parameter == "TX")
         {
             result = result * 0.1;
-            LOG(INFO) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
+            LOG(DEBUG) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
         }
         else if(parameter == "RX")
         {
             result = result * 0.1;
-            LOG(INFO) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
+            LOG(DEBUG) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
         }
-        else if(parameter == "raw") { LOG(INFO) << "The SFP's output for channel " << channel << " is " << result << RESET; }
+        else if(parameter == "raw") { LOG(DEBUG) << "The SFP's output for channel " << channel << " is " << result << RESET; }
         return result;
     }
     return error;
 }
-float D19cFWInterface::GetSFPParameter_L12(std::string parameter, int channel)
+
+float D19cFWInterface::GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOpticalGroup, std::string parameter)
 {
-    if(parameter == "T") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 96);
-    if(parameter == "V") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 98);
-    if(parameter == "I") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 100);
-    if(parameter == "TX") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 102);
-    if(parameter == "RX") this->WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 104);
-    if(parameter == "raw") this->WriteReg("fc7_daq_cnfg.SFP_DDMI.regAddress", 96);
-    this->WriteReg("fc7_daq_cnfg.sfp_ddmi.channel_number", channel);
-    this->WriteReg("fc7_daq_cnfg.sfp_ddmi.enable", 1);
-    int  error = 0, timer_sfp = 0;
-    bool time_out = false;
-    while(this->ReadReg("fc7_daq_stat.sfp_ddmi_status.busy_l12"))
-    {
-        this->WriteReg("fc7_daq_cnfg.sfp_ddmi.enable", 0);
-        std::this_thread::sleep_for(std::chrono::microseconds(10));
+    uint32_t fmc2_card_type = ReadReg("fc7_daq_stat.general.info.fmc2_card_type");
+    size_t   cLinkOffset    = 0;
+    if(fFMCMap[fmc2_card_type] == "OPTO_QUAD") cLinkOffset = 4;
+    if(fFMCMap[fmc2_card_type] == "OPTO_OCTA") cLinkOffset = 8;
 
-        if(timer_sfp > 50)
-        {
-            time_out = true;
-            break;
-        }
-        else
-            timer_sfp++;
-    }
-    // std::this_thread::sleep_for(std::chrono::seconds(1));
-    error = this->ReadReg("fc7_daq_stat.sfp_ddmi_status.error_l12");
-    if(error) { LOG(INFO) << "Error occurred during communication with the SFP. The error code is: " << error << RESET; }
-    else if(error == 0 && time_out == true)
-    {
-        if(parameter == "T") LOG(INFO) << "Time out in reading the temperature of the SFP for channel " << channel << "." << RESET;
-        if(parameter == "V") LOG(INFO) << "Time out in reading the SFP's voltage for channel " << channel << "." << RESET;
-        if(parameter == "I") LOG(INFO) << "Time out in reading the SFP's bias current for channel " << channel << "." << RESET;
-        if(parameter == "TX") LOG(INFO) << "Time out in reading the SFP's transmited power for channel " << channel << "." << RESET;
-        if(parameter == "RX") LOG(INFO) << "Time out in reading the SFP's received power for channel " << channel << "." << RESET;
-    }
+    bool isL8            = (theOpticalGroup->getFMCId() != 12);
+    auto cOpticalGroupId = theOpticalGroup->getId();
+
+    int channelNumber = 0;
+    if(isL8)
+        channelNumber = cOpticalGroupId;
     else
-    {
-        float result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_l12");
-        if(parameter == "T")
-        {
-            result = result / 256.0;
-            LOG(INFO) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
-        }
-        else if(parameter == "V")
-        {
-            result = result / 10.0;
-            LOG(INFO) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
-        }
-        else if(parameter == "I")
-        {
-            result = result * 0.002;
-            LOG(INFO) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
-        }
-        else if(parameter == "TX")
-        {
-            result = result * 0.1;
-            LOG(INFO) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
-        }
-        else if(parameter == "RX")
-        {
-            result = result * 0.1;
-            LOG(INFO) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
-        }
-        else if(parameter == "raw")
-            LOG(INFO) << "The SFP's output for channel " << channel << " is " << result << RESET;
+        channelNumber = cOpticalGroupId - cLinkOffset;
 
-        return result;
-    }
-    return error;
-} // D19cFWInterface
+    channelNumber = 3 - channelNumber % 4 + 4 * (channelNumber / 4);
+
+    return GetSFPParameter(parameter, channelNumber, isL8);
+}
+
+void D19cFWInterface::vtrxHardReset(Ph2_HwDescription::OpticalGroup* theOpticalGroup)
+{
+    flpGBTSlowControlWorkerInterface->SelectLink(theOpticalGroup->getId());
+    auto theLpGBT = theOpticalGroup->flpGBT;
+
+    auto theRegItem   = theOpticalGroup->flpGBT->getRegItem("PIOOutH");
+    theRegItem.fValue = theRegItem.fValue | 0x80;
+    std::vector<ChipRegItem> theRegisterVectorResetElabled{theRegItem};
+
+    auto resetEnableCommand = flpGBTSlowControlWorkerInterface->EncodeCommand(LpGBTSlowControlWorker::WRITE_IC, theLpGBT, theRegisterVectorResetElabled, false);
+    flpGBTSlowControlWorkerInterface->WriteCommand(resetEnableCommand);
+    flpGBTSlowControlWorkerInterface->Reset();
+
+    theRegItem.fValue = theRegItem.fValue & 0x7F;
+    std::vector<ChipRegItem> theRegisterVectorResetDisabled{theRegItem};
+
+    usleep(100000);
+
+    auto resetDisableCommand = flpGBTSlowControlWorkerInterface->EncodeCommand(LpGBTSlowControlWorker::WRITE_IC, theLpGBT, theRegisterVectorResetElabled, false);
+    flpGBTSlowControlWorkerInterface->WriteCommand(resetDisableCommand);
+    flpGBTSlowControlWorkerInterface->Reset();
+
+    usleep(100000);
+}
 
 std::vector<uint32_t> D19cFWInterface::L1ADebug(uint8_t pWait_ms, bool pPrint) { return fDebugInterface->L1ADebug(pWait_ms, pPrint); }
 

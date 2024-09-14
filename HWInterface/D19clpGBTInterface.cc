@@ -650,4 +650,11 @@ void D19clpGBTInterface::setCICClockPolarityAndStrength(Ph2_HwDescription::Chip*
     updateClockFunction(cicClockLeftRegisterName, pPolarity, pStrength);
 }
 
+void D19clpGBTInterface::vtrxReset(Ph2_HwDescription::Chip* pChip, bool pEnable)
+{
+    std::string registerName    = "PIOOutH";
+    uint16_t    currentPIOvalue = pChip->getReg(registerName); // if I am resetting the VTRx there may be a communication issue and I cannot read from the LpGBT directly
+    WriteChipReg(pChip, "PIOOutH", (currentPIOvalue & 0x7F) | ((pEnable ? 1 : 0) << 7), false);
+}
+
 } // namespace Ph2_HwInterface
