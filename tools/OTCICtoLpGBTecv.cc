@@ -22,9 +22,9 @@ void OTCICtoLpGBTecv::Initialise(void)
     // free the registers in case any
     fNumberOfIterations  = findValueInSettings<double>("OTCICtoLpGBTecv_NumberOfIterations", 1000);
     fListOfLpGBTPhase    = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_LpGBTPhase", "0-14"));
-    fListOfCICStrength   = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_CICStrength", "1-5"));
+    fListOfCICStrength   = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_CICStrength", "1, 3, 5"));
     fListOfClockPolarity = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_ClockPolarity", "0-1"));
-    fListOfClockStrength = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_ClockStrength", "1-7"));
+    fListOfClockStrength = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_ClockStrength", "1, 4, 7"));
 
     // Error handle for incorrect LpGBTPhase input
     std::unordered_set<float> allowedLpGBTPhases{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};

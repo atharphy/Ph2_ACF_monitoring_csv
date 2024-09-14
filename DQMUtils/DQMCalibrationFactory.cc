@@ -240,7 +240,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramPedestalEqualization,
-             DQMHistogramPedeNoise>("quickTest2S");
+             DQMHistogramPedeNoise>("2SquickTest");
 
     Register<DQMMetadataOT,
              DQMHistogramOTVTRxLightYieldScan,
@@ -259,7 +259,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTRegisterTester,
              DQMHistogramOTCICtoLpGBTecv,
              DQMHistogramOTalignLpGBTinputsForBypass,
-             DQMHistogramOTCBCtoCICecv>("fullTest2S");
+             DQMHistogramOTCBCtoCICecv>("2SfullTest");
 
     Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
 
@@ -288,7 +288,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramOTPSringOscillatorTest,
              DQMHistogramPedestalEqualization,
-             DQMHistogramPedeNoise>("quickTestPS");
+             DQMHistogramPedeNoise>("PSquickTest");
 
     Register<DQMMetadataOT, PSPhysicsHistograms>("psphysics");
 

@@ -212,7 +212,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTCICwordAlignment,
              OTverifyCICdataWord,
              PedestalEqualization,
-             PedeNoise>("2S Module", "quickTest2S");
+             PedeNoise>("2S Module", "2SquickTest");
 
     Register<TuneLpGBTVref,
              OTVTRxLightYieldScan,
@@ -231,7 +231,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTRegisterTester,
              OTCICtoLpGBTecv,
              OTalignLpGBTinputsForBypass,
-             OTCBCtoCICecv>("2S Module", "fullTest2S");
+             OTCBCtoCICecv>("2S Module", "2SfullTest");
 
     Register<Physics2S>("2S Module", "physics2s");
 
@@ -255,7 +255,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyMPASSAdataWord,
              OTPSringOscillatorTest,
              PedestalEqualization,
-             PedeNoise>("PS Module", "quickTestPS");
+             PedeNoise>("PS Module", "PSquickTest");
 
     Register<TuneLpGBTVref,
              OTPSADCCalibration,
@@ -279,7 +279,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTSSAtoMPAecv,
              OTSSAtoSSAecv,
              OTalignLpGBTinputsForBypass,
-             OTMPAtoCICecv>("PS Module", "fullTestPS");
+             OTMPAtoCICecv>("PS Module", "PSfullTest");
 
     Register<PSPhysics>("PS Module", "psphysics");
 
