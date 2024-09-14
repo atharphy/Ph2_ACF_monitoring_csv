@@ -190,7 +190,7 @@
     <!--PedestalEqualization-->
 	<Setting name="Nevents">1000</Setting>
 	<Setting name="CMNoise_Nevents">1000</Setting>
-	<Setting name="CMNoise_manualVcth">595</Setting>
+	<Setting name="CMNoise_manualVcth">0</Setting>
 	<Setting name="CMNoise_2DHistograms">1</Setting> <!-- Create additional Correlation plots. CPU & RAM intensive -->
 
     <Setting name="HoleMode">0</Setting>

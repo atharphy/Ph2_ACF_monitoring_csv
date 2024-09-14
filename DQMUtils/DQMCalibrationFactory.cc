@@ -242,6 +242,25 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise>("quickTest2S");
 
+    Register<DQMMetadataOT,
+             DQMHistogramOTVTRxLightYieldScan,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTverifyCICdataWord,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramPedeNoise,
+             DQMHistogramOTinjectionDelayOptimization,
+             DQMHistogramOTinjectionOccupancyScan,
+             DQMHistogramOTCMNoise,
+             DQMHistogramOTRegisterTester,
+             DQMHistogramOTCICtoLpGBTecv,
+             DQMHistogramOTalignLpGBTinputsForBypass,
+             DQMHistogramOTCBCtoCICecv>("fullTest2S");
+
     Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
 
     Register<DQMMetadataOT, DQMHistogramOTCICphaseAlignment, DQMHistogramOTalignLpGBTinputsForBypass, DQMHistogramOTCBCtoCICecv>("CBCtoCICecv");

@@ -49,6 +49,7 @@ class OTCMNoise : public Tool
     void ConfigureCalibration() override;
     void Pause() override;
     void Resume() override;
+    void Reset();
 
     static std::string fCalibrationDescription;
 

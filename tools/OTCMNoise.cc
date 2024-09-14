@@ -2,6 +2,8 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
+#include "System/RegisterHelper.h"
+#include <math.h>
 
 std::string OTCMNoise::fCalibrationDescription = "Measure common noise in 2S modules";
 // PUBLIC METHODS
@@ -11,6 +13,8 @@ OTCMNoise::~OTCMNoise() {}
 
 void OTCMNoise::Initialize()
 {
+    fRegisterHelper->takeSnapshot();
+
     parseSettings();
 
 #ifdef __USE_ROOT__
@@ -38,7 +42,14 @@ void OTCMNoise::SetThresholds()
                     cVisitor.setThreshold(fManualVcth);
                     static_cast<OuterTrackerHybrid*>(cHybrid)->accept(cVisitor);
                 }
-                else { LOG(INFO) << BOLDCYAN << "Not resetting threshold! Running with values in config files." << RESET; }
+                else
+                {
+                    LOG(INFO) << BOLDCYAN << "Not setting manual threshold! Running with threshold at the pedestal." << RESET;
+                    for(auto theChip: *cHybrid)
+                    {
+                        fReadoutChipInterface->WriteChipReg(theChip, "Threshold", round(theChip->getAveragePedestal()));
+                    }
+                }
 
                 for(auto cChip: *cHybrid)
                 {
@@ -333,6 +344,7 @@ void OTCMNoise::Running()
     Initialize();
     SetThresholds();
     TakeData();
+    Reset();
     LOG(INFO) << "Done with CM noise";
 }
 
@@ -349,3 +361,6 @@ void OTCMNoise::Stop()
 void OTCMNoise::Pause() {}
 
 void OTCMNoise::Resume() {}
+
+void OTCMNoise::Reset() { fRegisterHelper->restoreSnapshot(); }
+

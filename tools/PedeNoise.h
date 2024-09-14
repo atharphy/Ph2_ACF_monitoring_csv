@@ -34,7 +34,7 @@ class PedeNoise : public Tool
     ~PedeNoise();
     void clearDataMembers();
 
-    void Initialise(bool pAllChan = false, bool pDisableStubLogic = true);
+    virtual void Initialise(bool pAllChan = false, bool pDisableStubLogic = true);
     void measureNoise(); // method based on the one below that actually analyzes the scurves and extracts the noise
     void sweepSCurves(); // actual methods to measure SCurves
     void Validate();
@@ -45,7 +45,7 @@ class PedeNoise : public Tool
     void ConfigureCalibration() override;
     void Pause() override;
     void Resume() override;
-    void Reset();
+    virtual void Reset();
 
     static std::string fCalibrationDescription;
 
