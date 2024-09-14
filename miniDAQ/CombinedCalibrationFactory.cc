@@ -214,17 +214,17 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     // 2S specific calibrations
 
     Register<TuneLpGBTVref,
-            OTVTRxLightYieldScan,
-            OTalignLpGBTinputs,
-            OTalignBoardDataWord,
-            OTverifyBoardDataWord,
-            OTalignStubPackage,
-            OTCICphaseAlignment,
-            OTCICwordAlignment,
-            OTverifyCICdataWord,
-            OTverifyMPASSAdataWord,
-            PedestalEqualization,
-            PedeNoise>("2S Module", "quickTest2S");
+             OTVTRxLightYieldScan,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTverifyCICdataWord,
+             OTverifyMPASSAdataWord,
+             PedestalEqualization,
+             PedeNoise>("2S Module", "quickTest2S");
 
     Register<Physics2S>("2S Module", "physics2s");
 
