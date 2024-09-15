@@ -91,17 +91,6 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     if(fFullScan)
     {
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-
         fTestPulseAmplitude    = findValueInSettings<double>("PedestalEqualization_PulseAmplitudeFullScan", 20);
         fTestPulseAmplitudePix = findValueInSettings<double>("PedestalEqualization_PulseAmplitudePixFullScan", 30);
     }
