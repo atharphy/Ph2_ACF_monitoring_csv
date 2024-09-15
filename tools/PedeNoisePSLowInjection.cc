@@ -8,8 +8,8 @@ std::string PedeNoisePSLowInjection::fCalibrationDescription = "Measure noise an
 
 void PedeNoisePSLowInjection::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
-    fOriginalPulseAmplitude              = findValueInSettings<double>("PedeNoise_PulseAmplitude", 0);
-    fOriginalPulseAmplitudePix           = findValueInSettings<double>("PedeNoise_PulseAmplitudePix", fPulseAmplitude);
+    fOriginalPulseAmplitude    = findValueInSettings<double>("PedeNoise_PulseAmplitude", 0);
+    fOriginalPulseAmplitudePix = findValueInSettings<double>("PedeNoise_PulseAmplitudePix", fPulseAmplitude);
     setValueInSettings<double>("PedeNoise_PulseAmplitude", 20);
     setValueInSettings<double>("PedeNoise_PulseAmplitudePix", 30);
     PedeNoise::Initialise(pAllChan, pDisableStubLogic);
@@ -18,7 +18,7 @@ void PedeNoisePSLowInjection::Initialise(bool pAllChan, bool pDisableStubLogic)
 void PedeNoisePSLowInjection::Reset()
 {
     // restoring original setting
-    setValueInSettings<double>("PedeNoise_PulseAmplitude", fOriginalPulseAmplitude); 
+    setValueInSettings<double>("PedeNoise_PulseAmplitude", fOriginalPulseAmplitude);
     setValueInSettings<double>("PedeNoise_PulseAmplitudePix", fOriginalPulseAmplitudePix);
     PedeNoise::Reset();
 }

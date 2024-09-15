@@ -1,8 +1,8 @@
 #include "OTCMNoise.h"
+#include "System/RegisterHelper.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
-#include "System/RegisterHelper.h"
 #include <math.h>
 
 std::string OTCMNoise::fCalibrationDescription = "Measure common noise in 2S modules";
@@ -45,10 +45,7 @@ void OTCMNoise::SetThresholds()
                 else
                 {
                     LOG(INFO) << BOLDCYAN << "Not setting manual threshold! Running with threshold at the pedestal." << RESET;
-                    for(auto theChip: *cHybrid)
-                    {
-                        fReadoutChipInterface->WriteChipReg(theChip, "Threshold", round(theChip->getAveragePedestal()));
-                    }
+                    for(auto theChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(theChip, "Threshold", round(theChip->getAveragePedestal())); }
                 }
 
                 for(auto cChip: *cHybrid)
@@ -363,4 +360,3 @@ void OTCMNoise::Pause() {}
 void OTCMNoise::Resume() {}
 
 void OTCMNoise::Reset() { fRegisterHelper->restoreSnapshot(); }
-

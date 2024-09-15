@@ -290,7 +290,6 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise>("PSquickTest");
 
-    
     Register<DQMMetadataOT,
              DQMHistogramOTPSADCCalibration,
              DQMHistogramOTVTRxLightYieldScan,
@@ -341,7 +340,6 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTalignLpGBTinputsForBypass,
              DQMHistogramOTMPAtoCICecv,
              DQMHistogramOTRegisterTester>("PSfullTestPart2");
-
 
     Register<DQMMetadataOT, PSPhysicsHistograms>("psphysics");
 

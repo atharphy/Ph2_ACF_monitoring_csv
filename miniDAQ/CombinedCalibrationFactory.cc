@@ -40,7 +40,9 @@
 #include "tools/OTverifyMPASSAdataWord.h"
 #include "tools/PSPhysics.h"
 #include "tools/PedeNoise.h"
+#include "tools/PedeNoisePSLowInjection.h"
 #include "tools/PedestalEqualization.h"
+#include "tools/PedestalEqualizationPSFullScan.h"
 #include "tools/Physics2S.h"
 #include "tools/RD53ClockDelay.h"
 #include "tools/RD53Gain.h"
@@ -55,8 +57,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/PedestalEqualizationPSFullScan.h"
-#include "tools/PedeNoisePSLowInjection.h"
 
 using namespace MessageUtils;
 

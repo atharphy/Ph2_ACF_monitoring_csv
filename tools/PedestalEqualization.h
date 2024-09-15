@@ -29,16 +29,16 @@ class PedestalEqualization : public Tool
     ~PedestalEqualization();
 
     virtual void Initialise(bool pAllChan = false, bool pDisableStubLogic = true);
-    void FindVplus();
+    void         FindVplus();
     // offsets are found by taking pMultiple*fEvents triggers
     void FindOffsets();
     void writeObjects();
 
-    void Running() override;
-    void Stop() override;
-    void ConfigureCalibration() override;
-    void Pause() override;
-    void Resume() override;
+    void         Running() override;
+    void         Stop() override;
+    void         ConfigureCalibration() override;
+    void         Pause() override;
+    void         Resume() override;
     virtual void Reset();
 
     static std::string fCalibrationDescription;

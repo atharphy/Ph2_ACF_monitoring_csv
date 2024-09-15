@@ -127,11 +127,10 @@ void initializeFreeRegisters()
                                              std::make_pair(std::regex("^DigCalibPattern_[LH]$"), RegisterType::Utility),
                                              std::make_pair(std::regex("^AC_ReadCounter[LM]SB$"), RegisterType::Utility)};
 
-
     listOfFreeRegistersMap[ChipType::VTRx] = {std::make_pair(std::regex("^STATUS$"), RegisterType::ReadOnly),
-                                             std::make_pair(std::regex("^ID$"), RegisterType::ReadOnly),
-                                             std::make_pair(std::regex("^UID[0-3]$"), RegisterType::ReadOnly),
-                                             std::make_pair(std::regex("^SEU[0-3]$"), RegisterType::Utility)};
+                                              std::make_pair(std::regex("^ID$"), RegisterType::ReadOnly),
+                                              std::make_pair(std::regex("^UID[0-3]$"), RegisterType::ReadOnly),
+                                              std::make_pair(std::regex("^SEU[0-3]$"), RegisterType::Utility)};
 }
 
 bool matchWithPatternList(ChipType theChipType, std::string registerName)

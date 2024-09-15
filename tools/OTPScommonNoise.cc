@@ -70,12 +70,7 @@ void OTPScommonNoise::SetThresholds()
 }
 void OTPScommonNoise::TakeData()
 {
-
-    for(auto theBoard: *fDetectorContainer)
-    {
-        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", 1);
-    }
-
+    for(auto theBoard: *fDetectorContainer) { fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", 1); }
 
     auto        selectSSAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
     std::string selectSSAfunctionName = "SelectSSAfunction";
@@ -85,9 +80,9 @@ void OTPScommonNoise::TakeData()
 
     // DetectorDataContainer the2DHitContainer;
     fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
-    setSameDac("ReadoutMode", 0x0);                                                     // normal readout mode
-    setSameDac("control_2", 0x0F);                                                      // maximize cluster cut
-    
+    setSameDac("ReadoutMode", 0x0); // normal readout mode
+    setSameDac("control_2", 0x0F);  // maximize cluster cut
+
     DetectorDataContainer theStripHitContainer;
     ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (NSSACHANNELS + 1)>>(*fDetectorContainer, theStripHitContainer);
     DetectorDataContainer theStripHybridHitContainer;
@@ -97,9 +92,9 @@ void OTPScommonNoise::TakeData()
     fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
-    setSameDac("Control_1", 0x0);                                                       // set Readout mode to normal
-    setSameDac("PixelControl_ALL", 0x1D);                                               // disable Hip cut, cluster cut to the maximum, mode select level
-    
+    setSameDac("Control_1", 0x0);         // set Readout mode to normal
+    setSameDac("PixelControl_ALL", 0x1D); // disable Hip cut, cluster cut to the maximum, mode select level
+
     DetectorDataContainer thePixelHitContainer;
     ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(*fDetectorContainer, thePixelHitContainer);
     DetectorDataContainer thePixelHybridHitContainer;

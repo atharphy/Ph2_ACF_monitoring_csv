@@ -21,7 +21,7 @@ class PedestalEqualizationPSFullScan : public PedestalEqualization
     static std::string fCalibrationDescription;
 
   private:
-    bool    fOriginalIsFullScan;
+    bool fOriginalIsFullScan;
 };
 
 #endif
