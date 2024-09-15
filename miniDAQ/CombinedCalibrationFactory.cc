@@ -228,16 +228,14 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTinjectionDelayOptimization,
              OTinjectionOccupancyScan,
              OTCMNoise,
-             OTRegisterTester,
              OTCICtoLpGBTecv,
              OTalignLpGBTinputsForBypass,
-             OTCBCtoCICecv>("2S Module", "2SfullTest");
+             OTCBCtoCICecv,
+             OTRegisterTester>("2S Module", "2SfullTest");
 
     Register<Physics2S>("2S Module", "physics2s");
 
-    Register<
-    // OTCICphaseAlignment, OTalignLpGBTinputsForBypass, 
-    OTCBCtoCICecv>("2S Module", "CBCtoCICecv");
+    Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTCBCtoCICecv>("2S Module", "CBCtoCICecv");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTalignLpGBTinputsForBypass, OTCBCtoCICecv>("2S Module", "2Secv");
 
@@ -274,12 +272,38 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTinjectionDelayOptimization,
              OTinjectionOccupancyScan,
              OTPScommonNoise,
-             OTRegisterTester,
              OTCICtoLpGBTecv,
              OTSSAtoMPAecv,
              OTSSAtoSSAecv,
              OTalignLpGBTinputsForBypass,
-             OTMPAtoCICecv>("PS Module", "PSfullTest");
+             OTMPAtoCICecv,
+             OTRegisterTester>("PS Module", "PSfullTest");
+
+    Register<TuneLpGBTVref,
+             OTPSADCCalibration,
+             OTVTRxLightYieldScan,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTverifyCICdataWord,
+             OTverifyMPASSAdataWord,
+             OTPSringOscillatorTest,
+             PedestalEqualizationPSFullScan,
+             PedeNoisePSLowInjection>("PS Module", "PSfullTestPart1");
+
+    Register<OTalignBoardDataWord,
+             OTinjectionDelayOptimization,
+             OTinjectionOccupancyScan,
+             OTPScommonNoise,
+             OTCICtoLpGBTecv,
+             OTSSAtoMPAecv,
+             OTSSAtoSSAecv,
+             OTalignLpGBTinputsForBypass,
+             OTMPAtoCICecv,
+             OTRegisterTester>("PS Module", "PSfullTestPart2");
 
     Register<PSPhysics>("PS Module", "psphysics");
 

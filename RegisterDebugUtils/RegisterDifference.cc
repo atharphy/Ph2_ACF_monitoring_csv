@@ -12,10 +12,11 @@ enum class ChipType
     CIC,
     MPA,
     SSA,
-    CBC
+    CBC,
+    VTRx
 };
 
-std::map<std::string, ChipType> theChipTypeMap{{"LpGBT", ChipType::LpGBT}, {"CIC", ChipType::CIC}, {"MPA", ChipType::MPA}, {"SSA", ChipType::SSA}, {"CBC", ChipType::CBC}};
+std::map<std::string, ChipType> theChipTypeMap{{"LpGBT", ChipType::LpGBT}, {"CIC", ChipType::CIC}, {"MPA", ChipType::MPA}, {"SSA", ChipType::SSA}, {"CBC", ChipType::CBC}, {"VTRx", ChipType::VTRx}};
 
 enum class RegisterType
 {
@@ -125,6 +126,12 @@ void initializeFreeRegisters()
                                              std::make_pair(std::regex("^THTRIMMING$"), RegisterType::Utility),
                                              std::make_pair(std::regex("^DigCalibPattern_[LH]$"), RegisterType::Utility),
                                              std::make_pair(std::regex("^AC_ReadCounter[LM]SB$"), RegisterType::Utility)};
+
+
+    listOfFreeRegistersMap[ChipType::VTRx] = {std::make_pair(std::regex("^STATUS$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^ID$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^UID[0-3]$"), RegisterType::ReadOnly),
+                                             std::make_pair(std::regex("^SEU[0-3]$"), RegisterType::Utility)};
 }
 
 bool matchWithPatternList(ChipType theChipType, std::string registerName)
