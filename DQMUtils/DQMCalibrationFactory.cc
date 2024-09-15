@@ -240,7 +240,26 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramPedestalEqualization,
-             DQMHistogramPedeNoise>("quickTest2S");
+             DQMHistogramPedeNoise>("2SquickTest");
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTVTRxLightYieldScan,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTverifyCICdataWord,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramPedeNoise,
+             DQMHistogramOTinjectionDelayOptimization,
+             DQMHistogramOTinjectionOccupancyScan,
+             DQMHistogramOTCMNoise,
+             DQMHistogramOTCICtoLpGBTecv,
+             DQMHistogramOTalignLpGBTinputsForBypass,
+             DQMHistogramOTCBCtoCICecv,
+             DQMHistogramOTRegisterTester>("2SfullTest");
 
     Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
 
@@ -269,7 +288,58 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramOTPSringOscillatorTest,
              DQMHistogramPedestalEqualization,
-             DQMHistogramPedeNoise>("quickTestPS");
+             DQMHistogramPedeNoise>("PSquickTest");
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTPSADCCalibration,
+             DQMHistogramOTVTRxLightYieldScan,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTverifyCICdataWord,
+             DQMHistogramOTverifyMPASSAdataWord,
+             DQMHistogramOTPSringOscillatorTest,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramPedeNoise,
+             DQMHistogramOTinjectionDelayOptimization,
+             DQMHistogramOTinjectionOccupancyScan,
+             DQMHistogramOTPScommonNoise,
+             DQMHistogramOTCICtoLpGBTecv,
+             DQMHistogramOTSSAtoMPAecv,
+             DQMHistogramOTSSAtoSSAecv,
+             DQMHistogramOTalignLpGBTinputsForBypass,
+             DQMHistogramOTMPAtoCICecv,
+             DQMHistogramOTRegisterTester>("PSfullTest");
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTPSADCCalibration,
+             DQMHistogramOTVTRxLightYieldScan,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTverifyCICdataWord,
+             DQMHistogramOTverifyMPASSAdataWord,
+             DQMHistogramOTPSringOscillatorTest,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramPedeNoise>("PSfullTestPart1");
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTinjectionDelayOptimization,
+             DQMHistogramOTinjectionOccupancyScan,
+             DQMHistogramOTPScommonNoise,
+             DQMHistogramOTCICtoLpGBTecv,
+             DQMHistogramOTSSAtoMPAecv,
+             DQMHistogramOTSSAtoSSAecv,
+             DQMHistogramOTalignLpGBTinputsForBypass,
+             DQMHistogramOTMPAtoCICecv,
+             DQMHistogramOTRegisterTester>("PSfullTestPart2");
 
     Register<DQMMetadataOT, PSPhysicsHistograms>("psphysics");
 
