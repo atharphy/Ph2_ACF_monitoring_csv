@@ -116,3 +116,11 @@ For any support/suggestions, send an email to fabio.raveraSPAMNOT@cern.ch, mauro
 ##
 ### Firmware repository for OT tracker
 [https://udtc-ot-firmware.web.cern.ch/](https://udtc-ot-firmware.web.cern.ch/)
+
+
+##
+### Outer Tracker Suggested Tags
+
+Firmware tag: v3-00
+
+Ph2_ACF tag: v6-00
