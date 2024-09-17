@@ -1163,11 +1163,11 @@ void RD53FWInterface::ConfigurePCTestAdapter(const std::string& config)
             if(line.find_first_not_of(" \t") == std::string::npos || line.at(0) == '#' || line.at(0) == '*' || line.empty()) {continue;}
             else
             {
-            myString.str("");
-            myString.clear();
-            myString << line;
-            myString >> address >> value;
-            fAddressValue.push_back(std::make_pair(strtoul(address.c_str(), 0, 16), strtoul(value.c_str(), 0 ,16)));
+                myString.str("");
+                myString.clear();
+                myString << line;
+                myString >> address >> value;
+                fAddressValue.push_back(std::make_pair(strtoul(address.c_str(), 0, 16), strtoul(value.c_str(), 0 ,16)));
             }
         }
         
