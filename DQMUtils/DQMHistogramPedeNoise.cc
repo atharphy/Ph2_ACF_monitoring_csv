@@ -54,26 +54,9 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     auto selectPixelChipFunction = [cPixelTypes](const ChipContainer* pChip)
     { return (std::find(cPixelTypes.begin(), cPixelTypes.end(), static_cast<const ReadoutChip*>(pChip)->getFrontEndType()) != cPixelTypes.end()); };
 
-    // find maximum number of channels
-    std::vector<size_t> cNPixelChannels(0), cNStripChannels(0);
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    auto cNChannels = theDetectorStructure.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->size();
-                    auto cType      = cChip->getFrontEndType();
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2) { cNStripChannels.push_back(cNChannels); }
-                    else if(cType == FrontEndType::MPA2) { cNPixelChannels.push_back(cNChannels); }
-                }
-            }
-        }
-    }
-    if(fWithCBC || fWithSSA) { fNStripChannels = *std::max_element(std::begin(cNStripChannels), std::end(cNStripChannels)); }
-    if(fWithMPA) { fNPixelChannels = *std::max_element(std::begin(cNPixelChannels), std::end(cNPixelChannels)); }
+    if(fWithCBC) fNStripChannels = NCHANNELS;
+    if(fWithSSA) fNStripChannels = NSSACHANNELS;
+    if(fWithMPA) fNPixelChannels = NSSACHANNELS * NMPAROWS;
 
     auto cSetting = pSettingsMap.find("PlotSCurves");
     fPlotSCurves  = (cSetting != std::end(pSettingsMap)) ? boost::any_cast<double>(cSetting->second) : 0;
@@ -90,15 +73,13 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         if(fPlotSCurves)
         {
             uint16_t nYbins = (fWithSSA) ? 255 : 1024;
-            float    minY   = -0.5;
-            float    maxY   = (fWithSSA) ? 254.5 : 1023.5;
 
-            HistContainer<TH2F> theTH2FChipStripSCurve("SCurve", "SCurve", fNStripChannels, -0.5, fNStripChannels - 0.5, nYbins, minY, maxY);
+            HistContainer<TH2F> theTH2FChipStripSCurve("SCurve", "SCurve", fNStripChannels, -0.5, fNStripChannels - 0.5, nYbins, -0.5, float(nYbins) - 0.5);
             RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipStripSCurveHistograms, theTH2FChipStripSCurve);
 
             if(fFitSCurves)
             {
-                HistContainer<TH1F> theTH1FChannelStripSCurveContainer("SCurve", "SCurve", nYbins, minY, maxY);
+                HistContainer<TH1F> theTH1FChannelStripSCurveContainer("SCurve", "SCurve", nYbins, -0.5, float(nYbins) - 0.5);
                 RootContainerFactory::bookChannelHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripSCurveHistograms, theTH1FChannelStripSCurveContainer);
             }
         }
@@ -457,7 +438,7 @@ void DQMHistogramPedeNoise::process()
                             ->getObject(cHybrid->getId())
                             ->getSummary<HistContainer<TH1F>>()
                             .fTheHistogram->GetXaxis()
-                            ->SetRangeUser(-0.5, fNStripChannels * 8 - 0.5);
+                            ->SetRangeUser(-0.5, fNStripChannels * 4 - 0.5);
                         fDetectorHybridStripNoiseEvenHistograms.getObject(cBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
@@ -470,7 +451,7 @@ void DQMHistogramPedeNoise::process()
                             ->getObject(cHybrid->getId())
                             ->getSummary<HistContainer<TH1F>>()
                             .fTheHistogram->GetXaxis()
-                            ->SetRangeUser(-0.5, fNStripChannels * 8 - 0.5);
+                            ->SetRangeUser(-0.5, fNStripChannels * 4 - 0.5);
                         fDetectorHybridStripNoiseOddHistograms.getObject(cBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
@@ -893,18 +874,37 @@ void DQMHistogramPedeNoise::fitSCurves()
 
                             float cChannelPedestal = cChannelPedestalHistogram->GetBinContent(linearizeRowAndCols(row, col, cChip->getNumberOfCols()) + 1);
 
-                            TF1* cFit = new TF1("SCurveFit", MyErf, cChannelPedestal - (cChannelNoise * 5), cChannelPedestal + (cChannelNoise * 5), 2);
+                            // Fit the S-curve for the 2S module
+                            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
+                            {
+                                TF1* cFit = new TF1("SCurveFit", MyErf, cChannelPedestal - (cChannelNoise * 5), cChannelPedestal + (cChannelNoise * 5), 2);
+                                cFit->SetParameter(0, cChannelPedestal);
+                                cFit->SetParameter(1, cChannelNoise);
 
-                            cFit->SetParameter(0, cChannelPedestal);
-                            cFit->SetParameter(1, cChannelNoise);
+                                // Fit
+                                cChannelSCurve->Fit(cFit, "RQM");
 
-                            // Fit
-                            cChannelSCurve->Fit(cFit, "RQ");
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThreshold      = cFit->GetParameter(0);
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoise          = cFit->GetParameter(1);
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThresholdError = cFit->GetParError(0);
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoiseError     = cFit->GetParError(1);
+                            }
 
-                            theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThreshold      = cFit->GetParameter(0);
-                            theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoise          = cFit->GetParameter(1);
-                            theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThresholdError = cFit->GetParError(0);
-                            theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoiseError     = cFit->GetParError(1);
+                            // Fit the S-curve for the PS module
+                            else if((cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS))
+                            {
+                                TF1* cFit = new TF1("SCurveFit", MyErfc, cChannelPedestal - (cChannelNoise * 5), cChannelPedestal + (cChannelNoise * 5), 2);
+                                cFit->SetParameter(0, cChannelPedestal);
+                                cFit->SetParameter(1, cChannelNoise);
+
+                                // Fit
+                                cChannelSCurve->Fit(cFit, "RQM");
+
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThreshold      = cFit->GetParameter(0);
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoise          = cFit->GetParameter(1);
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThresholdError = cFit->GetParError(0);
+                                theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoiseError     = cFit->GetParError(1);
+                            }
                         }
                     }
                 }

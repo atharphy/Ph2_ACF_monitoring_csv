@@ -17,8 +17,8 @@
 #include "HWInterface/RD53BInterface.h"
 #include "HWInterface/RD53FWInterface.h"
 #include "HWInterface/VTRxInterface.h"
-#include "MonitorUtils/CBCMonitor.h"
 #include "MonitorUtils/DetectorMonitor.h"
+#include "MonitorUtils/Monitor2S.h"
 #include "MonitorUtils/PSMonitor.h"
 #include "MonitorUtils/RD53Monitor.h"
 #include "MonitorUtils/SEHMonitor.h"
@@ -118,6 +118,11 @@ void SystemController::Destroy()
 
     RD53Event::JoinDecodingThreads();
 
+    if(fDetectorMonitor != nullptr)
+    {
+        fDetectorMonitor->stopRunning();
+        fDetectorMonitor->waitForMonitorToStop();
+    }
     delete fDetectorMonitor;
     fDetectorMonitor = nullptr;
 
@@ -346,7 +351,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     if(fDetectorMonitorConfig->fEnable == true)
     {
         if(fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_2S_VALUE)
-            fDetectorMonitor = new CBCMonitor(this, *fDetectorMonitorConfig);
+            fDetectorMonitor = new Monitor2S(this, *fDetectorMonitorConfig);
         else if((fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_RD53A_VALUE) || (fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_RD53B_VALUE))
             fDetectorMonitor = new RD53Monitor(this, *fDetectorMonitorConfig);
         else if(fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_2SSEH_VALUE)
@@ -517,6 +522,8 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
             LOG(INFO) << GREEN << "Configuring chips of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+            bool   eFuseCodeCheck = true;
+            double eFuseCode;
 
             for(const auto cChip: *cHybrid)
             {
@@ -527,10 +534,28 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 static_cast<RD53*>(cChip)->copyMaskToDefault();
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
 
+                try
+                {
+                    eFuseCode = fReadoutChipInterface->ReadChipFuseID(cChip);
+                }
+                catch(const std::runtime_error& err)
+                {
+                    LOG(WARNING) << RED << err.what() << RESET;
+                    eFuseCode      = -1;
+                    eFuseCodeCheck = false;
+                }
+                catch(const std::out_of_range& err)
+                {
+                    LOG(WARNING) << RED << err.what() << RESET;
+                    eFuseCode = atoi(err.what());
+                }
+
                 LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
-                LOG(INFO) << GREEN << "Fused ID: " << BOLDYELLOW << +fReadoutChipInterface->ReadChipFuseID(cChip) << RESET;
+                if(eFuseCode >= 0) LOG(INFO) << GREEN << "e-fuse code: " << BOLDYELLOW << static_cast<uint32_t>(eFuseCode) << RESET;
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
+
+            if(eFuseCodeCheck == false) throw std::runtime_error("Please set the proper e-fuse code(s) in the xml file");
 
             LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases (if any and if needed) for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
             static_cast<RD53Interface*>(fReadoutChipInterface)->TAP0slaveOptimization(pBoard, cHybrid);
@@ -848,7 +873,7 @@ void SystemController::ConfigureHw(bool pReInitialize)
         exit(EXIT_FAILURE);
     }
 
-    LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from xml file @@@" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from XML file @@@" << RESET;
     for(const auto cBoard: *fDetectorContainer)
     {
         cBoard->printBoardType();

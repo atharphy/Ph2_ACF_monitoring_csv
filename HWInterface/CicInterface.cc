@@ -114,7 +114,7 @@ void CicInterface::CheckConfig(Chip* pChip)
     }
 }
 
-uint32_t CicInterface::ReadChipFuseID(Chip* pCic)
+uint32_t CicInterface::ReadChipFuseID(Chip* pCic, uint8_t version)
 {
     /*
     CIC ID = AABBBCCCD

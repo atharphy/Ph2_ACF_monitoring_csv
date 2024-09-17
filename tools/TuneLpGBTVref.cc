@@ -1,4 +1,5 @@
 #include "tools/TuneLpGBTVref.h"
+#include "MonitorUtils/DetectorMonitor.h"
 #include "System/RegisterHelper.h"
 
 std::string TuneLpGBTVref::fCalibrationDescription = "Tune Vref value for LpGBT ADC";
@@ -37,9 +38,11 @@ void TuneLpGBTVref::tuneVref()
 
 void TuneLpGBTVref::Running()
 {
+    if(fDetectorMonitor != nullptr) fDetectorMonitor->pauseMonitoring();
     Initialise();
     tuneVref();
     reset();
+    if(fDetectorMonitor != nullptr) fDetectorMonitor->resumeMonitoring();
 }
 
 void TuneLpGBTVref::Stop() {}

@@ -5,6 +5,7 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/Utilities.h"
 #include "Utils/ValueAndTime.h"
+#include <boost/algorithm/string.hpp>
 
 #ifdef __USE_ROOT__
 #include "TFile.h"
@@ -14,7 +15,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, DetectorMonitorConfig theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
+SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
 {
     // Add a new TCP Client to avoid conflicts in parallel process
     LOG(INFO) << BOLDYELLOW << "Trying to connect to the Power Supply Server..." << RESET;
@@ -30,9 +31,9 @@ SEHMonitor::SEHMonitor(const Ph2_System::SystemController* theSystemController, 
 #ifdef __USE_ROOT__
     fMonitorPlotDQMSEH = new MonitorDQMPlotSEH();
     fMonitorPlotDQMSEH->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
-    fMonitorPlotDQM    = new MonitorDQMPlotCBC();
-    fMonitorDQMPlotCBC = static_cast<MonitorDQMPlotCBC*>(fMonitorPlotDQM);
-    fMonitorDQMPlotCBC->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
+    fMonitorPlotDQM   = new MonitorDQMPlot2S();
+    fMonitorDQMPlot2S = static_cast<MonitorDQMPlot2S*>(fMonitorPlotDQM);
+    fMonitorDQMPlot2S->book(fOutputFile, *fTheSystemController->fDetectorContainer, fDetectorMonitorConfig);
 #endif
 }
 // Maybe not ideal here (but needed to avoid memory leak)?? Could be moved to ~DetectorMonitor() if fPowerSupplyClient is also used for other devices?
@@ -54,8 +55,6 @@ SEHMonitor::~SEHMonitor()
 
 void SEHMonitor::runMonitor()
 {
-    std::recursive_mutex                  theMutex;
-    std::lock_guard<std::recursive_mutex> theGuard(theMutex);
     for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
         if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
     for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("PowerSupply"))
@@ -64,29 +63,29 @@ void SEHMonitor::runMonitor()
         if(registerName.second) runTestCardMonitor(registerName.first);
 }
 
-void SEHMonitor::runLpGBTRegisterMonitor(std::string registerName)
+void SEHMonitor::runLpGBTRegisterMonitor(const std::string& registerName)
 {
     DetectorDataContainer theLpGBTRegisterContainer;
-    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
+    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
         if(board->getFirstObject()->flpGBT == nullptr)
         {
             for(const auto& opticalGroup: *board)
-                theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(0, getTimeStamp());
+                theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(0, getTimeStamp());
             continue;
         }
         for(const auto& opticalGroup: *board)
         {
             uint16_t registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
             LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << registerName << " = " << registerValue << RESET;
-            theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
+            theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStamp());
         }
     }
 
 #ifdef __USE_ROOT__
-    fMonitorDQMPlotCBC->fillLpGBTRegisterPlots(theLpGBTRegisterContainer, registerName);
+    fMonitorDQMPlot2S->fillLpGBTmonitorPlots(theLpGBTRegisterContainer, registerName);
 #else
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
     {
@@ -96,19 +95,31 @@ void SEHMonitor::runLpGBTRegisterMonitor(std::string registerName)
 #endif
 }
 
-void SEHMonitor::runPowerSupplyMonitor(std::string registerName)
+void SEHMonitor::runPowerSupplyMonitor(const std::string& registerName)
 {
-    // LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName<< RESET;
-    std::string buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
-    LOG(INFO) << BOLDMAGENTA << buffer << RESET;
-    // while(!(buffer.find("TimeStamp") != std::string::npos))
-    // {
-    //     buffer = fPowerSupplyClient->sendAndReceivePacket("GetStatus");
-    //     LOG(INFO) << BOLDMAGENTA << buffer << RESET;
-    // }
-    float cValue = std::stof(getVariableValue(registerName, buffer));
-    LOG(INFO) << BOLDMAGENTA << cValue << " " << registerName << RESET;
-    if((registerName.find("HV") != std::string::npos) & (registerName.find("Current") != std::string::npos)) { cValue *= 1e9; }
+    std::vector<std::string> seglist;
+    boost::split(seglist, registerName, boost::is_any_of("_"));
+    float cValue;
+
+    if((registerName.find("HV") != std::string::npos) & (registerName.find("Current") != std::string::npos))
+    {
+        std::string message = "GetCurrent,PowerSupplyId:" + seglist[0] + ",ChannelId:" + seglist[1] + "_" + seglist[2];
+        LOG(INFO) << BOLDMAGENTA << message << RESET;
+        std::string current = fPowerSupplyClient->sendAndReceivePacket(message);
+
+        cValue = std::stof(current);
+        LOG(INFO) << BOLDMAGENTA << registerName << " " << cValue << RESET;
+
+        cValue *= 1e9;
+    }
+    else
+    {
+        std::string message = "GetVoltage,PowerSupplyId:" + seglist[0] + ",ChannelId:" + seglist[1] + "_" + seglist[2];
+        LOG(INFO) << BOLDMAGENTA << message << RESET;
+        std::string voltage = fPowerSupplyClient->sendAndReceivePacket(message);
+        cValue              = std::stof(voltage);
+        LOG(INFO) << BOLDMAGENTA << registerName << " " << cValue << RESET;
+    }
     DetectorDataContainer thePowerSupplyContainer;
     ContainerFactory::copyAndInitDetector<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, thePowerSupplyContainer);
     thePowerSupplyContainer.getSummary<ValueAndTime<float>>() = ValueAndTime<float>(cValue, getTimeStamp());
@@ -124,7 +135,7 @@ void SEHMonitor::runPowerSupplyMonitor(std::string registerName)
 #endif
 }
 
-void SEHMonitor::runTestCardMonitor(std::string registerName)
+void SEHMonitor::runTestCardMonitor(const std::string& registerName)
 {
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement " << registerName << RESET;
     float cValue = 0;
@@ -147,12 +158,12 @@ void SEHMonitor::runTestCardMonitor(std::string registerName)
 #endif
 }
 
-void SEHMonitor::runInputCurrentMonitor(std::string registerName)
+void SEHMonitor::runInputCurrentMonitor(const std::string& registerName)
 {
     LOG(INFO) << BOLDMAGENTA << "Running Input Current Monitor" << RESET;
 
     DetectorDataContainer theLpGBTRegisterContainer;
-    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<uint16_t>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
+    ContainerFactory::copyAndInitOpticalGroup<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theLpGBTRegisterContainer);
 
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
@@ -163,13 +174,13 @@ void SEHMonitor::runInputCurrentMonitor(std::string registerName)
             LOG(INFO) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - "
                       << "ADC1"
                       << " = " << registerValue << RESET;
-            // theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<uint16_t>>() = ValueAndTime<uint16_t>(registerValue, getTimeStamp());
+            // theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStamp());
         }
     }
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement" << RESET;
 }
 
-std::string SEHMonitor::getVariableValue(std::string variable, std::string buffer)
+std::string SEHMonitor::getVariableValue(const std::string& variable, const std::string& buffer)
 {
     size_t begin = buffer.find(variable) + variable.size() + 1;
     size_t end   = buffer.find(',', begin);

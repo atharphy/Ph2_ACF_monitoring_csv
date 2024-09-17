@@ -57,7 +57,7 @@ class MPA2Interface : public ReadoutChipInterface
 
     int32_t                                       ReadChipReg(Ph2_HwDescription::Chip* pMPA, const std::string& pRegName) override;
     std::vector<std::pair<std::string, uint16_t>> ReadChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::string>& theRegisterList) override;
-    uint32_t                                      ReadChipFuseID(Ph2_HwDescription::Chip* pMPA2) override;
+    uint32_t                                      ReadChipFuseID(Ph2_HwDescription::Chip* pMPA2, uint8_t version = 1) override;
 
     void producePhaseAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip, uint8_t pWait_ms = 10) override;
     void produceWordAlignmentPattern(Ph2_HwDescription::ReadoutChip* pChip) override;

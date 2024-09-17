@@ -245,7 +245,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
         LOG(WARNING) << BOLDBLUE << "\t--> Proceeding with the hardcoded path: " << BOLDYELLOW << configFilePathCSV << RESET;
     }
 
-    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), this->ReadChipID(static_cast<lpGBT*>(pChip), 1), configFilePathCSV);
+    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), this->ReadChipFuseID(static_cast<lpGBT*>(pChip), cChipVersion), configFilePathCSV);
     lpGBTInterface::EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
     lpGBTInterface::TuneVrefControlLib(static_cast<lpGBT*>(pChip));
     lpGBTInterface::AutoTuneVref(static_cast<lpGBT*>(pChip));
@@ -276,11 +276,7 @@ void RD53lpGBTInterface::SetUpLinkMapping(const OpticalGroup* pOpticalGroup)
 
     for(const auto cHybrid: *pOpticalGroup)
         for(const auto cChip: *cHybrid)
-        {
-            auto pChip = static_cast<RD53*>(cChip);
-            // static_cast<RD53FWInterface*>(fBoardFW)->SetUpLinkMapping(pOpticalGroup->getOpticalGroupId(), pChip->getRxGroupsChipLanes(), cHybrid->getId(), pChip->getChipLane());
-            static_cast<RD53FWInterface*>(fBoardFW)->SetUpLinkMapping(pOpticalGroup->getOpticalGroupId(), pChip->getRxGroupsChipLanes(), cHybrid->getId());
-        }
+            static_cast<RD53FWInterface*>(fBoardFW)->SetUpLinkMapping(pOpticalGroup->getOpticalGroupId(), static_cast<RD53*>(cChip)->getRxGroupsChipLanes(), cHybrid->getId());
 }
 
 void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)

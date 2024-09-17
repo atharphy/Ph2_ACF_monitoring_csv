@@ -137,7 +137,10 @@ std::map<std::string, RD53::SpecialRegInfo> RD53B::specialRegMap = {{"CDR_CONFIG
 
                                                                     {"ManualChoice", {"PhaseDetectorConfig", 0}},
                                                                     {"ManualMode", {"PhaseDetectorConfig", 1}},
-                                                                    {"FixedMode", {"PhaseDetectorConfig", 5}}};
+                                                                    {"FixedMode", {"PhaseDetectorConfig", 5}},
+
+                                                                    {"ChipIdWireBonds", {"PadReadout", 0}},
+                                                                    {"IrefWireBonds", {"PadReadout", 4}}};
 
 RD53B::RD53B(const FrontEndType& frontEndType,
              uint8_t             pBeId,
@@ -146,9 +149,10 @@ RD53B::RD53B(const FrontEndType& frontEndType,
              uint8_t             pHybridId,
              uint8_t             pRD53Id,
              uint8_t             pRD53Lane,
+             int64_t             pRD53eFuseCode,
              const std::string&  fileName,
              const std::string&  cfgComment)
-    : RD53(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id, pRD53Lane, fileName, cfgComment)
+    : RD53(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id, pRD53Lane, pRD53eFuseCode, fileName, cfgComment)
 {
     ReadoutChip::fChipOriginalMask = std::make_shared<RD53ChannelGroup>(RD53B::NROWS, RD53B::NCOLS, true);
     RD53::loadfRegMap(fileName);

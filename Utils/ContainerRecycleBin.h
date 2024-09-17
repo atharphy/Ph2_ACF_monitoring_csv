@@ -48,7 +48,7 @@ class ContainerRecycleBin
         {
             DetectorDataContainer* availableContainer = fRecycleBin.back();
             fRecycleBin.pop_back();
-            ContainerFactory::reinitializeContainer<Args...>(availableContainer, theInitArguments...);
+            ContainerFactory::reinitializeContainer<Args...>(*availableContainer, theInitArguments...);
             return availableContainer;
         }
     }

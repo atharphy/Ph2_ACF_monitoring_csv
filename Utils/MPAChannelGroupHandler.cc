@@ -1,22 +1,10 @@
 #include "Utils/MPAChannelGroupHandler.h"
+#include "HWDescription/Definition.h"
 
-// MPAChannelGroupHandler::MPAChannelGroupHandler()
-// {
-//     allChannelGroup_     = new ChannelGroup<NMPAROWS, NSSACHANNELS>();
-//     currentChannelGroup_ = new ChannelGroup<NMPAROWS, NSSACHANNELS>();
-// }
-
-// MPAChannelGroupHandler::~MPAChannelGroupHandler()
-// {
-//     delete allChannelGroup_;
-//     delete currentChannelGroup_;
-// }
 MPAChannelGroupHandler::MPAChannelGroupHandler()
 {
     allChannelGroup_     = std::make_shared<ChannelGroup<NMPAROWS, NSSACHANNELS>>();
     currentChannelGroup_ = std::make_shared<ChannelGroup<NMPAROWS, NSSACHANNELS>>();
-
-    allChannelGroup_->enableAllChannels();
 }
 
 MPAChannelGroupHandler::MPAChannelGroupHandler(std::bitset<NSSACHANNELS * NMPAROWS>&& inputChannelsBitset)

@@ -122,7 +122,7 @@ std::vector<std::pair<std::string, uint16_t>> VTRxInterface::ReadChipMultReg(Ph2
     return theRegisterValues;
 }
 
-uint32_t VTRxInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip)
+uint32_t VTRxInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip, uint8_t version)
 {
     std::vector<std::string> theIdRegisterList;
     uint8_t                  numberOfRegisters = 4;

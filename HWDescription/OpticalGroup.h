@@ -71,11 +71,9 @@ class OpticalGroup
         fStubLatency      = pCnfg.second;
     }
 
-    void addNTC(std::string cNTCType, std::string cNTCADC, std::string cNTCLookUpTable) { fNTCMap.insert(std::make_pair(cNTCType, std::make_pair(cNTCADC, cNTCLookUpTable))); }
+    void addNTC(std::string cNTCType, std::string cNTCADC) { fNTCMap.insert(std::make_pair(cNTCType, cNTCADC)); }
 
-    std::map<std::string, std::pair<std::string, std::string>> getNTCMap() const { return fNTCMap; }
-
-    std::map<std::string, std::pair<std::string, std::string>> fNTCMap;
+    std::map<std::string, std::string> getNTCMap() const { return fNTCMap; }
 
     std::map<uint8_t, std::vector<uint8_t>>                            getLpGBTrxGroupsAndChannels() const;
     std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> getLpGBTrxGroupsAndChannelsPerHybrid() const;
@@ -88,6 +86,7 @@ class OpticalGroup
   private:
     static std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> f2SgroupsAndChannelToCIClineMap;
     static std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> fPSgroupsAndChannelToCIClineMap;
+    std::map<std::string, std::string>                                        fNTCMap;
 };
 } // namespace Ph2_HwDescription
 

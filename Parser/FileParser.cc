@@ -10,6 +10,7 @@
 #include "HWDescription/VTRx.h"
 #include "HWDescription/lpGBT.h"
 #include "Parser/ParserDefinitions.h"
+#include "Utils/NTChandler.h"
 #include "Utils/Utilities.h"
 
 using namespace Ph2_HwDescription;
@@ -346,10 +347,11 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
         }
         else if(static_cast<std::string>(theChild.name()) == NTCPROPERTIES_NODE_NAME)
         {
-            std::string cNTCType        = std::string(theChild.attribute(NTCPROPERTIES_TYPE_ATTRIBUTE_NAME).value());
-            std::string cNTCADC         = std::string(theChild.attribute(NTCPROPERTIES_ADC_ATTRIBUTE_NAME).value());
-            std::string cNTCLookUpTable = expandEnvironmentVariables(std::string(theChild.attribute(NTCPROPERTIES_LOOKUPTABLE_ATTRIBUTE_NAME).value()));
-            theOpticalGroup->addNTC(cNTCType, cNTCADC, cNTCLookUpTable);
+            std::string cNTCType          = std::string(theChild.attribute(NTCPROPERTIES_TYPE_ATTRIBUTE_NAME).value());
+            std::string cNTCADC           = std::string(theChild.attribute(NTCPROPERTIES_ADC_ATTRIBUTE_NAME).value());
+            std::string cNTCTableFileName = expandEnvironmentVariables(std::string(theChild.attribute(NTCPROPERTIES_LOOKUPTABLE_ATTRIBUTE_NAME).value()));
+            theOpticalGroup->addNTC(cNTCType, cNTCADC);
+            NTChandler::getInstance().addNTCtable(cNTCType, cNTCTableFileName);
         }
     }
 }
@@ -507,14 +509,9 @@ void FileParser::parseSSA2Container(pugi::xml_node pSSAnode, Hybrid* pHybrid, st
     cSSA2->setMasterId(pHybrid->getMasterId());
 
     if(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cSSA2->setAverageNoise(pSSAnode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
-    if(pSSAnode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME) && pSSAnode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME))
-    {
-        std::map<std::string, float> theADCcalibration;
-        theADCcalibration["ADC_SLOPE"]  = pSSAnode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME).as_float();
-        theADCcalibration["ADC_OFFSET"] = pSSAnode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME).as_float();
+    if(pSSAnode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)) { cSSA2->setAveragePedestal(pSSAnode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME).as_float()); }
 
-        cSSA2->setADCCalibrationMap(theADCcalibration);
-    }
+    setChipADCParameters(pSSAnode, cSSA2);
 }
 
 void FileParser::parseSSA2Settings(pugi::xml_node pHybridNode, Ph2_HwDescription::Hybrid* pHybrid, std::ostream& os)
@@ -660,14 +657,9 @@ void FileParser::parseMPA2Container(pugi::xml_node pMPANode, Hybrid* pHybrid, st
     cMPA->setMasterId(pHybrid->getMasterId());
 
     if(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cMPA->setAverageNoise(pMPANode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
-    if(pMPANode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME) && pMPANode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME))
-    {
-        std::map<std::string, float> theADCcalibration;
-        theADCcalibration["ADC_SLOPE"]  = pMPANode.attribute(CHIP_SLOPE_ATTRIBUTE_NAME).as_float();
-        theADCcalibration["ADC_OFFSET"] = pMPANode.attribute(CHIP_OFFSET_ATTRIBUTE_NAME).as_float();
+    if(pMPANode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)) { cMPA->setAveragePedestal(pMPANode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME).as_float()); }
 
-        cMPA->setADCCalibrationMap(theADCcalibration);
-    }
+    setChipADCParameters(pMPANode, cMPA);
 
     os << BOLDCYAN << "|"
        << "  "
@@ -1214,6 +1206,7 @@ void FileParser::parseCbcContainer(pugi::xml_node pCbcNode, Hybrid* cHybrid, std
     cCbc->setMasterId(cHybrid->getMasterId());
 
     if(pCbcNode.attribute(CHIP_NOISE_ATTRIBUTE_NAME)) { cCbc->setAverageNoise(pCbcNode.attribute(CHIP_NOISE_ATTRIBUTE_NAME).as_float()); }
+    if(pCbcNode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)) { cCbc->setAveragePedestal(pCbcNode.attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME).as_float()); }
 
     os << BOLDCYAN << "|"
        << "  "
@@ -1448,7 +1441,8 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
                                                   "OTinjectionOccupancyScan_ListOfInjectedPulses",
                                                   "OTMPAtoCICecv_ListOfMPAslvsCurrents",
                                                   "OTSSAtoMPAecv_ListOfSSAslvsCurrents",
-                                                  "OTSSAtoSSAecv_ListOfSSAslvsCurrents"};
+                                                  "OTSSAtoSSAecv_ListOfSSAslvsCurrents",
+                                                  "OTCBCtoCICecv_ListOfCBCslvsCurrents"};
     pugi::xml_document       doc;
     openHWconfig(pFilename, doc);
 
@@ -1520,7 +1514,8 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             // ################################################################################
             // # Retrieve links, groups, channels and polarities and propagate to LpGBT class #
             // ################################################################################
-            for(auto RxGroup: cRxGroups) pLpGBT->addRxProperty(RxGroup, cRxChannel, cRxPolarity);
+            for(auto RxGroup: cRxGroups)
+                if(RxGroup != 0) pLpGBT->addRxProperty(RxGroup, cRxChannel, cRxPolarity);
             pLpGBT->addTxProperty(cTxGroup, cTxChannel, cTxPolarity);
 
             // ###################################################################
@@ -1554,7 +1549,8 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
 
     const uint32_t    chipId      = theChipNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
     const uint32_t    chipLane    = theChipNode.attribute("Lane").as_uint();
-    const std::string cRxGroups   = theChipNode.attribute("RxGroups").as_string();
+    const int64_t     eFuseCode   = (theChipNode.attribute("eFuseCode") ? theChipNode.attribute("eFuseCode").as_uint() : 0);
+    const std::string cRxGroups   = theChipNode.attribute("RxGroups").as_string("0000");
     const uint8_t     cRxChannel  = (theChipNode.attribute("RxChannel") ? theChipNode.attribute("RxChannel").as_uint() : 0);
     const uint8_t     cRxPolarity = theChipNode.attribute("RxPolarity").as_uint();
     const uint8_t     cTxGroup    = theChipNode.attribute("TxGroup").as_uint();
@@ -1562,17 +1558,18 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
     const uint8_t     cTxPolarity = theChipNode.attribute("TxPolarity").as_uint();
     const std::string cfgComment  = theChipNode.attribute("Comment").as_string();
 
-    os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << chipId << BOLDBLUE << ", Lane: " << BOLDYELLOW << chipLane << BOLDBLUE << ", File: " << BOLDYELLOW
-       << cFileName << BOLDBLUE << ", RxGroups: " << BOLDYELLOW << cRxGroups << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel << BOLDBLUE << ", RxPolarity: " << BOLDYELLOW << +cRxPolarity
-       << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << BOLDBLUE << ", TxPolarity: " << BOLDYELLOW << +cTxPolarity << BOLDBLUE
-       << ", Comment: " << BOLDYELLOW << cfgComment << RESET << std::endl;
+    os << BOLDBLUE << "|\t|\t|----" << theChipNode.name() << " --> Id: " << BOLDYELLOW << chipId << BOLDBLUE << ", Lane: " << BOLDYELLOW << chipLane << BOLDBLUE << ", eFuseCode: " << BOLDYELLOW
+       << eFuseCode << BOLDBLUE << ", File: " << BOLDYELLOW << cFileName << BOLDBLUE << ", RxGroups: " << BOLDYELLOW << cRxGroups << BOLDBLUE << ", RxChannel: " << BOLDYELLOW << +cRxChannel
+       << BOLDBLUE << ", RxPolarity: " << BOLDYELLOW << +cRxPolarity << BOLDBLUE << ", TxGroup: " << BOLDYELLOW << +cTxGroup << BOLDBLUE << ", TxChannel: " << BOLDYELLOW << +cTxChannel << BOLDBLUE
+       << ", TxPolarity: " << BOLDYELLOW << +cTxPolarity << BOLDBLUE << ", Comment: " << BOLDYELLOW << cfgComment << RESET << std::endl;
 
     ReadoutChip* theChip;
     if(frontEndType == FrontEndType::RD53A)
-        theChip = cHybrid->addChipContainer(chipId, new RD53A(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+        theChip = cHybrid->addChipContainer(
+            chipId, new RD53A(cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, eFuseCode, cFileName, cfgComment));
     else
         theChip = cHybrid->addChipContainer(
-            chipId, new RD53B(frontEndType, cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, cFileName, cfgComment));
+            chipId, new RD53B(frontEndType, cHybrid->getBeBoardId(), cHybrid->getFMCId(), cHybrid->getOpticalGroupId(), cHybrid->getId(), chipId, chipLane, eFuseCode, cFileName, cfgComment));
     theChip->setNumberOfChannels(static_cast<RD53*>(theChip)->getNRows(), static_cast<RD53*>(theChip)->getNCols());
 
     parseRD53Settings(theChipNode, theChip, os);
@@ -1763,6 +1760,14 @@ void FileParser::parseLpGBTphasesForBypass(pugi::xml_node lpgbtPhasesForBypassNo
             theCic->setLpGBTphaseForCICbypass(phyPort, stubLine, convertAnyInt(theStubAttribute.value()));
         }
     }
+}
+
+void FileParser::setChipADCParameters(pugi::xml_node pChipNode, Ph2_HwDescription::ReadoutChip* cChip)
+{
+    if(pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("ADC_SLOPE", pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("ADC_OFFSET", pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("TEMP_SLOPE", pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("TEMP_OFFSET", pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME).as_float());
 }
 
 } // namespace Ph2_Parser

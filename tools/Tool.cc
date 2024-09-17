@@ -195,6 +195,34 @@ void Tool::Start(const StartInfo& theStartInfo)
 //     wakeUp.notify_one();
 // }
 
+void Tool::readBitslipRegs()
+{
+    auto getRegisterName = [](const std::string& type, size_t linkNumber, size_t hybridId)
+    {
+        std::stringstream registerNameStream;
+        registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.link" << std::uppercase << linkNumber << "_hybrid" << hybridId << "_" << type << "_bitslip" << std::dec;
+        return registerNameStream.str();
+    };
+
+    std::vector<std::pair<std::string, uint32_t>> alignedBitslipRegisters;
+    for(size_t linkNumber = 0; linkNumber < 12; ++linkNumber)
+    {
+        for(size_t hybridId = 0; hybridId < 2; ++hybridId)
+        {
+            alignedBitslipRegisters.push_back({getRegisterName("stub", linkNumber, hybridId), 0xFFFFFFFF});
+            alignedBitslipRegisters.push_back({getRegisterName("L1A", linkNumber, hybridId), 0xFFFFFFFF});
+        }
+    }
+
+    // Reading all bitslip registers
+    fBeBoardInterface->ReadBoardMultReg(fDetectorContainer->getFirstObject(), alignedBitslipRegisters);
+
+    for(const auto& registerNameAndValue: alignedBitslipRegisters)
+    {
+        std::cout << "Reading  " << registerNameAndValue.first << " = 0x" << std::hex << registerNameAndValue.second << std::dec << std::endl;
+    }
+}
+
 void Tool::Stop()
 {
     if(Tool::fKeepRunning == true)
@@ -214,8 +242,8 @@ void Tool::Stop()
         {
             throw std::runtime_error(e.what());
         }
-        SystemController::Stop();
 
+        SystemController::Stop();
         Tool::dumpConfigFiles();
         if(fMetadataHandler != nullptr) fMetadataHandler->fillFinalConditions();
 
@@ -1312,7 +1340,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
             setAllGlobalDacBeBoard(boardId, dacName, *currentDacList);
 
         Occupancy noOccupancy;
-        ContainerFactory::reinitializeContainer(currentStepOccupancyContainer, noOccupancy);
+        ContainerFactory::reinitializeContainer(*currentStepOccupancyContainer, noOccupancy);
         fDetectorDataContainer = currentStepOccupancyContainer;
         measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
         // TO-DO.. generalize so that I don't need the MPA/SSA
@@ -1566,7 +1594,7 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
             setAllGlobalDacBeBoard(boardId, dacName, *currentDacList);
 
         Occupancy noOccupancy;
-        ContainerFactory::reinitializeContainer(currentStepOccupancyContainer, noOccupancy);
+        ContainerFactory::reinitializeContainer(*currentStepOccupancyContainer, noOccupancy);
         fDetectorDataContainer = currentStepOccupancyContainer;
         measureBeBoardData(boardId, numberOfEvents, numberOfEventsPerBurst);
 
@@ -2313,7 +2341,7 @@ void Tool::setSameDac(const std::string& dacName, const uint16_t dacValue)
     for(auto cBoard: *fDetectorContainer) { setSameDacBeBoard(static_cast<BeBoard*>(cBoard), dacName, dacValue); }
 }
 
-std::string Tool::getCalibrationName(void)
+std::string Tool::getCalibrationName(void) const
 {
     int32_t     status;
     std::string className     = abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);

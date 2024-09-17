@@ -52,7 +52,7 @@ class SSA2Interface : public ReadoutChipInterface
     uint32_t readADCBandGap(Ph2_HwDescription::ReadoutChip* pSSA2);
     uint32_t readADCVref(Ph2_HwDescription::ReadoutChip* pSSA2);
     uint32_t readVrefRegister(Ph2_HwDescription::ReadoutChip* pSSA2);
-    uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pSSA2) override;
+    uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pSSA2, uint8_t version = 1) override;
     bool     setVrefFromFuseID(Ph2_HwDescription::ReadoutChip* pSSA2) override;
     bool     setVref(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t theVrefRegisterValue) override;
     float    calculateADCLSB(Ph2_HwDescription::ReadoutChip* pSSA2, float theVrefValue = SSA2_VREF_EXPECTED) override;
@@ -77,7 +77,7 @@ class SSA2Interface : public ReadoutChipInterface
     const std::map<std::string, uint8_t> SSA2_ADC_CONTROL_TABLE = {
         {"highimpedence", 0}, {"Bias_D5BFEED", 1},   {"Bias_D5PREAMP", 2}, {"Bias_D5TDR", 3}, {"Bias_D5ALLV", 4}, {"Bias_D5ALLI", 5}, {"Bias_CALDAC", 6}, {"Bias_BOOSTERBASELINE", 7},
         {"Bias_THDAC", 8},    {"Bias_THDACHIGH", 9}, {"Bias_D5DAC8", 10},  {"VBG", 11},       {"GND", 12},        {"ADC_IREF", 13},   {"ADC_VREF", 14},   {"TESTPAD", 15},
-        {"Temperature", 16},  {"AVDD", 17},          {"PVDD", 18},         {"DVDD", 19}};
+        {"temperature", 16},  {"AVDD", 17},          {"PVDD", 18},         {"DVDD", 19}};
 
     // Map of the bias structure registers
     // < register name , <default register value (DAC) , expected value in V on the test pad>

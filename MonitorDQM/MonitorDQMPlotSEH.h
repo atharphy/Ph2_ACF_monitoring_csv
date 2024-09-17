@@ -61,7 +61,7 @@ class MonitorDQMPlotSEH : public MonitorDQMPlotBase
      * \param theCBCRegisterContainer : Container with the hits you want to plot
      * \param timeStamp : timeStamp
      */
-    // void fillLpGBTRegisterPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
+    // void fillLpGBTmonitorPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
     void fillPowerSupplyPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
     void fillTestCardPlots(DetectorDataContainer& theCBCRegisterContainer, const std::string& registerName);
 

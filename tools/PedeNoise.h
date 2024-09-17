@@ -84,7 +84,7 @@ class PedeNoise : public Tool
 
   private:
     // to hold the original register values
-    std::vector<EventType> fEventTypes;
+    DetectorDataContainer  fEventTypes;
     DetectorDataContainer* fStubLogicValue;
     DetectorDataContainer* fHIPCountValue;
     DetectorDataContainer  fBoardRegContainer;
