@@ -139,7 +139,8 @@ void DQMHistogramOTCICtoLpGBTecv::fillEfficiency(uint8_t                pClockSt
         {
             for(auto theHybrid: *opticalGroup)
             {
-                auto efficiencies = theEfficiencyContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
+                if(!theHybrid->hasSummary()) continue;
+                auto efficiencies = theHybrid->getSummary<std::vector<float>>();
 
                 // Select the correct histogram given the pClockPolarity and the pCicStrength
                 uint8_t CICStrengthPolarityCombination = (pCicStrength * 10) + pClockPolarity;
