@@ -130,7 +130,7 @@ void OTCICtoLpGBTecv::runECV()
         auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
         for(auto theOpticalGroup: *theBoard)
         {
-            for(auto clockPolarity: fListOfClockPolarity)
+            for(uint8_t clockPolarity: fListOfClockPolarity)
             {
                 LOG(INFO) << BOLDMAGENTA << "CLOCK POLARITY: " << +clockPolarity << RESET;
                 for(auto clockStrength: fListOfClockStrength)
@@ -143,7 +143,7 @@ void OTCICtoLpGBTecv::runECV()
                         LOG(INFO) << BOLDYELLOW << "Attention! ignoring failures on right hybrid CIC line 4 due to bug in kickoff SEH!" << RESET;
                     size_t cNlines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
 
-                    for(auto cicStrength: fListOfCICStrength)
+                    for(uint8_t cicStrength: fListOfCICStrength)
                     {
                         LOG(INFO) << BOLDMAGENTA << "        CIC STRENGTH: " << +cicStrength << RESET;
                         for(auto cHybrid: *theOpticalGroup)
