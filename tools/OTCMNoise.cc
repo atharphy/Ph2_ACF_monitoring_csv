@@ -285,22 +285,14 @@ void OTCMNoise::TakeData()
         cStreamableMap["OTCMNoiseModuleHitStream"]                 = &theModuleHitContainer;
         cStreamableMap["OTCMNoise2DHybridCorrelationStream"]       = &the2DHybridCorrelationContainer;
         cStreamableMap["OTCMNoise2DSensorModuleCorrelationStream"] = &the2DSensorModuleCorrelationContainer;
-        // cStreamableMap["OTCMNoise2DSensorHybridCorrelationStream"]     = &the2DSensorHybridCorrelationContainer; //Ignoring, causes a crash
-        cStreamableMap["OTCMNoise2DSensorChipCorrelationStream"] = &the2DSensorChipCorrelationContainer;
+        cStreamableMap["OTCMNoise2DSensorHybridCorrelationStream"] = &the2DSensorHybridCorrelationContainer;
+        cStreamableMap["OTCMNoise2DSensorChipCorrelationStream"]   = &the2DSensorChipCorrelationContainer;
 
         for(auto cStreamable: cStreamableMap)
         {
-            try
-            {
-                LOG(DEBUG) << "Streaming " << cStreamable.first << RESET;
-                ContainerSerialization theHitSerializationSum(cStreamable.first);
-                theHitSerializationSum.streamByOpticalGroupContainer(fDQMStreamer, *(cStreamable.second));
-            }
-            catch(const std::exception& e) // reference to the base of a polymorphic object
-            {
-                LOG(INFO) << BOLDRED << " Unable to serialize " << cStreamable.first << RESET;
-                LOG(INFO) << e.what() << RESET;
-            }
+            LOG(INFO) << "Streaming " << cStreamable.first << RESET;
+            ContainerSerialization theHitSerializationSum(cStreamable.first);
+            theHitSerializationSum.streamByOpticalGroupContainer(fDQMStreamer, *(cStreamable.second));
         }
 
         if(f2DHistograms)
