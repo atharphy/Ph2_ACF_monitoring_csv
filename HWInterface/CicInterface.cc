@@ -130,7 +130,7 @@ uint32_t CicInterface::ReadChipFuseID(Chip* pCic, uint8_t version)
     this->WriteChipReg(pCic, "EFUSEMODE", 0x0);
 
     uint32_t val =
-        (this->ReadChipReg(pCic, "EfuseValue3") << 24) | (this->ReadChipReg(pCic, "EfuseValue2") << 16) | (this->ReadChipReg(pCic, "EfuseValue1") << 8) | (this->ReadChipReg(pCic, "EfuseValue0") << 0);
+        (this->ReadChipReg(pCic, "EfuseValue0") << 24) | (this->ReadChipReg(pCic, "EfuseValue1") << 16) | (this->ReadChipReg(pCic, "EfuseValue2") << 8) | (this->ReadChipReg(pCic, "EfuseValue3") << 0);
     // pCic->pChipFuseID.SetId(val);
 
     LOG(INFO) << BOLDYELLOW << "FuseID from CIC2 " << +val << " LOT " << +(int)val / (int)1e7 << " Wafer " << +(int)(val % (int)1e7) / (int)1e4 << " RETICLE " << +(int)(val % (int)1e4) / 10 << " DIE "
