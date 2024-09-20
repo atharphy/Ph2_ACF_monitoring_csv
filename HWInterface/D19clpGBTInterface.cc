@@ -14,8 +14,8 @@
 #include <chrono>
 #include <cstring>
 #include <fstream>
-#include <regex>
 #include <iostream>
+#include <regex>
 #include <thread>
 #include <unordered_map>
 
@@ -31,7 +31,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pChip->getId() << "] , Version[" << +cChipVersion << "]" << RESET;
     PrintChipMode(pChip);
-    
+
     // Waiting for at least PauseForDllConfig state before configuring chip. If state beyond, then I can still configure
     uint16_t cIter = 0, cMaxIter = 200;
     for(auto& ele: fPUSMStatusMap[cChipVersion]) revertedPUSMStatusMap[ele.second] = ele.first;
@@ -47,7 +47,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
     cRegVec.clear();
-    
+
     for(const auto& cRegItem: clpGBTRegMap)
     {
         bool isFreeRegister = false;

@@ -201,9 +201,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord>("exttriggerotlatency");
 
-    Register<DQMMetadataOT,
-             DQMHistogramOTalignBoardDataWord,
-             DQMHistogramOTCMNoise>("commonNoise2S");
+    Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCMNoise>("commonNoise2S");
 
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
