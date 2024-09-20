@@ -97,7 +97,7 @@ void OTMPAtoCICecv::runElectricChainValidation()
 
     auto thePSinterface = static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface;
 
-    for(auto slvsCurrent: fListOfMPAslvsCurrents)
+    for(uint8_t slvsCurrent: fListOfMPAslvsCurrents)
     {
         LOG(INFO) << BOLDGREEN << "    Measuring slvs current " << +slvsCurrent << RESET;
         for(auto theBoard: *fDetectorContainer)

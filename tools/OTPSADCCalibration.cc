@@ -58,9 +58,9 @@ void OTPSADCCalibration::CalibrateBias()
     DetectorDataContainer theADCSlopeContainer;
     ContainerFactory::copyAndInitChip<ADCSlope>(*fDetectorContainer, theADCSlopeContainer);
     DetectorDataContainer theAVDDContainer;
-    ContainerFactory::copyAndInitChip<std::pair<uint32_t, float>>(*fDetectorContainer, theAVDDContainer);
+    ContainerFactory::copyAndInitChip<std::pair<uint8_t, float>>(*fDetectorContainer, theAVDDContainer);
     DetectorDataContainer theDVDDContainer;
-    ContainerFactory::copyAndInitChip<std::pair<uint32_t, float>>(*fDetectorContainer, theDVDDContainer);
+    ContainerFactory::copyAndInitChip<std::pair<uint8_t, float>>(*fDetectorContainer, theDVDDContainer);
 
     for(const auto theBoard: *fDetectorContainer)
     {

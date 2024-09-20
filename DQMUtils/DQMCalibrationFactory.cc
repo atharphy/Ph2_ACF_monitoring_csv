@@ -201,16 +201,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord>("exttriggerotlatency");
 
-    Register<DQMMetadataOT,
-             DQMHistogramOTalignLpGBTinputs,
-             DQMHistogramOTalignBoardDataWord,
-             DQMHistogramOTverifyBoardDataWord,
-             DQMHistogramOTalignStubPackage,
-             DQMHistogramOTCICphaseAlignment,
-             DQMHistogramOTCICwordAlignment,
-             DQMHistogramPedestalEqualization,
-             DQMHistogramPedeNoise,
-             DQMHistogramOTCMNoise>("commonNoise2S");
+    Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCMNoise>("commonNoise2S");
 
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
@@ -275,6 +266,16 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCBCtoCICecv>("2Secv");
 
     // PS specific calibrations
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTVTRxLightYieldScan,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTPSringOscillatorTest,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramPedeNoise>("PSskeletonTest");
 
     Register<DQMMetadataOT,
              DQMHistogramOTVTRxLightYieldScan,

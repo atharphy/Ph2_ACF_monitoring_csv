@@ -241,6 +241,9 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     // PS specific calibrations
 
+    Register<TuneLpGBTVref, OTVTRxLightYieldScan, OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTPSringOscillatorTest, PedestalEqualization, PedeNoise>(
+        "PS Module", "PSskeletonTest");
+
     Register<TuneLpGBTVref,
              OTVTRxLightYieldScan,
              OTalignLpGBTinputs,
