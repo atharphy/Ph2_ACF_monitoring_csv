@@ -12,6 +12,7 @@
 #include "DQMUtils/DQMHistogramOTCICwordAlignment.h"
 #include "DQMUtils/DQMHistogramOTCMNoise.h"
 #include "DQMUtils/DQMHistogramOTCicBypassTest.h"
+#include "DQMUtils/DQMHistogramOTLpGBTEyeOpeningTest.h"
 #include "DQMUtils/DQMHistogramOTMPAtoCICecv.h"
 #include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
 #include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
@@ -49,7 +50,6 @@
 #include "DQMUtils/RD53ThrEqualizationHistograms.h"
 #include "DQMUtils/RD53ThresholdHistograms.h"
 #include "DQMUtils/RD53VoltageTuningHistograms.h"
-#include "DQMUtils/DQMHistogramOTLpGBTEyeOpeningTest.h"
 
 using namespace MessageUtils;
 
@@ -220,7 +220,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMMetadata, DQMHistogramOTBitErrorRateTest>("bert");
 
     Register<DQMMetadataOT, DQMHistogramOTLpGBTEyeOpeningTest>("eyeOpening");
-    
+
     // 2S specific calibrations
 
     Register<DQMMetadataOT,

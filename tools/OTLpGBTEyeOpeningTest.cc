@@ -18,16 +18,13 @@ void OTLpGBTEyeOpeningTest::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTLpGBTEyeOpeningTest.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 }
 
-void OTLpGBTEyeOpeningTest::ConfigureCalibration()
-{
-
-}
+void OTLpGBTEyeOpeningTest::ConfigureCalibration() {}
 
 void OTLpGBTEyeOpeningTest::Running()
 {
@@ -41,40 +38,28 @@ void OTLpGBTEyeOpeningTest::Running()
 void OTLpGBTEyeOpeningTest::Stop(void)
 {
     LOG(INFO) << "Stopping OTLpGBTEyeOpeningTest measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTLpGBTEyeOpeningTest.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTLpGBTEyeOpeningTest.process();
+#endif
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTLpGBTEyeOpeningTest stopped.";
 }
 
-void OTLpGBTEyeOpeningTest::Pause()
-{
+void OTLpGBTEyeOpeningTest::Pause() {}
 
-}
+void OTLpGBTEyeOpeningTest::Resume() {}
 
-
-void OTLpGBTEyeOpeningTest::Resume()
-{
-
-}
-
-
-void OTLpGBTEyeOpeningTest::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTLpGBTEyeOpeningTest::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTLpGBTEyeOpeningTest::runEyeOpeningTest()
 {
     uint8_t pEndOfCountSelect = 7;
-    uint8_t pEQAttenuation = 3;
+    uint8_t pEQAttenuation    = 3;
 
     DetectorDataContainer theEyeOpeningContainer;
     ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint16_t, 64, 31>>(*fDetectorContainer, theEyeOpeningContainer);
-
 
     for(auto theBoard: *fDetectorContainer)
     {
@@ -88,42 +73,34 @@ void OTLpGBTEyeOpeningTest::runEyeOpeningTest()
 
         for(uint8_t cVoltageStep = 0; cVoltageStep < 31; cVoltageStep++)
         {
-            for(auto theOpticalGroup: *theBoard)
-            {
-                flpGBTInterface->SelectEOMVof(theOpticalGroup->flpGBT, cVoltageStep);
-            }
+            for(auto theOpticalGroup: *theBoard) { flpGBTInterface->SelectEOMVof(theOpticalGroup->flpGBT, cVoltageStep); }
 
             for(uint8_t cTimeStep = 0; cTimeStep < 64; cTimeStep++)
             {
-                for(auto theOpticalGroup: *theBoard)
-                {
-                    flpGBTInterface->SelectEOMPhase(theOpticalGroup->flpGBT, cTimeStep);
-                }
+                for(auto theOpticalGroup: *theBoard) { flpGBTInterface->SelectEOMPhase(theOpticalGroup->flpGBT, cTimeStep); }
                 std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-                for(auto theOpticalGroup: *theBoard)
-                {
-                    flpGBTInterface->StartEOM(theOpticalGroup->flpGBT, true);
-                }
+                for(auto theOpticalGroup: *theBoard) { flpGBTInterface->StartEOM(theOpticalGroup->flpGBT, true); }
 
                 for(auto theOpticalGroup: *theBoard)
                 {
-                    auto& theEyeArray = theEyeOpeningContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<GenericDataArray<uint16_t, 64, 31>>();
-                    uint8_t cEOMStatus = flpGBTInterface->GetEOMStatus(theOpticalGroup->flpGBT);
-                    uint16_t numberOfAttempts = 0;
+                    auto&    theEyeArray            = theEyeOpeningContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<GenericDataArray<uint16_t, 64, 31>>();
+                    uint8_t  cEOMStatus             = flpGBTInterface->GetEOMStatus(theOpticalGroup->flpGBT);
+                    uint16_t numberOfAttempts       = 0;
                     uint16_t maximumAllowedAttempts = 10;
                     while((cEOMStatus & (0x1 << 1) >> 1) && !(cEOMStatus & (0x1 << 0)))
                     {
                         std::this_thread::sleep_for(std::chrono::milliseconds(1));
                         cEOMStatus = flpGBTInterface->GetEOMStatus(theOpticalGroup->flpGBT);
-                        if(numberOfAttempts++ > 10) break;;
+                        if(numberOfAttempts++ > 10) break;
+                        ;
                     }
                     if(numberOfAttempts == maximumAllowedAttempts)
                     {
                         theEyeArray[cTimeStep][cVoltageStep] = 0;
                         continue;
                     }
-                    uint16_t cCounterValue    = flpGBTInterface->GetEOMCounter(theOpticalGroup->flpGBT);
+                    uint16_t cCounterValue = flpGBTInterface->GetEOMCounter(theOpticalGroup->flpGBT);
                     flpGBTInterface->StartEOM(theOpticalGroup->flpGBT, false);
                     theEyeArray[cTimeStep][cVoltageStep] = cCounterValue;
                 }
@@ -140,5 +117,4 @@ void OTLpGBTEyeOpeningTest::runEyeOpeningTest()
         theEyeOpeningSerialization.streamByOpticalGroupContainer(fDQMStreamer, theEyeOpeningContainer);
     }
 #endif
-
 }

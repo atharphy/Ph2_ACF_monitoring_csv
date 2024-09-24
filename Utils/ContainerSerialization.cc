@@ -110,6 +110,8 @@ BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint3
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>)))
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint16_t, 64, 31>>)))
+BOOST_CLASS_EXPORT_IMPLEMENT(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint16_t, 64, 31>, EmptyContainer>)))
 
 ContainerSerialization::ContainerSerialization(const std::string& calibrationName) : fCalibrationName(calibrationName) {}
 

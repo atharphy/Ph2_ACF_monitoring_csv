@@ -130,6 +130,8 @@ BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, (
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>, EmptyContainer>)))
 BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<EmptyContainer, GenericDataArray<uint16_t, 64, 31>>)))
+BOOST_CLASS_EXPORT_KEY(BOOST_IDENTITY_TYPE((Summary<GenericDataArray<uint16_t, 64, 31>, EmptyContainer>)))
 
 #include "Utils/Occupancy.h"
 #include <arpa/inet.h>

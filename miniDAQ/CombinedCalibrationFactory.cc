@@ -18,6 +18,7 @@
 #include "tools/OTCICwordAlignment.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTCicBypassTest.h"
+#include "tools/OTLpGBTEyeOpeningTest.h"
 #include "tools/OTMPAtoCICecv.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
@@ -57,7 +58,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/OTLpGBTEyeOpeningTest.h"
 
 using namespace MessageUtils;
 
@@ -246,8 +246,16 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     // PS specific calibrations
 
-    Register<TuneLpGBTVref, OTVTRxLightYieldScan, OTLpGBTEyeOpeningTest, OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTPSringOscillatorTest, PedestalEqualization, PedeNoise>(
-        "PS Module", "PSskeletonTest");
+    Register<TuneLpGBTVref,
+             OTVTRxLightYieldScan,
+             OTLpGBTEyeOpeningTest,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTPSringOscillatorTest,
+             PedestalEqualization,
+             PedeNoise>("PS Module", "PSskeletonTest");
 
     Register<TuneLpGBTVref,
              OTVTRxLightYieldScan,
