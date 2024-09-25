@@ -542,6 +542,8 @@
 
     <Setting name="OTCBCtoCICecv_NumberOfIterations"> 1000</Setting>
     <Setting name="OTCBCtoCICecv_ListOfCBCslvsCurrents"> 0, 8, 14</Setting>
+
+    <Setting name="OTLpGBTEyeOpeningTest_PowerList">1-3</Setting>
 </Settings>
 
 

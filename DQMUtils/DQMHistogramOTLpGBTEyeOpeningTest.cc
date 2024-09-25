@@ -24,27 +24,32 @@ void DQMHistogramOTLpGBTEyeOpeningTest::book(TFile* theOutputFile, DetectorConta
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
+    auto thePowerList = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTLpGBTEyeOpeningTest_PowerList", "1-3"));
+
     float numberOfTimePoints    = 64;
     float numberOfVoltagePoints = 31;
     float timeStepSize          = 6.1;
     float voltageStepSize       = 40.;
 
-    HistContainer<TH2I> theEyeOpeningHistogram("EyeOpeningScan",
-                                               "Eye Opening Scan",
-                                               numberOfTimePoints,
-                                               -(timeStepSize / 2),
-                                               (numberOfTimePoints - 0.5) * timeStepSize,
-                                               numberOfVoltagePoints,
-                                               -(voltageStepSize / 2),
-                                               (numberOfVoltagePoints - 0.5) * voltageStepSize);
-    theEyeOpeningHistogram.fTheHistogram->GetXaxis()->SetTitle("time [ps]");
-    theEyeOpeningHistogram.fTheHistogram->GetYaxis()->SetTitle("voltage [mV]");
-    theEyeOpeningHistogram.fTheHistogram->SetStats(false);
-    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fEyeOpeningHystogramContainer, theEyeOpeningHistogram);
+    for(auto thePower: thePowerList)
+    {
+        HistContainer<TH2I> theEyeOpeningHistogram(Form("EyeOpeningScan_power_%f", thePower / 3.),
+                                                   Form("Eye Opening Scan - power = %f", thePower / 3.),
+                                                   numberOfTimePoints,
+                                                   -(timeStepSize / 2),
+                                                   (numberOfTimePoints - 0.5) * timeStepSize,
+                                                   numberOfVoltagePoints,
+                                                   -(voltageStepSize / 2),
+                                                   (numberOfVoltagePoints - 0.5) * voltageStepSize);
+        theEyeOpeningHistogram.fTheHistogram->GetXaxis()->SetTitle("time [ps]");
+        theEyeOpeningHistogram.fTheHistogram->GetYaxis()->SetTitle("voltage [mV]");
+        theEyeOpeningHistogram.fTheHistogram->SetStats(false);
+        RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fEyeOpeningHystogramContainerMap[thePower], theEyeOpeningHistogram);
+    }
 }
 
 //========================================================================================================================
-void DQMHistogramOTLpGBTEyeOpeningTest::fillEyeOpening(DetectorDataContainer& theEyeOpeningContainer)
+void DQMHistogramOTLpGBTEyeOpeningTest::fillEyeOpening(DetectorDataContainer& theEyeOpeningContainer, float thePower)
 {
     for(auto theBoard: theEyeOpeningContainer)
     {
@@ -52,7 +57,7 @@ void DQMHistogramOTLpGBTEyeOpeningTest::fillEyeOpening(DetectorDataContainer& th
         {
             if(!theOpticalGroup->hasSummary()) continue;
             auto  theEyeArray            = theOpticalGroup->getSummary<GenericDataArray<uint16_t, 64, 31>>();
-            TH2I* theEyeOpeningHistogram = fEyeOpeningHystogramContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH2I>>().fTheHistogram;
+            TH2I* theEyeOpeningHistogram = fEyeOpeningHystogramContainerMap[thePower].getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH2I>>().fTheHistogram;
             for(uint8_t cVoltageStep = 0; cVoltageStep < 31; cVoltageStep++)
             {
                 for(uint8_t cTimeStep = 0; cTimeStep < 64; cTimeStep++) { theEyeOpeningHistogram->SetBinContent(cTimeStep + 1, cVoltageStep + 1, theEyeArray[cTimeStep][cVoltageStep]); }
@@ -85,9 +90,10 @@ bool DQMHistogramOTLpGBTEyeOpeningTest::fill(std::string& inputStream)
 
     if(theLightYieldSerialization.attachDeserializer(inputStream))
     {
+        float                 thePower;
         DetectorDataContainer theDetectorData =
-            theLightYieldSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, 64, 31>>(fDetectorContainer);
-        fillEyeOpening(theDetectorData);
+            theLightYieldSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, 64, 31>>(fDetectorContainer, thePower);
+        fillEyeOpening(theDetectorData, thePower);
         return true;
     }
 

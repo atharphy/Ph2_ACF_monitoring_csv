@@ -36,7 +36,8 @@ class OTLpGBTEyeOpeningTest : public Tool
     static std::string fCalibrationDescription;
 
   private:
-    void runEyeOpeningTest();
+    void               runEyeOpeningTest();
+    std::vector<float> fPowerList;
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
