@@ -142,12 +142,13 @@ void Tool::waitForRunToBeCompleted()
 
 void Tool::Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize)
 {
+    std::string startOfTestTime = getTimeStampString();
     SystemController::Configure(theConfigureInfo, pReInitialize);
 
     if(fBoardType == BoardType::D19C)
-        fMetadataHandler = new MetadataHandlerOT();
+        fMetadataHandler = new MetadataHandlerOT(startOfTestTime);
     else if(fBoardType == BoardType::RD53)
-        fMetadataHandler = new MetadataHandlerIT();
+        fMetadataHandler = new MetadataHandlerIT(startOfTestTime);
     else
     {
         LOG(ERROR) << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Board type not defined!! Impossible to create DQM for metadata, aborting..." << std::endl;

@@ -8,7 +8,7 @@ class DQMMetadata;
 class MetadataHandler : public Tool
 {
   public:
-    MetadataHandler();
+    MetadataHandler(std::string startOfTestTime);
     ~MetadataHandler();
 
     void initMetadata();
@@ -37,6 +37,7 @@ class MetadataHandler : public Tool
     void fillBoardConfigurationContainer(DetectorDataContainer& theBoardConfigurationContainer);
 
     std::string fFinalConfigurationFileContent{""};
+    std::string fStartOfTest;
 };
 
 #endif

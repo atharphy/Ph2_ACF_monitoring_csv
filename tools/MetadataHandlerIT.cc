@@ -1,6 +1,6 @@
 #include "tools/MetadataHandlerIT.h"
 
-MetadataHandlerIT::MetadataHandlerIT() : MetadataHandler() {}
+MetadataHandlerIT::MetadataHandlerIT(std::string startOfTestTime) : MetadataHandler(startOfTestTime) {}
 
 MetadataHandlerIT::~MetadataHandlerIT() {}
 

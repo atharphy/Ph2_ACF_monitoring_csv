@@ -228,7 +228,6 @@ void OTBitErrorRateTest::bitErrorRateTest()
                 // auto readBack = this->fBeBoardInterface->ReadBoardReg(theBoard, registerName);
                 // std::cout << "Reading back register " << registerName << " value 0x" << std::hex << readBack << std::dec << std::endl;
                 // if(registerValue != readBack) std::cout << BOLDRED << "Readback does not match!!!" << RESET << std::endl;
-                std::cout << std::endl;
             };
 
             auto readForAllLines =
@@ -254,29 +253,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
                 std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
             };
 
-            writeWithComment(theBertRegisterControl, 0xFFF20005, "Set mode = PRBS");
-
-            // writeWithComment(theBertRegisterControl, 0xFFF3FEDE, "Set mode = PRBS");
-
-            writeWithComment(theBertRegisterControl, 0xFFF50004, "Sample PRBS data – DATA_LD = 1");
-
-            readForAllLines(theBertRegisterControl, 0x00000000, "Select PRBS status 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 0");
-
-            readForAllLines(theBertRegisterControl, 0x00010000, "Select PRBS status 1", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 1");
-
-            readForAllLines(theBertRegisterControl, 0x00060000, "Select PRBS FIRST DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS FIRST DATA");
-
-            readForAllLines(theBertRegisterControl, 0x00070000, "Select PRBS SAMPLED DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS SAMPLED DATA");
-
-            writeWithComment(theBertRegisterControl, 0xFFF30080, "Configure BERT – CNTR_THR = 0x80");
-
-            writeWithComment(theBertRegisterControl, 0xFFF20035, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1");
-
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Configure Word Alignment (WA)" << std::endl;
-
-            // writeWithComment(phaseTuningControlRegisterName, 0xFFF44030, "Configure WA – SYNC_PATTERN = 0x4030");
-            // writeWithComment(phaseTuningControlRegisterName, 0xFFF4cea7, "Configure WA – SYNC_PATTERN = 0xcea7");
-            writeWithComment(phaseTuningControlRegisterName, 0xFFF42cea, "Configure WA – SYNC_PATTERN = 0x2cea");
+            writeWithComment(phaseTuningControlRegisterName, 0xFFF4020C, "Configure WA – SYNC_PATTERN = 0x020C");
 
             writeWithComment(phaseTuningControlRegisterName, 0xFFF50008, "Reset WA FSM – FSM_RST = 1");
 
@@ -290,7 +267,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
                 std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVectorBefore[lineIndex], 1, true) << std::endl;
             }
 
-            writeWithComment(phaseTuningControlRegisterName, 0xFFF50002, " Do Word Alignment – DO_WA = 1");
+            writeWithComment(phaseTuningControlRegisterName, 0xFFF50002, "Do Word Alignment – DO_WA = 1");
 
             for(int sleepSec = 0; sleepSec < 5; ++sleepSec)
             {
@@ -298,65 +275,193 @@ void OTBitErrorRateTest::bitErrorRateTest()
                 usleep(1000000);
             }
 
-            // readForAllLines(phaseTuningControlRegisterName, 0x00000000, "Select phase tuning status", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "Phase tuning reply");
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read WA Status Reg 0 (loop on hybrids and lines)" << std::endl;
+            readForAllLines(phaseTuningControlRegisterName, 0x00000000, "Reading WA Status Reg 0", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "WA Status Reg 0 reply");
 
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read WA Status (loop on hybrids and lines)" << std::endl;
-            readForAllLines(phaseTuningControlRegisterName, 0x00010000, "Select phase tuning status", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "Phase tuning reply");
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read WA Status Reg 1 (loop on hybrids and lines)" << std::endl;
+            readForAllLines(phaseTuningControlRegisterName, 0x00010000, "Reading WA Status Reg 1", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "WA Status Reg 1 reply");
 
-            usleep(1000000);
+            writeWithComment(theBertRegisterControl, 0xFFF20135, "Configure BERT – DEBUG_MODE = 1, CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1");
 
-            auto lineOutputVectorAfter = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
-            for(size_t lineIndex = 0; lineIndex < lineOutputVectorAfter.size(); ++lineIndex)
-            {
-                std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVectorAfter[lineIndex], 1, true) << std::endl;
-            }
+            writeWithComment(theBertRegisterControl, 0xFFF30080, "Configure BERT – CNTR_THR = 0x80");
 
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Sample PRBS Data" << std::endl;
+            writeWithComment(theBertRegisterControl, 0xFFF50004, "Sample PRBS data – DATA_LD = 1");
 
-            // writeWithComment(theBertRegisterControl, 0x00050004, "Sample PRBS data – DATA_LD = 1");
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS Status Reg 0 (loop on hybrids and lines)" << std::endl;
+            readForAllLines(theBertRegisterControl, 0x00000000, "Reading PRBS Status Reg 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS Status Reg 0");
 
-            // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS First Data (loop on hybrids and lines)" << std::endl;
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS Status Reg 1 (loop on hybrids and lines)" << std::endl;
+            readForAllLines(theBertRegisterControl, 0x00010000, "Reading PRBS Status Reg 1", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS Status Reg 1");
 
-            // readForAllLines(theBertRegisterControl, 0x00060000, "Select PRBS FIRST DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS FIRST DATA");
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS First Data (loop on hybrids and lines)" << std::endl;
+            readForAllLines(theBertRegisterControl, 0x00060000, "Reading PRBS First Data", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS First Data");
 
-            // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS Sampled Data (loop on hybrids and lines" << std::endl;
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS Sampled Data (loop on hybrids and lines)" << std::endl;
+            readForAllLines(theBertRegisterControl, 0x00070000, "Reading PRBS Sampled Data", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS Sampled Data");
 
-            // readForAllLines(theBertRegisterControl, 0x00070000, "Select PRBS SAMPLED DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS SAMPLED DATA");
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS BER COUNTERS (loop on hybrids and lines)" << std::endl;
+            readForAllLines(theBertRegisterControl, 0x00040000, "Reading PRBS BER COUNTERS", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS BER COUNTERS");
 
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
+            writeWithComment(theBertRegisterControl, 0xFFF20137, "Configure BERT – DEBUG_MODE = 1, CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 1");
 
-            readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS Status Reg 0 (loop on hybrids and lines)" << std::endl;
+            readForAllLines(theBertRegisterControl, 0x00000000, "Reading PRBS Status Reg 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS Status Reg 0");
 
-            readForAllLines(theBertRegisterControl, 0x00000000, "Select PRBS status 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 0");
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS Status Reg 1 (loop on hybrids and lines)" << std::endl;
+            readForAllLines(theBertRegisterControl, 0x00010000, "Reading PRBS Status Reg 1", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS Status Reg 1");
 
-            writeWithComment(theBertRegisterControl, 0xFFF20037, "Start PRBS Test");
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS First Data (loop on hybrids and lines)" << std::endl;
+            readForAllLines(theBertRegisterControl, 0x00060000, "Reading PRBS First Data", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS First Data");
 
-            readForAllLines(theBertRegisterControl, 0x00000000, "Select PRBS status 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 0");
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS Sampled Data (loop on hybrids and lines)" << std::endl;
+            readForAllLines(theBertRegisterControl, 0x00070000, "Reading PRBS Sampled Data", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS Sampled Data");
 
-            readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS BER COUNTERS (loop on hybrids and lines)" << std::endl;
+            readForAllLines(theBertRegisterControl, 0x00040000, "Reading PRBS BER COUNTERS", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS BER COUNTERS");
 
-            uint32_t numberOfIterations = 5;
+            uint32_t numberOfIterations = 4;
+            uint32_t sleepingTime       = 10; // seconds
             std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Start BER Test with error injection (repeat " << numberOfIterations << " times)" << std::endl;
 
             for(uint32_t iteration = 0; iteration < numberOfIterations; ++iteration)
             {
-                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] !!!!!!!!!!! Start injecting errors - iteration " << iteration << std::endl;
+                // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Iteration = " << iteration << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << BOLDYELLOW << " Time passed = " << (sleepingTime * iteration) / 60. << " min" << RESET << std::endl;
 
-                writeWithComment(theBertRegisterControl, 0xFFF200B7, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 1, INJ_ERR = 1");
+                // uint32_t numberOfErrorInjections = 10;
+                // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Injecting " << numberOfErrorInjections << " errors" << std::endl;
 
-                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Stop injecting errors" << std::endl;
+                // for(uint32_t errorInjection = 0; errorInjection < numberOfErrorInjections; ++errorInjection)
+                // {
+                //     writeWithComment(theBertRegisterControl, 0xFFF50080, "Inject Error – INJ_ERR = 1");
+                // }
 
-                writeWithComment(theBertRegisterControl, 0xFFF20037, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 1, INJ_ERR = 0");
+                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read error counters (loop on hybrids and lines) – BER Counter – MODE = 0" << std::endl;
+                writeWithComment(theBertRegisterControl, 0xFFF20137, "Configure BERT – DEBUG_MODE = 1, CHK_MODE = 0 (No Emu), CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 0");
+                readForAllLines(theBertRegisterControl, 0x00040000, "Reading PRBS BER COUNTERS", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS BER COUNTERS");
 
-                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read BER counters (loop on hybrids and lines)" << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read error counters (loop on hybrids and lines) – FER Counter – MODE = 0" << std::endl;
+                writeWithComment(theBertRegisterControl, 0xFFF20127, "Configure BERT – DEBUG_MODE = 1, CHK_MODE = 0 (No Emu), CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 0");
+                readForAllLines(theBertRegisterControl, 0x00040000, "Reading PRBS BER COUNTERS", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS BER COUNTERS");
 
-                readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
+                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read error counters (loop on hybrids and lines) – BER Counter – MODE = 1" << std::endl;
+                writeWithComment(theBertRegisterControl, 0xFFF201B7, "Configure BERT – DEBUG_MODE = 1, CHK_MODE = 1 (Emu On), CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 0");
+                readForAllLines(theBertRegisterControl, 0x00040000, "Reading PRBS BER COUNTERS", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS BER COUNTERS");
+
+                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read error counters (loop on hybrids and lines) – FER Counter – MODE = 1" << std::endl;
+                writeWithComment(theBertRegisterControl, 0xFFF20127, "Configure BERT – DEBUG_MODE = 1, CHK_MODE = 1 (Emu On), CNTR_SEL = 10 (FER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 0");
+                readForAllLines(theBertRegisterControl, 0x00040000, "Reading PRBS BER COUNTERS", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS BER COUNTERS");
+
+                std::cout << std::endl << std::endl;
+
+                usleep(sleepingTime * 1000000);
             }
 
-            writeWithComment(theBertRegisterControl, 0x00020035, "Stop PRBS test");
+            /// Old code
+
+            //     writeWithComment(theBertRegisterControl, 0xFFF20005, "Set mode = PRBS");
+
+            //     // writeWithComment(theBertRegisterControl, 0xFFF3FEDE, "Set mode = PRBS");
+
+            //     writeWithComment(theBertRegisterControl, 0xFFF50004, "Sample PRBS data – DATA_LD = 1");
+
+            //     readForAllLines(theBertRegisterControl, 0x00000000, "Select PRBS status 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 0");
+
+            //     readForAllLines(theBertRegisterControl, 0x00010000, "Select PRBS status 1", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 1");
+
+            //     readForAllLines(theBertRegisterControl, 0x00060000, "Select PRBS FIRST DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS FIRST DATA");
+
+            //     readForAllLines(theBertRegisterControl, 0x00070000, "Select PRBS SAMPLED DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS SAMPLED DATA");
+
+            //     writeWithComment(theBertRegisterControl, 0xFFF30080, "Configure BERT – CNTR_THR = 0x80");
+
+            //     writeWithComment(theBertRegisterControl, 0xFFF20035, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1");
+
+            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Configure Word Alignment (WA)" << std::endl;
+
+            //     // writeWithComment(phaseTuningControlRegisterName, 0xFFF44030, "Configure WA – SYNC_PATTERN = 0x4030");
+            //     // writeWithComment(phaseTuningControlRegisterName, 0xFFF4cea7, "Configure WA – SYNC_PATTERN = 0xcea7");
+            //     writeWithComment(phaseTuningControlRegisterName, 0xFFF42cea, "Configure WA – SYNC_PATTERN = 0x2cea");
+
+            //     writeWithComment(phaseTuningControlRegisterName, 0xFFF50008, "Reset WA FSM – FSM_RST = 1");
+
+            //     writeWithComment(phaseTuningControlRegisterName, 0xFFF20300, "Configure WA – MODE = 00 (auto), PRBS_EN = 1, SYNC_EN = 1");
+
+            //     usleep(1000000);
+
+            //     auto lineOutputVectorBefore = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
+            //     for(size_t lineIndex = 0; lineIndex < lineOutputVectorBefore.size(); ++lineIndex)
+            //     {
+            //         std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVectorBefore[lineIndex], 1, true) << std::endl;
+            //     }
+
+            //     writeWithComment(phaseTuningControlRegisterName, 0xFFF50002, " Do Word Alignment – DO_WA = 1");
+
+            //     for(int sleepSec = 0; sleepSec < 5; ++sleepSec)
+            //     {
+            //         std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] sleeping 1 sec..." << std::endl;
+            //         usleep(1000000);
+            //     }
+
+            //     // readForAllLines(phaseTuningControlRegisterName, 0x00000000, "Select phase tuning status", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "Phase tuning reply");
+
+            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read WA Status (loop on hybrids and lines)" << std::endl;
+            //     readForAllLines(phaseTuningControlRegisterName, 0x00010000, "Select phase tuning status", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "Phase tuning reply");
+
+            //     usleep(1000000);
+
+            //     auto lineOutputVectorAfter = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
+            //     for(size_t lineIndex = 0; lineIndex < lineOutputVectorAfter.size(); ++lineIndex)
+            //     {
+            //         std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVectorAfter[lineIndex], 1, true) << std::endl;
+            //     }
+
+            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Sample PRBS Data" << std::endl;
+
+            //     // writeWithComment(theBertRegisterControl, 0x00050004, "Sample PRBS data – DATA_LD = 1");
+
+            //     // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS First Data (loop on hybrids and lines)" << std::endl;
+
+            //     // readForAllLines(theBertRegisterControl, 0x00060000, "Select PRBS FIRST DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS FIRST DATA");
+
+            //     // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS Sampled Data (loop on hybrids and lines" << std::endl;
+
+            //     // readForAllLines(theBertRegisterControl, 0x00070000, "Select PRBS SAMPLED DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS SAMPLED DATA");
+
+            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
+            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
+            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
+            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
+
+            //     readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
+
+            //     readForAllLines(theBertRegisterControl, 0x00000000, "Select PRBS status 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 0");
+
+            //     writeWithComment(theBertRegisterControl, 0xFFF20037, "Start PRBS Test");
+
+            //     readForAllLines(theBertRegisterControl, 0x00000000, "Select PRBS status 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 0");
+
+            //     readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
+
+            //     uint32_t numberOfIterations = 5;
+            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Start BER Test with error injection (repeat " << numberOfIterations << " times)" << std::endl;
+
+            //     for(uint32_t iteration = 0; iteration < numberOfIterations; ++iteration)
+            //     {
+            //         std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] !!!!!!!!!!! Start injecting errors - iteration " << iteration << std::endl;
+
+            //         writeWithComment(theBertRegisterControl, 0xFFF200B7, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 1, INJ_ERR = 1");
+
+            //         std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Stop injecting errors" << std::endl;
+
+            //         writeWithComment(theBertRegisterControl, 0xFFF20037, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 1, INJ_ERR = 0");
+
+            //         std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read BER counters (loop on hybrids and lines)" << std::endl;
+
+            //         readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
+            //     }
+
+            //     writeWithComment(theBertRegisterControl, 0x00020035, "Stop PRBS test");
         }
     }
 }
