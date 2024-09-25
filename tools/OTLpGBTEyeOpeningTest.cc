@@ -55,21 +55,12 @@ void OTLpGBTEyeOpeningTest::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTLpGBTEyeOpeningTest::runEyeOpeningTest()
 {
-    uint8_t pEndOfCountSelect = 7;
-    uint8_t pEQAttenuation    = 3;
-
     DetectorDataContainer theEyeOpeningContainer;
     ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint16_t, 64, 31>>(*fDetectorContainer, theEyeOpeningContainer);
 
     for(auto theBoard: *fDetectorContainer)
     {
-        for(auto theOpticalGroup: *theBoard)
-        {
-            LOG(INFO) << BOLDYELLOW << "Measuring Eye Opening on OpticalGroup " << theOpticalGroup->getId() << RESET;
-            // FIXME for now I am forcing to 0x00 EQCap bits of the register
-            flpGBTInterface->WriteChipReg(theOpticalGroup->flpGBT, "EQConfig", pEQAttenuation << 3);
-            flpGBTInterface->ConfigureEOM(theOpticalGroup->flpGBT, pEndOfCountSelect, false, true);
-        }
+        for(auto theOpticalGroup: *theBoard) { flpGBTInterface->ConfigureEOM(theOpticalGroup->flpGBT, 7, false, true); }
 
         for(uint8_t cVoltageStep = 0; cVoltageStep < 31; cVoltageStep++)
         {

@@ -9,7 +9,7 @@
 
 using namespace Ph2_HwDescription;
 
-MetadataHandlerOT::MetadataHandlerOT() : MetadataHandler() {}
+MetadataHandlerOT::MetadataHandlerOT(std::string startOfTestTime) : MetadataHandler(startOfTestTime) {}
 
 MetadataHandlerOT::~MetadataHandlerOT() {}
 
