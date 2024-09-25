@@ -19,10 +19,11 @@
 
 - Latest IT-DAQ school: <https://indico.cern.ch/event/1374747/>
 
-### TUI/GUI
+### TUI/GUI/GS
 
-- Text-based User Interface (TUI) - aka Dirigent: <https://gitlab.cern.ch/ethz-phase2-pixels/dirigent/>
+- Text-based User Interface (TUI) - aka Dirigent: <https://gitlab.cern.ch/cms_tk_ph2/dirigent/>
 - Graphical-based User Interface (GUI) - aka Ohio-GUI: <https://github.com/OSU-CMS/Ph2_ACF_GUI/>
+- Grading Software - aka Panthera: https://panthera.fit.edu/
 
 ### Miscellanea
 

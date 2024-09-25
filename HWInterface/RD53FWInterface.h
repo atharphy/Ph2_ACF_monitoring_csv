@@ -74,11 +74,12 @@ class RD53FWInterface : public BeBoardFWInterface
     void Pause() override;
     void Resume() override;
 
-    std::vector<double> RunBERtest(bool given_time, double frames_or_time, std::vector<std::pair<uint16_t, uint16_t>> hybrid_id_chip_lane, uint8_t frontendSpeed) override;
-    void                ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true) override;
-    uint32_t            ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
-    void                ChipReset() override;
-    void                ChipReSync() override;
+    std::vector<double>
+    RunBERtest(bool given_time, double frames_or_time, const std::vector<std::pair<uint16_t, uint16_t>>& hybrid_id_chip_lane, const std::vector<uint8_t>& chipLanes, uint8_t frontendSpeed) override;
+    void     ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true) override;
+    uint32_t ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
+    void     ChipReset() override;
+    void     ChipReSync() override;
 
     void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
     void SetOptoLinkVersion(uint8_t version) override;
@@ -210,7 +211,7 @@ class RD53FWInterface : public BeBoardFWInterface
     uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override;
     void     ResetOptoLinkSlowControl();
     void     SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_t TxModuleId);
-    void     SetUpLinkMapping(uint8_t RxLink, const std::vector<std::pair<uint8_t, uint8_t>>& RxGroups, uint8_t RxModuleId);
+    void     SetUpLinkMapping(uint8_t RxLink, uint8_t ModuleId, uint8_t ChipId, const std::vector<std::pair<uint8_t, uint8_t>>& RxGroupsChipLanes);
 
     // ####################################################
     // # Hybrid ADC measurements: temperature and voltage #

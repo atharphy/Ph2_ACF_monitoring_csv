@@ -335,7 +335,11 @@ class D19cFWInterface : public BeBoardFWInterface
     // ##############################
     // # Pseudo Random Bit Sequence #
     // ##############################
-    std::vector<double> RunBERtest(bool given_time, double frames_or_time, std::vector<std::pair<uint16_t, uint16_t>> hybrid_id_chip_lane, uint8_t frontendSpeed) override { return {}; };
+    std::vector<double>
+    RunBERtest(bool given_time, double frames_or_time, const std::vector<std::pair<uint16_t, uint16_t>>& hybrid_id_chip_id, const std::vector<uint8_t>& chipLanes, uint8_t frontendSpeed) override
+    {
+        return {};
+    };
 
     // ############################
     // # Read/Write Optical Group #
