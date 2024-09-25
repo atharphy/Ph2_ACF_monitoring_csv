@@ -55,10 +55,10 @@ class DQMHistogramOTLpGBTEyeOpeningTest : public DQMHistogramBase
      */
     void reset(void) override;
 
-    void fillEyeOpening(DetectorDataContainer& theEyeOpeningContainer);
+    void fillEyeOpening(DetectorDataContainer& theEyeOpeningContainer, float thePower);
 
   private:
-    DetectorContainer*    fDetectorContainer;
-    DetectorDataContainer fEyeOpeningHystogramContainer;
+    DetectorContainer*                       fDetectorContainer;
+    std::map<uint8_t, DetectorDataContainer> fEyeOpeningHystogramContainerMap;
 };
 #endif
