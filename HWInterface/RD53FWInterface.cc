@@ -1466,8 +1466,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 // # Bit Error Rate test #
 // #######################
 
-std::vector<double>
-RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, const std::vector<std::pair<uint16_t, uint16_t>>& hybrid_id_chip_id, const std::vector<uint8_t>& chipLanes, uint8_t frontendSpeed)
+std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, const std::map<uint16_t, std::vector<uint8_t>>& hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed)
 // ####################
 // # frontendSpeed    #
 // # 1.28 Gbit/s  = 0 #
@@ -1530,18 +1529,22 @@ RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, const std::v
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
 
         forceDone = true;
-        for(const auto& thePair: hybrid_id_chip_id)
-            for(const auto& lane: chipLanes)
+        for(const auto& thePair: hybrid_id_chip_id_chip_lanes)
+        {
+            uint8_t hybrid_id = thePair.first >> 8;
+            uint8_t chip_id   = thePair.first & 0x00FF;
+
+            for(const auto& lane: thePair.second)
             {
-                RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", thePair.first}, {"user.ctrl_regs.PRBS_checker.chip_address", thePair.second}});
+                RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id}, {"user.ctrl_regs.PRBS_checker.chip_address", chip_id}});
 
                 cntr_hi = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
                 cntr_lo = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
                 nErrors = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
 
                 if(bits::pack<32, 32>(cntr_hi, cntr_lo) == 0)
-                    LOG(WARNING) << BOLDRED << "No clock was detected for Hybrid ID " << BOLDYELLOW << thePair.first << BOLDRED << " Chip Id " << BOLDYELLOW << thePair.second << BOLDRED
-                                 << " Chip Lane " << BOLDYELLOW << lane << RESET;
+                    LOG(WARNING) << BOLDRED << "No clock was detected for Hybrid ID " << BOLDYELLOW << hybrid_id << BOLDRED << " Chip Id " << BOLDYELLOW << chip_id << BOLDRED << " Chip Lane "
+                                 << BOLDYELLOW << lane << RESET;
                 else
                 {
                     frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
@@ -1551,6 +1554,7 @@ RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, const std::v
                               << RESET << GREEN << "% of the sent frames)" << std::setprecision(-1) << RESET;
                 }
             }
+        }
 
         LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << frameCounter / frames2run * 100. << RESET << GREEN << "% done)"
                   << RESET;
@@ -1572,11 +1576,15 @@ RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, const std::v
     // # Read PRBS frame counter #
     // ###########################
     std::vector<double> results;
-    for(const auto& thePair: hybrid_id_chip_id)
-        for(const auto& lane: chipLanes)
+    for(const auto& thePair: hybrid_id_chip_id_chip_lanes)
+    {
+        uint8_t hybrid_id = thePair.first >> 8;
+        uint8_t chip_id   = thePair.first & 0x00FF;
+
+        for(const auto& lane: thePair.second)
         {
             // @TMP@ : Yiannis needs to tell me which register to use for chip lane
-            RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", thePair.first}, {"user.ctrl_regs.PRBS_checker.chip_address", thePair.second}});
+            RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id}, {"user.ctrl_regs.PRBS_checker.chip_address", chip_id}});
 
             cntr_hi      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
             cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
@@ -1584,8 +1592,8 @@ RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, const std::v
             nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
             results.push_back(nErrors / frames2run);
 
-            LOG(INFO) << BOLDGREEN << "===== BER test summary for Hybrid ID " << BOLDYELLOW << thePair.first << BOLDGREEN << " Chip Id " << BOLDYELLOW << thePair.second << BOLDGREEN << " Chip Lane "
-                      << lane << BOLDGREEN << " =====" << RESET;
+            LOG(INFO) << BOLDGREEN << "===== BER test summary for Hybrid ID " << BOLDYELLOW << hybrid_id << BOLDGREEN << " Chip Id " << BOLDYELLOW << chip_id << BOLDGREEN << " Chip Lane " << lane
+                      << BOLDGREEN << " =====" << RESET;
             LOG(INFO) << GREEN << "Number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
             LOG(INFO) << GREEN << "Frames with error(s): " << BOLDYELLOW << nErrors << RESET;
             LOG(INFO) << GREEN << "Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << std::fixed << std::setprecision(3)
@@ -1593,6 +1601,7 @@ RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, const std::v
             LOG(INFO) << GREEN << "BER test result: " << (nErrors == 0 ? BOLDYELLOW : BOLDRED) << (nErrors == 0 ? "PASSED" : "NOT PASSED") << RESET;
             LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
         }
+    }
 
     return results;
 }
