@@ -1153,7 +1153,7 @@ void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, uint8_t ModuleId, uint8_t
     // // # Send commands #
     // // #################
     // RegManager::WriteStackReg(commands);
-    // RegManager::WriteReg("user.ctrl_regs.i2c_block.active_lanes", RxGroupsChipLanes.size());
+    // RegManager::WriteReg("user.ctrl_regs.i2c_block.active_lanes", RxGroupsChipLanes.size()); // @TMP@ : for the time being in the FW all chips can only have the same number of lanes
 
     // @TMP@ : Yiannis, this is the old code
     for(auto RxGroupChipLane: RxGroupsChipLanes)
