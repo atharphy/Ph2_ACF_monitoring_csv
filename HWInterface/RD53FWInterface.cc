@@ -1146,8 +1146,8 @@ void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, uint8_t ModuleId, uint8_t
     // // ####################
     // // # Toggle to update #
     // // ####################
-    // commands.push_back({"user.ctrl_regs.lpgbt_mappping.update_uplink", 1});
-    // commands.push_back({"user.ctrl_regs.lpgbt_mappping.update_uplink", 0});
+    // commands.push_back({"user.ctrl_regs.lpgbt_mapping.update_uplink", 1});
+    // commands.push_back({"user.ctrl_regs.lpgbt_mapping.update_uplink", 0});
 
     // // #################
     // // # Send commands #
