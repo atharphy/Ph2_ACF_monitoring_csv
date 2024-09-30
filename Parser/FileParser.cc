@@ -1524,7 +1524,7 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             uint8_t cChipId = cChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
 
             for(auto i = 0u; i < cRxGroups.size(); i++)
-                if(cRxGroups[i] != 0) static_cast<RD53*>(cHybrid->getObject(cChipId))->addRxGroup(cRxGroups[i], NCHIPLANES - i);
+                if(cRxGroups[i] != 0) static_cast<RD53*>(cHybrid->getObject(cChipId))->addRxGroup(cRxGroups[i], NCHIPLANES - i - 1);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxChannel(cRxChannel);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxPolarity(cRxPolarity);
 
