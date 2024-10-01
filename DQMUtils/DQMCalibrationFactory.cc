@@ -12,6 +12,7 @@
 #include "DQMUtils/DQMHistogramOTCICwordAlignment.h"
 #include "DQMUtils/DQMHistogramOTCMNoise.h"
 #include "DQMUtils/DQMHistogramOTCicBypassTest.h"
+#include "DQMUtils/DQMHistogramOTLpGBTEyeOpeningTest.h"
 #include "DQMUtils/DQMHistogramOTMPAtoCICecv.h"
 #include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
 #include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
@@ -201,16 +202,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord>("exttriggerotlatency");
 
-    Register<DQMMetadataOT,
-             DQMHistogramOTalignLpGBTinputs,
-             DQMHistogramOTalignBoardDataWord,
-             DQMHistogramOTverifyBoardDataWord,
-             DQMHistogramOTalignStubPackage,
-             DQMHistogramOTCICphaseAlignment,
-             DQMHistogramOTCICwordAlignment,
-             DQMHistogramPedestalEqualization,
-             DQMHistogramPedeNoise,
-             DQMHistogramOTCMNoise>("commonNoise2S");
+    Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCMNoise>("commonNoise2S");
 
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
@@ -227,10 +219,13 @@ DQMCalibrationFactory::DQMCalibrationFactory()
 
     Register<DQMMetadata, DQMHistogramOTBitErrorRateTest>("bert");
 
+    Register<DQMMetadataOT, DQMHistogramOTLpGBTEyeOpeningTest>("eyeOpening");
+
     // 2S specific calibrations
 
     Register<DQMMetadataOT,
              DQMHistogramOTVTRxLightYieldScan,
+             DQMHistogramOTLpGBTEyeOpeningTest,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
              DQMHistogramOTverifyBoardDataWord,
@@ -244,6 +239,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
 
     Register<DQMMetadataOT,
              DQMHistogramOTVTRxLightYieldScan,
+             DQMHistogramOTLpGBTEyeOpeningTest,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
              DQMHistogramOTverifyBoardDataWord,
@@ -278,6 +274,18 @@ DQMCalibrationFactory::DQMCalibrationFactory()
 
     Register<DQMMetadataOT,
              DQMHistogramOTVTRxLightYieldScan,
+             DQMHistogramOTLpGBTEyeOpeningTest,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTPSringOscillatorTest,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramPedeNoise>("PSskeletonTest");
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTVTRxLightYieldScan,
+             DQMHistogramOTLpGBTEyeOpeningTest,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
              DQMHistogramOTverifyBoardDataWord,
@@ -293,6 +301,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMMetadataOT,
              DQMHistogramOTPSADCCalibration,
              DQMHistogramOTVTRxLightYieldScan,
+             DQMHistogramOTLpGBTEyeOpeningTest,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
              DQMHistogramOTverifyBoardDataWord,
@@ -317,6 +326,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMMetadataOT,
              DQMHistogramOTPSADCCalibration,
              DQMHistogramOTVTRxLightYieldScan,
+             DQMHistogramOTLpGBTEyeOpeningTest,
              DQMHistogramOTalignLpGBTinputs,
              DQMHistogramOTalignBoardDataWord,
              DQMHistogramOTverifyBoardDataWord,

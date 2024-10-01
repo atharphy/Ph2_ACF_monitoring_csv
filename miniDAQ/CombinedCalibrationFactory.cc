@@ -18,6 +18,7 @@
 #include "tools/OTCICwordAlignment.h"
 #include "tools/OTCMNoise.h"
 #include "tools/OTCicBypassTest.h"
+#include "tools/OTLpGBTEyeOpeningTest.h"
 #include "tools/OTMPAtoCICecv.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
@@ -195,6 +196,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTBitErrorRateTest>("Outer Tracker", "bert");
 
+    Register<OTLpGBTEyeOpeningTest>("Outer Tracker", "eyeOpening");
+
     // 2S specific calibrations
 
     Register<OTalignBoardDataWord, OTCMNoise>("2S Module", "commonNoise2S");
@@ -204,6 +207,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<TuneLpGBTVref,
              OTVTRxLightYieldScan,
+             OTLpGBTEyeOpeningTest,
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
@@ -216,6 +220,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<TuneLpGBTVref,
              OTVTRxLightYieldScan,
+             OTLpGBTEyeOpeningTest,
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
@@ -243,6 +248,18 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<TuneLpGBTVref,
              OTVTRxLightYieldScan,
+             OTLpGBTEyeOpeningTest,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTalignStubPackage,
+             OTPSringOscillatorTest,
+             PedestalEqualization,
+             PedeNoise>("PS Module", "PSskeletonTest");
+
+    Register<TuneLpGBTVref,
+             OTVTRxLightYieldScan,
+             OTLpGBTEyeOpeningTest,
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
@@ -258,6 +275,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<TuneLpGBTVref,
              OTPSADCCalibration,
              OTVTRxLightYieldScan,
+             OTLpGBTEyeOpeningTest,
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
@@ -282,6 +300,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<TuneLpGBTVref,
              OTPSADCCalibration,
              OTVTRxLightYieldScan,
+             OTLpGBTEyeOpeningTest,
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,

@@ -104,12 +104,12 @@ bool DQMHistogramOTCICtoLpGBTecv::fill(std::string& inputStream)
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
     // As example, I'm expecting to receive a data stream from an uint32_t contained from calibration "OTverifyECVlpGBTCIC"
-    ContainerSerialization theECVlpGBTCICContainerSerialization("OTverifyECVlpGBTCICEfficiencyHistogram");
+    ContainerSerialization theECVlpGBTCICContainerSerialization("OTCICtoLpGBTecvEfficiencyHistogram");
 
     if(theECVlpGBTCICContainerSerialization.attachDeserializer(inputStream))
     {
         // It matched! Decoding data
-        std::cout << "Matched OTverifyECVlpGBTCIC!!!!!\n";
+        std::cout << "Matched OTCICtoLpGBTecv EfficiencyHistogram!!!!!\n";
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
         uint8_t               pClockStrengthLengthOfOptions, pClockPolarity, pClockStrengthIndex, pCicStrength, pPhaseIndex;
         DetectorDataContainer theDetectorData = theECVlpGBTCICContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, float, EmptyContainer>(
@@ -139,7 +139,8 @@ void DQMHistogramOTCICtoLpGBTecv::fillEfficiency(uint8_t                pClockSt
         {
             for(auto theHybrid: *opticalGroup)
             {
-                auto efficiencies = theEfficiencyContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
+                if(!theHybrid->hasSummary()) continue;
+                auto efficiencies = theHybrid->getSummary<std::vector<float>>();
 
                 // Select the correct histogram given the pClockPolarity and the pCicStrength
                 uint8_t CICStrengthPolarityCombination = (pCicStrength * 10) + pClockPolarity;

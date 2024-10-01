@@ -264,6 +264,8 @@
     <Setting name="OTSSAtoSSAecv_ListOfSSAslvsCurrents">1, 4, 7</Setting>
 
     <Setting name="OTPSringOscillatorTest_NumberOfClockCycles">100</Setting>
+
+    <Setting name="OTLpGBTEyeOpeningTest_PowerList">1-3</Setting>
 </Settings>
 
 <MonitoringSettings>

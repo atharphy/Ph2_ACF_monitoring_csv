@@ -98,7 +98,7 @@ class CalibBase : public Tool
             // #################
             if(this->fMetadataHandler == nullptr)
             {
-                this->fMetadataHandler = new MetadataHandlerIT();
+                this->fMetadataHandler = new MetadataHandlerIT(getTimeStampString());
                 this->fMetadataHandler->Inherit(this);
                 this->fMetadataHandler->initMetadata();
                 this->fMetadataHandler->justBookDQMMetadata();

@@ -15,6 +15,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <thread>
 #include <unordered_map>
 
@@ -30,6 +31,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pChip->getId() << "] , Version[" << +cChipVersion << "]" << RESET;
     PrintChipMode(pChip);
+
     // Waiting for at least PauseForDllConfig state before configuring chip. If state beyond, then I can still configure
     uint16_t cIter = 0, cMaxIter = 200;
     for(auto& ele: fPUSMStatusMap[cChipVersion]) revertedPUSMStatusMap[ele.second] = ele.first;
@@ -45,11 +47,16 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
     cRegVec.clear();
-    uint16_t maximumWritableRegister = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 0x13C : 0x14F;
 
     for(const auto& cRegItem: clpGBTRegMap)
     {
-        if(cRegItem.second.fAddress <= maximumWritableRegister) cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
+        bool isFreeRegister = false;
+        for(const auto& freeRegister: pChip->getFreeRegisters())
+        {
+            isFreeRegister = std::regex_match(cRegItem.first, freeRegister.first);
+            if(isFreeRegister) break;
+        }
+        if(!isFreeRegister) cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
     } // get read/write registers
 
     WriteChipMultReg(pChip, cRegVec);

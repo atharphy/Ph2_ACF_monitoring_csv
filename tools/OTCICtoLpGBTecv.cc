@@ -130,7 +130,7 @@ void OTCICtoLpGBTecv::runECV()
         auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
         for(auto theOpticalGroup: *theBoard)
         {
-            for(auto clockPolarity: fListOfClockPolarity)
+            for(uint8_t clockPolarity: fListOfClockPolarity)
             {
                 LOG(INFO) << BOLDMAGENTA << "CLOCK POLARITY: " << +clockPolarity << RESET;
                 for(auto clockStrength: fListOfClockStrength)
@@ -143,7 +143,7 @@ void OTCICtoLpGBTecv::runECV()
                         LOG(INFO) << BOLDYELLOW << "Attention! ignoring failures on right hybrid CIC line 4 due to bug in kickoff SEH!" << RESET;
                     size_t cNlines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
 
-                    for(auto cicStrength: fListOfCICStrength)
+                    for(uint8_t cicStrength: fListOfCICStrength)
                     {
                         LOG(INFO) << BOLDMAGENTA << "        CIC STRENGTH: " << +cicStrength << RESET;
                         for(auto cHybrid: *theOpticalGroup)
@@ -255,25 +255,19 @@ void OTCICtoLpGBTecv::runECV()
                                 }
 
                             } // hybrid loop
-#ifdef __USE_ROOT__
-                            // Find the pClockStrength and pPhase indices
                             auto    phaseIterator                = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
                             uint8_t phaseIndex                   = std::distance(fListOfLpGBTPhase.begin(), phaseIterator) + 1;
                             auto    clockStrengthIterator        = std::find(fListOfClockStrength.begin(), fListOfClockStrength.end(), clockStrength);
                             uint8_t clockStrengthIndex           = std::distance(fListOfClockStrength.begin(), clockStrengthIterator) + 1;
                             uint8_t clockStrengthLengthOfOptions = fListOfClockStrength.size();
+#ifdef __USE_ROOT__
+                            // Find the pClockStrength and pPhase indices
 
                             fDQMHistogramOTCICtoLpGBTecv.fillEfficiency(clockStrengthLengthOfOptions, clockPolarity, clockStrengthIndex, cicStrength, phaseIndex, fPatternMatchingEfficiencyContainer);
 #else
                             if(fDQMStreamerEnabled)
                             {
                                 // Find the pClockStrength and pPhase indices
-                                auto    phaseIterator                = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
-                                uint8_t phaseIndex                   = std::distance(fListOfLpGBTPhase.begin(), phaseIterator) + 1;
-                                auto    clockStrengthIterator        = std::find(fListOfClockStrength.begin(), fListOfClockStrength.end(), clockStrength);
-                                uint8_t clockStrengthIndex           = std::distance(fListOfClockStrength.begin(), clockStrengthIterator) + 1;
-                                uint8_t clockStrengthLengthOfOptions = fListOfClockStrength.size();
-
                                 ContainerSerialization theECVlpGBTCICContainerSerialization("OTCICtoLpGBTecvEfficiencyHistogram");
                                 theECVlpGBTCICContainerSerialization.streamByOpticalGroupContainer(
                                     fDQMStreamer, fPatternMatchingEfficiencyContainer, clockStrengthLengthOfOptions, clockPolarity, clockStrengthIndex, cicStrength, phaseIndex);

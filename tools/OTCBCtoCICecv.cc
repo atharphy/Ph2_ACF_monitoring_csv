@@ -117,6 +117,8 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
 
     for(uint8_t cicPhase = cicPhaseStart; cicPhase <= cicPhaseEnd; cicPhase++) // phase 0 to 14
     {
+        LOG(INFO) << YELLOW << "Measuring pattern matching efficiency for CIC phase " << +cicPhase << RESET;
+
         if(cicPhase == 2 || cicPhase == 3) continue; // since Phase 2,3 doesn't work
         for(auto theBoard: *fDetectorContainer)
             for(auto theOpticalGroup: *theBoard)
@@ -136,11 +138,11 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                         }
                     }
                     fCicInterface->WriteChipMultReg(theCic, cicPhaseRegisterVector);
-                    LOG(INFO) << "Successfully set cicPhase value of " << +cicPhase << " for CIC " << theHybrid->getId() << RESET;
                 }
 
         for(uint8_t cbcStrength: fListOfCBCslvsCurrents) // itr over BetaMult&SLVS from 0x?0 to 0x?F with sum of 0x01
         {
+            LOG(INFO) << MAGENTA << "    CBC SLVS strenght " << +cbcStrength << RESET;
             for(auto theBoard: *fDetectorContainer)
             {
                 for(auto theOpticalGroup: *theBoard)
@@ -155,9 +157,6 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                             if(!pVerifyBit)
                                 LOG(ERROR) << "Error in setting BetaMult&SLVS value of 0x" << std::hex << +BetaMultAndSLVSbyte << std::dec << " for CIC " << theHybrid->getId() << ", CBC "
                                            << theCBC->getId() << "[ cbc strength set to " << +cbcStrength << " ]" << RESET;
-
-                            // if(pVerifyBit && theCBC->getId() == 7) LOG(INFO) << "Successfully set BetaMult&SLVS value of 0x" << std::hex << +BetaMultAndSLVSbyte << std::dec << " for CIC " <<
-                            // theHybrid->getId() << ", CBC 0-" << theCBC->getId() << "[ cbc strength set to " << +cbcStrength << " ]" <<  RESET;
                         }
                     }
                 }
