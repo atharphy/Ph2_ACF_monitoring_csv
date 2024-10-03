@@ -152,6 +152,7 @@
       <node id="chip2_primary"         mask="0x00030000"      permission="rw"      description="" />
       <node id="chip3_primary"         mask="0x000C0000"      permission="rw"      description="" />
       <node id="chip_id_en"            mask="0x00100000"      permission="rw"      description="" />
+      <node id="active_lanes"          mask="0x03C00000"      permission="rw"      description="" />
     </node>
 
     <node id="PRBS_checker"         address="0x00000012"      permission="rw"      description="">
@@ -164,6 +165,7 @@
       <node id="emulator_en"           mask="0x00000200"      permission="rw"      description="Enable PRBS emulation (for fw debugging only)" />
       <node id="chip_address"          mask="0x00001C00"      permission="rw"      description="Address of the chip for which PRBS output regs will be read. (IPBus status registers are MUXed)" />
       <node id="module_addr"           mask="0x0001E000"      permission="rw"      description="Address of the module for which PRBS output regs will be read. (IPBus status registers are MUXed)" />
+      <node id="lane_addr"             mask="0x00060000"      permission="rw"      description="Aurora lane for which PRBS output regs will be read. (IPBus status registers are MUXed)" />
     </node>
 
     <node id="prbs_frames_to_run_low"  address="0x00000013"   permission="rw"      description=""> </node>
@@ -190,33 +192,30 @@
     </node>
 
     <node id="lpgbt_mapping"         address="0x00000018"     permission="rw"      description="Configuration lpGBT link mapping">
-      <node id="update_downlink"        mask="0x00000001"     permission="rw"      description="Update mapping for downlink groups/channels" />
-      <node id="update_uplink"          mask="0x00000002"     permission="rw"      description="Update mapping for downlink groups/channels" />
-      <node id="module_map_id"          mask="0x0000007C"     permission="rw"      description="" />
-      <node id="chip_map_id"            mask="0x00000180"     permission="rw"      description="" />
-      <node id="downlink_map_id"        mask="0x00001E00"     permission="rw"      description="" />
-      <node id="downgroup_map_id"       mask="0x0000E000"     permission="rw"      description="" />
-      <node id="uplink_map_id"          mask="0x000F0000"     permission="rw"      description="" />
-      <node id="upgroup_map_id"         mask="0x00700000"     permission="rw"      description="" />
+      <node id="update_downlink"       mask="0x00000001"      permission="rw"      description="Update mapping for downlink groups/channels" />
+      <node id="update_uplink"         mask="0x00000002"      permission="rw"      description="Update mapping for downlink groups/channels" />
+      <node id="link_id"               mask="0x0000003C"      permission="rw"      description="lpGBT address" />
+      <node id="module_id"             mask="0x000003C0"      permission="rw"      description="Module Address" />
+      <node id="chip_id"               mask="0x00000C00"      permission="rw"      description="Chip Address" />
+      <node id="tx_elink_id"           mask="0x00007000"      permission="rw"      description="tx group/channel id" />
+      <node id="lane0_elink_id"        mask="0x00038000"      permission="rw"      description="rx group for lane0" />
+      <node id="lane1_elink_id"        mask="0x001C0000"      permission="rw"      description="rx group for lane1" />
+      <node id="lane2_elink_id"        mask="0x00E00000"      permission="rw"      description="rx group for lane2" />
+      <node id="lane3_elink_id"        mask="0x07000000"      permission="rw"      description="rx group for lane3" />
     </node>
 
     <node id="gtx_drp"               address="0x0000001A"     permission="rw"      description="Control registers for drp ports">
-      <node id="address"                mask="0x000007FF"     permission="rw"      description="Address for DRP Register transaction" />
-      <node id="wr_din"                 mask="0x0007F800"     permission="rw"      description="Write data in" />
-      <node id="wr_en"                  mask="0x00080000"     permission="rw"      description="Write enable" />
-      <node id="rd_en"                  mask="0x00100000"     permission="rw"      description="Read enable" />
-      <node id="set_aurora_speed"       mask="0x00200000"     permission="rw"      description="Start Procedure to set aurora speed" />
-      <node id="aurora_speed"           mask="0x00400000"     permission="rw"      description="Aurora Speed configuration. '0'=1.28Gbps, '1'=640Mbps" />
+      <node id="address"               mask="0x000007FF"      permission="rw"      description="Address for DRP Register transaction" />
+      <node id="wr_din"                mask="0x0007F800"      permission="rw"      description="Write data in" />
+      <node id="wr_en"                 mask="0x00080000"      permission="rw"      description="Write enable" />
+      <node id="rd_en"                 mask="0x00100000"      permission="rw"      description="Read enable" />
+      <node id="set_aurora_speed"      mask="0x00200000"      permission="rw"      description="Start Procedure to set aurora speed" />
+      <node id="aurora_speed"          mask="0x00400000"      permission="rw"      description="Aurora Speed configuration. '0'=1.28Gbps, '1'=640Mbps" />
     </node>
 
     <node id="sfp_disable"          address="0x00000017"      permission="rw"      description="Configuration for SFP connectors">
       <node id="l8"                    mask="0x00007FFF"      permission="rw"      description="disable for FMC L8 pins" />
       <node id="l12"                   mask="0xFFFF8000"      permission="rw"      description="diasble for FMC L12 pins" />
-    </node>
-
-    <node id="sfp_tx_polarity"      address="0x00000018"      permission="rw"      description="Configuration for SFP connectors">
-      <node id="l8"                    mask="0x00007FFF"      permission="rw"      description="Polarity for FMC L8 TX pins" />
-      <node id="l12"                   mask="0xFFFF8000"      permission="rw"      description="Polarity for FMC L12 TX pins" />
     </node>
 
     <node id="gtx_rx_polarity"      address="0x00000019"      permission="rw"      description="Configuration for GTX polarity">
@@ -231,10 +230,10 @@
     </node>
 
    <node id="cnf_portcard_adapter"  address="0x0000001C"      permission="rw"      description="Configure SPI communication with Portcard Test Adapter">
-      <node id="ctrl"                    mask="0x00000003"    permission="rw"      description="Idle='0', Write Register='1', Read Register='2'" />
-      <node id="switch_address"          mask="0x000003FC"    permission="rw"      description="Specify the address of one switch register" />
-      <node id="switch_value"            mask="0x0003FC00"    permission="rw"      description="Specify the value of one switch register" />
-      <node id="reset"                   mask="0x00040000"    permission="rw"      description="Reset SPI communication" />
+      <node id="ctrl"                  mask="0x00000003"    permission="rw"      description="Idle='0', Write Register='1', Read Register='2'" />
+      <node id="switch_address"        mask="0x000003FC"    permission="rw"      description="Specify the address of one switch register" />
+      <node id="switch_value"          mask="0x0003FC00"    permission="rw"      description="Specify the value of one switch register" />
+      <node id="reset"                 mask="0x00040000"    permission="rw"      description="Reset SPI communication" />
     </node>
 
   </node>

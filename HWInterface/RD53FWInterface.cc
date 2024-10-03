@@ -239,20 +239,6 @@ void RD53FWInterface::PrintFWstatus()
     else
         LOG(ERROR) << BOLDRED << "\t--> Clock generator is not locked" << RESET;
 
-    // ############################
-    // # Check I2C initialization #
-    // ############################
-    if(RegManager::ReadReg("user.stat_regs.global_reg.i2c_init") == 1)
-        LOG(INFO) << BOLDBLUE << "\t--> I2C " << BOLDYELLOW << "initialized (meaningful only for optical readout)" << RESET;
-    else
-    {
-        LOG(ERROR) << BOLDRED << "I2C not initialized (meaningful only for optical readout)" << RESET;
-        uint32_t status = RegManager::ReadReg("user.stat_regs.global_reg.i2c_init_err");
-        LOG(ERROR) << BOLDRED << "\t--> I2C initialization status error: " << BOLDYELLOW << status << RESET;
-    }
-
-    if(RegManager::ReadReg("user.stat_regs.global_reg.i2c_acq_err") == 1) LOG(INFO) << GREEN << "I2C ack error during analog readout (for KSU FMC only)" << RESET;
-
     // ############################################################
     // # Check status registers associated wih fast command block #
     // ############################################################
@@ -1123,46 +1109,37 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
 
 void RD53FWInterface::SetDownLinkMapping(uint8_t TxLink, uint8_t TxGroup, uint8_t TxModuleId)
 {
-    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.downlink_map_id", TxLink},
-                               {"user.ctrl_regs.lpgbt_mapping.downgroup_map_id", TxGroup},
-                               {"user.ctrl_regs.lpgbt_mapping.module_map_id", TxModuleId},
+    RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.link_id", TxLink},
+                               {"user.ctrl_regs.lpgbt_mapping.tx_elink_id", TxGroup},
+                               {"user.ctrl_regs.lpgbt_mapping.module_id", TxModuleId},
                                {"user.ctrl_regs.lpgbt_mapping.update_downlink", 1},
                                {"user.ctrl_regs.lpgbt_mapping.update_downlink", 0}});
 }
 
 void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, uint8_t ModuleId, uint8_t ChipId, const std::vector<std::pair<uint8_t, uint8_t>>& RxGroupsChipLanes)
 {
-    // // #######################
-    // // # Chip identification #
-    // // #######################
-    // std::vector<std::pair<std::string, uint32_t>> commands{
-    //     {"user.ctrl_regs.elink_mapping.link_id", RxLink}, {"user.ctrl_regs.elink_mapping.module_id", ModuleId}, {"user.ctrl_regs.elink_mapping.chip_id", ChipId}};
+    // #######################
+    // # Chip identification #
+    // #######################
+    std::vector<std::pair<std::string, uint32_t>> commands{
+        {"user.ctrl_regs.lpgbt_mapping.link_id", RxLink}, {"user.ctrl_regs.lpgbt_mapping.module_id", ModuleId}, {"user.ctrl_regs.lpgbt_mapping.chip_id", ChipId}};
 
-    // // ###############################
-    // // # RxGroup to ChipLane mapping #
-    // // ###############################
-    // for(auto RxGroupChipLane: RxGroupsChipLanes) commands.push_back({"user.ctrl_regs.elink_mapping.lane" + std::to_string(RxGroupChipLane.second) + "_elink_id", RxGroupChipLane.first});
+    // ###############################
+    // # RxGroup to ChipLane mapping #
+    // ###############################
+    for(auto RxGroupChipLane: RxGroupsChipLanes) commands.push_back({"user.ctrl_regs.lpgbt_mapping.lane" + std::to_string(RxGroupChipLane.second) + "_elink_id", RxGroupChipLane.first});
 
-    // // ####################
-    // // # Toggle to update #
-    // // ####################
-    // commands.push_back({"user.ctrl_regs.lpgbt_mapping.update_uplink", 1});
-    // commands.push_back({"user.ctrl_regs.lpgbt_mapping.update_uplink", 0});
+    // ####################
+    // # Toggle to update #
+    // ####################
+    commands.push_back({"user.ctrl_regs.lpgbt_mapping.update_uplink", 1});
+    commands.push_back({"user.ctrl_regs.lpgbt_mapping.update_uplink", 0});
 
-    // // #################
-    // // # Send commands #
-    // // #################
-    // RegManager::WriteStackReg(commands);
-    // RegManager::WriteReg("user.ctrl_regs.i2c_block.active_lanes", RxGroupsChipLanes.size()); // @TMP@ : for the time being in the FW all chips can only have the same number of lanes
-
-    // @TMP@ : Yiannis, this is the old code
-    for(auto RxGroupChipLane: RxGroupsChipLanes)
-        RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_mapping.uplink_map_id", RxLink},
-                                   {"user.ctrl_regs.lpgbt_mapping.upgroup_map_id", RxGroupChipLane.first},
-                                   {"user.ctrl_regs.lpgbt_mapping.module_map_id", ModuleId},
-                                   {"user.ctrl_regs.lpgbt_mapping.chip_map_id", RxGroupChipLane.second},
-                                   {"user.ctrl_regs.lpgbt_mapping.update_uplink", 1},
-                                   {"user.ctrl_regs.lpgbt_mapping.update_uplink", 0}});
+    // #################
+    // # Send commands #
+    // #################
+    RegManager::WriteStackReg(commands);
+    RegManager::WriteReg("user.ctrl_regs.i2c_block.active_lanes", RxGroupsChipLanes.size()); // @TMP@ : for the time being in the FW all chips can only have the same number of lanes
 }
 
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
@@ -1533,25 +1510,26 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
         {
             uint8_t hybrid_id = thePair.first >> 8;
             uint8_t chip_id   = thePair.first & 0x00FF;
-
+            LOG(INFO) << GREEN << "\t--> Hybrid Id " << BOLDYELLOW << +hybrid_id << RESET << GREEN << " Chip Id " << BOLDYELLOW << +chip_id << RESET;
             for(const auto& lane: thePair.second)
             {
-                RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id}, {"user.ctrl_regs.PRBS_checker.chip_address", chip_id}});
+                RegManager::WriteStackReg(
+                    {{"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id}, {"user.ctrl_regs.PRBS_checker.chip_address", chip_id}, {"user.ctrl_regs.PRBS_checker.lane_addr", lane}});
 
                 cntr_hi = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
                 cntr_lo = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
                 nErrors = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
 
                 if(bits::pack<32, 32>(cntr_hi, cntr_lo) == 0)
-                    LOG(WARNING) << BOLDRED << "No clock was detected for Hybrid ID " << BOLDYELLOW << hybrid_id << BOLDRED << " Chip Id " << BOLDYELLOW << chip_id << BOLDRED << " Chip Lane "
-                                 << BOLDYELLOW << lane << RESET;
+                    LOG(WARNING) << BOLDRED << "No clock was detected for Hybrid Id " << BOLDYELLOW << +hybrid_id << BOLDRED << " Chip Id " << BOLDYELLOW << +chip_id << BOLDRED << " Chip Lane "
+                                 << BOLDYELLOW << +lane << RESET;
                 else
                 {
                     frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
                     forceDone    = false;
 
-                    LOG(INFO) << GREEN << "Frames with error(s): " << BOLDYELLOW << nErrors << RESET << GREEN << "(" << BOLDYELLOW << std::fixed << std::setprecision(3) << nErrors / frameCounter * 100
-                              << RESET << GREEN << "% of the sent frames)" << std::setprecision(-1) << RESET;
+                    LOG(INFO) << GREEN << "\t\t--> Frames with error(s) (Chip Lane: " << BOLDYELLOW << +lane << RESET << GREEN << "): " << BOLDYELLOW << nErrors << RESET << GREEN << " (" << BOLDYELLOW
+                              << std::fixed << std::setprecision(3) << nErrors / frameCounter * 100 << RESET << GREEN << "% of the sent frames)" << std::setprecision(-1) << RESET;
                 }
             }
         }
@@ -1576,6 +1554,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
     // # Read PRBS frame counter #
     // ###########################
     std::vector<double> results;
+    LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     for(const auto& thePair: hybrid_id_chip_id_chip_lanes)
     {
         uint8_t hybrid_id = thePair.first >> 8;
@@ -1583,8 +1562,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
 
         for(const auto& lane: thePair.second)
         {
-            // @TMP@ : Yiannis needs to tell me which register to use for chip lane
-            RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id}, {"user.ctrl_regs.PRBS_checker.chip_address", chip_id}});
+            RegManager::WriteStackReg({{"user.ctrl_regs.PRBS_checker.module_addr", hybrid_id}, {"user.ctrl_regs.PRBS_checker.chip_address", chip_id}, {"user.ctrl_regs.PRBS_checker.lane_addr", lane}});
 
             cntr_hi      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_high");
             cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
@@ -1592,16 +1570,15 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
             nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
             results.push_back(nErrors / frames2run);
 
-            LOG(INFO) << BOLDGREEN << "===== BER test summary for Hybrid ID " << BOLDYELLOW << hybrid_id << BOLDGREEN << " Chip Id " << BOLDYELLOW << chip_id << BOLDGREEN << " Chip Lane " << lane
-                      << BOLDGREEN << " =====" << RESET;
+            LOG(INFO) << BOLDGREEN << "Hybrid Id " << BOLDYELLOW << +hybrid_id << BOLDGREEN << " Chip Id " << BOLDYELLOW << +chip_id << BOLDGREEN << " Chip Lane " << BOLDYELLOW << +lane << RESET;
             LOG(INFO) << GREEN << "Number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
             LOG(INFO) << GREEN << "Frames with error(s): " << BOLDYELLOW << nErrors << RESET;
             LOG(INFO) << GREEN << "Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << std::fixed << std::setprecision(3)
                       << results.back() * 100 << RESET << GREEN << "%)" << std::setprecision(-1) << RESET;
             LOG(INFO) << GREEN << "BER test result: " << (nErrors == 0 ? BOLDYELLOW : BOLDRED) << (nErrors == 0 ? "PASSED" : "NOT PASSED") << RESET;
-            LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
         }
     }
+    LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
     return results;
 }
