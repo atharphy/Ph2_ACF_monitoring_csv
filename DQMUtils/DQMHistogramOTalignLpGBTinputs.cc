@@ -27,34 +27,23 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
     // SoC utilities only - END
 
     fGroupAndChannelToBinNumber.clear();
-    const auto theGroupsAndChannels       = theDetectorStructure.getFirstObject()->getFirstObject()->getLpGBTrxGroupsAndChannels();
     const auto theHybridGroupsAndChannels = theDetectorStructure.getFirstObject()->getFirstObject()->getLpGBTrxGroupsAndChannelsPerHybrid();
 
-    int numberOfBins = 0;
-    for(const auto& groupAndChannels: theGroupsAndChannels)
+    int numberOfBins = theHybridGroupsAndChannels.size();
+    for(const auto& groupAndChannels: theHybridGroupsAndChannels)
     {
-        for(const auto channel: groupAndChannels.second)
-        {
-            fGroupAndChannelToBinNumber[groupAndChannels.first][channel] = numberOfBins + 1;
-            ++numberOfBins;
-        }
+        fGroupAndChannelToBinNumber[groupAndChannels.first.first][groupAndChannels.first.second] = groupAndChannels.second.first * numberOfBins / 2 + groupAndChannels.second.second + 1;
     }
 
-    auto setBinLabels = [this, &theHybridGroupsAndChannels](TAxis* theHistogram)
+    auto setBinLabels = [this, numberOfBins](TAxis* theHistogramAxis)
     {
-        for(const auto& group: this->fGroupAndChannelToBinNumber)
+        for(int binNumber = 0; binNumber < numberOfBins; ++binNumber)
         {
-            for(const auto& channelAndBin: group.second)
-            {
-                auto        hybridAndLine = theHybridGroupsAndChannels.at(std::make_pair(group.first, channelAndBin.first));
-                std::string label         = "FEH";
-                label += hybridAndLine.first == 0 ? "R" : "L";
-                if(hybridAndLine.second == 0)
-                    label += "_L1";
-                else
-                    label += Form("_Stub%d", hybridAndLine.second - 1);
-                theHistogram->SetBinLabel(channelAndBin.second, label.c_str());
-            }
+            std::string label = "FEH";
+            label += (2 * binNumber / numberOfBins > 0) ? "L" : "R";
+            if(2 * binNumber % numberOfBins == 0) label += "_L1";
+            else label += ("_Stub" + std::to_string(binNumber % (numberOfBins/2) -1));
+            theHistogramAxis->SetBinLabel(binNumber + 1, label.c_str());
         }
     };
 
