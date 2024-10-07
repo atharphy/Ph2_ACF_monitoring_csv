@@ -82,8 +82,8 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     DetectorDataContainer fDetectorHybridNoiseHistograms;
     DetectorDataContainer fDetectorHybridStripNoiseHistograms;
     DetectorDataContainer fDetectorHybridPixelNoiseHistograms;
-    DetectorDataContainer fDetectorHybridStripNoiseEvenHistograms; // only for CBC
-    DetectorDataContainer fDetectorHybridStripNoiseOddHistograms;  // only for CBC
+    DetectorDataContainer fDetectorHybridStripNoiseBottomHistograms; // only for CBC
+    DetectorDataContainer fDetectorHybridStripNoiseTopHistograms;  // only for CBC
 
     DetectorDataContainer fDetectorChipStripSCurveHistograms;
     DetectorDataContainer fDetectorChipPixelSCurveHistograms;
@@ -108,8 +108,8 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
 
     DetectorDataContainer fDetectorChannel2DPixelNoiseHistograms;
 
-    DetectorDataContainer fDetectorChannelStripNoiseEvenHistograms;
-    DetectorDataContainer fDetectorChannelStripNoiseOddHistograms;
+    DetectorDataContainer fDetectorChannelStripNoiseBottomHistograms;
+    DetectorDataContainer fDetectorChannelStripNoiseTopHistograms;
 
     bool fWithCBC = false;
     bool fWithSSA = false;
