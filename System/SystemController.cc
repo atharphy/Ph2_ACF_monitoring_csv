@@ -360,7 +360,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             fDetectorMonitor = new PSMonitor(this, *fDetectorMonitorConfig);
         else
         {
-            LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
+            LOG(ERROR) << BOLDRED << "Unrecognized monitor type. Aborting" << RESET;
             exit(EXIT_FAILURE);
         }
 

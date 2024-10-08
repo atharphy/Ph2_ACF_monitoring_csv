@@ -213,7 +213,12 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     if(fabs(inputClk / 1000. - 40) > 1) LOG(ERROR) << BOLDRED << "Input clock frequency not nominal" << RESET;
     LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz"
               << std::setprecision(-1) << RESET;
-    if(!((fabs(gtxClk / 1000. - 160) < 1) || (fabs(gtxClk / 1000. - 320) < 1))) LOG(ERROR) << BOLDRED << "GTX receiver clock frequency not nominal" << RESET;
+    if(!((fabs(gtxClk / 1000. - 160) < 1) || (fabs(gtxClk / 1000. - 320) < 1)))
+    {
+        LOG(ERROR) << BOLDRED << "GTX receiver clock frequency not nominal" << RESET;
+        LOG(ERROR) << BOLDRED << "===== Aborting =====" << RESET;
+        exit(EXIT_FAILURE);
+    }
 
     // ##################
     // # Reset Metadata #
