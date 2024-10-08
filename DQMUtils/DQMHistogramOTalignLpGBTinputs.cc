@@ -41,8 +41,10 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
         {
             std::string label = "FEH";
             label += (2 * binNumber / numberOfBins > 0) ? "L" : "R";
-            if(2 * binNumber % numberOfBins == 0) label += "_L1";
-            else label += ("_Stub" + std::to_string(binNumber % (numberOfBins/2) -1));
+            if(2 * binNumber % numberOfBins == 0)
+                label += "_L1";
+            else
+                label += ("_Stub" + std::to_string(binNumber % (numberOfBins / 2) - 1));
             theHistogramAxis->SetBinLabel(binNumber + 1, label.c_str());
         }
     };
