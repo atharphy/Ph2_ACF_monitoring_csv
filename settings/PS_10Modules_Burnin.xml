@@ -14,6 +14,8 @@
             <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
             <Settings/>
             </lpGBT>
+            <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
+            <VTRx Id="0" configFile="VTRx.txt"/>
             <Hybrid Id="0" enable="1" reset="1" invertClock="0">
                 <Global>                 
                     <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
@@ -95,6 +97,8 @@
             <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
             <Settings/>
             </lpGBT>
+            <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
+            <VTRx Id="0" configFile="VTRx.txt"/>
             <Hybrid Id="0" enable="1" reset="1" invertClock="0">
                 <Global>                 
                     <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
@@ -176,6 +180,8 @@
             <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
             <Settings/>
             </lpGBT>
+            <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
+            <VTRx Id="0" configFile="VTRx.txt"/>
             <Hybrid Id="0" enable="1" reset="1" invertClock="0">
                 <Global>                 
                     <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
@@ -257,6 +263,8 @@
             <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
             <Settings/>
             </lpGBT>
+            <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
+            <VTRx Id="0" configFile="VTRx.txt"/>
             <Hybrid Id="0" enable="1" reset="1" invertClock="0">
                 <Global>                 
                     <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
@@ -338,6 +346,8 @@
             <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
             <Settings/>
             </lpGBT>
+            <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
+            <VTRx Id="0" configFile="VTRx.txt"/>
             <Hybrid Id="0" enable="1" reset="1" invertClock="0">
                 <Global>                 
                     <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
@@ -419,6 +429,8 @@
             <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
             <Settings/>
             </lpGBT>
+            <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
+            <VTRx Id="0" configFile="VTRx.txt"/>
             <Hybrid Id="0" enable="1" reset="1" invertClock="0">
                 <Global>                 
                     <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
@@ -500,6 +512,8 @@
             <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
             <Settings/>
             </lpGBT>
+            <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
+            <VTRx Id="0" configFile="VTRx.txt"/>
             <Hybrid Id="0" enable="1" reset="1" invertClock="0">
                 <Global>                 
                     <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
@@ -581,6 +595,8 @@
             <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
             <Settings/>
             </lpGBT>
+            <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
+            <VTRx Id="0" configFile="VTRx.txt"/>
             <Hybrid Id="0" enable="1" reset="1" invertClock="0">
                 <Global>                 
                     <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
@@ -662,6 +678,8 @@
             <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
             <Settings/>
             </lpGBT>
+            <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
+            <VTRx Id="0" configFile="VTRx.txt"/>
             <Hybrid Id="0" enable="1" reset="1" invertClock="0">
                 <Global>                 
                     <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
@@ -743,6 +761,8 @@
             <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
             <Settings/>
             </lpGBT>
+            <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
+            <VTRx Id="0" configFile="VTRx.txt"/>
             <Hybrid Id="0" enable="1" reset="1" invertClock="0">
                 <Global>                 
                     <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
