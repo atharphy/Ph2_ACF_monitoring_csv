@@ -208,11 +208,6 @@ void OTBitErrorRateTest::bitErrorRateTest()
                 std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVector[lineIndex], 1, true) << std::endl;
             }
 
-            // flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain10", 0x00);
-            // flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain32", 0x00);
-            // flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain54", 0x00);
-            // flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrainEc6", 0x00);
-
             if(!allAligned) //
             {
                 std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]"

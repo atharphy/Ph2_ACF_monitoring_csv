@@ -23,7 +23,7 @@ void DQMHistogramOTVTRxLightYieldScan::book(TFile* theOutputFile, DetectorContai
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    HistContainer<TH2F> lightYieldHistogram("VTRxLightYieldScan", "VTRx Light Yield Scan - Power (#{mu}W)", 8, 46, 82, 8, 30, 66);
+    HistContainer<TH2F> lightYieldHistogram("VTRxLightYieldScan", "VTRx Light Yield Scan - Power (#muW)", 5, 38, 58, 5, 22, 42);
     lightYieldHistogram.fTheHistogram->GetXaxis()->SetTitle("bias [DAC units]");
     lightYieldHistogram.fTheHistogram->GetYaxis()->SetTitle("modulation [DAC units]");
     lightYieldHistogram.fTheHistogram->SetStats(false);
