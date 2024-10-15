@@ -123,4 +123,4 @@ For any support/suggestions, send an email to fabio.raveraSPAMNOT@cern.ch, mauro
 
 Firmware tag: v3-00
 
-Ph2_ACF tag: v6-00
+Ph2_ACF tag: v6-01
