@@ -1,5 +1,5 @@
 #include "miniDAQ/CombinedCalibrationFactory.h"
-
+#include "tools/PSCounterTest.h"
 #include "MiddlewareController.h"
 #include "tools/BeamTestCheck.h"
 #include "tools/CBCPulseShape.h"
@@ -178,7 +178,12 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              CalibrationExample>("Outer Tracker", "calibrationexample");
-
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTalignStubPackage,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             PSCounterTest>("Outer Tracker", "pscountertest");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, LatencyScan>(
         "Outer Tracker", "otlatency");
 
