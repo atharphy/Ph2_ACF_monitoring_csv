@@ -712,9 +712,22 @@
 
             <node id="mpa_to_cic_cntr"            address="0x0F9" mask="0xFFFFFFFF"/>
             <node id="async_counter_decode"        address="0x0FF">
-                    <node id="ready"                  mask="0x00000001"/>
-                    <node id="state"                  mask="0x000000F0"/>
-                    <node id="received_start"         mask="0x00FFFF00"/>
+                <node id="ready"                  mask="0x00000001"/>
+                <node id="state"                  mask="0x000000F0"/>
+                <node id="received_start"         mask="0x00FFFF00"/>
+		<node id="chip_counters_done"             mask="0x00000010"/>
+                <node id="store_fsm_state"                 mask="0x000001E0"/>
+                <node id="received_start"               mask="0x01FFFE00"/>
+                <node id="start_pattern_not_found"         mask="0x02000000"/>
+            </node>
+	    <node id="async_counter_stats"        address="0x121">
+                    <node id="package"             mask="0x0000FFFF"/>
+                    <node id="clocks"              mask="0xFFFF0000"/>
+            </node>
+            <node id="async_counter_ddr3_packer"        address="0x120">
+                    <node id="fsm_state"                       mask="0x0000000F"/>
+                    <node id="num_fifo_entry"                  mask="0x0000FFF0"/>
+                    <node id="num_boxcar_rxd"                  mask="0x0FFF0000"/>
             </node>
             
             <node id="ps_return"                address="0x00E">

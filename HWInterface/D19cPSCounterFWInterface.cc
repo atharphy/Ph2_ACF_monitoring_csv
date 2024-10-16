@@ -12,6 +12,7 @@
 #include "Utils/easylogging++.h"
 #include <thread>
 #include <numeric>
+#include "Utils/Utilities.h"
 
 using namespace Ph2_HwDescription;
 
@@ -225,7 +226,17 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
 {
     fPSCounterData.clear();
 
+    fTheRegManager->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
+
     LOG(INFO) << BOLDGREEN <<"FastRead() Starts" << RESET;
+
+    fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 50);
+    fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 50);
+    fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", 50);
+    
+    fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_delay.after_clear_counters", 50);
+    fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_delay.after_close_shutter", 50);
+    fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_delay.after_open_shutter", 50);
 
     std::string                                   cStartPattern = "111111111111111";
     auto cCicVeto = fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto");
@@ -267,16 +278,13 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
         {
             if(cDecoderState==0x00 && cCountersReady==0x00) 
             {
-                PS_Start_counters_read();
+                // PS_Start_counters_read();
+                // fFastCommandInterface->SendGlobalReSync();
+                fFastCommandInterface->SendGlobalCounterReset();
                 fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
 //                LOG(INFO) << BOLDGREEN << "Manually Send PS Start Counter Readout" << RESET;
             }
-            // if(cIterations%100==0) LOG (DEBUG) << BOLDYELLOW << "[Iter#" << +cIterations << "] Hybrid#"
-                // << cHybrid   
-                // << " Decoder state : 0x" << std::hex << cDecoderState << std::dec 
-                // << " Counters Ready : 0x" << std::hex << cCountersReady << std::dec 
-                // << RESET;
-            if(cIterations%100==0) LOG (INFO) << BOLDYELLOW << "[Iter#" << +cIterations << "] Hybrid#"
+            if(cIterations%100==0) LOG (DEBUG) << BOLDYELLOW << "[Iter#" << +cIterations << "] Hybrid#"
                 << cHybrid   
                 << " Decoder state : 0x" << std::hex << cDecoderState << std::dec 
                 << " Counters Ready : 0x" << std::hex << cCountersReady << std::dec 
@@ -308,13 +316,10 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
         auto cRxdStart = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.received_start");
         auto cNPkgsDcdr = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_stats.package");
         auto cNClksDcdr = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_stats.clocks");
-        // LOG (DEBUG) << BOLDYELLOW << "Decoder Block rxd start : " <<  +cRxdStart << " clock cycles after reset " << RESET;
-        // LOG (DEBUG) << BOLDYELLOW << "Decoder Block rxd  : " <<  +cNPkgsDcdr << " package  " << RESET;
-        // LOG (DEBUG) << BOLDYELLOW << "Decoder Block rxd  data for " <<  +cNClksDcdr << " clk cycles  " << RESET;
+        LOG (DEBUG) << BOLDYELLOW << "Decoder Block rxd start : " <<  +cRxdStart << " clock cycles after reset " << RESET;
+        LOG (DEBUG) << BOLDYELLOW << "Decoder Block rxd  : " <<  +cNPkgsDcdr << " package  " << RESET;
+        LOG (DEBUG) << BOLDYELLOW << "Decoder Block rxd  data for " <<  +cNClksDcdr << " clk cycles  " << RESET;
 
-        LOG (INFO) << BOLDYELLOW << "Decoder Block rxd start : " <<  +cRxdStart << " clock cycles after reset " << RESET;
-        LOG (INFO) << BOLDYELLOW << "Decoder Block rxd  : " <<  +cNPkgsDcdr << " package  " << RESET;
-        LOG (INFO) << BOLDYELLOW << "Decoder Block rxd  data for " <<  +cNClksDcdr << " clk cycles  " << RESET;
 
 //        PS_Start_counters_read();
     }
@@ -363,7 +368,7 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
             // << " FastReset Flag: 0x" << std::hex << +cFastReset << std::dec << RESET;
         // if(cIterations%100==0) LOG (INFO) << BOLDRED << "Iteration #" << cIterations
             // << " FastOrbitReset Flag: 0x" << std::hex << +cFastOrbitReset << std::dec << RESET;
-        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));   
+        std::this_thread::sleep_for(std::chrono::microseconds(100));   
         cDDR3state = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.fsm_state");
         cNBoxcars = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.num_boxcar_rxd");
         cNFIFOentries = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.num_fifo_entry");
@@ -374,15 +379,15 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
             
      
         // Added for debugging:
-        auto cFastCommandFSM = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
-        auto cTriggerIn = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-        auto cAsyncDone = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.antenna_async_done");
-        if(cIterations%100==0)
-        {
-            LOG (INFO) << BOLDYELLOW << "FastCommandFSM : 0x" << std::hex << +cFastCommandFSM << std::dec << RESET;
-            LOG (INFO) << BOLDYELLOW << "cTriggerIn : 0x" << std::hex << +cTriggerIn << std::dec << RESET;
-            LOG (INFO) << BOLDYELLOW << "cAsyncDone : 0x" << std::hex << +cAsyncDone << std::dec << RESET;
-        }    
+//        auto cFastCommandFSM = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
+//        auto cTriggerIn = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
+//        auto cAsyncDone = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.antenna_async_done");
+//        if(cIterations%100==0)
+//        {
+//            LOG (INFO) << BOLDYELLOW << "FastCommandFSM : 0x" << std::hex << +cFastCommandFSM << std::dec << RESET;
+//            LOG (INFO) << BOLDYELLOW << "cTriggerIn : 0x" << std::hex << +cTriggerIn << std::dec << RESET;
+//            LOG (INFO) << BOLDYELLOW << "cAsyncDone : 0x" << std::hex << +cAsyncDone << std::dec << RESET;
+//        }    
             
             cIterations++;
     }while( cDDR3state != 0x1  );// while not in idle state 
@@ -392,20 +397,35 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
     LOG (INFO) << BOLDYELLOW << "#FIFO Entries 0x" << std::hex << +cNFIFOentries << std::dec << RESET;
 
     // Testing using ReadPSCountersFast
-    // LOG (INFO) << BOLDRED << "Trying ReadPSCountersFast" << RESET;
+    LOG (INFO) << BOLDRED << "Trying ReadPSCountersFast" << RESET;
     // ReadPSCountersFast(1, 8, 0); // Raw Mode, Chip ID, Hybrid ID
     
     
     
-    
-    
+    LOG (INFO) << BOLDRED << "Printing DDR3 Content" << RESET;
     auto cData = fTheRegManager->ReadBlockRegOffset("fc7_daq_ddr3", cNFIFOentries*1024/32, 0);
-    for(auto data: cData)
-    {
-        std::cout<<std::hex<<data<< " " <<std::dec;
-    }
+    // for(auto data: cData)
+    // {
+        // std::cout<<std::hex<<data<< " " <<std::dec;
+    // }
 
     std::cout<<std::endl;
+
+    // std::cout<<getPatternPrintout(cData,1,true)<<std::endl;
+
+    std::cout<<std::endl;
+
+    std::cout<<getPatternPrintout(cData,1,false)<<std::endl;
+
+    std::cout<<std::endl;
+    std::cout<<std::endl;
+
+    
+//    LOG (INFO) << BOLDRED << "Trying ReadPSSCCountersFast" << RESET;
+//    std::vector<uint32_t> pData;
+//    ReadPSSCCountersFast(pBoard, pData, cRawMode);
+
+
     auto cIter = cData.begin();
     cIter += +32;// offset header 
     size_t cPrintUntil = 10; 
@@ -519,6 +539,7 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
     std::vector<std::string> cDataFrmHybs{ cDataH1.str(), cDataH0.str() };
     size_t cNHybrids=0;
     LOG (INFO) << BOLDGREEN << "Testing FastRead" << RESET;
+    fSuccessFastRead = true; 
     for(auto cData : cDataFrmHybs) 
     {
         if( cNHybrids > 0 ) continue;
@@ -559,7 +580,8 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
                 {
                     auto cStubPkt = cData.substr(cStrOffset, 6*8*8 - cPktLngth);
                     // if( cNPkts < 20) 
-                    LOG (DEBUG) << BOLDYELLOW << "Pkt#" << cNPkts <<  " BxId " << cHdrVals["BxId"] << ", "  << cHdrVals["NbStubs"] <<  RESET;
+                    //LOG (DEBUG) << BOLDYELLOW << "Pkt#" << cNPkts <<  " BxId " << cHdrVals["BxId"] << ", "  << cHdrVals["NbStubs"] <<  RESET;
+                    LOG (INFO) << BOLDYELLOW << "Pkt#" << cNPkts <<  " BxId " << cHdrVals["BxId"] << ", "  << cHdrVals["NbStubs"] <<  RESET;
                     if( cHdrVals["NbStubs"] > 0 && cFrstPktWthStbs == 0 ) cFrstPktWthStbs = cNPkts;
                     if( cHdrVals["NbStubs"] > 0 ) cLstPktWthStbs = cNPkts;
                     if( cStubPkt.length() < 21*cHdrVals["NbStubs"] ) break; 
@@ -568,7 +590,8 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
                     {
                         auto cStubBits = cStubPkt.substr(cStbIndx*21, 21); 
                         if( cFrstPktWthStbs != 0 && (cFrstPktWthStbs == cLstPktWthStbs) ) cStartPatternRxd = cStartPatternRxd && cStubBits.substr(6,15) == cStartPattern;
-                        if( cNPkts < 10 ) LOG (DEBUG) << BOLDYELLOW << " Stub#" << cStbIndx << " : " << cStubBits << RESET;
+                        //if( cNPkts < 10 ) LOG (DEBUG) << BOLDYELLOW << " Stub#" << cStbIndx << " : " << cStubBits << RESET;
+                        if( cNPkts < 10 ) LOG (INFO) << BOLDYELLOW << " Stub#" << cStbIndx << " : " << cStubBits << RESET;
                         size_t cStbOffst=0;
                         std::map<std::string, uint16_t> cStubVals;
                         for(auto cStbFld : cStbFlds )
@@ -577,7 +600,8 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
                             if( cStbFld.first == "Stub" ){ 
                                 uint16_t cCounterValue = std::stoi(cStr.substr(8, 6) + cStr.substr(0, 7), 0, 2) ;
                                 if( cStartPatternRxd && (cFrstPktWthStbs != cLstPktWthStbs) ) cCounters[cStubVals["FeId"]].push_back(cCounterValue);
-                                if( cNPkts%10 == 0 )  LOG (DEBUG) << BOLDGREEN << "FeId#" << cStubVals["FeId"] << " Offset " << cStubVals["Offset"] << " Stub : " << cStr << " -- " << cCounterValue << RESET;
+                                //if( cNPkts%10 == 0 )  LOG (DEBUG) << BOLDGREEN << "FeId#" << cStubVals["FeId"] << " Offset " << cStubVals["Offset"] << " Stub : " << cStr << " -- " << cCounterValue << RESET;
+                                if( cNPkts%10 == 0 )  LOG (INFO) << BOLDGREEN << "FeId#" << cStubVals["FeId"] << " Offset " << cStubVals["Offset"] << " Stub : " << cStr << " -- " << cCounterValue << RESET;
                             }
                             else cStubVals[cStbFld.first] = std::stoi( cStr , 0 , 2 ); 
                             cStbOffst += cStbFld.second; 
@@ -595,7 +619,7 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
         LOG (INFO) << BOLDYELLOW << "Last packet with a stub " << cLstPktWthStbs << RESET;
         LOG (INFO) << BOLDYELLOW << "Number of FEs with counters read-out " << cCounters.size() << RESET;
 
-	// Temporarily removed
+	//Temporary Commented
 //        fSuccessFastRead = fSuccessFastRead && (cCounters.size() == 8 ); 
         if(!cStartPatternRxd) LOG (DEBUG) << BOLDRED << "Start pattern not found" << RESET;
         for( auto cCounter : cCounters ) 
@@ -672,7 +696,8 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
 
 
 // method to read SSA/MPA counters over stub lines on single chip cards
-void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode)
+//void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode)
+void D19cPSCounterFWInterface::ReadPSSCCountersFast(const BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode)
 {
     this->fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", 0x0);
     this->fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", pRawMode);
@@ -698,7 +723,7 @@ void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector
                     cStatus = this->fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.ps_counters_ready");
                 } while(cStatus == 0);
 
-                // LOG(DEBUG) << BOLDBLUE << "PS counters " << BOLDGREEN << " READY " << RESET;
+                LOG(DEBUG) << BOLDBLUE << "PS counters " << BOLDGREEN << " READY " << RESET;
                 uint32_t cDataWord    = 0x0000;
                 uint32_t cWordCounter = 0;
                 for(int cChannelId = 0; cChannelId < (int)cChip->size(); cChannelId++)
@@ -730,6 +755,7 @@ void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector
                                 if(temp != 0)
                                 {
                                     count[cycle] = temp - 1;
+                                    LOG(INFO) << BOLDYELLOW << "Count#" << cycle << ": " << count[cycle] << RESET;
                                     cycle += 1;
                                 }
                             }
@@ -760,14 +786,18 @@ void D19cPSCounterFWInterface::ReadPSSCCountersFast(BeBoard* pBoard, std::vector
 void D19cPSCounterFWInterface::GetCounterData(const BeBoard* pBoard)
 {
     // LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::GetCounterData" << RESET;
+    LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::GetCounterData" << RESET;
     auto cFrontEndTypes = pBoard->connectedFrontEndTypes();
     // LOG(DEBUG) << BOLDYELLOW << cFrontEndTypes.size() << " different types of Chips connected to BeBoard#" << +pBoard->getId() << RESET;
+    LOG(INFO) << BOLDYELLOW << cFrontEndTypes.size() << " different types of Chips connected to BeBoard#" << +pBoard->getId() << RESET;
     if(fPSCounterFast == 0) // readout over registers
     {
         SlowRead(pBoard);
     }
     else // readout over fast interface
     {
+        LOG(INFO) << BOLDGREEN << "Running FastRead()" << RESET;
+        FastRead(pBoard); 
     }
 }
 void D19cPSCounterFWInterface::FillData()
@@ -816,10 +846,12 @@ bool D19cPSCounterFWInterface::WaitForNTriggers()
     // // wait for trigger state machine to send all triggers
     auto cTriggerSource = this->fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source"); // trigger source
     // LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
+    LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData After resetting trigger FSM.. trigger source is " << cTriggerSource << RESET;
 
     if(cTriggerSource == 10 || cTriggerSource == 12)
     {
         // LOG(DEBUG) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
+        LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::WaitForData Running Trigger FSM ..." << RESET;
         return fTriggerInterface->RunTriggerFSM();
     }
     else
@@ -840,13 +872,49 @@ bool D19cPSCounterFWInterface::PollReadoutData(const Ph2_HwDescription::BeBoard*
 }
 bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* pBoard)
 {
+    // Added For FastReadout
+    // fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto", 0);
+    // fFastCommandInterface->SendGlobalReSync();
+
+    LOG(INFO) << BOLDGREEN << "D19cPSCounterFWInterface::Manually Enable FastReadout Mode" << RESET;
+    SetPSCounterMode(1); //Enables Fast Readout Mode (Manually)
+//    SetPSCounterMode(0); //Disables Fast Readout Mode (Manually)
+    if( fPSCounterFast ) 
+    {
+
+        std::cout << "FSM state = " << fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << std::endl;
+
+        LOG (INFO) << BOLDGREEN << "Fast counter mode readout" << RESET;
+        fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto", 1);
+        fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.select_even", 1);
+        fTheRegManager->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0);
+        fTheRegManager->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",1);
+        fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.trigger_source",12);
+        fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en",1);
+        // fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en",0);
+
+//        LOG(DEBUG) << BOLDBLUE << "Reseting DDR3 " << RESET;
+        LOG(INFO) << BOLDBLUE << "Reseting DDR3 " << RESET;
+        auto cDDR3Calibrated = (fTheRegManager->ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
+        while(!cDDR3Calibrated)
+        {
+            //LOG(DEBUG) << "Waiting for DDR3 to finish initial calibration";
+            LOG(INFO) << BOLDYELLOW << "Waiting for DDR3 to finish initial calibration" << RESET;
+            std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+            cDDR3Calibrated = (fTheRegManager->ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
+        }
+        LOG(INFO) << BOLDBLUE << "DDR3 Initial Calibration Complete " << RESET;
+    }
+    // Added For FastReadout (End)
     // clear data vector
     fData.clear();
     // make sure trigger mult is taken into account
     auto cMultiplicity = fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     fNEvents           = fNEvents * (cMultiplicity + 1);
+    std::cout << "FSM state = " << fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << std::endl;
 
     fTriggerInterface->SetNTriggersToAccept(fNEvents);
+    std::cout << "FSM state = " << fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << std::endl;
 
     // make sure handshake is configured
     fTheRegManager->WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", fHandshake);
@@ -856,9 +924,13 @@ bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* pBoard)
     // fTriggerInterface->ResetTriggerFSM();
     // make sure counters have been cleared and reset
     // not sure its needed but.. to be safe
-    PS_Close_shutter();
-    fFastCommandInterface->SendGlobalReSync();
-    PS_Clear_counters();
+
+    // FIXME
+    // LOG(INFO) << BOLDYELLOW << "Send Global Resync" << RESET;	//Debug Print Statement
+    // PS_Close_shutter();
+    // fFastCommandInterface->SendGlobalReSync();
+    // PS_Clear_counters();
+    // LOG(INFO) << BOLDYELLOW << "Global Resync Sent" << RESET;	//Debug Print Statement
 
     if(byrow or bypixel)
     {
@@ -936,18 +1008,59 @@ bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* pBoard)
         }
     }
     else
-        WaitForNTriggers();
+//    	LOG(INFO) << BOLDRED << "WaitForNTriggers Commented Out" << RESET;	//Debug Print Statement
+	if(!fPSCounterFast)
+	{
+    	    WaitForNTriggers();
+    	    LOG(INFO) << BOLDRED << "WaitForNTriggers Done" << RESET;	//Debug Print Statement
+        }
+//    if(success)
+//    {
+//        LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents triggers succesfully sent" << RESET;
+//        GetCounterData(pBoard);
+
+//        FillData();
+//        LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents filled data vector with " << fData.size() << " 32-bit words" << RESET;
+//        return (fData.size() > 0);
+//    }
     if(success)
     {
         LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents triggers succesfully sent" << RESET;
-        GetCounterData(pBoard);
-
+        if( fPSCounterFast ) // Added For FastReadout
+        {
+            LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::fPSCounterFast was set to True" << RESET;
+            LOG(DEBUG) << BOLDYELLOW << "Running PSCounterFast" << RESET;
+            fSuccessFastRead = false;
+            size_t cIteration=0;
+            do
+            {
+    std::cout << "FSM state = " << fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << std::endl;
+                LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::Trying GetCounterData" << RESET;
+                GetCounterData(pBoard);
+                if(!fSuccessFastRead)
+                {
+                    LOG (INFO) << BOLDRED << "Fast read failed.. trying triggers again .. " << RESET;
+                    std::this_thread::sleep_for(std::chrono::microseconds(1500));
+                    WaitForNTriggers(); 
+                }
+                cIteration++; 
+            }while(!fSuccessFastRead); 
+            if( fSuccessFastRead ) LOG (INFO) << BOLDGREEN << " Succesful read of fast counters after " << (cIteration) << " attempts." << RESET;
+        }
+        // Added For FastReadout (End)
+	    else
+	    {
+    std::cout << "FSM state = " << fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << std::endl;
+            GetCounterData(pBoard);
+    std::cout << "FSM state = " << fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << std::endl;
+	    }
         FillData();
         LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::ReadEvents filled data vector with " << fData.size() << " 32-bit words" << RESET;
         return (fData.size() > 0);
     }
     else
         LOG(INFO) << BOLDRED << "D19cPSCounterFWInterface::ReadEvents did not receive all triggers..." << RESET;
+    std::cout << "FSM state = " << fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << std::endl;
 
     return false;
 }

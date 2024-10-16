@@ -38,7 +38,6 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     void SetPSCounterDelay(uint8_t pDelay) { fPSCounterDelay = pDelay; };
     void SetPSCounterMode(uint8_t pMode) { fPSCounterFast = pMode; };
     void SetPSPairSelect(uint8_t pMode) { fPairSelect = pMode; };
-    void FastRead(const Ph2_HwDescription::BeBoard* pBoard);
 
     void SetWait(uint32_t pWait_us) { fWait_us = pWait_us; }
 
@@ -74,7 +73,9 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
 
     // function read-back counters
     void SlowRead(const Ph2_HwDescription::BeBoard* pBoard);
-    void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode = 0);
+    void FastRead(const Ph2_HwDescription::BeBoard* pBoard);
+    //void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode = 0);
+    void ReadPSSCCountersFast(const Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode = 0);
     bool ReadPSCountersFast(uint8_t pRawMode, size_t pChipId, size_t pHybridId);
 
     //

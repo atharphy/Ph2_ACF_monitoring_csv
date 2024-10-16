@@ -94,6 +94,7 @@ void RegisterHelper::restoreSnapshot()
     for(auto theBoard: *fDetectorContainer)
     {
         const auto modifiedBoardRegisters = theBoard->getSnapshot();
+        for(auto theRegister: modifiedBoardRegisters) std::cout << theRegister.first << " 0x" << std::hex << theBoard->getReg(theRegister.first) << std::dec << std::endl;
         fBeBoardInterface->WriteBoardMultReg(theBoard, modifiedBoardRegisters);
         for(auto theOpticalGroup: *theBoard)
         {
