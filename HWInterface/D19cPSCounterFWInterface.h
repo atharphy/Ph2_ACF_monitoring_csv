@@ -55,6 +55,8 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     // 0  - Raw , 1 - parsed
     void configureFastReadout(uint8_t pEnable, uint8_t pMode = 0) { fPSCounterFast = pEnable; }
 
+    void setOutputFile(const std::string& theOutputFile) {fOutputFile = theOutputFile;}
+
   private:
     FEConfigurationInterface* fFEConfigurationInterface{nullptr};
 
@@ -65,6 +67,7 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     uint8_t  fPairSelect{0};
     uint32_t fReadoutAttempts{0};
     bool     fSuccessFastRead{false};
+    std::string fOutputFile{"./fastCounter.txt"};
 
     std::vector<uint8_t> fStubBuffer;
     PSCounterData        fPSCounterData;

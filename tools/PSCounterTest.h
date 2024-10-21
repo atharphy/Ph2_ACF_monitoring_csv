@@ -32,7 +32,7 @@ class PSCounterTest : public Tool
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
-    void RunFast();
+    void RunFast(uint16_t stripThreshold, uint16_t pixelThreshold);
     void Pause() override;
     void Resume() override;
     void Reset();

@@ -94,7 +94,7 @@
 				<Register name="antenna">0</Register>
 				<Register name="cal_pulse">1</Register>
 				<Register name="cic_veto">0</Register>
-				<Register name="clear_counters">0</Register>
+				<Register name="clear_counters">1</Register>
 				<Register name="close_shutter">1</Register>
 				<Register name="open_shutter">1</Register>
 				<Register name="select_even">0</Register>

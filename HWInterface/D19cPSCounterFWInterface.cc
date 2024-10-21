@@ -13,6 +13,7 @@
 #include <thread>
 #include <numeric>
 #include "Utils/Utilities.h"
+#include <fstream>
 
 using namespace Ph2_HwDescription;
 
@@ -224,17 +225,35 @@ bool D19cPSCounterFWInterface::ReadPSCountersFast(uint8_t pRawMode, size_t pChip
 // Added For FastReadout
 void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
 {
+    // LOG(DEBUG) << BOLDBLUE << "D19cL1ReadoutInterface Resetting readout..." << RESET;
+    // fTheRegManager->WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
+    // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+    // fTheRegManager->WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x0);
+    // std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+
+    // auto     cDDR3Calibrated = (fTheRegManager->ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
+    // uint16_t cAttempts       = 0;
+    // uint16_t cMaxAttempts    = 1000;
+
+    // while(!cDDR3Calibrated && (cAttempts < cMaxAttempts))
+    // {
+    //     LOG(INFO) << "Waiting for DDR3 to finish initial calibration";
+    //     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+    //     cDDR3Calibrated = (fTheRegManager->ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
+    //     cAttempts++;
+    // }
+
     fPSCounterData.clear();
 
     fTheRegManager->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
 
     LOG(INFO) << BOLDGREEN <<"FastRead() Starts" << RESET;
 
-    fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 50);
+    fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 100);
     fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 50);
     fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", 50);
     
-    fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_delay.after_clear_counters", 50);
+    fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_delay.after_clear_counters", 100);
     fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_delay.after_close_shutter", 50);
     fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_delay.after_open_shutter", 50);
 
@@ -268,24 +287,24 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
     
     
 //    for( int cHybrid = 0 ; cHybrid < 1 ; cHybrid++)
-    for( int cHybrid = 0 ; cHybrid < 2 ; cHybrid++)
+    // for( int cHybrid = 0 ; cHybrid < 2 ; cHybrid++)
     {
-        fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid);
+        // fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", cHybrid);
         auto cDecoderState = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state");
         auto cCountersReady = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.chip_counters_done");
         size_t cIterations = 0; 
         do
-        {
+        {            
             if(cDecoderState==0x00 && cCountersReady==0x00) 
             {
                 // PS_Start_counters_read();
                 // fFastCommandInterface->SendGlobalReSync();
-                fFastCommandInterface->SendGlobalCounterReset();
+                // fFastCommandInterface->SendGlobalCounterReset();
                 fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
 //                LOG(INFO) << BOLDGREEN << "Manually Send PS Start Counter Readout" << RESET;
             }
             if(cIterations%100==0) LOG (DEBUG) << BOLDYELLOW << "[Iter#" << +cIterations << "] Hybrid#"
-                << cHybrid   
+                // << cHybrid   
                 << " Decoder state : 0x" << std::hex << cDecoderState << std::dec 
                 << " Counters Ready : 0x" << std::hex << cCountersReady << std::dec 
                 << RESET;
@@ -306,7 +325,6 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
             cIterations++;
         }while( cIterations < 1000 && !(cDecoderState==0x00 && cCountersReady == 0x01 ) );
         // }while(!(cDecoderState==0x00 && cCountersReady == 0x01 ) );
-
 
 
         auto cStrtPtrn = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.start_pattern_not_found");
@@ -344,6 +362,8 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
     auto cDecoderState = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state");
     auto cCountersReady = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.chip_counters_done");
 
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] async_counter_decode = 0x" << std::hex << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode") << std::dec << std::endl;
+
 //    LOG (INFO) << BOLDRED << "Writing fc7_daq_ctrl.fast_command_block.control.fast_reset and fc7_daq_ctrl.fast_command_block.control.fast_orbit_reset to 1" << RESET;
 
 //    fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.fast_reset", 1);
@@ -354,6 +374,19 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
 
     do
     {
+        // for(size_t hybridId = 0; hybridId<2; ++hybridId)
+        // {
+        //     LOG(INFO) << BOLDGREEN << "Selected hybrid " << hybridId << RESET;
+        //     fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_select_hybrid", hybridId);
+        //     LOG(INFO) << BOLDGREEN << "async_counter_decode = 0x" << std::hex << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode") << std::dec << RESET;
+        //     LOG(INFO) << BOLDGREEN << "start_pattern_not_found = 0x" << std::hex << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.start_pattern_not_found") << std::dec << RESET;
+        //     LOG(INFO) << BOLDGREEN << "ready = 0x" << std::hex << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.ready") << std::dec << RESET;
+        //     LOG(INFO) << BOLDGREEN << "state = 0x" << std::hex << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.state") << std::dec << RESET;
+        //     LOG(INFO) << BOLDGREEN << "received_start = 0x" << std::hex << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.received_start") << std::dec << RESET;
+        //     LOG(INFO) << BOLDGREEN << "chip_counters_done = 0x" << std::hex << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.chip_counters_done") << std::dec << RESET;
+        //     LOG(INFO) << BOLDGREEN << "store_fsm_state = 0x" << std::hex << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state") << std::dec << RESET;
+        //     LOG(INFO) << BOLDGREEN << "start_pattern_not_found = 0x" << std::hex << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.start_pattern_not_found") << std::dec << RESET;
+        // }
         if(cIterations%100==0) LOG (INFO) << BOLDYELLOW << "Iteration #" << cIterations
             << " DDR3 packer block : FSM state 0x" << std::hex << +cDDR3state << std::dec << RESET;
         if(cIterations%100==0) LOG (INFO) << BOLDGREEN << "Iteration #" << cIterations
@@ -409,16 +442,10 @@ void D19cPSCounterFWInterface::FastRead(const BeBoard* pBoard)
         // std::cout<<std::hex<<data<< " " <<std::dec;
     // }
 
-    std::cout<<std::endl;
+    // fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
 
-    // std::cout<<getPatternPrintout(cData,1,true)<<std::endl;
-
-    std::cout<<std::endl;
-
-    std::cout<<getPatternPrintout(cData,1,false)<<std::endl;
-
-    std::cout<<std::endl;
-    std::cout<<std::endl;
+    std::ofstream outfile(fOutputFile); 
+    outfile <<getPatternPrintout(cData,1,false)<<std::endl;
 
     
 //    LOG (INFO) << BOLDRED << "Trying ReadPSSCCountersFast" << RESET;
@@ -797,7 +824,7 @@ void D19cPSCounterFWInterface::GetCounterData(const BeBoard* pBoard)
     else // readout over fast interface
     {
         LOG(INFO) << BOLDGREEN << "Running FastRead()" << RESET;
-        FastRead(pBoard); 
+        FastRead(pBoard);
     }
 }
 void D19cPSCounterFWInterface::FillData()
@@ -881,12 +908,21 @@ bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* pBoard)
 //    SetPSCounterMode(0); //Disables Fast Readout Mode (Manually)
     if( fPSCounterFast ) 
     {
-
+        
+        fFastCommandInterface->SendGlobalReSync();
         std::cout << "FSM state = " << fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << std::endl;
 
         LOG (INFO) << BOLDGREEN << "Fast counter mode readout" << RESET;
+        fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.clear_counters", 1);
+        fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.open_shutter", 1);
+        fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 1);
+        fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.close_shutter", 1);
         fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto", 1);
         fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.select_even", 1);
+        fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", 0);
+        fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren", 1);
+        fTheRegManager->WriteReg("fc7_daq_cnfg.sync_block.enable", 0);
+
         fTheRegManager->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable",0);
         fTheRegManager->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable",1);
         fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.trigger_source",12);
