@@ -130,7 +130,7 @@
       <node id="AutoRead_addr_b"       mask="0x000007C0"      permission="rw"      description="" />
     </node>
 
-    <node id="Aurora_block"         address="0x00000010"      permission="rw"      description="">
+    <node id="Aurora_block"          address="0x00000010"     permission="rw"      description="">
       <node id="error_cntr_module_addr" mask="0x0000000F"     permission="rw"      description="" />
       <node id="error_cntr_chip_addr"   mask="0x00000070"     permission="rw"      description="" />
       <node id="event_stream_timeout"   mask="0x007FFF80"     permission="rw"      description="" />
@@ -204,7 +204,7 @@
       <node id="lane3_elink_id"        mask="0x07000000"      permission="rw"      description="rx group for lane3" />
     </node>
 
-    <node id="gtx_drp"               address="0x0000001A"     permission="rw"      description="Control registers for drp ports">
+    <node id="gtx_drp"              address="0x0000001A"      permission="rw"      description="Control registers for drp ports">
       <node id="address"               mask="0x000007FF"      permission="rw"      description="Address for DRP Register transaction" />
       <node id="wr_din"                mask="0x0007F800"      permission="rw"      description="Write data in" />
       <node id="wr_en"                 mask="0x00080000"      permission="rw"      description="Write enable" />
@@ -230,10 +230,10 @@
     </node>
 
    <node id="cnf_portcard_adapter"  address="0x0000001C"      permission="rw"      description="Configure SPI communication with Portcard Test Adapter">
-      <node id="ctrl"                  mask="0x00000003"    permission="rw"      description="Idle='0', Write Register='1', Read Register='2'" />
-      <node id="switch_address"        mask="0x000003FC"    permission="rw"      description="Specify the address of one switch register" />
-      <node id="switch_value"          mask="0x0003FC00"    permission="rw"      description="Specify the value of one switch register" />
-      <node id="reset"                 mask="0x00040000"    permission="rw"      description="Reset SPI communication" />
+      <node id="ctrl"                  mask="0x00000003"      permission="rw"      description="Idle='0', Write Register='1', Read Register='2'" />
+      <node id="switch_address"        mask="0x000003FC"      permission="rw"      description="Specify the address of one switch register" />
+      <node id="switch_value"          mask="0x0003FC00"      permission="rw"      description="Specify the value of one switch register" />
+      <node id="reset"                 mask="0x00040000"      permission="rw"      description="Reset SPI communication" />
     </node>
 
   </node>
