@@ -20,6 +20,11 @@
 #include "DQMUtils/DQMHistogramPSCounterTest.h"
 #endif
 
+namespace Ph2_HwInterface
+{
+  class D19cFWInterface;
+}
+
 class PSCounterTest : public Tool
 {
   public:
@@ -48,6 +53,7 @@ class PSCounterTest : public Tool
     bool fWithSSA = false;
     bool fWithMPA = false;  
 
+    bool GetCounterData(Ph2_HwInterface::D19cFWInterface *theFWinterface, const std::string& theOutputFileName, int eventsPerPoint);
     // Settings
     bool fDisableStubLogic{true};
     

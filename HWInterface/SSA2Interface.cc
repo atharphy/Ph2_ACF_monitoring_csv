@@ -693,11 +693,8 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     else if(pRegNameMod == "AnalogueSync")
     {
         uint8_t cReadoutMode = 0x0;
-        uint8_t cEdgeSel_T1  = 0x0;
         // readout mode
         bool cSuccess = this->WriteChipRegBitsLocal(pSSA2, "control_1", cReadoutMode, "mask_peri_D", 0x7, pVerify);
-        // edge select
-        cSuccess = cSuccess && this->WriteChipRegBitsLocal(pSSA2, "control_1", cEdgeSel_T1, "mask_peri_D", (0x1 << 3));
         // duration
         uint8_t cDuration = 0x8;
         cSuccess          = cSuccess && this->WriteChipRegBitsLocal(pSSA2, "control_2", cDuration, "mask_peri_D", (0xF << 4));
@@ -724,11 +721,8 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     else if(pRegNameMod == "AnalogueAsync")
     {
         uint8_t cReadoutMode = 0x1;
-        uint8_t cEdgeSel_T1  = 0x0;
         // readout mode
         bool cSuccess = this->WriteChipRegBitsLocal(pSSA2, "control_1", cReadoutMode, "mask_peri_D", 0x07);
-        // edge select
-        cSuccess = cSuccess && this->WriteChipRegBitsLocal(pSSA2, "control_1", cEdgeSel_T1, "mask_peri_D", (0x1 << 3));
         // duration
         uint8_t cDuration = 0x8;
         cSuccess          = cSuccess && this->WriteChipRegBitsLocal(pSSA2, "control_2", cDuration, "mask_peri_D", 0xF0);
