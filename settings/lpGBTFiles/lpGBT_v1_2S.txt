@@ -151,7 +151,7 @@ PIOOutH                   0x055         0x00              0x80                  
 PIOOutL                   0x056         0x00              0x41                          8
 PIOPullEnaH               0x057         0x00              0x00                          8
 PIOPullEnaL               0x058         0x00              0x00                          8
-PIOUpDownH                0x058         0x00              0x00                          8
+PIOUpDownH                0x059         0x00              0x00                          8
 PIOUpDownL                0x05a         0x00              0x00                          8
 PIODriveStrengthH         0x05b         0x00              0x00                          8
 PIODriveStrengthL         0x05c         0x00              0x00                          8
