@@ -128,7 +128,11 @@ void PSCounterTest::Initialise(void)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1); } // Tells chip to expect async
+                for(auto cChip: *cHybrid)
+                {
+                    // if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
+                    fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1); 
+                } // Tells chip to expect async
             }
         }
     }
@@ -148,14 +152,21 @@ void PSCounterTest::Running()
     Timer scanTimer;
     scanTimer.start();
 
-    uint16_t thrOffset = findValueInSettings<double>("PSCounterTest_thrOffset", 0);
-    RunFast(75 + thrOffset, 210 + thrOffset);
+    // uint16_t startDelay = 0x3bf2;
+    // uint16_t delaySteps = 50;
 
-    // for(uint16_t thrOffset = 0; thrOffset <= 30; thrOffset+=1)
+    // uint16_t thrOffset = findValueInSettings<double>("PSCounterTest_thrOffset", 0);
+    // RunFast(65 + thrOffset, 200 + thrOffset);
+    // for(uint16_t delay = startDelay; delay <= startDelay + delaySteps; ++delay)
     // {
-    //     RunFast(65 + thrOffset, 200 + thrOffset);
-    //     // usleep(3000000);
+    //     RunFast(65 + thrOffset, 200 + thrOffset, delay);
     // }
+
+    for(uint16_t thrOffset = 0; thrOffset <= 30; thrOffset+=1)
+    {
+        RunFast(65 + thrOffset, 200 + thrOffset);
+        // sleep(10);
+    }
 
     scanTimer.stop();
     scanTimer.show("Scan time: ");
@@ -168,13 +179,6 @@ bool PSCounterTest::GetCounterData(Ph2_HwInterface::D19cFWInterface* theFWinterf
 {
     theFWinterface->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto", 0);
 
-    theFWinterface->ChipReSync();
-
-    // for(uint16_t numit = 0; numit < 5; numit++) theFWinterface->getFastCommandInterface()->SendGlobalCounterResetL1A();
-
-    std::cout << "FSM state = " << theFWinterface->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << std::endl;
-
-    LOG(INFO) << BOLDGREEN << "Fast counter mode readout" << RESET;
     theFWinterface->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.clear_counters", 1);
     theFWinterface->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.open_shutter", 1);
     theFWinterface->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.cal_pulse", 1);
@@ -187,41 +191,29 @@ bool PSCounterTest::GetCounterData(Ph2_HwInterface::D19cFWInterface* theFWinterf
 
     theFWinterface->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0);
     theFWinterface->WriteReg("fc7_daq_cnfg.ddr3_debug.ps_async_counter_enable", 1);
+    theFWinterface->WriteReg("fc7_daq_cnfg.ddr3_debug.scan_chain_enable", 0);
     theFWinterface->WriteReg("fc7_daq_cnfg.fast_command_block.trigger_source", 12);
     theFWinterface->WriteReg("fc7_daq_ctrl.dio5_block.control.load_config", 0);
     usleep(100);
     theFWinterface->WriteReg("fc7_daq_ctrl.dio5_block.control.load_config", 1);
     usleep(100);
 
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] trigger_source = " << theFWinterface->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source") << std::endl;
-
     theFWinterface->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en", 1);
-    // theFWinterface->WriteReg("fc7_daq_cnfg.physical_interface_block.ps_counters_raw_en",0);
 
-    //        LOG(DEBUG) << BOLDBLUE << "Reseting DDR3 " << RESET;
-    LOG(INFO) << BOLDBLUE << "Reseting DDR3 " << RESET;
     auto cDDR3Calibrated = (theFWinterface->ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
     while(!cDDR3Calibrated)
     {
-        // LOG(DEBUG) << "Waiting for DDR3 to finish initial calibration";
         LOG(INFO) << BOLDYELLOW << "Waiting for DDR3 to finish initial calibration" << RESET;
         std::this_thread::sleep_for(std::chrono::microseconds(100));
         cDDR3Calibrated = (theFWinterface->ReadReg("fc7_daq_stat.ddr3_block.init_calib_done") == 1);
     }
-    LOG(INFO) << BOLDBLUE << "DDR3 Initial Calibration Complete " << RESET;
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] trigger_source = " << theFWinterface->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source") << std::endl;
+    
     auto     cMultiplicity = theFWinterface->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint32_t fNEvents      = eventsPerPoint * (cMultiplicity + 1);
     theFWinterface->getTriggerInterface()->SetNTriggersToAccept(fNEvents);
     theFWinterface->WriteReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0);
-    std::cout << "FSM state = " << theFWinterface->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state") << std::endl;
-
-    LOG(INFO) << BOLDYELLOW << "D19cPSCounterFWInterface::fPSCounterFast was set to True" << RESET;
-    LOG(DEBUG) << BOLDYELLOW << "Running PSCounterFast" << RESET;
 
     theFWinterface->WriteReg("fc7_daq_ctrl.physical_interface_block.control.decoder_reset", 0x1);
-
-    LOG(INFO) << BOLDGREEN << "FastRead() Starts" << RESET;
 
     theFWinterface->WriteReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", 100);
     theFWinterface->WriteReg("fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", 50);
@@ -233,22 +225,31 @@ bool PSCounterTest::GetCounterData(Ph2_HwInterface::D19cFWInterface* theFWinterf
 
     theFWinterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
 
-    auto   cDecoderState  = theFWinterface->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state");
-    auto   cCountersReady = theFWinterface->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.chip_counters_done");
     size_t startIterations    = 0;
-    do {
+    while(startIterations < 30)
+    {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        cDecoderState  = theFWinterface->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state");
-        cCountersReady = theFWinterface->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.chip_counters_done");
+        auto cDecoderState  = theFWinterface->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state");
+        auto cCountersReady = theFWinterface->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.chip_counters_done");
         if(cDecoderState == 0x00 && cCountersReady == 0x01) break;
         startIterations++;
-    } while(startIterations < 30);
+    }
+
+    theFWinterface->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", 1);
+    uint32_t startPatternFound = theFWinterface->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.start_pattern_not_found");
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] async_counter_decode = " << std::hex << theFWinterface->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode") << std::dec << std::endl;
+    
+    if(startPatternFound == 1)
+    {
+        LOG(WARNING) << WARNING_FORMAT << "Start pattern not found" << RESET;
+        // sleep(10);
+        return false;
+    }
 
     auto   cDDR3state  = theFWinterface->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.fsm_state");
     size_t cIterations = 0;
     while(cDDR3state != 0x1 && cIterations < 5) // while not in idle state
     {
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Waiting for DDR" << std::endl;
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         cDDR3state     = theFWinterface->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.fsm_state");
         cIterations++;
@@ -256,10 +257,12 @@ bool PSCounterTest::GetCounterData(Ph2_HwInterface::D19cFWInterface* theFWinterf
     if(cDDR3state != 0x1)
     {
         LOG(ERROR) << ERROR_FORMAT << "Failed to DDR3" << RESET;
-        return false;
+        throw std::runtime_error("PSCounterTest::GetCounterData - DDR3 not ready!!");
     }
 
     auto cNFIFOentries = theFWinterface->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.num_fifo_entry");
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] cNFIFOentries = " << std::hex << cNFIFOentries << std::dec << std::endl;
+    
     auto cData = theFWinterface->ReadBlockRegOffset("fc7_daq_ddr3", cNFIFOentries * 1024 / 32, 0);
 
     std::ofstream outfile(theOutputFileName);
@@ -271,9 +274,13 @@ bool PSCounterTest::GetCounterData(Ph2_HwInterface::D19cFWInterface* theFWinterf
 }
 
 
-void PSCounterTest::RunFast(uint16_t stripThreshold, uint16_t pixelThreshold)
+void PSCounterTest::RunFast(uint16_t stripThreshold, uint16_t pixelThreshold, uint16_t delay)
 {
     std::cout << "Running" << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] stripThreshold = " << stripThreshold << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pixelThreshold = " << pixelThreshold << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] delay = " << std::hex << delay << std::dec << std::endl;
+    
     auto theBoard = fDetectorContainer->getFirstObject();
     auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
     for(auto cBoard: *fDetectorContainer)
@@ -291,17 +298,14 @@ void PSCounterTest::RunFast(uint16_t stripThreshold, uint16_t pixelThreshold)
 
                         if(cType == FrontEndType::MPA2)
                         {
-                            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pixelThreshold = " << pixelThreshold << std::endl;
-
                             fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 70);
-                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", pixelThreshold);
                             fReadoutChipInterface->WriteChipReg(cChip, "Threshold", pixelThreshold);
                         }
                         else
                         {
-                            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] stripThreshold = " << stripThreshold << std::endl;
                             fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 70);
                             fReadoutChipInterface->WriteChipReg(cChip, "Threshold", stripThreshold);
+                            fReadoutChipInterface->WriteChipReg(cChip, "AsyncDelay", delay);
                         }
                     }
                 }
@@ -311,18 +315,19 @@ void PSCounterTest::RunFast(uint16_t stripThreshold, uint16_t pixelThreshold)
     std::cout << "Measuring Data" << std::endl;
 
     int         eventsPerPoint = 254;
-    std::string outputFileName  = fDirectoryName + "/fastCounter_StripTh_" + std::to_string(stripThreshold) + "_PixelTh_" + std::to_string(pixelThreshold) + ".txt";
+    std::string outputFileName  = fDirectoryName + "/fastCounter_StripTh_" + std::to_string(stripThreshold) + "_PixelTh_" + std::to_string(pixelThreshold) + "_delay_" + std::to_string(delay) + ".txt";
 
     bool local = true;
     if(local)
     {
+        int maxNumberOfIterations = 10;
         int iteration = 0;
-        while(iteration < 5)
+        while(iteration < maxNumberOfIterations)
         {
             std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Getting counters iteration " << iteration++ << std::endl;
             if(GetCounterData(theFWinterface, outputFileName, eventsPerPoint)) break;
         }
-        if(iteration>5) abort();
+        if(iteration >= maxNumberOfIterations) abort();
     }
     else
     {

@@ -676,19 +676,11 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     else if(pRegNameMod == "AsyncDelay")
     {
         uint8_t                  cLSB = pValue & 0xFF;
-        uint8_t                  cMSB = (pValue << 8);
-        std::vector<ChipRegItem> cRegItems;
-        std::vector<std::string> cRegNames{"AsyncRead_StartDel_LSB", "AsyncRead_StartDel_MSB"};
-        for(auto cRegName: cRegNames)
-        {
-            cRegItem        = cRegMap[cRegName];
-            cRegItem.fValue = (cRegName == "AsyncRead_StartDel_LSB") ? cLSB : cMSB;
-            cRegItems.push_back(cRegItem);
-        }
-        LOG(ERROR) << BOLDRED << "SSA2 Register " << BOLDYELLOW << pRegNameMod << BOLDRED << " has not been checked after changes in SSA2Interface::WriteChipRegBitsLocal " << RESET;
-        throw Exception("SSA2 Register has not been checked after changes in SSA2Interface::WriteChipRegBitsLocal");
-
-        return fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerify);
+        uint8_t                  cMSB = (pValue >> 8);
+        std::vector<std::pair<std::string, uint16_t>> registerVector;
+        registerVector.push_back({"AsyncRead_StartDel_LSB", cLSB});
+        registerVector.push_back({"AsyncRead_StartDel_MSB", cMSB});
+        return WriteChipMultReg(pSSA2, registerVector, pVerify);
     }
     else if(pRegNameMod == "AnalogueSync")
     {

@@ -37,7 +37,7 @@ class PSCounterTest : public Tool
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
-    void RunFast(uint16_t stripThreshold, uint16_t pixelThreshold);
+    void RunFast(uint16_t stripThreshold, uint16_t pixelThreshold, uint16_t delay = 0x3bf2);
     void Pause() override;
     void Resume() override;
     void Reset();
@@ -51,7 +51,7 @@ class PSCounterTest : public Tool
     DetectorDataContainer  fBoardRegContainer;
     bool fWithCBC = false;
     bool fWithSSA = false;
-    bool fWithMPA = false;  
+    bool fWithMPA = false;
 
     bool GetCounterData(Ph2_HwInterface::D19cFWInterface *theFWinterface, const std::string& theOutputFileName, int eventsPerPoint);
     // Settings
