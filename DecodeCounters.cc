@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
     std::vector<TH2I*> theHistogramList;
     for(size_t chip=0; chip<8; ++chip)
     {
-        theHistogramList.push_back(new TH2I(Form("SCurve_MPA%i", chip), Form("SCurve MPA %i", chip), 12*17, -0.5, 120*17-1, totalThresholdOffset + 1, pixelThresholdStart -0.5, pixelThresholdStart + totalThresholdOffset + 0.5));
+        theHistogramList.push_back(new TH2I(Form("SCurve_MPA%i", chip), Form("SCurve MPA %i", chip), 120*16, -0.5, 120*16-1, totalThresholdOffset + 1, pixelThresholdStart -0.5, pixelThresholdStart + totalThresholdOffset + 0.5));
         theHistogramList.back()->SetStats(false);
     }
 
@@ -321,9 +321,9 @@ int main(int argc, char* argv[])
                 auto theOccupancyPlot = (TH2I*)(parsedFile.Get(Form("MPA%i", chip)));
                 for(uint16_t col = 0; col<120; ++col)
                 {
-                    for(uint16_t row = 0; row<17; ++row)
+                    for(uint16_t row = 0; row<16; ++row)
                     {
-                        theHistogramList[chip]->SetBinContent(col + row*120 , thrOffset+1, theOccupancyPlot->GetBinContent(col+1, row+1));
+                        theHistogramList[chip]->SetBinContent(col + row*120 + 1, thrOffset+1, theOccupancyPlot->GetBinContent(col+1, row+1));
                     }
                 }
             }
