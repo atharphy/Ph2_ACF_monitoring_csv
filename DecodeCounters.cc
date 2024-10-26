@@ -43,6 +43,8 @@ void printWord(const std::array<uint32_t, 32>& word)
 
 std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 0)
 {
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] parsing file " << fileName << std::endl;
+    
     std::ifstream inputFile(fileName);
     std::vector<uint32_t> hexValues;
     std::string fileContents, word;
@@ -195,6 +197,7 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
     {
         if((theBXword & counterStartPatternMask) == counterStartPattern)
         {
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] FOUND start pattern!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
             numberOfSkip += 8;
             break;
         }
@@ -216,11 +219,12 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
     size_t numberOfBanks = theDecodedHydrid1Data.size()/8;
     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] numberOfBanks = " << numberOfBanks << std::endl;
     
+    uint16_t bxOffset = 8;
     for(size_t bankNumber=0; bankNumber<numberOfBanks; ++bankNumber)
     {
         if(bankNumber>= 17*120) break;
-        uint16_t pixelRow = bankNumber%16;
-        uint16_t pixelCol = bankNumber/16;
+        uint16_t pixelCol = bankNumber%120;
+        uint16_t pixelRow = bankNumber/120;
         if(bankNumber>= 16*120)
         {
             pixelRow = 16;
@@ -236,10 +240,17 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
             fullWord += theDecodedHydrid1Data[bankNumber*8 + wordNumber].to_string();
         }
 
-
+        
         for(size_t chipPosition=0; chipPosition<8; ++chipPosition)
         {
             std::string chipData = fullWord.substr(28 + chipPosition*21, 21);
+            if(bxOffset == 8) bxOffset = std::bitset<3>(chipData.substr(0, 3)).to_ulong();
+            else if(bxOffset != std::bitset<3>(chipData.substr(0, 3)).to_ulong()) 
+            {
+                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BX offset changed in a run!!!!!!!!!!!!!!!!" << std::endl;
+                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] expectd " << +bxOffset << " found " << +std::bitset<3>(chipData.substr(0, 3)).to_ulong() << std::endl;
+                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] chipData = " << chipData << std::endl;
+            }
             uint8_t chipId = std::bitset<3>(chipData.substr(3, 3)).to_ulong();
             uint16_t counterLow = std::bitset<7>(chipData.substr(6, 7)).to_ulong();
             uint16_t counterHigh = std::bitset<7>(chipData.substr(14, 7)).to_ulong() << 7;
@@ -254,6 +265,8 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
         // std::cout<<theBank<<std::endl;
     }
 
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BX offset = " << bxOffset << std::endl;
+    
     TCanvas* theCanvas = new TCanvas();
     theCanvas->Divide(2,4);
 
@@ -274,10 +287,15 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
 int main(int argc, char* argv[]) 
 {
     // Check if the file name is provided as an argument
-    if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <folderName>" << std::endl;
+    if (argc < 2 || argc > 3) {
+        std::cerr << "Usage: " << argv[0] << " <folderName> [numberOfWords]" << std::endl;
         return 1;
     }
+
+    size_t numberOfWords = 0;
+    if(argc == 3) numberOfWords = atoi(argv[2]);
+
+
 
     uint16_t stripThresholdStart = 65;
     uint16_t pixelThresholdStart = 200;
@@ -311,8 +329,8 @@ int main(int argc, char* argv[])
         {
             uint16_t stripThreshold = stripThresholdStart + thrOffset;
             uint16_t pixelThreshold = pixelThresholdStart + thrOffset;
-            std::string fileName = folderName + + "/fastCounter_StripTh_" +  std::to_string(stripThreshold) + "_PixelTh_" + std::to_string(pixelThreshold) + "_delay_" + std::to_string(delay) + ".txt";
-            std::string parsedFileName = parseCounterRaw(fileName);
+            std::string fileName = folderName + "/fastCounter_StripTh_" +  std::to_string(stripThreshold) + "_PixelTh_" + std::to_string(pixelThreshold) + "_delay_" + std::to_string(delay) + ".txt";
+            std::string parsedFileName = parseCounterRaw(fileName, numberOfWords);
             if(parsedFileName == "") continue;
 
             TFile parsedFile(parsedFileName.c_str());
