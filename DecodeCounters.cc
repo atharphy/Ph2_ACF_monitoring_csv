@@ -240,17 +240,32 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
             fullWord += theDecodedHydrid1Data[bankNumber*8 + wordNumber].to_string();
         }
 
+        uint16_t numberOfStubs = std::bitset<6>(fullWord.substr(22, 6)).to_ulong();
+        if(numberOfStubs != 8)
+        {
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Event " << bankNumber << " without 8 stubs, read out " << numberOfStubs << std::endl;
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(0, 1) << std::endl;
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(1, 9) << std::endl;
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(10, 12) << std::endl;
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(22, 6) << std::endl;
+            for(size_t stubPosition=0; stubPosition<16; ++stubPosition)
+            {
+                std::string theStubString = fullWord.substr(28 + stubPosition*21, 21); 
+                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << theStubString.substr(0, 3) << " " << theStubString.substr(3, 3) << " " << theStubString.substr(6, 15) << std::endl;
+            }
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(364, 20) << std::endl;
+        }
         
         for(size_t chipPosition=0; chipPosition<8; ++chipPosition)
         {
             std::string chipData = fullWord.substr(28 + chipPosition*21, 21);
-            if(bxOffset == 8) bxOffset = std::bitset<3>(chipData.substr(0, 3)).to_ulong();
-            else if(bxOffset != std::bitset<3>(chipData.substr(0, 3)).to_ulong()) 
-            {
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BX offset changed in a run!!!!!!!!!!!!!!!!" << std::endl;
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] expectd " << +bxOffset << " found " << +std::bitset<3>(chipData.substr(0, 3)).to_ulong() << std::endl;
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] chipData = " << chipData << std::endl;
-            }
+            // if(bxOffset == 8) bxOffset = std::bitset<3>(chipData.substr(0, 3)).to_ulong();
+            // else if(bxOffset != std::bitset<3>(chipData.substr(0, 3)).to_ulong()) 
+            // {
+            //     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BX offset changed in a run!!!!!!!!!!!!!!!!" << std::endl;
+            //     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] expectd " << +bxOffset << " found " << +std::bitset<3>(chipData.substr(0, 3)).to_ulong() << std::endl;
+            //     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] chipData = " << chipData << std::endl;
+            // }
             uint8_t chipId = std::bitset<3>(chipData.substr(3, 3)).to_ulong();
             uint16_t counterLow = std::bitset<7>(chipData.substr(6, 7)).to_ulong();
             uint16_t counterHigh = std::bitset<7>(chipData.substr(14, 7)).to_ulong() << 7;
@@ -265,7 +280,7 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
         // std::cout<<theBank<<std::endl;
     }
 
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BX offset = " << bxOffset << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BX offset = " << bxOffset << std::endl;
     
     TCanvas* theCanvas = new TCanvas();
     theCanvas->Divide(2,4);
