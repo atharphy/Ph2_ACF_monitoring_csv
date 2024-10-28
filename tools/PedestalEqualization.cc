@@ -267,7 +267,6 @@ void PedestalEqualization::FindVplus()
         this->fullScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst, fPedestalEqualizationFullScanStart);
     else
         this->bitWiseScan("Threshold", fEventsPerPoint, fOccupancyAtPedestal, fNEventsPerBurst);
-    // dumpConfigFiles();
 
     // LOG(INFO) << BOLDBLUE << "Setting threshold trim registers to max value..." << RESET;
     if(fWithCBC)
@@ -402,7 +401,6 @@ void PedestalEqualization::FindOffsets()
             this->bitWiseScan("ThresholdTrim", fEventsPerPoint, cOccupancyAtPedestal, fNEventsPerBurst);
     }
 
-    dumpConfigFiles();
     DetectorDataContainer theOffsetsCointainer;
     ContainerFactory::copyAndInitChannel<uint8_t>(*fDetectorContainer, theOffsetsCointainer);
 
@@ -499,7 +497,6 @@ void PedestalEqualization::Stop()
 {
     LOG(INFO) << "Stopping Pedestal Equalization.";
     writeObjects();
-    dumpConfigFiles();
     closeFileHandler();
     LOG(INFO) << "Pedestal Equalization stopped.";
 }
