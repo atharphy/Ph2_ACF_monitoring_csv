@@ -13,10 +13,10 @@
 #include "HWDescription/MPA2.h"
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/ConsoleColor.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/DataContainer.h"
 #include "Utils/Utilities.h"
 #include <typeinfo>
-#include "Utils/DataContainer.h"
-#include "Utils/ContainerFactory.h"
 
 #define DEV_FLAG 0
 
@@ -605,7 +605,8 @@ std::vector<std::pair<std::string, uint16_t>> MPA2Interface::ReadChipMultReg(Ph2
     return theRegisterValues;
 }
 
-std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>>  MPA2Interface::packLocalRegisters(Ph2_HwDescription::ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues)
+std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>>
+MPA2Interface::packLocalRegisters(Ph2_HwDescription::ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues)
 {
     std::string localDacName = dacName;
     if(dacName == "ThresholdTrim") localDacName = "TrimDAC";
@@ -614,7 +615,7 @@ std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, u
 
     uint16_t theMostFrequentValue = getMostFrequentLocalRegisterValue(localRegValues);
 
-    std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>>  theListOfLocalRegisters;
+    std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>> theListOfLocalRegisters;
     theListOfLocalRegisters.first = {localDacName + "_ALL", theMostFrequentValue};
 
     for(size_t row = 0; row < pChip->getNumberOfRows(); ++row)
@@ -633,7 +634,7 @@ std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, u
 bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify)
 {
     auto theListOfLocalRegisters = packLocalRegisters(pChip, dacName, localRegValues);
-    bool success = WriteChipReg(pChip, theListOfLocalRegisters.first.first, theListOfLocalRegisters.first.second, false);
+    bool success                 = WriteChipReg(pChip, theListOfLocalRegisters.first.first, theListOfLocalRegisters.first.second, false);
     success &= WriteChipMultReg(pChip, theListOfLocalRegisters.second, pVerify);
     return success;
 }
@@ -674,17 +675,17 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
         localRegisterMatches.push_back("ENFLAGS_C");
         localRegisterMatches.push_back("TrimDAC_C");
         localRegisterMatches.push_back("DigPattern_C");
-        for(const auto& templ: localRegisterMatches) if(theRegisterName.find(templ) != std::string::npos) return true;
+        for(const auto& templ: localRegisterMatches)
+            if(theRegisterName.find(templ) != std::string::npos) return true;
         return false;
     };
 
-    auto extractRowAndCol = [](const std::string& registerName) -> std::pair<uint16_t, uint16_t>  {
+    auto extractRowAndCol = [](const std::string& registerName) -> std::pair<uint16_t, uint16_t>
+    {
         size_t posC = registerName.find("_C");
         size_t posR = registerName.find("_R");
 
-        if (posC == std::string::npos || posR == std::string::npos || posR <= posC) {
-            throw std::invalid_argument("Invalid format: missing '_C' or '_R'");
-        }
+        if(posC == std::string::npos || posR == std::string::npos || posR <= posC) { throw std::invalid_argument("Invalid format: missing '_C' or '_R'"); }
         uint16_t col = std::stoi(registerName.substr(posC + 2, posR - (posC + 2)));
         uint16_t row = std::stoi(registerName.substr(posR + 2));
 
@@ -719,8 +720,10 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
                 }
                 theEnableFlagContainer.getChannel<uint16_t>(rowAndCol.first, rowAndCol.second) = cMapItem.second.fValue;
             }
-            else if(cMapItem.first.find("TrimDAC") != std::string::npos) theTrimDacContainer.getChannel<uint16_t>(rowAndCol.first, rowAndCol.second) = cMapItem.second.fValue;
-            else if(cMapItem.first.find("DigPattern") != std::string::npos) theDigPatternContainer.getChannel<uint16_t>(rowAndCol.first, rowAndCol.second) = cMapItem.second.fValue;
+            else if(cMapItem.first.find("TrimDAC") != std::string::npos)
+                theTrimDacContainer.getChannel<uint16_t>(rowAndCol.first, rowAndCol.second) = cMapItem.second.fValue;
+            else if(cMapItem.first.find("DigPattern") != std::string::npos)
+                theDigPatternContainer.getChannel<uint16_t>(rowAndCol.first, rowAndCol.second) = cMapItem.second.fValue;
             else
             {
                 LOG(ERROR) << ERROR_FORMAT << "MPA2Interface::ConfigureChip - Local register " << cMapItem.first << " not recognized, throwing exception" << RESET;

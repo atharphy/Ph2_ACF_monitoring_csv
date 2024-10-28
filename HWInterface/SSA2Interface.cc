@@ -14,8 +14,8 @@
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Container.h"
-#include "Utils/DataContainer.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/DataContainer.h"
 #include <bitset>
 
 using namespace Ph2_HwDescription;
@@ -65,7 +65,7 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
     // need to split between control and enable registers
     // don't read back enable registers
     std::vector<ChipRegItem> cCntrlRegItems;
-    
+
     ChipDataContainer theEnableFlagContainer;
     ContainerFactory::copyAndInitChannel<uint16_t>(*static_cast<ReadoutChip*>(pSSA2), theEnableFlagContainer);
     ChipDataContainer theStripControl2Container;
@@ -85,16 +85,16 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
         localRegisterMatches.push_back("THTRIMMING_S");
         localRegisterMatches.push_back("DigCalibPattern_L_S");
         localRegisterMatches.push_back("DigCalibPattern_H_S");
-        for(const auto& templ: localRegisterMatches) if(theRegisterName.find(templ) != std::string::npos) return true;
+        for(const auto& templ: localRegisterMatches)
+            if(theRegisterName.find(templ) != std::string::npos) return true;
         return false;
     };
 
-    auto extractStrip = [](const std::string& registerName) -> uint16_t  {
+    auto extractStrip = [](const std::string& registerName) -> uint16_t
+    {
         size_t posS = registerName.find("_S");
 
-        if (posS == std::string::npos) {
-            throw std::invalid_argument("Invalid format: missing '_S'");
-        }
+        if(posS == std::string::npos) { throw std::invalid_argument("Invalid format: missing '_S'"); }
         uint16_t strip = std::stoi(registerName.substr(posS + 2)) - 1;
         return strip;
     };
@@ -119,21 +119,23 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
         else if(isLocalRegister(cMapItem.first))
         {
             uint16_t strip = extractStrip(cMapItem.first);
-            if(cMapItem.first.find("ENFLAGS") != std::string::npos) theEnableFlagContainer.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
-            else if(cMapItem.first.find("StripControl2") != std::string::npos) theStripControl2Container.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
-            else if(cMapItem.first.find("THTRIMMING") != std::string::npos) theThTrimmingContainer.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
-            else if(cMapItem.first.find("DigCalibPattern_L") != std::string::npos) theDigCalibPatternLSBContainer.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
-            else if(cMapItem.first.find("DigCalibPattern_H") != std::string::npos) theDigCalibPatternMSBContainer.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
+            if(cMapItem.first.find("ENFLAGS") != std::string::npos)
+                theEnableFlagContainer.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
+            else if(cMapItem.first.find("StripControl2") != std::string::npos)
+                theStripControl2Container.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
+            else if(cMapItem.first.find("THTRIMMING") != std::string::npos)
+                theThTrimmingContainer.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
+            else if(cMapItem.first.find("DigCalibPattern_L") != std::string::npos)
+                theDigCalibPatternLSBContainer.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
+            else if(cMapItem.first.find("DigCalibPattern_H") != std::string::npos)
+                theDigCalibPatternMSBContainer.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
             else
             {
                 LOG(ERROR) << ERROR_FORMAT << "SSA2Interface::ConfigureChip - Local register " << cMapItem.first << " not recognized, throwing exception" << RESET;
                 std::runtime_error("SSA2Interface::ConfigureChip - Local register not recognized");
             }
         }
-        else
-        {
-            cRegItems.push_back(cMapItem.second);
-        }
+        else { cRegItems.push_back(cMapItem.second); }
     }
     bool cSuccess = fBoardFW->MultiRegisterWrite(pSSA2, cCntrlRegItems, false);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cCntrlRegItems.size() << " control registers in SSA#" << +pSSA2->getId() << RESET;
@@ -397,7 +399,8 @@ uint8_t SSA2Interface::ReadChipId(Chip* pChip)
     return cItem.fValue;
 }
 
-std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>>  SSA2Interface::packLocalRegisters(ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues)
+std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>>
+SSA2Interface::packLocalRegisters(ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues)
 {
     std::string localDacName = dacName;
     if(dacName == "ThresholdTrim") localDacName = "THTRIMMING";
@@ -407,7 +410,7 @@ std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, u
 
     uint16_t theMostFrequentValue = getMostFrequentLocalRegisterValue(localRegValues);
 
-    std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>>  theListOfLocalRegisters;
+    std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>> theListOfLocalRegisters;
     theListOfLocalRegisters.first = {localDacName, theMostFrequentValue};
     for(size_t strip = 0; strip < pChip->getNumberOfCols(); ++strip)
     {
@@ -419,11 +422,10 @@ std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, u
     return theListOfLocalRegisters;
 }
 
-
 bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify)
 {
     auto theListOfLocalRegisters = packLocalRegisters(pChip, dacName, localRegValues);
-    bool success = WriteChipReg(pChip, theListOfLocalRegisters.first.first, theListOfLocalRegisters.first.second, false);
+    bool success                 = WriteChipReg(pChip, theListOfLocalRegisters.first.first, theListOfLocalRegisters.first.second, false);
     success &= WriteChipMultReg(pChip, theListOfLocalRegisters.second, pVerify);
     return success;
 }

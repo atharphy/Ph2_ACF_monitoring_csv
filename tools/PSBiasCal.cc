@@ -784,7 +784,6 @@ void PSBiasCal::Running() {}
 
 void PSBiasCal::Stop()
 {
-
     // Destroy();
 }
 
