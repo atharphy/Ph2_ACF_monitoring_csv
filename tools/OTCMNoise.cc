@@ -341,7 +341,6 @@ void OTCMNoise::Stop()
 {
     LOG(INFO) << "Stopping CM noise measurement";
     writeObjects();
-    dumpConfigFiles();
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "CM Noise measurement stopped.";

@@ -142,6 +142,8 @@ class MPA2Interface : public ReadoutChipInterface
     bool                                 injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
     const std::map<std::string, uint8_t> ECM_TABLE = {{"StubWindow", 0}, {"StubMode", 6}};
 
+    std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>> packLocalRegisters(Ph2_HwDescription::ReadoutChip* pMPA2, const std::string& dacName, const ChipContainer& localRegValues);
+
   private:
     // pixelEnable bits
     const std::map<std::string, uint8_t> PIXEL_ENABLE_TABLE =

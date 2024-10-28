@@ -287,6 +287,9 @@ class ReadoutChipInterface : public ChipInterface
      * \param pRegNode : Node of the register to write
      * \param pValue : Readout value
      */
+
+    uint16_t getMostFrequentLocalRegisterValue(const ChipContainer& theChipContainer);
+
     virtual void ReadChipAllLocalReg(Ph2_HwDescription::ReadoutChip* pChip, const std::string& dacName, ChipContainer& pValue) {}
 
     /*!

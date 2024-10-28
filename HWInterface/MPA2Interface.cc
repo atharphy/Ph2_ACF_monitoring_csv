@@ -15,6 +15,8 @@
 #include "Utils/ConsoleColor.h"
 #include "Utils/Utilities.h"
 #include <typeinfo>
+#include "Utils/DataContainer.h"
+#include "Utils/ContainerFactory.h"
 
 #define DEV_FLAG 0
 
@@ -603,64 +605,37 @@ std::vector<std::pair<std::string, uint16_t>> MPA2Interface::ReadChipMultReg(Ph2
     return theRegisterValues;
 }
 
-bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pMPA2, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify) // unchanged from MPA1 -- to check
+std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>>  MPA2Interface::packLocalRegisters(Ph2_HwDescription::ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues)
 {
-    setBoard(pMPA2->getBeBoardId());
-    assert(localRegValues.size() == pMPA2->getNumberOfChannels());
+    std::string localDacName = dacName;
+    if(dacName == "ThresholdTrim") localDacName = "TrimDAC";
+    // check that you are actually configuring all local registers
+    assert(localRegValues.size() == pChip->getNumberOfChannels());
 
-    if(dacName != "TrimDAC_C" && dacName != "ThresholdTrim")
+    uint16_t theMostFrequentValue = getMostFrequentLocalRegisterValue(localRegValues);
+
+    std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>>  theListOfLocalRegisters;
+    theListOfLocalRegisters.first = {localDacName + "_ALL", theMostFrequentValue};
+
+    for(size_t row = 0; row < pChip->getNumberOfRows(); ++row)
     {
-        LOG(ERROR) << "Error, DAC " << dacName << " is not a Local DAC";
-        abort();
-    }
-
-    std::vector<std::pair<std::string, uint16_t>> cRegVec;
-    ChannelGroup<NMPAROWS, NSSACHANNELS>          channelToEnable;
-    std::vector<uint32_t>                         cVec;
-    cVec.clear();
-    bool cSuccess = true;
-
-    // check if all registers are the same
-    std::vector<uint8_t> cVals(0);
-    for(uint16_t row = 0; row < pMPA2->getNumberOfRows(); ++row)
-    {
-        for(uint16_t col = 0; col < pMPA2->getNumberOfCols(); ++col)
+        for(size_t col = 0; col < pChip->getNumberOfCols(); ++col)
         {
-            cVals.push_back(localRegValues.getChannel<uint16_t>(row, col));
-            // LOG(DEBUG) << BOLDMAGENTA << +cVals[cVals.size() - 1] << RESET;
+            uint16_t theValue = localRegValues.getChannel<uint16_t>(row, col);
+            if(theValue == theMostFrequentValue) continue;
+            theListOfLocalRegisters.second.push_back({static_cast<MPA2*>(pChip)->getPixelRegisterName(localDacName, row, col), theValue});
         }
     }
 
-    if(std::adjacent_find(cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>()) == cVals.end())
-    {
-        // LOG(DEBUG) << BOLDBLUE << "All elements of " << dacName << " are equal to one  another .. will use global register" << RESET;
-        if(dacName == "TrimDAC_C" or dacName == "ThresholdTrim")
-        {
-            bool cWrite = this->WriteChipReg(pMPA2, "TrimDAC_ALL", cVals[0], false);
-            if(pVerify)
-            {
-                auto cReadback = this->ReadChipReg(pMPA2, "TrimDAC_C10_R10");
-                // LOG(DEBUG) << BOLDMAGENTA << "Read-back a value of " << +cReadback << " from trim-dac register" << RESET;
-                return (cReadback == cVals[0]);
-            }
-            else
-                return cWrite;
-        }
-        // to-add .. add the rest
-    }
+    return theListOfLocalRegisters;
+}
 
-    // LOG(DEBUG) << BOLDBLUE << "Different values for " << dacName << " ... will NOT use global register" << RESET;
-    std::vector<std::pair<std::string, uint16_t>> registerList;
-
-    for(uint16_t row = 0; row < pMPA2->getNumberOfRows(); ++row)
-    {
-        for(uint16_t col = 0; col < pMPA2->getNumberOfCols(); ++col)
-        {
-            registerList.push_back({MPA2::getPixelRegisterName("TrimDAC", row, col), localRegValues.getChannel<uint16_t>(row, col) & 0x1F});
-        }
-    }
-    cSuccess &= WriteChipMultReg(pMPA2, registerList, pVerify);
-    return cSuccess;
+bool MPA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify)
+{
+    auto theListOfLocalRegisters = packLocalRegisters(pChip, dacName, localRegValues);
+    bool success = WriteChipReg(pChip, theListOfLocalRegisters.first.first, theListOfLocalRegisters.first.second, false);
+    success &= WriteChipMultReg(pChip, theListOfLocalRegisters.second, pVerify);
+    return success;
 }
 
 bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize)
@@ -679,8 +654,6 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
     // don't read back enable registers
     std::vector<ChipRegItem> cCntrlRegItems;
     std::vector<ChipRegItem> cRegItems;
-    std::vector<ChipRegItem> cLocalRegItems;
-    cCntrlRegItems.clear();
 
     auto cOriginalMask = static_cast<ReadoutChip*>(pMPA2)->getChipOriginalMask();
     // std::vector<std::string>
@@ -688,6 +661,37 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
 
     uint8_t maskValue    = 0xFF;
     uint8_t maskAllValue = 0xFF;
+
+    ChipDataContainer theEnableFlagContainer;
+    ContainerFactory::copyAndInitChannel<uint16_t>(*static_cast<ReadoutChip*>(pMPA2), theEnableFlagContainer);
+    ChipDataContainer theTrimDacContainer;
+    ContainerFactory::copyAndInitChannel<uint16_t>(*static_cast<ReadoutChip*>(pMPA2), theTrimDacContainer);
+    ChipDataContainer theDigPatternContainer;
+
+    auto isLocalRegister = [](const std::string& theRegisterName) -> bool
+    {
+        std::vector<std::string> localRegisterMatches;
+        localRegisterMatches.push_back("ENFLAGS_C");
+        localRegisterMatches.push_back("TrimDAC_C");
+        localRegisterMatches.push_back("DigPattern_C");
+        for(const auto& templ: localRegisterMatches) if(theRegisterName.find(templ) != std::string::npos) return true;
+        return false;
+    };
+
+    auto extractRowAndCol = [](const std::string& registerName) -> std::pair<uint16_t, uint16_t>  {
+        size_t posC = registerName.find("_C");
+        size_t posR = registerName.find("_R");
+
+        if (posC == std::string::npos || posR == std::string::npos || posR <= posC) {
+            throw std::invalid_argument("Invalid format: missing '_C' or '_R'");
+        }
+        uint16_t col = std::stoi(registerName.substr(posC + 2, posR - (posC + 2)));
+        uint16_t row = std::stoi(registerName.substr(posR + 2));
+
+        return {row, col};
+    };
+
+    ContainerFactory::copyAndInitChannel<uint16_t>(*static_cast<ReadoutChip*>(pMPA2), theDigPatternContainer);
 
     for(auto cMapItem: cRegMap)
     {
@@ -703,9 +707,9 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
 
         if(cMapItem.second.fControlReg)
             cCntrlRegItems.push_back(cMapItem.second);
-        else if((cMapItem.first.find("_C") != std::string::npos))
+        else if(isLocalRegister(cMapItem.first))
         {
-            cLocalRegItems.push_back(cMapItem.second);
+            auto rowAndCol = extractRowAndCol(cMapItem.first);
             if(cMapItem.first.find("ENFLAGS") != std::string::npos)
             {
                 if((cMapItem.second.fValue & 0x1) == 0)
@@ -713,6 +717,14 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
                     auto maskedPixelAddress = extractMaskedPixelAddress(cMapItem.first);
                     cOriginalMask->disableChannel(maskedPixelAddress.first, maskedPixelAddress.second);
                 }
+                theEnableFlagContainer.getChannel<uint16_t>(rowAndCol.first, rowAndCol.second) = cMapItem.second.fValue;
+            }
+            else if(cMapItem.first.find("TrimDAC") != std::string::npos) theTrimDacContainer.getChannel<uint16_t>(rowAndCol.first, rowAndCol.second) = cMapItem.second.fValue;
+            else if(cMapItem.first.find("DigPattern") != std::string::npos) theDigPatternContainer.getChannel<uint16_t>(rowAndCol.first, rowAndCol.second) = cMapItem.second.fValue;
+            else
+            {
+                LOG(ERROR) << ERROR_FORMAT << "MPA2Interface::ConfigureChip - Local register " << cMapItem.first << " not recognized, throwing exception" << RESET;
+                std::runtime_error("MPA2Interface::ConfigureChip - Local register not recognized");
             }
         }
         else
@@ -727,14 +739,29 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
     bool cSuccess = fBoardFW->MultiRegisterWrite(pMPA2, cCntrlRegItems, false);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cCntrlRegItems.size() << " control registers in" << cOutput.str() << "#" << +pMPA2->getId() << RESET;
     // glbl
-    cSuccess = fBoardFW->MultiRegisterWrite(pMPA2, cRegItems, false);
+    cSuccess &= fBoardFW->MultiRegisterWrite(pMPA2, cRegItems, false);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cRegItems.size() << " R/W registers in" << cOutput.str() << "#" << +pMPA2->getId() << RESET;
 
     // lcl
     if(cConfigLocalRegs)
     {
-        cSuccess = fBoardFW->MultiRegisterWrite(pMPA2, cLocalRegItems, true);
-        if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in" << cOutput.str() << "#" << +pMPA2->getId() << RESET;
+        std::vector<std::pair<std::string, uint16_t>> globalSettings;
+        std::vector<std::pair<std::string, uint16_t>> localSettings;
+
+        auto enflagsRegisterVector = packLocalRegisters(static_cast<ReadoutChip*>(pMPA2), "ENFLAGS", theEnableFlagContainer);
+        globalSettings.push_back(enflagsRegisterVector.first);
+        localSettings.insert(localSettings.end(), enflagsRegisterVector.second.begin(), enflagsRegisterVector.second.end());
+
+        auto trimDacRegisterVector = packLocalRegisters(static_cast<ReadoutChip*>(pMPA2), "TrimDAC", theTrimDacContainer);
+        globalSettings.push_back(trimDacRegisterVector.first);
+        localSettings.insert(localSettings.end(), trimDacRegisterVector.second.begin(), trimDacRegisterVector.second.end());
+
+        auto DigiPatternRegisterVector = packLocalRegisters(static_cast<ReadoutChip*>(pMPA2), "DigPattern", theDigPatternContainer);
+        globalSettings.push_back(DigiPatternRegisterVector.first);
+        localSettings.insert(localSettings.end(), DigiPatternRegisterVector.second.begin(), DigiPatternRegisterVector.second.end());
+
+        cSuccess &= WriteChipMultReg(pMPA2, globalSettings, false);
+        cSuccess &= WriteChipMultReg(pMPA2, localSettings);
     }
     pMPA2->setRegisterTracking(1);
     return cSuccess;
