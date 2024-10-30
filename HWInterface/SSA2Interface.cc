@@ -14,6 +14,8 @@
 #include "Utils/ChannelGroupHandler.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/Container.h"
+#include "Utils/ContainerFactory.h"
+#include "Utils/DataContainer.h"
 #include <bitset>
 
 using namespace Ph2_HwDescription;
@@ -63,10 +65,40 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
     // need to split between control and enable registers
     // don't read back enable registers
     std::vector<ChipRegItem> cCntrlRegItems;
-    // std::vector<std::string> cCntrlRegItemsNames;
-    std::vector<ChipRegItem> cLocalRegItems;
-    // std::vector<std::string> cLocalRegItemsNames;
-    // std::vector<std::string> cRegItemsNames;
+
+    ChipDataContainer theEnableFlagContainer;
+    ContainerFactory::copyAndInitChannel<uint16_t>(*static_cast<ReadoutChip*>(pSSA2), theEnableFlagContainer);
+    ChipDataContainer theStripControl2Container;
+    ContainerFactory::copyAndInitChannel<uint16_t>(*static_cast<ReadoutChip*>(pSSA2), theStripControl2Container);
+    ChipDataContainer theThTrimmingContainer;
+    ContainerFactory::copyAndInitChannel<uint16_t>(*static_cast<ReadoutChip*>(pSSA2), theThTrimmingContainer);
+    ChipDataContainer theDigCalibPatternLSBContainer;
+    ContainerFactory::copyAndInitChannel<uint16_t>(*static_cast<ReadoutChip*>(pSSA2), theDigCalibPatternLSBContainer);
+    ChipDataContainer theDigCalibPatternMSBContainer;
+    ContainerFactory::copyAndInitChannel<uint16_t>(*static_cast<ReadoutChip*>(pSSA2), theDigCalibPatternMSBContainer);
+
+    auto isLocalRegister = [](const std::string& theRegisterName) -> bool
+    {
+        std::vector<std::string> localRegisterMatches;
+        localRegisterMatches.push_back("ENFLAGS_S");
+        localRegisterMatches.push_back("StripControl2_S");
+        localRegisterMatches.push_back("THTRIMMING_S");
+        localRegisterMatches.push_back("DigCalibPattern_L_S");
+        localRegisterMatches.push_back("DigCalibPattern_H_S");
+        for(const auto& templ: localRegisterMatches)
+            if(theRegisterName.find(templ) != std::string::npos) return true;
+        return false;
+    };
+
+    auto extractStrip = [](const std::string& registerName) -> uint16_t
+    {
+        size_t posS = registerName.find("_S");
+
+        if(posS == std::string::npos) { throw std::invalid_argument("Invalid format: missing '_S'"); }
+        uint16_t strip = std::stoi(registerName.substr(posS + 2)) - 1;
+        return strip;
+    };
+
     cCntrlRegItems.clear();
     auto theListOfFreeRegisters = pSSA2->getFreeRegisters();
     for(auto cMapItem: cSSA2RegMap)
@@ -84,50 +116,60 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
             cCntrlRegItems.push_back(cMapItem.second);
             // cCntrlRegItemsNames.push_back(cMapItem.first);
         }
-        else if((cMapItem.first.find("_S") != std::string::npos))
+        else if(isLocalRegister(cMapItem.first))
         {
-            cLocalRegItems.push_back(cMapItem.second);
-            // cLocalRegItemsNames.push_back(cMapItem.first);
+            uint16_t strip = extractStrip(cMapItem.first);
+            if(cMapItem.first.find("ENFLAGS") != std::string::npos)
+                theEnableFlagContainer.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
+            else if(cMapItem.first.find("StripControl2") != std::string::npos)
+                theStripControl2Container.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
+            else if(cMapItem.first.find("THTRIMMING") != std::string::npos)
+                theThTrimmingContainer.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
+            else if(cMapItem.first.find("DigCalibPattern_L") != std::string::npos)
+                theDigCalibPatternLSBContainer.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
+            else if(cMapItem.first.find("DigCalibPattern_H") != std::string::npos)
+                theDigCalibPatternMSBContainer.getChannel<uint16_t>(0, strip) = cMapItem.second.fValue;
+            else
+            {
+                LOG(ERROR) << ERROR_FORMAT << "SSA2Interface::ConfigureChip - Local register " << cMapItem.first << " not recognized, throwing exception" << RESET;
+                std::runtime_error("SSA2Interface::ConfigureChip - Local register not recognized");
+            }
         }
-        else
-        {
-            cRegItems.push_back(cMapItem.second);
-            // cRegItemsNames.push_back(cMapItem.first);
-        }
+        else { cRegItems.push_back(cMapItem.second); }
     }
     bool cSuccess = fBoardFW->MultiRegisterWrite(pSSA2, cCntrlRegItems, false);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cCntrlRegItems.size() << " control registers in SSA#" << +pSSA2->getId() << RESET;
-    // for(unsigned r=0; r<cCntrlRegItemsNames.size(); r++)
-    // {
-    //     std::string pRegNode = cCntrlRegItemsNames[r];
-    //     uint16_t registerValue = cCntrlRegItems[r].fValue;
-    //     uint16_t chipRegisterValue = this->ReadChipReg(pSSA2, pRegNode);
-    //     uint16_t memoryRegisterValue = pSSA2->getReg(pRegNode);
-    //     if(registerValue == chipRegisterValue && memoryRegisterValue == chipRegisterValue)
-    //         LOG(INFO) << BOLDGREEN  << "Name: " << pRegNode << std::hex << " Register: " << registerValue << " ReadBack: " << memoryRegisterValue << " Chip: " << chipRegisterValue << std::dec <<
-    //         RESET;
-    //     else
-    //         LOG(INFO) << BOLDRED  << "Name: " << pRegNode << std::hex << " Register: " << registerValue << " ReadBack: " << memoryRegisterValue << " Chip: " << chipRegisterValue << std::dec <<
-    //         RESET;
-    // }
 
-    cSuccess = fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerify);
+    cSuccess &= fBoardFW->MultiRegisterWrite(pSSA2, cRegItems, pVerify);
     if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cRegItems.size() << " global R/W registers in SSA#" << +pSSA2->getId() << RESET;
-    // for(unsigned r=0; r<cRegItemsNames.size(); r++)
-    // {
-    //     std::string pRegNode = cRegItemsNames[r];
-    //     uint16_t registerValue = cRegItems[r].fValue;
-    //     uint16_t chipRegisterValue = this->ReadChipReg(pSSA2, pRegNode);
-    //     uint16_t memoryRegisterValue = pSSA2->getReg(pRegNode);
-    //     if(pRegNode.find("control_") != std::string::npos )
-    //         LOG(INFO) << BOLDGREEN  << "Name: " << pRegNode << std::hex << " Register: " << registerValue << " ReadBack: " << memoryRegisterValue << " Chip: " << chipRegisterValue << std::dec <<
-    //         RESET;
-    // }
 
     if(cConfigLocalRegs)
     {
-        cSuccess = fBoardFW->MultiRegisterWrite(pSSA2, cLocalRegItems, pVerify);
-        if(cSuccess) LOG(INFO) << BOLDGREEN << "Wrote " << cLocalRegItems.size() << " local R/W registers in SSA#" << +pSSA2->getId() << RESET;
+        std::vector<std::pair<std::string, uint16_t>> globalSettings;
+        std::vector<std::pair<std::string, uint16_t>> localSettings;
+
+        auto enflagsRegisterVector = packLocalRegisters(static_cast<ReadoutChip*>(pSSA2), "ENFLAGS", theEnableFlagContainer);
+        globalSettings.push_back(enflagsRegisterVector.first);
+        localSettings.insert(localSettings.end(), enflagsRegisterVector.second.begin(), enflagsRegisterVector.second.end());
+
+        auto stripControl2RegisterVector = packLocalRegisters(static_cast<ReadoutChip*>(pSSA2), "StripControl2", theStripControl2Container);
+        globalSettings.push_back(stripControl2RegisterVector.first);
+        localSettings.insert(localSettings.end(), stripControl2RegisterVector.second.begin(), stripControl2RegisterVector.second.end());
+
+        auto thTRimmingRegisterVector = packLocalRegisters(static_cast<ReadoutChip*>(pSSA2), "THTRIMMING", theThTrimmingContainer);
+        globalSettings.push_back(thTRimmingRegisterVector.first);
+        localSettings.insert(localSettings.end(), thTRimmingRegisterVector.second.begin(), thTRimmingRegisterVector.second.end());
+
+        auto digCalibPatternLSBRegisterVector = packLocalRegisters(static_cast<ReadoutChip*>(pSSA2), "DigCalibPattern_L", theDigCalibPatternLSBContainer);
+        globalSettings.push_back(digCalibPatternLSBRegisterVector.first);
+        localSettings.insert(localSettings.end(), digCalibPatternLSBRegisterVector.second.begin(), digCalibPatternLSBRegisterVector.second.end());
+
+        auto digCalibPatternMSBRegisterVector = packLocalRegisters(static_cast<ReadoutChip*>(pSSA2), "DigCalibPattern_H", theDigCalibPatternMSBContainer);
+        globalSettings.push_back(digCalibPatternMSBRegisterVector.first);
+        localSettings.insert(localSettings.end(), digCalibPatternMSBRegisterVector.second.begin(), digCalibPatternMSBRegisterVector.second.end());
+
+        cSuccess &= WriteChipMultReg(pSSA2, globalSettings, false);
+        cSuccess &= WriteChipMultReg(pSSA2, localSettings);
     }
 
     pSSA2->setRegisterTracking(1);
@@ -356,94 +398,36 @@ uint8_t SSA2Interface::ReadChipId(Chip* pChip)
     cItem.fValue = 0x0F;
     return cItem.fValue;
 }
-// WRITE REGISTER (ALL LOCAL):
-bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify) // FIXME SSA2
-{
-    bool cSuccess = true;
-    // set board
-    setBoard(pChip->getBeBoardId());
-    auto cRegMap = pChip->getRegMap();
 
-    // check if all registers are the same
-    std::vector<uint8_t> cVals(0);
-    for(uint16_t iChannel = 0; iChannel < pChip->getNumberOfChannels(); ++iChannel)
-    {
-        cVals.push_back(localRegValues.getChannel<uint16_t>(0, iChannel));
-        // LOG(DEBUG) << BOLDMAGENTA << +cVals[cVals.size() - 1] << RESET;
-    }
-    auto cAllTheSame = (std::adjacent_find(cVals.begin(), cVals.end(), std::not_equal_to<uint16_t>()) == cVals.end());
-    if(cAllTheSame)
-    {
-        std::string cRegName = (dacName == "GainTrim") ? "StripControl2" : "THTRIMMING";
-        LOG(INFO) << BOLDGREEN << " All local registers are the same " << RESET;
-        auto cRegItem   = cRegMap[cRegName];
-        cRegItem.fValue = localRegValues.getChannel<uint8_t>(0, 0);
-        cSuccess        = fBoardFW->SingleRegisterWrite(pChip, cRegItem, false);
-        cRegName        = (dacName == "GainTrim") ? "StripControl2_S32" : "THTRIMMING_S32";
-        auto cRegValue  = fBoardFW->SingleRegisterRead(pChip, cRegMap[cRegName]);
-        LOG(INFO) << BOLDBLUE << cRegName << " set to 0x" << std::hex << +cRegValue << std::dec << RESET;
-        cSuccess = (cRegValue == localRegValues.getChannel<uint8_t>(0, 0));
-        return cSuccess;
-    }
+std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>>
+SSA2Interface::packLocalRegisters(ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues)
+{
+    std::string localDacName = dacName;
+    if(dacName == "ThresholdTrim") localDacName = "THTRIMMING";
 
     // check that you are actually configuring all local registers
     assert(localRegValues.size() == pChip->getNumberOfChannels());
-    // figure out a few items based on the template
-    std::string dacTemplate = (dacName == "GainTrim") ? "GAINTRIMMING_S" : "THTRIMMING_S";
-    uint8_t     cMaskValue  = (dacName == "GainTrim") ? 120 : 31;
-    // write mask
-    // for some reason I have to write to all the mask registers... why!?
-    std::vector<std::string> cMaskRegs{"strip", "peri_A", "peri_D"};
-    std::vector<ChipRegItem> cRegItems;
-    for(auto cName: cMaskRegs)
+
+    uint16_t theMostFrequentValue = getMostFrequentLocalRegisterValue(localRegValues);
+
+    std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>> theListOfLocalRegisters;
+    theListOfLocalRegisters.first = {localDacName, theMostFrequentValue};
+    for(size_t strip = 0; strip < pChip->getNumberOfCols(); ++strip)
     {
-        auto cRegName = "mask_" + cName;
-        auto cItem    = cRegMap[cRegName];
-        cItem.fValue  = (cRegName == "strip") ? cMaskValue : 0xFF;
-        cRegItems.push_back(cItem);
-    }
-    // cSuccess = fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
-    cSuccess = fBoardFW->MultiRegisterWrite(pChip, cRegItems, false);
-    if(!cSuccess)
-    {
-        LOG(INFO) << BOLDRED << "Failed to write to one of these registers" << RESET;
-        for(auto cName: cMaskRegs) LOG(INFO) << BOLDRED << "mask_" << cName << RESET;
-        return cSuccess;
+        uint16_t theValue = localRegValues.getChannel<uint16_t>(0, strip);
+        if(theValue == theMostFrequentValue) continue;
+        theListOfLocalRegisters.second.push_back({static_cast<SSA2*>(pChip)->getStripRegisterName(localDacName, strip), theValue});
     }
 
-    // write local registers
-    cRegItems.clear();
-    ChannelGroup<1, NCHANNELS> channelToEnable;
-    for(uint8_t iChannel = 0; iChannel < pChip->getNumberOfChannels(); ++iChannel)
-    {
-        std::stringstream dacName;
-        dacName << dacTemplate.c_str() << 1 + iChannel;
-        auto cIterator = cRegMap.find(dacName.str());
-        if(cIterator == cRegMap.end())
-        {
-            LOG(ERROR) << BOLDRED << "SSA2Interaface::WriteChipAllLocalReg trying to write to a register that doesn't exist in the map : " << dacName.str() << RESET;
-            continue;
-        }
-        ChipRegItem cItem = cIterator->second;
-        cItem.fValue      = localRegValues.getChannel<uint16_t>(0, iChannel) & 0x1F;
-        // LOG(INFO) << BOLDBLUE << "Setting register " << dacName.str() << " to " << cItem.fValue << RESET;
-        cRegItems.push_back(cItem);
-    }
-    // cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
-    cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, false);
-    // write mask
-    cRegItems.clear();
-    cMaskValue = 0xFF;
-    for(auto cName: cMaskRegs)
-    {
-        auto cRegName = "mask_" + cName;
-        auto cItem    = cRegMap[cRegName];
-        cItem.fValue  = cMaskValue;
-        cRegItems.push_back(cItem);
-    }
-    // cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
-    cSuccess = cSuccess && fBoardFW->MultiRegisterWrite(pChip, cRegItems, false);
-    return cSuccess;
+    return theListOfLocalRegisters;
+}
+
+bool SSA2Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& dacName, const ChipContainer& localRegValues, bool pVerify)
+{
+    auto theListOfLocalRegisters = packLocalRegisters(pChip, dacName, localRegValues);
+    bool success                 = WriteChipReg(pChip, theListOfLocalRegisters.first.first, theListOfLocalRegisters.first.second, false);
+    success &= WriteChipMultReg(pChip, theListOfLocalRegisters.second, pVerify);
+    return success;
 }
 
 bool SSA2Interface::WriteChipMultReg(Chip* pSSA2, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify)

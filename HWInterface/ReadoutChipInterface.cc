@@ -23,5 +23,25 @@ ReadoutChipInterface::ReadoutChipInterface(const BeBoardFWMap& pBoardMap) : Chip
 #endif
 }
 
+uint16_t ReadoutChipInterface::getMostFrequentLocalRegisterValue(const ChipContainer& theChipContainer)
+{
+    std::unordered_map<uint16_t, size_t> theValueFrequency;
+    for(auto theChannel: *theChipContainer.getChannelContainer<uint16_t>()) { theValueFrequency[theChannel]++; }
+
+    uint16_t maximumFrequencyValue = 0xFFFF;
+    size_t   maximumFrequency      = 0;
+
+    for(const auto& valueAndFrequency: theValueFrequency)
+    {
+        if(valueAndFrequency.second > maximumFrequency)
+        {
+            maximumFrequency      = valueAndFrequency.second;
+            maximumFrequencyValue = valueAndFrequency.first;
+        }
+    }
+
+    return maximumFrequencyValue;
+}
+
 ReadoutChipInterface::~ReadoutChipInterface() {}
 } // namespace Ph2_HwInterface

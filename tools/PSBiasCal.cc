@@ -784,8 +784,6 @@ void PSBiasCal::Running() {}
 
 void PSBiasCal::Stop()
 {
-    dumpConfigFiles();
-
     // Destroy();
 }
 
