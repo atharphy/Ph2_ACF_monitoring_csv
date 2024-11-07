@@ -649,6 +649,13 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pMPA2->getId() << "]" << RESET;
     pMPA2->setRegisterTracking(0);
 
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_1_0 = " << std::hex << ReadChipReg(pMPA2, "InSetting_1_0") << std::dec << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_3_2 = " << std::hex << ReadChipReg(pMPA2, "InSetting_3_2") << std::dec << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_5_4 = " << std::hex << ReadChipReg(pMPA2, "InSetting_5_4") << std::dec << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_7_6 = " << std::hex << ReadChipReg(pMPA2, "InSetting_7_6") << std::dec << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_8   = " << std::hex << ReadChipReg(pMPA2, "InSetting_8")   << std::dec << std::endl;
+    
+
     std::vector<uint32_t> cVec;
     ChipRegMap            cRegMap = pMPA2->getRegMap();
     // need to split between control and enable registers
@@ -733,6 +740,20 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
         else
             cRegItems.push_back(cMapItem.second);
     }
+
+
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_1_0 = " << std::hex << cRegMap["InSetting_1_0"].fValue << std::dec << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_3_2 = " << std::hex << cRegMap["InSetting_3_2"].fValue << std::dec << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_5_4 = " << std::hex << cRegMap["InSetting_5_4"].fValue << std::dec << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_7_6 = " << std::hex << cRegMap["InSetting_7_6"].fValue << std::dec << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_8   = " << std::hex << cRegMap["InSetting_8"].fValue   << std::dec << std::endl;
+
+
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_1_0 = " << std::hex << ReadChipReg(pMPA2, "InSetting_1_0") << std::dec << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_3_2 = " << std::hex << ReadChipReg(pMPA2, "InSetting_3_2") << std::dec << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_5_4 = " << std::hex << ReadChipReg(pMPA2, "InSetting_5_4") << std::dec << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_7_6 = " << std::hex << ReadChipReg(pMPA2, "InSetting_7_6") << std::dec << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_8   = " << std::hex << ReadChipReg(pMPA2, "InSetting_8")   << std::dec << std::endl;
 
     // Mask need to be written first, default value is 0
     this->WriteChipReg(pMPA2, "Mask", maskValue, false);

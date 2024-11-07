@@ -209,11 +209,18 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
     std::string outputFileName = fileName.substr(0, fileName.length() - 4) + ".root";
     TFile theFile(outputFileName.c_str(), "RECREATE");
 
-    std::vector<TH2I*> theHistogramList;
+    std::vector<TH2I*> theMPAhistogramList;
     for(size_t chip=0; chip<8; ++chip)
     {
-        theHistogramList.push_back(new TH2I(Form("MPA%i", chip), Form("MPA %i", chip), 120, -0.5, 119.5, 17, -0.5, 16.5));
-        theHistogramList.back()->SetStats(false);
+        theMPAhistogramList.push_back(new TH2I(Form("MPA%i", chip), Form("MPA %i", chip), 120, -0.5, 119.5, 16, -0.5, 16.5));
+        theMPAhistogramList.back()->SetStats(false);
+    }
+
+    std::vector<TH1I*> theSSAhistogramList;
+    for(size_t chip=0; chip<8; ++chip)
+    {
+        theSSAhistogramList.push_back(new TH1I(Form("SSA%i", chip), Form("SSA %i", chip), 120, -0.5, 119.5));
+        theSSAhistogramList.back()->SetStats(false);
     }
 
     size_t numberOfBanks = theDecodedHydrid1Data.size()/8;
@@ -243,17 +250,17 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
         uint16_t numberOfStubs = std::bitset<6>(fullWord.substr(22, 6)).to_ulong();
         if(numberOfStubs != 8)
         {
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Event " << bankNumber << " without 8 stubs, read out " << numberOfStubs << std::endl;
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(0, 1) << std::endl;
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(1, 9) << std::endl;
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(10, 12) << std::endl;
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(22, 6) << std::endl;
-            for(size_t stubPosition=0; stubPosition<16; ++stubPosition)
-            {
-                std::string theStubString = fullWord.substr(28 + stubPosition*21, 21); 
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << theStubString.substr(0, 3) << " " << theStubString.substr(3, 3) << " " << theStubString.substr(6, 15) << std::endl;
-            }
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(364, 20) << std::endl;
+            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Event " << bankNumber << " without 8 stubs, read out " << numberOfStubs << std::endl;
+            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(0, 1) << std::endl;
+            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(1, 9) << std::endl;
+            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(10, 12) << std::endl;
+            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(22, 6) << std::endl;
+            // for(size_t stubPosition=0; stubPosition<16; ++stubPosition)
+            // {
+            //     std::string theStubString = fullWord.substr(28 + stubPosition*21, 21); 
+            //     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << theStubString.substr(0, 3) << " " << theStubString.substr(3, 3) << " " << theStubString.substr(6, 15) << std::endl;
+            // }
+            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << fullWord.substr(364, 20) << std::endl;
         }
         
         for(size_t chipPosition=0; chipPosition<8; ++chipPosition)
@@ -271,9 +278,13 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
             uint16_t counterHigh = std::bitset<7>(chipData.substr(14, 7)).to_ulong() << 7;
             uint16_t totalCounter = counterLow + counterHigh;
             if(totalCounter-- == 0) continue; // not a real counter since they are always at least 1;
-            theHistogramList[chipId]->SetBinContent(pixelCol + 1, pixelRow + 1, totalCounter);
-            if(pixelRow == 16 && totalCounter > 0) std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] FOUND!!! " << totalCounter << std::endl;
-            if(totalCounter > 254) std::cout << fullWord << std::endl;
+            if(pixelRow == 16)
+            {
+                // if(totalCounter > 0) std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] FOUND!!!" << std::endl;
+                theSSAhistogramList[chipId]->SetBinContent(pixelCol + 1, totalCounter);
+            }
+            else theMPAhistogramList[chipId]->SetBinContent(pixelCol + 1, pixelRow + 1, totalCounter);
+            // if(totalCounter > 254) std::cout << fullWord << std::endl;
         }
 
         std::bitset<382> theBank(fullWord);
@@ -282,17 +293,29 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
 
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BX offset = " << bxOffset << std::endl;
     
-    TCanvas* theCanvas = new TCanvas();
-    theCanvas->Divide(2,4);
+    TCanvas* theMPAcanvas = new TCanvas();
+    theMPAcanvas->Divide(2,4);
 
     for(size_t chip=0; chip<8; ++chip)
     {
-        theCanvas->cd(chip+1);
-        theHistogramList[chip]->Draw("colz");
-        theHistogramList[chip]->Write();
+        theMPAcanvas->cd(chip+1);
+        theMPAhistogramList[chip]->Draw("colz");
+        theMPAhistogramList[chip]->Write();
     }
 
-    theCanvas->Write();
+    theMPAcanvas->Write();
+
+    TCanvas* theSSAcanvas = new TCanvas();
+    theSSAcanvas->Divide(2,4);
+
+    for(size_t chip=0; chip<8; ++chip)
+    {
+        theSSAcanvas->cd(chip+1);
+        theSSAhistogramList[chip]->Draw();
+        theSSAhistogramList[chip]->Write();
+    }
+
+    theSSAcanvas->Write();
 
     theFile.Close();
 
@@ -312,71 +335,112 @@ int main(int argc, char* argv[])
 
 
 
-    uint16_t stripThresholdStart = 65;
-    uint16_t pixelThresholdStart = 200;
-    uint16_t totalThresholdOffset = 30;
+    // uint16_t stripThresholdStart = 65;
+    // uint16_t pixelThresholdStart = 200;
+    // uint16_t totalThresholdOffset = 30;
 
-    // uint16_t delayStart = 15346;
-    // uint16_t delayOffset = 50;
 
-    uint16_t delayStart = 0x3bf2;
-    uint16_t delayOffset = 0;
+    uint16_t stripThresholdStart = 0;
+    uint16_t pixelThresholdStart = 0;
+    uint16_t totalThresholdOffset = 10;
+
+    // uint32_t delayStart = 0;
+    // uint32_t delayOffset = 0xffff;
+    // uint32_t delayIncrement = 100;
+    // uint32_t subDelayMax = 8;
+
+    uint32_t delayStart = 0x3bf2;
+    uint32_t delayOffset = 0;
+    uint32_t delayIncrement = 1;
+    uint32_t subDelayMax = 1;
 
     std::string folderName = argv[1];
 
     std::string ouputFileName = folderName + "/SCurve.root";
     TFile theSCurveFile(ouputFileName.c_str(), "RECREATE");
 
-    std::vector<TH2I*> theHistogramList;
+    std::vector<TH2I*> theMPAhistogramList;
     for(size_t chip=0; chip<8; ++chip)
     {
-        theHistogramList.push_back(new TH2I(Form("SCurve_MPA%i", chip), Form("SCurve MPA %i", chip), 120*16, -0.5, 120*16-1, totalThresholdOffset + 1, pixelThresholdStart -0.5, pixelThresholdStart + totalThresholdOffset + 0.5));
-        theHistogramList.back()->SetStats(false);
+        theMPAhistogramList.push_back(new TH2I(Form("SCurve_MPA%i", chip), Form("SCurve MPA %i", chip), 120*16, -0.5, 120*16-0.5, totalThresholdOffset + 1, pixelThresholdStart -0.5, pixelThresholdStart + totalThresholdOffset + 0.5));
+        theMPAhistogramList.back()->SetStats(false);
+    }
+
+    std::vector<TH2I*> theSSAhistogramList;
+    for(size_t chip=0; chip<8; ++chip)
+    {
+        theSSAhistogramList.push_back(new TH2I(Form("SCurve_SSA%i", chip), Form("SCurve SSA %i", chip), 120, -0.5, 120-0.5, totalThresholdOffset + 1, stripThresholdStart -0.5, stripThresholdStart + totalThresholdOffset + 0.5));
+        theSSAhistogramList.back()->SetStats(false);
     }
 
 
-    for(uint16_t delay = delayStart; delay <= delayStart + delayOffset; ++delay)
+    for(uint32_t delay = delayStart; delay <= delayStart + delayOffset; delay+=delayIncrement)
     {
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] delay = " << delay << std::endl;
-        
-
-        for(uint16_t thrOffset = 0; thrOffset <= totalThresholdOffset; ++thrOffset)
+        for(uint32_t subDelay = 0; subDelay < subDelayMax; ++subDelay)
         {
-            uint16_t stripThreshold = stripThresholdStart + thrOffset;
-            uint16_t pixelThreshold = pixelThresholdStart + thrOffset;
-            std::string fileName = folderName + "/fastCounter_StripTh_" +  std::to_string(stripThreshold) + "_PixelTh_" + std::to_string(pixelThreshold) + "_delay_" + std::to_string(delay) + ".txt";
-            std::string parsedFileName = parseCounterRaw(fileName, numberOfWords);
-            if(parsedFileName == "") continue;
+            uint32_t totalDelay = delay + subDelay;
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] delay = " << totalDelay << std::endl;
+            
 
-            TFile parsedFile(parsedFileName.c_str());
-            for(size_t chip=0; chip<8; ++chip)
+            for(uint16_t thrOffset = 0; thrOffset <= totalThresholdOffset; ++thrOffset)
             {
-                auto theOccupancyPlot = (TH2I*)(parsedFile.Get(Form("MPA%i", chip)));
-                for(uint16_t col = 0; col<120; ++col)
+                uint16_t stripThreshold = stripThresholdStart + thrOffset;
+                uint16_t pixelThreshold = pixelThresholdStart + thrOffset;
+                std::string fileName = folderName + "/fastCounter_StripTh_" +  std::to_string(stripThreshold) + "_PixelTh_" + std::to_string(pixelThreshold) + "_delay_" + std::to_string(totalDelay) + ".txt";
+                std::string parsedFileName = parseCounterRaw(fileName, numberOfWords);
+                if(parsedFileName == "") continue;
+
+                TFile parsedFile(parsedFileName.c_str());
+                for(size_t chip=0; chip<8; ++chip)
                 {
-                    for(uint16_t row = 0; row<16; ++row)
+                    auto theMPAoccupancyPlot = (TH2I*)(parsedFile.Get(Form("MPA%i", chip)));
+                    for(uint16_t col = 0; col<120; ++col)
                     {
-                        theHistogramList[chip]->SetBinContent(col + row*120 + 1, thrOffset+1, theOccupancyPlot->GetBinContent(col+1, row+1));
+                        for(uint16_t row = 0; row<16; ++row)
+                        {
+                            theMPAhistogramList[chip]->SetBinContent(col + row*120 + 1, thrOffset+1, theMPAoccupancyPlot->GetBinContent(col+1, row+1));
+                        }
+                    }
+
+                    auto theSSAoccupancyPlot = (TH1I*)(parsedFile.Get(Form("SSA%i", chip)));
+                    for(uint16_t col = 0; col<120; ++col)
+                    {
+                        theSSAhistogramList[chip]->SetBinContent(col + 1, thrOffset+1, theSSAoccupancyPlot->GetBinContent(col+1));
                     }
                 }
+                parsedFile.Close();
             }
-            parsedFile.Close();
         }
     }
 
-    TCanvas* theCanvas = new TCanvas();
-    theCanvas->Divide(2,4);
+    TCanvas* theMPAcanvas = new TCanvas();
+    theMPAcanvas->Divide(2,4);
 
     theSCurveFile.cd();
 
     for(size_t chip=0; chip<8; ++chip)
     {
-        theCanvas->cd(chip+1);
-        theHistogramList[chip]->Draw("colz");
-        theHistogramList[chip]->Write();
+        theMPAcanvas->cd(chip+1);
+        theMPAhistogramList[chip]->Draw("colz");
+        theMPAhistogramList[chip]->Write();
     }
 
-    theCanvas->Write();
+    theMPAcanvas->Write();
+
+    TCanvas* theSSAcanvas = new TCanvas();
+    theSSAcanvas->Divide(2,4);
+
+    theSCurveFile.cd();
+
+    for(size_t chip=0; chip<8; ++chip)
+    {
+        theSSAcanvas->cd(chip+1);
+        theSSAhistogramList[chip]->Draw("colz");
+        theSSAhistogramList[chip]->Write();
+    }
+
+    theSSAcanvas->Write();
+
 
     theSCurveFile.Close();
 
