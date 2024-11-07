@@ -10,9 +10,6 @@
 #ifndef PSCounterTest_h__
 #define PSCounterTest_h__
 
-#include "Utils/CommonVisitors.h"
-#include "Utils/ContainerRecycleBin.h"
-#include "Utils/Visitor.h"
 #include "tools/Tool.h"
 #include <map>
 #ifdef __USE_ROOT__
@@ -20,9 +17,9 @@
 #include "DQMUtils/DQMHistogramPSCounterTest.h"
 #endif
 
-namespace Ph2_HwInterface
+namespace Ph2_HwDescription
 {
-  class D19cFWInterface;
+  class BeBoard;
 }
 
 class PSCounterTest : public Tool
@@ -37,7 +34,7 @@ class PSCounterTest : public Tool
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
-    void RunFast(uint16_t stripThreshold, uint16_t pixelThreshold, uint16_t delay = 0x3bf2);
+    void RunFast(uint16_t stripThreshold, uint16_t pixelThreshold);
     void Pause() override;
     void Resume() override;
     void Reset();
@@ -53,7 +50,7 @@ class PSCounterTest : public Tool
     bool fWithSSA = false;
     bool fWithMPA = false;
 
-    bool GetCounterData(Ph2_HwInterface::D19cFWInterface *theFWinterface, const std::string& theOutputFileName, int eventsPerPoint);
+    bool GetCounterData(Ph2_HwDescription::BeBoard *theBoard, const std::string& theOutputFileName, int eventsPerPoint);
     // Settings
     bool fDisableStubLogic{true};
     
