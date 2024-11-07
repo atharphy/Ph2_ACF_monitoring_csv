@@ -345,7 +345,7 @@ int main(int argc, char* argv[])
     if(argc == 3) numberOfWords = atoi(argv[2]);
 
 
-    uint16_t numberOfLinks = 1;
+    uint16_t numberOfLinks = 2;
 
     uint16_t stripThresholdStart = 65;
     uint16_t pixelThresholdStart = 200;
