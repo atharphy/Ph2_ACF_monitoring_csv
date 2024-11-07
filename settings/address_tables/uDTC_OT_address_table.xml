@@ -711,11 +711,11 @@
             </node>
 
             <node id="mpa_to_cic_cntr"            address="0x0F9" mask="0xFFFFFFFF"/>
-            <node id="async_counter_decode"        address="0x0FF">
+            <!-- <node id="async_counter_decode"        address="0x0FF">
                     <node id="ready"                  mask="0x00000001"/>
                     <node id="state"                  mask="0x000000F0"/>
                     <node id="received_start"         mask="0x00FFFF00"/>
-            </node>
+            </node> -->
             
             <node id="ps_return"                address="0x00E">
                 <node id="clock_from_ssa1_test_done"            mask="0x00000001" description="test of the return clock from SSA1 done           "/>

@@ -607,11 +607,11 @@
 			<Register name="state_tuning_cbc0">0</Register>
 			<Register name="state_tuning_cbc1">0</Register>
 			<Register name="stub_debug">0</Register>
-			<Register name="async_counter_decode">
+			<!-- <Register name="async_counter_decode">
 				<Register name="ready">0</Register>
 				<Register name="received_start">0</Register>
 				<Register name="state">0</Register>
-			</Register>
+			</Register> -->
 			<Register name="cic_decoder">
 				<Register name="bx0_alignment_state">8</Register>
 			</Register>
