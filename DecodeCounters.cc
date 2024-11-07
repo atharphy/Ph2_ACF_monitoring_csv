@@ -335,14 +335,14 @@ int main(int argc, char* argv[])
 
 
 
-    // uint16_t stripThresholdStart = 65;
-    // uint16_t pixelThresholdStart = 200;
-    // uint16_t totalThresholdOffset = 30;
+    uint16_t stripThresholdStart = 65;
+    uint16_t pixelThresholdStart = 200;
+    uint16_t totalThresholdOffset = 30;
 
 
-    uint16_t stripThresholdStart = 0;
-    uint16_t pixelThresholdStart = 0;
-    uint16_t totalThresholdOffset = 10;
+    // uint16_t stripThresholdStart = 0;
+    // uint16_t pixelThresholdStart = 0;
+    // uint16_t totalThresholdOffset = 10;
 
     // uint32_t delayStart = 0;
     // uint32_t delayOffset = 0xffff;

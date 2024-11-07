@@ -169,10 +169,10 @@ void PSCounterTest::Running()
     //     }
     // }
 
-    for(uint16_t thrOffset = 0; thrOffset <= 10; thrOffset+=1)
+    for(uint16_t thrOffset = 0; thrOffset <= 30; thrOffset+=1)
     {
-        // RunFast(65 + thrOffset, 200 + thrOffset);
-        RunFast(thrOffset, thrOffset);
+        RunFast(65 + thrOffset, 200 + thrOffset);
+        // RunFast(thrOffset, thrOffset);
         // sleep(10);
     }
 
@@ -327,12 +327,6 @@ void PSCounterTest::RunFast(uint16_t stripThreshold, uint16_t pixelThreshold, ui
                         {
                             fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 70);
                             fReadoutChipInterface->WriteChipReg(cChip, "Threshold", pixelThreshold);
-                            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_1_0 = " << std::hex << fReadoutChipInterface->ReadChipReg(cChip, "InSetting_1_0") << std::dec << std::endl;
-                            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_3_2 = " << std::hex << fReadoutChipInterface->ReadChipReg(cChip, "InSetting_3_2") << std::dec << std::endl;
-                            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_5_4 = " << std::hex << fReadoutChipInterface->ReadChipReg(cChip, "InSetting_5_4") << std::dec << std::endl;
-                            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_7_6 = " << std::hex << fReadoutChipInterface->ReadChipReg(cChip, "InSetting_7_6") << std::dec << std::endl;
-                            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_8   = " << std::hex << fReadoutChipInterface->ReadChipReg(cChip, "InSetting_8")   << std::dec << std::endl;
-    
                         }
                         else
                         {

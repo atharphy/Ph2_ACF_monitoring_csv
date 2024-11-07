@@ -13,7 +13,7 @@ namespace Ph2_HwInterface
 
 uint32_t PhaseTuningControl::encodeCommand() const
 {
-    bool     newFW      = true;
+    bool     newFW      = false;
     uint32_t theCommand = 0;
 
     theCommand |= ((fHybridId & 0x1F) << (newFW ? 27 : 28));
