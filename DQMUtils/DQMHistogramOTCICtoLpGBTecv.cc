@@ -29,7 +29,7 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
     std::vector<float> listOfClockStrength = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTCICtoLpGBTecv_ClockStrength", "1, 4, 7"));
     size_t             numberOfLines       = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
 
-    // x-axis is LpGBT phase and y-axis is line:clock strenghts
+    // x-axis is LpGBT phase and y-axis is line
     for(auto polarity: listOfClockPolarity)
     {
         for(auto CICStrength: listOfCICStrength)
