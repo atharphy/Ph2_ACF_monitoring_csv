@@ -67,11 +67,9 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
                 binNumber = 1;
                 for(uint32_t channel = 1; channel <= numberOfLines; channel++)
                 {
-
-                    std::string s      = channel == 1 ? "L1" : "Stub" + convertToString(channel - 1);
+                    std::string s = channel == 1 ? "L1" : "Stub" + convertToString(channel - 1);
                     ECVEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(binNumber, s.c_str());
                     binNumber++;
-
                 }
 
                 // Book the histograms
@@ -127,11 +125,7 @@ bool DQMHistogramOTCICtoLpGBTecv::fill(std::string& inputStream)
     // SoC utilities only - END
 }
 
-void DQMHistogramOTCICtoLpGBTecv::fillEfficiency(uint8_t                pClockPolarity,
-                                                 uint8_t                pClockStrength,
-                                                 uint8_t                pCicStrength,
-                                                 uint8_t                pPhaseIndex,
-                                                 DetectorDataContainer& theEfficiencyContainer)
+void DQMHistogramOTCICtoLpGBTecv::fillEfficiency(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhaseIndex, DetectorDataContainer& theEfficiencyContainer)
 {
     for(auto board: theEfficiencyContainer)
     {
@@ -144,7 +138,7 @@ void DQMHistogramOTCICtoLpGBTecv::fillEfficiency(uint8_t                pClockPo
 
                 // Select the correct histogram given the pClockPolarity and the pCicStrength
                 uint8_t ClockCICStrengthPolarityCombination = (pClockStrength * 100) + (pCicStrength * 10) + pClockPolarity;
-                auto    theEfficiencyHistogram         = fEfficiency[ClockCICStrengthPolarityCombination]
+                auto    theEfficiencyHistogram              = fEfficiency[ClockCICStrengthPolarityCombination]
                                                   .getObject(board->getId())
                                                   ->getObject(opticalGroup->getId())
                                                   ->getObject(theHybrid->getId())
@@ -155,7 +149,7 @@ void DQMHistogramOTCICtoLpGBTecv::fillEfficiency(uint8_t                pClockPo
                 uint8_t lineCounter = 0;
                 for(auto efficiency: efficiencies)
                 {
-                    theEfficiencyHistogram->SetBinContent(pPhaseIndex, lineCounter+1, efficiency);
+                    theEfficiencyHistogram->SetBinContent(pPhaseIndex, lineCounter + 1, efficiency);
                     lineCounter++;
                 }
             }

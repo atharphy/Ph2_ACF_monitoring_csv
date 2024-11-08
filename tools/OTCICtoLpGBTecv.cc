@@ -255,8 +255,8 @@ void OTCICtoLpGBTecv::runECV()
                                 }
 
                             } // hybrid loop
-                            auto    phaseIterator                = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
-                            uint8_t phaseIndex                   = std::distance(fListOfLpGBTPhase.begin(), phaseIterator) + 1;
+                            auto    phaseIterator = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
+                            uint8_t phaseIndex    = std::distance(fListOfLpGBTPhase.begin(), phaseIterator) + 1;
 #ifdef __USE_ROOT__
                             // Find the pClockStrength and pPhase indices
 
