@@ -222,7 +222,7 @@ bool PSCounterTest::GetCounterData(BeBoard* theBoard, const std::string& theOutp
     if(!allStartPatternFound)
     {
         LOG(WARNING) << WARNING_FORMAT << "Start pattern not found" << RESET;
-        // sleep(5);
+        // sleep(10);
         return false;
     }
 
@@ -230,7 +230,6 @@ bool PSCounterTest::GetCounterData(BeBoard* theBoard, const std::string& theOutp
 
     for(auto theOpticalGroup: *theBoard)
     {
-        // sleep(5);
         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren", 1 << theOpticalGroup->getId());
         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] ddr3_wren = "  << fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren") << std::endl;
         auto cNFIFOentries = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.num_fifo_entry");

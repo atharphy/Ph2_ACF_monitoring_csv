@@ -196,25 +196,24 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
         theFile.mkdir(Form("Hybrid_%i", hybrid));
         theFile.cd(Form("Hybrid_%i", hybrid));
 
-        size_t numberOfSkip = 0;
-        std::bitset<48> startPattern    ("100000000000000000000000100000000000000000000000");
-        std::bitset<48> startPatternMask("111111111100000000000011111100000000000000000000");
-        // some times the start pattern is saved, sometimes is not
-        std::bitset<48> counterStartPattern    ("100000000000000000000000100000000011111111111111");
-        std::bitset<48> counterStartPatternMask("111111111100000000000011111100000011111111111111");
-        for(auto theBXword: theDecodedHydridData[hybrid])
-        {
-            if((theBXword & counterStartPatternMask) == counterStartPattern)
-            {
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] FOUND start pattern!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                numberOfSkip += 8;
-                break;
-            }
-            if((theBXword & startPatternMask) == startPattern) break;
-            ++numberOfSkip;
-        }
-        theDecodedHydridData[hybrid].erase(theDecodedHydridData[hybrid].begin(), theDecodedHydridData[hybrid].begin() + numberOfSkip);
-
+        // size_t numberOfSkip = 0;
+        // std::bitset<48> startPattern    ("100000000000000000000000100000000000000000000000");
+        // std::bitset<48> startPatternMask("111111111100000000000011111100000000000000000000");
+        // // some times the start pattern is saved, sometimes is not
+        // std::bitset<48> counterStartPattern    ("100000000000000000000000100000000011111111111111");
+        // std::bitset<48> counterStartPatternMask("111111111100000000000011111100000011111111111111");
+        // for(auto theBXword: theDecodedHydridData[hybrid])
+        // {
+        //     if((theBXword & counterStartPatternMask) == counterStartPattern)
+        //     {
+        //         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] FOUND start pattern!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+        //         numberOfSkip += 8;
+        //         break;
+        //     }
+        //     if((theBXword & startPatternMask) == startPattern) break;
+        //     ++numberOfSkip;
+        // }
+        // theDecodedHydridData[hybrid].erase(theDecodedHydridData[hybrid].begin(), theDecodedHydridData[hybrid].begin() + numberOfSkip);
 
         std::vector<TH2I*> theMPAhistogramList;
         for(size_t chip=0; chip<8; ++chip)
