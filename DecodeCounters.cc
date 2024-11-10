@@ -77,24 +77,25 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
 
     inputFile.close();
 
-    if(numberOfWords == 0) numberOfWords = hexValues.size()/32;
+    if(numberOfWords == 0) numberOfWords = hexValues.size()/16;
 
     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] total banks = " << numberOfWords << std::endl;
 
-    std::vector<std::array<uint32_t, 32>> theWordArray(numberOfWords);
+    std::vector<std::array<uint32_t, 16>> theWordArray(numberOfWords);
 
     for(size_t wordNumber=0; wordNumber<numberOfWords; ++wordNumber)
     {
-        for(size_t hexWord=0; hexWord<32; ++hexWord)
+        
+        for(size_t hexWord=0; hexWord<16; ++hexWord)
         {
-            theWordArray[wordNumber][hexWord] = hexValues[wordNumber*32 + hexWord];
+            theWordArray[wordNumber][hexWord] = hexValues[wordNumber*16 + hexWord];
         }
     }
 
-    auto invert = [](std::array<uint32_t, 32>& theWord)
+    auto invert = [](std::array<uint32_t, 16>& theWord)
     {
-        std::array<uint32_t, 32> theNewWord;
-        for(size_t word256=0; word256<4; ++word256)
+        std::array<uint32_t, 16> theNewWord;
+        for(size_t word256=0; word256<2; ++word256)
         {
             for(size_t word32=0; word32<8; ++word32)
             {
@@ -112,49 +113,41 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
         invert(word);
     }
 
-    std::array<uint32_t, 32> theStartWord;
+    std::array<uint32_t, 16> theStartWord;
     for(auto& thehexWord: theStartWord) thehexWord = 0xaaaaaaaa;
     theStartWord[7] = 0xaaaaaaaf;
     
-    auto searchForBadBad = [](const std::array<uint32_t, 32>& theWord)
+    auto searchForFAB10 = [](const std::array<uint32_t, 16>& theWord)
     {
-
-        if(theWord[0] != 0xbadbadba) return false;
-        if(theWord[1] != 0xdbadbadb) return false; 
-        if(theWord[2] != 0xadbadbad) return false; 
-        if(theWord[3] != 0xbadbadba) return false; 
-        if(theWord[4] != 0xdbadbadb) return false; 
-        if((theWord[5] & 0xffffff00) != 0xadbadd00) return false;
+        if(theWord[0] != 0xFAB10FAB) return false;
+        if((theWord[1] & 0xff000000) != 0x10000000) return false;
         return true;
     };
 
-    auto searchStart = [&theStartWord](const std::array<uint32_t, 32>& theWord)
+    auto searchStart = [&theStartWord](const std::array<uint32_t, 16>& theWord)
     {
-        for(size_t i =0; i<32; i++)
+        for(size_t i =0; i<16; i++)
         {
             if(theWord[i] != theStartWord[i]) return false;
         }
         return true;
     };
 
-    auto decodeHybrid = [](const std::array<uint32_t, 32>& theWord, size_t offset, std::vector<std::bitset<48>>& theDecodedHydridData)
+    auto decodeHybrid = [](const std::array<uint32_t, 16>& theWord, std::vector<std::bitset<200>>& theDecodedHydrid0Data, std::vector<std::bitset<200>>& theDecodedHydrid1Data)
     {
         std::stringstream theBitStream;
 
-        for(size_t stubDataWord = offset; stubDataWord< offset + 12; ++stubDataWord)
+        for(size_t stubDataWord = 0; stubDataWord< 16; ++stubDataWord)
         {
             std::bitset<32> theBits(theWord[stubDataWord]);
             theBitStream<<theBits.to_string();
         }
 
-        for (int i = 0; i < 384; i += 48) {
-            std::string subValue = theBitStream.str().substr(i, 48);
-            theDecodedHydridData.push_back(std::bitset<48>(subValue));
-            // std::cout << theDecodedHydridData.back() << std::endl;
-        }
+        theDecodedHydrid0Data.push_back(std::bitset<200>(theBitStream.str().substr(512 - 200, 200)));
+        theDecodedHydrid1Data.push_back(std::bitset<200>(theBitStream.str().substr(512 - 400, 200)));
     };
 
-    std::vector<std::vector<std::bitset<48>>> theDecodedHydridData(2);
+    std::vector<std::vector<std::bitset<200>>> theDecodedHydridData(2);
 
     bool startWordFound = false;
     for(size_t wordNumber=0; wordNumber<numberOfWords; ++wordNumber)
@@ -173,9 +166,9 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
             }
             continue;
         }
-        if(!searchForBadBad(theWordArray[wordNumber]))
+        if(!searchForFAB10(theWordArray[wordNumber]))
         {
-            // std::cout << "Missing badbdabad pattern at 1kb word number " << wordNumber << std::endl;
+            std::cout << "Missing badbdabad pattern at 1kb word number " << wordNumber << std::endl;
             continue;
         }
 
@@ -184,8 +177,7 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
 
         // std::cout << "Hybrid 1 - word number = " << wordNumber << std::endl;
 
-        decodeHybrid(theWordArray[wordNumber],  8, theDecodedHydridData[1]);
-        decodeHybrid(theWordArray[wordNumber], 20, theDecodedHydridData[0]);
+        decodeHybrid(theWordArray[wordNumber], theDecodedHydridData[0], theDecodedHydridData[1]);
     }
 
     std::string outputFileName = fileName.substr(0, fileName.length() - 4) + ".root";
@@ -229,7 +221,7 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
             theSSAhistogramList.back()->SetStats(false);
         }
 
-        size_t numberOfBanks = theDecodedHydridData[hybrid].size()/8;
+        size_t numberOfBanks = theDecodedHydridData[hybrid].size();
         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] numberOfBanks = " << numberOfBanks << std::endl;
         
         uint16_t bxOffset = 8;
@@ -243,15 +235,8 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
                 pixelRow = 16;
                 pixelCol = bankNumber - 16*120;
             }
-            std::string fullWord = "";
-            for(size_t wordNumber=0; wordNumber<8; ++wordNumber)
-            {
-                // if(bankNumber>= 16*120)
-                // {
-                //     std::cout<< theDecodedHydrid1Data[bankNumber*8 + wordNumber].to_string() << std::endl;
-                // }
-                fullWord += theDecodedHydridData[hybrid][bankNumber*8 + wordNumber].to_string();
-            }
+            std::string fullWord = theDecodedHydridData[hybrid][bankNumber].to_string();
+
 
             uint16_t numberOfStubs = std::bitset<6>(fullWord.substr(22, 6)).to_ulong();
             if(numberOfStubs != 8)
@@ -292,9 +277,6 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
                 else theMPAhistogramList[chipId]->SetBinContent(pixelCol + 1, pixelRow + 1, totalCounter);
                 // if(totalCounter > 254) std::cout << fullWord << std::endl;
             }
-
-            std::bitset<382> theBank(fullWord);
-            // std::cout<<theBank<<std::endl;
         }
 
         // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BX offset = " << bxOffset << std::endl;
@@ -344,7 +326,7 @@ int main(int argc, char* argv[])
     if(argc == 3) numberOfWords = atoi(argv[2]);
 
 
-    uint16_t numberOfLinks = 2;
+    uint16_t numberOfLinks = 1;
 
     uint16_t stripThresholdStart = 65;
     uint16_t pixelThresholdStart = 200;

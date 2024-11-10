@@ -255,7 +255,7 @@ bool PSCounterTest::GetCounterData(BeBoard* theBoard, const std::string& theOutp
             throw std::runtime_error("PSCounterTest::GetCounterData - DDR3 not ready!!");
         }
         
-        auto cData = fBeBoardInterface->ReadBlockBoardReg(theBoard, "fc7_daq_ddr3", cNFIFOentries * 1024 / 32, 0x20000 * theOpticalGroup->getId());
+        auto cData = fBeBoardInterface->ReadBlockBoardReg(theBoard, "fc7_daq_ddr3", cNFIFOentries * 16, 0x20000 * theOpticalGroup->getId());
 
         std::string fullOutputFile = theOutputFileName + "_link" + std::to_string(theOpticalGroup->getId()) + ".txt";
         std::ofstream outfile(fullOutputFile);
