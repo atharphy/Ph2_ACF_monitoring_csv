@@ -55,9 +55,6 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     // 0  - Raw , 1 - parsed
     void configureFastReadout(uint8_t pEnable, uint8_t pMode = 0) { fPSCounterFast = pEnable; }
 
-    void setOutputFile(const std::string& theOutputFile) {fOutputFile = theOutputFile;}
-    void FastRead(const Ph2_HwDescription::BeBoard* pBoard);
-
   private:
     FEConfigurationInterface* fFEConfigurationInterface{nullptr};
 
@@ -67,8 +64,6 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     uint8_t  fPSCounterFast{0};
     uint8_t  fPairSelect{0};
     uint32_t fReadoutAttempts{0};
-    bool     fSuccessFastRead{false};
-    std::string fOutputFile{"./fastCounter.txt"};
 
     std::vector<uint8_t> fStubBuffer;
     PSCounterData        fPSCounterData;
@@ -77,8 +72,7 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
 
     // function read-back counters
     void SlowRead(const Ph2_HwDescription::BeBoard* pBoard);
-    //void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode = 0);
-    void ReadPSSCCountersFast(const Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode = 0);
+    void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode = 0);
     bool ReadPSCountersFast(uint8_t pRawMode, size_t pChipId, size_t pHybridId);
 
     //

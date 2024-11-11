@@ -647,14 +647,7 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
     setBoard(pMPA2->getBeBoardId());
     pMPA2->printChipType(cOutput);
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pMPA2->getId() << "]" << RESET;
-    pMPA2->setRegisterTracking(0);
-
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_1_0 = " << std::hex << ReadChipReg(pMPA2, "InSetting_1_0") << std::dec << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_3_2 = " << std::hex << ReadChipReg(pMPA2, "InSetting_3_2") << std::dec << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_5_4 = " << std::hex << ReadChipReg(pMPA2, "InSetting_5_4") << std::dec << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_7_6 = " << std::hex << ReadChipReg(pMPA2, "InSetting_7_6") << std::dec << std::endl;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] InSetting_8   = " << std::hex << ReadChipReg(pMPA2, "InSetting_8")   << std::dec << std::endl;
-    
+    pMPA2->setRegisterTracking(0);  
 
     std::vector<uint32_t> cVec;
     ChipRegMap            cRegMap = pMPA2->getRegMap();
