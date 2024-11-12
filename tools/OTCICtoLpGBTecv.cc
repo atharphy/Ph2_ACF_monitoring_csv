@@ -255,22 +255,19 @@ void OTCICtoLpGBTecv::runECV()
                                 }
 
                             } // hybrid loop
-                            auto    phaseIterator                = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
-                            uint8_t phaseIndex                   = std::distance(fListOfLpGBTPhase.begin(), phaseIterator) + 1;
-                            auto    clockStrengthIterator        = std::find(fListOfClockStrength.begin(), fListOfClockStrength.end(), clockStrength);
-                            uint8_t clockStrengthIndex           = std::distance(fListOfClockStrength.begin(), clockStrengthIterator) + 1;
-                            uint8_t clockStrengthLengthOfOptions = fListOfClockStrength.size();
+                            auto    phaseIterator = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
+                            uint8_t phaseIndex    = std::distance(fListOfLpGBTPhase.begin(), phaseIterator) + 1;
 #ifdef __USE_ROOT__
                             // Find the pClockStrength and pPhase indices
 
-                            fDQMHistogramOTCICtoLpGBTecv.fillEfficiency(clockStrengthLengthOfOptions, clockPolarity, clockStrengthIndex, cicStrength, phaseIndex, fPatternMatchingEfficiencyContainer);
+                            fDQMHistogramOTCICtoLpGBTecv.fillEfficiency(clockPolarity, clockStrength, cicStrength, phaseIndex, fPatternMatchingEfficiencyContainer);
 #else
                             if(fDQMStreamerEnabled)
                             {
                                 // Find the pClockStrength and pPhase indices
                                 ContainerSerialization theECVlpGBTCICContainerSerialization("OTCICtoLpGBTecvEfficiencyHistogram");
                                 theECVlpGBTCICContainerSerialization.streamByOpticalGroupContainer(
-                                    fDQMStreamer, fPatternMatchingEfficiencyContainer, clockStrengthLengthOfOptions, clockPolarity, clockStrengthIndex, cicStrength, phaseIndex);
+                                    fDQMStreamer, fPatternMatchingEfficiencyContainer, clockPolarity, clockStrength, cicStrength, phaseIndex);
                             }
 #endif
 
