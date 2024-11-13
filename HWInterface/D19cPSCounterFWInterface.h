@@ -30,6 +30,7 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
 
   public:
     void FillData() override;
+    bool ReadEventsOld(const Ph2_HwDescription::BeBoard* pBoard);
     bool ReadEvents(const Ph2_HwDescription::BeBoard* pBoard) override;
     bool WaitForReadout() override;
     bool WaitForNTriggers() override;
@@ -53,7 +54,7 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     void LinkFEConfigurationInterface(FEConfigurationInterface* pInterface) { fFEConfigurationInterface = pInterface; }
 
     // 0  - Raw , 1 - parsed
-    void configureFastReadout(uint8_t pEnable, uint8_t pMode = 0) { fPSCounterFast = pEnable; }
+    void configureFastReadout(bool enableFastReadout) { fPSCounterFast = enableFastReadout; }
 
   private:
     FEConfigurationInterface* fFEConfigurationInterface{nullptr};
@@ -61,7 +62,7 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     uint32_t fFCDupe{4};
     uint32_t fWait_us{100};
     uint32_t fPSCounterDelay{29};
-    uint8_t  fPSCounterFast{0};
+    bool     fPSCounterFast {true};
     uint8_t  fPairSelect{0};
     uint32_t fReadoutAttempts{0};
 
@@ -72,8 +73,7 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
 
     // function read-back counters
     void SlowRead(const Ph2_HwDescription::BeBoard* pBoard);
-    void ReadPSSCCountersFast(Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& pData, uint8_t pRawMode = 0);
-    bool ReadPSCountersFast(uint8_t pRawMode, size_t pChipId, size_t pHybridId);
+    bool FastRead(const Ph2_HwDescription::BeBoard* pBoard);
 
     //
     bool CheckStartPattern();

@@ -134,6 +134,8 @@ void PSCounterTest::Running()
 
 bool PSCounterTest::GetCounterData(BeBoard* theBoard, const std::string& theOutputFileName, int eventsPerPoint)
 {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
     uint32_t delayAfterFastReset = 100;
     uint32_t delayAfterTestPulse = 50;
     uint32_t delayBeforeNextPulse = 50;
@@ -193,14 +195,37 @@ bool PSCounterTest::GetCounterData(BeBoard* theBoard, const std::string& theOutp
     uint32_t waitForDataCollection = (delayAfterFastReset + afterOpenShutter + afterClearCounters + afterCloseShutter + (delayAfterTestPulse + delayBeforeNextPulse) * eventsPerPoint) / 1000;
     std::this_thread::sleep_for(std::chrono::microseconds(waitForDataCollection));
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
     size_t startIterations    = 0;
+    bool allCompleted;
     while(startIterations < 30)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        auto cDecoderState  = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state");
-        auto cCountersReady = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.async_counter_decode.chip_counters_done");
-        if(cDecoderState == 0x00 && cCountersReady == 0x01) break;
+        allCompleted = true;
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
+
+                auto cDecoderState  = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state");
+                if(cDecoderState != 0x00)
+                {
+                    allCompleted = false;
+                    break;
+                }
+            }
+            if(!allCompleted) break;
+        }
+        if(allCompleted) break;
         startIterations++;
+    }
+
+    if(!allCompleted)
+    {
+        LOG(ERROR) << ERROR_FORMAT << "State machine did not run" << RESET;
+        abort();
     }
 
     bool allStartPatternFound = true;
@@ -234,7 +259,7 @@ bool PSCounterTest::GetCounterData(BeBoard* theBoard, const std::string& theOutp
         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] ddr3_wren = "  << fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren") << std::endl;
         auto cNFIFOentries = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.num_fifo_entry");
         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] cNFIFOentries for opticalGroup " << theOpticalGroup->getId() << " = " << std::hex << cNFIFOentries << std::dec << std::endl;
-
+        if(cNFIFOentries == 1) return false;
         // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren = " << fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren") << std::endl;
         // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_cnfg.fast_command_block.ps_async_en = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en") << std::dec << std::endl;
 
@@ -279,6 +304,8 @@ void PSCounterTest::RunFast(uint16_t stripThreshold, uint16_t pixelThreshold)
 
     for(auto cBoard: *fDetectorContainer)
     {
+        cBoard->setEventType(EventType::PSAS);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitializePSCounterFWInterface(cBoard);
         if(fWithSSA || fWithMPA)
         {
             // Allow for different SSA and MPA injection amplitudes
@@ -305,6 +332,11 @@ void PSCounterTest::RunFast(uint16_t stripThreshold, uint16_t pixelThreshold)
                 }
             }
         }
+
+        // measureData(eventsPerPoint);
+
+        
+
         std::cout << "Measuring Data" << std::endl;
         std::string outputFileName  = fDirectoryName + "/fastCounter_StripTh_" + std::to_string(stripThreshold) + "_PixelTh_" + std::to_string(pixelThreshold);
 

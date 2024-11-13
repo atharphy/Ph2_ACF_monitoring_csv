@@ -115,12 +115,18 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
 
     std::array<uint32_t, 16> theStartWord;
     for(auto& thehexWord: theStartWord) thehexWord = 0xaaaaaaaa;
+    theStartWord[0] = 0xFAB10FAB;
+    theStartWord[1] = 0x10FAB10a;
     theStartWord[7] = 0xaaaaaaaf;
-    
+    theStartWord[8] = 0xFAB10FAB;
+    theStartWord[9] = 0x10FAB10a;
+
     auto searchForFAB10 = [](const std::array<uint32_t, 16>& theWord)
     {
         if(theWord[0] != 0xFAB10FAB) return false;
-        if((theWord[1] & 0xff000000) != 0x10000000) return false;
+        if((theWord[1] & 0xfffffff0) != 0x10FAB100) return false;
+        if(theWord[8] != 0xFAB10FAB) return false;
+        if((theWord[9] & 0xfffffff0) != 0x10FAB100) return false;
         return true;
     };
 
@@ -133,7 +139,7 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
         return true;
     };
 
-    auto decodeHybrid = [](const std::array<uint32_t, 16>& theWord, std::vector<std::bitset<200>>& theDecodedHydrid0Data, std::vector<std::bitset<200>>& theDecodedHydrid1Data)
+    auto decodeHybrid = [](const std::array<uint32_t, 16>& theWord, std::vector<std::bitset<196>>& theDecodedHydrid0Data, std::vector<std::bitset<196>>& theDecodedHydrid1Data)
     {
         std::stringstream theBitStream;
 
@@ -143,11 +149,11 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
             theBitStream<<theBits.to_string();
         }
 
-        theDecodedHydrid0Data.push_back(std::bitset<200>(theBitStream.str().substr(512 - 200, 200)));
-        theDecodedHydrid1Data.push_back(std::bitset<200>(theBitStream.str().substr(512 - 400, 200)));
+        theDecodedHydrid0Data.push_back(std::bitset<196>(theBitStream.str().substr(256 + 60, 196)));
+        theDecodedHydrid1Data.push_back(std::bitset<196>(theBitStream.str().substr(60, 196)));
     };
 
-    std::vector<std::vector<std::bitset<200>>> theDecodedHydridData(2);
+    std::vector<std::vector<std::bitset<196>>> theDecodedHydridData(2);
 
     bool startWordFound = false;
     for(size_t wordNumber=0; wordNumber<numberOfWords; ++wordNumber)
@@ -275,7 +281,11 @@ std::string parseCounterRaw(const std::string& fileName, size_t numberOfWords = 
                     theSSAhistogramList[chipId]->SetBinContent(pixelCol + 1, totalCounter);
                 }
                 else theMPAhistogramList[chipId]->SetBinContent(pixelCol + 1, pixelRow + 1, totalCounter);
-                // if(totalCounter > 254) std::cout << fullWord << std::endl;
+                if(totalCounter > 255)
+                {
+                    std::cout << "MPA" << chipId <<  " - " << pixelCol << " - " << pixelRow << " count " << totalCounter << std::endl;
+                    std::cout << fullWord << std::endl;
+                }
             }
         }
 
@@ -327,6 +337,11 @@ int main(int argc, char* argv[])
 
 
     uint16_t numberOfLinks = 1;
+
+
+    // uint16_t stripThresholdStart = 94;
+    // uint16_t pixelThresholdStart = 229;
+    // uint16_t totalThresholdOffset = 0;
 
     uint16_t stripThresholdStart = 65;
     uint16_t pixelThresholdStart = 200;
