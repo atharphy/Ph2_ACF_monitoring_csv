@@ -184,6 +184,7 @@
       <node id="ic_chip_addr_tx"       mask="0x007F8000"      permission="rw"      description="lpgbt address (always 0x70 for now)" />
       <node id="active_link"           mask="0x07800000"      permission="rw"      description="select link for slow control (only one lpgbt at a time for now)" />
       <node id="lpgbt_version"         mask="0x08000000"      permission="rw"      description="Version of the lpGBT chip. 0=lpGBTv0(default), 1=lpGBTv1" />
+      <node id="fec_cntr_clear"        mask="0x10000000"      permission="rw"      description="Reset counter for FEC monitoring" />
     </node>
 
     <node id="lpgbt_2"               address="0x00000016"     permission="rw"      description="Signals for Slow Control of lpgbt">
@@ -234,6 +235,13 @@
       <node id="switch_address"        mask="0x000003FC"      permission="rw"      description="Specify the address of one switch register" />
       <node id="switch_value"          mask="0x0003FC00"      permission="rw"      description="Specify the value of one switch register" />
       <node id="reset"                 mask="0x00040000"      permission="rw"      description="Reset SPI communication" />
+    </node>
+
+   <node id="cnfg_sfp_monitoring"   address="0x0000001D"      permission="rw"      description="">
+      <node id="reg_address"           mask="0x000000FF"      permission="rw"      description="Address of the SFP's EEPROM register" />
+      <node id="data_in"               mask="0x0000FF00"      permission="rw"      description="Data to write" />
+      <node id="channel_number"        mask="0x00070000"      permission="rw"      description="Specify which SFP of the FMC you want to access" />
+      <node id="enable"                mask="0x00080000"      permission="rw"      description="Enable transaction" />
     </node>
 
   </node>
@@ -366,7 +374,14 @@
     <node id="aurora_frame_cntr"       address="0x0000001D"   permission="r"       description="Aurora Frame Counter for DM Tests"> </node>
     <node id="aurora_service_blk_cntr" address="0x0000001E"   permission="r"       description="Aurora Service Block Counter for DM Tests"> </node>
 
-    <node id="stat_portcard_adapter" address="0x0000001F"     permission="r"       description="SPI received data from Portcard Test Adapter">
+    <node id="lpgbt_monitoring"     address="0x0000001F"      permission="r"       description="">
+      <node id="fec_cntr"              mask="0x00000FFF"      permission="r"       description="" />
+      <node id="sfp_i2c_error"         mask="0x00006000"      permission="r"       description="" />
+      <node id="sfp_i2c_busy"          mask="0x00008000"      permission="r"       description="" />
+      <node id="sfp_i2c_data_out"      mask="0xFFFF0000"      permission="r"       description="" />
+    </node>
+
+    <node id="stat_portcard_adapter" address="0x00000020"     permission="r"       description="SPI received data from Portcard Test Adapter">
       <node id="switch_value"          mask="0x000000FF"      permission="r"       description="Received register value from the switch" />
       <node id="data_ready"            mask="0x00000100"      permission="r"       description="End of communication flag from firmware" />
     </node>

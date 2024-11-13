@@ -1038,9 +1038,9 @@ void RD53FWInterface::SendDIO5Cfg(const DIO5Config* config)
     RD53FWInterface::SendBoardCommandWithStrobe("user.ctrl_regs.ext_tlu_reg2.dio5_load_config");
 }
 
-// ###################################
-// # Read/Write Status Optical Group #
-// ###################################
+// ##################################
+// # Optical Group member functions #
+// ##################################
 
 void RD53FWInterface::ResetOptoLinkSlowControl()
 {
@@ -1156,6 +1156,80 @@ void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, uint8_t ModuleId, uint8_t
 
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
 void RD53FWInterface::SetOptoLinkVersion(uint8_t version) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.lpgbt_version", version); }
+
+float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
+{
+    std::string mezzanine = "l8";
+
+    if(parameter == "T") RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 96);
+    if(parameter == "V") RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 98);
+    if(parameter == "I") RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 100);
+    if(parameter == "TX") RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 102);
+    if(parameter == "RX") RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 104);
+    if(parameter == "raw") RegManager::WriteReg("fc7_daq_cnfg.SFP_DDMI.regAddress", 96);
+    RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.channel_number", channel);
+    RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.enable", 1);
+    int  error = 0, timer_sfp = 0;
+    bool time_out = false;
+    while(RegManager::ReadReg("fc7_daq_stat.sfp_ddmi_status.busy_" + mezzanine))
+    {
+        RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.enable", 0);
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+
+        if(timer_sfp > 50)
+        {
+            time_out = true;
+            break;
+        }
+        else
+            timer_sfp++;
+    }
+
+    error = RegManager::ReadReg("fc7_daq_stat.sfp_ddmi_status.error_" + mezzanine);
+    if(error)
+        LOG(ERROR) << ERROR_FORMAT << "Error occurred during communication with the SFP. The error code is: " << error << RESET;
+    else if(error == 0 && time_out == true)
+    {
+        if(parameter == "T") LOG(DEBUG) << "Time out in reading the temperature of the SFP for channel " << channel << "." << RESET;
+        if(parameter == "V") LOG(DEBUG) << "Time out in reading the SFP's voltage for channel " << channel << "." << RESET;
+        if(parameter == "I") LOG(DEBUG) << "Time out in reading the SFP's bias current for channel " << channel << "." << RESET;
+        if(parameter == "TX") LOG(DEBUG) << "Time out in reading the SFP's transmited power for channel " << channel << "." << RESET;
+        if(parameter == "RX") LOG(DEBUG) << "Time out in reading the SFP's received power for channel " << channel << "." << RESET;
+    }
+    else
+    {
+        float result = RegManager::ReadReg("fc7_daq_stat.sfp_ddmi.data_" + mezzanine);
+
+        if(parameter == "T")
+        {
+            result = result / 256.0;
+            LOG(DEBUG) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
+        }
+        else if(parameter == "V")
+        {
+            result = result / 10.0;
+            LOG(DEBUG) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
+        }
+        else if(parameter == "I")
+        {
+            result = result * 0.002;
+            LOG(DEBUG) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
+        }
+        else if(parameter == "TX")
+        {
+            result = result * 0.1;
+            LOG(DEBUG) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
+        }
+        else if(parameter == "RX")
+        {
+            result = result * 0.1;
+            LOG(DEBUG) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
+        }
+        else if(parameter == "raw") { LOG(DEBUG) << "The SFP's output for channel " << channel << " is " << result << RESET; }
+        return result;
+    }
+    return error;
+}
 
 void RD53FWInterface::ConfigurePCTestAdapter(const std::string& config)
 {

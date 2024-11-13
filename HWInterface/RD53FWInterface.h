@@ -83,6 +83,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
     void SetOptoLinkVersion(uint8_t version) override;
     // #############################
+    float GetSFPParameter(std::string parameter, int channel);
 
     void ConfigurePCTestAdapter(const std::string& config);
     void SelectBERcheckBitORFrame(const uint8_t bitORframe);
