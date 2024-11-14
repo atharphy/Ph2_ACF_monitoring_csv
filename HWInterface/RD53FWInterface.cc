@@ -355,6 +355,8 @@ bool RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
     if(commandList.size() == 0) return true;
     bool returnValue = true;
 
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+
     // ############################
     // # Check write-command FIFO #
     // ############################

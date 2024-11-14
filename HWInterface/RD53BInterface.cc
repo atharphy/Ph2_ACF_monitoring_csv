@@ -349,6 +349,8 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53BInterface::ReadRD53Reg(ReadoutCh
 {
     this->setBoard(pChip->getBeBoardId());
 
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
+
     auto nameAndValue(SetSpecialRegister(regName, 0, pChip->getRegMap()));
     RD53Interface::SendCommand(pChip, RD53BCmd::RdReg{pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress});
     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pChip);
