@@ -108,7 +108,7 @@ void VTRxLightYieldScan::run()
                     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
                     theVTRxLightYieldScanContainer.getOpticalGroup(cBoard->getId(), cOpticalGroup->getId())->getSummary<std::vector<float>>().at(i * dac2List.size() + j) =
-                        static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter("RX", 0); // @TMP@
+                        static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter("RX", cOpticalGroup->getId());
                 }
 
     // #####################

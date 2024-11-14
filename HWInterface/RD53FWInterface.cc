@@ -1161,46 +1161,41 @@ void RD53FWInterface::SetOptoLinkVersion(uint8_t version) { RegManager::WriteReg
 
 float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
 {
-    std::string mezzanine = "l8";
+    int  nAttempts = 0, error = 0;
+    bool timeOut = false;
 
-    if(parameter == "T") RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 96);
-    if(parameter == "V") RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 98);
-    if(parameter == "I") RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 100);
-    if(parameter == "TX") RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 102);
-    if(parameter == "RX") RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.regAddress", 104);
-    if(parameter == "raw") RegManager::WriteReg("fc7_daq_cnfg.SFP_DDMI.regAddress", 96);
-    RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.channel_number", channel);
-    RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.enable", 1);
-    int  error = 0, timer_sfp = 0;
-    bool time_out = false;
-    while(RegManager::ReadReg("fc7_daq_stat.sfp_ddmi_status.busy_" + mezzanine))
+    if(parameter == "T") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 96);
+    if(parameter == "V") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 98);
+    if(parameter == "I") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 100);
+    if(parameter == "TX") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 102);
+    if(parameter == "RX") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 104);
+    if(parameter == "raw") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 96);
+
+    RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.channel_number", channel);
+    RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.enable", 1);
+
+    while(RegManager::ReadReg("user.stat_regs.lpgbt_monitoring.sfp_i2c_busy") == true)
     {
-        RegManager::WriteReg("fc7_daq_cnfg.sfp_ddmi.enable", 0);
-        std::this_thread::sleep_for(std::chrono::microseconds(10));
+        RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.enable", 0);
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
 
-        if(timer_sfp > 50)
+        if(nAttempts > RD53Shared::MAXATTEMPTS)
         {
-            time_out = true;
+            timeOut = true;
             break;
         }
         else
-            timer_sfp++;
+            nAttempts++;
     }
 
-    error = RegManager::ReadReg("fc7_daq_stat.sfp_ddmi_status.error_" + mezzanine);
-    if(error)
-        LOG(ERROR) << ERROR_FORMAT << "Error occurred during communication with the SFP. The error code is: " << error << RESET;
-    else if(error == 0 && time_out == true)
-    {
-        if(parameter == "T") LOG(DEBUG) << "Time out in reading the temperature of the SFP for channel " << channel << "." << RESET;
-        if(parameter == "V") LOG(DEBUG) << "Time out in reading the SFP's voltage for channel " << channel << "." << RESET;
-        if(parameter == "I") LOG(DEBUG) << "Time out in reading the SFP's bias current for channel " << channel << "." << RESET;
-        if(parameter == "TX") LOG(DEBUG) << "Time out in reading the SFP's transmited power for channel " << channel << "." << RESET;
-        if(parameter == "RX") LOG(DEBUG) << "Time out in reading the SFP's received power for channel " << channel << "." << RESET;
-    }
+    error = RegManager::ReadReg("user.stat_regs.lpgbt_monitoring.sfp_i2c_error");
+    if(error != 0)
+        LOG(ERROR) << BOLDRED << "Error occurred during communication with the SFP. The error code is: " << error << RESET;
+    else if((error == 0) && (timeOut == true))
+        LOG(DEBUG) << "Time out in reading from the SFP for channel " << channel << "." << RESET;
     else
     {
-        float result = RegManager::ReadReg("fc7_daq_stat.sfp_ddmi.data_" + mezzanine);
+        float result = RegManager::ReadReg("user.stat_regs.lpgbt_monitoring.sfp_i2c_data_out");
 
         if(parameter == "T")
         {
@@ -1227,9 +1222,11 @@ float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
             result = result * 0.1;
             LOG(DEBUG) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
         }
-        else if(parameter == "raw") { LOG(DEBUG) << "The SFP's output for channel " << channel << " is " << result << RESET; }
+        else if(parameter == "raw")
+            LOG(DEBUG) << "The SFP's output for channel " << channel << " is " << result << RESET;
         return result;
     }
+
     return error;
 }
 
