@@ -36,7 +36,7 @@ StubQuickCheck::~StubQuickCheck()
     // delete fOccupancyCanvas;
 }
 
-void StubQuickCheck::Initialise()
+void StubQuickCheck::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
     // this is needed if you're going to use groups anywhere
     CBCChannelGroupHandler theChannelGroupHandler;

@@ -786,6 +786,7 @@ void CbcInterface::produceL1phaseAlignmentPattern(ReadoutChip* pChip)
     // if I set this it doesn't work..   so no cluster cut
     WriteChipReg(pChip, "ClusterCut", 4);
     selectLogicMode(static_cast<ReadoutChip*>(pChip), "Sampled", true, true);
+    WriteChipReg(pChip, "Threshold", 1023);
 
     auto cChannelMask = std::make_shared<ChannelGroup<1, NCHANNELS>>();
     cChannelMask->disableAllChannels();

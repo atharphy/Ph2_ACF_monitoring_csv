@@ -25,6 +25,12 @@ if [ "$#" -eq 1 ]; then
     echo
     echo
 
+    echo "Comparing VTRx files"
+    ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesWithDefault.sh ${PH2ACF_BASE_DIR}/settings/VTRxFiles/VTRx.txt ${run_number} "BE*_OG*_VTRx*.txt" VTRx
+    echo
+    echo
+    echo
+
     echo "Comparing CIC files"
     ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesWithDefault.sh ${PH2ACF_BASE_DIR}/settings/CicFiles/CIC2_2S.txt ${run_number} "BE*_OG*_FE*_CIC.txt" CIC
     echo
@@ -50,6 +56,12 @@ else
 
     echo "Comparing LpGBT files"
     ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesFromTwoRuns.sh ${run_number_1} ${run_number_2} "BE*_OG*_lpGBT*.txt" LpGBT
+    echo
+    echo
+    echo
+
+    echo "Comparing VTRx files"
+    ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesFromTwoRuns.sh ${run_number_1} ${run_number_2} "BE*_OG*_VTRx*.txt" VTRx
     echo
     echo
     echo

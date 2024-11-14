@@ -116,12 +116,23 @@ void CicInterface::CheckConfig(Chip* pChip)
 
 uint32_t CicInterface::ReadChipFuseID(Chip* pCic, uint8_t version)
 {
-    /*
-    CIC ID = AABBBCCCD
+    /* pre-production (CERN tested wafers)
+    CIC ID = AABBBCCCD (decimal!)
     AA : LOT number
     BBB : WAFER number
     CCC : RETICLE number
     D : DIE number
+    */
+    /* production (vendor tested wafers)
+    Byte order to be confirmed!
+    fuseID32 = (((process & 0x0F) << 22) | ((status & 0x3) << 20) | ((lot & 0xF) << 16) | ((wafer & 0x1F) << 11) | ((reticle & 0x7F)<<4) | (die & 0xF);
+    Where:
+    process = 15
+    status = pass/fail
+    lot = the wafer lot number
+    wafer = the wafer number
+    reticle = the reticle number (0 to 127)
+    die = the die number in the reticle (0 to 3)
     */
     this->WriteChipReg(pCic, "EFUSEMODE", 0x0);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
@@ -130,11 +141,18 @@ uint32_t CicInterface::ReadChipFuseID(Chip* pCic, uint8_t version)
     this->WriteChipReg(pCic, "EFUSEMODE", 0x0);
 
     uint32_t val =
-        (this->ReadChipReg(pCic, "EfuseValue3") << 24) | (this->ReadChipReg(pCic, "EfuseValue2") << 16) | (this->ReadChipReg(pCic, "EfuseValue1") << 8) | (this->ReadChipReg(pCic, "EfuseValue0") << 0);
+        (this->ReadChipReg(pCic, "EfuseValue0") << 24) | (this->ReadChipReg(pCic, "EfuseValue1") << 16) | (this->ReadChipReg(pCic, "EfuseValue2") << 8) | (this->ReadChipReg(pCic, "EfuseValue3") << 0);
     // pCic->pChipFuseID.SetId(val);
-
-    LOG(INFO) << BOLDYELLOW << "FuseID from CIC2 " << +val << " LOT " << +(int)val / (int)1e7 << " Wafer " << +(int)(val % (int)1e7) / (int)1e4 << " RETICLE " << +(int)(val % (int)1e4) / 10 << " DIE "
-              << +(int)(val % 10) << RESET;
+    if(((val >> 22) & 0x0F) == 0x0F)
+    {
+        LOG(INFO) << BOLDYELLOW << "FuseID from production CIC2 0x" << std::hex << +val << std::dec << " Status " << +((val >> 20) & 0x03) << " LOT " << +((val >> 16) & 0x0F) << " Wafer "
+                  << +((val >> 11) & 0x1F) << " RETICLE " << +((val >> 4) & 0x7F) << " DIE " << +((val) & 0x0F) << RESET;
+    }
+    else
+    {
+        LOG(INFO) << BOLDYELLOW << "FuseID from pre-production CIC2 " << +val << " LOT " << +(int)val / (int)1e7 << " Wafer " << +(int)(val % (int)1e7) / (int)1e4 << " RETICLE "
+                  << +(int)(val % (int)1e4) / 10 << " DIE " << +(int)(val % 10) << RESET;
+    }
     return val;
 }
 bool CicInterface::ConfigureChip(Chip* pCic, bool pVerify, uint32_t pBlockSize)
