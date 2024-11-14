@@ -36,11 +36,10 @@ class ThrEqualization : public PixelAlive
         delete histos;
     }
 
-    void Running() override;
-    void Stop() override;
-    void ConfigureCalibration() override;
-    void sendData() override;
-
+    void   Running() override;
+    void   Stop() override;
+    void   ConfigureCalibration() override;
+    void   sendData() override;
     void   localConfigure(const std::string& histoFileName, int currentRun) override;
     void   run() override;
     void   draw(bool saveData = true) override;

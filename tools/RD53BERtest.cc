@@ -1,5 +1,5 @@
 /*!
-  \file                  RD53BERtest.h
+  \file                  RD53BERtest.cc
   \brief                 Implementaion of Bit Error Rate test
   \author                Mauro DINARDO
   \version               1.0

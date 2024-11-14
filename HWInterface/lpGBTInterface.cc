@@ -203,7 +203,7 @@ uint32_t lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint
 bool lpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerify)
 {
     bool writeGood = true;
-    for(const auto& cReg: pRegVec) writeGood = WriteChipReg(pChip, cReg.first, cReg.second);
+    for(const auto& cReg: pRegVec) writeGood &= WriteChipReg(pChip, cReg.first, cReg.second);
     return writeGood;
 }
 

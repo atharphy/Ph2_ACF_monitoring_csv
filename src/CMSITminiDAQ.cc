@@ -7,7 +7,6 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#include "MonitorUtils/DetectorMonitor.h"
 #include "System/SystemController.h"
 #include "Utils/ConfigureInfo.h"
 #include "Utils/argvparser.h"
@@ -25,6 +24,7 @@
 #include "tools/RD53ThrAdjustment.h"
 #include "tools/RD53ThrEqualization.h"
 #include "tools/RD53ThrMinimization.h"
+#include "tools/RD53VTRxLightYieldScan.h"
 #include "tools/RD53VoltageTuning.h"
 
 #ifdef __EUDAQ__
@@ -121,7 +121,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning gendacdac]",
+                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning gendacdac vtrx]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -522,6 +522,20 @@ int main(int argc, char** argv)
         gs.run();
         gs.analyze();
         gs.draw();
+    }
+    else if(whichCalib == "vtrx")
+    {
+        // #############################
+        // # Run VTRx Light Yield Scan #
+        // #############################
+        LOG(INFO) << BOLDMAGENTA << "@@@ Performing VTRx Light Yield scan @@@" << RESET;
+
+        std::string        fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_VTRxScan");
+        VTRxLightYieldScan vs;
+        vs.Inherit(&mySysCntr);
+        vs.localConfigure(fileName, runNumber);
+        vs.run();
+        vs.draw();
     }
     else if(whichCalib == "physics")
     {

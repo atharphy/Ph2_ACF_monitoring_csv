@@ -1,6 +1,6 @@
 /*!
   \file                  RD53CalibBase.h
-  \brief                 Implementaion of CalibBase
+  \brief                 Header of CalibBase
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
