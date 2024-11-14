@@ -37,7 +37,7 @@ void DQMHistogramOTalignLpGBTinputsForBypass::book(TFile* theOutputFile, Detecto
                                                         -0.5,
                                                         numberOfLines - 0.5);
         phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("phase");
-        for(uint8_t line = 0; line < numberOfLines; ++line) phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel(line + 1, Form("Stub%d", line));
+        for(uint8_t line = 0; line < numberOfLines; ++line) phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel(line + 1, Form("Stub%d", line + 1));
         phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
         phaseScanMatchingEfficiency.fTheHistogram->SetMaximum(1);
         phaseScanMatchingEfficiency.fTheHistogram->SetStats(false);
@@ -45,7 +45,7 @@ void DQMHistogramOTalignLpGBTinputsForBypass::book(TFile* theOutputFile, Detecto
 
         HistContainer<TH1I> bestPhase(Form("LpGBTforCICbypassBestPhase_phyPort%d", phyPort), Form("LpGBT for CIC Bypass best phase - phyPort %d", phyPort), numberOfLines, -0.5, numberOfLines - 0.5);
         bestPhase.fTheHistogram->GetXaxis()->SetTitle("line");
-        for(uint8_t line = 0; line < numberOfLines; ++line) bestPhase.fTheHistogram->GetXaxis()->SetBinLabel(line + 1, Form("Stub%d", line));
+        for(uint8_t line = 0; line < numberOfLines; ++line) bestPhase.fTheHistogram->GetXaxis()->SetBinLabel(line + 1, Form("Stub%d", line + 1));
         bestPhase.fTheHistogram->SetStats(false);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBestPhase[phyPort], bestPhase);
     }

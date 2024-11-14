@@ -6,7 +6,7 @@
 class MetadataHandlerOT : public MetadataHandler
 {
   public:
-    MetadataHandlerOT();
+    MetadataHandlerOT(std::string startOfTestTime);
     ~MetadataHandlerOT();
 
     void initMetadataHardwareSpecific() override;

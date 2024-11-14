@@ -335,7 +335,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // ##############################
     // # Pseudo Random Bit Sequence #
     // ##############################
-    std::vector<double> RunBERtest(bool given_time, double frames_or_time, std::vector<std::pair<uint16_t, uint16_t>> hybrid_id_chip_lane, uint8_t frontendSpeed) override { return {}; };
+    std::vector<double> RunBERtest(bool given_time, double frames_or_time, const std::map<uint16_t, std::vector<uint8_t>>& hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed) override { return {}; };
 
     // ############################
     // # Read/Write Optical Group #
@@ -363,8 +363,12 @@ class D19cFWInterface : public BeBoardFWInterface
     // fast command generic block
     void  ResetFCMDBram();
     void  ConfigureFCMDBram(std::vector<uint8_t> pFastCommands);
-    float GetSFPParameter_L8(std::string parameter, int channel);
-    float GetSFPParameter_L12(std::string parameter, int channel);
+    float GetSFPParameter(std::string parameter, int channel, bool isL8);
+    float GetSFPParameter_L8(std::string parameter, int channel) { return GetSFPParameter(parameter, channel, true); };
+    float GetSFPParameter_L12(std::string parameter, int channel) { return GetSFPParameter(parameter, channel, false); };
+    float GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOpticalGroup, std::string parameter);
+
+    void vtrxHardReset(Ph2_HwDescription::OpticalGroup* theOpticalGroup);
 
     std::vector<uint32_t>              L1ADebug(uint8_t pWait_ms, bool pPrint);
     std::vector<std::vector<uint32_t>> StubDebug(bool pWithTestPulse, uint8_t pNlines, bool pPrint);

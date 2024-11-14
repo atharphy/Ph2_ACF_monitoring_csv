@@ -2,11 +2,11 @@
 <HwDescription>
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="1">
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.6:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.10:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <configuration file_name="${PH2ACF_BASE_DIR}/settings/BeBoardFiles/uDTC_registers_PS.xml"/>
     <CDCE configure="0" clockRate="320"/>
         
-     <OpticalGroup Id="1" enable="1" FMCId="L8" reset="1">
+     <OpticalGroup Id="0" enable="1" FMCId="L12" reset="1">
         <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
         <NTCProperties type="VTRx+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
         
@@ -14,6 +14,8 @@
         <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
           <Settings/>
         </lpGBT>
+        <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
+        <VTRx Id="0" configFile="VTRx.txt"/>
         <Hybrid Id="0" enable="1" reset="1" invertClock="0">
             <Global>                 
                 <StubLogic       mode="0" window="4"/> <!-- Mode (0) pixel-strip, (1) strip-strip, (2) pixel-pixel, (3) strip-pixel  --><!-- Window in half pixels, window will be strictly lower than the set value (ie set 4 -> window is 3.5 pixels) -->
@@ -186,6 +188,8 @@
     <Setting name="PedeNoise_PulseAmplitude">70</Setting>
     <Setting name="PedestalEqualization_PulseAmplitudePix">70</Setting>
     <Setting name="PedeNoise_PulseAmplitudePix">70</Setting>
+    <Setting name="PedestalEqualization_PulseAmplitudeFullScan">20</Setting>
+    <Setting name="PedestalEqualization_PulseAmplitudePixFullScan">30</Setting>
 
     <Setting name="StartPhase">0</Setting>
     <Setting name="PhaseRange">7</Setting>
@@ -238,9 +242,9 @@
     <Setting name="OTRegisterTester_NumberOfIterations">1000</Setting>
     <Setting name="OTRegisterTester_Pattern">0xAA</Setting>
     <Setting name="OTverifyBoardDataWord_NumberOfIterations">100</Setting>
-    <Setting name="OTCICtoLpGBTecv_CICStrength">1-5</Setting>
+    <Setting name="OTCICtoLpGBTecv_CICStrength">1, 3, 5</Setting>
     <Setting name="OTCICtoLpGBTecv_ClockPolarity">0-1</Setting>
-    <Setting name="OTCICtoLpGBTecv_ClockStrength">1-7</Setting>
+    <Setting name="OTCICtoLpGBTecv_ClockStrength">1, 4, 7</Setting>
     <Setting name="OTCICtoLpGBTecv_LpGBTPhase">0-14</Setting>
     <Setting name="OTCICtoLpGBTecv_NumberOfIterations">1000</Setting>
 
@@ -266,6 +270,8 @@
     <Setting name="OTMeasureOccupancy_ForceChannelGroup">0</Setting>
     <Setting name="OTMeasureOccupancy_ThresholdOffset">0</Setting>
 
+    <Setting name="OTPScommonNoise_NumberOfEvents">10000</Setting>    
+
     <Setting name="OTinjectionOccupancyScan_ListOfInjectedPulses"> 0, 0.25, 0.5, 1., 2.</Setting> <!-- MIP units -->
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithoutInjection"> 1000000</Setting>
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithInjection"> 1000</Setting>
@@ -283,6 +289,8 @@
     <Setting name="OTSSAtoSSAecv_ListOfSSAslvsCurrents">1, 4, 7</Setting>
 
     <Setting name="OTPSringOscillatorTest_NumberOfClockCycles">100</Setting>
+
+    <Setting name="OTLpGBTEyeOpeningTest_PowerList">1-3</Setting>
 </Settings>
 
 <MonitoringSettings>

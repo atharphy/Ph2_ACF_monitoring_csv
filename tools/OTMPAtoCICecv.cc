@@ -97,7 +97,7 @@ void OTMPAtoCICecv::runElectricChainValidation()
 
     auto thePSinterface = static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface;
 
-    for(auto slvsCurrent: fListOfMPAslvsCurrents)
+    for(uint8_t slvsCurrent: fListOfMPAslvsCurrents)
     {
         LOG(INFO) << BOLDGREEN << "    Measuring slvs current " << +slvsCurrent << RESET;
         for(auto theBoard: *fDetectorContainer)
@@ -181,7 +181,7 @@ void OTMPAtoCICecv::runElectricChainValidation()
 
                                 try // Handle disable chip
                                 {
-                                    theMatchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first)
+                                    theMatchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first + 8)
                                         ->getSummary<GenericDataArray<float, 6>>()[chipIdAndLine.second] = matchingEfficiency;
                                 }
                                 catch(const std::exception& e)

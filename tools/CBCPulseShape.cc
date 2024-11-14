@@ -19,7 +19,7 @@ CBCPulseShape::CBCPulseShape() : PedeNoise() {}
 
 CBCPulseShape::~CBCPulseShape() {}
 
-void CBCPulseShape::Initialise(void)
+void CBCPulseShape::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
     fEventsPerPoint        = findValueInSettings<double>("PulseShape_Nevents", 10);
     fInitialLatency        = findValueInSettings<double>("PulseShapeInitialLatency", 200);

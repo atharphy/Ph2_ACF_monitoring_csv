@@ -9,7 +9,7 @@
 #include "DQMUtils/DQMMetadata.h"
 #endif
 
-MetadataHandler::MetadataHandler() : Tool() {}
+MetadataHandler::MetadataHandler(std::string startOfTestTime) : Tool() { fStartOfTest = startOfTestTime; }
 
 MetadataHandler::~MetadataHandler()
 {
@@ -74,7 +74,7 @@ void MetadataHandler::fillInitialConditions()
 
     DetectorDataContainer theCalibrationTimestampContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theCalibrationTimestampContainer);
-    theCalibrationTimestampContainer.getSummary<std::string>() = getTimeStampString();
+    theCalibrationTimestampContainer.getSummary<std::string>() = fStartOfTest;
 
     DetectorDataContainer theBoardConfigurationContainer;
     ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theBoardConfigurationContainer);

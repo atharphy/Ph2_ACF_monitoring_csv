@@ -1,6 +1,6 @@
 /*!
   \file                  RD53DataReadbackOptimization.h
-  \brief                 Implementaion of data readback optimization scan
+  \brief                 Header of data readback optimization scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -34,7 +34,6 @@ class DataReadbackOptimization : public BERtest
     void Stop() override;
     void ConfigureCalibration() override;
     void sendData() override;
-
     void localConfigure(const std::string& hstoFileName, int currentRun) override;
     void run() override;
     void draw(bool saveData = true) override;

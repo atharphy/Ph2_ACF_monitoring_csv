@@ -1,6 +1,6 @@
 /*!
   \file                  RD53eudaqProducer.h
-  \brief                 Implementaion of EUDAQ producer
+  \brief                 Header of EUDAQ producer
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18

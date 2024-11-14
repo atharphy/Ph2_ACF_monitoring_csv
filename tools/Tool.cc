@@ -142,12 +142,13 @@ void Tool::waitForRunToBeCompleted()
 
 void Tool::Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize)
 {
+    std::string startOfTestTime = getTimeStampString();
     SystemController::Configure(theConfigureInfo, pReInitialize);
 
     if(fBoardType == BoardType::D19C)
-        fMetadataHandler = new MetadataHandlerOT();
+        fMetadataHandler = new MetadataHandlerOT(startOfTestTime);
     else if(fBoardType == BoardType::RD53)
-        fMetadataHandler = new MetadataHandlerIT();
+        fMetadataHandler = new MetadataHandlerIT(startOfTestTime);
     else
     {
         LOG(ERROR) << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Board type not defined!! Impossible to create DQM for metadata, aborting..." << std::endl;
@@ -2332,7 +2333,23 @@ void Tool::setSameLocalDacBeBoard(BeBoard* pBoard, const std::string& dacName, c
 void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string& dacName, const uint16_t dacValue)
 {
     // Assumption: 1 BeBoard has only 1 chip flavor
-    if(static_cast<ReadoutChip*>(pBoard->getFirstObject()->getFirstObject()->getFirstObject())->isDACLocal(dacName)) { setSameLocalDacBeBoard(pBoard, dacName, dacValue); }
+    bool isLocalDac  = false;
+    bool isChipFound = false;
+    for(auto theOpticalGroup: *pBoard)
+    {
+        for(auto theHybrid: *theOpticalGroup)
+        {
+            if(theHybrid->size() > 0)
+            {
+                isLocalDac  = theHybrid->getFirstObject()->isDACLocal(dacName);
+                isChipFound = true;
+                break;
+            }
+        }
+        if(isChipFound) break;
+    }
+    if(!isChipFound) return;
+    if(isLocalDac) { setSameLocalDacBeBoard(pBoard, dacName, dacValue); }
     else { setSameGlobalDacBeBoard(pBoard, dacName, dacValue); }
 }
 

@@ -87,6 +87,7 @@ class D19clpGBTInterface : public lpGBTInterface
         else
             ConfigureGPIOLevel(pChip, {fReset_LHS_CBC}, (pEnable) ? 1 : 0);
     }
+    void vtrxReset(Ph2_HwDescription::Chip* pChip, bool pEnable);
     // 0 [RHS], 1 [LHS]
     // send reset functions
     void resetCIC(Ph2_HwDescription::Chip* pChip, uint8_t pSide = 0)

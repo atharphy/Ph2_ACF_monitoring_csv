@@ -124,7 +124,7 @@ void GenericDacDacScanHistograms::fillOccupancy(const DetectorDataContainer& Occ
                                                 ->getObject(cOpticalGroup->getId())
                                                 ->getObject(cHybrid->getId())
                                                 ->getObject(cChip->getId())
-                                                ->getSummary<CanvasContainer<TH1F>>()
+                                                ->getSummary<CanvasContainer<TH2F>>()
                                                 .fTheHistogram;
 
                     for(auto i = 0; i < Occupancy2DHist->GetNbinsX(); i++)
