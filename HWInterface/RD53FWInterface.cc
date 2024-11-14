@@ -1190,44 +1190,40 @@ float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
 
     error = RegManager::ReadReg("user.stat_regs.lpgbt_monitoring.sfp_i2c_error");
     if(error != 0)
-        LOG(ERROR) << BOLDRED << "Error occurred during communication with the SFP. The error code is: " << error << RESET;
+        throw std::runtime_error("Error occurred during communication with the SFP. The error code is: " + std::to_string(error));
     else if((error == 0) && (timeOut == true))
-        LOG(DEBUG) << "Time out in reading from the SFP for channel " << channel << "." << RESET;
-    else
+        throw std::runtime_error("Time out in reading from the SFP channel: " + std::to_string(channel));
+
+    float result = RegManager::ReadReg("user.stat_regs.lpgbt_monitoring.sfp_i2c_data_out");
+    if(parameter == "T")
     {
-        float result = RegManager::ReadReg("user.stat_regs.lpgbt_monitoring.sfp_i2c_data_out");
-
-        if(parameter == "T")
-        {
-            result = result / 256.0;
-            LOG(DEBUG) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
-        }
-        else if(parameter == "V")
-        {
-            result = result / 10.0;
-            LOG(DEBUG) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
-        }
-        else if(parameter == "I")
-        {
-            result = result * 0.002;
-            LOG(DEBUG) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
-        }
-        else if(parameter == "TX")
-        {
-            result = result * 0.1;
-            LOG(DEBUG) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
-        }
-        else if(parameter == "RX")
-        {
-            result = result * 0.1;
-            LOG(DEBUG) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
-        }
-        else if(parameter == "raw")
-            LOG(DEBUG) << "The SFP's output for channel " << channel << " is " << result << RESET;
-        return result;
+        result = result / 256.0;
+        LOG(DEBUG) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
     }
+    else if(parameter == "V")
+    {
+        result = result / 10.0;
+        LOG(DEBUG) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
+    }
+    else if(parameter == "I")
+    {
+        result = result * 0.002;
+        LOG(DEBUG) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
+    }
+    else if(parameter == "TX")
+    {
+        result = result * 0.1;
+        LOG(DEBUG) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
+    }
+    else if(parameter == "RX")
+    {
+        result = result * 0.1;
+        LOG(DEBUG) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
+    }
+    else if(parameter == "raw")
+        LOG(DEBUG) << "The SFP's output for channel " << channel << " is " << result << RESET;
 
-    return error;
+    return result;
 }
 
 void RD53FWInterface::ConfigurePCTestAdapter(const std::string& config)
