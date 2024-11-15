@@ -1,5 +1,5 @@
 /*!
-  \file                  RD53VTRxLightYieldScanHistograms.h
+  \file                  RD53LpGBTeyeOpeningHistograms.h
   \brief                 Header file of VTRx light yield scan histograms
   \author                Mauro DINARDO
   \version               1.0
@@ -7,15 +7,16 @@
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef RD53VTRxLightYieldScanHistograms_H
-#define RD53VTRxLightYieldScanHistograms_H
+#ifndef RD53LpGBTeyeOpeningHistograms_H
+#define RD53LpGBTeyeOpeningHistograms_H
 
 #include "DQMHistogramBase.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/GenericDataArray.h"
 
 #include <TH2F.h>
 
-class VTRxLightYieldScanHistograms : public DQMHistogramBase
+class LpGBTeyeOpeningHistograms : public DQMHistogramBase
 {
   public:
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
@@ -32,12 +33,7 @@ class VTRxLightYieldScanHistograms : public DQMHistogramBase
 
     DetectorDataContainer Intensity2D;
 
-    size_t biasStart;
-    size_t biasStop;
-    size_t biasStep;
-    size_t modulationStart;
-    size_t modulationStop;
-    size_t modulationStep;
+    size_t lpGBTattenuation;
 };
 
 #endif

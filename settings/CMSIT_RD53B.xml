@@ -304,6 +304,8 @@
     <Setting name="VTRxModulationStop">   40 </Setting>
     <Setting name="VTRxModulationStep">    4 </Setting>
 
+    <Setting name="LpGBTattenuation">      0 </Setting>
+
     <Setting name="DoOnlyNGroups">         0 </Setting>
     <Setting name="DisplayHisto">          0 </Setting>
     <Setting name="UpdateChipCfg">         1 </Setting>

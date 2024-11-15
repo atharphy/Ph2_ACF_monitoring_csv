@@ -1,31 +1,32 @@
 /*!
-  \file                  RD53VTRxLightYieldScan.h
-  \brief                 Header of VTRx light yield scan
+  \file                  RD53LpGBTeyeOpening.h
+  \brief                 Header of LpGBT eye opening scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  29/11/24
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef RD53VTRxLightYieldScan_H
-#define RD53VTRxLightYieldScan_H
+#ifndef RD53LpGBTeyeOpening_H
+#define RD53LpGBTeyeOpening_H
 
 #include "MonitorUtils/DetectorMonitor.h"
 #include "RD53CalibBase.h"
+#include "Utils/GenericDataArray.h"
 
 #ifdef __USE_ROOT__
-#include "DQMUtils/RD53VTRxLightYieldScanHistograms.h"
+#include "DQMUtils/RD53LpGBTeyeOpeningHistograms.h"
 #else
-typedef bool VTRxLightYieldScanHistograms;
+typedef bool LpGBTeyeOpeningHistograms;
 #endif
 
 // ##################
 // # BER test suite #
 // ##################
-class VTRxLightYieldScan : public CalibBase
+class LpGBTeyeOpening : public CalibBase
 {
   public:
-    ~VTRxLightYieldScan()
+    ~LpGBTeyeOpening()
     {
         this->WriteRootFile();
         delete histos;
@@ -39,26 +40,19 @@ class VTRxLightYieldScan : public CalibBase
     void run() override;
     void draw(bool saveData = true) override;
 
-    VTRxLightYieldScanHistograms* histos;
+    LpGBTeyeOpeningHistograms* histos;
 
   private:
     void fillHisto() override;
 
-    std::vector<uint16_t> dac1List;
-    std::vector<uint16_t> dac2List;
-    DetectorDataContainer theVTRxLightYieldScanContainer;
+    DetectorDataContainer theLpGBTeyeOpeningContainer;
 
   protected:
     // ######################################
     // # Parameters from configuration file #
     // ######################################
-    size_t biasStart;
-    size_t biasStop;
-    size_t biasStep;
-    size_t modulationStart;
-    size_t modulationStop;
-    size_t modulationStep;
-    bool   doDisplay;
+    int  lpGBTattenuation;
+    bool doDisplay;
 };
 
 #endif
