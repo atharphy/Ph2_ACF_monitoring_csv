@@ -91,7 +91,7 @@ void OTCICBX0Alignment::BX0Alignment()
                     return;
                 }
                 // std::cout << " the FE to use is " << +theFEtoUse->getId() << std::endl;
-                auto    theFECICmapping = fCicInterface->getMapping(cCic);
+                auto    theFECICmapping = cCic->getMapping();
                 uint8_t theIndex        = (theFEtoUse->getFrontEndType() == FrontEndType::MPA2) ? theFEtoUse->getId() - 8 : theFEtoUse->getId();
                 uint8_t theFEId         = theFECICmapping[theIndex];
                 // configure word alignment pattern on FEs
@@ -192,7 +192,7 @@ void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
                         return;
                     }
                     // std::cout << " the FE to use is " << +theFEtoUse->getId() << std::endl;
-                    auto    theFECICmapping = fCicInterface->getMapping(cCic);
+                    auto    theFECICmapping = cCic->getMapping();
                     uint8_t theIndex        = (theFEtoUse->getFrontEndType() == FrontEndType::MPA2) ? theFEtoUse->getId() - 8 : theFEtoUse->getId();
                     uint8_t theFEId         = theFECICmapping[theIndex];
                     // configure word alignment pattern on FEs

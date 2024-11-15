@@ -12,6 +12,7 @@
 #include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
 #include "Utils/ThresholdAndNoise.h"
+#include "HWInterface/D19cPSCounterFWInterface.h"
 // #include "boost/format.hpp"
 #include <math.h>
 
@@ -135,6 +136,8 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fMaskingThreshold        = findValueInSettings<double>("MaskingThreshold", 0.001);     // NOT IN XML
     fPedeNoiseLatency        = findValueInSettings<double>("PedeNoiseLatency", 198);
 
+    bool fastCounterReadout = findValueInSettings<double>("PedeNoise_FastCounterReadout", 0) > 0;
+
     fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : fEventsPerPoint;
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
     // uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
@@ -179,6 +182,8 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         if(!cForcePSasync) continue;
         cBoard->setEventType(EventType::PSAS);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitializePSCounterFWInterface(cBoard);
+        static_cast<D19cPSCounterFWInterface*>(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->getL1ReadoutInterface())->configureFastReadout(fastCounterReadout);
+        
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)

@@ -55,7 +55,10 @@ class DQMHistogramPSCounterTest : public DQMHistogramBase
      */
     void reset(void) override;
 
+    void fillSCurvePlots(uint16_t stripThreshold, uint16_t pixelThreshold, DetectorDataContainer& theOccupancyContainer);
+
   private:
     DetectorContainer*    fDetectorContainer;
+    DetectorDataContainer fSCurveContainer;
 };
 #endif

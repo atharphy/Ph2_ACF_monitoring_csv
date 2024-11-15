@@ -119,7 +119,7 @@ void OTverifyCICdataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterface*
 
             fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
             fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-            auto theChipToCICMapping = fCicInterface->getMapping(cCic);
+            auto theChipToCICMapping = cCic->getMapping();
 
             for(auto theChip: *theHybrid)
             {
@@ -314,7 +314,7 @@ void OTverifyCICdataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterfac
             auto theFeConfigRegisterValue = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
             theFeConfigRegisterValue |= 0x04; // Force bending to be sent out in the stub stream
             fCicInterface->WriteChipReg(cCic, "FE_CONFIG", theFeConfigRegisterValue);
-            auto theChipToCICMapping = fCicInterface->getMapping(cCic);
+            auto theChipToCICMapping =cCic->getMapping();
             for(auto theChip: *theHybrid)
             {
                 if(theChip->getFrontEndType() == FrontEndType::SSA2) continue;

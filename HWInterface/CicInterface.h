@@ -154,20 +154,6 @@ class CicInterface : public ChipInterface
     uint16_t retrieveExternalBX0AlignmentValue(Ph2_HwDescription::Chip* pChip);
     bool     ConfigureExternalBX0Delay(Ph2_HwDescription::Chip* pChip, const uint16_t theBX0AlignmentValues);
 
-    std::vector<uint8_t> getMapping(Ph2_HwDescription::Chip* pChip)
-    {
-        bool c2S = ((pChip->getReg("FE_CONFIG") & 0x01) == 0);
-        if(c2S)
-            return fFeMapping2S;
-        else // a bit too many else, but easier to read
-        {
-            if(pChip->getHybridId() % 2 == 0)
-                return fFeMappingPSR;
-            else
-                return fFeMappingPSL;
-        }
-    }
-
   private:
     bool    fRetryI2C       = true;
     uint8_t fMaxI2CAttempts = 20;
@@ -189,10 +175,6 @@ class CicInterface : public ChipInterface
     uint16_t fReWR               = 0;
 
   protected:
-    std::vector<uint8_t> fFeMapping2S{0, 1, 2, 3, 7, 6, 5, 4};  // Index CIC FE Id , Value Hybrid FE Id
-    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index hybrid FE Id , Value CIC FE Id
-    std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index hybrid FE Id , Value CIC FE Id
-
     std::map<uint8_t, uint8_t> fTxDriveStrength  = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
     uint8_t                    fMaxDriveStrength = 5;
     // 4 channels per phyPort ... 12 phyPorts per CIC

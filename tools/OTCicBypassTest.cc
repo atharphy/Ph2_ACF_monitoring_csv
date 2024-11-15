@@ -69,7 +69,7 @@ void OTCicBypassTest::runCICbypassTest()
             {
                 std::map<uint8_t, std::map<uint8_t, std::pair<uint8_t, uint8_t>>> phyPortAndChannelToChipAndLine;
                 auto&                                                             cCic                = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                auto                                                              theChipToCICMapping = fCicInterface->getMapping(cCic);
+                auto                                                              theChipToCICMapping = cCic->getMapping();
 
                 // inject the same channels on all Readout chips
                 for(auto theChip: *theHybrid)

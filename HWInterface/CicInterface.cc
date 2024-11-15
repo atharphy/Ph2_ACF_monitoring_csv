@@ -14,6 +14,7 @@
 #include "HWInterface/ExceptionHandler.h"
 #include "Utils/GenericDataArray.h"
 #include "boost/format.hpp"
+#include "HWDescription/Cic.h"
 #include <numeric>
 
 #define DEV_FLAG 0
@@ -324,7 +325,7 @@ bool CicInterface::ManualBx0Alignment(Chip* pChip, uint8_t pBx0delay)
 // run automated Bx0 alignment - FIX ME
 bool CicInterface::ConfigureBx0Alignment(Chip* pChip, std::vector<uint8_t> pAlignmentPatterns, uint8_t pFEId, uint8_t pLineId)
 {
-    // std::vector<uint8_t> cFeMapping = getMapping(pChip);
+    // std::vector<uint8_t> cFeMapping = static_cast<Cic*>(pChip)->getMapping();
     std::vector<uint8_t> cFeMapping{3, 2, 1, 0, 4, 5, 6, 7}; // FE --> FE CIC
     setBoard(pChip->getBeBoardId());
     LOG(DEBUG) << BOLDBLUE << "Running automated word alignment in CIC on FE" << +pChip->getHybridId() << RESET;
@@ -920,7 +921,7 @@ uint16_t CicInterface::retrieveExternalBX0AlignmentValue(Chip* pChip)
 std::pair<uint8_t, uint8_t> CicInterface::GetPhyPortConfig(Chip* pChip, uint8_t pFeId, uint8_t pLineId)
 {
     std::pair<uint8_t, uint8_t> cCnfg;
-    std::vector<uint8_t>        cFeMapping  = getMapping(pChip);
+    std::vector<uint8_t>        cFeMapping  = static_cast<Cic*>(pChip)->getMapping();
     size_t                      cNSLVSLines = 6; // 6 stub lines from a front-end chip to the CIC - 5 stubs + 1 L1
     std::vector<uint8_t>        cPhaseTaps(cNSLVSLines, 15);
 
@@ -1024,7 +1025,7 @@ GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> Ci
     };
 
     GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> theOptimalPhase2DArray;
-    std::vector<uint8_t>                                                          cicFrontEndMapping = getMapping(pChip);
+    std::vector<uint8_t>                                                          cicFrontEndMapping = static_cast<Cic*>(pChip)->getMapping();
     for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd) // using the same Id of the chip
     {
         // L1 lines are on phyport 10 and 11 and go on first line of the ouput array
@@ -1067,7 +1068,7 @@ GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicIn
         return isLocked;
     };
 
-    std::vector<uint8_t> cicFrontEndMapping = getMapping(pChip);
+    std::vector<uint8_t> cicFrontEndMapping = static_cast<Cic*>(pChip)->getMapping();
 
     for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd) // using the same Id of the chip
     {
@@ -1103,7 +1104,7 @@ bool CicInterface::writeAllTaps(Ph2_HwDescription::Chip* pChip, GenericDataArray
         theCurrentRegisterValue       = (theCurrentRegisterValue & (0xF << ((phyPort + 1) % 2 * 4))) | ((phase & 0xF) << (phyPort % 2 * 4));
     };
 
-    std::vector<uint8_t> cicFrontEndMapping = getMapping(pChip);
+    std::vector<uint8_t> cicFrontEndMapping = static_cast<Cic*>(pChip)->getMapping();
     for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd)
     {
         auto l1PhyPortAndChannel = fromChipL1ToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd);
@@ -1149,13 +1150,13 @@ std::pair<uint8_t, uint8_t> CicInterface::fromPhyPortAndChanneltoChipIdAndLine(P
 
 uint8_t CicInterface::fromChipIdToCICFEid(Ph2_HwDescription::Chip* pChip, uint8_t chipId)
 {
-    auto cicFEmapping = getMapping(pChip);
+    auto cicFEmapping = static_cast<Cic*>(pChip)->getMapping();
     return cicFEmapping[chipId % 8];
 }
 
 uint8_t CicInterface::fromCICFEidToChipId(Ph2_HwDescription::Chip* pChip, uint8_t cicFEid)
 {
-    auto cicFEmapping = getMapping(pChip);
+    auto cicFEmapping = static_cast<Cic*>(pChip)->getMapping();
     return std::find_if(cicFEmapping.begin(), cicFEmapping.end(), [cicFEid](uint8_t value) { return value == cicFEid; }) - cicFEmapping.begin();
 }
 
@@ -1178,7 +1179,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
     size_t cL1Line            = 5;
     bool   cLastStubLineFound = false;
 
-    std::vector<uint8_t>        cFeMapping = getMapping(pChip);
+    std::vector<uint8_t>        cFeMapping = static_cast<Cic*>(pChip)->getMapping();
     std::vector<std::bitset<6>> theFeStates(8, 0);
 
     // read back phase alignment on stub lines
@@ -1259,7 +1260,7 @@ bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFeIds, bool pEna
     setBoard(pChip->getBeBoardId());
 
     //  read type of CIC to figure out which mapping to use
-    std::vector<uint8_t> cFeMapping = getMapping(pChip);
+    std::vector<uint8_t> cFeMapping = static_cast<Cic*>(pChip)->getMapping();
     // read enable register
     std::string cRegName = "FE_ENABLE";
     uint16_t    cValue   = this->ReadChipReg(pChip, cRegName);
@@ -1278,7 +1279,7 @@ bool CicInterface::configureEnabledFEs(Chip* pChip, std::vector<uint8_t> pFeIds)
 {
     setBoard(pChip->getBeBoardId());
     //  read type of CIC to figure out which mapping to use
-    std::vector<uint8_t> cFeMapping = getMapping(pChip);
+    std::vector<uint8_t> cFeMapping = static_cast<Cic*>(pChip)->getMapping();
     // read enable register
     std::string cRegName = "FE_ENABLE";
     uint8_t     cValue   = 0;

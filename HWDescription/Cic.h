@@ -66,7 +66,12 @@ class Cic : public Chip
     void    setLpGBTphaseForCICbypass(uint8_t phyPort, uint8_t stubLine, uint8_t lpgbtPhase);
     uint8_t getLpGBTphaseForCICbypass(uint8_t phyPort, uint8_t stubLine) const;
 
+    std::vector<uint8_t> getMapping();
+
   private:
+    std::vector<uint8_t> fFeMapping2S{0, 1, 2, 3, 7, 6, 5, 4};  // Index CIC FE Id , Value Hybrid FE Id
+    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; // Index hybrid FE Id , Value CIC FE Id
+    std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index hybrid FE Id , Value CIC FE Id
     void                                          initializeLpGBTphasesForCICbypassMap();
     static std::map<uint8_t, uint8_t>             fTxDriveStrength;
     std::map<uint8_t, std::map<uint8_t, uint8_t>> fLpGBTphasesForCICbypassMap;
