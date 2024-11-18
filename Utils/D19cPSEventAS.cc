@@ -31,7 +31,56 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     ContainerFactory::copyAndInitChannel<uint16_t>(*pBoard, fTheOccupancyContainer);
     if(fEnableFastReadout)
     {
+        size_t numberOfParsedOpticalGroups = 0;
+        size_t numberOfChannels = NSSACHANNELS * (NMPAROWS + 1);
+        size_t hybridDataSize = 8;
 
+        for(auto theOpticalGroup: *pBoard)
+        {
+            for(size_t dataCounterPacketNumber = 0; dataCounterPacketNumber < numberOfChannels; ++dataCounterPacketNumber)
+            {
+                uint8_t pixelCol = dataCounterPacketNumber%NSSACHANNELS;
+                uint8_t pixelRow = dataCounterPacketNumber/NSSACHANNELS;
+
+                for(auto theHybrid: *theOpticalGroup)
+                {   
+                    size_t hybridDataStart = numberOfChannels * hybridDataSize * numberOfParsedOpticalGroups * 2 + (dataCounterPacketNumber * 2 + (theHybrid->getId() % 2)) * hybridDataSize;
+
+                    for(uint8_t counterNumber = 0; counterNumber < 8; ++counterNumber)
+                    {
+                        uint32_t counterStart = 21 * counterNumber;
+                        uint32_t counterEnd = 21 * (counterNumber+1) -1;
+
+                        uint32_t firstWord  = counterStart / 32;
+                        uint32_t secondWord = counterEnd / 32;
+
+                        uint32_t counterPacket;
+                        if(firstWord == secondWord)
+                        {
+                            counterPacket = (pData[hybridDataStart + firstWord] >> (counterStart % 32) ) & 0x1FFFFF;
+                        }
+                        else
+                        {
+                            counterPacket = (pData[hybridDataStart + firstWord] >> (counterStart % 32) | (pData[hybridDataStart + secondWord] << (32 - counterStart % 32))) & 0x1FFFFF;
+                        }
+                        
+                        uint8_t chipId = getChipIdMapped(theHybrid->getId(), (counterPacket >> 15) & 0x7) + (pixelRow < 16 ? 8 : 0);
+                        uint16_t counterData = (((counterPacket >> 8) & 0x7F) | ((counterPacket & 0x7F) << 7)) - 1;
+
+                        try
+                        {
+                            fTheOccupancyContainer.getChip(theOpticalGroup->getId(), theHybrid->getId(), chipId)->getChannel<uint16_t>(pixelRow%16, pixelCol) = counterData;
+                        }
+                        catch(...)
+                        {
+                            // this chip is not enabled
+                            continue;
+                        }
+                    }
+                }
+            }
+            ++numberOfParsedOpticalGroups;
+        }
     }
     else
     {

@@ -25,8 +25,8 @@ class D19cPSEventAS : public Event
   private:
     static bool fEnableFastReadout;
 
-    std::vector<uint8_t> fFeMappingPSR{6, 7, 3, 2, 1, 0, 4, 5}; //  Index Hybrid Fe Id , Value CIC Fe Id
-    std::vector<uint8_t> fFeMappingPSL{1, 0, 4, 5, 6, 7, 3, 2}; // Index Hybrid Fe Id , Value CIC Fe Id
+    std::vector<uint8_t> fFeMappingPSR{5, 4, 3, 2, 6, 7, 0, 1}; //  Index CIC Fe Id , Value Hybrid Fe Id
+    std::vector<uint8_t> fFeMappingPSL{1, 0, 7, 6, 2, 3, 4, 5}; // Index Hybrid Fe Id , Value CIC Fe Id
 
     inline uint8_t getChipIdMapped(uint8_t pHybridId, uint8_t pReadoutChipId) const
     {

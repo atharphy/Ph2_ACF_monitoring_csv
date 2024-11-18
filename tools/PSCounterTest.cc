@@ -35,6 +35,8 @@ void PSCounterTest::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
 
+    fAllChan = true;
+
     fWithSSA = false;
     fWithMPA = false;
     std::vector<FrontEndType> cAllFrontEndTypes;
@@ -71,7 +73,7 @@ void PSCounterTest::Initialise(void)
 
         cBoard->setEventType(EventType::PSAS);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitializePSCounterFWInterface(cBoard);
-        static_cast<D19cPSCounterFWInterface*>(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->getL1ReadoutInterface())->configureFastReadout(false);
+        static_cast<D19cPSCounterFWInterface*>(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->getL1ReadoutInterface())->configureFastReadout(true);
         
         for(auto cOpticalGroup: *cBoard)
         {
@@ -296,7 +298,7 @@ void PSCounterTest::RunFast(uint16_t stripThreshold, uint16_t pixelThreshold)
     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] stripThreshold = " << stripThreshold << std::endl;
     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pixelThreshold = " << pixelThreshold << std::endl;
     int eventsPerPoint = 100;
-    // int eventsPerPoint = 0xff;
+    // int eventsPerPoint = 0xfe;
 
     for(auto cBoard: *fDetectorContainer)
     {

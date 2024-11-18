@@ -2159,13 +2159,6 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
     theScan.setDataContainer(fDetectorDataContainer);
     // Make sure async mode uses ReadNEvents
 
-    bool cUseReadNEvents = fUseReadNEvents;
-    if(fDetectorContainer->getObject(boardId)->getEventType() == EventType::PSAS)
-    {
-        this->setSameGlobalDac("AnalogueAsync", 1);
-        fUseReadNEvents = true;
-    }
-
     doScanOnAllGroupsBeBoard(boardId, numberOfEvents, numberOfEventsPerBurst, &theScan);
 
     if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
@@ -2175,8 +2168,6 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
 
     if(fNormalize)
         fDetectorDataContainer->getObject(boardId)->normalizeAndAverageContainers(fDetectorContainer->getObject(boardId), getChannelGroupHandlerContainer()->getObject(boardId), numberOfEvents);
-
-    fUseReadNEvents = cUseReadNEvents;
 }
 
 class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup

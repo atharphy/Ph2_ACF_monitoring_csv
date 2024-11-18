@@ -104,19 +104,17 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
 {
     BoardDataContainer theMissingCounterContainer;
     ContainerFactory::copyAndInitChip<std::vector<std::pair<uint8_t, uint8_t>>>(*theBoard, theMissingCounterContainer);
+
     for(auto theOpticalGroup: *theBoard)
     {
         fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren", 1 << theOpticalGroup->getId());
         auto cNFIFOentries = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.num_fifo_entry");
-        if(cNFIFOentries < 2041)
+        if(cNFIFOentries < NSSACHANNELS * (NMPAROWS + 1) + 1)
         {
             LOG(WARNING) << WARNING_FORMAT << "Imcomplete counter packer" << RESET;
             return false;
         }
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren = " << fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren") << std::endl;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_cnfg.fast_command_block.ps_async_en = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en") << std::dec << std::endl;
 
-        // sleep(5);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         auto   cDDR3state  = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.fsm_state");
         size_t cIterations = 0;
@@ -134,16 +132,16 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
         
         auto moduleData = fTheRegManager->ReadBlockRegOffset("fc7_daq_ddr3", cNFIFOentries * 16, 0x20000 * theOpticalGroup->getId());
 
-        for(auto theHybrid: *theOpticalGroup)
+        for(size_t dataCounterPacketNumber = 1; dataCounterPacketNumber < NSSACHANNELS * (NMPAROWS + 1) + 1; ++dataCounterPacketNumber)
         {
-            
-            for(size_t dataCounterPacketNumber = 1; dataCounterPacketNumber < 2041; ++dataCounterPacketNumber)
+            for(auto theHybrid: *theOpticalGroup)
             {
+            
                 uint8_t pixelCol = (dataCounterPacketNumber - 1)%120;
                 uint8_t pixelRow = (dataCounterPacketNumber - 1)/120;
 
                 size_t hybridDataSize = 8;
-                size_t hybridDataStart = (dataCounterPacketNumber * 2 + (theHybrid->getId() % 2)) * hybridDataSize;
+                size_t hybridDataStart = (dataCounterPacketNumber * 2 + (1 - theHybrid->getId() % 2)) * hybridDataSize;
                 auto startPointer = moduleData.begin() + hybridDataStart;
                 std::vector<uint32_t> hybridPacket = {*(startPointer+3), *(startPointer+2), *(startPointer+1), *(startPointer+0), *(startPointer+7), *(startPointer+6), *(startPointer+5), *(startPointer+4)};
                 
@@ -197,6 +195,8 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
     fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren", 0);
 
     // integrate missing counters with I2C readout
+    size_t numberOfParsedOpticalGroups = 0;
+
     for(auto theOpticalGroup: *theBoard)
     {
         for(auto theHybrid: *theOpticalGroup)
@@ -205,6 +205,7 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
             {
                 const auto& missingChannelVector = theMissingCounterContainer.getChip(theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::vector<std::pair<uint8_t, uint8_t>>>();
                 if(missingChannelVector.size() == 0) continue;
+                
                 uint8_t idForCIC = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic->getMapping()[theChip->getId() % 8];
                 std::vector<ChipRegItem> registersToRead;
                 for(const auto& missingChannel: missingChannelVector)
@@ -222,7 +223,7 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
                     uint16_t counterValue = registersToRead[registerCounter*2].fValue << 8 | registersToRead[registerCounter*2 + 1].fValue;
                     uint32_t fakeStubPacket = (7 << 19) | (idForCIC) << 16 | ((counterValue & 0x7F) << 8) | ((counterValue >> 7) & 0x7F);
 
-                    uint32_t channelOffset = theOpticalGroup->getId() * 2040 + missingChannel.first * 120 + missingChannel.second + 256 * theHybrid->getId();
+                    uint32_t channelOffset = numberOfParsedOpticalGroups * NSSACHANNELS * (NMPAROWS + 1) + missingChannel.first * 120 + missingChannel.second + 256 * theHybrid->getId();
                     uint8_t numberOfCounters = (fData[channelOffset + 5] >> 8) & 0x3F;
 
                     uint8_t counterNumber = 8 - (numberOfCounters + 1);
@@ -251,6 +252,7 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
 
             }
         }
+        ++numberOfParsedOpticalGroups;
     }
 
     return true;
@@ -306,12 +308,12 @@ bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* theBoard)
     fTriggerInterface->SetNTriggersToAccept(fNEvents);
 
     fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-    uint32_t waitForDataCollection = (delayAfterFastReset + afterOpenShutter + afterClearCounters + afterCloseShutter + (delayAfterTestPulse + delayBeforeNextPulse) * fNEvents) / 1000;
-    std::this_thread::sleep_for(std::chrono::microseconds(waitForDataCollection + 5000));
+    uint32_t waitForDataCollection = (delayAfterFastReset + afterOpenShutter + afterClearCounters + afterCloseShutter + (delayAfterTestPulse + delayBeforeNextPulse) * fNEvents) / 1000 * 25 + 5000;
+
+    std::this_thread::sleep_for(std::chrono::microseconds(waitForDataCollection));
 
     if(fPSCounterFast)
     {
-
         size_t readDDR3Iteration    = 0;
         size_t maxReadDDR3Iterations    = 30;
         while(readDDR3Iteration < maxReadDDR3Iterations)
@@ -373,12 +375,15 @@ bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* theBoard)
                 {
                     fTheRegManager->WriteStackReg(firstListOfBoardRegisters);
                     fTriggerInterface->SetNTriggersToAccept(fNEvents);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
                     fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-                    std::this_thread::sleep_for(std::chrono::microseconds(waitForDataCollection + 5000));
+                    std::this_thread::sleep_for(std::chrono::microseconds(waitForDataCollection));
                     ++searchStartPatternIteration;
                 }
-                else break;
+                else
+                {
+                    break;
+                }
             }
             if(searchStartPatternIteration >= maxSearchStartPatternIterations)
             {

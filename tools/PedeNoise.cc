@@ -136,7 +136,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fMaskingThreshold        = findValueInSettings<double>("MaskingThreshold", 0.001);     // NOT IN XML
     fPedeNoiseLatency        = findValueInSettings<double>("PedeNoiseLatency", 198);
 
-    bool fastCounterReadout = findValueInSettings<double>("PedeNoise_FastCounterReadout", 0) > 0;
+    bool fastCounterReadout = findValueInSettings<double>("PedeNoise_FastCounterReadout", 1) > 0;
 
     fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : fEventsPerPoint;
     // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
