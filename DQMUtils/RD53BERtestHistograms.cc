@@ -1,6 +1,7 @@
 /*!
   \file                  RD53BERtestHistograms.cc
   \brief                 Implementation of BERtest calibration histograms
+  \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch

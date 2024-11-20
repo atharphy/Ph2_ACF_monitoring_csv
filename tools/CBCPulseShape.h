@@ -25,7 +25,7 @@ class CBCPulseShape : public PedeNoise
     CBCPulseShape();
     ~CBCPulseShape();
 
-    void Initialise(void);
+    void Initialise(bool pAllChan = false, bool pDisableStubLogic = true) override;
     void runCBCPulseShape(void);
     void writeObjects(void);
 

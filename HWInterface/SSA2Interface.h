@@ -69,6 +69,9 @@ class SSA2Interface : public ReadoutChipInterface
     float getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pSSA2);
     bool  WriteChipRegBits(Ph2_HwDescription::Chip* theSSA, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = false);
 
+    std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>>
+    packLocalRegisters(Ph2_HwDescription::ReadoutChip* pSSA2, const std::string& dacName, const ChipContainer& localRegValues);
+
   private:
     uint8_t ReadChipId(Ph2_HwDescription::Chip* pChip);                                                                                                                           // FIXME
     bool    WriteChipRegBitsLocal(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = false); // FIXME

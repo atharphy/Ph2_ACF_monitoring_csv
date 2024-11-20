@@ -50,7 +50,7 @@ class DetectorMonitor
     std::atomic<bool> fIsMonitorRunning;
     std::future<void> fMonitorFuture;
 
-    int fMaximumStopTentatives = 20;
+    int fMaximumStopTentatives = 100;
 };
 
 #endif

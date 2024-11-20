@@ -1,6 +1,6 @@
 /*!
   \file                  RD53CalibBase.h
-  \brief                 Implementaion of CalibBase
+  \brief                 Header of CalibBase
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -98,7 +98,7 @@ class CalibBase : public Tool
             // #################
             if(this->fMetadataHandler == nullptr)
             {
-                this->fMetadataHandler = new MetadataHandlerIT();
+                this->fMetadataHandler = new MetadataHandlerIT(getTimeStampString());
                 this->fMetadataHandler->Inherit(this);
                 this->fMetadataHandler->initMetadata();
                 this->fMetadataHandler->justBookDQMMetadata();

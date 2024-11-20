@@ -52,8 +52,8 @@ void OTQuickNoise::TakeData()
     DetectorDataContainer theHitContainer;
     ContainerFactory::copyAndInitStructure<EmptyContainer,
                                            GenericDataArray<uint32_t, NCHANNELS + 1>,
-                                           GenericDataArray<uint32_t, HYBRID_CHANNELS_OT + 1>,
-                                           GenericDataArray<uint32_t, TOTAL_CHANNELS_OT + 1>,
+                                           GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT + 1>,
+                                           GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2 + 1>,
                                            EmptyContainer,
                                            EmptyContainer>(*fDetectorContainer, theHitContainer);
 #ifdef __USE_ROOT__
@@ -67,14 +67,14 @@ void OTQuickNoise::TakeData()
         for(auto cOpticalGroup: *cBoard)
         {
             json             j;
-            std::vector<int> hits(TOTAL_CHANNELS_OT, 0);
+            std::vector<int> hits(NCHANNELS * NCHIPS_OT * 2, 0);
             for(auto& cEvent: events)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        uint32_t chipOffset_module = (cHybrid->getId() * HYBRID_CHANNELS_OT) + (cChip->getId() * NCHANNELS);
+                        uint32_t chipOffset_module = (cHybrid->getId() * NCHANNELS * NCHIPS_OT) + (cChip->getId() * NCHANNELS);
                         for(uint32_t iCh = 0; iCh < NCHANNELS + 1; iCh++)
                         {
                             if(cEvent->DataBit(cHybrid->getId(), cChip->getId(), iCh)) { hits[chipOffset_module + iCh] += 1; }

@@ -18,12 +18,14 @@
 #include "tools/RD53GenericDacDacScan.h"
 #include "tools/RD53InjectionDelay.h"
 #include "tools/RD53Latency.h"
+#include "tools/RD53LpGBTeyeOpening.h"
 #include "tools/RD53Physics.h"
 #include "tools/RD53PixelAlive.h"
 #include "tools/RD53SCurve.h"
 #include "tools/RD53ThrAdjustment.h"
 #include "tools/RD53ThrEqualization.h"
 #include "tools/RD53ThrMinimization.h"
+#include "tools/RD53VTRxLightYieldScan.h"
 #include "tools/RD53VoltageTuning.h"
 
 #ifdef __EUDAQ__
@@ -120,7 +122,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning gendacdac]",
+                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning gendacdac vtrx eye]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -162,10 +164,10 @@ int main(int argc, char** argv)
     // # Read run number #
     // ###################
     unsigned int  runNumber = RUNNUMBER;
-    std::ifstream fileRunNumberIn;
-    fileRunNumberIn.open(FILERUNNUMBER, std::ios::in);
-    if(fileRunNumberIn.is_open() == true) fileRunNumberIn >> runNumber;
-    fileRunNumberIn.close();
+    std::ifstream theFileIn;
+    theFileIn.open(FILERUNNUMBER, std::ios::in);
+    if(theFileIn.is_open() == true) theFileIn >> runNumber;
+    theFileIn.close();
     system(std::string("mkdir -p " + std::string(RD53Shared::RESULTDIR)).c_str());
 
     // ####################
@@ -522,6 +524,34 @@ int main(int argc, char** argv)
         gs.analyze();
         gs.draw();
     }
+    else if(whichCalib == "vtrx")
+    {
+        // #############################
+        // # Run VTRx Light Yield Scan #
+        // #############################
+        LOG(INFO) << BOLDMAGENTA << "@@@ Performing VTRx Light Yield scan @@@" << RESET;
+
+        std::string        fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_VTRxScan");
+        VTRxLightYieldScan vs;
+        vs.Inherit(&mySysCntr);
+        vs.localConfigure(fileName, runNumber);
+        vs.run();
+        vs.draw();
+    }
+    else if(whichCalib == "eye")
+    {
+        // ##############################
+        // # Run LpGBT Eye Opening Scan #
+        // ##############################
+        LOG(INFO) << BOLDMAGENTA << "@@@ Performing LpGBT Eye Opening scan @@@" << RESET;
+
+        std::string     fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_LpGBTeyeScan");
+        LpGBTeyeOpening es;
+        es.Inherit(&mySysCntr);
+        es.localConfigure(fileName, runNumber);
+        es.run();
+        es.draw();
+    }
     else if(whichCalib == "physics")
     {
         // ###############
@@ -610,32 +640,45 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
+    // ######################################################
+    // # Disable all channels and destroy System Controller #
+    // ######################################################
+    std::string monitorFileName(mySysCntr.fDetectorMonitor != nullptr ? mySysCntr.fDetectorMonitor->getMonitorFileName() : "");
+    if(binaryFile == "") mySysCntr.disableAllChannels();
+    mySysCntr.Destroy();
+
     // ###########################
     // # Copy configuration file #
     // ###########################
-    auto copyConfigFile = [&](const std::string& fileName)
+    auto copyFile = [&](const std::string& fileName, const std::string& fileReName = "")
     {
-        const auto fileBasename = fileName.substr(fileName.find_last_of("/\\") + 1);
-        const auto outputFile   = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + fileBasename;
+        const std::string fileBaseName = fileName.substr(fileName.find_last_of("/\\") + 1);
+        std::string       fileBaseReName(fileBaseName);
+        if(fileReName != "") fileBaseReName = fileReName.substr(fileReName.find_last_of("/\\") + 1);
+        const std::string outputFile = std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_" + (fileReName == "" ? fileBaseName : fileBaseReName);
         system(("cp " + fileName + " " + outputFile).c_str());
     };
-    copyConfigFile(configFile);
-    if(configFile != calibSettingsFile) copyConfigFile(calibSettingsFile);
+    copyFile(configFile);
+    if(configFile != calibSettingsFile) copyFile(calibSettingsFile);
+
+    // ##########################
+    // # Retrieve last DQM file #
+    // ##########################
+    if(monitorFileName != "")
+    {
+        std::string monitorFileNameNew(monitorFileName);
+        monitorFileNameNew.erase(monitorFileNameNew.find("_"), monitorFileNameNew.find(".root") - monitorFileNameNew.find("_"));
+        copyFile(monitorFileName, monitorFileNameNew);
+    }
 
     // #####################
     // # Update run number #
     // #####################
-    std::ofstream fileRunNumberOut;
+    std::ofstream theFileOut;
     runNumber++;
-    fileRunNumberOut.open(FILERUNNUMBER, std::ios::out);
-    if(fileRunNumberOut.is_open() == true) fileRunNumberOut << RD53Shared::fromInt2Str(runNumber) << std::endl;
-    fileRunNumberOut.close();
-
-    // ######################################################
-    // # Disable all channels and destroy System Controller #
-    // ######################################################
-    if(binaryFile == "") mySysCntr.disableAllChannels();
-    mySysCntr.Destroy();
+    theFileOut.open(FILERUNNUMBER, std::ios::out);
+    if(theFileOut.is_open() == true) theFileOut << RD53Shared::fromInt2Str(runNumber) << std::endl;
+    theFileOut.close();
 
     LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
 

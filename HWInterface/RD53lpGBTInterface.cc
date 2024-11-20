@@ -276,7 +276,10 @@ void RD53lpGBTInterface::SetUpLinkMapping(const OpticalGroup* pOpticalGroup)
 
     for(const auto cHybrid: *pOpticalGroup)
         for(const auto cChip: *cHybrid)
-            static_cast<RD53FWInterface*>(fBoardFW)->SetUpLinkMapping(pOpticalGroup->getOpticalGroupId(), static_cast<RD53*>(cChip)->getRxGroupsChipLanes(), cHybrid->getId());
+        {
+            auto pRD53 = static_cast<RD53*>(cChip);
+            static_cast<RD53FWInterface*>(fBoardFW)->SetUpLinkMapping(pOpticalGroup->getOpticalGroupId(), cHybrid->getId(), pRD53->getChipLane(), pRD53->getRxGroupsChipLanes());
+        }
 }
 
 void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const OpticalGroup* pOpticalGroup, ReadoutChipInterface* pReadoutChipInterface)

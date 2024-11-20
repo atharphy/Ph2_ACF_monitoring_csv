@@ -1,6 +1,6 @@
 /*!
   \file                  RD53BERtest.h
-  \brief                 Implementaion of Bit Error Rate test
+  \brief                 Header of Bit Error Rate test
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18

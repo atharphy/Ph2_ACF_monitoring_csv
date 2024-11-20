@@ -2,6 +2,7 @@
 #include "HWInterface/BeBoardInterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/D19cOpticalInterface.h"
+#include "MonitorUtils/DetectorMonitor.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

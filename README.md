@@ -60,11 +60,6 @@ Enable shared Runners (if not enabled)
 
 
 ##
-### Setup on `RHEL 9` or `AlmaLinux 9`
-See <https://ph2acf.docs.cern.ch/general/required_install/> for instructions on installing required libraries and tools on `RHEL/AlmaLinux 9`
-
-
-##
 ### To pull large files
 Install `git lfs`
 ```bash
@@ -116,3 +111,11 @@ For any support/suggestions, send an email to fabio.raveraSPAMNOT@cern.ch, mauro
 ##
 ### Firmware repository for OT tracker
 [https://udtc-ot-firmware.web.cern.ch/](https://udtc-ot-firmware.web.cern.ch/)
+
+
+##
+### Outer Tracker Suggested Tags
+
+Firmware tag: v3-00
+
+Ph2_ACF tag: v6-01
