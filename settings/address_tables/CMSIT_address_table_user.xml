@@ -325,7 +325,7 @@
 
     <node id="aurora_rx_lane_up"    address="0x0000000D"      permission="r"       description=""> </node>
 
-    <node id="ddr3_num_errors"      address="0x0000000E"      permission="r"       description="Number of errors during DDR3 self-check"> </node>
+    <!--<node id="ddr3_num_errors"      address="0x0000000E"      permission="r"       description="Number of errors during DDR3 self-check"> </node>-->
     <node id="ddr3_num_words"       address="0x0000000F"      permission="r"       description="Nb of words readout during DDR3 self-check"> </node>
 
     <!-- Register Readout -->
@@ -381,7 +381,7 @@
       <node id="sfp_i2c_data_out"      mask="0xFFFF0000"      permission="r"       description="" />
     </node>
 
-    <node id="stat_portcard_adapter" address="0x00000020"     permission="r"       description="SPI received data from Portcard Test Adapter">
+    <node id="stat_portcard_adapter" address="0x0000000E"     permission="r"       description="SPI received data from Portcard Test Adapter">
       <node id="switch_value"          mask="0x000000FF"      permission="r"       description="Received register value from the switch" />
       <node id="data_ready"            mask="0x00000100"      permission="r"       description="End of communication flag from firmware" />
     </node>
