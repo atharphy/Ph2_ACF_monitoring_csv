@@ -1236,6 +1236,7 @@ void RD53FWInterface::ConfigurePCTestAdapter(const std::string& config)
     std::string                              line, value, address;
     std::vector<std::pair<uint8_t, uint8_t>> fAddressValue;
     uint8_t                                  fValueReadBack;
+    bool                                     errorFlag=false;
 
     if(file.is_open())
     {
@@ -1272,28 +1273,79 @@ void RD53FWInterface::ConfigurePCTestAdapter(const std::string& config)
         RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.switch_address", thePair.first);
         RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.switch_value", thePair.second);
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
-        RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.ctrl", 1); // Writing to Switch
+	RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.ctrl", 1); //Writing to Switch
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
 
-        while(RegManager::ReadReg("user.stat_regs.stat_portcard_adapter.data_ready") != 1)
-        {
-            std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
-        } // Waiting and
-          // Resetting
         RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.ctrl", 0);
         RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.reset", 1);
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
         RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.reset", 0);
 
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
-        RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.ctrl", 2); // Reading from Switch
+        RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.ctrl", 2); //Reading from Switch
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
 
-        while(RegManager::ReadReg("user.stat_regs.stat_portcard_adapter.data_ready") != 1) { std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP)); } // Waiting and Saving
         fValueReadBack = RegManager::ReadReg("user.stat_regs.stat_portcard_adapter.switch_value");
         RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.ctrl", 0);
+        
+        LOG(INFO) << GREEN << "Reading: Address " << BOLDYELLOW << std::to_string(thePair.first) << RESET << GREEN <<" Value: " << BOLDYELLOW << std::to_string(fValueReadBack) << RESET;
+        if(fValueReadBack != thePair.second) { 
+            LOG(WARNING) << BOLDRED << "Mismatch between set value and read value!" << RESET; 
+            errorFlag=true;
+        } 
+   }
+    
+    LOG(INFO) << GREEN << "Updating the matrix" << RESET;
 
-        LOG(INFO) << GREEN << "Reading: Address " << BOLDYELLOW << std::to_string(thePair.first) << RESET << GREEN << " Value: " << BOLDYELLOW << std::to_string(fValueReadBack) << RESET;
-        if(fValueReadBack != thePair.second) LOG(WARNING) << BOLDRED << "Mismatch between set value and read value!" << RESET;
+    RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.reset", 1);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+    RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.reset", 0);
+    
+    LOG(INFO) << GREEN << "Setting: Address " << BOLDYELLOW << "1" << RESET << GREEN <<" Value: " << BOLDYELLOW << "1" << RESET;
+    RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.switch_address", (uint8_t)1 );
+    RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.switch_value", (uint8_t)1 ); //Updating Matrix
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+    RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.ctrl", 1); //Writing to Switch
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+
+    RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.ctrl", 0);
+    RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.reset", 1);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+    RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.reset", 0);
+
+    LOG(INFO) << GREEN << "Setting: Address " << BOLDYELLOW << "1" << RESET << GREEN <<" Value: " << BOLDYELLOW << "0" << RESET;
+    RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.switch_value", (uint8_t)0 );
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+    RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.ctrl", 1); //Writing to Switch
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+    
+    RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.ctrl", 0);
+    
+    LOG(INFO) << GREEN << "Reading back matrix values" << RESET;
+    
+    for(const auto& thePair: fAddressValue)
+    {
+        RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.reset", 1);
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+        RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.reset", 0);
+        
+        RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.switch_address", (uint8_t)(thePair.first+80) );
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+        RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.ctrl", 2); //Reading from Switch
+        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+
+       fValueReadBack = RegManager::ReadReg("user.stat_regs.stat_portcard_adapter.switch_value");
+        RegManager::WriteReg("user.ctrl_regs.cnf_portcard_adapter.ctrl", 0);
+        
+        LOG(INFO) << GREEN << "Reading: Address " << BOLDYELLOW << std::to_string(thePair.first+80) << RESET << GREEN <<" Value: " << BOLDYELLOW << std::to_string(fValueReadBack) << RESET;
+        if(fValueReadBack != thePair.second) { 
+            LOG(WARNING) << BOLDRED << "Mismatch between set value and read value!" << RESET; 
+            errorFlag=true;
+        }  
     }
+
+    if(errorFlag==true)
+        throw std::runtime_error("A mismatch between set value and read value has occurred!");
 }
 
 void RD53FWInterface::SelectBERcheckBitORFrame(const uint8_t bitORframe) { RegManager::WriteReg("user.ctrl_regs.PRBS_checker.error_cntr_sel", bitORframe); }
