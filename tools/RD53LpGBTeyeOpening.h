@@ -20,9 +20,15 @@
 typedef bool LpGBTeyeOpeningHistograms;
 #endif
 
-// ##################
-// # BER test suite #
-// ##################
+// #############
+// # CONSTANTS #
+// #############
+#define TIMEMAX 64 // Max value of time register
+#define VOLTMAX 31 // Max value of voltage register
+
+// ########################
+// # LpGBT eye test suite #
+// ########################
 class LpGBTeyeOpening : public CalibBase
 {
   public:

@@ -60,11 +60,10 @@ void FileParser::openHWconfig(const std::string& pFilename, pugi::xml_document& 
     pugi::xml_parse_result result = doc.load_file(pFilename.c_str());
     if(!result) // Try if it is not a file, but a string containing the full xml
         result = doc.load_string(pFilename.c_str());
-
     if(!result)
     {
-        LOG(ERROR) << BOLDRED << "ERROR : Unable to open the file : " << RESET << pFilename << std::endl;
-        LOG(ERROR) << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
+        LOG(ERROR) << BOLDRED << "Error: Unable to open the file " << BOLDYELLOW << pFilename << RESET;
+        LOG(ERROR) << BOLDRED << "Error description: " << BOLDYELLOW << result.description() << RESET;
         throw Exception("Unable to parse XML source!");
     }
 }

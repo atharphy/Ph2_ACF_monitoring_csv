@@ -144,8 +144,8 @@ void BeBoard::loadConfigFile(const std::string& filename)
         result = registerPugiDocument.load_string(filename.c_str());
     if(!result)
     {
-        LOG(ERROR) << BOLDRED << "ERROR : Unable to open the file : " << RESET << filename << std::endl;
-        LOG(ERROR) << BOLDRED << "Error description : " << RED << result.description() << RESET << std::endl;
+        LOG(ERROR) << BOLDRED << "Error: Unable to open the file " << BOLDYELLOW << filename << RESET;
+        LOG(ERROR) << BOLDRED << "Error description: " << BOLDYELLOW << result.description() << RESET;
         throw Exception("Unable to parse BeBoard XML source!");
     }
 

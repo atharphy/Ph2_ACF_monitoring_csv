@@ -77,10 +77,7 @@ void LpGBTeyeOpening::localConfigure(const std::string& histoFileName, int curre
 
 void LpGBTeyeOpening::run()
 {
-    const int timeMax = 64;
-    const int voltMax = 31;
-
-    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint16_t, timeMax, voltMax>>(*fDetectorContainer, theLpGBTeyeOpeningContainer);
+    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint16_t, TIMEMAX, VOLTMAX>>(*fDetectorContainer, theLpGBTeyeOpeningContainer);
 
     // ####################
     // # Pause monitoring #
@@ -91,15 +88,16 @@ void LpGBTeyeOpening::run()
     {
         for(auto cOpticalGroup: *cBoard)
         {
+            if(cOpticalGroup->flpGBT == nullptr) throw std::runtime_error("LpGBT not enabled in configuration file for optical group ID " + std::to_string(cOpticalGroup->getId()));
             flpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "EQConfig", (lpGBTattenuation << 3) | (cOpticalGroup->flpGBT->getReg("EQConfig") & 0x3));
             flpGBTInterface->ConfigureEOM(cOpticalGroup->flpGBT, 7, false, true);
         }
 
-        for(uint8_t voltage = 0; voltage < voltMax; voltage++)
+        for(uint8_t voltage = 0; voltage < VOLTMAX; voltage++)
         {
             for(auto cOpticalGroup: *cBoard) flpGBTInterface->SelectEOMVof(cOpticalGroup->flpGBT, voltage);
 
-            for(uint8_t time = 0; time < timeMax; time++)
+            for(uint8_t time = 0; time < TIMEMAX; time++)
             {
                 for(auto cOpticalGroup: *cBoard) flpGBTInterface->SelectEOMPhase(cOpticalGroup->flpGBT, time);
                 std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
@@ -107,7 +105,7 @@ void LpGBTeyeOpening::run()
 
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto     theEyeArray = theLpGBTeyeOpeningContainer.getOpticalGroup(cBoard->getId(), cOpticalGroup->getId())->getSummary<GenericDataArray<uint16_t, timeMax, voltMax>>();
+                    auto     theEyeArray = theLpGBTeyeOpeningContainer.getOpticalGroup(cBoard->getId(), cOpticalGroup->getId())->getSummary<GenericDataArray<uint16_t, TIMEMAX, VOLTMAX>>();
                     uint8_t  EOMStatus   = flpGBTInterface->GetEOMStatus(cOpticalGroup->flpGBT);
                     uint16_t nAttempts   = 0;
 
