@@ -1,5 +1,5 @@
 /*!
-  \file                  RD53BERtest.h
+  \file                  RD53BERtest.cc
   \brief                 Implementaion of Bit Error Rate test
   \author                Mauro DINARDO
   \version               1.0
@@ -95,12 +95,15 @@ void BERtest::run()
             const uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
             static_cast<RD53Interface*>(this->fReadoutChipInterface)->StartPRBSpattern(cBoard);
 
-            std::vector<std::pair<uint16_t, uint16_t>> hybrid_id_chip_lane;
+            std::map<uint16_t, std::vector<uint8_t>> hybrid_id_chip_id_chip_lanes;
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid) hybrid_id_chip_lane.push_back(std::pair<uint16_t, uint16_t>(cHybrid->getId(), static_cast<RD53*>(cChip)->getChipLane()));
+                    for(const auto cChip: *cHybrid)
+                        for(const auto lane: static_cast<RD53*>(cChip)->laneConfig.outputLaneMapping)
+                            if(lane < static_cast<RD53*>(cChip)->laneConfig.nOutputLanes)
+                                hybrid_id_chip_id_chip_lanes[cHybrid->getId() << 8 | static_cast<RD53*>(cChip)->getChipLane()].push_back(lane);
 
-            const auto results = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, hybrid_id_chip_lane, frontendSpeed);
+            const auto results = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, hybrid_id_chip_id_chip_lanes, frontendSpeed);
 
             auto it = results.begin();
             for(const auto cOpticalGroup: *cBoard)
@@ -124,12 +127,15 @@ void BERtest::run()
 
             for(const auto cOpticalGroup: *cBoard)
             {
-                std::vector<std::pair<uint16_t, uint16_t>> hybrid_id_chip_lane;
+                std::map<uint16_t, std::vector<uint8_t>> hybrid_id_chip_id_chip_lanes;
                 for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid) hybrid_id_chip_lane.push_back(std::pair<uint16_t, uint16_t>(cHybrid->getId(), static_cast<RD53*>(cChip)->getChipLane()));
+                    for(const auto cChip: *cHybrid)
+                        for(const auto lane: static_cast<RD53*>(cChip)->laneConfig.outputLaneMapping)
+                            if(lane < static_cast<RD53*>(cChip)->laneConfig.nOutputLanes)
+                                hybrid_id_chip_id_chip_lanes[cHybrid->getId() << 8 | static_cast<RD53*>(cChip)->getChipLane()].push_back(lane);
 
                 static_cast<lpGBTInterface*>(flpGBTInterface)->StartPRBSpattern(cOpticalGroup->flpGBT);
-                const auto results = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, hybrid_id_chip_lane, frontendSpeed);
+                const auto results = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, hybrid_id_chip_id_chip_lanes, frontendSpeed);
 
                 auto it = results.begin();
                 for(const auto cHybrid: *cOpticalGroup)

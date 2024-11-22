@@ -1,6 +1,6 @@
 /*!
   \file                  RD53GainOptimization.h
-  \brief                 Implementaion of gain optimization
+  \brief                 Header of gain optimization
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -35,11 +35,10 @@ class GainOptimization : public Gain
         delete histos;
     }
 
-    void Running() override;
-    void Stop() override;
-    void ConfigureCalibration() override;
-    void sendData() override;
-
+    void   Running() override;
+    void   Stop() override;
+    void   ConfigureCalibration() override;
+    void   sendData() override;
     void   localConfigure(const std::string& histoFileName, int currentRun) override;
     void   run() override;
     void   draw(bool saveData = true) override;

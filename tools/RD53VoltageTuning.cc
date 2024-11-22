@@ -1,5 +1,5 @@
 /*!
-  \file                  RD53VoltageTuning.h
+  \file                  RD53VoltageTuning.cc
   \brief                 Implementaion of Bit Error Rate test
   \author                Mauro DINARDO
   \version               1.0
@@ -98,6 +98,11 @@ void VoltageTuning::run()
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theAnaContainer, init);
 
     auto RD53ChipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
+
+    // ####################
+    // # Pause monitoring #
+    // ####################
+    if(this->fDetectorMonitor != nullptr) this->fDetectorMonitor->pauseMonitoring();
 
     // ################################
     // # Prepare query and enable all #
@@ -323,6 +328,11 @@ void VoltageTuning::run()
     // # Restore query and enable all #
     // ################################
     fDetectorContainer->resetReadoutChipQueryFunction();
+
+    // #####################
+    // # Resume monitoring #
+    // #####################
+    if(this->fDetectorMonitor != nullptr) this->fDetectorMonitor->resumeMonitoring();
 }
 
 void VoltageTuning::draw(bool saveData)
