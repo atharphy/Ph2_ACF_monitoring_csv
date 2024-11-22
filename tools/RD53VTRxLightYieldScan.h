@@ -19,9 +19,9 @@
 typedef bool VTRxLightYieldScanHistograms;
 #endif
 
-// ##################
-// # BER test suite #
-// ##################
+// ###################
+// # VTRx test suite #
+// ###################
 class VTRxLightYieldScan : public CalibBase
 {
   public:

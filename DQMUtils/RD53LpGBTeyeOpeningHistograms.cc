@@ -25,7 +25,8 @@ void LpGBTeyeOpeningHistograms::book(TFile* theOutputFile, DetectorContainer& th
     // #####################################
     // # Make proper axis for secial cases #
     // #####################################
-    auto hInt2D = CanvasContainer<TH2F>("LpGBTeyeOpening", ("LpGBT Eyey Opening Scan (attenuation = " + std::to_string(lpGBTattenuation) + ")").c_str(), 64, 0, 63, 31, 0, 30);
+    auto hInt2D =
+        CanvasContainer<TH2F>("LpGBTeyeOpening", ("LpGBT Eyey Opening Scan (attenuation = " + std::to_string(lpGBTattenuation) + ")").c_str(), TIMEMAX, 0, TIMEMAX - 1, VOLTMAX, 0, VOLTMAX - 1);
     bookChipImplementer(theOutputFile, theDetectorStructure, Intensity2D, hInt2D, "Time (s)", "Volt (V)");
 
     AreHistoBooked = true;
@@ -38,7 +39,7 @@ bool LpGBTeyeOpeningHistograms::fill(std::string& inputStream)
     if(theIntensitySerialization.attachDeserializer(inputStream))
     {
         DetectorDataContainer fDetectorData =
-            theIntensitySerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, 64, 31>>(fDetectorContainer);
+            theIntensitySerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint16_t, TIMEMAX, VOLTMAX>>(fDetectorContainer);
         LpGBTeyeOpeningHistograms::fillIntensity(fDetectorData);
         return true;
     }
@@ -52,7 +53,7 @@ void LpGBTeyeOpeningHistograms::fillIntensity(const DetectorDataContainer& Inten
         {
             if(cOpticalGroup->hasSummary() == false) continue;
 
-            auto  theEyeArray     = cOpticalGroup->getSummary<GenericDataArray<uint16_t, 64, 31>>();
+            auto  theEyeArray     = cOpticalGroup->getSummary<GenericDataArray<uint16_t, TIMEMAX, VOLTMAX>>();
             auto* Intensity2DHist = Intensity2D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
             for(auto i = 0; i < Intensity2DHist->GetNbinsX(); i++)

@@ -16,6 +16,12 @@
 
 #include <TH2F.h>
 
+// #############
+// # CONSTANTS #
+// #############
+#define TIMEMAX 64 // Max value of time register
+#define VOLTMAX 31 // Max value of voltage register
+
 class LpGBTeyeOpeningHistograms : public DQMHistogramBase
 {
   public:
