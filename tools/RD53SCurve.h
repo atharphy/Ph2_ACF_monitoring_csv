@@ -1,6 +1,6 @@
 /*!
   \file                  RD53SCurve.h
-  \brief                 Implementaion of SCurve scan
+  \brief                 Header of SCurve scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -36,11 +36,10 @@ class SCurve : public CalibBase
         delete histos;
     }
 
-    void Running() override;
-    void Stop() override;
-    void ConfigureCalibration() override;
-    void sendData() override;
-
+    void   Running() override;
+    void   Stop() override;
+    void   ConfigureCalibration() override;
+    void   sendData() override;
     void   localConfigure(const std::string& histoFileName, int currentRun) override;
     void   run() override;
     void   draw(bool saveData = true) override;

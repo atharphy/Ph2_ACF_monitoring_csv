@@ -11,6 +11,7 @@
 #ifndef RD53VoltageTuning_H
 #define RD53VoltageTuning_H
 
+#include "MonitorUtils/DetectorMonitor.h"
 #include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
@@ -42,7 +43,6 @@ class VoltageTuning : public CalibBase
     void Stop() override;
     void ConfigureCalibration() override;
     void sendData() override;
-
     void localConfigure(const std::string& histoFileName, int currentRun) override;
     void run() override;
     void draw(bool saveData = true) override;
