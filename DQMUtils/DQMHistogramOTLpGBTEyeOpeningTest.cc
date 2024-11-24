@@ -60,7 +60,7 @@ void DQMHistogramOTLpGBTEyeOpeningTest::fillEyeOpening(DetectorDataContainer& th
             TH2I* theEyeOpeningHistogram = fEyeOpeningHystogramContainerMap[thePower].getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH2I>>().fTheHistogram;
             for(uint8_t cVoltageStep = 0; cVoltageStep < 31; cVoltageStep++)
             {
-                for(uint8_t cTimeStep = 0; cTimeStep < 64; cTimeStep++) { theEyeOpeningHistogram->SetBinContent(cTimeStep + 1, cVoltageStep + 1, theEyeArray[cTimeStep][cVoltageStep]); }
+                for(uint8_t cTimeStep = 0; cTimeStep < 64; cTimeStep++) { theEyeOpeningHistogram->SetBinContent(cTimeStep + 1, cVoltageStep + 1, theEyeArray.at(cTimeStep).at(cVoltageStep)); }
             }
         }
     }

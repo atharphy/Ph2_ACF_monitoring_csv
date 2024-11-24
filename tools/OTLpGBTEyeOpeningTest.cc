@@ -110,12 +110,12 @@ void OTLpGBTEyeOpeningTest::runEyeOpeningTest()
                         }
                         if(numberOfAttempts == maximumAllowedAttempts)
                         {
-                            theEyeArray[cTimeStep][cVoltageStep] = 0;
+                            theEyeArray.at(cTimeStep).at(cVoltageStep) = 0;
                             continue;
                         }
                         uint16_t cCounterValue = flpGBTInterface->GetEOMCounter(theOpticalGroup->flpGBT);
                         flpGBTInterface->StartEOM(theOpticalGroup->flpGBT, false);
-                        theEyeArray[cTimeStep][cVoltageStep] = cCounterValue;
+                        theEyeArray.at(cTimeStep).at(cVoltageStep) = cCounterValue;
                     }
                 }
             }

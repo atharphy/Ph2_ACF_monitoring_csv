@@ -102,9 +102,9 @@ std::vector<std::vector<uint32_t>> D19cDebugFWInterface::StubDebug(bool pWithTes
         std::vector<std::string> cOutputWords(0);
         for(size_t cIndex = 0; cIndex < 10; cIndex++)
         {
-            auto cWord = cWords[cLine * 10 + cIndex];
+            auto cWord = cWords.at(cLine * 10 + cIndex);
             // std::cout << cWord << " ";
-            lineWordVector[cLine].push_back(cWord);
+            lineWordVector.at(cLine).push_back(cWord);
             auto cString = std::bitset<32>(cWord).to_string();
             for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
         }
@@ -151,7 +151,7 @@ std::vector<std::string> D19cDebugFWInterface::ScopeStubLines(bool pWithTestPuls
         std::vector<std::string> cOutputWords(0);
         for(size_t cIndex = 0; cIndex < cNlines; cIndex++)
         {
-            auto cWord   = cWords[cLine * 10 + cIndex];
+            auto cWord   = cWords.at(cLine * 10 + cIndex);
             auto cString = std::bitset<32>(cWord).to_string();
             for(size_t cOffset = 0; cOffset < 4; cOffset++) { cOutputWords.push_back(cString.substr(cOffset * 8, 8)); }
         }

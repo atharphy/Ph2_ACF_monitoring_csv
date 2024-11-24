@@ -98,48 +98,23 @@ void OTPSADCCalibration::CalibrateBias()
 
                     LOG(INFO) << BOLDYELLOW << "Going to calibrate the ADC bias registers..." << RESET;
                     CalibrateChipBias(theChip, theVrefValue);
-
-                    theADCSlopeContainer.getObject(theChip->getBeBoardId())
-                        ->getObject(theChip->getOpticalGroupId())
-                        ->getObject(theChip->getHybridId())
-                        ->getObject(theChip->getId())
-                        ->getSummary<ADCSlope>()
-                        .fADC_GND               = theGroundValue;
                     uint32_t theADCBandgapValue = fReadoutChipInterface->readADCBandGap(theChip);
-                    theADCSlopeContainer.getObject(theChip->getBeBoardId())
-                        ->getObject(theChip->getOpticalGroupId())
-                        ->getObject(theChip->getHybridId())
-                        ->getObject(theChip->getId())
-                        ->getSummary<ADCSlope>()
-                        .fADC_VBG           = theADCBandgapValue;
                     float theBandgapVoltage = fReadoutChipInterface->getBandGapExpectedValue(theChip); // FIXME this should be the real bandgap value!!
-                    theADCSlopeContainer.getObject(theChip->getBeBoardId())
-                        ->getObject(theChip->getOpticalGroupId())
-                        ->getObject(theChip->getHybridId())
-                        ->getObject(theChip->getId())
-                        ->getSummary<ADCSlope>()
-                        .fMeasured_VBG = theBandgapVoltage;
                     float theSlope     = theBandgapVoltage / (theADCBandgapValue - theGroundValue);
                     float theOffset    = -theGroundValue * theSlope;
-                    theADCSlopeContainer.getObject(theChip->getBeBoardId())
-                        ->getObject(theChip->getOpticalGroupId())
-                        ->getObject(theChip->getHybridId())
-                        ->getObject(theChip->getId())
-                        ->getSummary<ADCSlope>()
-                        .fSlope = theSlope;
-                    theADCSlopeContainer.getObject(theChip->getBeBoardId())
-                        ->getObject(theChip->getOpticalGroupId())
-                        ->getObject(theChip->getHybridId())
-                        ->getObject(theChip->getId())
-                        ->getSummary<ADCSlope>()
-                        .fOffset = theOffset;
+
+                    auto& theADCinformation = theADCSlopeContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<ADCSlope>();
+                    theADCinformation.fADC_GND               = theGroundValue;
+                    theADCinformation.fADC_VBG           = theADCBandgapValue;
+                    theADCinformation.fMeasured_VBG = theBandgapVoltage;
+                    theADCinformation.fSlope = theSlope;
+                    theADCinformation.fOffset = theOffset;
 
                     std::map<std::string, float> theADCcalibrationMap;
                     static_cast<ReadoutChip*>(theChip)->setADCCalibrationValue("ADC_SLOPE", theSlope);
                     static_cast<ReadoutChip*>(theChip)->setADCCalibrationValue("ADC_OFFSET", theOffset);
                     // make sure test pads output is disabled
                     fReadoutChipInterface->disableTestPadsOutput(theChip);
-
                 } // chip
             }
         }
@@ -169,13 +144,13 @@ void OTPSADCCalibration::CalibrateChipBias(ReadoutChip* theChip, float theVrefVa
 {
     // The register table is < std::string register name, < uint8_t register default value, float register expected value>>
     auto theRegistersTable = fReadoutChipInterface->getBiasStructureDefaultTable(theChip);
+    float theADCLSB = fReadoutChipInterface->calculateADCLSB(theChip, theVrefValue);
     for(auto it = theRegistersTable.begin(); it != theRegistersTable.end(); it++)
     {
         std::string theRegisterName  = it->first;
         uint8_t     theDefaultValue  = it->second.first;
         float       theExpectedValue = it->second.second;
 
-        float theADCLSB = fReadoutChipInterface->calculateADCLSB(theChip, theVrefValue);
         fReadoutChipInterface->TuneDAC(theChip, theADCLSB, theExpectedValue, theRegisterName, theDefaultValue, false);
     }
 }

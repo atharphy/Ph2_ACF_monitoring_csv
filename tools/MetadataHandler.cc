@@ -212,7 +212,7 @@ void MetadataHandler::fillNameContainerWithChipIDs()
     if(fNameContainer == nullptr) return;
     for(auto cBoard: *fDetectorContainer)
     {
-        fNameContainer->getObject(cBoard->getId())->getSummary<std::string>() = cBoard->getConnectionUri();
+        fNameContainer->getObject(cBoard->getId())->getSummary<std::string, std::string>() = cBoard->getConnectionUri();
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)

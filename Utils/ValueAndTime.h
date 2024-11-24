@@ -7,11 +7,11 @@ template <typename T>
 class ValueAndTime
 {
   public:
-    ValueAndTime(T theValue, time_t theTime) : fValue(theValue), fTime(theTime) {}
+    ValueAndTime(T theValue, std::string theTime) : fValue(theValue), fTime(theTime) {}
     ValueAndTime() = default;
 
     T      fValue;
-    time_t fTime;
+    std::string fTime;
 
   private:
     friend class boost::serialization::access;

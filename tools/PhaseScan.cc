@@ -116,7 +116,7 @@ void PhaseScan::ScanPhase()
                                                     ->getObject(cOpticalGroup->getId())
                                                     ->getObject(cHybrid->getId())
                                                     ->getObject(cChip->getId())
-                                                    ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
+                                                    ->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(cTDCVal) += 1;
                                                 NPclus += 1;
                                             }
                                         }
@@ -131,7 +131,7 @@ void PhaseScan::ScanPhase()
                                                     ->getObject(cOpticalGroup->getId())
                                                     ->getObject(cHybrid->getId())
                                                     ->getObject(cChip->getId())
-                                                    ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDCVal] += 1;
+                                                    ->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(cTDCVal) += 1;
                                                 NSclus += 1;
                                             }
                                         }

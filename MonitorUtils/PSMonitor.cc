@@ -68,6 +68,6 @@ void PSMonitor::readChipMonitorValue(const std::string& monitorValueName, Ph2_Hw
     if(monitorValueName == "temp") { monitorValue = thePSInterface->measureTemperature(theChip); }
     else { monitorValue = thePSInterface->readADCVoltage(theChip, monitorValueName); }
 
-    ValueAndTime<float> theRegisterAndTime(monitorValue, getTimeStamp());
+    ValueAndTime<float> theRegisterAndTime(monitorValue, getTimeStampString());
     theDataContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<ValueAndTime<float>>() = theRegisterAndTime;
 }

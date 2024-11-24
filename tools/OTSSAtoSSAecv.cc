@@ -78,7 +78,7 @@ void OTSSAtoSSAecv::runSSAtoSSAecvScan()
                 {
                     for(auto theChip: *theHybrid)
                     {
-                        static_cast<SSA2Interface*>(fReadoutChipInterface)->WriteChipRegBits(theChip, "SLVS_pad_current_Lateral", slvsCurrent | (slvsCurrent << 3), "mask_peri_D", 0x3F);
+                        static_cast<PSInterface*>(fReadoutChipInterface)->fTheSSA2Interface->WriteChipRegBits(theChip, "SLVS_pad_current_Lateral", slvsCurrent | (slvsCurrent << 3), "mask_peri_D", 0x3F);
                     }
                 }
             }
@@ -108,7 +108,7 @@ void OTSSAtoSSAecv::runSSAtoSSAecvScan()
                             {
                                 if(theChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
-                                    auto theSSAInterface = static_cast<SSA2Interface*>(fReadoutChipInterface);
+                                    auto theSSAInterface = static_cast<PSInterface*>(fReadoutChipInterface)->fTheSSA2Interface;
                                     theSSAInterface->WriteChipRegBits(theChip, "LateralRX_sampling", (clockEdge << 3) | (clockEdge << 7), "mask_peri_D", 0x88);
                                 }
                             }

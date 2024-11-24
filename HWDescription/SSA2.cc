@@ -74,10 +74,9 @@ void SSA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^Ring_oscillator$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ADC_out$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^bist_output$"), RegisterType::ReadOnly));
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^AC_ReadCounter$"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^AC_ReadCounter.*"), RegisterType::Utility));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^status_reg$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^Fuse_Value_b[0-3]$"), RegisterType::ReadOnly));
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^AC_ReadCounter[LM]SB_S.*"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^status_reg$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex(".*_Cnt_[LH]$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^bist_output$"), RegisterType::ReadOnly));
@@ -94,7 +93,6 @@ void SSA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^StripControl2$"), RegisterType::Utility));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^THTRIMMING$"), RegisterType::Utility));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^DigCalibPattern_[LH]$"), RegisterType::Utility));
-    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^AC_ReadCounter[LM]SB$"), RegisterType::ReadOnly));
 }
 
 void SSA2::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg)

@@ -18,6 +18,7 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/ValueAndTime.h"
+#include "Parser/DetectorMonitorConfig.h"
 
 using namespace Ph2_HwDescription;
 

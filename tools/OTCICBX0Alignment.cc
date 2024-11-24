@@ -93,7 +93,7 @@ void OTCICBX0Alignment::BX0Alignment()
                 // std::cout << " the FE to use is " << +theFEtoUse->getId() << std::endl;
                 auto    theFECICmapping = cCic->getMapping();
                 uint8_t theIndex        = (theFEtoUse->getFrontEndType() == FrontEndType::MPA2) ? theFEtoUse->getId() - 8 : theFEtoUse->getId();
-                uint8_t theFEId         = theFECICmapping[theIndex];
+                uint8_t theFEId         = theFECICmapping.at(theIndex);
                 // configure word alignment pattern on FEs
                 std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getBX0AlignmentPatterns();
                 uint8_t              pLine              = 0;
@@ -101,7 +101,7 @@ void OTCICBX0Alignment::BX0Alignment()
                 fCicInterface->PrepareForAutomatedBX0Alignment(cCic, cAlignmentPatterns, pLine, theFEId);
                 for(uint8_t cIndex = 0; cIndex < (uint8_t)cAlignmentPatterns.size(); cIndex += 1)
                 {
-                    LOG(INFO) << BOLDBLUE << "Calibration pattern set on readout chip on stub line " << +cIndex << " set to " << std::bitset<8>(cAlignmentPatterns[cIndex]) << RESET;
+                    LOG(INFO) << BOLDBLUE << "Calibration pattern set on readout chip on stub line " << +cIndex << " set to " << std::bitset<8>(cAlignmentPatterns.at(cIndex)) << RESET;
                 }
 
                 // std::cout << " BXO alignment pattern for chip " << +theFEtoUse->getId() << std::endl;
@@ -194,7 +194,7 @@ void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
                     // std::cout << " the FE to use is " << +theFEtoUse->getId() << std::endl;
                     auto    theFECICmapping = cCic->getMapping();
                     uint8_t theIndex        = (theFEtoUse->getFrontEndType() == FrontEndType::MPA2) ? theFEtoUse->getId() - 8 : theFEtoUse->getId();
-                    uint8_t theFEId         = theFECICmapping[theIndex];
+                    uint8_t theFEId         = theFECICmapping.at(theIndex);
                     // configure word alignment pattern on FEs
                     std::vector<uint8_t> cAlignmentPatterns = fReadoutChipInterface->getBX0AlignmentPatterns();
                     uint8_t              pLine              = 0;
@@ -202,7 +202,7 @@ void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
                     fCicInterface->PrepareForAutomatedBX0Alignment(cCic, cAlignmentPatterns, pLine, theFEId);
                     for(uint8_t cIndex = 0; cIndex < (uint8_t)cAlignmentPatterns.size(); cIndex += 1)
                     {
-                        LOG(INFO) << BOLDBLUE << "Calibration pattern set on readout chip on stub line " << +cIndex << " set to " << std::bitset<8>(cAlignmentPatterns[cIndex]) << RESET;
+                        LOG(INFO) << BOLDBLUE << "Calibration pattern set on readout chip on stub line " << +cIndex << " set to " << std::bitset<8>(cAlignmentPatterns.at(cIndex)) << RESET;
                     }
 
                     LOG(INFO) << BOLDMAGENTA << " BXO alignment pattern for hybrid " << +theHybrid->getId() << " on chip " << +theFEtoUse->getId() << " with retime pix " << +theRetimePix << RESET;
@@ -230,9 +230,9 @@ void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
                         theBX0AlignmentDelayVsRetimePixContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<uint16_t>>();
 
                     // bool  cSuccessAlign          = fCicInterface->AutomatedBX0Alignment(cCic, cAlignmentPatterns);
-                    theBX0AlignmentValues[theRetimePix] = fCicInterface->retrieveExternalBX0AlignmentValue(cCic);
-                    // std::cout << " theBX0AlignmentValues[theRetimePix] " << theBX0AlignmentValues[theRetimePix] << std::endl;
-                    cSuccessAlign = cSuccessAlign && fCicInterface->ConfigureExternalBX0Delay(cCic, theBX0AlignmentValues[theRetimePix]);
+                    theBX0AlignmentValues.at(theRetimePix) = fCicInterface->retrieveExternalBX0AlignmentValue(cCic);
+                    // std::cout << " theBX0AlignmentValues.at(theRetimePix) " << theBX0AlignmentValues.at(theRetimePix) << std::endl;
+                    cSuccessAlign = cSuccessAlign && fCicInterface->ConfigureExternalBX0Delay(cCic, theBX0AlignmentValues.at(theRetimePix));
                     if(cSuccessAlign) { LOG(INFO) << BOLDBLUE << "Automated BX0 alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET; }
                     else
                     {

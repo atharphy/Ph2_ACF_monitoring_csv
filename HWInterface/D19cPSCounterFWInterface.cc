@@ -134,20 +134,39 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
 
         for(size_t dataCounterPacketNumber = 1; dataCounterPacketNumber < NSSACHANNELS * (NMPAROWS + 1) + 1; ++dataCounterPacketNumber)
         {
-            for(auto theHybrid: *theOpticalGroup)
+            for(uint8_t hybridId = 0; hybridId < 2; ++hybridId) // the countes will be send out independetly from the number of enabled hybrids
             {
-            
                 uint8_t pixelCol = (dataCounterPacketNumber - 1)%120;
                 uint8_t pixelRow = (dataCounterPacketNumber - 1)/120;
 
                 size_t hybridDataSize = 8;
-                size_t hybridDataStart = (dataCounterPacketNumber * 2 + (1 - theHybrid->getId() % 2)) * hybridDataSize;
-                auto startPointer = moduleData.begin() + hybridDataStart;
-                std::vector<uint32_t> hybridPacket = {*(startPointer+3), *(startPointer+2), *(startPointer+1), *(startPointer+0), *(startPointer+7), *(startPointer+6), *(startPointer+5), *(startPointer+4)};
-                
-                uint8_t numberOfCounters = (hybridPacket[5] >> 8) & 0x3F;
-                if(numberOfCounters < 8)
+                size_t hybridDataStart = (dataCounterPacketNumber * 2 + (1 - hybridId)) * hybridDataSize;
+                std::vector<uint32_t> hybridPacket = {moduleData.at(hybridDataStart+3), moduleData.at(hybridDataStart+2), moduleData.at(hybridDataStart+1), moduleData.at(hybridDataStart+0), moduleData.at(hybridDataStart+7), moduleData.at(hybridDataStart+6), moduleData.at(hybridDataStart+5), moduleData.at(hybridDataStart+4)};
+                fData.insert(fData.end(), hybridPacket.begin(), hybridPacket.end());
+
+                Hybrid* theHybrid = nullptr;
+                try
                 {
+                    theHybrid = theOpticalGroup->getObject(hybridId + 2*theOpticalGroup->getId());
+                }
+                catch(const std::exception& e)
+                {
+                    continue; // this hybrid is not enabled
+                }
+                
+                uint8_t numberOfCounters = (hybridPacket.at(5) >> 8) & 0x3F;
+                uint8_t numberOfExpectedCounters = 0;
+                if(theHybrid->size() == 16 ) numberOfExpectedCounters = 8;
+                else
+                {
+                    for(auto theChip: *theHybrid)
+                    {
+                        if(theChip->getFrontEndType() == FrontEndType::MPA2) ++numberOfExpectedCounters;
+                    }
+                }
+                if(numberOfCounters < numberOfExpectedCounters)
+                {
+                    
                     std::vector<bool> packetFound(8, false);
                     for(uint8_t counterNumber = 8 - numberOfCounters; counterNumber < 8; ++counterNumber)
                     {
@@ -160,33 +179,32 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
                         uint32_t counterPacket;
                         if(firstWord == secondWord)
                         {
-                            counterPacket = (hybridPacket[firstWord] >> (counterStart % 32) ) & 0x1FFFFF;
+                            counterPacket = (hybridPacket.at(firstWord) >> (counterStart % 32) ) & 0x1FFFFF;
                         }
                         else
                         {
-                            counterPacket = (hybridPacket[firstWord] >> (counterStart % 32) | (hybridPacket[secondWord] << (32 - counterStart % 32))) & 0x1FFFFF;
+                            counterPacket = (hybridPacket.at(firstWord) >> (counterStart % 32) | (hybridPacket.at(secondWord) << (32 - counterStart % 32))) & 0x1FFFFF;
                         }
 
-                        packetFound[(counterPacket >> 15) & 0x7] = true;
+                        packetFound.at((counterPacket >> 15) & 0x7) = true;
                     }
 
                     for(auto theChip: *theHybrid)
                     {
                         if((pixelRow < 16 && theChip->getFrontEndType() == FrontEndType::SSA2) || (pixelRow >= 16 && theChip->getFrontEndType() == FrontEndType::MPA2)) continue;
-                        uint8_t idForCIC = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic->getMapping()[theChip->getId() % 8];
-                        if(!packetFound[idForCIC])
+                        uint8_t idForCIC = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic->getMapping().at(theChip->getId() % 8);
+                        if(!packetFound.at(idForCIC))
                         {
                             theMissingCounterContainer.getChip(theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::vector<std::pair<uint8_t, uint8_t>>>().push_back({pixelRow, pixelCol});
                         }
                     }
                 }
-                else if(numberOfCounters>8)
+                else if(numberOfCounters>numberOfExpectedCounters)
                 {
                     LOG(ERROR) << ERROR_FORMAT << "Number of counters = " << +numberOfCounters << " greater than 8, not able to handle this case" << RESET;
                     throw std::runtime_error("Number of counters greater than 8");
                 }
 
-                fData.insert(fData.end(), hybridPacket.begin(), hybridPacket.end());
             }
         }
     }
@@ -206,7 +224,7 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
                 const auto& missingChannelVector = theMissingCounterContainer.getChip(theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::vector<std::pair<uint8_t, uint8_t>>>();
                 if(missingChannelVector.size() == 0) continue;
                 
-                uint8_t idForCIC = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic->getMapping()[theChip->getId() % 8];
+                uint8_t idForCIC = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic->getMapping().at(theChip->getId() % 8);
                 std::vector<ChipRegItem> registersToRead;
                 for(const auto& missingChannel: missingChannelVector)
                 {
@@ -220,11 +238,11 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
                 uint16_t registerCounter = 0;
                 for(const auto& missingChannel: missingChannelVector)
                 {
-                    uint16_t counterValue = registersToRead[registerCounter*2].fValue << 8 | registersToRead[registerCounter*2 + 1].fValue;
+                    uint16_t counterValue = registersToRead.at(registerCounter*2).fValue << 8 | registersToRead.at(registerCounter*2 + 1).fValue;
                     uint32_t fakeStubPacket = (7 << 19) | (idForCIC) << 16 | ((counterValue & 0x7F) << 8) | ((counterValue >> 7) & 0x7F);
 
                     uint32_t channelOffset = numberOfParsedOpticalGroups * NSSACHANNELS * (NMPAROWS + 1) + missingChannel.first * 120 + missingChannel.second + 256 * theHybrid->getId();
-                    uint8_t numberOfCounters = (fData[channelOffset + 5] >> 8) & 0x3F;
+                    uint8_t numberOfCounters = (fData.at(channelOffset + 5) >> 8) & 0x3F;
 
                     uint8_t counterNumber = 8 - (numberOfCounters + 1);
 
@@ -238,12 +256,12 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
 
                     if(firstWord == secondWord)
                     {
-                        fData[channelOffset + firstWord] = (fData[channelOffset + firstWord] & (~(mask << (counterStart % 32)))) | ((fakeStubPacket & mask) << (counterStart % 32));
+                        fData.at(channelOffset + firstWord) = (fData.at(channelOffset + firstWord) & (~(mask << (counterStart % 32)))) | ((fakeStubPacket & mask) << (counterStart % 32));
                     }
                     else
                     {
-                        fData[channelOffset + firstWord]  = (fData[channelOffset + firstWord] & (~(mask << (counterStart % 32)))) | ((fakeStubPacket & mask) << (counterStart % 32));
-                        fData[channelOffset + secondWord] = (fData[channelOffset + firstWord] & (~(mask >> (32 - counterStart % 32)))) | ((fakeStubPacket & mask) >> (32 - counterStart % 32));
+                        fData.at(channelOffset + firstWord)  = (fData.at(channelOffset + firstWord) & (~(mask << (counterStart % 32)))) | ((fakeStubPacket & mask) << (counterStart % 32));
+                        fData.at(channelOffset + secondWord) = (fData.at(channelOffset + firstWord) & (~(mask >> (32 - counterStart % 32)))) | ((fakeStubPacket & mask) >> (32 - counterStart % 32));
                     }
 
                     ++registerCounter;
@@ -282,6 +300,7 @@ bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* theBoard)
     firstListOfBoardRegisters.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto", 1});
     firstListOfBoardRegisters.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.select_even", 1});
     firstListOfBoardRegisters.push_back({"fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", 0});
+    firstListOfBoardRegisters.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", 1});
     firstListOfBoardRegisters.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren", 0});
     firstListOfBoardRegisters.push_back({"fc7_daq_cnfg.sync_block.enable", 0});
     firstListOfBoardRegisters.push_back({"fc7_daq_cnfg.ddr3_debug.stub_enable", 0});
@@ -365,7 +384,7 @@ bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* theBoard)
                         uint32_t startPatternNotFound = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.start_pattern_not_found");
                         if(startPatternNotFound == 1)
                         {
-                            LOG(WARNING) << WARNING_FORMAT << "Start pattern not found for OpticalGroup " << +theOpticalGroup->getId() << " hybrid " << theHybrid->getId() % 2 << RESET;
+                            LOG(DEBUG) << WARNING_FORMAT << "Start pattern not found for OpticalGroup " << +theOpticalGroup->getId() << " hybrid " << theHybrid->getId() % 2 << RESET;
                             allStartPatternFound = false;
                         }
                     }

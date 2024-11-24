@@ -364,7 +364,7 @@ bool KIRA::check_channel_illumination(BeBoard* pBoard, DetectorDataContainer& pC
                 // count occupancy in all channels
                 auto cContainer =
                     pContainer.getObject(pBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<GenericDataArray<float, VECSIZE>>();
-                for(uint16_t cIndx = 0; cIndx < 127; cIndx++) { cSum += cContainer[cIndx]; }
+                for(uint16_t cIndx = 0; cIndx < 127; cIndx++) { cSum += cContainer.at(cIndx); }
             }
         }
         if(cSum / (254. * fNReadbackEvents) == 1) { cChipCovered = true; }
@@ -409,7 +409,7 @@ DetectorDataContainer KIRA::analyseEvents(BeBoard* pBoard, const std::vector<Eve
                                 ->getObject(cOpticalGroup->getId())
                                 ->getObject(cHybrid->getId())
                                 ->getObject(cChip->getId())
-                                ->getSummary<GenericDataArray<float, VECSIZE>>()[int(cHit.second / 2)] += 1;
+                                ->getSummary<GenericDataArray<float, VECSIZE>>().at(int(cHit.second / 2)) += 1;
                         }
                     }
                 } // chip vector

@@ -226,8 +226,8 @@ void DQMHistogramKira::fillBottomSensorPlots(DetectorDataContainer& pHitContaine
                         pHitContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<GenericDataArray<float, VECSIZE>>();
                     for(uint32_t cIndx = 0; cIndx < 127; cIndx++)
                     {
-                        cKIRAHitsBottomSensor->SetBinContent(cIndx + 1, cNhits[cIndx] / (1.0 * pNevents));
-                        cKIRAHitsHybridBottomSensor->SetBinContent(127 * chip->getId() + cIndx + 1, 1 - cNhits[cIndx] / (1.0 * pNevents));
+                        cKIRAHitsBottomSensor->SetBinContent(cIndx + 1, cNhits.at(cIndx) / (1.0 * pNevents));
+                        cKIRAHitsHybridBottomSensor->SetBinContent(127 * chip->getId() + cIndx + 1, 1 - cNhits.at(cIndx) / (1.0 * pNevents));
                     }
                 }
             }
@@ -265,8 +265,8 @@ void DQMHistogramKira::fillTopSensorPlots(DetectorDataContainer& pHitContainer, 
                         pHitContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<GenericDataArray<float, VECSIZE>>();
                     for(uint32_t cIndx = 0; cIndx < 127; cIndx++)
                     {
-                        cKIRAHitsTopSensor->SetBinContent(cIndx + 1, cNhits[cIndx] / (1.0 * pNevents));
-                        cKIRAHitsHybridTopSensor->SetBinContent(127 * chip->getId() + cIndx + 1, 1 - cNhits[cIndx] / (1.0 * pNevents));
+                        cKIRAHitsTopSensor->SetBinContent(cIndx + 1, cNhits.at(cIndx) / (1.0 * pNevents));
+                        cKIRAHitsHybridTopSensor->SetBinContent(127 * chip->getId() + cIndx + 1, 1 - cNhits.at(cIndx) / (1.0 * pNevents));
                     }
                 }
             }
@@ -317,7 +317,7 @@ void DQMHistogramKira::fillSensorPlotsCalibration(DetectorDataContainer& pHitCon
                                           ->getObject(hybrid->getId())
                                           ->getObject(cChip->getId())
                                           ->getSummary<GenericDataArray<float, VECSIZE>>();
-                        for(uint32_t cIndx = 0; cIndx < 127; cIndx++) { cHitMap->SetBinContent(cBinX, 127 * cChip->getId() + cIndx + 1, cNhits[cIndx] / (1.0 * pNevents)); }
+                        for(uint32_t cIndx = 0; cIndx < 127; cIndx++) { cHitMap->SetBinContent(cBinX, 127 * cChip->getId() + cIndx + 1, cNhits.at(cIndx) / (1.0 * pNevents)); }
                     }
                 }
             }

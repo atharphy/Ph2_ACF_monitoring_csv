@@ -141,18 +141,18 @@ void OTalignStubPackage::AlignStubPackage()
             // retrieve bunch crossing id for all events
             for(size_t eventNumber = 0; eventNumber < numberOfEvents; ++eventNumber)
             {
-                auto theEvent = theEventVector[eventNumber];
+                auto theEvent = theEventVector.at(eventNumber);
                 for(auto theOpticalGroup: *theBoard)
                 {
                     for(auto theHybrid: *theOpticalGroup)
                     {
                         auto& eventBxIdVector        = theBunchCrossingIdContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<uint16_t>>();
-                        eventBxIdVector[eventNumber] = theEvent->BxId(theHybrid->getId());
+                        eventBxIdVector.at(eventNumber) = theEvent->BxId(theHybrid->getId());
                         if(eventNumber > numberOfEventsToSkip)
                         {
                             auto& bxIdDifferenceVector =
-                                theBunchCrossingIdDifferenceContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<int16_t>>();
-                            bxIdDifferenceVector[eventNumber - 1 - numberOfEventsToSkip] = eventBxIdVector[eventNumber] - eventBxIdVector[eventNumber - 1];
+                                theBunchCrossingIdDifferenceContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<uint16_t>>();
+                            bxIdDifferenceVector.at(eventNumber - 1 - numberOfEventsToSkip) = eventBxIdVector.at(eventNumber) - eventBxIdVector.at(eventNumber - 1);
                         }
                     }
                 }
@@ -163,7 +163,7 @@ void OTalignStubPackage::AlignStubPackage()
                 for(auto theHybrid: *theOpticalGroup)
                 {
                     auto theBunchCrossingIdDifference =
-                        theBunchCrossingIdDifferenceContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<int16_t>>();
+                        theBunchCrossingIdDifferenceContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<uint16_t>>();
                     // std::cout << "Hybrid id = " << theHybrid->getId() << std::endl;
                     // for(auto bxIdDifference: theBunchCrossingIdDifference) std::cout << bxIdDifference << " ";
                     // std::cout << std::endl;
@@ -179,8 +179,8 @@ void OTalignStubPackage::AlignStubPackage()
                     // remove duplicate
                     std::sort(theBunchCrossingIdDifference.begin(), theBunchCrossingIdDifference.end());
                     theBunchCrossingIdDifference.erase(unique(theBunchCrossingIdDifference.begin(), theBunchCrossingIdDifference.end()), theBunchCrossingIdDifference.end());
-                    bool isSameAndCorrectBx = theBunchCrossingIdDifference.size() == 1 && theBunchCrossingIdDifference[0] == numberOfClockCyclesBetweenTwoConsecutiveTriggers;
-                    theBestPackageDelayContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<bool>>()[thePackageDelay] = isSameAndCorrectBx;
+                    bool isSameAndCorrectBx = theBunchCrossingIdDifference.size() == 1 && theBunchCrossingIdDifference.at(0) == numberOfClockCyclesBetweenTwoConsecutiveTriggers;
+                    theBestPackageDelayContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<bool>>().at(thePackageDelay) = isSameAndCorrectBx;
                 }
             }
         }
@@ -217,9 +217,9 @@ void OTalignStubPackage::AlignStubPackage()
                 }
 
                 if(theOpticalGroup->getId() < 10)
-                    bestPackageDelayLink0Link9 = (hybridBestPackageDelay[0] << theOpticalGroup->getId() % 10 * 3) | bestPackageDelayLink0Link9;
+                    bestPackageDelayLink0Link9 = (hybridBestPackageDelay.at(0) << theOpticalGroup->getId() % 10 * 3) | bestPackageDelayLink0Link9;
                 else
-                    bestPackageDelayLink10Link11 = (hybridBestPackageDelay[0] << theOpticalGroup->getId() % 10 * 3) | bestPackageDelayLink10Link11;
+                    bestPackageDelayLink10Link11 = (hybridBestPackageDelay.at(0) << theOpticalGroup->getId() % 10 * 3) | bestPackageDelayLink10Link11;
             }
         }
 

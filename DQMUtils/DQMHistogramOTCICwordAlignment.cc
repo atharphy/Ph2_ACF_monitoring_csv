@@ -66,7 +66,7 @@ void DQMHistogramOTCICwordAlignment::book(TFile* theOutputFile, DetectorContaine
                 TH2I* wordAlignmentDelaPhaseHistogram = hybrid->getSummary<HistContainer<TH2I>>().fTheHistogram;
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
-                    for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS; cLineId++) { wordAlignmentDelaPhaseHistogram->SetBinContent(chipId + 1, cLineId + 1, -1); }
+                    for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS - 1; cLineId++) { wordAlignmentDelaPhaseHistogram->SetBinContent(chipId + 1, cLineId + 1, -1); }
                 }
             }
         }
@@ -90,9 +90,9 @@ void DQMHistogramOTCICwordAlignment::fillWordAlignmentDelay(DetectorDataContaine
 
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
-                    for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS; cLineId++)
+                    for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS - 1; cLineId++)
                     {
-                        wordAlignmentDelaPhaseHistogram->SetBinContent(chipId + 1, cLineId + 1, theWordAlignmentDelayVector[chipId][cLineId]);
+                        wordAlignmentDelaPhaseHistogram->SetBinContent(chipId + 1, cLineId + 1, theWordAlignmentDelayVector.at(chipId).at(cLineId));
                     }
                 }
             }

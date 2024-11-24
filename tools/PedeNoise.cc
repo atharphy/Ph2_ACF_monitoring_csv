@@ -392,9 +392,6 @@ void PedeNoise::Validate()
                                 {
                                     if(fWithCBC)
                                     {
-                                        // char cRegName[11];
-                                        // sprintf(cRegName, "Channel%03d", iChan + 1);
-                                        // std::string cRegName = "Channel" + (boost::format("%|03|") % (col + 1)).str();
                                         std::ostringstream oss;
                                         oss << "Channel" << std::setw(3) << std::setfill('0') << (col + 1);
                                         std::string cRegName = oss.str();
@@ -402,9 +399,6 @@ void PedeNoise::Validate()
                                     }
                                     if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                     {
-                                        // char cRegName[17];
-                                        // sprintf(cRegName, "THTRIMMING_S%03d", iChan + 1);
-                                        // std::string cRegName = "THTRIMMING_S" + (boost::format("%|03|") % (col + 1)).str();
                                         std::string cRegName = "THTRIMMING_S" + std::to_string(col + 1);
                                         cRegVec.push_back({cRegName, 0x1F});
                                     }
@@ -591,8 +585,8 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
             }
 #endif
 
-            auto cStripDistanceFromTarget = std::fabs(std::min(cStripGlobalOccupancy, cMaxOccupancy) - (cLimits[cCounter]));
-            auto cPixelDistanceFromTarget = std::fabs(std::min(cPixelGlobalOccupancy, cMaxOccupancy) - (cLimits[cCounter]));
+            auto cStripDistanceFromTarget = std::fabs(std::min(cStripGlobalOccupancy, cMaxOccupancy) - (cLimits.at(cCounter)));
+            auto cPixelDistanceFromTarget = std::fabs(std::min(cPixelGlobalOccupancy, cMaxOccupancy) - (cLimits.at(cCounter)));
 
             if(fWithCBC || fWithSSA)
             {
@@ -655,12 +649,14 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
                 if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign because threshold limit was reached .." << RESET; }
             }
         } while(!cLimitFound);
+        
         cCounter++;
-        cStripValue = pStripStartValue + cSigns[cCounter];
-        cPixelValue = pPixelStartValue + cSigns[cCounter];
+        cStripValue = pStripStartValue + cSign;
+        cPixelValue = pPixelStartValue + cSign;
     }
-    // this->HttpServerProcess();
+    
     LOG(DEBUG) << YELLOW << "Found minimal and maximal occupancy " << cMinBreakCount << " times, SCurves finished! " << RESET;
+    
 }
 void PedeNoise::extractPedeNoise()
 {
@@ -876,7 +872,7 @@ void PedeNoise::extractPedeNoise()
                 for(auto theChip: *theHybrid)
                 {
                     const auto& noiseAndThreshold =
-                        fThresholdAndNoiseContainer->getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<ThresholdAndNoise>();
+                        fThresholdAndNoiseContainer->getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<ThresholdAndNoise, ThresholdAndNoise>();
                     theChip->setAverageNoise(noiseAndThreshold.fNoise);
                 }
             }
@@ -890,22 +886,22 @@ void PedeNoise::producePedeNoisePlots()
     fDQMHistogramPedeNoise.fillPedestalAndNoisePlots(*fThresholdAndNoiseContainer);
 
     // Storing noise and pedestal average and RMS values on the summaryTree
-    for(auto board: *fThresholdAndNoiseContainer)
-    {
-        for(auto opticalGroup: *board)
-        {
-            for(auto module: *opticalGroup)
-            {
-                for(auto chip: *module)
-                {
-                    fillSummaryTree("AvgNoiseSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fNoise);          // For GUI summaryTree
-                    fillSummaryTree("StDvNoiseSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fNoiseError);    // For GUI summaryTree
-                    fillSummaryTree("AvgPedeSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fThreshold);       // For GUI summaryTree
-                    fillSummaryTree("StDvPedeSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise>().fThresholdError); // For GUI summaryTree
-                }
-            }
-        }
-    }
+    // for(auto board: *fThresholdAndNoiseContainer)
+    // {
+    //     for(auto opticalGroup: *board)
+    //     {
+    //         for(auto module: *opticalGroup)
+    //         {
+    //             for(auto chip: *module)
+    //             {
+    //                 fillSummaryTree("AvgNoiseSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fNoise);          // For GUI summaryTree
+    //                 fillSummaryTree("StDvNoiseSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fNoiseError);    // For GUI summaryTree
+    //                 fillSummaryTree("AvgPedeSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThreshold);       // For GUI summaryTree
+    //                 fillSummaryTree("StDvPedeSSA" + std::to_string(chip->getId()), chip->getSummary<ThresholdAndNoise, ThresholdAndNoise>().fThresholdError); // For GUI summaryTree
+    //             }
+    //         }
+    //     }
+    // }
 
 #else
     if(fDQMStreamerEnabled)

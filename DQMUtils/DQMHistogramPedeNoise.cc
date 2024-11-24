@@ -158,7 +158,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         HistContainer<TH1F> theTH1FHybridPixelNoiseContainer("HybridPixelNoiseDistribution", "HybridPixelNoise", fNPixelChannels * 8, -0.5, float(fNPixelChannels) * 8 - 0.5);
         RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridPixelNoiseHistograms, theTH1FHybridPixelNoiseContainer);
         //
-        HistContainer<TH1F> theTH1FChipPixelNoiseContainer("NoiseDistribution", "NoiseDistribution", 200, 0., 20.);
+        HistContainer<TH1F> theTH1FChipPixelNoiseContainer("NoiseDistribution", "NoiseDistribution", 200, -0.5, 20.);
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelNoiseHistograms, theTH1FChipPixelNoiseContainer);
         // 1D pixel noise
         HistContainer<TH1F> theTH1FChannelPixelNoiseContainer("ChannelNoiseDistribution", "ChannelNoise", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
@@ -354,7 +354,13 @@ void DQMHistogramPedeNoise::process()
                             float maxY = (fWithSSA) ? 254.5 : 1023.5;
                             cChipStripSCurveHist->GetYaxis()->SetRangeUser(-0.5, maxY);
                             TH1D* cTmp = cChipStripSCurveHist->ProjectionY();
-                            cChipStripSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0.)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.)) + 10);
+
+                            float minLimit = cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0.)) - 10;
+                            float maxLimit = cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.)) + 10;
+                            minLimit = minLimit < cChipStripSCurveHist->GetYaxis()->GetXmin() ? cChipStripSCurveHist->GetYaxis()->GetXmin() : minLimit;
+                            maxLimit = maxLimit > cChipStripSCurveHist->GetYaxis()->GetXmax() ? cChipStripSCurveHist->GetYaxis()->GetXmax() : maxLimit;
+
+                            cChipStripSCurveHist->GetYaxis()->SetRangeUser(minLimit, maxLimit);
                             delete cTmp;
                             cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 2);
                             cChipStripSCurveHist->SetStats(false);
@@ -379,7 +385,12 @@ void DQMHistogramPedeNoise::process()
 
                             cChipPixelSCurveHist->GetYaxis()->SetRangeUser(-0.5, 254.5);
                             TH1D* cTmp = cChipPixelSCurveHist->ProjectionY();
-                            cChipPixelSCurveHist->GetYaxis()->SetRangeUser(cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0)) - 10, cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.)) + 10);
+                            float minLimit = cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0.)) - 10;
+                            float maxLimit = cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.)) + 10;
+                            minLimit = minLimit < cChipPixelSCurveHist->GetYaxis()->GetXmin() ? cChipPixelSCurveHist->GetYaxis()->GetXmin() : minLimit;
+                            maxLimit = maxLimit > cChipPixelSCurveHist->GetYaxis()->GetXmax() ? cChipPixelSCurveHist->GetYaxis()->GetXmax() : maxLimit;
+
+                            cChipPixelSCurveHist->GetYaxis()->SetRangeUser(minLimit, maxLimit);
                             // cSCurveHist->GetZaxis()->SetRangeUser(0,1.);
                             delete cTmp;
                             cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 2);

@@ -109,7 +109,7 @@ void CicInterface::CheckConfig(Chip* pChip)
             if(cIter == fReadBackErrorMap.end())
                 fReadBackErrorMap[cRegItem.fAddress] = 1;
             else
-                fReadBackErrorMap[cRegItem.fAddress] = fReadBackErrorMap[cRegItem.fAddress] + 1;
+                fReadBackErrorMap.at(cRegItem.fAddress) = fReadBackErrorMap.at(cRegItem.fAddress) + 1;
             fReadBackErrors++;
         }
     }
@@ -188,8 +188,8 @@ bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16
     setBoard(pChip->getBeBoardId());
     // LOG(DEBUG) << BOLDMAGENTA << "CicInterface::WriteChipReg trying to write to register 0x" << pRegNode << RESET;
     ChipRegMap cRegMap       = pChip->getRegMap();
-    cRegMap[pRegNode].fValue = pValue;
-    return fBoardFW->SingleRegisterWrite(pChip, cRegMap[pRegNode], pVerify);
+    cRegMap.at(pRegNode).fValue = pValue;
+    return fBoardFW->SingleRegisterWrite(pChip, cRegMap.at(pRegNode), pVerify);
 }
 
 bool CicInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pVecReq, bool pVerify)
@@ -247,7 +247,7 @@ std::vector<std::pair<std::string, uint16_t>> CicInterface::ReadChipMultReg(Ph2_
     fBoardFW->MultiRegisterRead(pChip, cRegItems);
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
-    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList.at(i), cRegItems.at(i).fValue));
     return theRegisterValues;
 }
 
@@ -302,8 +302,8 @@ bool CicInterface::ConfigureAlignmentPatterns(Chip* pChip, std::vector<uint8_t> 
         std::stringstream cBuffer;
         cBuffer << "CALIB_PATTERN" << +cIndex;
         std::string cRegName(cBuffer.str()); //, sizeof(cBuffer));
-        cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, pAlignmentPatterns[cIndex]);
-        if(cSuccess) { LOG(INFO) << BOLDBLUE << "Calibration pattern [for word alignment] on stub line " << +cIndex << " set to " << std::bitset<8>(pAlignmentPatterns[cIndex]) << RESET; }
+        cSuccess = cSuccess && this->WriteChipReg(pChip, cRegName, pAlignmentPatterns.at(cIndex));
+        if(cSuccess) { LOG(INFO) << BOLDBLUE << "Calibration pattern [for word alignment] on stub line " << +cIndex << " set to " << std::bitset<8>(pAlignmentPatterns.at(cIndex)) << RESET; }
     }
     return cSuccess;
 }
@@ -340,7 +340,7 @@ bool CicInterface::ConfigureBx0Alignment(Chip* pChip, std::vector<uint8_t> pAlig
 
     cRegName  = "BX0_ALIGN_CONFIG";
     cRegValue = this->ReadChipReg(pChip, cRegName);
-    cValue    = ((cRegValue & 0xC7) | (cFeMapping[pFEId] << 3));
+    cValue    = ((cRegValue & 0xC7) | (cFeMapping.at(pFEId) << 3));
     cSuccess  = cSuccess && this->WriteChipReg(pChip, cRegName, cValue);
     if(!cSuccess) return cSuccess;
 
@@ -746,7 +746,7 @@ bool CicInterface::CheckDLL(Chip* pChip)
         cRegItems.push_back(cRegItem);
     }
     auto     cValues = fBoardFW->MultiRegisterRead(pChip, cRegItems);
-    uint16_t cLock   = (cValues[1] << 8) | cValues[0];
+    uint16_t cLock   = (cValues.at(1) << 8) | cValues.at(0);
     bool     cLocked = (cLock == 0xFFF);
     return cLocked;
 }
@@ -842,7 +842,7 @@ bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip, const GenericData
     {
         for(size_t cLine = 0; cLine < 5; cLine++)
         {
-            auto cAlVal = (theWordAlignmentValues[cFeId][cLine] & 0xF);
+            auto cAlVal = (theWordAlignmentValues.at(cFeId).at(cLine) & 0xF);
             cValue      = cValue | (cAlVal << (cCounter % 2) * 4);
             if((1 + cCounter) % 2 == 0)
             {
@@ -895,7 +895,7 @@ GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1
         for(uint8_t cNibble = 0; cNibble < 2; cNibble += 1)
         {
             uint8_t cWordAlignment                           = (cRegValue & (0xF << cNibble * 4)) >> 4 * cNibble;
-            theWordAlignmentValues[cFECounter][cLineCounter] = cWordAlignment;
+            theWordAlignmentValues.at(cFECounter).at(cLineCounter) = cWordAlignment;
             LOG(DEBUG) << BOLDBLUE << "Word alignment for FE" << +cFECounter << " Line" << +cLineCounter << " value found to be " << +cWordAlignment << RESET;
             cLineCounter += 1;
             if(cLineCounter > 4)
@@ -949,7 +949,7 @@ std::pair<uint8_t, uint8_t> CicInterface::GetPhyPortConfig(Chip* pChip, uint8_t 
             cFeCounter         = (cLastStubLineFound) ? cBitIndex : cFeCounter;
 
             // get CIC FEId
-            uint8_t cChipId_forCic = cFeMapping[pFeId];
+            uint8_t cChipId_forCic = cFeMapping.at(pFeId);
             if(cFeCounter == cChipId_forCic && cInputLineCounter == pLineId)
             {
                 LOG(DEBUG) << BOLDYELLOW << "FE#" << +pFeId << " Line#" << +pLineId << " corresponds to PhyPort#" << +cPortCounter << " input#" << +cInputCounter << " which is CIC_FE#"
@@ -988,7 +988,7 @@ bool CicInterface::SetPhaseTap(Chip* pChip, uint8_t pPhyPort, uint8_t pPhyPortCh
 
     cRegItem.fAddress = cBaseReg + cRegOffset;
     auto cIterator    = find_if(cRegisterMap.begin(), cRegisterMap.end(), [&cRegItem](const ChipRegPair& obj) { return obj.second.fAddress == cRegItem.fAddress; });
-    cRegItem          = cRegisterMap[cIterator->first];
+    cRegItem          = cRegisterMap.at(cIterator->first);
     uint8_t cRegMask  = (0xF << cBitShift); //
     cRegMask          = ~(cRegMask);
     auto cRegValue    = fBoardFW->SingleRegisterRead(pChip, cRegItem);
@@ -1030,13 +1030,13 @@ GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> Ci
     {
         // L1 lines are on phyport 10 and 11 and go on first line of the ouput array
         auto l1PhyPortAndChannel            = fromChipL1ToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd);
-        theOptimalPhase2DArray[frontEnd][0] = getPhaseValue(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second);
+        theOptimalPhase2DArray.at(frontEnd).at(0) = getPhaseValue(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second);
 
         // Stub lines are on pyPort 0 to 9
         for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS - 1; ++line)
         {
             auto stubPhyPortAndChannel                 = fromChipStubToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd, line);
-            theOptimalPhase2DArray[frontEnd][line + 1] = getPhaseValue(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second);
+            theOptimalPhase2DArray.at(frontEnd).at(line + 1) = getPhaseValue(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second);
         }
     }
 
@@ -1075,18 +1075,18 @@ GenericDataArray<bool, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> CicIn
         // L1 lines are on phyport 10 and 11 and go on first line of the ouput array
         auto l1PhyPortAndChannel = fromChipL1ToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd);
         if(isLocked(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second))
-            theIsLocked2DArray[frontEnd][0] = true;
+            theIsLocked2DArray.at(frontEnd).at(0) = true;
         else
-            theIsLocked2DArray[frontEnd][0] = false;
+            theIsLocked2DArray.at(frontEnd).at(0) = false;
 
         // Stub lines are on pyPort 0 to 9
         for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS - 1; ++line)
         {
             auto stubPhyPortAndChannel = fromChipStubToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd, line);
             if(isLocked(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second))
-                theIsLocked2DArray[frontEnd][line + 1] = true;
+                theIsLocked2DArray.at(frontEnd).at(line + 1) = true;
             else
-                theIsLocked2DArray[frontEnd][line + 1] = false;
+                theIsLocked2DArray.at(frontEnd).at(line + 1) = false;
         }
     }
 
@@ -1108,11 +1108,11 @@ bool CicInterface::writeAllTaps(Ph2_HwDescription::Chip* pChip, GenericDataArray
     for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd)
     {
         auto l1PhyPortAndChannel = fromChipL1ToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd);
-        setPhaseValue(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second, cicInputTaps[frontEnd][0]);
+        setPhaseValue(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second, cicInputTaps.at(frontEnd).at(0));
         for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS - 1; ++line)
         {
             auto stubPhyPortAndChannel = fromChipStubToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd, line);
-            setPhaseValue(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second, cicInputTaps[frontEnd][line + 1]);
+            setPhaseValue(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second, cicInputTaps.at(frontEnd).at(line + 1));
         }
     }
 
@@ -1124,7 +1124,7 @@ bool CicInterface::writeAllTaps(Ph2_HwDescription::Chip* pChip, GenericDataArray
 
 std::pair<uint8_t, uint8_t> CicInterface::fromChipL1ToPhyPortAndChannel(Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId)
 {
-    uint8_t chipIdForCic    = chipToCICMapping[frontEndId];
+    uint8_t chipIdForCic    = chipToCICMapping.at(frontEndId);
     uint8_t phyPortForL1    = 10 + chipIdForCic / 4;
     uint8_t phyChannelForL1 = chipIdForCic % 4;
     return std::make_pair(phyPortForL1, phyChannelForL1);
@@ -1132,7 +1132,7 @@ std::pair<uint8_t, uint8_t> CicInterface::fromChipL1ToPhyPortAndChannel(Chip* pC
 
 std::pair<uint8_t, uint8_t> CicInterface::fromChipStubToPhyPortAndChannel(Chip* pChip, std::vector<uint8_t> chipToCICMapping, uint8_t frontEndId, uint8_t stubLine)
 {
-    uint8_t chipIdForCic     = chipToCICMapping[frontEndId];
+    uint8_t chipIdForCic     = chipToCICMapping.at(frontEndId);
     uint8_t phyPortFoStub    = (chipIdForCic * 5 + stubLine) / 4;
     uint8_t phyChannelFoStub = (chipIdForCic * 5 + stubLine) % 4;
     return std::make_pair(phyPortFoStub, phyChannelFoStub);
@@ -1151,7 +1151,7 @@ std::pair<uint8_t, uint8_t> CicInterface::fromPhyPortAndChanneltoChipIdAndLine(P
 uint8_t CicInterface::fromChipIdToCICFEid(Ph2_HwDescription::Chip* pChip, uint8_t chipId)
 {
     auto cicFEmapping = static_cast<Cic*>(pChip)->getMapping();
-    return cicFEmapping[chipId % 8];
+    return cicFEmapping.at(chipId % 8);
 }
 
 uint8_t CicInterface::fromCICFEidToChipId(Ph2_HwDescription::Chip* pChip, uint8_t cicFEid)
@@ -1195,7 +1195,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
             cInputLineCounter                          = (cIndex < 5) ? (cCounter % cNStubLines) : cL1Line;
             cLastStubLineFound                         = cLastStubLineFound || (cFeCounter == 7 && cInputLineCounter == 4);
             cFeCounter                                 = (cLastStubLineFound) ? cBitIndex : cFeCounter;
-            theFeStates[cFeCounter][cInputLineCounter] = std::bitset<8>(cRegValue)[cBitIndex];
+            theFeStates.at(cFeCounter)[cInputLineCounter] = std::bitset<8>(cRegValue)[cBitIndex];
 
             cFeCounter = (!cLastStubLineFound) ? (cFeCounter + (((1 + cCounter) % cNStubLines == 0) ? 1 : 0)) : cBitIndex;
             cCounter++;
@@ -1206,7 +1206,7 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
     for(cFeCounter = 0; cFeCounter < 8; cFeCounter++)
     {
         auto cCheckValue = (pCheckValue & (0x1 << cFeCounter)) >> cFeCounter;
-        for(cInputLineCounter = 0; cInputLineCounter < (1 + cNStubLines); cInputLineCounter++) { cLocked = cLocked & (theFeStates[cFeCounter][cInputLineCounter] == cCheckValue); }
+        for(cInputLineCounter = 0; cInputLineCounter < (1 + cNStubLines); cInputLineCounter++) { cLocked = cLocked & (theFeStates.at(cFeCounter)[cInputLineCounter] == cCheckValue); }
     }
     return cLocked;
 }
@@ -1267,7 +1267,7 @@ bool CicInterface::EnableFEs(Chip* pChip, std::vector<uint8_t> pFeIds, bool pEna
     // LOG (INFO) << BOLDMAGENTA << "FE_ENABLE register set to 0x" << std::hex  << +cValue << std::dec << RESET;
     for(auto pFeId: pFeIds)
     {
-        uint8_t cChipId_forCic = cFeMapping[pFeId]; // std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pFeId));
+        uint8_t cChipId_forCic = cFeMapping.at(pFeId); // std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pFeId));
         uint8_t cMask          = ~(0x1 << cChipId_forCic) & 0xFF;
         // LOG(INFO) << BOLDMAGENTA << "For ROC [Hybrid Id " << +pFeId << "] CIC FE#" << +cChipId_forCic << " mask is " << std::bitset<8>(cMask) << RESET;
         cValue = (cValue & cMask) | (static_cast<uint8_t>(pEnable) << cChipId_forCic);
@@ -1285,7 +1285,7 @@ bool CicInterface::configureEnabledFEs(Chip* pChip, std::vector<uint8_t> pFeIds)
     uint8_t     cValue   = 0;
     for(auto pFeId: pFeIds)
     {
-        uint8_t cChipId_forCic = cFeMapping[pFeId];
+        uint8_t cChipId_forCic = cFeMapping.at(pFeId);
         cValue                 = cValue | (1u << cChipId_forCic);
     }
     LOG(DEBUG) << BOLDMAGENTA << "New value of FE_ENABLE for CIC is " << std::hex << +cValue << std::dec << RESET;

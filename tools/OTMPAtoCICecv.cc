@@ -154,15 +154,15 @@ void OTMPAtoCICecv::runElectricChainValidation()
                             auto phyPortDataVector = readCICbypassOutput(theHybrid, theFWinterface, phyPort);
                             for(size_t line = 0; line < 4; ++line)
                             {
-                                float matchingEfficiency = countMatchingBits(phyPortDataVector[line], possiblePatternList);
+                                float matchingEfficiency = countMatchingBits(phyPortDataVector.at(line), possiblePatternList);
                                 auto  chipIdAndLine      = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
                                 // if(matchingEfficiency < 1 && matchingEfficiency>0.95)
                                 // {
                                 //     size_t patternSize = 10;
-                                //     size_t numberOfPatterns = phyPortDataVector[line].size() / patternSize;
+                                //     size_t numberOfPatterns = phyPortDataVector.at(line).size() / patternSize;
                                 //     for(size_t patternCounter = 0; patternCounter<numberOfPatterns; ++patternCounter)
                                 //     {
-                                //         auto first = phyPortDataVector[line].begin() + patternCounter * patternSize;
+                                //         auto first = phyPortDataVector.at(line).begin() + patternCounter * patternSize;
                                 //         auto last  = first + patternSize;
                                 //         std::vector<uint32_t> patternVector(first, last);
                                 //         bool matching = true;
@@ -182,7 +182,7 @@ void OTMPAtoCICecv::runElectricChainValidation()
                                 try // Handle disable chip
                                 {
                                     theMatchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first + 8)
-                                        ->getSummary<GenericDataArray<float, 6>>()[chipIdAndLine.second] = matchingEfficiency;
+                                        ->getSummary<GenericDataArray<float, 6>>().at(chipIdAndLine.second) = matchingEfficiency;
                                 }
                                 catch(const std::exception& e)
                                 {
@@ -224,7 +224,7 @@ std::vector<std::vector<uint32_t>> OTMPAtoCICecv::readCICbypassOutput(Hybrid* th
     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
     {
         auto lineOutputVector = theFWinterface->StubDebug(true, cNlines, false);
-        for(size_t line = 0; line < cNlines; ++line) { phyPortDataVector[line].insert(phyPortDataVector[line].end(), lineOutputVector[line].begin(), lineOutputVector[line].end()); }
+        for(size_t line = 0; line < cNlines; ++line) { phyPortDataVector.at(line).insert(phyPortDataVector.at(line).end(), lineOutputVector.at(line).begin(), lineOutputVector.at(line).end()); }
     }
 
     return phyPortDataVector;

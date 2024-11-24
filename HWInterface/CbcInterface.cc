@@ -131,7 +131,7 @@ bool CbcInterface::maskChannelGroup(ReadoutChip* pCbc, const std::shared_ptr<Cha
     {
         // uint16_t cValue = (uint16_t)((originalMask->getBitset() & fActiveChannels) >> (maskGroup << 3) & tmpBit).to_ulong();
         // LOG(DEBUG) << BOLDBLUE << "\t...Group" << +maskGroup << " : " << std::bitset<8>(cValue) << RESET;
-        cRegVec.push_back(make_pair(fChannelMaskMapCBC3[maskGroup], (uint16_t)((originalMask->getBitset() & fActiveChannels) >> (maskGroup << 3) & tmpBit).to_ulong()));
+        cRegVec.push_back(make_pair(fChannelMaskMapCBC3.at(maskGroup), (uint16_t)((originalMask->getBitset() & fActiveChannels) >> (maskGroup << 3) & tmpBit).to_ulong()));
     }
     return WriteChipMultReg(pCbc, cRegVec, pVerify);
 }
@@ -288,8 +288,8 @@ std::vector<uint8_t> CbcInterface::readLUT(ReadoutChip* pCbc, uint8_t pMode)
         std::string cRegName(cBuffer, cLength);
         // LOG(DEBUG) << BOLDBLUE << "Reading bend register " << cRegName << RESET;
         uint16_t cValue            = (pMode == 0) ? this->ReadChipReg(pCbc, cRegName) : pCbc->getReg(cRegName);
-        cBendCodes[cIndex * 2]     = (cValue & 0x0F);
-        cBendCodes[cIndex * 2 + 1] = (cValue & 0xF0) >> 4;
+        cBendCodes.at(cIndex * 2)     = (cValue & 0x0F);
+        cBendCodes.at(cIndex * 2 + 1) = (cValue & 0xF0) >> 4;
     }
     return cBendCodes;
 }
@@ -535,7 +535,7 @@ std::vector<std::pair<std::string, uint16_t>> CbcInterface::ReadChipMultReg(Ph2_
     fBoardFW->MultiRegisterRead(pChip, cRegItems);
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
-    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList.at(i), cRegItems.at(i).fValue));
     return theRegisterValues;
 }
 
@@ -565,7 +565,7 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerify)
         //            << std::dec << RESET;
         fPageMap.insert(std::make_pair(cAddress, cDefaultPage));
         // LOG(DEBUG) << BOLDYELLOW << "Page was not explicitly selected on CBC#" << +pCbc->getId() << " setting to default value." << RESET;
-        cSuccess = fBoardFW->SingleRegisterWrite(pCbc, cCbcRegMap[cRegName], pVerify);
+        cSuccess = fBoardFW->SingleRegisterWrite(pCbc, cCbcRegMap.at(cRegName), pVerify);
     }
     if(!cSuccess)
     {
@@ -602,9 +602,9 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
     // first, identify the correct BeBoardFWInterface
     setBoard(pCbc->getBeBoardId());
     auto cRegMap             = pCbc->getRegMap();
-    cRegMap[pRegNode].fValue = pValue;
-    ConfigurePage(pCbc, cRegMap[pRegNode].fPage, pVerify);
-    return fBoardFW->SingleRegisterWrite(pCbc, cRegMap[pRegNode], pVerify);
+    cRegMap.at(pRegNode).fValue = pValue;
+    ConfigurePage(pCbc, cRegMap.at(pRegNode).fPage, pVerify);
+    return fBoardFW->SingleRegisterWrite(pCbc, cRegMap.at(pRegNode), pVerify);
 }
 uint8_t CbcInterface::GetLastPage(Chip* pCbc)
 {
@@ -899,14 +899,14 @@ void CbcInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
     selectLogicMode(static_cast<ReadoutChip*>(pChip), "Sampled", true, true);
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
-    theRegisterVector.push_back({"Bend7", fWordAlignmentPatterns[3] & 0x0F});        // Set bend 0 to output of stub 1 required pattern
-    theRegisterVector.push_back({"Bend8", (fWordAlignmentPatterns[3] & 0xF0) >> 4}); // Set bend 2 to output of stub 1 required pattern
-    theRegisterVector.push_back({"Bend9", fWordAlignmentPatterns[4] & 0x0F});        // Set bend 4 to output of stub 1 required pattern
+    theRegisterVector.push_back({"Bend7", fWordAlignmentPatterns.at(3) & 0x0F});        // Set bend 0 to output of stub 1 required pattern
+    theRegisterVector.push_back({"Bend8", (fWordAlignmentPatterns.at(3) & 0xF0) >> 4}); // Set bend 2 to output of stub 1 required pattern
+    theRegisterVector.push_back({"Bend9", fWordAlignmentPatterns.at(4) & 0x0F});        // Set bend 4 to output of stub 1 required pattern
     theRegisterVector.push_back({"CoincWind&Offset12", 0x00});                       // set stub window offset to 0
     theRegisterVector.push_back({"CoincWind&Offset34", 0x00});                       // set stub window offset to 0
 
     WriteChipMultReg(pChip, theRegisterVector);
-    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{fWordAlignmentPatterns[0], 0}, {fWordAlignmentPatterns[1], 2}, {fWordAlignmentPatterns[2], 4}};
+    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{fWordAlignmentPatterns.at(0), 0}, {fWordAlignmentPatterns.at(1), 2}, {fWordAlignmentPatterns.at(2), 4}};
 
     injectStubs(static_cast<ReadoutChip*>(pChip), stubSeedAndBend);
 }
@@ -925,9 +925,9 @@ void CbcInterface::produceBX0AlignmentPattern(ReadoutChip* pChip)
 
     std::map<uint8_t, uint8_t>                    pBendingAndCode{{0, 0x9}, {2, 0xB}, {4, 0xF}};
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
-    theRegisterVector.push_back({"Bend7", pBendingAndCode[0]});
-    theRegisterVector.push_back({"Bend8", pBendingAndCode[2]});
-    theRegisterVector.push_back({"Bend9", pBendingAndCode[4]});
+    theRegisterVector.push_back({"Bend7", pBendingAndCode.at(0)});
+    theRegisterVector.push_back({"Bend8", pBendingAndCode.at(2)});
+    theRegisterVector.push_back({"Bend9", pBendingAndCode.at(4)});
     theRegisterVector.push_back({"CoincWind&Offset12", 0x00}); // set stub window offset to 0
     theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
     WriteChipMultReg(pChip, theRegisterVector);

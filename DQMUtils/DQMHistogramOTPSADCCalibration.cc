@@ -206,27 +206,27 @@ void DQMHistogramOTPSADCCalibration::fillVDDPlots(DetectorDataContainer& theVDDC
                                       ->getObject(cOpticalGroup->getId())
                                       ->getObject(cHybrid->getId())
                                       ->getObject(cChip->getId())
-                                      ->getSummary<std::pair<uint32_t, float>>()
+                                      ->getSummary<std::pair<uint8_t, float>>()
                                       .first
                                << " "
                                << theVDDContainer.getObject(cBoard->getId())
                                       ->getObject(cOpticalGroup->getId())
                                       ->getObject(cHybrid->getId())
                                       ->getObject(cChip->getId())
-                                      ->getSummary<std::pair<uint32_t, float>>()
+                                      ->getSummary<std::pair<uint8_t, float>>()
                                       .second
                                << RESET;
                     theVDDHistograms->Fill(theVDDContainer.getObject(cBoard->getId())
                                                ->getObject(cOpticalGroup->getId())
                                                ->getObject(cHybrid->getId())
                                                ->getObject(cChip->getId())
-                                               ->getSummary<std::pair<uint32_t, float>>()
+                                               ->getSummary<std::pair<uint8_t, float>>()
                                                .first,
                                            theVDDContainer.getObject(cBoard->getId())
                                                ->getObject(cOpticalGroup->getId())
                                                ->getObject(cHybrid->getId())
                                                ->getObject(cChip->getId())
-                                               ->getSummary<std::pair<uint32_t, float>>()
+                                               ->getSummary<std::pair<uint8_t, float>>()
                                                .second);
 
                 } // chip

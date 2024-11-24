@@ -10,24 +10,18 @@
 #ifndef __MonitorDQMPlotBASE_H__
 #define __MonitorDQMPlotBASE_H__
 
-#include "Parser/DetectorMonitorConfig.h"
-#include "Parser/FileParser.h"
-#include "RootUtils/GraphContainer.h"
-#include "RootUtils/RootContainerFactory.h"
-#include "Utils/Container.h"
-
 #include <memory>
 #include <string>
 #include <unistd.h>
 #include <vector>
 
-#include <TAxis.h>
-#include <TDatime.h>
-#include <TGraph.h>
-
 class DetectorDataContainer;
 class DetectorContainer;
 class TFile;
+template <typename T>
+class GraphContainer;
+class TGraph;
+struct DetectorMonitorConfig;
 
 /*!
  * \class MonitorDQMPlotBase
@@ -71,16 +65,7 @@ class MonitorDQMPlotBase
     virtual void reset(void) = 0;
 
   protected:
-    uint32_t getTimeStampForRoot(time_t rawTime)
-    {
-        struct tm* timeinfo = localtime(&rawTime);
-        char       timeStampString[80];
-        strftime(timeStampString, sizeof(timeStampString), TIME_FORMAT, timeinfo);
-        std::string tmpTime{std::to_string(1) + timeStampString};
-
-        TDatime rootTime(tmpTime.c_str());
-        return rootTime.Convert();
-    }
+    uint32_t getTimeStampForRoot(std::string rawTime);
 
     void bookImplementer(TFile*                   theOutputFile,
                          const DetectorContainer& theDetectorStructure,
@@ -88,26 +73,7 @@ class MonitorDQMPlotBase
                          GraphContainer<TGraph>&  graphContainer,
                          const std::string&       type,
                          const char*              XTitle = nullptr,
-                         const char*              YTitle = nullptr)
-    {
-        graphContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
-        graphContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
-        graphContainer.fTheGraph->GetXaxis()->SetTimeFormat(TIME_FORMAT);
-        graphContainer.fTheGraph->GetXaxis()->SetTimeOffset(0);
-        if(XTitle != nullptr) graphContainer.fTheGraph->GetXaxis()->SetTitle(XTitle);
-        if(YTitle != nullptr)
-        {
-            graphContainer.setNameTitle("DQM_" + std::string{YTitle}, "DQM_" + std::string{YTitle});
-            graphContainer.fTheGraph->GetYaxis()->SetTitle(YTitle);
-        }
-        graphContainer.fTheGraph->SetMarkerStyle(20);
-        graphContainer.fTheGraph->SetMarkerSize(0.8);
-
-        if(type == "chip")
-            RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, dataContainer, graphContainer);
-        else if(type == "opto")
-            RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, dataContainer, graphContainer);
-    }
+                         const char*              YTitle = nullptr);
 };
 
 #endif

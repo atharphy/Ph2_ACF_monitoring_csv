@@ -110,9 +110,9 @@ void OTPSringOscillatorTest::runMPAringOscillatorTest()
         auto registerValues = this->fReadoutChipInterface->ReadChipMultReg(theChip, theRegisterList);
         for(int registerIndex = 0; registerIndex < NMPAROWS + 1; ++registerIndex)
         {
-            uint16_t totalCount = registerValues[registerIndex * 2].second | (registerValues[registerIndex * 2 + 1].second << 8);
+            uint16_t totalCount = registerValues.at(registerIndex * 2).second | (registerValues.at(registerIndex * 2 + 1).second << 8);
             theOutputContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())
-                ->getSummary<GenericDataArray<uint16_t, NMPAROWS + 1>>()[registerIndex] = totalCount;
+                ->getSummary<GenericDataArray<uint16_t, NMPAROWS + 1>>().at(registerIndex) = totalCount;
         }
     };
 
@@ -187,8 +187,8 @@ void OTPSringOscillatorTest::runSSAringOscillatorTest()
         auto registerValues = this->fReadoutChipInterface->ReadChipMultReg(theChip, theRegisterList);
         for(int registerIndex = 0; registerIndex < 4; ++registerIndex)
         {
-            uint16_t totalCount = registerValues[registerIndex * 2].second | (registerValues[registerIndex * 2 + 1].second << 8);
-            theOutputContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<GenericDataArray<uint16_t, 4>>()[registerIndex] =
+            uint16_t totalCount = registerValues.at(registerIndex * 2).second | (registerValues.at(registerIndex * 2 + 1).second << 8);
+            theOutputContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<GenericDataArray<uint16_t, 4>>().at(registerIndex) =
                 totalCount;
         }
     };
