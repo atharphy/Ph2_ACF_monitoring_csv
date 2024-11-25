@@ -909,27 +909,34 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
             {
                 if(cName.find(CHIP_FILES_APPEND_NODE_NAME) != std::string::npos)
                     cConfigFileDirectory = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute(COMMON_PATH_ATTRIBUTE_NAME).value()));
-                else if(!(cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME)) || (cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool() == true))
+                else if(!(cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME)) || (cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool() == true) ||
+                        (cNextName.find(CHIP_GLOBAL_NODE_NAME) != std::string::npos))
                 {
                     int         cChipId   = cChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_int();
                     std::string cFileName = expandEnvironmentVariables(static_cast<std::string>(cChild.attribute(COMMON_CONFIGFILE_ATTRIBUTE_NAME).value()));
 
                     if(cName.find(RD53_NODE_NAME) != std::string::npos)
                     {
-                        cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
-                        const auto frontEndType = cName.find(RD53A_NODE_NAME) != std::string::npos     ? FrontEndType::RD53A
-                                                  : cName.find(RD53Bv1_NODE_NAME) != std::string::npos ? FrontEndType::RD53Bv1
-                                                                                                       : FrontEndType::RD53Bv2;
-                        pBoard->setFrontEndType(frontEndType);
-                        parseRD53(cChild, cHybrid, cConfigFileDirectory, os, frontEndType);
-                        if(cNextName.empty() || cNextName != cName) parseGlobalRD53Settings(pHybridNode, cHybrid, os);
+                        if(!(cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME)) || (cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool() == true))
+                        {
+                            cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
+                            const auto frontEndType = cName.find(RD53A_NODE_NAME) != std::string::npos     ? FrontEndType::RD53A
+                                                      : cName.find(RD53Bv1_NODE_NAME) != std::string::npos ? FrontEndType::RD53Bv1
+                                                                                                           : FrontEndType::RD53Bv2;
+                            pBoard->setFrontEndType(frontEndType);
+                            parseRD53(cChild, cHybrid, cConfigFileDirectory, os, frontEndType);
+                        }
+                        if((cNextName.empty() == true) || (cNextName.find(CHIP_GLOBAL_NODE_NAME) != std::string::npos)) parseGlobalRD53Settings(pHybridNode, cHybrid, os);
                     }
                     else if(cName.find(CBC_NODE_NAME) != std::string::npos)
                     {
-                        pOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
-                        cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
-                        parseCbcContainer(cChild, cHybrid, cConfigFileDirectory, os);
-                        if(cNextName.empty() || cNextName != cName) parseGlobalCbcSettings(pHybridNode, cHybrid, os);
+                        if(!(cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME)) || (cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool() == true))
+                        {
+                            pOpticalGroup->setFrontEndType(FrontEndType::OuterTracker2S);
+                            cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
+                            parseCbcContainer(cChild, cHybrid, cConfigFileDirectory, os);
+                        }
+                        if((cNextName.empty() == true) || (cNextName.find(CHIP_GLOBAL_NODE_NAME) != std::string::npos)) parseGlobalCbcSettings(pHybridNode, cHybrid, os);
                     }
                     else if(cName.find(CIC2_NODE_NAME) != std::string::npos)
                     {
@@ -1009,17 +1016,23 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                     }
                     else if(cName == SSA2_NODE_NAME)
                     {
-                        pOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS);
-                        cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
-                        parseSSA2Container(cChild, cHybrid, cConfigFileDirectory, os);
-                        if(cNextName.empty() || cNextName != cName) parseSSA2Settings(pHybridNode, cHybrid, os);
+                        if(!(cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME)) || (cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool() == true))
+                        {
+                            pOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS);
+                            cHybrid->setNStripChips(cHybrid->getNStripChips() + 1);
+                            parseSSA2Container(cChild, cHybrid, cConfigFileDirectory, os);
+                        }
+                        if((cNextName.empty() == true) || (cNextName.find(CHIP_GLOBAL_NODE_NAME) != std::string::npos)) parseSSA2Settings(pHybridNode, cHybrid, os);
                     }
                     else if(cName == MPA2_NODE_NAME)
                     {
-                        pOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS);
-                        cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
-                        parseMPA2Container(cChild, cHybrid, cConfigFileDirectory, os);
-                        if(cNextName.empty() || cNextName != cName) parseMPA2Settings(pHybridNode, cHybrid, os);
+                        if(!(cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME)) || (cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool() == true))
+                        {
+                            pOpticalGroup->setFrontEndType(FrontEndType::OuterTrackerPS);
+                            cHybrid->setNPixelChips(cHybrid->getNPixelChips() + 1);
+                            parseMPA2Container(cChild, cHybrid, cConfigFileDirectory, os);
+                        }
+                        if((cNextName.empty() == true) || (cNextName.find(CHIP_GLOBAL_NODE_NAME) != std::string::npos)) parseMPA2Settings(pHybridNode, cHybrid, os);
                     }
                 }
             }
