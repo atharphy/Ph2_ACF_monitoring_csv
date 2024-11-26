@@ -351,6 +351,8 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
             std::string cNTCTableFileName = expandEnvironmentVariables(std::string(theChild.attribute(NTCPROPERTIES_LOOKUPTABLE_ATTRIBUTE_NAME).value()));
             theOpticalGroup->addNTC(cNTCType, cNTCADC);
             NTChandler::getInstance().addNTCtable(cNTCType, cNTCTableFileName);
+            os << BOLDBLUE << "|\t|\t|---- NTC type: " << BOLDYELLOW << cNTCType << BOLDBLUE << ", LpGBT ADC: " << BOLDYELLOW << cNTCADC << BOLDBLUE << ", Lookup Table: " << BOLDYELLOW
+               << cNTCTableFileName << RESET << std::endl;
         }
     }
 }

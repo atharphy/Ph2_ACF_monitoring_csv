@@ -10,6 +10,8 @@
     <!-- Frontend chip configuration -->
      <OpticalGroup Id="0" enable="1" FMCId="L12">
       <!--
+      <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
+      <NTCProperties type="VTRx+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
       <lpGBT_Files path="${PWD}" />
       <lpGBT_ConfigFile fileName="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv" />
       <lpGBT Id="0" version="0" configFile="CMSIT_LpGBTv0.txt" ChipAddress="0x70" RxDataRate="1280" RxHSLPolarity="1" TxDataRate="160" TxHSLPolarity="0">
@@ -350,6 +352,8 @@
       <MonitoringElement device="RD53"  register="TEMPSENS_CENTER"      enable="1"/>
       <MonitoringElement device="RD53"  register="INTERNAL_NTC"         enable="1"/>
 
+      <MonitoringElement device="LpGBT" register="ADC4"                 enable="0"/>
+      <MonitoringElement device="LpGBT" register="ADC7"                 enable="0"/>
       <MonitoringElement device="LpGBT" register="TEMP"                 enable="0"/>
       <MonitoringElement device="LpGBT" register="VDDTX"                enable="0"/>
       <MonitoringElement device="LpGBT" register="VDDRX"                enable="0"/>

@@ -1906,44 +1906,60 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip,
     return cVsup;
 }
 
-float lpGBTInterface::ReadChipMonitor(Ph2_HwDescription::lpGBT* pChip, const std::string& registerName, bool silentRunning)
+float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const std::string& registerName, bool silentRunning)
 {
-    float value;
+    const int RSensTemp = 1000;  // @CONST@
+    const int RVTRxTemp = 10000; // @CONST@
+    float     value;
+
+    auto cChip = pOpticalGroup->flpGBT;
 
     if(registerName.find("TEMP") != std::string::npos)
     {
-        value = lpGBTInterface::MeasureTemperature(pChip);
+        value = lpGBTInterface::MeasureTemperature(cChip);
         if(silentRunning == false) LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement " BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
     }
     else if((registerName.find("VDDTX") != std::string::npos) || (registerName.find("VDDRX") != std::string::npos) || (registerName.find("VDD") != std::string::npos) ||
             (registerName.find("VDDA") != std::string::npos))
     {
-        value = lpGBTInterface::MeasurePowerSupplyVoltage(pChip, registerName);
+        value = lpGBTInterface::MeasurePowerSupplyVoltage(cChip, registerName);
         if(silentRunning == false)
             LOG(INFO) << BOLDBLUE << "\t--> LpGBT voltage measurement from power supply " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value << BOLDBLUE
                       << " V" << std::setprecision(-1) << RESET;
     }
-    // @TMP@ : To be completed
     else if(registerName.find("ADC") != std::string::npos)
     {
-        lpGBTInterface::CdacSetCurrent(pChip, registerName, lpGBTInterface::_CdacCodeToCurrent(pChip, registerName, 0xAA));
-        float resistance = lpGBTInterface::MeasureResistance(pChip, registerName, 1000, false);
+        std::string sensorType("");
+
+        for(const auto& ele: pOpticalGroup->getNTCMap())
+            if(ele.second == registerName) sensorType = ele.first;
+        if(sensorType == "")
+        {
+            value = lpGBTInterface::ReadADC(cChip, registerName, "VREF/2", 0, silentRunning);
+            if(silentRunning == false)
+                LOG(WARNING) << BOLDBLUE << "\t--> LpGBT sensor " << BOLDYELLOW << registerName << BOLDBLUE << " has no calibration file. Raw value is " << BOLDYELLOW << value << RESET;
+            return value;
+        }
+
+        lpGBTInterface::CdacSetCurrent(cChip, registerName, lpGBTInterface::_CdacCodeToCurrent(cChip, registerName, 0xAA));
+        float resistance = lpGBTInterface::MeasureResistance(cChip, registerName, sensorType.find("Sensor") != std::string::npos ? RSensTemp : RVTRxTemp, false);
+
         try
         {
-            value = NTChandler::getInstance().getTemperature("Sensor", resistance);
+            value = NTChandler::getInstance().getTemperature(sensorType, resistance);
             if(silentRunning == false)
                 LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement from sensor " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value
                           << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
         }
         catch(const std::runtime_error& error)
         {
-            value = lpGBTInterface::ReadADC(pChip, registerName, "VREF/2", 0, silentRunning);
+            value = lpGBTInterface::ReadADC(cChip, registerName, "VREF/2", 0, silentRunning);
             if(silentRunning == false)
                 LOG(WARNING) << BOLDBLUE << "\t--> LpGBT sensor " << BOLDYELLOW << registerName << BOLDBLUE << " has no calibration file. Raw value is " << BOLDYELLOW << value << RESET;
         }
     }
     else
-        value = lpGBTInterface::ReadADC(pChip, registerName, "VREF/2", 0, silentRunning);
+        value = lpGBTInterface::ReadADC(cChip, registerName, "VREF/2", 0, silentRunning);
 
     return value;
 }
