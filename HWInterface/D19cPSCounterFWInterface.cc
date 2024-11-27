@@ -111,7 +111,7 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
         auto cNFIFOentries = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.num_fifo_entry");
         if(cNFIFOentries < NSSACHANNELS * (NMPAROWS + 1) + 1)
         {
-            LOG(WARNING) << WARNING_FORMAT << "Imcomplete counter packer" << RESET;
+            LOG(WARNING) << WARNING_FORMAT << "Incomplete counter packet" << RESET;
             return false;
         }
 
@@ -279,8 +279,36 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
 
 bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* theBoard)
 {
+    size_t iterationCounter = 0;
+    size_t maximumNumberOfIterations = 30;
+    while(iterationCounter < maximumNumberOfIterations)
+    {
+        try
+        {
+            ReadEventsLocal(theBoard);
+            break;
+        }
+        catch(const std::exception& e)
+        {
+            ++iterationCounter;
+        }
+    }
+    if(iterationCounter >= maximumNumberOfIterations)
+    {
+        LOG(ERROR) << ERROR_FORMAT << "Read event for PS counters failed after " << iterationCounter << " trials" << RESET;
+        throw std::runtime_error("Read event for PS counters failed");
+    }
+
+    return true;
+}
+
+bool D19cPSCounterFWInterface::ReadEventsLocal(const Ph2_HwDescription::BeBoard* theBoard)
+{
     // clear data vector
     fData.clear();
+
+    fTheRegManager->WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
 
     uint32_t delayAfterFastReset = 100;
     uint32_t delayAfterTestPulse = 50;

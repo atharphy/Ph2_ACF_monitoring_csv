@@ -22,7 +22,8 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
     ~D19cPSCounterFWInterface();
 
   public:
-    bool ReadEvents(const Ph2_HwDescription::BeBoard* pBoard) override;
+    bool ReadEvents(const Ph2_HwDescription::BeBoard* theBoard) override;
+    bool ReadEventsLocal(const Ph2_HwDescription::BeBoard* theBoard);
     // function to link FEConfigurationInterface
     void LinkFEConfigurationInterface(FEConfigurationInterface* pInterface) { fFEConfigurationInterface = pInterface; }
     void configureFastReadout(bool enableFastReadout);
