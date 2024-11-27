@@ -809,11 +809,13 @@ void lpGBTInterface::ConfigureInternalMonitoring(Chip* pChip, uint8_t pEnable)
 float lpGBTInterface::GetInternalTemperature(Chip* pChip)
 {
     auto cVal = ReadChipReg(pChip, "ADCMon");
+
     // ######################################
     // # Enable reset on temperature sensor #
     // ######################################
     WriteChipReg(pChip, "ADCMon", (1 << 4 | cVal));
     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+
     // #######################################
     // # Disable reset on temperature sensor #
     // #######################################
@@ -979,10 +981,11 @@ uint16_t lpGBTInterface::ReadADC(Chip* pChip, const std::string& pADCInputP, con
         cSuccess = lpGBTInterface::IsReadADCDone(pChip);
         cIter++;
     } while((cIter < lpGBTconstants::MAXATTEMPTS) && (cSuccess == false));
+
     if(!cSuccess)
     {
-        LOG(ERROR) << BOLDRED << "lpGBTInterface::ReadADC timed out" << RESET;
-        return 65535;
+        LOG(ERROR) << BOLDRED << "[lpGBTInterface::ReadADC] Timed out error" << RESET;
+        return 0xFFFF;
     }
 
     if(cIter == lpGBTconstants::MAXATTEMPTS)
@@ -1589,7 +1592,7 @@ float lpGBTInterface::AdcGetVin(Ph2_HwDescription::lpGBT* pChip, const std::stri
     */
 
     std::vector<uint16_t> cMeasurements(0);
-    for(uint8_t cIndx = 0; cIndx < pSamples; cIndx++) { cMeasurements.push_back(lpGBTInterface::ReadADC(pChip, pADCInputP, pADCInputN, pGain)); }
+    for(uint8_t cIndx = 0; cIndx < pSamples; cIndx++) cMeasurements.push_back(lpGBTInterface::ReadADC(pChip, pADCInputP, pADCInputN, pGain));
     uint16_t cResult = (uint16_t)std::round(std::accumulate(cMeasurements.begin(), cMeasurements.end(), 0.) / cMeasurements.size());
 
     std::string cAdcStr = "ADC_" + fADCGainMap[pGain];
@@ -1936,8 +1939,8 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
         if(sensorType == "")
         {
             value = lpGBTInterface::ReadADC(cChip, registerName, "VREF/2", 0, silentRunning);
-            if(silentRunning == false)
-                LOG(WARNING) << BOLDBLUE << "\t--> LpGBT sensor " << BOLDYELLOW << registerName << BOLDBLUE << " has no calibration file. Raw value is " << BOLDYELLOW << value << RESET;
+            if((silentRunning == false) && (value != 0xFFFF))
+                LOG(WARNING) << BOLDBLUE << "\t--> LpGBT register " << BOLDYELLOW << registerName << BOLDBLUE << " has no calibration file. Raw value is " << BOLDYELLOW << value << RESET;
             return value;
         }
 
@@ -1948,14 +1951,14 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
         {
             value = NTChandler::getInstance().getTemperature(sensorType, resistance);
             if(silentRunning == false)
-                LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement from sensor " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value
+                LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement from register " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value
                           << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
         }
         catch(const std::runtime_error& error)
         {
             value = lpGBTInterface::ReadADC(cChip, registerName, "VREF/2", 0, silentRunning);
-            if(silentRunning == false)
-                LOG(WARNING) << BOLDBLUE << "\t--> LpGBT sensor " << BOLDYELLOW << registerName << BOLDBLUE << " has no calibration file. Raw value is " << BOLDYELLOW << value << RESET;
+            if((silentRunning == false) && (value != 0xFFFF))
+                LOG(WARNING) << BOLDBLUE << "\t--> LpGBT register " << BOLDYELLOW << registerName << BOLDBLUE << " has no calibration file. Raw value is " << BOLDYELLOW << value << RESET;
         }
     }
     else
