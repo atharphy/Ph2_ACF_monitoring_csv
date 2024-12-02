@@ -95,9 +95,9 @@ class Tool : public Ph2_System::SystemController
 
     void WriteRootFile();
 
-    virtual void sendData(){};
-    virtual void ConfigureCalibration(){};
-    virtual void Running(){};
+    virtual void sendData() {};
+    virtual void ConfigureCalibration() {};
+    virtual void Running() {};
     virtual bool GetRunningStatus();
 
     void Configure(const ConfigureInfo& theConfigureInfo, bool pReInitialize = true) override;

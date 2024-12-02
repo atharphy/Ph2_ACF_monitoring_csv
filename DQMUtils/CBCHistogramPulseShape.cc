@@ -122,10 +122,10 @@ void CBCHistogramPulseShape::fillCBCPulseShapePlots(uint16_t delay, DetectorData
                             channelPulseShapeHistogram->SetBinError(currentBin, chip->getChannel<ThresholdAndNoise>(row, col).fNoise);
                         }
                     } // for on channel - end
-                }     // for on chip - end
-            }         // for on hybrid - end
-        }             // for on opticalGroup - end
-    }                 // for on boards - end
+                } // for on chip - end
+            } // for on hybrid - end
+        } // for on opticalGroup - end
+    } // for on boards - end
 }
 
 //========================================================================================================================
@@ -198,9 +198,9 @@ void CBCHistogramPulseShape::process()
                     currentCanvas->Modified();
                     currentCanvas->Update();
                 } // for on chip - end
-            }     // for on hybrid - end
-        }         // for on opticalGroup - end
-    }             // for on boards - end
+            } // for on hybrid - end
+        } // for on opticalGroup - end
+    } // for on boards - end
 }
 
 //========================================================================================================================

@@ -97,7 +97,7 @@ void DQMHistogramKira::book(TFile* theOutputFile, DetectorContainer& theDetector
                 if(cN > cNCh) cNCh = cN;
 
             } // hybrid
-        }     // OG
+        } // OG
         if(cLinks >= cNLinks) cNLinks = cLinks;
     } // board
 

@@ -174,8 +174,8 @@ std::vector<FrontEndType> BeBoard::connectedFrontEndTypes() const
                 auto cIter = std::find(cFrontEndTypes.begin(), cFrontEndTypes.end(), cChip->getFrontEndType());
                 if(cIter == cFrontEndTypes.end()) cFrontEndTypes.push_back(cChip->getFrontEndType());
             } // chips
-        }     // hybrids
-    }         // opticalGroup
+        } // hybrids
+    } // opticalGroup
     return cFrontEndTypes;
 }
 
