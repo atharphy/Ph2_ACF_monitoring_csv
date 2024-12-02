@@ -1,6 +1,6 @@
 /*!
   \file                  RD53GenericDacDacScan.h
-  \brief                 Implementaion of a generic DAC-DAC scan
+  \brief                 Header of a generic DAC-DAC scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/05/21
@@ -30,11 +30,10 @@ class GenericDacDacScan : public PixelAlive
         delete histos;
     }
 
-    void Running() override;
-    void Stop() override;
-    void ConfigureCalibration() override;
-    void sendData() override;
-
+    void   Running() override;
+    void   Stop() override;
+    void   ConfigureCalibration() override;
+    void   sendData() override;
     void   localConfigure(const std::string& histoFileName, int currentRun) override;
     void   run() override;
     void   draw(bool saveData = true) override;

@@ -98,10 +98,12 @@ class lpGBT : public Chip
     std::map<std::string, float> getADCCalibrationData() const { return fADCcalibrationData; }
     void                         setADCCalibrationData(const std::map<std::string, float>& theInputMap);
 
-    // # Set the junction temperature. It should be updated by the user based on:
-    // # - thermal simulations and measurements performed in the final system, or
-    // # - data of its internal temperature sensor obtained during production testing
-    // #   (estimate_temperature_uncalib_vref)
+    // ################################################################################
+    // # Set the junction temperature. It should be updated by the user based on:     #
+    // # - thermal simulations and measurements performed in the final system, or     #
+    // # - data of its internal temperature sensor obtained during production testing #
+    // #   (estimate_temperature_uncalib_vref)                                        #
+    // ################################################################################
     void  setTemperature(float cTemperature) { fTemperature = cTemperature; }
     float getTemperature() { return fTemperature; }
 

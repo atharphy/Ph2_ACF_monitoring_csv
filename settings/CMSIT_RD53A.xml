@@ -302,6 +302,13 @@
     <Setting name="StopValueDAC2">      1000 </Setting>
     <Setting name="StepDAC2">             20 </Setting>
 
+    <Setting name="VTRxBiasStart">        40 </Setting>
+    <Setting name="VTRxBiasStop">         56 </Setting>
+    <Setting name="VTRxBiasStep">          4 </Setting>
+    <Setting name="VTRxModulationStart">  24 </Setting>
+    <Setting name="VTRxModulationStop">   40 </Setting>
+    <Setting name="VTRxModulationStep">    4 </Setting>
+
     <Setting name="DoOnlyNGroups">         0 </Setting>
     <Setting name="DisplayHisto">          0 </Setting>
     <Setting name="UpdateChipCfg">         1 </Setting>
