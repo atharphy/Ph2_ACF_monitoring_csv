@@ -218,11 +218,11 @@ uint32_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
     WriteChipReg(pChip, "ADC_control", theRegValue);
     theRegValue = 0xC0 | (pInput & 0x1F);
     WriteChipReg(pChip, "ADC_control", theRegValue);
-    
+
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-    uint16_t cMSB = ReadChipReg(pChip, "ADC_out_H");
-    uint16_t cLSB = ReadChipReg(pChip, "ADC_out_L");
+    uint16_t cMSB       = ReadChipReg(pChip, "ADC_out_H");
+    uint16_t cLSB       = ReadChipReg(pChip, "ADC_out_L");
     auto     finalValue = (cMSB << 8 | cLSB);
     return finalValue;
 }
