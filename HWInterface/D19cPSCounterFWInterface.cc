@@ -104,6 +104,7 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
 {
     BoardDataContainer theMissingCounterContainer;
     ContainerFactory::copyAndInitChip<std::vector<std::pair<uint8_t, uint8_t>>>(*theBoard, theMissingCounterContainer);
+    std::bitset<32>enabledHybrids(theBoard->getReg("fc7_daq_cnfg.global.hybrid_enable"));
 
     for(auto theOpticalGroup: *theBoard)
     {
@@ -111,20 +112,20 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
         auto cNFIFOentries = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.num_fifo_entry");
         if(cNFIFOentries < NSSACHANNELS * (NMPAROWS + 1) + 1)
         {
-            LOG(WARNING) << WARNING_FORMAT << "Incomplete counter packet" << RESET;
+            LOG(WARNING) << WARNING_FORMAT << "Incomplete counter packet, FIFO entries = " << cNFIFOentries << RESET;
             return false;
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         auto   cDDR3state  = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.fsm_state");
         size_t cIterations = 0;
-        while((cDDR3state >> 3) != 1 && cIterations < 10) // while not in idle state
+        while(cDDR3state != 0xA && cIterations < 10) // while not in idle state
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
             cDDR3state     = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.fsm_state");
             cIterations++;
         }
-        if((cDDR3state >> 3) != 1)
+        if(cDDR3state != 0xA)
         {
             LOG(WARNING) << WARNING_FORMAT << "Failed to read DDR3" << RESET;
             return false;
@@ -144,15 +145,10 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
                 std::vector<uint32_t> hybridPacket = {moduleData.at(hybridDataStart+3), moduleData.at(hybridDataStart+2), moduleData.at(hybridDataStart+1), moduleData.at(hybridDataStart+0), moduleData.at(hybridDataStart+7), moduleData.at(hybridDataStart+6), moduleData.at(hybridDataStart+5), moduleData.at(hybridDataStart+4)};
                 fData.insert(fData.end(), hybridPacket.begin(), hybridPacket.end());
 
-                Hybrid* theHybrid = nullptr;
-                try
-                {
-                    theHybrid = theOpticalGroup->getObject(hybridId + 2*theOpticalGroup->getId());
-                }
-                catch(const std::exception& e)
-                {
-                    continue; // this hybrid is not enabled
-                }
+                uint16_t hybridNumber = hybridId + 2*theOpticalGroup->getId();
+                if(enabledHybrids[hybridNumber] == 0) continue;
+
+                Hybrid* theHybrid = theOpticalGroup->getObject(hybridNumber);
                 
                 uint8_t numberOfCounters = (hybridPacket.at(5) >> 8) & 0x3F;
                 uint8_t numberOfExpectedCounters = 0;
@@ -283,15 +279,8 @@ bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* theBoard)
     size_t maximumNumberOfIterations = 30;
     while(iterationCounter < maximumNumberOfIterations)
     {
-        try
-        {
-            ReadEventsLocal(theBoard);
-            break;
-        }
-        catch(const std::exception& e)
-        {
-            ++iterationCounter;
-        }
+        if(ReadEventsLocal(theBoard)) break;
+        ++iterationCounter;
     }
     if(iterationCounter >= maximumNumberOfIterations)
     {
@@ -306,9 +295,6 @@ bool D19cPSCounterFWInterface::ReadEventsLocal(const Ph2_HwDescription::BeBoard*
 {
     // clear data vector
     fData.clear();
-
-    fTheRegManager->WriteReg("fc7_daq_ctrl.readout_block.control.readout_reset", 0x1);
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
 
     uint32_t delayAfterFastReset = 100;
     uint32_t delayAfterTestPulse = 50;
@@ -361,92 +347,79 @@ bool D19cPSCounterFWInterface::ReadEventsLocal(const Ph2_HwDescription::BeBoard*
 
     if(fPSCounterFast)
     {
-        size_t readDDR3Iteration    = 0;
-        size_t maxReadDDR3Iterations    = 30;
-        while(readDDR3Iteration < maxReadDDR3Iterations)
+        size_t searchStartPatternIteration    = 0;
+        size_t maxSearchStartPatternIterations    = 30;
+
+        while(searchStartPatternIteration < maxSearchStartPatternIterations)
         {
-
-            size_t searchStartPatternIteration    = 0;
-            size_t maxSearchStartPatternIterations    = 30;
-
-            while(searchStartPatternIteration < maxSearchStartPatternIterations)
+            size_t fsmStartIterations    = 0;
+            bool allCompleted;
+            while(fsmStartIterations < 30)
             {
-                size_t fsmStartIterations    = 0;
-                bool allCompleted;
-                while(fsmStartIterations < 30)
-                {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                    allCompleted = true;
-                    for(auto theOpticalGroup: *theBoard)
-                    {
-                        for(auto theHybrid: *theOpticalGroup)
-                        {
-                            fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
-
-                            auto cDecoderState  = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state");
-                            if(cDecoderState != 0x00)
-                            {
-                                allCompleted = false;
-                                break;
-                            }
-                        }
-                        if(!allCompleted) break;
-                    }
-                    if(allCompleted) break;
-                    fsmStartIterations++;
-                }
-
-                if(!allCompleted)
-                {
-                    LOG(ERROR) << ERROR_FORMAT << "Fast counter FSM did not run, please contact Fabio Ravera" << RESET;
-                    throw std::runtime_error("Fast counter FSM did not run");
-                }
-                
-                bool allStartPatternFound = true;
-
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                allCompleted = true;
                 for(auto theOpticalGroup: *theBoard)
                 {
                     for(auto theHybrid: *theOpticalGroup)
                     {
                         fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
-                        uint32_t startPatternNotFound = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.start_pattern_not_found");
-                        if(startPatternNotFound == 1)
+
+                        auto cDecoderState  = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state");
+                        if(cDecoderState != 0x00)
                         {
-                            LOG(DEBUG) << WARNING_FORMAT << "Start pattern not found for OpticalGroup " << +theOpticalGroup->getId() << " hybrid " << theHybrid->getId() % 2 << RESET;
-                            allStartPatternFound = false;
+                            allCompleted = false;
+                            break;
                         }
                     }
+                    if(!allCompleted) break;
                 }
-
-                if(!allStartPatternFound)
-                {
-                    fTheRegManager->WriteStackReg(firstListOfBoardRegisters);
-                    fTriggerInterface->SetNTriggersToAccept(fNEvents);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
-                    fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-                    std::this_thread::sleep_for(std::chrono::microseconds(waitForDataCollection));
-                    ++searchStartPatternIteration;
-                }
-                else
-                {
-                    break;
-                }
+                if(allCompleted) break;
+                fsmStartIterations++;
             }
-            if(searchStartPatternIteration >= maxSearchStartPatternIterations)
+
+            if(!allCompleted)
             {
-                LOG(ERROR) << ERROR_FORMAT << "Start pattern not found after " << searchStartPatternIteration << " trials" << RESET;
-                throw std::runtime_error("Start pattern not found");
+                LOG(ERROR) << ERROR_FORMAT << "Fast counter FSM did not run, please contact Fabio Ravera" << RESET;
+                throw std::runtime_error("Fast counter FSM did not run");
+            }
+            
+            bool allStartPatternFound = true;
+
+            for(auto theOpticalGroup: *theBoard)
+            {
+                for(auto theHybrid: *theOpticalGroup)
+                {
+                    fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
+                    uint32_t startPatternNotFound = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.start_pattern_not_found");
+                    if(startPatternNotFound == 1)
+                    {
+                        LOG(DEBUG) << WARNING_FORMAT << "Start pattern not found for OpticalGroup " << +theOpticalGroup->getId() << " hybrid " << theHybrid->getId() % 2 << RESET;
+                        allStartPatternFound = false;
+                    }
+                }
             }
 
-            if(FastRead(theBoard)) break;
-            else ++readDDR3Iteration;
+            if(!allStartPatternFound)
+            {
+                fTheRegManager->WriteStackReg(firstListOfBoardRegisters);
+                fTriggerInterface->SetNTriggersToAccept(fNEvents);
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+                std::this_thread::sleep_for(std::chrono::microseconds(waitForDataCollection));
+                ++searchStartPatternIteration;
+            }
+            else
+            {
+                break;
+            }
+        }
+        if(searchStartPatternIteration >= maxSearchStartPatternIterations)
+        {
+            LOG(ERROR) << ERROR_FORMAT << "Start pattern not found after " << searchStartPatternIteration << " trials" << RESET;
+            throw std::runtime_error("Start pattern not found");
         }
 
-        if(readDDR3Iteration >= maxReadDDR3Iterations)
-        {
-            LOG(ERROR) << ERROR_FORMAT << "DDR3 not read after " << readDDR3Iteration << " trials" << RESET;
-            throw std::runtime_error("DDR3 not read");
-        }
+        return FastRead(theBoard);
     }
     else
     {

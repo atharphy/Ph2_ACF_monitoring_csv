@@ -102,7 +102,7 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
 void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId)
 {
     if(testChannelGroup == nullptr) return;
-    auto& theChipEventContainer = fTheOccupancyContainer.getChip(hybridId/2, hybridId%2, chipContainer->getId());
+    auto& theChipEventContainer = fTheOccupancyContainer.getChip(hybridId/2, hybridId, chipContainer->getId());
 
     for(uint8_t row = 0; row < theChipEventContainer->getNumberOfRows(); ++row)
     {
