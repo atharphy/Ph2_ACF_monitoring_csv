@@ -221,7 +221,7 @@ uint32_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
     // fBoardFW->SingleRegisterWrite(pChip, cItem, cVerify);
     // this->WriteChipReg(pChip, "ADC_control", 0xE0 | (pInput & 0x1F));
     // this->WriteChipReg(pChip, "ADC_control", 0xC0 | (pInput & 0x1F));
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
     // cItem         = cRegMap["ADC_out_H"];
     // uint16_t cMSB = fBoardFW->SingleRegisterRead(pChip, cItem);

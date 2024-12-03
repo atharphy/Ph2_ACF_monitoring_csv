@@ -867,7 +867,7 @@ float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
         // this->WriteChipRegBits(pMPA2, "ADCcontrol", pValue, "Mask", cRegMask, false);
         this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x7 << 5), "Mask", 0xE0);
         this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x6 << 5), "Mask", 0xE0);
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
         uint16_t ADCRead = this->ReadChipReg(pMPA2, "ADC_output");
         ADCReadsAve += ADCRead;
         // std::cout<<"ADCRead "<<+ADCRead<<std::endl;
