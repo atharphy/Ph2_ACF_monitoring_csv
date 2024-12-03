@@ -101,7 +101,7 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
                     } // chips
                 }
             } // hybrids
-        }     // modules
+        } // modules
         // and then loop over map and write
         for(auto cIterator = fI2CSlaveMap.begin(); cIterator != fI2CSlaveMap.end(); cIterator++)
         {

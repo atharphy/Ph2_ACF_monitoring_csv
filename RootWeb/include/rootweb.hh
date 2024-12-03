@@ -39,7 +39,7 @@ std::string cleanUpObjectName(const std::string&);
 class RootWItem
 {
   public:
-    virtual ~RootWItem(){};
+    virtual ~RootWItem() {};
     RootWItem() { taken = false; };
     virtual bool     isTable() { return false; };
     virtual bool     isImage() { return false; };
@@ -54,7 +54,7 @@ class RootWText : public RootWItem
   public:
     RootWText() { myText_.clear(); };
     RootWText(string newText) { myText_.str(newText); };
-    ~RootWText(){};
+    ~RootWText() {};
     void     addText(string newText) { myText_ << newText; };
     ostream& dump(ostream& output)
     {
@@ -85,7 +85,7 @@ class RootWInfo : public RootWItem
         description_ = description;
         value_       = value;
     };
-    ~RootWInfo(){};
+    ~RootWInfo() {};
     string setDescription(string newText)
     {
         description_ = newText;
@@ -111,7 +111,7 @@ typedef std::map<pair<int, int>, int>    rootWTableContentColor;
 class RootWTable : public RootWItem
 {
   public:
-    ~RootWTable(){};
+    ~RootWTable() {};
     RootWTable();
     void           setContent(int row, int column, string content);
     void           setContent(int row, int column, int number);
@@ -190,7 +190,7 @@ class RootWFile : public RootWItem
 
   public:
     RootWFile() { fileName_ = "aFile.txt"; };
-    ~RootWFile(){};
+    ~RootWFile() {};
     RootWFile(string newFileName)
     {
         setFileName(newFileName);
@@ -217,7 +217,7 @@ class RootWFileList : public RootWItem
     string            targetDirectory_;
 
   public:
-    RootWFileList(){};
+    RootWFileList() {};
     template <class I>
     RootWFileList(I begin, I end)
     {
@@ -247,8 +247,8 @@ class RootWTextFile : public RootWFile
     stringstream myText_;
 
   public:
-    RootWTextFile(){};
-    ~RootWTextFile(){};
+    RootWTextFile() {};
+    ~RootWTextFile() {};
     RootWTextFile(string newFileName)
     {
         setFileName(newFileName);
@@ -270,8 +270,8 @@ class RootWBinaryFile : public RootWFile
     string originalFileName_;
 
   public:
-    RootWBinaryFile(){};
-    ~RootWBinaryFile(){};
+    RootWBinaryFile() {};
+    ~RootWBinaryFile() {};
     RootWBinaryFile(string newFileName)
     {
         setFileName(newFileName);
@@ -300,8 +300,8 @@ class RootWBinaryFileList : public RootWFileList
     std::list<string> originalFileNames_;
 
   public:
-    RootWBinaryFileList(){};
-    ~RootWBinaryFileList(){};
+    RootWBinaryFileList() {};
+    ~RootWBinaryFileList() {};
     template <class I>
     RootWBinaryFileList(I begin, I end) : RootWFileList(begin, end)
     {
@@ -450,8 +450,8 @@ class RootWItemCollection
     map<string, RootWItem*> itemCollection_;
 
   public:
-    RootWItemCollection(){};
-    ~RootWItemCollection(){};
+    RootWItemCollection() {};
+    ~RootWItemCollection() {};
     RootWItem*         getItem(string itemName);
     void               addItem(RootWItem* anItem, string itemName);
     vector<RootWItem*> getOtherItems();

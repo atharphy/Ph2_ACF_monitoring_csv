@@ -20,7 +20,7 @@ class PhaseTuningControl
     friend class PhaseTuningReply;
 
   public:
-    PhaseTuningControl(bool isOptical) : fIsOptical(isOptical){};
+    PhaseTuningControl(bool isOptical) : fIsOptical(isOptical) {};
     enum class Command
     {
         ReturnConfig     = 0,

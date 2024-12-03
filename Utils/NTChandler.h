@@ -24,7 +24,7 @@ class NTChandler
     std::string getNTCfile(const std::string& theNTCtype);
 
   private:
-    NTChandler(){};
+    NTChandler() {};
     NTChandler(const NTChandler&)            = delete;
     NTChandler& operator=(const NTChandler&) = delete;
 
