@@ -894,6 +894,8 @@ float MPA2Interface::calculateADCLSB(ReadoutChip* pMPA2, float theVrefValue)
 
 bool MPA2Interface::selectBlock(Chip* pMPA2, uint8_t block, uint8_t testPoint, uint8_t swEn)
 {
+    setBoard(pMPA2->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
     auto theCurrentMask = this->ReadChipReg(pMPA2, "Mask");
 
     std::vector<std::pair<std::string, uint16_t>> registerList;
