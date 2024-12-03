@@ -14,7 +14,7 @@ namespace Ph2_HwDescription
 {
 struct BeBoardRegItem
 {
-    BeBoardRegItem(){};
+    BeBoardRegItem() {};
     BeBoardRegItem(uint32_t pValue) : fValue(pValue) {}
     BeBoardRegItem(const BeBoardRegItem&) = default;
 

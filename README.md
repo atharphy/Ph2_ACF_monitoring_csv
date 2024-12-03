@@ -60,11 +60,6 @@ Enable shared Runners (if not enabled)
 
 
 ##
-### Setup on `RHEL 9` or `AlmaLinux 9`
-See <https://ph2acf.docs.cern.ch/general/required_install/> for instructions on installing required libraries and tools on `RHEL/AlmaLinux 9`
-
-
-##
 ### To pull large files
 Install `git lfs`
 ```bash

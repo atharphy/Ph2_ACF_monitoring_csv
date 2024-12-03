@@ -188,10 +188,10 @@ void RegisterTester::CheckReadRegisters(uint8_t pPageToSelect, uint8_t pNRegiste
                             cIndex++;
                         }
                     } // loop over registers
-                }     // chips
-            }         // hyrbids
-        }             // optical group
-    }                 // boards
+                } // chips
+            } // hyrbids
+        } // optical group
+    } // boards
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillRegisterReadMismatches(cMismatches, cPageToggles, cMismatchValues);
 #endif
@@ -338,10 +338,10 @@ void RegisterTester::CheckWriteRegisters(uint8_t pPageToSelect, uint8_t pNRegist
                             cNWrites++;
                         }
                     } // loop over registers
-                }     // chips
-            }         // hyrbids
-        }             // optical group
-    }                 // boards
+                } // chips
+            } // hyrbids
+        } // optical group
+    } // boards
 
     // make sure that original default values are put back
     for(auto cBoard: *fDetectorContainer)
@@ -507,9 +507,9 @@ void RegisterTester::CheckPageSwitchRead(uint8_t pPageToSelect, uint8_t pNRegist
                     LOG(INFO) << BOLDBLUE << "Hybrid#" << +cHybrid->getId() << " Chip#" << +cChip->getId() << " found " << +cMismatches.size() << " mismatches in " << +cNReads << " reads and "
                               << +cNPageToggles << " page toggles." << RESET;
                 } // chips
-            }     // hyrbids
-        }         // optical group
-    }             // boards
+            } // hyrbids
+        } // optical group
+    } // boards
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillRegisterReadMismatches(cMismatches, cPageToggles, cMismatchValues);
     fDQMHistogrammer.fillRegisterReadCounts(cTotalReadAttempts, cTotalPageToggles);
@@ -671,10 +671,10 @@ void RegisterTester::CheckPageSwitchWrite(uint8_t pPageToSelect, uint8_t pNRegis
                             cWriteCount++;
                         }
                     } // loop over registers
-                }     // chips
-            }         // hyrbids
-        }             // optical group
-    }                 // boards
+                } // chips
+            } // hyrbids
+        } // optical group
+    } // boards
 
     // make sure that original default values are put back
     for(auto cBoard: *fDetectorContainer)
@@ -777,10 +777,10 @@ void RegisterTester::RegisterTest()
                         LOG(DEBUG) << BOLDMAGENTA << "Default value after a hard reset of register " << cListItem.first << " is 0x" << std::hex << +cRegItem.fValue << std::dec
                                    << " value after configuration should be 0x" << std::hex << cListItem.second.fValue << std::dec << RESET;
                     } // map
-                }     // chip
-            }         // hybrid
-        }             // OG
-    }                 // board loop to save record of registers
+                } // chip
+            } // hybrid
+        } // OG
+    } // board loop to save record of registers
 
     for(size_t cAttempt = 0; cAttempt < cAttempts; cAttempt++)
     {
@@ -865,9 +865,9 @@ void RegisterTester::RegisterTest()
                             LOG(INFO) << BOLDRED << "Sensitive register " << cSensitiveRegister.first << " on page " << +cSensitiveRegister.second.fPage << RESET;
                         }
                     } // chip
-                }     // hybrid
-            }         // OG
-        }             // board loop to run test
+                } // hybrid
+            } // OG
+        } // board loop to run test
     }
     cTestFlavor++;
 }

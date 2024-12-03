@@ -219,8 +219,8 @@ void OTPScommonNoise::TakeData()
                         ->getSummary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>()[cStripModuleHits][cPixelModuleHits] += 1;
 
                 } // end events loop
-            }     // end module loop
-        }         // end acquisition loop
+            } // end module loop
+        } // end acquisition loop
     }
 
 #ifdef __USE_ROOT__

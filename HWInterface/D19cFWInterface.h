@@ -335,16 +335,16 @@ class D19cFWInterface : public BeBoardFWInterface
     // ##############################
     // # Pseudo Random Bit Sequence #
     // ##############################
-    std::vector<double> RunBERtest(bool given_time, double frames_or_time, std::vector<std::pair<uint16_t, uint16_t>> hybrid_id_chip_lane, uint8_t frontendSpeed) override { return {}; };
+    std::vector<double> RunBERtest(bool given_time, double frames_or_time, const std::map<uint16_t, std::vector<uint8_t>>& hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed) override { return {}; };
 
     // ############################
     // # Read/Write Optical Group #
     // ############################
     // Functions for standard uDTC
-    void     SetOptoLinkVersion(uint8_t version) override{};
-    void     selectLink(const uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override{};
+    void     SetOptoLinkVersion(uint8_t version) override {};
+    void     selectLink(const uint8_t pLinkId = 0, uint32_t cWait_ms = 100) override {};
     void     StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uint32_t& mgtStatus) override {}
-    void     ResetOptoLink() override{};
+    void     ResetOptoLink() override {};
     bool     WriteOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerifLoop = false) override { return true; };
     uint32_t ReadOptoLinkRegister(const Ph2_HwDescription::Chip* pChip, const uint32_t pAddress) override { return 0; };
 

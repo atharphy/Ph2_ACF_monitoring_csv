@@ -37,7 +37,7 @@ D19cPSEventAS::D19cPSEventAS(const BeBoard* pBoard, const std::vector<uint32_t>&
             fCounterData.push_back(cHybridCounterData);
             fChipIds.push_back(cChipIds);
         } // hybrids
-    }     // opticalGroup
+    } // opticalGroup
     this->Set(pBoard, list);
 }
 void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
@@ -64,9 +64,9 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                     }
                     cDataIterator++;
                 } // channels
-            }     // chips
-        }         // hybrids
-    }             // optical groups
+            } // chips
+        } // hybrids
+    } // optical groups
 }
 // required by event but not sure if makes sense for AS
 void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId)

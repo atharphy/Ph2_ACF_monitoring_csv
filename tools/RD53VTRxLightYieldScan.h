@@ -1,30 +1,31 @@
 /*!
-  \file                  RD53BERtest.h
-  \brief                 Header of Bit Error Rate test
+  \file                  RD53VTRxLightYieldScan.h
+  \brief                 Implementaion of VTRx light yield scan
   \author                Mauro DINARDO
   \version               1.0
-  \date                  28/06/18
+  \date                  29/11/24
   Support:               email to mauro.dinardo@cern.ch
 */
 
-#ifndef RD53BERtest_H
-#define RD53BERtest_H
+#ifndef RD53VTRxLightYieldScan_H
+#define RD53VTRxLightYieldScan_H
 
+#include "MonitorUtils/DetectorMonitor.h"
 #include "RD53CalibBase.h"
 
 #ifdef __USE_ROOT__
-#include "DQMUtils/RD53BERtestHistograms.h"
+#include "DQMUtils/RD53VTRxLightYieldScanHistograms.h"
 #else
-typedef bool BERtestHistograms;
+typedef bool VTRxLightYieldScanHistograms;
 #endif
 
 // ##################
 // # BER test suite #
 // ##################
-class BERtest : public CalibBase
+class VTRxLightYieldScan : public CalibBase
 {
   public:
-    ~BERtest()
+    ~VTRxLightYieldScan()
     {
         this->WriteRootFile();
         delete histos;
@@ -34,26 +35,30 @@ class BERtest : public CalibBase
     void Stop() override;
     void ConfigureCalibration() override;
     void sendData() override;
-
     void localConfigure(const std::string& histoFileName, int currentRun) override;
     void run() override;
     void draw(bool saveData = true) override;
 
-    BERtestHistograms* histos;
+    VTRxLightYieldScanHistograms* histos;
 
   private:
     void fillHisto() override;
+
+    std::vector<uint16_t> dac1List;
+    std::vector<uint16_t> dac2List;
+    DetectorDataContainer theVTRxLightYieldScanContainer;
 
   protected:
     // ######################################
     // # Parameters from configuration file #
     // ######################################
-    size_t chain2test;
-    bool   given_time;
-    double frames_or_time;
+    size_t biasStart;
+    size_t biasStop;
+    size_t biasStep;
+    size_t modulationStart;
+    size_t modulationStop;
+    size_t modulationStep;
     bool   doDisplay;
-
-    DetectorDataContainer theBERtestContainer;
 };
 
 #endif

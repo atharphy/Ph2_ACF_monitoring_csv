@@ -360,7 +360,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             fDetectorMonitor = new PSMonitor(this, *fDetectorMonitorConfig);
         else
         {
-            LOG(ERROR) << BOLDRED << "Unrecognized monitor type, Aborting" << RESET;
+            LOG(ERROR) << BOLDRED << "Unrecognized monitor type. Aborting" << RESET;
             exit(EXIT_FAILURE);
         }
 
@@ -544,9 +544,14 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                     eFuseCode      = -1;
                     eFuseCodeCheck = false;
                 }
+                catch(const std::out_of_range& err)
+                {
+                    LOG(WARNING) << RED << err.what() << RESET;
+                    eFuseCode = atoi(err.what());
+                }
 
                 LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
-                if(eFuseCode >= 0) LOG(INFO) << GREEN << "e-Fuse code: " << BOLDYELLOW << static_cast<uint32_t>(eFuseCode) << RESET;
+                if(eFuseCode >= 0) LOG(INFO) << GREEN << "e-fuse code: " << BOLDYELLOW << static_cast<uint32_t>(eFuseCode) << RESET;
                 LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
 
@@ -746,8 +751,8 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             }
 
             for(auto cChip: *cHybrid) { fReadoutChipInterface->ConfigureChip(cChip); } // Chip config
-        }                                                                              // hybrid
-    }                                                                                  // OG
+        } // hybrid
+    } // OG
     LOG(INFO) << BOLDMAGENTA << "Configured OT module" << RESET;
 }
 
@@ -852,7 +857,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
             LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence..." << RESET;
 
         cSuccess = true; // At least one hybrid is working fine
-    }                    // All hybrids connected to this OG
+    } // All hybrids connected to this OG
 #ifdef __TCUSB__
     cSuccess = true; // No hybrids in the SEH/ROH test system
 #endif

@@ -115,8 +115,8 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
                     LOG(INFO) << BOLDBLUE << "Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
 
                 } // hybrids or CICs
-            }     // OGs
-        }         // events
+            } // OGs
+        } // events
         // figure out the differences between the bxIds
         auto cFirstDifference = cBxDifferences[0];
         std::adjacent_difference(cBxDifferences.begin(), cBxDifferences.end(), cBxDifferences.begin());
@@ -329,7 +329,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             } // PS chips  - MPAs
 
         } // Hybrid
-    }     // OG
+    } // OG
 
     // find correct hit latency
     bool     cFoundCorrectHitLatency = false;
@@ -356,8 +356,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                     else
                         fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", (uint16_t)cLatency);
                 } // Chip - only MPAs and CBCs for this test since I'm eihter in p=p mode or 2S
-            }     // hybrid
-        }         // OG
+            } // hybrid
+        } // OG
 
         // send a ReSync since the latency was changed
         fBeBoardInterface->ChipReSync(pBoard);
@@ -461,8 +461,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                         if(cNstubsThisHybrd > 0)
                             LOG(INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " found " << +cNstubsThisHybrd << " stubs in CIC#" << +cHybrid->getId() << " BxId is " << +cBx << RESET;
                     } // hybrids
-                }     // OGs
-            }         // events
+                } // OGs
+            } // events
             cFoundCorrectStubLatency = (cNStubsFound > cFraction * cNinjectedStubs * cEvents.size());
             if(cFoundCorrectStubLatency)
             {
@@ -503,9 +503,9 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                                           << " stubs." << RESET;
                             }
                         } // Chips
-                    }     // hybrids
-                }         // OGs
-            }             // events
+                    } // hybrids
+                } // OGs
+            } // events
         }
     }
 
@@ -520,7 +520,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
             fCicInterface->SetSparsification(cCic, cSparsified);
         } // hybrids
-    }     // OG
+    } // OG
     // set everything back to original values .. like I wasn't here
     // reset fast command registers
     LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Resetting BeBoards regs back to their original values" << RESET;
