@@ -220,8 +220,7 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
             {
                 const auto& missingChannelVector = theMissingCounterContainer.getChip(theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::vector<std::pair<uint8_t, uint8_t>>>();
                 if(missingChannelVector.size() == 0) continue;
-                
-                uint8_t idForCIC = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic->getMapping().at(theChip->getId() % 8);
+                uint32_t idForCIC = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic->getMapping().at(theChip->getId() % 8);
                 std::vector<ChipRegItem> registersToRead;
                 for(const auto& missingChannel: missingChannelVector)
                 {
@@ -235,21 +234,19 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
                 uint16_t registerCounter = 0;
                 for(const auto& missingChannel: missingChannelVector)
                 {
-                    uint16_t counterValue = registersToRead.at(registerCounter*2).fValue << 8 | registersToRead.at(registerCounter*2 + 1).fValue;
-                    uint32_t fakeStubPacket = (7 << 19) | (idForCIC) << 16 | ((counterValue & 0x7F) << 8) | ((counterValue >> 7) & 0x7F);
-
-                    uint32_t channelOffset = numberOfParsedOpticalGroups * NSSACHANNELS * (NMPAROWS + 1) + missingChannel.first * 120 + missingChannel.second + 256 * theHybrid->getId();
-                    uint8_t numberOfCounters = (fData.at(channelOffset + 5) >> 8) & 0x3F;
-
-                    uint8_t counterNumber = 8 - (numberOfCounters + 1);
-
-                    uint8_t counterStart = 21 * counterNumber;
-                    uint8_t counterEnd = 21 * (counterNumber+1) -1;
+                    uint32_t counterValue = (registersToRead.at(registerCounter*2).fValue << 8 | registersToRead.at(registerCounter*2 + 1).fValue) +1;
+                    uint32_t fakeStubPacket = (7 << 18) | (idForCIC) << 15 | ((counterValue & 0x7F) << 8) | ((counterValue >> 7) & 0x7F);
+                    uint32_t channelOffset = ((numberOfParsedOpticalGroups * NSSACHANNELS * (NMPAROWS + 1) + missingChannel.first * 120 + missingChannel.second)*2 + theHybrid->getId()%2 )*8;
+                    
+                    uint16_t numberOfCounters = (fData.at(channelOffset + 5) >> 8) & 0x3F;
+                    uint16_t counterNumber = 8 - (numberOfCounters + 1);
+                    uint16_t counterStart = 21 * counterNumber;
+                    uint16_t counterEnd = 21 * (counterNumber+1) -1;
 
                     uint32_t firstWord  = counterStart / 32;
                     uint32_t secondWord = counterEnd / 32;
 
-                    uint32_t mask = 0x1FFFF;
+                    uint32_t mask = 0x1FFFFF;
 
                     if(firstWord == secondWord)
                     {
@@ -258,11 +255,11 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
                     else
                     {
                         fData.at(channelOffset + firstWord)  = (fData.at(channelOffset + firstWord) & (~(mask << (counterStart % 32)))) | ((fakeStubPacket & mask) << (counterStart % 32));
-                        fData.at(channelOffset + secondWord) = (fData.at(channelOffset + firstWord) & (~(mask >> (32 - counterStart % 32)))) | ((fakeStubPacket & mask) >> (32 - counterStart % 32));
+                        fData.at(channelOffset + secondWord) = (fData.at(channelOffset + secondWord) & (~(mask >> (32 - counterStart % 32)))) | ((fakeStubPacket & mask) >> (32 - counterStart % 32));
                     }
 
+                    fData.at(channelOffset + 5) = (fData.at(channelOffset + 5) & 0xFFFFC0FF) | ((numberOfCounters + 1) << 8);
                     ++registerCounter;
-
                 }
 
             }
