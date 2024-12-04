@@ -50,7 +50,6 @@ class PSCounterTest : public Tool
     bool                   fWithSSA = false;
     bool                   fWithMPA = false;
 
-    bool GetCounterData(Ph2_HwDescription::BeBoard* theBoard, const std::string& theOutputFileName, int eventsPerPoint);
     // Settings
     bool fDisableStubLogic{true};
 
