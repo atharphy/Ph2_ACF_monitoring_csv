@@ -201,7 +201,7 @@ uint32_t SSA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << " not found for this chip type - aborting." << RESET;
         abort();
     }
-    LOG(DEBUG) << BOLDMAGENTA << " converting " << pRegName << " to " << +theRegister->second << RESET;
+    LOG(DEBUG) << BOLDMAGENTA << "For SSA " << +pChip->getId() << " converting " << pRegName << " to " << +theRegister->second << RESET;
     return SSA2Interface::ReadADC(pChip, theRegister->second);
 }
 
@@ -209,6 +209,8 @@ uint32_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
 {
     // bool cVerify = true;
     setBoard(pChip->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
+
     // auto cRegMap = pChip->getRegMap();
     // auto cItem   = cRegMap.at("ADC_control");
     // cItem.fValue = 0xE0 | (pInput & 0x1F);
@@ -216,14 +218,10 @@ uint32_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
     WriteChipReg(pChip, "ADC_control", theRegValue);
     theRegValue = 0xC0 | (pInput & 0x1F);
     WriteChipReg(pChip, "ADC_control", theRegValue);
-    // fBoardFW->SingleRegisterWrite(pChip, cItem, cVerify);
-    // cItem.fValue = 0xC0 | (pInput & 0x1F);
-    // fBoardFW->SingleRegisterWrite(pChip, cItem, cVerify);
-    // this->WriteChipReg(pChip, "ADC_control", 0xE0 | (pInput & 0x1F));
-    // this->WriteChipReg(pChip, "ADC_control", 0xC0 | (pInput & 0x1F));
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    uint16_t cMSB = ReadChipReg(pChip, "ADC_out_H");
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    uint16_t cMSB       = ReadChipReg(pChip, "ADC_out_H");
     uint16_t cLSB       = ReadChipReg(pChip, "ADC_out_L");
     auto     finalValue = (cMSB << 8 | cLSB);
     return finalValue;

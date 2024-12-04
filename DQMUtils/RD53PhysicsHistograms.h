@@ -22,7 +22,7 @@ class PhysicsHistograms : public DQMHistogramBase
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::string& inputStream) override;
-    void reset() override{};
+    void reset() override {};
 
     void fill(const DetectorDataContainer& DataContainer);
     void fillBCID(const DetectorDataContainer& DataContainer);

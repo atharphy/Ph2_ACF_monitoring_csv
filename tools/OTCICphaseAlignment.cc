@@ -186,8 +186,7 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                     continue;
                 }
             } // CICs
-        }     // OG
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+        } // OG
 
         // Find and set best phases
         for(auto theOpticalGroup: *theBoard)

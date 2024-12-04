@@ -282,11 +282,11 @@ void OTCICtoLpGBTecv::runECV()
                                     theNumberOfMatches = 0;
                                 }
                             } // hybrid loop
-                        }     // lpgbt phase loop
-                    }         // CIC driver strenght loop
-                }             // clock strenght loop
-            }                 // polarity loop
-        }                     // optical group loop
+                        } // lpgbt phase loop
+                    } // CIC driver strenght loop
+                } // clock strenght loop
+            } // polarity loop
+        } // optical group loop
     }
 }
 

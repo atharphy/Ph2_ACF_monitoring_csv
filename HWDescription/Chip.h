@@ -240,7 +240,7 @@ class Chip : public FrontEndDescription
     std::vector<std::string>                         getReadOnlyRegisterList() const;
 
   protected:
-    virtual void                                     initializeFreeRegisters(){};
+    virtual void                                     initializeFreeRegisters() {};
     std::string                                      fConfigFileName;
     uint8_t                                          fChipCode;
     uint8_t                                          fChipId;

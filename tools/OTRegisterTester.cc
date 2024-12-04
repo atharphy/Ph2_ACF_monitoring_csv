@@ -83,8 +83,8 @@ void OTRegisterTester::TestRegisters()
                 }
 #endif
             } // hybrid loop
-        }     // optical group loop
-    }         // board loop
+        } // optical group loop
+    } // board loop
 }
 
 float OTRegisterTester::EfficiencyCalculator(Ph2_HwDescription::Chip* theChip, std::vector<std::string> theRegisters)

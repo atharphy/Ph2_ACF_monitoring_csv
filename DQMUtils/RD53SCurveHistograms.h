@@ -32,7 +32,7 @@ class SCurveHistograms : public DQMHistogramBase
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::string& inputStream) override;
-    void reset() override{};
+    void reset() override {};
 
     void fillOccupancy(const DetectorDataContainer& OccupancyContainer, uint16_t DELTA_VCAL);
     void fillThrAndNoise(const DetectorDataContainer& ThrAndNoiseContainer);

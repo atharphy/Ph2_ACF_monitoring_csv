@@ -19,13 +19,13 @@
 class MonitorDQMPlotRD53 : public MonitorDQMPlotBase
 {
   public:
-    MonitorDQMPlotRD53(){};
-    ~MonitorDQMPlotRD53(){};
+    MonitorDQMPlotRD53() {};
+    ~MonitorDQMPlotRD53() {};
 
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& detectorMonitorConfig) override;
     bool fill(std::string& inputStream) override;
-    void process() override{};
-    void reset(void) override{};
+    void process() override {};
+    void reset(void) override {};
 
     void fillChipPlots(DetectorDataContainer& DataContainer, const std::string& registerName);
     void fillOptoPlots(DetectorDataContainer& DataContainer, const std::string& registerName);

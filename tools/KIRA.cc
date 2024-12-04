@@ -158,8 +158,8 @@ void KIRA::determineLatency()
                     {
                         cHitContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = 0;
                     } // chip
-                }     // hybrid
-            }         // optical group
+                } // hybrid
+            } // optical group
 
             // start at the beginning + trigger id in burst
             auto cEventIter  = cEvents.begin() + cTriggerId;
@@ -188,8 +188,8 @@ void KIRA::determineLatency()
                                 }
                             }
                         } // chip vector
-                    }     // hybrid vector
-                }         // optical group vector
+                    } // hybrid vector
+                } // optical group vector
                 cEventIter += (1 + cTriggerMult);
             } while(cEventIter < cEvents.end());
 #ifdef __USE_ROOT__
@@ -413,8 +413,8 @@ DetectorDataContainer KIRA::analyseEvents(BeBoard* pBoard, const std::vector<Eve
                         }
                     }
                 } // chip vector
-            }     // hybrid vector
-        }         // optical group vector
+            } // hybrid vector
+        } // optical group vector
         cEventIter += 1;
     } while(cEventIter < pEvents.end());
     return cHitContainer;

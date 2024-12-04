@@ -160,7 +160,7 @@ void PSBiasCal::CalibrateADC()
                 LOG(INFO) << BOLDBLUE << "ADC_ " << cADCs_Names[cIndx] << " reading from lpGBT " << +cMean * 1e3 << " milli-volts. This is monitored via the " << cModuleSide[cIndx]
                           << " side of the module" << RESET;
             } // read all monitors
-        }     // configure lpGBT
+        } // configure lpGBT
     }
 }
 
@@ -751,9 +751,9 @@ void PSBiasCal::CalibrateBias()
                     DisableTest(cChip);
 
                 } // chip
-            }     // hybrid
-        }         // optica]l group
-    }             // board
+            } // hybrid
+        } // optica]l group
+    } // board
 #ifdef __USE_ROOT__
     fDQMHistogramPSBiasCal.fillDACPlots(theVREFDACContainer);
     fDQMHistogramPSBiasCal.fillSlopePlots(theADCSlopeContainer);
