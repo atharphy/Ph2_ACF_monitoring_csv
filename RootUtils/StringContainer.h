@@ -42,7 +42,7 @@ class StringContainer : public PlotContainer
         fDirectoryPath = gDirectory->GetPath();
     }
 
-    void        setNameTitle(std::string histogramName, std::string histogramTitle) override{};
+    void        setNameTitle(std::string histogramName, std::string histogramTitle) override {};
     void        setName(const std::string& theName) { fName = theName; }
     std::string getName() const override { return fName; };
     std::string getTitle() const override { return ""; };

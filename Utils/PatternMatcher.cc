@@ -10,7 +10,6 @@ PatternMatcher::~PatternMatcher() {}
 void PatternMatcher::addToPattern(uint32_t thePattern, uint32_t thePatternMask, uint8_t thePatternBitLenght)
 {
     fPatternNumberOfMaskedBits = 0;
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << std::hex << thePattern << " " << thePatternMask << std::dec << " " << +thePatternBitLenght << std::endl;
 
     uint8_t numberOfBitsInWord = (sizeof(uint32_t)) * 8;
     uint8_t availableBitNumber = numberOfBitsInWord - fPatternNumberOfBits % numberOfBitsInWord;

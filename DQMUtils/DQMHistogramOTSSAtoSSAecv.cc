@@ -90,7 +90,7 @@ void DQMHistogramOTSSAtoSSAecv::fillStubPatternEfficiencyScan(DetectorDataContai
                 for(int mpaId = mpaRange.first; mpaId < mpaRange.second; ++mpaId)
                 {
                     patternMatchingEfficiencyHistogram->SetBinContent(
-                        clockEdge + 1, direction * (mpaRange.second - mpaRange.first) + (mpaId - mpaRange.first) + 1, thePatternMatchingEfficiencyVector[mpaId][1]);
+                        clockEdge + 1, direction * (mpaRange.second - mpaRange.first) + (mpaId - mpaRange.first) + 1, thePatternMatchingEfficiencyVector.at(mpaId).at(1));
                 }
             }
         }

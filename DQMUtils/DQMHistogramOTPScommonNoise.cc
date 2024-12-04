@@ -167,7 +167,7 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
         std::cout << "Matched OTPScommonNoiseStripModuleHit!!!!!\n";
         bool                  isSSA;
         DetectorDataContainer theDetectorData =
-            theStripModuleHitContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(
+            theStripModuleHitContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS * 2 + 1)>>(
                 fDetectorContainer, isSSA);
         // Filling the histograms
         fillModuleHitPlots(theDetectorData, isSSA);
@@ -180,7 +180,7 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
         std::cout << "Matched OTPScommonNoisePixelModuleHit!!!!!\n";
         bool                  isSSA;
         DetectorDataContainer theDetectorData =
-            thePixelModuleHitContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(
+            thePixelModuleHitContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS * 2 + 1)>>(
                 fDetectorContainer, isSSA);
         // Filling the histograms
         fillModuleHitPlots(theDetectorData, isSSA);
@@ -217,7 +217,7 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
         std::cout << "Matched OTPScommonNoiseStripPixelModuleCorrelation!!!!!\n";
         DetectorDataContainer theDetectorData =
             theStripPixelModuleContainerSerialization
-                .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>(fDetectorContainer);
+                .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS * 2 + 1), (MAXCICCHANNELS * 2 + 1)>>(fDetectorContainer);
         // Filling the histograms
         fillStripPixelModuleCorrelationPlots(theDetectorData);
         return true;
@@ -305,12 +305,12 @@ void DQMHistogramOTPScommonNoise::fillModuleHitPlots(DetectorDataContainer& theH
             if(isStrip)
             {
                 TH1F* theHistogram = fStripModuleHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                fillEventsVsHitsHist<MAXCICCHANNELS + 1>(opticalGroup, *theHistogram);
+                fillEventsVsHitsHist<MAXCICCHANNELS * 2 + 1>(opticalGroup, *theHistogram);
             }
             else
             {
                 TH1F* theHistogram = fPixelModuleHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                fillEventsVsHitsHist<MAXCICCHANNELS + 1>(opticalGroup, *theHistogram);
+                fillEventsVsHitsHist<MAXCICCHANNELS * 2 + 1>(opticalGroup, *theHistogram);
             }
         }
     }
@@ -369,7 +369,7 @@ void DQMHistogramOTPScommonNoise::fillStripPixelModuleCorrelationPlots(DetectorD
         {
             if(!opticalGroup->hasSummary()) continue;
             TH2F* h2DModuleCorrelation = fStripPixelModuleHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-            fillCorrelationHist<MAXCICCHANNELS + 1, MAXCICCHANNELS + 1>(opticalGroup, h2DModuleCorrelation);
+            fillCorrelationHist<MAXCICCHANNELS * 2 + 1, MAXCICCHANNELS * 2 + 1>(opticalGroup, h2DModuleCorrelation);
         }
     }
 }

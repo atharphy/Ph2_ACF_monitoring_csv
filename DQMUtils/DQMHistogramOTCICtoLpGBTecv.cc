@@ -29,56 +29,55 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
     std::vector<float> listOfClockStrength = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTCICtoLpGBTecv_ClockStrength", "1, 4, 7"));
     size_t             numberOfLines       = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
 
-    // x-axis is line:clock strenghts and y-axis is LpGBT phase
+    // x-axis is LpGBT phase and y-axis is line
     for(auto polarity: listOfClockPolarity)
     {
         for(auto CICStrength: listOfCICStrength)
         {
-            // Declare histogram axes titles and number of bins
-            size_t              numberOfYAxisBins = listOfLpGBTPhase.size();
-            size_t              numberofXaxisBins = numberOfLines * listOfClockStrength.size();
-            HistContainer<TH2F> ECVEfficiencyHistogram(Form("Efficiency_CIC_Clock_Polarity_%.0f-CIC_Signal_Strength_%.0f", polarity, CICStrength),
-                                                       Form("Polarity %.0f CIC Strength %.0f", polarity, CICStrength),
-                                                       numberofXaxisBins,
-                                                       0,
-                                                       numberofXaxisBins,
-                                                       numberOfYAxisBins,
-                                                       0,
-                                                       numberOfYAxisBins);
-
-            ECVEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle("Line : Clock strenghts");
-            ECVEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("lpGBT Phase");
-            ECVEfficiencyHistogram.fTheHistogram->SetStats(false);
-            ECVEfficiencyHistogram.fTheHistogram->GetYaxis()->SetLabelSize(0.04);
-            ECVEfficiencyHistogram.fTheHistogram->GetXaxis()->SetLabelSize(0.02);
-
-            // Label the y axis with the lpGBT phase
-            int binNumber = 1;
-            for(auto phase: listOfLpGBTPhase)
+            for(auto hybridClockStrength: listOfClockStrength)
             {
-                std::string s = convertToString(phase);
-                ECVEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(binNumber, s.c_str());
-                binNumber++;
-            }
+                // Declare histogram axes titles and number of bins
+                size_t              numberOfXaxisBins = listOfLpGBTPhase.size();
+                size_t              numberOfYaxisBins = numberOfLines;
+                HistContainer<TH2F> ECVEfficiencyHistogram(Form("Efficiency_CIC_Clock_Polarity_%.0f-CIC_Signal_Strength_%.0f-Clock_Strength_%.0f", polarity, CICStrength, hybridClockStrength),
+                                                           Form("Polarity %.0f CIC Strength %.0f Clock Strength %.0f", polarity, CICStrength, hybridClockStrength),
+                                                           numberOfXaxisBins,
+                                                           0,
+                                                           numberOfXaxisBins,
+                                                           numberOfYaxisBins,
+                                                           0,
+                                                           numberOfYaxisBins);
 
-            // Label the x axis with the line and clock strength
-            binNumber = 1;
-            for(uint32_t channel = 1; channel <= numberOfLines; channel++)
-            {
-                for(auto hybridClockStrength: listOfClockStrength)
+                ECVEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
+                ECVEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle("lpGBT Phase");
+                ECVEfficiencyHistogram.fTheHistogram->SetStats(false);
+                ECVEfficiencyHistogram.fTheHistogram->GetXaxis()->SetLabelSize(0.04);
+                ECVEfficiencyHistogram.fTheHistogram->GetYaxis()->SetLabelSize(0.04);
+
+                // Label the x axis with the lpGBT phase
+                int binNumber = 1;
+                for(auto phase: listOfLpGBTPhase)
                 {
-                    std::string prefix = channel == 1 ? "L1" : "Stub" + convertToString(channel - 1);
-                    std::string s      = prefix + ":" + convertToString(hybridClockStrength);
+                    std::string s = convertToString(phase);
                     ECVEfficiencyHistogram.fTheHistogram->GetXaxis()->SetBinLabel(binNumber, s.c_str());
                     binNumber++;
                 }
-            }
 
-            // Book the histograms
-            auto CICStrengthPolarityCombination = (CICStrength * 10) + polarity;
-            ECVEfficiencyHistogram.fTheHistogram->LabelsOption("v", "X");
-            ECVEfficiencyHistogram.fTheHistogram->DrawCopy("text");
-            RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fEfficiency[CICStrengthPolarityCombination], ECVEfficiencyHistogram);
+                // Label the y axis with the line and clock strength
+                binNumber = 1;
+                for(uint32_t channel = 1; channel <= numberOfLines; channel++)
+                {
+                    std::string s = channel == 1 ? "L1" : "Stub" + convertToString(channel - 1);
+                    ECVEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(binNumber, s.c_str());
+                    binNumber++;
+                }
+
+                // Book the histograms
+                auto ClockCICStrengthPolarityCombination = (hybridClockStrength * 100) + (CICStrength * 10) + polarity;
+                ECVEfficiencyHistogram.fTheHistogram->LabelsOption("v", "X");
+                ECVEfficiencyHistogram.fTheHistogram->DrawCopy("text");
+                RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fEfficiency[ClockCICStrengthPolarityCombination], ECVEfficiencyHistogram);
+            }
         }
     }
 }
@@ -111,12 +110,12 @@ bool DQMHistogramOTCICtoLpGBTecv::fill(std::string& inputStream)
         // It matched! Decoding data
         std::cout << "Matched OTCICtoLpGBTecv EfficiencyHistogram!!!!!\n";
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
-        uint8_t               pClockStrengthLengthOfOptions, pClockPolarity, pClockStrengthIndex, pCicStrength, pPhaseIndex;
+        uint8_t               pClockPolarity, pClockStrengthIndex, pCicStrength, pPhaseIndex;
         DetectorDataContainer theDetectorData = theECVlpGBTCICContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, float, EmptyContainer>(
-            fDetectorContainer, pClockStrengthLengthOfOptions, pClockPolarity, pClockStrengthIndex, pCicStrength, pPhaseIndex);
+            fDetectorContainer, pClockPolarity, pClockStrengthIndex, pCicStrength, pPhaseIndex);
 
         // Filling the histograms
-        fillEfficiency(pClockStrengthLengthOfOptions, pClockPolarity, pClockStrengthIndex, pCicStrength, pPhaseIndex, theDetectorData);
+        fillEfficiency(pClockPolarity, pClockStrengthIndex, pCicStrength, pPhaseIndex, theDetectorData);
         return true;
     }
 
@@ -126,12 +125,7 @@ bool DQMHistogramOTCICtoLpGBTecv::fill(std::string& inputStream)
     // SoC utilities only - END
 }
 
-void DQMHistogramOTCICtoLpGBTecv::fillEfficiency(uint8_t                pClockStrengthLengthOfOptions,
-                                                 uint8_t                pClockPolarity,
-                                                 uint8_t                pClockStrengthIndex,
-                                                 uint8_t                pCicStrength,
-                                                 uint8_t                pPhaseIndex,
-                                                 DetectorDataContainer& theEfficiencyContainer)
+void DQMHistogramOTCICtoLpGBTecv::fillEfficiency(uint8_t pClockPolarity, uint8_t pClockStrength, uint8_t pCicStrength, uint8_t pPhaseIndex, DetectorDataContainer& theEfficiencyContainer)
 {
     for(auto board: theEfficiencyContainer)
     {
@@ -143,8 +137,8 @@ void DQMHistogramOTCICtoLpGBTecv::fillEfficiency(uint8_t                pClockSt
                 auto efficiencies = theHybrid->getSummary<std::vector<float>>();
 
                 // Select the correct histogram given the pClockPolarity and the pCicStrength
-                uint8_t CICStrengthPolarityCombination = (pCicStrength * 10) + pClockPolarity;
-                auto    theEfficiencyHistogram         = fEfficiency[CICStrengthPolarityCombination]
+                uint8_t ClockCICStrengthPolarityCombination = (pClockStrength * 100) + (pCicStrength * 10) + pClockPolarity;
+                auto    theEfficiencyHistogram              = fEfficiency[ClockCICStrengthPolarityCombination]
                                                   .getObject(board->getId())
                                                   ->getObject(opticalGroup->getId())
                                                   ->getObject(theHybrid->getId())
@@ -155,7 +149,7 @@ void DQMHistogramOTCICtoLpGBTecv::fillEfficiency(uint8_t                pClockSt
                 uint8_t lineCounter = 0;
                 for(auto efficiency: efficiencies)
                 {
-                    theEfficiencyHistogram->SetBinContent(lineCounter * pClockStrengthLengthOfOptions + pClockStrengthIndex, pPhaseIndex, efficiency);
+                    theEfficiencyHistogram->SetBinContent(pPhaseIndex, lineCounter + 1, efficiency);
                     lineCounter++;
                 }
             }

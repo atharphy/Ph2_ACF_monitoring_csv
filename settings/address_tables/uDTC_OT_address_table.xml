@@ -21,6 +21,7 @@
             <node id="ddr3_debug"           address="0x0008000">
                 <node id="stub_enable"                  mask="0x00000001"/>
                 <node id="ps_async_counter_enable"      mask="0x00000002"/>
+                <node id="scan_chain_enable"            mask="0x00000004"/>
             </node>
 
             <node id="clock"            address="0x0001">
@@ -107,6 +108,7 @@
                     <node id="cal_pulse"                    mask="0x00000010" description="choose cal pulse injection in async sequence"/>
                     <node id="cic_veto"                     mask="0x00000020" description="veto fcmds to CIC"/>
                     <node id="select_even"                  mask="0x00000040" description="veto fcmds to CIC"/>
+                    <node id="ddr3_wren"                    mask="0x0000FF00" description="Select DDR3 write enable"/>
                 </node>
                 <node id="stub_trigger_delay_value"     address="0x007" mask="0x000001FF" description="stub trigger delay before sending to CBCs"/>
                 <node id="ext_trigger_delay_value"      address="0x007" mask="0x0003FE00" description="sets the delay of the external trigger (dio5 ch 5)"/>
@@ -129,6 +131,7 @@
 
             <node id="physical_interface_block"     address="0x3000">
                 <node id="ps_counters_raw_en"               address="0x000" mask="0x00000001" description="enabling outputing raw counters data instead of already parsed"/>
+                <!-- <node id="ps_counters_select_hybrid"        address="0x000" mask="0x03F00000" description="select hybrid for reading status"/> -->
                 <node id="cic"              address="0x000" >
                     <node id="2s_sparsified_enable"             mask="0x00000002"/>
                     <node id="clock_enable"                     mask="0x00000004"/>
@@ -140,15 +143,15 @@
                         <node id="master_en"                        mask="0x00000100"/>
                 </node>
                 <node id="multiplexing_bp"                    address="0x038">
-                <node id="backplane_num"                 mask="0x0000000f"/>
-                <node id="card_num"                      mask="0x000000f0"/>
-                <node id="ssa_pair_select"                  mask="0x00000f00"/>
-                <node id="rtn_fcmd_test"                    mask="0x00001000" description="return fast commands from SSAs test regime, predefined number of trigger commands is sent"/>
-                <!-- <node id="backplane_select_tri"             mask="0x00002000" description="control tri-state buffer"/> -->
-                <!-- <node id="card_select_tri"                  mask="0x00004000" description="control tri-state buffer"/> -->
-                <node id="interlock_switch_feature"         mask="0x00002000" description="enabling of the interlock switch feature. O sets the control from the firmware, 1 sets the monitoring from the firmware"/>
-                <node id="interlock_switch_output"          mask="0x00004000" description="output to the interlock switch when the firmware is controlling the line"/>
-            </node>
+                    <node id="backplane_num"                 mask="0x0000000f"/>
+                    <node id="card_num"                      mask="0x000000f0"/>
+                    <node id="ssa_pair_select"                  mask="0x00000f00"/>
+                    <node id="rtn_fcmd_test"                    mask="0x00001000" description="return fast commands from SSAs test regime, predefined number of trigger commands is sent"/>
+                    <!-- <node id="backplane_select_tri"             mask="0x00002000" description="control tri-state buffer"/> -->
+                    <!-- <node id="card_select_tri"                  mask="0x00004000" description="control tri-state buffer"/> -->
+                    <node id="interlock_switch_feature"         mask="0x00002000" description="enabling of the interlock switch feature. O sets the control from the firmware, 1 sets the monitoring from the firmware"/>
+                    <node id="interlock_switch_output"          mask="0x00004000" description="output to the interlock switch when the firmware is controlling the line"/>
+                </node>
 
                  <node id="data_player"                    address="0x03A">
                     <node id="pattern_320MHz"                 mask="0x000000ff"/>
@@ -159,6 +162,7 @@
                     <node id="chip_select"                     mask="0x000F0000"/>
                     <node id="hybrid_select"                   mask="0x03F00000"/>
                     <node id="auto_l1_capture"                 mask="0x04000000"/>
+                    <node id="slvs_debug_l1_delay"             mask="0x0000FF00"/>
                 </node>
 
                 <!-- line debug -->
@@ -684,6 +688,8 @@
             </node>
 
            <node id="slvs_debug"               address="0x00F">
+                <node id="slvs_debug_l1_ready"      mask="0x00000001"/>
+                <node id="slvs_debug_stub_ready"    mask="0x00000002"/>
                 <node id="ps_counters_ready"        mask="0x00000004"/>
                 <node id="ps_counters_fsm_state"    mask="0x000000f0"/>
                 <node id="first_header_delay"       mask="0x0000ff00"/>
@@ -711,11 +717,21 @@
             </node>
 
             <node id="mpa_to_cic_cntr"            address="0x0F9" mask="0xFFFFFFFF"/>
-            <!-- <node id="async_counter_decode"        address="0x0FF">
-                    <node id="ready"                  mask="0x00000001"/>
-                    <node id="state"                  mask="0x000000F0"/>
-                    <node id="received_start"         mask="0x00FFFF00"/>
-            </node> -->
+            <node id="async_counter_decode"        address="0x0FF">
+		        <node id="chip_counters_done"             mask="0x00000010"/>
+                <node id="store_fsm_state"                mask="0x000001E0"/>
+                <node id="received_start"                 mask="0x01FFFE00"/>
+                <node id="start_pattern_not_found"        mask="0x02000000"/>
+            </node>
+            <node id="async_counter_stats"        address="0x121">
+                <node id="package"             mask="0x0000FFFF"/>
+                <node id="clocks"              mask="0xFFFF0000"/>
+            </node>
+            <node id="async_counter_ddr3_packer"        address="0x120">
+                <node id="fsm_state"                       mask="0x0000000F"/>
+                <node id="num_fifo_entry"                  mask="0x0000FFF0"/>
+                <node id="num_boxcar_rxd"                  mask="0x0FFF0000"/>
+            </node>
             
             <node id="ps_return"                address="0x00E">
                 <node id="clock_from_ssa1_test_done"            mask="0x00000001" description="test of the return clock from SSA1 done           "/>

@@ -205,7 +205,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
             auto lineOutputVector = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
             for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
             {
-                std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVector[lineIndex], 1, true) << std::endl;
+                std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVector.at(lineIndex), 1, true) << std::endl;
             }
 
             if(!allAligned) //
@@ -387,7 +387,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
             //     auto lineOutputVectorBefore = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
             //     for(size_t lineIndex = 0; lineIndex < lineOutputVectorBefore.size(); ++lineIndex)
             //     {
-            //         std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVectorBefore[lineIndex], 1, true) << std::endl;
+            //         std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVectorBefore.at(lineIndex), 1, true) << std::endl;
             //     }
 
             //     writeWithComment(phaseTuningControlRegisterName, 0xFFF50002, " Do Word Alignment – DO_WA = 1");
@@ -408,7 +408,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
             //     auto lineOutputVectorAfter = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
             //     for(size_t lineIndex = 0; lineIndex < lineOutputVectorAfter.size(); ++lineIndex)
             //     {
-            //         std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVectorAfter[lineIndex], 1, true) << std::endl;
+            //         std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVectorAfter.at(lineIndex), 1, true) << std::endl;
             //     }
 
             //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Sample PRBS Data" << std::endl;

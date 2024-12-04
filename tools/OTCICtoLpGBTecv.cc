@@ -182,9 +182,9 @@ void OTCICtoLpGBTecv::runECV()
                                         {
                                             uint8_t flagCharacter = pattern.first;
                                             uint8_t idleCharacter = pattern.second;
-                                            if(isStubPatternMatched(lineOutputVector[lineIndex], numberOfBytesInSinglePacket, flagCharacter, idleCharacter))
+                                            if(isStubPatternMatched(lineOutputVector.at(lineIndex), numberOfBytesInSinglePacket, flagCharacter, idleCharacter))
                                             {
-                                                ++theHybridPatternMatchingEfficiency[lineIndex + 1];
+                                                ++theHybridPatternMatchingEfficiency.at(lineIndex + 1);
                                                 break;
                                             }
                                             else if(!(fIsKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)))
@@ -238,7 +238,7 @@ void OTCICtoLpGBTecv::runECV()
 
                                         if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket, header, fHeaderMask))
                                         {
-                                            ++theHybridPatternMatchingEfficiency[0];
+                                            ++theHybridPatternMatchingEfficiency.at(0);
                                             break;
                                         }
                                         else { LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET; }
@@ -255,22 +255,19 @@ void OTCICtoLpGBTecv::runECV()
                                 }
 
                             } // hybrid loop
-                            auto    phaseIterator                = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
-                            uint8_t phaseIndex                   = std::distance(fListOfLpGBTPhase.begin(), phaseIterator) + 1;
-                            auto    clockStrengthIterator        = std::find(fListOfClockStrength.begin(), fListOfClockStrength.end(), clockStrength);
-                            uint8_t clockStrengthIndex           = std::distance(fListOfClockStrength.begin(), clockStrengthIterator) + 1;
-                            uint8_t clockStrengthLengthOfOptions = fListOfClockStrength.size();
+                            auto    phaseIterator = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
+                            uint8_t phaseIndex    = std::distance(fListOfLpGBTPhase.begin(), phaseIterator) + 1;
 #ifdef __USE_ROOT__
                             // Find the pClockStrength and pPhase indices
 
-                            fDQMHistogramOTCICtoLpGBTecv.fillEfficiency(clockStrengthLengthOfOptions, clockPolarity, clockStrengthIndex, cicStrength, phaseIndex, fPatternMatchingEfficiencyContainer);
+                            fDQMHistogramOTCICtoLpGBTecv.fillEfficiency(clockPolarity, clockStrength, cicStrength, phaseIndex, fPatternMatchingEfficiencyContainer);
 #else
                             if(fDQMStreamerEnabled)
                             {
                                 // Find the pClockStrength and pPhase indices
                                 ContainerSerialization theECVlpGBTCICContainerSerialization("OTCICtoLpGBTecvEfficiencyHistogram");
                                 theECVlpGBTCICContainerSerialization.streamByOpticalGroupContainer(
-                                    fDQMStreamer, fPatternMatchingEfficiencyContainer, clockStrengthLengthOfOptions, clockPolarity, clockStrengthIndex, cicStrength, phaseIndex);
+                                    fDQMStreamer, fPatternMatchingEfficiencyContainer, clockPolarity, clockStrength, cicStrength, phaseIndex);
                             }
 #endif
 
@@ -285,11 +282,11 @@ void OTCICtoLpGBTecv::runECV()
                                     theNumberOfMatches = 0;
                                 }
                             } // hybrid loop
-                        }     // lpgbt phase loop
-                    }         // CIC driver strenght loop
-                }             // clock strenght loop
-            }                 // polarity loop
-        }                     // optical group loop
+                        } // lpgbt phase loop
+                    } // CIC driver strenght loop
+                } // clock strenght loop
+            } // polarity loop
+        } // optical group loop
     }
 }
 

@@ -212,13 +212,10 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
     }
 
     // Iterate the OpticalGroup node
+    cBeBoard->setOptical(false);
     for(pugi::xml_node pOpticalGroupNode = pBeBordNode.child(OPTICALGROUP_NODE_NAME); pOpticalGroupNode; pOpticalGroupNode = pOpticalGroupNode.next_sibling())
     {
-        if(static_cast<std::string>(pOpticalGroupNode.name()) == OPTICALGROUP_NODE_NAME)
-        {
-            cBeBoard->setOptical(false);
-            parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os);
-        }
+        if(static_cast<std::string>(pOpticalGroupNode.name()) == OPTICALGROUP_NODE_NAME) { parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os); }
     }
 
     pugi::xml_node cSLinkNode = pBeBordNode.child("SLink");
@@ -1515,7 +1512,8 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             // ################################################################################
             // # Retrieve links, groups, channels and polarities and propagate to LpGBT class #
             // ################################################################################
-            for(auto RxGroup: cRxGroups) pLpGBT->addRxProperty(RxGroup, cRxChannel, cRxPolarity);
+            for(auto RxGroup: cRxGroups)
+                if(RxGroup != 0) pLpGBT->addRxProperty(RxGroup, cRxChannel, cRxPolarity);
             pLpGBT->addTxProperty(cTxGroup, cTxChannel, cTxPolarity);
 
             // ###################################################################
@@ -1524,7 +1522,7 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             uint8_t cChipId = cChild.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
 
             for(auto i = 0u; i < cRxGroups.size(); i++)
-                if(cRxGroups[i] != 0) static_cast<RD53*>(cHybrid->getObject(cChipId))->addRxGroup(cRxGroups[i], NCHIPLANES - i);
+                if(cRxGroups[i] != 0) static_cast<RD53*>(cHybrid->getObject(cChipId))->addRxGroup(cRxGroups[i], NCHIPLANES - i - 1);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxChannel(cRxChannel);
             static_cast<RD53*>(cHybrid->getObject(cChipId))->setRxPolarity(cRxPolarity);
 
@@ -1549,8 +1547,8 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
 
     const uint32_t    chipId      = theChipNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
     const uint32_t    chipLane    = theChipNode.attribute("Lane").as_uint();
-    const uint32_t    eFuseCode   = (theChipNode.attribute("eFuseCode") ? theChipNode.attribute("eFuseCode").as_uint() : 0);
-    const std::string cRxGroups   = theChipNode.attribute("RxGroups").as_string();
+    const int64_t     eFuseCode   = (theChipNode.attribute("eFuseCode") ? theChipNode.attribute("eFuseCode").as_uint() : 0);
+    const std::string cRxGroups   = theChipNode.attribute("RxGroups").as_string("0000");
     const uint8_t     cRxChannel  = (theChipNode.attribute("RxChannel") ? theChipNode.attribute("RxChannel").as_uint() : 0);
     const uint8_t     cRxPolarity = theChipNode.attribute("RxPolarity").as_uint();
     const uint8_t     cTxGroup    = theChipNode.attribute("TxGroup").as_uint();

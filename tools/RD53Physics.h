@@ -1,6 +1,6 @@
 /*!
   \file                  RD53Physics.h
-  \brief                 Implementaion of Physics data taking
+  \brief                 Header of Physics data taking
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -44,7 +44,6 @@ class Physics : public CalibBase
     void Running() override;
     void Stop() override;
     void ConfigureCalibration() override;
-
     void localConfigure(const std::string& histoFileName, int currentRun) override;
     void run() override;
     void draw(bool saveData = true) override;
@@ -75,7 +74,7 @@ class Physics : public CalibBase
   protected:
     struct RD53dummyEvtConverter
     {
-        void operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList){};
+        void operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList) {};
     };
 
     // ######################################

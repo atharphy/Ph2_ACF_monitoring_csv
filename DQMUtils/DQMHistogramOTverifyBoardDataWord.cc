@@ -62,8 +62,8 @@ void DQMHistogramOTverifyBoardDataWord::fillPatternMatchingEfficiency(DetectorDa
             for(auto hybrid: *opticalGroup)
             {
                 if(!hybrid->hasSummary()) continue;
-                TH1I* hybridMatchingEfficiencyHistogram =
-                    fMatchingEfficiencyHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
+                TH1F* hybridMatchingEfficiencyHistogram =
+                    fMatchingEfficiencyHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 auto theHybridMatchingEfficiencyVector = hybrid->getSummary<std::vector<float>>();
                 for(size_t lineId = 0; lineId < theHybridMatchingEfficiencyVector.size(); ++lineId)
                 {

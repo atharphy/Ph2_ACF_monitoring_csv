@@ -194,6 +194,20 @@ void Cic::setEdgeSelect(uint8_t pEdgeSel)
     theRegister.fValue = (theRegister.fValue & 0xF7) | ((cNegEdge ? 1 : 0) << 3);
 }
 
+std::vector<uint8_t> Cic::getMapping()
+{
+    bool c2S = ((getReg("FE_CONFIG") & 0x01) == 0);
+    if(c2S)
+        return fFeMapping2S;
+    else // a bit too many else, but easier to read
+    {
+        if(getHybridId() % 2 == 0)
+            return fFeMappingPSR;
+        else
+            return fFeMappingPSL;
+    }
+}
+
 std::map<uint8_t, uint8_t> Cic::fTxDriveStrength = {{0, 0}, {1, 2}, {2, 6}, {3, 1}, {4, 3}, {5, 7}};
 
 } // namespace Ph2_HwDescription

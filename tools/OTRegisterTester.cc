@@ -66,12 +66,12 @@ void OTRegisterTester::TestRegisters()
                         else // SSA2
                             theReadoutChipRegisters = {"Threshold", "control_3", "ClockDeskewing_coarse", "DigCalibPattern_L_S2"};
                     }
-                    theRegisterMatchingEfficiency[theChip->getId()] = EfficiencyCalculator(theChip, theReadoutChipRegisters);
+                    theRegisterMatchingEfficiency.at(theChip->getId()) = EfficiencyCalculator(theChip, theReadoutChipRegisters);
                 } // chip loop
 
                 LOG(DEBUG) << BOLDMAGENTA << " Done with chips. Moving to CIC" << RESET;
-                auto& cCic                                            = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                theRegisterMatchingEfficiency[totalNumberOfChips - 1] = EfficiencyCalculator(cCic, theCICRegisters);
+                auto& cCic                                               = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                theRegisterMatchingEfficiency.at(totalNumberOfChips - 1) = EfficiencyCalculator(cCic, theCICRegisters);
 
 #ifdef __USE_ROOT__
                 fDQMHistogramOTRegisterTester.fillPatternMatchingEfficiencyResults(fPatternMatchingEfficiencyContainer);
@@ -83,8 +83,8 @@ void OTRegisterTester::TestRegisters()
                 }
 #endif
             } // hybrid loop
-        }     // optical group loop
-    }         // board loop
+        } // optical group loop
+    } // board loop
 }
 
 float OTRegisterTester::EfficiencyCalculator(Ph2_HwDescription::Chip* theChip, std::vector<std::string> theRegisters)

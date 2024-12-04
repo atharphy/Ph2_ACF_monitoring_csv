@@ -48,9 +48,9 @@ DAC_KRUM_CURR_LIN         0x1D          0d70                    0d70            
 DAC_REF_KRUM_LIN          0x1E          0d360                   0d360                              10
 DAC_COMP_LIN              0x1F          0d80                    0d80                               10
 DAC_COMP_TA_LIN           0x20          0d900                   0d900                              10
-DAC_GDAC_L_LIN            0x21          0d900                   0d900                              10
-DAC_GDAC_R_LIN            0x22          0d900                   0d900                              10
-DAC_GDAC_M_LIN            0x23          0d900                   0d900                              10
+DAC_GDAC_L_LIN            0x21          0d450                   0d450                              10
+DAC_GDAC_R_LIN            0x22          0d450                   0d450                              10
+DAC_GDAC_M_LIN            0x23          0d450                   0d450                              10
 DAC_LDAC_LIN              0x24          0d130                   0d130                              10
 
 *-------------------------------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ EN_CORE_COL_RESET_0       0x2E          0b0                     0b0             
 *-------------------------------------------------------------------------------------------------------
 * RegName                 Addr          Defval                  Value                           BitSize
 *-------------------------------------------------------------------------------------------------------
-TriggerConfig             0x2F          0b0111110100            0b0111110100                       10
+TriggerConfig             0x2F          0b0010001000            0b0010001000                       10
 SelfTriggerConfig_1       0x30          0b010001                0b010001                            6
 SelfTriggerConfig_0       0x31          0b000110010000001       0b000110010000001                  15
 SelfTriggerDeadTime       0x32          0b0                     0b0                                16
@@ -346,6 +346,8 @@ EnServiceData             0x124         0b0                     0b0             
 ManualChoice              0x125         0b0                     0b0                                 1
 ManualMode                0x126         0b0                     0b0                                 4
 FixedMode                 0x127         0b0                     0b0                                 8
+ChipIdWireBonds           0x128         0b0                     0b0                                 4
+IrefWireBonds             0x129         0b0                     0b0                                 4
 
 RESISTORI2V               0x1A0         0d5000                  0d4990                             16
 ADC_OFFSET_VOLT           0x1A1         0d63                    0d68                               16

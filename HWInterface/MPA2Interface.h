@@ -146,6 +146,8 @@ class MPA2Interface : public ReadoutChipInterface
     packLocalRegisters(Ph2_HwDescription::ReadoutChip* pMPA2, const std::string& dacName, const ChipContainer& localRegValues);
 
   private:
+    std::vector<std::pair<std::string, uint16_t>> fTriggerReadAdcSequence{{"Mask", 0xE0}, {"ADCcontrol", 0xE0}, {"ADCcontrol", 0xC0}, {"Mask", 0xFF}};
+
     // pixelEnable bits
     const std::map<std::string, uint8_t> PIXEL_ENABLE_TABLE =
         {{"PixelMask", 0}, {"Polarity", 1}, {"EnEdgeBR", 2}, {"EnLvlBR", 3}, {"CounterEnable", 4}, {"DigitalInjection", 5}, {"AnalogueInjection", 6}, {"BrClk", 7}};

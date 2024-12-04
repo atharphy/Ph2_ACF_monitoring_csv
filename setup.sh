@@ -145,6 +145,16 @@ export CompileWithEUDAQ=false
 ###############################
 export CompileWithTCUSB=false
 
+##########################
+# Compile with sanitizer #
+##########################
+export EnableSanitizer=false
+if [[ $EnableSanitizer == "true" ]]; then
+  export UBSAN_OPTIONS=print_stacktrace=1
+else
+  unset UBSAN_OPTIONS
+fi
+
 ########################
 # Clang-format command #
 ########################
@@ -156,6 +166,7 @@ if [[ $1 == "ci" ]]; then
     export CompileForShep=false
     export CompileWithEUDAQ=false
     export CompileWithTCUSB=false
+    export EnableSanitizer=false
 fi
 
 echo "=== DONE: you can now run cmake ==="

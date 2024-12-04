@@ -93,7 +93,7 @@ void SSAPhysicsHistograms::process()
                     chipHitHistogram->SetStats(false);
                     chipHitHistogram->DrawCopy();
                 } // for on chip - end
-            }     // for on hybrid - end
-        }         // for on opticalGroup - end
-    }             // for on boards - end
+            } // for on hybrid - end
+        } // for on opticalGroup - end
+    } // for on boards - end
 }

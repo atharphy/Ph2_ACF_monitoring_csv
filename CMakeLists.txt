@@ -81,6 +81,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     set(CompileForShep "$ENV{CompileForShep}")
     set(CompileForHerd "$ENV{CompileForHerd}")
     set(CompileMinExecutable "$ENV{CompileMinExecutable}")
+    set(EnableSanitizer "$ENV{EnableSanitizer}")
     if ((NOT CompileForShep) AND (NOT CompileForHerd))
         set(NoDataShipping true)
     else()
@@ -110,6 +111,10 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     if(NoDataShipping)
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{UseRootFlag}")
     endif()
+    if(EnableSanitizer)
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --param=max-vartrack-size=150000000 -fsanitize=undefined -Wno-array-bounds ")
+    endif()
+    
 
     ##################################
     # Check for external dependences #

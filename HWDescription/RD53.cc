@@ -70,7 +70,7 @@ RD53::RD53(uint8_t            pBeId,
            uint8_t            pHybridId,
            uint8_t            pRD53Id,
            uint8_t            pRD53Lane,
-           uint32_t           pRD53eFuseCode,
+           int64_t            pRD53eFuseCode,
            const std::string& fileName,
            const std::string& cfgComment)
     : ReadoutChip(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id)
@@ -119,7 +119,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         readWord.erase(std::remove_if(readWord.begin(), readWord.end(), isspace), readWord.end());
                         if(std::all_of(readWord.begin(), readWord.end(), isdigit))
                         {
-                            thePixMask.Enable.at(row + this->getNRows() * col) = atoi(readWord.c_str());
+                            thePixMask.Enable.at(row + this->getNRows() * col) = std::atoi(readWord.c_str());
                             if(thePixMask.Enable[row + this->getNRows() * col] == false)
                                 fChipOriginalMask->disableChannel(row, col);
                             else
@@ -150,7 +150,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         readWord.erase(std::remove_if(readWord.begin(), readWord.end(), isspace), readWord.end());
                         if(std::all_of(readWord.begin(), readWord.end(), isdigit))
                         {
-                            thePixMask.HitBus.at(row + this->getNRows() * col) = atoi(readWord.c_str());
+                            thePixMask.HitBus.at(row + this->getNRows() * col) = std::atoi(readWord.c_str());
                             row++;
                         }
                     }
@@ -177,7 +177,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         readWord.erase(std::remove_if(readWord.begin(), readWord.end(), isspace), readWord.end());
                         if(std::all_of(readWord.begin(), readWord.end(), isdigit))
                         {
-                            thePixMask.InjEn.at(row + this->getNRows() * col) = atoi(readWord.c_str());
+                            thePixMask.InjEn.at(row + this->getNRows() * col) = std::atoi(readWord.c_str());
                             row++;
                         }
                     }
@@ -204,7 +204,7 @@ void RD53::loadfRegMap(const std::string& fileName)
                         readWord.erase(std::remove_if(readWord.begin(), readWord.end(), isspace), readWord.end());
                         if(std::all_of(readWord.begin(), readWord.end(), isdigit))
                         {
-                            thePixMask.TDAC.at(row + this->getNRows() * col) = atoi(readWord.c_str());
+                            thePixMask.TDAC.at(row + this->getNRows() * col) = std::atoi(readWord.c_str());
                             row++;
                         }
                     }

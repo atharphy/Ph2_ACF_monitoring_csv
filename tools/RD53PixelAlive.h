@@ -1,6 +1,6 @@
 /*!
   \file                  RD53PixelAlive.h
-  \brief                 Implementaion of PixelAlive scan
+  \brief                 Header of PixelAlive scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -35,11 +35,10 @@ class PixelAlive : public CalibBase
         delete histos;
     }
 
-    void Running() override;
-    void Stop() override;
-    void ConfigureCalibration() override;
-    void sendData() override;
-
+    void   Running() override;
+    void   Stop() override;
+    void   ConfigureCalibration() override;
+    void   sendData() override;
     void   localConfigure(const std::string& histoFileName, int currentRun) override;
     void   run() override;
     void   draw(bool saveData = true) override;

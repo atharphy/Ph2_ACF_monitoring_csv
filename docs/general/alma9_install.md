@@ -1,4 +1,4 @@
-# Installing AlmaLinux 9
+# Installing RHEL/AlmaLinux 9
 
 ## Installation Guide
 

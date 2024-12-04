@@ -99,7 +99,7 @@ void PhaseTuningReply::decodeReply(uint32_t reply, const PhaseTuningControl& the
     uint8_t receivedLineId = (reply >> 28) & 0xF;
     if(expectedLineId != receivedLineId)
     {
-        std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " requestion info for line " + std::to_string(expectedLineId) + " but received line " + std::to_string(receivedLineId);
+        std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " requesting info for line " + std::to_string(expectedLineId) + " but received line " + std::to_string(receivedLineId);
         std::cerr << errorMessage << std::endl;
         throw std::runtime_error(errorMessage);
     }

@@ -129,7 +129,7 @@ void DQMHistogramOTCICphaseAlignment::fillPhaseHistogramResults(DetectorDataCont
                     {
                         for(size_t phase = 0; phase < 16; phase++)
                         {
-                            bestPhaseHistogram->SetBinContent(chipId * NUMBER_OF_LINES_PER_CIC_PORTS + cLineId + 1, phase + 1, thePhaseHistogramVector[chipId][cLineId][phase]);
+                            bestPhaseHistogram->SetBinContent(chipId * NUMBER_OF_LINES_PER_CIC_PORTS + cLineId + 1, phase + 1, thePhaseHistogramVector.at(chipId).at(cLineId).at(phase));
                         }
                     }
                 }
@@ -156,7 +156,10 @@ void DQMHistogramOTCICphaseAlignment::fillBestPhaseResults(DetectorDataContainer
 
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
-                    for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS; cLineId++) { bestPhaseHistogram->SetBinContent(chipId + 1, cLineId + 1, theBestPhaseVector[chipId][cLineId]); }
+                    for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS; cLineId++)
+                    {
+                        bestPhaseHistogram->SetBinContent(chipId + 1, cLineId + 1, theBestPhaseVector.at(chipId).at(cLineId));
+                    }
                 }
             }
         }
@@ -183,7 +186,7 @@ void DQMHistogramOTCICphaseAlignment::fillLockingEfficiencyResults(DetectorDataC
                 {
                     for(size_t cLineId = 0; cLineId < NUMBER_OF_LINES_PER_CIC_PORTS; cLineId++)
                     {
-                        lockingEfficiencyHistogram->SetBinContent(chipId + 1, cLineId + 1, theLockingEfficiencyVector[chipId][cLineId]);
+                        lockingEfficiencyHistogram->SetBinContent(chipId + 1, cLineId + 1, theLockingEfficiencyVector.at(chipId).at(cLineId));
                     }
                 }
             }

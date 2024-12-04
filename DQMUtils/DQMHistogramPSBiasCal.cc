@@ -236,10 +236,10 @@ void DQMHistogramPSBiasCal::fillDACPlots(DetectorDataContainer& theDAC)
                         fPixelVrefHistograms->GetXaxis()->SetTitle("ADC_VREF register");
                         fPixelVrefHistograms->GetYaxis()->SetTitle("VREF [V]");
                     } // chip type
-                }     // chip
-            }         // hybrid
-        }             // optical group
-    }                 // board
+                } // chip
+            } // hybrid
+        } // optical group
+    } // board
 }
 
 //========================================================================================================================
@@ -369,10 +369,10 @@ void DQMHistogramPSBiasCal::fillVDDPlots(DetectorDataContainer& theVDD, bool isA
                         fPixelVDDHistograms->GetYaxis()->SetTitle("VDD [V]");
                         fPixelVDDHistograms->SetMarkerStyle(20);
                     } // chip type
-                }     // chip
-            }         // hybrid
-        }             // optical group
-    }                 // board
+                } // chip
+            } // hybrid
+        } // optical group
+    } // board
 }
 
 //========================================================================================================================
@@ -456,7 +456,7 @@ void DQMHistogramPSBiasCal::fillSlopePlots(DetectorDataContainer& theSlope)
                         fPol1->SetLineStyle(2);
                     }
                 } // chip
-            }     // hybrid
-        }         // optical group
-    }             // board
+            } // hybrid
+        } // optical group
+    } // board
 }

@@ -1,6 +1,7 @@
 /*!
   \file                  RD53BERtestHistograms.h
   \brief                 Header file of BERtest calibration histograms
+  \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
   Support:               email to mauro.dinardo@cern.ch
@@ -20,7 +21,7 @@ class BERtestHistograms : public DQMHistogramBase
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::string& inputStream) override;
-    void reset() override{};
+    void reset() override {};
 
     void fillBERtest(const DetectorDataContainer& BERtestContainer);
 

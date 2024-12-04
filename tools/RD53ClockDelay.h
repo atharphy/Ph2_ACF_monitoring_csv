@@ -1,6 +1,6 @@
 /*!
   \file                  RD53ClockDelay.h
-  \brief                 Implementaion of Clock Delay scan
+  \brief                 Header of Clock Delay scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
@@ -30,11 +30,10 @@ class ClockDelay : public PixelAlive
         delete histos;
     }
 
-    void Running() override;
-    void Stop() override;
-    void ConfigureCalibration() override;
-    void sendData() override;
-
+    void   Running() override;
+    void   Stop() override;
+    void   ConfigureCalibration() override;
+    void   sendData() override;
     void   localConfigure(const std::string& histoFileName, int currentRun) override;
     void   run() override;
     void   draw(bool saveData = true) override;

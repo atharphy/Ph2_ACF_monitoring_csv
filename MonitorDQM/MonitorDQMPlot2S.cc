@@ -7,6 +7,8 @@
 */
 
 #include "MonitorDQM/MonitorDQMPlot2S.h"
+#include "HWDescription/Definition.h"
+#include "Parser/DetectorMonitorConfig.h"
 #include "RootUtils/GraphContainer.h"
 #include "RootUtils/RootContainerFactory.h"
 #include "TAxis.h"
