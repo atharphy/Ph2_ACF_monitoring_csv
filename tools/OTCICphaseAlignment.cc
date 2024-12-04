@@ -122,7 +122,6 @@ void OTCICphaseAlignment::phaseAlignment()
                 }
             }
         }
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
         // normalize phase histogram
         for(auto opticalGroup: *thePhaseHistogramBoardDataContainer)
@@ -139,7 +138,6 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
                 }
             }
         }
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
         // check alignment
         for(auto theOpticalGroup: *theBoard)
@@ -225,7 +223,6 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             }
         }
     }
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
 #ifdef __USE_ROOT__
     fDQMHistogramOTCICphaseAlignment.fillPhaseHistogramResults(thePhaseHistogramContainer);
@@ -244,10 +241,8 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         theLockingEfficiencyContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theLockingEfficiencyContainer);
     }
 #endif
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
     fDetectorContainer->removeReadoutChipQueryFunction(theQueryFunction);
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     
 }
 
