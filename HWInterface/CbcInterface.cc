@@ -287,7 +287,7 @@ std::vector<uint8_t> CbcInterface::readLUT(ReadoutChip* pCbc, uint8_t pMode)
         sprintf(cBuffer, "Bend%d", static_cast<int>(cIndex));
         std::string cRegName(cBuffer, cLength);
         // LOG(DEBUG) << BOLDBLUE << "Reading bend register " << cRegName << RESET;
-        uint16_t cValue            = (pMode == 0) ? this->ReadChipReg(pCbc, cRegName) : pCbc->getReg(cRegName);
+        uint16_t cValue               = (pMode == 0) ? this->ReadChipReg(pCbc, cRegName) : pCbc->getReg(cRegName);
         cBendCodes.at(cIndex * 2)     = (cValue & 0x0F);
         cBendCodes.at(cIndex * 2 + 1) = (cValue & 0xF0) >> 4;
     }
@@ -601,7 +601,7 @@ bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, u
 {
     // first, identify the correct BeBoardFWInterface
     setBoard(pCbc->getBeBoardId());
-    auto cRegMap             = pCbc->getRegMap();
+    auto cRegMap                = pCbc->getRegMap();
     cRegMap.at(pRegNode).fValue = pValue;
     ConfigurePage(pCbc, cRegMap.at(pRegNode).fPage, pVerify);
     return fBoardFW->SingleRegisterWrite(pCbc, cRegMap.at(pRegNode), pVerify);
@@ -902,8 +902,8 @@ void CbcInterface::produceWordAlignmentPattern(ReadoutChip* pChip)
     theRegisterVector.push_back({"Bend7", fWordAlignmentPatterns.at(3) & 0x0F});        // Set bend 0 to output of stub 1 required pattern
     theRegisterVector.push_back({"Bend8", (fWordAlignmentPatterns.at(3) & 0xF0) >> 4}); // Set bend 2 to output of stub 1 required pattern
     theRegisterVector.push_back({"Bend9", fWordAlignmentPatterns.at(4) & 0x0F});        // Set bend 4 to output of stub 1 required pattern
-    theRegisterVector.push_back({"CoincWind&Offset12", 0x00});                       // set stub window offset to 0
-    theRegisterVector.push_back({"CoincWind&Offset34", 0x00});                       // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset12", 0x00});                          // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset34", 0x00});                          // set stub window offset to 0
 
     WriteChipMultReg(pChip, theRegisterVector);
     std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{fWordAlignmentPatterns.at(0), 0}, {fWordAlignmentPatterns.at(1), 2}, {fWordAlignmentPatterns.at(2), 4}};

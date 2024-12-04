@@ -281,7 +281,8 @@ void DQMHistogramLatencyScan::fillLatencyPlots(uint16_t pLatency, DetectorDataCo
                                               ->getObject(opticalGroup->getId())
                                               ->getObject(hybrid->getId())
                                               ->getObject(chip->getId())
-                                              ->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(cTDC);
+                                              ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()
+                                              .at(cTDC);
                         LOG(DEBUG) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of " << pLatency << " bin of " << +cBin << " OG" << +opticalGroup->getId() << " Hybrid"
                                    << +hybrid->getId() << " Chip" << +chip->getId() << " - have found " << cNhits << " channels with a hit [per chip per event]." << RESET;
                         cLatencyTDC->SetBinContent(cBin, cNhits);

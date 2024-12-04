@@ -70,7 +70,7 @@ void OTRegisterTester::TestRegisters()
                 } // chip loop
 
                 LOG(DEBUG) << BOLDMAGENTA << " Done with chips. Moving to CIC" << RESET;
-                auto& cCic                                            = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                auto& cCic                                               = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 theRegisterMatchingEfficiency.at(totalNumberOfChips - 1) = EfficiencyCalculator(cCic, theCICRegisters);
 
 #ifdef __USE_ROOT__

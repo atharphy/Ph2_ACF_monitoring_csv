@@ -657,7 +657,8 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, uint16_t pTr
                                               ->getObject(opticalGroup->getId())
                                               ->getObject(hybrid->getId())
                                               ->getObject(chip->getId())
-                                              ->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(cTDC);
+                                              ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()
+                                              .at(cTDC);
                         LOG(DEBUG) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of " << pLatency << " bin of " << +cBin << " OG" << +opticalGroup->getId() << " Hybrid"
                                    << +hybrid->getId() << " Chip" << +chip->getId() << " - on average have found " << cNhits << " channels with a hit [per chip per event]." << RESET;
                         cLatencyTDC->SetBinContent(cBin, cNhits);
@@ -917,7 +918,8 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                                               ->getObject(opticalGroup->getId())
                                               ->getObject(hybrid->getId())
                                               ->getObject(chip->getId())
-                                              ->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(cTDC);
+                                              ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()
+                                              .at(cTDC);
                         LOG(DEBUG) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of [1] "
                                    << " bin of " << +cBin << " OG" << +opticalGroup->getId() << " Hybrid" << +hybrid->getId() << " Chip" << +chip->getId() << " - on average have found " << cNhits
                                    << " channels with a hit [per chip per event]." << RESET;

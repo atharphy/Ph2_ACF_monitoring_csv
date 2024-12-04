@@ -1,4 +1,5 @@
 #include "MonitorDQM/MonitorDQMPlotOT.h"
+#include "Parser/DetectorMonitorConfig.h"
 #include "RootUtils/GraphContainer.h"
 #include "RootUtils/RootContainerFactory.h"
 #include "TAxis.h"
@@ -7,7 +8,6 @@
 #include "Utils/Container.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/ValueAndTime.h"
-#include "Parser/DetectorMonitorConfig.h"
 
 //========================================================================================================================
 MonitorDQMPlotOT::MonitorDQMPlotOT() {}

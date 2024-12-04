@@ -5,8 +5,8 @@
 
 namespace Ph2_HwDescription
 {
-    class BeBoard;
-    struct ChipRegItem;
+class BeBoard;
+struct ChipRegItem;
 } // namespace Ph2_HwDescription
 namespace Ph2_HwInterface
 {
@@ -30,12 +30,11 @@ class D19cPSCounterFWInterface : public L1ReadoutInterface
 
   private:
     FEConfigurationInterface* fFEConfigurationInterface{nullptr};
-    bool     fPSCounterFast {true};
+    bool                      fPSCounterFast{true};
     // function read-back counters
-    void SlowRead(const Ph2_HwDescription::BeBoard* pBoard);
-    bool FastRead(const Ph2_HwDescription::BeBoard* pBoard);
+    void                                                                      SlowRead(const Ph2_HwDescription::BeBoard* pBoard);
+    bool                                                                      FastRead(const Ph2_HwDescription::BeBoard* pBoard);
     std::pair<Ph2_HwDescription::ChipRegItem, Ph2_HwDescription::ChipRegItem> getChannelCounterRegister(uint16_t row, uint16_t col, bool isMPA);
-
 };
 } // namespace Ph2_HwInterface
 #endif

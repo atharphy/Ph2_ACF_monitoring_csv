@@ -226,7 +226,8 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                                 try // Handle disable chip
                                 {
                                     matchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first)
-                                        ->getSummary<GenericDataArray<float, 6>>().at(chipIdAndLine.second) = matchingEfficiency;
+                                        ->getSummary<GenericDataArray<float, 6>>()
+                                        .at(chipIdAndLine.second) = matchingEfficiency;
                                 }
                                 catch(const std::exception& e)
                                 {

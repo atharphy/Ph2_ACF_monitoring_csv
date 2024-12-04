@@ -144,13 +144,13 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             int cL1Offset         = cOffset + 3;
                             if(fIsSparsified)
                             {
-                                size_t cEOffset                   = 3;
+                                size_t cEOffset                      = 3;
                                 fEventHitList.at(cHybridIndex).first = cL1Information;
                                 fEventHitList.at(cHybridIndex).second.clear();
                                 uint8_t cNStripClusters = 0;
                                 if(fIs2S)
                                 {
-                                    cNStripClusters               = (*(cIterator + 2) & (0x7F << 0)) >> 0;
+                                    cNStripClusters                  = (*(cIterator + 2) & (0x7F << 0)) >> 0;
                                     fNStripClusters.at(cHybridIndex) = cNStripClusters;
                                     // clusters/hit data first
                                     std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNStripClusters, 0);

@@ -182,7 +182,8 @@ void OTMPAtoCICecv::runElectricChainValidation()
                                 try // Handle disable chip
                                 {
                                     theMatchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first + 8)
-                                        ->getSummary<GenericDataArray<float, 6>>().at(chipIdAndLine.second) = matchingEfficiency;
+                                        ->getSummary<GenericDataArray<float, 6>>()
+                                        .at(chipIdAndLine.second) = matchingEfficiency;
                                 }
                                 catch(const std::exception& e)
                                 {

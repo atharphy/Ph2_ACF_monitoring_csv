@@ -78,7 +78,8 @@ void OTSSAtoSSAecv::runSSAtoSSAecvScan()
                 {
                     for(auto theChip: *theHybrid)
                     {
-                        static_cast<PSInterface*>(fReadoutChipInterface)->fTheSSA2Interface->WriteChipRegBits(theChip, "SLVS_pad_current_Lateral", slvsCurrent | (slvsCurrent << 3), "mask_peri_D", 0x3F);
+                        static_cast<PSInterface*>(fReadoutChipInterface)
+                            ->fTheSSA2Interface->WriteChipRegBits(theChip, "SLVS_pad_current_Lateral", slvsCurrent | (slvsCurrent << 3), "mask_peri_D", 0x3F);
                     }
                 }
             }

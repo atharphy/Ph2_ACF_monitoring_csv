@@ -561,8 +561,8 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     }
     else if(pRegNameMod == "AsyncDelay")
     {
-        uint8_t                  cLSB = pValue & 0xFF;
-        uint8_t                  cMSB = (pValue >> 8);
+        uint8_t                                       cLSB = pValue & 0xFF;
+        uint8_t                                       cMSB = (pValue >> 8);
         std::vector<std::pair<std::string, uint16_t>> registerVector;
         registerVector.push_back({"AsyncRead_StartDel_LSB", cLSB});
         registerVector.push_back({"AsyncRead_StartDel_MSB", cMSB});

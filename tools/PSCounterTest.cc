@@ -74,20 +74,17 @@ void PSCounterTest::Initialise(void)
         cBoard->setEventType(EventType::PSAS);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitializePSCounterFWInterface(cBoard);
         static_cast<D19cPSCounterFWInterface*>(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->getL1ReadoutInterface())->configureFastReadout(true);
-        
+
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1); 
+                    fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 1);
                     auto cType = cChip->getFrontEndType();
 
-                    if(cType == FrontEndType::MPA2)
-                    {
-                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 70);
-                    }
+                    if(cType == FrontEndType::MPA2) { fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 70); }
                     else
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", 70);
@@ -108,7 +105,6 @@ void PSCounterTest::ConfigureCalibration() {}
 
 void PSCounterTest::Running()
 {
-
     LOG(INFO) << "Starting PSCounterTest measurement.";
     Initialise();
     Timer scanTimer;
@@ -117,7 +113,7 @@ void PSCounterTest::Running()
     // uint16_t thrOffset = findValueInSettings<double>("PSCounterTest_thrOffset", 0);
     // RunFast(65 + thrOffset, 200 + thrOffset);
 
-    for(uint16_t thrOffset = 0; thrOffset <= 30; thrOffset+=1)
+    for(uint16_t thrOffset = 0; thrOffset <= 30; thrOffset += 1)
     {
         RunFast(65 + thrOffset, 200 + thrOffset);
         // RunFast(thrOffset, thrOffset);
@@ -133,16 +129,16 @@ void PSCounterTest::Running()
 
 bool PSCounterTest::GetCounterData(BeBoard* theBoard, const std::string& theOutputFileName, int eventsPerPoint)
 {
-
-    uint32_t delayAfterFastReset = 100;
-    uint32_t delayAfterTestPulse = 50;
+    uint32_t delayAfterFastReset  = 100;
+    uint32_t delayAfterTestPulse  = 50;
     uint32_t delayBeforeNextPulse = 50;
-    uint32_t afterClearCounters = 100;
-    uint32_t afterCloseShutter = 50;
-    uint32_t afterOpenShutter = 50;
+    uint32_t afterClearCounters   = 100;
+    uint32_t afterCloseShutter    = 50;
+    uint32_t afterOpenShutter     = 50;
 
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren = " << fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren") << std::endl;
-    
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren = " << fBeBoardInterface->ReadBoardReg(theBoard,
+    // "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren") << std::endl;
+
     std::vector<std::pair<std::string, uint32_t>> firstListOfBoardRegisters;
     firstListOfBoardRegisters.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto", 0});
     firstListOfBoardRegisters.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.clear_counters", 1});
@@ -170,7 +166,7 @@ bool PSCounterTest::GetCounterData(BeBoard* theBoard, const std::string& theOutp
         std::this_thread::sleep_for(std::chrono::microseconds(100));
         cDDR3Calibrated = (fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.ddr3_block.init_calib_done") == 1);
     }
-    
+
     auto     cMultiplicity = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
     uint32_t fNEvents      = eventsPerPoint * (cMultiplicity + 1);
     static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getTriggerInterface()->SetNTriggersToAccept(fNEvents);
@@ -195,8 +191,8 @@ bool PSCounterTest::GetCounterData(BeBoard* theBoard, const std::string& theOutp
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
-    size_t startIterations    = 0;
-    bool allCompleted;
+    size_t startIterations = 0;
+    bool   allCompleted;
     while(startIterations < 30)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -207,7 +203,7 @@ bool PSCounterTest::GetCounterData(BeBoard* theBoard, const std::string& theOutp
             {
                 fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
 
-                auto cDecoderState  = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state");
+                auto cDecoderState = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state");
                 if(cDecoderState != 0x00)
                 {
                     allCompleted = false;
@@ -254,12 +250,13 @@ bool PSCounterTest::GetCounterData(BeBoard* theBoard, const std::string& theOutp
     for(auto theOpticalGroup: *theBoard)
     {
         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren", 1 << theOpticalGroup->getId());
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] ddr3_wren = "  << fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren") << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] ddr3_wren = " << fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren") << std::endl;
         auto cNFIFOentries = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.num_fifo_entry");
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] cNFIFOentries for opticalGroup " << theOpticalGroup->getId() << " = " << std::hex << cNFIFOentries << std::dec << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] cNFIFOentries for opticalGroup " << theOpticalGroup->getId() << " = " << std::hex << cNFIFOentries << std::dec << std::endl;
         if(cNFIFOentries == 1) return false;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren = " << fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren") << std::endl;
-        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_cnfg.fast_command_block.ps_async_en = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en") << std::dec << std::endl;
+        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren = " << fBeBoardInterface->ReadBoardReg(theBoard,
+        // "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren") << std::endl; std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_cnfg.fast_command_block.ps_async_en = 0x" <<
+        // std::hex << fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en") << std::dec << std::endl;
 
         // sleep(5);
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -268,19 +265,20 @@ bool PSCounterTest::GetCounterData(BeBoard* theBoard, const std::string& theOutp
         while((cDDR3state >> 3) != 1 && cIterations < 100) // while not in idle state
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
-            cDDR3state     = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.fsm_state");
+            cDDR3state = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.fsm_state");
             cIterations++;
         }
         if((cDDR3state >> 3) != 1)
         {
             LOG(ERROR) << ERROR_FORMAT << "Failed to read DDR3" << RESET;
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.fsm_state = 0x" << std::hex << cDDR3state << std::dec << std::endl;
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.fsm_state = 0x" << std::hex << cDDR3state << std::dec
+                      << std::endl;
             throw std::runtime_error("PSCounterTest::GetCounterData - DDR3 not ready!!");
         }
-        
+
         auto cData = fBeBoardInterface->ReadBlockBoardReg(theBoard, "fc7_daq_ddr3", cNFIFOentries * 16, 0x20000 * theOpticalGroup->getId());
 
-        std::string fullOutputFile = theOutputFileName + "_link" + std::to_string(theOpticalGroup->getId()) + ".txt";
+        std::string   fullOutputFile = theOutputFileName + "_link" + std::to_string(theOpticalGroup->getId()) + ".txt";
         std::ofstream outfile(fullOutputFile);
         outfile << getPatternPrintout(cData, 1, false) << std::endl;
     }
@@ -291,12 +289,11 @@ bool PSCounterTest::GetCounterData(BeBoard* theBoard, const std::string& theOutp
     return true;
 }
 
-
 void PSCounterTest::RunFast(uint16_t stripThreshold, uint16_t pixelThreshold)
 {
     std::cout << "Running" << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] stripThreshold = " << stripThreshold << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pixelThreshold = " << pixelThreshold << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] stripThreshold = " << stripThreshold << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pixelThreshold = " << pixelThreshold << std::endl;
     int eventsPerPoint = 100;
     // int eventsPerPoint = 0xfe;
 
@@ -313,14 +310,8 @@ void PSCounterTest::RunFast(uint16_t stripThreshold, uint16_t pixelThreshold)
                     {
                         auto cType = cChip->getFrontEndType();
 
-                        if(cType == FrontEndType::MPA2)
-                        {
-                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", pixelThreshold);
-                        }
-                        else
-                        {
-                            fReadoutChipInterface->WriteChipReg(cChip, "Threshold", stripThreshold);
-                        }
+                        if(cType == FrontEndType::MPA2) { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", pixelThreshold); }
+                        else { fReadoutChipInterface->WriteChipReg(cChip, "Threshold", stripThreshold); }
                     }
                 }
             }
@@ -341,8 +332,6 @@ void PSCounterTest::RunFast(uint16_t stripThreshold, uint16_t pixelThreshold)
         }
 #endif
 
-        
-
         // std::cout << "Measuring Data" << std::endl;
         // std::string outputFileName  = fDirectoryName + "/fastCounter_StripTh_" + std::to_string(stripThreshold) + "_PixelTh_" + std::to_string(pixelThreshold);
 
@@ -354,17 +343,15 @@ void PSCounterTest::RunFast(uint16_t stripThreshold, uint16_t pixelThreshold)
         //     if(GetCounterData(cBoard, outputFileName, eventsPerPoint)) break;
         // }
         // if(iteration >= maxNumberOfIterations) abort();
-        // uint16_t mpa_lsb11 =
-        //     fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getObject(8), MPA2::getPixelRegisterName("ReadCounter_LSB", 1, 1));
-        // uint16_t mpa_msb11 =
-        //     fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getObject(8), MPA2::getPixelRegisterName("ReadCounter_MSB", 1, 1));
+        uint16_t mpa_lsb11 = fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getObject(8), MPA2::getPixelRegisterName("ReadCounter_LSB", 1, 1));
+        uint16_t mpa_msb11 = fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getObject(8), MPA2::getPixelRegisterName("ReadCounter_MSB", 1, 1));
 
-        // std::cout << "MPA=" << std::dec << (mpa_lsb11 | (mpa_msb11 << 8)) << std::endl;
+        std::cout << "MPA=" << std::dec << (mpa_lsb11 | (mpa_msb11 << 8)) << std::endl;
 
-        // uint16_t ssa_lsb1 = fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getObject(0), SSA2::getStripRegisterName("AC_ReadCounterLSB", 1));
-        // uint16_t ssa_msb1 = fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getObject(0), SSA2::getStripRegisterName("AC_ReadCounterMSB", 1));
+        uint16_t ssa_lsb1 = fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getObject(0), SSA2::getStripRegisterName("AC_ReadCounterLSB", 1));
+        uint16_t ssa_msb1 = fReadoutChipInterface->ReadChipReg(cBoard->getFirstObject()->getFirstObject()->getObject(0), SSA2::getStripRegisterName("AC_ReadCounterMSB", 1));
 
-        // std::cout << "SSA=" << std::dec << (ssa_lsb1 | (ssa_msb1 << 8)) << std::endl;
+        std::cout << "SSA=" << std::dec << (ssa_lsb1 | (ssa_msb1 << 8)) << std::endl;
     }
 }
 

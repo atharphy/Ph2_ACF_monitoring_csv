@@ -1,10 +1,10 @@
 #include "HWInterface/D19cPSCounterFWInterface.h"
 #include "HWDescription/BeBoard.h"
 #include "HWDescription/Chip.h"
-#include "HWDescription/OuterTrackerHybrid.h"
 #include "HWDescription/ChipRegItem.h"
 #include "HWDescription/Hybrid.h"
 #include "HWDescription/OpticalGroup.h"
+#include "HWDescription/OuterTrackerHybrid.h"
 #include "HWInterface/FEConfigurationInterface.h"
 #include "HWInterface/FastCommandInterface.h"
 #include "HWInterface/RegManager.h"
@@ -24,10 +24,9 @@ D19cPSCounterFWInterface::D19cPSCounterFWInterface(RegManager* theRegManager) : 
 
 D19cPSCounterFWInterface::~D19cPSCounterFWInterface() {}
 
-
 void D19cPSCounterFWInterface::configureFastReadout(bool enableFastReadout)
 {
-    fPSCounterFast = enableFastReadout; 
+    fPSCounterFast = enableFastReadout;
     D19cPSEventAS::configureFastReadout(fPSCounterFast);
 }
 
@@ -83,11 +82,11 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
                 }
 
                 if(!fFEConfigurationInterface->MultiRead(cChip, cRegItems)) continue;
-                
+
                 for(auto cIter = cRegItems.begin(); cIter < cRegItems.end(); cIter += 4)
                 {
-                    auto cMSBCounterOdd = (*cIter).fValue;
-                    auto cLSBCounterOdd = (*(cIter + 1)).fValue;
+                    auto cMSBCounterOdd  = (*cIter).fValue;
+                    auto cLSBCounterOdd  = (*(cIter + 1)).fValue;
                     auto cMSBCounterEven = (*(cIter + 2)).fValue;
                     auto cLSBCounterEven = (*(cIter + 3)).fValue;
 
@@ -100,12 +99,11 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
     // PS_Clear_counters();
 }
 
-
 bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoard)
 {
     BoardDataContainer theMissingCounterContainer;
     ContainerFactory::copyAndInitChip<std::vector<std::pair<uint8_t, uint8_t>>>(*theBoard, theMissingCounterContainer);
-    std::bitset<32>enabledHybrids(theBoard->getReg("fc7_daq_cnfg.global.hybrid_enable"));
+    std::bitset<32> enabledHybrids(theBoard->getReg("fc7_daq_cnfg.global.hybrid_enable"));
 
     for(auto theOpticalGroup: *theBoard)
     {
@@ -123,7 +121,7 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
         while(cDDR3state != 0xA && cIterations < 10) // while not in idle state
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            cDDR3state     = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.fsm_state");
+            cDDR3state = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_ddr3_packer.fsm_state");
             cIterations++;
         }
         if(cDDR3state != 0xA)
@@ -131,29 +129,37 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
             LOG(WARNING) << WARNING_FORMAT << "Failed to read DDR3" << RESET;
             return false;
         }
-        
+
         auto moduleData = fTheRegManager->ReadBlockRegOffset("fc7_daq_ddr3", cNFIFOentries * 16, 0x20000 * theOpticalGroup->getId());
 
         for(size_t dataCounterPacketNumber = 1; dataCounterPacketNumber < NSSACHANNELS * (NMPAROWS + 1) + 1; ++dataCounterPacketNumber)
         {
             for(uint8_t hybridId = 0; hybridId < 2; ++hybridId) // the countes will be send out independetly from the number of enabled hybrids
             {
-                uint8_t pixelCol = (dataCounterPacketNumber - 1)%120;
-                uint8_t pixelRow = (dataCounterPacketNumber - 1)/120;
+                uint8_t pixelCol = (dataCounterPacketNumber - 1) % 120;
+                uint8_t pixelRow = (dataCounterPacketNumber - 1) / 120;
 
-                size_t hybridDataSize = 8;
-                size_t hybridDataStart = (dataCounterPacketNumber * 2 + (1 - hybridId)) * hybridDataSize;
-                std::vector<uint32_t> hybridPacket = {moduleData.at(hybridDataStart+3), moduleData.at(hybridDataStart+2), moduleData.at(hybridDataStart+1), moduleData.at(hybridDataStart+0), moduleData.at(hybridDataStart+7), moduleData.at(hybridDataStart+6), moduleData.at(hybridDataStart+5), moduleData.at(hybridDataStart+4)};
+                size_t                hybridDataSize  = 8;
+                size_t                hybridDataStart = (dataCounterPacketNumber * 2 + (1 - hybridId)) * hybridDataSize;
+                std::vector<uint32_t> hybridPacket    = {moduleData.at(hybridDataStart + 3),
+                                                         moduleData.at(hybridDataStart + 2),
+                                                         moduleData.at(hybridDataStart + 1),
+                                                         moduleData.at(hybridDataStart + 0),
+                                                         moduleData.at(hybridDataStart + 7),
+                                                         moduleData.at(hybridDataStart + 6),
+                                                         moduleData.at(hybridDataStart + 5),
+                                                         moduleData.at(hybridDataStart + 4)};
                 fData.insert(fData.end(), hybridPacket.begin(), hybridPacket.end());
 
-                uint16_t hybridNumber = hybridId + 2*theOpticalGroup->getId();
+                uint16_t hybridNumber = hybridId + 2 * theOpticalGroup->getId();
                 if(enabledHybrids[hybridNumber] == 0) continue;
 
                 Hybrid* theHybrid = theOpticalGroup->getObject(hybridNumber);
-                
-                uint8_t numberOfCounters = (hybridPacket.at(5) >> 8) & 0x3F;
+
+                uint8_t numberOfCounters         = (hybridPacket.at(5) >> 8) & 0x3F;
                 uint8_t numberOfExpectedCounters = 0;
-                if(theHybrid->size() == 16 ) numberOfExpectedCounters = 8;
+                if(theHybrid->size() == 16)
+                    numberOfExpectedCounters = 8;
                 else
                 {
                     for(auto theChip: *theHybrid)
@@ -163,25 +169,18 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
                 }
                 if(numberOfCounters < numberOfExpectedCounters)
                 {
-                    
                     std::vector<bool> packetFound(8, false);
                     for(uint8_t counterNumber = 8 - numberOfCounters; counterNumber < 8; ++counterNumber)
                     {
                         uint8_t counterStart = 21 * counterNumber;
-                        uint8_t counterEnd = 21 * (counterNumber+1) -1;
+                        uint8_t counterEnd   = 21 * (counterNumber + 1) - 1;
 
                         uint8_t firstWord  = counterStart / 32;
                         uint8_t secondWord = counterEnd / 32;
 
                         uint32_t counterPacket;
-                        if(firstWord == secondWord)
-                        {
-                            counterPacket = (hybridPacket.at(firstWord) >> (counterStart % 32) ) & 0x1FFFFF;
-                        }
-                        else
-                        {
-                            counterPacket = (hybridPacket.at(firstWord) >> (counterStart % 32) | (hybridPacket.at(secondWord) << (32 - counterStart % 32))) & 0x1FFFFF;
-                        }
+                        if(firstWord == secondWord) { counterPacket = (hybridPacket.at(firstWord) >> (counterStart % 32)) & 0x1FFFFF; }
+                        else { counterPacket = (hybridPacket.at(firstWord) >> (counterStart % 32) | (hybridPacket.at(secondWord) << (32 - counterStart % 32))) & 0x1FFFFF; }
 
                         packetFound.at((counterPacket >> 15) & 0x7) = true;
                     }
@@ -192,16 +191,17 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
                         uint8_t idForCIC = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic->getMapping().at(theChip->getId() % 8);
                         if(!packetFound.at(idForCIC))
                         {
-                            theMissingCounterContainer.getChip(theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::vector<std::pair<uint8_t, uint8_t>>>().push_back({pixelRow, pixelCol});
+                            theMissingCounterContainer.getChip(theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())
+                                ->getSummary<std::vector<std::pair<uint8_t, uint8_t>>>()
+                                .push_back({pixelRow, pixelCol});
                         }
                     }
                 }
-                else if(numberOfCounters>numberOfExpectedCounters)
+                else if(numberOfCounters > numberOfExpectedCounters)
                 {
                     LOG(ERROR) << ERROR_FORMAT << "Number of counters = " << +numberOfCounters << " greater than 8, not able to handle this case" << RESET;
                     throw std::runtime_error("Number of counters greater than 8");
                 }
-
             }
         }
     }
@@ -218,9 +218,10 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
         {
             for(auto theChip: *theHybrid)
             {
-                const auto& missingChannelVector = theMissingCounterContainer.getChip(theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::vector<std::pair<uint8_t, uint8_t>>>();
+                const auto& missingChannelVector =
+                    theMissingCounterContainer.getChip(theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::vector<std::pair<uint8_t, uint8_t>>>();
                 if(missingChannelVector.size() == 0) continue;
-                uint32_t idForCIC = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic->getMapping().at(theChip->getId() % 8);
+                uint32_t                 idForCIC = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic->getMapping().at(theChip->getId() % 8);
                 std::vector<ChipRegItem> registersToRead;
                 for(const auto& missingChannel: missingChannelVector)
                 {
@@ -234,14 +235,14 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
                 uint16_t registerCounter = 0;
                 for(const auto& missingChannel: missingChannelVector)
                 {
-                    uint32_t counterValue = (registersToRead.at(registerCounter*2).fValue << 8 | registersToRead.at(registerCounter*2 + 1).fValue) +1;
+                    uint32_t counterValue   = (registersToRead.at(registerCounter * 2).fValue << 8 | registersToRead.at(registerCounter * 2 + 1).fValue) + 1;
                     uint32_t fakeStubPacket = (7 << 18) | (idForCIC) << 15 | ((counterValue & 0x7F) << 8) | ((counterValue >> 7) & 0x7F);
-                    uint32_t channelOffset = ((numberOfParsedOpticalGroups * NSSACHANNELS * (NMPAROWS + 1) + missingChannel.first * 120 + missingChannel.second)*2 + theHybrid->getId()%2 )*8;
-                    
+                    uint32_t channelOffset  = ((numberOfParsedOpticalGroups * NSSACHANNELS * (NMPAROWS + 1) + missingChannel.first * 120 + missingChannel.second) * 2 + theHybrid->getId() % 2) * 8;
+
                     uint16_t numberOfCounters = (fData.at(channelOffset + 5) >> 8) & 0x3F;
-                    uint16_t counterNumber = 8 - (numberOfCounters + 1);
-                    uint16_t counterStart = 21 * counterNumber;
-                    uint16_t counterEnd = 21 * (counterNumber+1) -1;
+                    uint16_t counterNumber    = 8 - (numberOfCounters + 1);
+                    uint16_t counterStart     = 21 * counterNumber;
+                    uint16_t counterEnd       = 21 * (counterNumber + 1) - 1;
 
                     uint32_t firstWord  = counterStart / 32;
                     uint32_t secondWord = counterEnd / 32;
@@ -261,19 +262,17 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
                     fData.at(channelOffset + 5) = (fData.at(channelOffset + 5) & 0xFFFFC0FF) | ((numberOfCounters + 1) << 8);
                     ++registerCounter;
                 }
-
             }
         }
         ++numberOfParsedOpticalGroups;
     }
 
     return true;
-
 }
 
 bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* theBoard)
 {
-    size_t iterationCounter = 0;
+    size_t iterationCounter          = 0;
     size_t maximumNumberOfIterations = 30;
     while(iterationCounter < maximumNumberOfIterations)
     {
@@ -294,15 +293,16 @@ bool D19cPSCounterFWInterface::ReadEventsLocal(const Ph2_HwDescription::BeBoard*
     // clear data vector
     fData.clear();
 
-    uint32_t delayAfterFastReset = 100;
-    uint32_t delayAfterTestPulse = 50;
+    uint32_t delayAfterFastReset  = 100;
+    uint32_t delayAfterTestPulse  = 50;
     uint32_t delayBeforeNextPulse = 50;
-    uint32_t afterClearCounters = 100;
-    uint32_t afterCloseShutter = 50;
-    uint32_t afterOpenShutter = 50;
+    uint32_t afterClearCounters   = 100;
+    uint32_t afterCloseShutter    = 50;
+    uint32_t afterOpenShutter     = 50;
 
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren = " << fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren") << std::endl;
-    
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren = " << fBeBoardInterface->ReadBoardReg(theBoard,
+    // "fc7_daq_cnfg.fast_command_block.ps_async_en.ddr3_wren") << std::endl;
+
     std::vector<std::pair<std::string, uint32_t>> firstListOfBoardRegisters;
     firstListOfBoardRegisters.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.cic_veto", 0});
     firstListOfBoardRegisters.push_back({"fc7_daq_cnfg.fast_command_block.ps_async_en.clear_counters", 1});
@@ -345,13 +345,13 @@ bool D19cPSCounterFWInterface::ReadEventsLocal(const Ph2_HwDescription::BeBoard*
 
     if(fPSCounterFast)
     {
-        size_t searchStartPatternIteration    = 0;
-        size_t maxSearchStartPatternIterations    = 30;
+        size_t searchStartPatternIteration     = 0;
+        size_t maxSearchStartPatternIterations = 30;
 
         while(searchStartPatternIteration < maxSearchStartPatternIterations)
         {
-            size_t fsmStartIterations    = 0;
-            bool allCompleted;
+            size_t fsmStartIterations = 0;
+            bool   allCompleted;
             while(fsmStartIterations < 30)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -362,7 +362,7 @@ bool D19cPSCounterFWInterface::ReadEventsLocal(const Ph2_HwDescription::BeBoard*
                     {
                         fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
 
-                        auto cDecoderState  = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state");
+                        auto cDecoderState = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.async_counter_decode.store_fsm_state");
                         if(cDecoderState != 0x00)
                         {
                             allCompleted = false;
@@ -380,7 +380,7 @@ bool D19cPSCounterFWInterface::ReadEventsLocal(const Ph2_HwDescription::BeBoard*
                 LOG(ERROR) << ERROR_FORMAT << "Fast counter FSM did not run, please contact Fabio Ravera" << RESET;
                 throw std::runtime_error("Fast counter FSM did not run");
             }
-            
+
             bool allStartPatternFound = true;
 
             for(auto theOpticalGroup: *theBoard)
@@ -406,10 +406,7 @@ bool D19cPSCounterFWInterface::ReadEventsLocal(const Ph2_HwDescription::BeBoard*
                 std::this_thread::sleep_for(std::chrono::microseconds(waitForDataCollection));
                 ++searchStartPatternIteration;
             }
-            else
-            {
-                break;
-            }
+            else { break; }
         }
         if(searchStartPatternIteration >= maxSearchStartPatternIterations)
         {
@@ -419,13 +416,9 @@ bool D19cPSCounterFWInterface::ReadEventsLocal(const Ph2_HwDescription::BeBoard*
 
         return FastRead(theBoard);
     }
-    else
-    {
-        SlowRead(theBoard);
-    }
+    else { SlowRead(theBoard); }
 
     return true;
-
 }
 
 } // namespace Ph2_HwInterface

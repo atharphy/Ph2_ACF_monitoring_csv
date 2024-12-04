@@ -57,7 +57,10 @@ void DQMHistogramOTverifyMPASSAdataWord::fillPatternMatchingEfficiencyResults(De
 
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
-                    for(size_t cLineId = 0; cLineId < 9; cLineId++) { patternMatchingEfficiencyHistogram->SetBinContent(chipId + 1, cLineId + 1, thePatternMatchingEfficiencyVector.at(chipId).at(cLineId)); }
+                    for(size_t cLineId = 0; cLineId < 9; cLineId++)
+                    {
+                        patternMatchingEfficiencyHistogram->SetBinContent(chipId + 1, cLineId + 1, thePatternMatchingEfficiencyVector.at(chipId).at(cLineId));
+                    }
                 }
             }
         }

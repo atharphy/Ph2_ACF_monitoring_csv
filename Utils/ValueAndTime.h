@@ -10,7 +10,7 @@ class ValueAndTime
     ValueAndTime(T theValue, std::string theTime) : fValue(theValue), fTime(theTime) {}
     ValueAndTime() = default;
 
-    T      fValue;
+    T           fValue;
     std::string fTime;
 
   private:

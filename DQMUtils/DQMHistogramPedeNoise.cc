@@ -357,8 +357,8 @@ void DQMHistogramPedeNoise::process()
 
                             float minLimit = cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0.)) - 10;
                             float maxLimit = cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.)) + 10;
-                            minLimit = minLimit < cChipStripSCurveHist->GetYaxis()->GetXmin() ? cChipStripSCurveHist->GetYaxis()->GetXmin() : minLimit;
-                            maxLimit = maxLimit > cChipStripSCurveHist->GetYaxis()->GetXmax() ? cChipStripSCurveHist->GetYaxis()->GetXmax() : maxLimit;
+                            minLimit       = minLimit < cChipStripSCurveHist->GetYaxis()->GetXmin() ? cChipStripSCurveHist->GetYaxis()->GetXmin() : minLimit;
+                            maxLimit       = maxLimit > cChipStripSCurveHist->GetYaxis()->GetXmax() ? cChipStripSCurveHist->GetYaxis()->GetXmax() : maxLimit;
 
                             cChipStripSCurveHist->GetYaxis()->SetRangeUser(minLimit, maxLimit);
                             delete cTmp;
@@ -384,11 +384,11 @@ void DQMHistogramPedeNoise::process()
                                                              .fTheHistogram;
 
                             cChipPixelSCurveHist->GetYaxis()->SetRangeUser(-0.5, 254.5);
-                            TH1D* cTmp = cChipPixelSCurveHist->ProjectionY();
+                            TH1D* cTmp     = cChipPixelSCurveHist->ProjectionY();
                             float minLimit = cTmp->GetBinCenter(cTmp->FindFirstBinAbove(0.)) - 10;
                             float maxLimit = cTmp->GetBinCenter(cTmp->FindLastBinAbove(0.)) + 10;
-                            minLimit = minLimit < cChipPixelSCurveHist->GetYaxis()->GetXmin() ? cChipPixelSCurveHist->GetYaxis()->GetXmin() : minLimit;
-                            maxLimit = maxLimit > cChipPixelSCurveHist->GetYaxis()->GetXmax() ? cChipPixelSCurveHist->GetYaxis()->GetXmax() : maxLimit;
+                            minLimit       = minLimit < cChipPixelSCurveHist->GetYaxis()->GetXmin() ? cChipPixelSCurveHist->GetYaxis()->GetXmin() : minLimit;
+                            maxLimit       = maxLimit > cChipPixelSCurveHist->GetYaxis()->GetXmax() ? cChipPixelSCurveHist->GetYaxis()->GetXmax() : maxLimit;
 
                             cChipPixelSCurveHist->GetYaxis()->SetRangeUser(minLimit, maxLimit);
                             // cSCurveHist->GetZaxis()->SetRangeUser(0,1.);

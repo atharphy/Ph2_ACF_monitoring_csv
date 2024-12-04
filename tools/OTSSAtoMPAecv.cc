@@ -224,7 +224,9 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForL1(uint8_t slvsCurrent)
                         {
                             if(!theChip->getSummary<bool>())
                                 fPatternMatchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
-                                    ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>().at(theChip->getId() % 8).at(0) = -1;
+                                    ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()
+                                    .at(theChip->getId() % 8)
+                                    .at(0) = -1;
                         }
                     }
                 }

@@ -19,7 +19,7 @@
 
 namespace Ph2_HwDescription
 {
-  class BeBoard;
+class BeBoard;
 }
 
 class PSCounterTest : public Tool
@@ -46,14 +46,14 @@ class PSCounterTest : public Tool
     DetectorDataContainer* fStubLogicValue;
     DetectorDataContainer* fHIPCountValue;
     DetectorDataContainer  fBoardRegContainer;
-    bool fWithCBC = false;
-    bool fWithSSA = false;
-    bool fWithMPA = false;
+    bool                   fWithCBC = false;
+    bool                   fWithSSA = false;
+    bool                   fWithMPA = false;
 
-    bool GetCounterData(Ph2_HwDescription::BeBoard *theBoard, const std::string& theOutputFileName, int eventsPerPoint);
+    bool GetCounterData(Ph2_HwDescription::BeBoard* theBoard, const std::string& theOutputFileName, int eventsPerPoint);
     // Settings
     bool fDisableStubLogic{true};
-    
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramPSCounterTest fDQMHistogramPSCounterTest;

@@ -118,8 +118,8 @@ void OTCicBypassTest::injectStubs2S(Ph2_HwDescription::ReadoutChip* theCBC)
     theRegisterVector.push_back({"Bend7", fBendingAndCode.at(0)}); // bendind = 0 will ouput 5
     theRegisterVector.push_back({"Bend8", fBendingAndCode.at(2)}); // bendind = 2 will ouput A
     theRegisterVector.push_back({"Bend9", fBendingAndCode.at(4)}); // bendind = 4 will ouput F
-    theRegisterVector.push_back({"CoincWind&Offset12", 0x00});  // set stub window offset to 0
-    theRegisterVector.push_back({"CoincWind&Offset34", 0x00});  // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset12", 0x00});     // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset34", 0x00});     // set stub window offset to 0
     fReadoutChipInterface->WriteChipMultReg(theCBC, theRegisterVector);
 
     // inject stubs on CBC to CIC stub lines 0 (first stub address) lines 1 (second stub address), line 3 (first and second stub bend)

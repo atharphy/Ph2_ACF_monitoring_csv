@@ -8,13 +8,13 @@
  */
 
 #include "HWInterface/CicInterface.h"
+#include "HWDescription/Cic.h"
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/D19clpGBTInterface.h"
 #include "HWInterface/ExceptionHandler.h"
 #include "Utils/GenericDataArray.h"
 #include "boost/format.hpp"
-#include "HWDescription/Cic.h"
 #include <numeric>
 
 #define DEV_FLAG 0
@@ -187,7 +187,7 @@ bool CicInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint16
 {
     setBoard(pChip->getBeBoardId());
     // LOG(DEBUG) << BOLDMAGENTA << "CicInterface::WriteChipReg trying to write to register 0x" << pRegNode << RESET;
-    ChipRegMap cRegMap       = pChip->getRegMap();
+    ChipRegMap cRegMap          = pChip->getRegMap();
     cRegMap.at(pRegNode).fValue = pValue;
     return fBoardFW->SingleRegisterWrite(pChip, cRegMap.at(pRegNode), pVerify);
 }
@@ -894,7 +894,7 @@ GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1
         LOG(DEBUG) << BOLDBLUE << "Word alignment value found to be " << std::bitset<8>(cRegValue) << RESET;
         for(uint8_t cNibble = 0; cNibble < 2; cNibble += 1)
         {
-            uint8_t cWordAlignment                           = (cRegValue & (0xF << cNibble * 4)) >> 4 * cNibble;
+            uint8_t cWordAlignment                                 = (cRegValue & (0xF << cNibble * 4)) >> 4 * cNibble;
             theWordAlignmentValues.at(cFECounter).at(cLineCounter) = cWordAlignment;
             LOG(DEBUG) << BOLDBLUE << "Word alignment for FE" << +cFECounter << " Line" << +cLineCounter << " value found to be " << +cWordAlignment << RESET;
             cLineCounter += 1;
@@ -1029,13 +1029,13 @@ GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS> Ci
     for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd) // using the same Id of the chip
     {
         // L1 lines are on phyport 10 and 11 and go on first line of the ouput array
-        auto l1PhyPortAndChannel            = fromChipL1ToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd);
+        auto l1PhyPortAndChannel                  = fromChipL1ToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd);
         theOptimalPhase2DArray.at(frontEnd).at(0) = getPhaseValue(l1PhyPortAndChannel.first, l1PhyPortAndChannel.second);
 
         // Stub lines are on pyPort 0 to 9
         for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS - 1; ++line)
         {
-            auto stubPhyPortAndChannel                 = fromChipStubToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd, line);
+            auto stubPhyPortAndChannel                       = fromChipStubToPhyPortAndChannel(pChip, cicFrontEndMapping, frontEnd, line);
             theOptimalPhase2DArray.at(frontEnd).at(line + 1) = getPhaseValue(stubPhyPortAndChannel.first, stubPhyPortAndChannel.second);
         }
     }
@@ -1192,9 +1192,9 @@ bool CicInterface::CheckPhaseAlignerLock(Chip* pChip, uint8_t pCheckValue)
 
         for(size_t cBitIndex = 0; cBitIndex < 8; cBitIndex++)
         {
-            cInputLineCounter                          = (cIndex < 5) ? (cCounter % cNStubLines) : cL1Line;
-            cLastStubLineFound                         = cLastStubLineFound || (cFeCounter == 7 && cInputLineCounter == 4);
-            cFeCounter                                 = (cLastStubLineFound) ? cBitIndex : cFeCounter;
+            cInputLineCounter                             = (cIndex < 5) ? (cCounter % cNStubLines) : cL1Line;
+            cLastStubLineFound                            = cLastStubLineFound || (cFeCounter == 7 && cInputLineCounter == 4);
+            cFeCounter                                    = (cLastStubLineFound) ? cBitIndex : cFeCounter;
             theFeStates.at(cFeCounter)[cInputLineCounter] = std::bitset<8>(cRegValue)[cBitIndex];
 
             cFeCounter = (!cLastStubLineFound) ? (cFeCounter + (((1 + cCounter) % cNStubLines == 0) ? 1 : 0)) : cBitIndex;

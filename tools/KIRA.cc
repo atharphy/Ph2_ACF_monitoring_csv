@@ -409,7 +409,8 @@ DetectorDataContainer KIRA::analyseEvents(BeBoard* pBoard, const std::vector<Eve
                                 ->getObject(cOpticalGroup->getId())
                                 ->getObject(cHybrid->getId())
                                 ->getObject(cChip->getId())
-                                ->getSummary<GenericDataArray<float, VECSIZE>>().at(int(cHit.second / 2)) += 1;
+                                ->getSummary<GenericDataArray<float, VECSIZE>>()
+                                .at(int(cHit.second / 2)) += 1;
                         }
                     }
                 } // chip vector

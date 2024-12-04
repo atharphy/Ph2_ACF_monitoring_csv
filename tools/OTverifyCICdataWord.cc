@@ -146,7 +146,9 @@ void OTverifyCICdataWord::injectL12S(Ph2_HwDescription::ReadoutChip* theChip, ui
     auto& theL1Efficiency = fPatternMatchingEfficiencyContainer.getObject(theChip->getBeBoardId())
                                 ->getObject(theChip->getOpticalGroupId())
                                 ->getObject(theChip->getHybridId())
-                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>().at(theChip->getId()).at(0);
+                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>()
+                                .at(theChip->getId())
+                                .at(0);
 
     std::vector<std::pair<uint8_t, uint8_t>> theClusterList{{0xAA, 2}};
     fReadoutChipInterface->WriteChipReg(theChip, "HitOr", 1);
@@ -215,7 +217,9 @@ void OTverifyCICdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCIC, 
     auto& theL1Efficiency = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
                                 ->getObject(theMPA->getOpticalGroupId())
                                 ->getObject(theMPA->getHybridId())
-                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>().at(theMPA->getId() % 8).at(0);
+                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>()
+                                .at(theMPA->getId() % 8)
+                                .at(0);
 
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 2)};
 
@@ -314,7 +318,7 @@ void OTverifyCICdataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterfac
             auto theFeConfigRegisterValue = fCicInterface->ReadChipReg(cCic, "FE_CONFIG");
             theFeConfigRegisterValue |= 0x04; // Force bending to be sent out in the stub stream
             fCicInterface->WriteChipReg(cCic, "FE_CONFIG", theFeConfigRegisterValue);
-            auto theChipToCICMapping =cCic->getMapping();
+            auto theChipToCICMapping = cCic->getMapping();
             for(auto theChip: *theHybrid)
             {
                 if(theChip->getFrontEndType() == FrontEndType::SSA2) continue;
@@ -344,8 +348,8 @@ void OTverifyCICdataWord::injectStubs2S(ReadoutChip* theChip, uint8_t chipIdForC
     theRegisterVector.push_back({"Bend7", fBendingAndCode.at(0)}); // bendind = 0 will ouput 9
     theRegisterVector.push_back({"Bend8", fBendingAndCode.at(2)}); // bendind = 2 will ouput B
     theRegisterVector.push_back({"Bend9", fBendingAndCode.at(4)}); // bendind = 4 will ouput F
-    theRegisterVector.push_back({"CoincWind&Offset12", 0x00});  // set stub window offset to 0
-    theRegisterVector.push_back({"CoincWind&Offset34", 0x00});  // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset12", 0x00});     // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset34", 0x00});     // set stub window offset to 0
     fReadoutChipInterface->WriteChipMultReg(theChip, theRegisterVector);
 
     // inject stubs on CBC to CIC stub lines 0 (first stub address) lines 1 (second stub address), line 3 (first and second stub bend)
@@ -359,7 +363,9 @@ void OTverifyCICdataWord::injectStubs2S(ReadoutChip* theChip, uint8_t chipIdForC
     fPatternMatchingEfficiencyContainer.getObject(theChip->getBeBoardId())
         ->getObject(theChip->getOpticalGroupId())
         ->getObject(theChip->getHybridId())
-        ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>().at(theChip->getId()).at(1) = (matchingEfficiencyFirstPattern + matchingEfficiencySecondPattern) / 2;
+        ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>()
+        .at(theChip->getId())
+        .at(1) = (matchingEfficiencyFirstPattern + matchingEfficiencySecondPattern) / 2;
 
     return;
 }
@@ -460,7 +466,9 @@ void OTverifyCICdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdForCI
     auto& theStubEfficiency = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
                                   ->getObject(theMPA->getOpticalGroupId())
                                   ->getObject(theMPA->getHybridId())
-                                  ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>().at(theMPA->getId() % 8).at(1);
+                                  ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>()
+                                  .at(theMPA->getId() % 8)
+                                  .at(1);
 
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 1)};
     static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, theClusterList);

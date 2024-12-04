@@ -101,8 +101,8 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fOccupancyAtPedestal     = findValueInSettings<double>("PedestalEqualization_Occupancy", 0.56);
     uint8_t cDefTargetOffset = (fWithCBC) ? 0x7F : 0xF;
     fTargetOffset            = findValueInSettings<double>("PedestalEqualizationTargetOffset", cDefTargetOffset);
-    bool fastCounterReadout = findValueInSettings<double>("PedestalEqualization_FastCounterReadout", 1) > 0;
-    
+    bool fastCounterReadout  = findValueInSettings<double>("PedestalEqualization_FastCounterReadout", 1) > 0;
+
     LOG(INFO) << BOLDBLUE << "PedestalEqualization::Initialise Occupancy at pedestal is " << fOccupancyAtPedestal << " target offset is " << +fTargetOffset << RESET;
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
 

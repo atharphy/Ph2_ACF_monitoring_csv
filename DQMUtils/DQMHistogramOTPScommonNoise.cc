@@ -167,7 +167,7 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
         std::cout << "Matched OTPScommonNoiseStripModuleHit!!!!!\n";
         bool                  isSSA;
         DetectorDataContainer theDetectorData =
-            theStripModuleHitContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS*2 + 1)>>(
+            theStripModuleHitContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS * 2 + 1)>>(
                 fDetectorContainer, isSSA);
         // Filling the histograms
         fillModuleHitPlots(theDetectorData, isSSA);
@@ -180,7 +180,7 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
         std::cout << "Matched OTPScommonNoisePixelModuleHit!!!!!\n";
         bool                  isSSA;
         DetectorDataContainer theDetectorData =
-            thePixelModuleHitContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS*2 + 1)>>(
+            thePixelModuleHitContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS * 2 + 1)>>(
                 fDetectorContainer, isSSA);
         // Filling the histograms
         fillModuleHitPlots(theDetectorData, isSSA);
@@ -305,12 +305,12 @@ void DQMHistogramOTPScommonNoise::fillModuleHitPlots(DetectorDataContainer& theH
             if(isStrip)
             {
                 TH1F* theHistogram = fStripModuleHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                fillEventsVsHitsHist<MAXCICCHANNELS*2 + 1>(opticalGroup, *theHistogram);
+                fillEventsVsHitsHist<MAXCICCHANNELS * 2 + 1>(opticalGroup, *theHistogram);
             }
             else
             {
                 TH1F* theHistogram = fPixelModuleHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                fillEventsVsHitsHist<MAXCICCHANNELS*2 + 1>(opticalGroup, *theHistogram);
+                fillEventsVsHitsHist<MAXCICCHANNELS * 2 + 1>(opticalGroup, *theHistogram);
             }
         }
     }

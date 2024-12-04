@@ -92,7 +92,9 @@ void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCI
     auto& theL1Efficiency = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
                                 ->getObject(theMPA->getOpticalGroupId())
                                 ->getObject(theMPA->getHybridId())
-                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>().at(theMPA->getId() % 8).at(0);
+                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()
+                                .at(theMPA->getId() % 8)
+                                .at(0);
 
     // std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList{};
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 2)};
@@ -161,7 +163,8 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
     auto& theLineEfficiencyArray = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
                                        ->getObject(theMPA->getOpticalGroupId())
                                        ->getObject(theMPA->getHybridId())
-                                       ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>().at(theMPA->getId() % 8);
+                                       ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()
+                                       .at(theMPA->getId() % 8);
 
     fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 0); // Use normal stub mode
 

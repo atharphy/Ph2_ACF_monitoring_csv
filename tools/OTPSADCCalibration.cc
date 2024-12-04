@@ -99,16 +99,16 @@ void OTPSADCCalibration::CalibrateBias()
                     LOG(INFO) << BOLDYELLOW << "Going to calibrate the ADC bias registers..." << RESET;
                     CalibrateChipBias(theChip, theVrefValue);
                     uint32_t theADCBandgapValue = fReadoutChipInterface->readADCBandGap(theChip);
-                    float theBandgapVoltage = fReadoutChipInterface->getBandGapExpectedValue(theChip); // FIXME this should be the real bandgap value!!
-                    float theSlope     = theBandgapVoltage / (theADCBandgapValue - theGroundValue);
-                    float theOffset    = -theGroundValue * theSlope;
+                    float    theBandgapVoltage  = fReadoutChipInterface->getBandGapExpectedValue(theChip); // FIXME this should be the real bandgap value!!
+                    float    theSlope           = theBandgapVoltage / (theADCBandgapValue - theGroundValue);
+                    float    theOffset          = -theGroundValue * theSlope;
 
-                    auto& theADCinformation = theADCSlopeContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<ADCSlope>();
-                    theADCinformation.fADC_GND               = theGroundValue;
-                    theADCinformation.fADC_VBG           = theADCBandgapValue;
+                    auto& theADCinformation    = theADCSlopeContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<ADCSlope>();
+                    theADCinformation.fADC_GND = theGroundValue;
+                    theADCinformation.fADC_VBG = theADCBandgapValue;
                     theADCinformation.fMeasured_VBG = theBandgapVoltage;
-                    theADCinformation.fSlope = theSlope;
-                    theADCinformation.fOffset = theOffset;
+                    theADCinformation.fSlope        = theSlope;
+                    theADCinformation.fOffset       = theOffset;
 
                     std::map<std::string, float> theADCcalibrationMap;
                     static_cast<ReadoutChip*>(theChip)->setADCCalibrationValue("ADC_SLOPE", theSlope);
@@ -143,8 +143,8 @@ void OTPSADCCalibration::CalibrateBias()
 void OTPSADCCalibration::CalibrateChipBias(ReadoutChip* theChip, float theVrefValue)
 {
     // The register table is < std::string register name, < uint8_t register default value, float register expected value>>
-    auto theRegistersTable = fReadoutChipInterface->getBiasStructureDefaultTable(theChip);
-    float theADCLSB = fReadoutChipInterface->calculateADCLSB(theChip, theVrefValue);
+    auto  theRegistersTable = fReadoutChipInterface->getBiasStructureDefaultTable(theChip);
+    float theADCLSB         = fReadoutChipInterface->calculateADCLSB(theChip, theVrefValue);
     for(auto it = theRegistersTable.begin(); it != theRegistersTable.end(); it++)
     {
         std::string theRegisterName  = it->first;

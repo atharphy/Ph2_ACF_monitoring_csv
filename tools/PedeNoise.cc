@@ -2,6 +2,7 @@
 #include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Cbc.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19cPSCounterFWInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/Container.h"
@@ -12,7 +13,6 @@
 #include "Utils/Occupancy.h"
 #include "Utils/SSAChannelGroupHandler.h"
 #include "Utils/ThresholdAndNoise.h"
-#include "HWInterface/D19cPSCounterFWInterface.h"
 // #include "boost/format.hpp"
 #include <math.h>
 
@@ -183,7 +183,7 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         cBoard->setEventType(EventType::PSAS);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitializePSCounterFWInterface(cBoard);
         static_cast<D19cPSCounterFWInterface*>(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->getL1ReadoutInterface())->configureFastReadout(fastCounterReadout);
-        
+
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -649,14 +649,13 @@ void PedeNoise::measureSCurves(uint16_t pStripStartValue, uint16_t pPixelStartVa
                 if(cLimitFound) { LOG(INFO) << BOLDYELLOW << "Switching sign because threshold limit was reached .." << RESET; }
             }
         } while(!cLimitFound);
-        
+
         cCounter++;
         cStripValue = pStripStartValue + cSign;
         cPixelValue = pPixelStartValue + cSign;
     }
-    
+
     LOG(DEBUG) << YELLOW << "Found minimal and maximal occupancy " << cMinBreakCount << " times, SCurves finished! " << RESET;
-    
 }
 void PedeNoise::extractPedeNoise()
 {

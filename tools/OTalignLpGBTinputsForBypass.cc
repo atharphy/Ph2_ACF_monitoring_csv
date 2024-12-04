@@ -141,8 +141,10 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
 
                         for(uint8_t line = 0; line < numberOfLines; ++line)
                         {
-                            auto& matchingEfficiency =
-                                matchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 15>>().at(line).at(lpgbtPhase);
+                            auto& matchingEfficiency = matchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
+                                                           ->getSummary<GenericDataArray<float, 4, 15>>()
+                                                           .at(line)
+                                                           .at(lpgbtPhase);
                             if(!isPS && phyPort >= 10) // L1 for 2S case
                             {
                                 matchingEfficiency = getMatchingEfficiency2SL1(phyPortDataVector.at(line));
@@ -175,7 +177,7 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                     auto theCic                = theOuterTrackerHybrid->fCic;
                     for(uint8_t line = 0; line < numberOfLines; ++line)
                     {
-                        auto theBestPhase                                           = getBestPhase(phyPortEfficiencyScanList.at(line), theOuterTrackerHybrid, line);
+                        auto theBestPhase                                              = getBestPhase(phyPortEfficiencyScanList.at(line), theOuterTrackerHybrid, line);
                         theHybrid->getSummary<GenericDataArray<uint8_t, 4>>().at(line) = theBestPhase;
                         theCic->setLpGBTphaseForCICbypass(phyPort, line, theBestPhase);
                     }

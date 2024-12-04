@@ -130,7 +130,10 @@ void DQMHistogramOTSSAtoMPAecv::fillStubPatternEfficiencyScan(DetectorDataContai
                                                                .fTheHistogram;
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
-                    for(size_t line = 1; line < 9; line++) { patternMatchingEfficiencyHistogram->SetBinContent(clockEdge + 1, chipId * 8 + line, thePatternMatchingEfficiencyVector.at(chipId).at(line)); }
+                    for(size_t line = 1; line < 9; line++)
+                    {
+                        patternMatchingEfficiencyHistogram->SetBinContent(clockEdge + 1, chipId * 8 + line, thePatternMatchingEfficiencyVector.at(chipId).at(line));
+                    }
                 }
             }
         }

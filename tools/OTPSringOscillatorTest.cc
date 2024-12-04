@@ -112,7 +112,8 @@ void OTPSringOscillatorTest::runMPAringOscillatorTest()
         {
             uint16_t totalCount = registerValues.at(registerIndex * 2).second | (registerValues.at(registerIndex * 2 + 1).second << 8);
             theOutputContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())
-                ->getSummary<GenericDataArray<uint16_t, NMPAROWS + 1>>().at(registerIndex) = totalCount;
+                ->getSummary<GenericDataArray<uint16_t, NMPAROWS + 1>>()
+                .at(registerIndex) = totalCount;
         }
     };
 

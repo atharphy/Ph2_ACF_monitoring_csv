@@ -192,7 +192,9 @@ void OTCMNoise::TakeData()
                                 ->getObject(cOpticalGroup->getId())
                                 ->getObject(cHybrid->getId())
                                 ->getObject(cChip->getId())
-                                ->getSummary<GenericDataArray<uint32_t, (NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1)>>().at(cEventHitsEven).at(cEventHitsOdd) += 1;
+                                ->getSummary<GenericDataArray<uint32_t, (NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1)>>()
+                                .at(cEventHitsEven)
+                                .at(cEventHitsOdd) += 1;
 
                             // for 2d correlation, save channels with hits per chip
                             if(f2DHistograms)
@@ -213,13 +215,17 @@ void OTCMNoise::TakeData()
                                 ->getObject(cOpticalGroup->getId())
                                 ->getObject(cHybrid->getId())
                                 ->getObject(cChip->getId())
-                                ->getSummary<GenericDataArray<uint32_t, NCHANNELS + 1, NCHANNELS * NCHIPS_OT + 1>>().at(cChipCorrelationMap.at(cHybrid->getId()).at(cChip->getId())).at(cHybridHits) += 1;
+                                ->getSummary<GenericDataArray<uint32_t, NCHANNELS + 1, NCHANNELS * NCHIPS_OT + 1>>()
+                                .at(cChipCorrelationMap.at(cHybrid->getId()).at(cChip->getId()))
+                                .at(cHybridHits) += 1;
                         }
 
                         the2DSensorHybridCorrelationContainer.getObject(cBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
-                            ->getSummary<GenericDataArray<uint32_t, (NCHANNELS * NCHIPS_OT / 2 + 1), (NCHANNELS * NCHIPS_OT / 2 + 1)>>().at(cHybridHitsEven).at(cHybridHitsOdd) += 1;
+                            ->getSummary<GenericDataArray<uint32_t, (NCHANNELS * NCHIPS_OT / 2 + 1), (NCHANNELS * NCHIPS_OT / 2 + 1)>>()
+                            .at(cHybridHitsEven)
+                            .at(cHybridHitsOdd) += 1;
 
                         auto theHybridContainerValues = &(theHybridHitContainer.getObject(cBoard->getId())
                                                               ->getObject(cOpticalGroup->getId())
@@ -239,12 +245,15 @@ void OTCMNoise::TakeData()
 
                     the2DSensorModuleCorrelationContainer.getObject(cBoard->getId())
                         ->getObject(cOpticalGroup->getId())
-                        ->getSummary<GenericDataArray<uint32_t, ((NCHANNELS * NCHIPS_OT * 2) / 2 + 1), ((NCHANNELS * NCHIPS_OT * 2) / 2 + 1)>>().at(cModuleHitsEven).at(cModuleHitsOdd) += 1;
+                        ->getSummary<GenericDataArray<uint32_t, ((NCHANNELS * NCHIPS_OT * 2) / 2 + 1), ((NCHANNELS * NCHIPS_OT * 2) / 2 + 1)>>()
+                        .at(cModuleHitsEven)
+                        .at(cModuleHitsOdd) += 1;
 
                     the2DHybridCorrelationContainer.getObject(cBoard->getId())
                         ->getObject(cOpticalGroup->getId())
-                        ->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT + 1, NCHANNELS * NCHIPS_OT + 1>>().at(cHybridCorrelationMap.begin()->second)
-                                                                                                                        .at(cHybridCorrelationMap.rbegin()->second) += 1;
+                        ->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT + 1, NCHANNELS * NCHIPS_OT + 1>>()
+                        .at(cHybridCorrelationMap.begin()->second)
+                        .at(cHybridCorrelationMap.rbegin()->second) += 1;
 
                     if(f2DHistograms)
                     {
@@ -255,7 +264,9 @@ void OTCMNoise::TakeData()
                             {
                                 the2DHitContainer.getObject(cBoard->getId())
                                     ->getObject(cOpticalGroup->getId())
-                                    ->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2, NCHANNELS * NCHIPS_OT * 2>>().at(hit_channels.at(iCh1)).at(hit_channels.at(iCh2)) += 1;
+                                    ->getSummary<GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2, NCHANNELS * NCHIPS_OT * 2>>()
+                                    .at(hit_channels.at(iCh1))
+                                    .at(hit_channels.at(iCh2)) += 1;
                             }
                         }
                     }

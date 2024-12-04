@@ -243,7 +243,6 @@ void OTCICphaseAlignment::phaseAlignment()
 #endif
 
     fDetectorContainer->removeReadoutChipQueryFunction(theQueryFunction);
-    
 }
 
 void OTCICphaseAlignment::AlignAllCICinputsPS(BeBoard*            theBoard,

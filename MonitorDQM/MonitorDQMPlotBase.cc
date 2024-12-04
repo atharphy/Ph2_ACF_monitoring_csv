@@ -7,26 +7,22 @@
 #include <TDatime.h>
 #include <TGraph.h>
 
-
 uint32_t MonitorDQMPlotBase::getTimeStampForRoot(std::string rawTime)
-{   
+{
     int yy, mm, dd, hh, mi, ss;
-    if (sscanf(rawTime.c_str(), "%d-%d-%d %d:%d:%d", &yy, &mm, &dd, &hh, &mi, &ss) != 6)
-    {
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] bad time format: " << rawTime << std::endl;
-    }
+    if(sscanf(rawTime.c_str(), "%d-%d-%d %d:%d:%d", &yy, &mm, &dd, &hh, &mi, &ss) != 6) { std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] bad time format: " << rawTime << std::endl; }
 
     TDatime rootTime(rawTime.c_str());
-    return rootTime.Convert();        
+    return rootTime.Convert();
 }
 
 void MonitorDQMPlotBase::bookImplementer(TFile*                   theOutputFile,
-                        const DetectorContainer& theDetectorStructure,
-                        DetectorDataContainer&   dataContainer,
-                        GraphContainer<TGraph>&  graphContainer,
-                        const std::string&       type,
-                        const char*              XTitle,
-                        const char*              YTitle)
+                                         const DetectorContainer& theDetectorStructure,
+                                         DetectorDataContainer&   dataContainer,
+                                         GraphContainer<TGraph>&  graphContainer,
+                                         const std::string&       type,
+                                         const char*              XTitle,
+                                         const char*              YTitle)
 {
     graphContainer.fTheGraph->GetXaxis()->SetTimeDisplay(1);
     graphContainer.fTheGraph->GetXaxis()->SetNdivisions(503);

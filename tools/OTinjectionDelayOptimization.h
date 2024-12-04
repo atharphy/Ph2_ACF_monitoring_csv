@@ -35,7 +35,7 @@ class OTinjectionDelayOptimization : public Tool
 
     static std::string fCalibrationDescription;
 
-  private:
+  protected:
     void optimizeInjectionDelay();
 
     void prepareInjectionDelayScan2S();
