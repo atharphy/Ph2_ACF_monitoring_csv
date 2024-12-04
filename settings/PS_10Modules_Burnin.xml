@@ -935,7 +935,7 @@
     <Setting name="PedeNoise_PulseAmplitude">70</Setting>
     <Setting name="PedestalEqualization_PulseAmplitudePix">70</Setting>
     <Setting name="PedeNoise_PulseAmplitudePix">70</Setting>
-    <Setting name="PedestalEqualization_PulseAmplitudeFullScan">20</Setting>
+    <Setting name="PedestalEqualization_PulseAmplitudeFullScan">30</Setting>
     <Setting name="PedestalEqualization_PulseAmplitudePixFullScan">30</Setting>
 
     <Setting name="StartPhase">0</Setting>
