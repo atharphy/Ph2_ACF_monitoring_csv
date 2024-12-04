@@ -56,6 +56,7 @@
 #include "tools/RD53ThrAdjustment.h"
 #include "tools/RD53ThrEqualization.h"
 #include "tools/RD53ThrMinimization.h"
+// #include "tools/TestPSEvents.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
 
@@ -285,6 +286,34 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTalignLpGBTinputsForBypass,
              OTMPAtoCICecv,
              OTRegisterTester>("PS Module", "PSfullTest");
+
+    // Register<
+    //     //  TuneLpGBTVref, // ->ok
+    //     //  OTPSADCCalibration, // ->ok
+    //     //  OTVTRxLightYieldScan, // ->ok
+    //     //  OTLpGBTEyeOpeningTest, // ->ok
+    //     //  OTalignLpGBTinputs, // ->ok
+    //     OTalignBoardDataWord,
+    //     //  OTverifyBoardDataWord, // ->ok
+    //     //  OTalignStubPackage, // ->ok
+    //     //  OTCICphaseAlignment, // ->ok
+    //     //  OTCICwordAlignment, // ->ok
+    //     //  OTverifyCICdataWord, // -> ok
+    //     //  OTverifyMPASSAdataWord, // -> probably the issue
+    //     //  OTPSringOscillatorTest, // ->ok
+    //     //  PedestalEqualizationPSFullScan, // ->ok
+    //     //  PedeNoisePSLowInjection, // ->ok
+    //     //  OTinjectionDelayOptimization
+    //     TestPSEvents
+    //     //  OTinjectionOccupancyScan, // -> ok
+    //     //  OTPScommonNoise, // -> ok
+    //     //  OTCICtoLpGBTecv, // -> ok
+    //     //  OTSSAtoMPAecv, // -> ok
+    //     //  OTSSAtoSSAecv, // -> ok
+    //     //  OTalignLpGBTinputsForBypass, // -> ok
+    //     //  OTMPAtoCICecv, // -> ok
+    //     //  OTRegisterTester // -> ok
+    //     >("PS Module", "test");
 
     Register<TuneLpGBTVref,
              OTPSADCCalibration,
