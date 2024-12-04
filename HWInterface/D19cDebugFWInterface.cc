@@ -3,6 +3,7 @@
 #include "Utils/ConsoleColor.h"
 #include "Utils/easylogging++.h"
 #include <bitset>
+// #include <thread>
 
 using namespace Ph2_HwInterface;
 
@@ -17,6 +18,10 @@ std::vector<uint32_t> D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPri
     if(pPrint) LOG(INFO) << BOLDBLUE << "D19cDebugFWInterface::L1ADebug ...." << RESET;
     // enable initial fast reset
     fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.misc.initial_fast_reset_enable", 1);
+
+    // fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.auto_l1_capture", 1);
+    // fTheRegManager->WriteReg("fc7_daq_cnfg.physical_interface_block.slvs_debug.slvs_debug_l1_delay", 1);
+
     // disable back-pressure
     fTheRegManager->WriteReg("fc7_daq_cnfg.fast_command_block.misc.backpressure_enable", 0);
     fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
@@ -45,6 +50,16 @@ std::vector<uint32_t> D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPri
     fTotalNumberOfTriggers += fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
 
     // LOG(DEBUG) << BOLDMAGENTA << "First header found after " << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
+    // int  iteration = 0;
+    // bool dataReady = false;
+    // while(!dataReady && iteration++ < 100)
+    // {
+    //     std::this_thread::sleep_for(std::chrono::microseconds(10));
+    //     dataReady = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.slvs_debug_stub_ready") == 1;
+    // }
+    // if(iteration > 1) std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] iteration = " << iteration << std::endl;
+    // if(!dataReady) std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Data not ready!!!!!!!!" << std::endl;
+
     auto cWords = fTheRegManager->ReadBlockReg("fc7_daq_stat.physical_interface_block.l1a_debug", 50);
     if(pPrint)
     {
