@@ -1470,7 +1470,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                                                   .fOccupancy;
                         }
                     }
-                    LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
+                    // LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
                 }
             }
         }

@@ -445,7 +445,6 @@ void PedestalEqualization::FindOffsets()
                             if(cType == FrontEndType::SSA2) cRegName = "THTRIMMING_S" + std::to_string(col + 1);
                             if(cType == FrontEndType::MPA2) cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
                             auto channel = roc->getReg(cRegName);
-                            LOG(DEBUG) << BOLDGREEN << "Offset of channel " << col << " set to " << +channel << RESET;
                             cMeanOffset += roc->getReg(cRegName);
                             chip->getChannel<uint8_t>(row, col) = channel;
                         }
