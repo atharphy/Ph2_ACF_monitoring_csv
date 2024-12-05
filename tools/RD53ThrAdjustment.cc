@@ -307,9 +307,9 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
             // # Run analysis #
             // ################
             CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames);
-            CalibBase::SilentRunning(true);
+            PixelAlive::doSilentRunning = true;
             PixelAlive::run();
-            CalibBase::SilentRunning(false);
+            PixelAlive::doSilentRunning = false;
             auto output = PixelAlive::analyze();
 
             // ##############################################
