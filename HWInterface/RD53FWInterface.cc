@@ -170,10 +170,10 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // # Enabling hybrids and chips   #
     // # Hybrid_type hard coded in FW #
     // # 1 = single chip              #
-    // # 2 = double chip hybrid       #
+    // # 2 = dual chip hybrid         #
     // # 4 = quad chip hybrid         #
     // ################################
-    this->singleChip     = RegManager::ReadReg("user.stat_regs.aurora_rx.Hybrid_type") == 1;
+    this->hybridType     = RegManager::ReadReg("user.stat_regs.aurora_rx.Hybrid_type");
     this->enabledHybrids = RD53FWInterface::GetBoardEnabledHybrids(pBoard);
     uint32_t chipsEn     = RD53FWInterface::GetBoardEnabledChips(pBoard);
     cVecReg.push_back({"user.ctrl_regs.Hybrids_en", this->enabledHybrids});
@@ -276,9 +276,8 @@ void RD53FWInterface::PrintFWstatus()
     // ##########################
     // # Check hybrid registers #
     // ##########################
-    uint32_t chipType = RegManager::ReadReg("user.stat_regs.aurora_rx.Hybrid_type");
-    this->singleChip  = chipType == 1;
-    LOG(INFO) << GREEN << "Hybrid type: " << BOLDYELLOW << chipType << RESET << GREEN " (1=Single chip, 2=Double chip, 4=Quad chip)" << RESET;
+    this->hybridType = RegManager::ReadReg("user.stat_regs.aurora_rx.Hybrid_type");
+    LOG(INFO) << GREEN << "Hybrid type: " << BOLDYELLOW << this->hybridType << RESET << GREEN " (1=Single chip, 2=Dual chip, 4=Quad chip)" << RESET;
 
     uint32_t hybrid = RegManager::ReadReg("user.stat_regs.aurora_rx.Nb_of_modules");
     LOG(INFO) << GREEN << "Number of hybrids which can be potentially readout: " << BOLDYELLOW << hybrid << RESET;
@@ -410,7 +409,7 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
     // # Compose chip-lane in readback #
     // #################################
     uint32_t chipLane = pChip->getHybridId();
-    if(this->singleChip != true) chipLane = RD53FWconstants::NLANE_HYBRID * chipLane + static_cast<RD53*>(pChip)->getChipLane();
+    if(this->hybridType != 1) chipLane = (this->hybridType == 2 ? RD53FWconstants::NLANE_DUALHYBRID : RD53FWconstants::NLANE_QUADHYBRID) * chipLane + static_cast<RD53*>(pChip)->getChipLane();
 
     // #####################
     // # Read the register #
@@ -501,13 +500,14 @@ uint32_t RD53FWInterface::GetBoardEnabledChips(const BeBoard* pBoard, bool prima
             uint32_t       chips_en  = 0;
             const uint32_t hybrid_id = cHybrid->getId();
 
-            if(this->singleChip == true)
+            if(this->hybridType == 1)
                 chips_en = 1 << hybrid_id;
             else
                 for(const auto cChip: *cHybrid)
                     if((primariesOnly == false) || (static_cast<Ph2_HwDescription::RD53*>(cChip)->laneConfig.isPrimary == true))
                     {
-                        const uint32_t chip_lane = (RD53FWconstants::NLANE_HYBRID * hybrid_id) + static_cast<RD53*>(cChip)->getChipLane();
+                        const uint32_t chip_lane =
+                            ((this->hybridType == 2 ? RD53FWconstants::NLANE_DUALHYBRID : RD53FWconstants::NLANE_QUADHYBRID) * hybrid_id) + static_cast<RD53*>(cChip)->getChipLane();
                         chips_en |= 1 << chip_lane;
                     }
 
@@ -1064,9 +1064,9 @@ void RD53FWInterface::StatusOptoLink(uint32_t& txStatus, uint32_t& rxStatus, uin
     rxStatus  = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.rx_ready");
     mgtStatus = RegManager::ReadReg("user.stat_regs.lpgbt_fpga.mgt_ready");
 
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip tx:  " << BOLDYELLOW << std::setw(2) << txStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<8>(txStatus) << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip rx:  " << BOLDYELLOW << std::setw(2) << rxStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<8>(rxStatus) << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << std::setw(2) << mgtStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<8>(mgtStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip tx:  " << BOLDYELLOW << std::setw(3) << txStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<8>(txStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip rx:  " << BOLDYELLOW << std::setw(3) << rxStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<8>(rxStatus) << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> Optical link n. active LpGBT chip mgt: " << BOLDYELLOW << std::setw(3) << mgtStatus << BOLDBLUE << ", i.e.: " << BOLDYELLOW << std::bitset<8>(mgtStatus) << RESET;
 }
 
 bool RD53FWInterface::WriteOptoLinkRegister(const Chip* pChip, const uint32_t pAddress, const uint32_t pData, const bool pVerify)
