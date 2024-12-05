@@ -352,10 +352,10 @@ bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* the
         if(!isLineAligned)
         {
             LOG(INFO) << BOLDYELLOW << "Alignment on line " << +lineId << " failed, retrying " << fMaxNumberOfIterations - currentIterationNumber << " more times before giving up" << RESET;
-            theHybridAlignmentRetryVector[lineId]++;
+            theHybridAlignmentRetryVector.at(lineId)++;
             continue;
         }
-        theHybridBitSlipVector[lineId] = theAlignmentResult.fBitslip;
+        theHybridBitSlipVector.at(lineId) = theAlignmentResult.fBitslip;
     }
 
     return isLineAligned;
@@ -379,7 +379,7 @@ bool OTalignBoardDataWord::tryAllLineAlignment(D19cBackendAlignmentFWInterface* 
         for(uint8_t lineId = 0; lineId < fNumberOfLines; ++lineId)
         {
             if(skip2SkickOff(theHybrid->getId(), lineId, !isPSmodule)) continue;
-            if(!theAlignmentVectorResult[lineId].fWordAlignmentSuccess)
+            if(!theAlignmentVectorResult.at(lineId).fWordAlignmentSuccess)
             {
                 allLinesAligned = false;
                 break;
@@ -393,7 +393,7 @@ bool OTalignBoardDataWord::tryAllLineAlignment(D19cBackendAlignmentFWInterface* 
         else
         {
             isHybridAligned = true;
-            for(uint8_t lineId = 0; lineId < fNumberOfLines; ++lineId) { theHybridBitSlipVector[lineId] = theAlignmentVectorResult[lineId].fBitslip; }
+            for(uint8_t lineId = 0; lineId < fNumberOfLines; ++lineId) { theHybridBitSlipVector.at(lineId) = theAlignmentVectorResult.at(lineId).fBitslip; }
         }
     }
 
@@ -419,12 +419,12 @@ bool OTalignBoardDataWord::tryAllHybridAlignment(D19cBackendAlignmentFWInterface
                 for(uint8_t lineId = 0; lineId < fNumberOfLines; ++lineId)
                 {
                     if(skip2SkickOff(theHybrid->getId(), lineId, !isPSmodule)) continue;
-                    if(!theAlignmentResultVector[lineId].fWordAlignmentSuccess)
+                    if(!theAlignmentResultVector.at(lineId).fWordAlignmentSuccess)
                     {
-                        ++theHybridAlignmentRetryVector[lineId];
+                        ++theHybridAlignmentRetryVector.at(lineId);
                         allHybridAligned = false;
                     }
-                    else { theHybridBitSlipVector[lineId] = theAlignmentResultVector[lineId].fBitslip; }
+                    else { theHybridBitSlipVector.at(lineId) = theAlignmentResultVector.at(lineId).fBitslip; }
                 }
             }
         }

@@ -143,6 +143,15 @@ class BeBoardInterface
     std::vector<uint32_t> ReadBlockBoardReg(Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode, uint32_t pSize);
 
     /*!
+     * \brief Read a block of a given size from the board
+     * \param pBoard
+     * \param pRegNode : Node of the register to read
+     * \param pSize Number of 32-bit words in the block
+     * \param pOffset Number of 32-bit words offset
+     */
+    std::vector<uint32_t> ReadBlockBoardReg(Ph2_HwDescription::BeBoard* pBoard, const std::string& pRegNode, uint32_t pSize, uint32_t pOffset);
+
+    /*!
      * \brief Read a vector of Registers
      * \param pBoard
      * \param pRegVec : Vector of Register/Value pairs

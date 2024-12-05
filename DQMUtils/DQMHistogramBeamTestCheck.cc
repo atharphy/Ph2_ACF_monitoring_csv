@@ -592,7 +592,7 @@ void DQMHistogramBeamTestCheck::fillClusterOccupancyPlots(DetectorDataContainer&
                     auto  cSize       = cChipClstrs->getSummary<GenericDataArray<float, VECSIZE>>().size();
                     for(size_t cIndx = 0; cIndx < cSize; cIndx++)
                     {
-                        auto cClusterOccupancy = cChipClstrs->getSummary<GenericDataArray<float, VECSIZE>>()[cIndx];
+                        auto cClusterOccupancy = cChipClstrs->getSummary<GenericDataArray<float, VECSIZE>>().at(cIndx);
                         auto cBinNum           = chipClstOccHist->FindBin(cIndx, cClusterOccupancy);
                         chipClstOccHist->SetBinContent(cBinNum, 1);
                         chipClstOccHist->SetBinError(cBinNum, 0);
@@ -657,7 +657,8 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(uint16_t pLatency, uint16_t pTr
                                               ->getObject(opticalGroup->getId())
                                               ->getObject(hybrid->getId())
                                               ->getObject(chip->getId())
-                                              ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDC];
+                                              ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()
+                                              .at(cTDC);
                         LOG(DEBUG) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of " << pLatency << " bin of " << +cBin << " OG" << +opticalGroup->getId() << " Hybrid"
                                    << +hybrid->getId() << " Chip" << +chip->getId() << " - on average have found " << cNhits << " channels with a hit [per chip per event]." << RESET;
                         cLatencyTDC->SetBinContent(cBin, cNhits);
@@ -697,7 +698,7 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(DetectorDataContainer& theLaten
                     uint32_t hits_total = 0;
                     if(cFillS0)
                     {
-                        uint32_t hits  = cHybridHitsS0->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[i];
+                        uint32_t hits  = cHybridHitsS0->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(i);
                         float    error = 0;
                         if(hits > 0) error = sqrt(float(hits));
                         auto cBin = hybridLatencyHistogramS0->FindBin((float)(fStartLatency + i));
@@ -707,7 +708,7 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(DetectorDataContainer& theLaten
                     }
                     if(cFillS1)
                     {
-                        uint32_t hits  = cHybridHitsS1->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[i];
+                        uint32_t hits  = cHybridHitsS1->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(i);
                         float    error = 0;
                         if(hits > 0) error = sqrt(float(hits));
                         auto cBin = hybridLatencyHistogramS1->FindBin((float)(fStartLatency + i));
@@ -739,7 +740,7 @@ void DQMHistogramBeamTestCheck::fillLatencyPlots(DetectorDataContainer& theLaten
                 {
                     if(cFill)
                     {
-                        uint32_t hits  = hybrid->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[i];
+                        uint32_t hits  = hybrid->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(i);
                         float    error = 0;
                         if(hits > 0) error = sqrt(float(hits));
                         hybridLatencyHistogram->SetBinContent(i, hits);
@@ -766,7 +767,7 @@ void DQMHistogramBeamTestCheck::fillStubLatencyPlots(DetectorDataContainer& theS
 
                 for(uint32_t i = 0; i < fLatencyRange; i++)
                 {
-                    uint32_t hits  = hybrid->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[i];
+                    uint32_t hits  = hybrid->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(i);
                     float    error = 0;
                     if(hits > 0) { error = sqrt(float(hits)); }
                     auto cBin = hybridLatencyHistogram->FindBin((float)i);
@@ -792,7 +793,7 @@ void DQMHistogramBeamTestCheck::fill2DLatencyPlots(DetectorDataContainer& the2DL
                 {
                     for(uint8_t cStubLatency = 0; cStubLatency < i + fStartLatency; cStubLatency++)
                     {
-                        uint32_t hits = hybrid->getSummary<GenericDataArray<GenericDataArray<uint16_t, VECSIZE>, VECSIZE>>()[cStubLatency][i];
+                        uint32_t hits = hybrid->getSummary<GenericDataArray<GenericDataArray<uint16_t, VECSIZE>, VECSIZE>>().at(cStubLatency).at(i);
 
                         hybridLatencyHistogram->SetBinContent(cStubLatency, i, hits);
                     }
@@ -813,7 +814,7 @@ void DQMHistogramBeamTestCheck::fillTriggerTDCPlots(DetectorDataContainer& theTr
         {
             TH1F* boardTriggerTDCHistogram = fTriggerTDCHistograms.getObject(board->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
             auto  cBin                     = boardTriggerTDCHistogram->GetXaxis()->FindBin(tdcValue);
-            boardTriggerTDCHistogram->SetBinContent(cBin, sum[tdcValue]);
+            boardTriggerTDCHistogram->SetBinContent(cBin, sum.at(tdcValue));
         }
     }
 }
@@ -917,7 +918,8 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                                               ->getObject(opticalGroup->getId())
                                               ->getObject(hybrid->getId())
                                               ->getObject(chip->getId())
-                                              ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()[cTDC];
+                                              ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()
+                                              .at(cTDC);
                         LOG(DEBUG) << BOLDMAGENTA << "\t\t..TDC phase of " << +cTDC << " latency of [1] "
                                    << " bin of " << +cBin << " OG" << +opticalGroup->getId() << " Hybrid" << +hybrid->getId() << " Chip" << +chip->getId() << " - on average have found " << cNhits
                                    << " channels with a hit [per chip per event]." << RESET;
@@ -1144,8 +1146,8 @@ void DQMHistogramBeamTestCheck::fillBendPlots(DetectorDataContainer& theMap)
                 {
                     float cBend = -7.0 + cIndx * 0.5;
                     auto  cBin  = cHist->GetXaxis()->FindBin(cBend);
-                    cHist->SetBinContent(cBin, cBends[cIndx]);
-                    cHist->SetBinError(cBin, std::sqrt(cBends[cIndx]));
+                    cHist->SetBinContent(cBin, cBends.at(cIndx));
+                    cHist->SetBinError(cBin, std::sqrt(cBends.at(cIndx)));
                 }
 
             } // hybrids
@@ -1201,8 +1203,8 @@ void DQMHistogramBeamTestCheck::fillCountPlots(DetectorDataContainer& theEventCo
     //             {
     //                 float cBend = -7.5 + cIndx * 0.5;
     //                 auto  cBin  = cHist->GetXaxis()->FindBin(cBend);
-    //                 cHist->SetBinContent(cBin, cBends[cIndx]);
-    //                 cHist->SetBinError(cBin, std::sqrt(cBends[cIndx]));
+    //                 cHist->SetBinContent(cBin, cBends.at(cIndx));
+    //                 cHist->SetBinError(cBin, std::sqrt(cBends.at(cIndx)));
     //             }
     //         } // hybrids
     //     }     // OG

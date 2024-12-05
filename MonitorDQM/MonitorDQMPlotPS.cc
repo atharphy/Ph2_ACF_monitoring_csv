@@ -8,6 +8,7 @@
 
 #include "MonitorDQM/MonitorDQMPlotPS.h"
 #include "HWDescription/ReadoutChip.h"
+#include "Parser/DetectorMonitorConfig.h"
 #include "RootUtils/GraphContainer.h"
 #include "RootUtils/RootContainerFactory.h"
 #include "TAxis.h"

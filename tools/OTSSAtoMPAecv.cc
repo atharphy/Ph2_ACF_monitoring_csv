@@ -131,7 +131,7 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForStubs(uint8_t slvsCurrent)
                     {
                         if(theChip->getFrontEndType() == FrontEndType::MPA2)
                         {
-                            auto    theMPAInterface = static_cast<MPA2Interface*>(fReadoutChipInterface);
+                            auto    theMPAInterface = static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface;
                             uint8_t registerValue;
                             if(clockEdge == 0)
                                 registerValue = 0x00;
@@ -185,7 +185,7 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForL1(uint8_t slvsCurrent)
                         {
                             if(theChip->getFrontEndType() == FrontEndType::MPA2)
                             {
-                                auto    theMPAInterface = static_cast<MPA2Interface*>(fReadoutChipInterface);
+                                auto    theMPAInterface = static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface;
                                 uint8_t registerValue;
                                 if(clockEdge == 0)
                                     registerValue = 0x0;
@@ -224,7 +224,9 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForL1(uint8_t slvsCurrent)
                         {
                             if(!theChip->getSummary<bool>())
                                 fPatternMatchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
-                                    ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()[theChip->getId() % 8][0] = -1;
+                                    ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()
+                                    .at(theChip->getId() % 8)
+                                    .at(0) = -1;
                         }
                     }
                 }

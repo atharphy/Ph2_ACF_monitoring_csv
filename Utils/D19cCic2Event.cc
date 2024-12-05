@@ -144,14 +144,14 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             int cL1Offset         = cOffset + 3;
                             if(fIsSparsified)
                             {
-                                size_t cEOffset                   = 3;
-                                fEventHitList[cHybridIndex].first = cL1Information;
-                                fEventHitList[cHybridIndex].second.clear();
+                                size_t cEOffset                      = 3;
+                                fEventHitList.at(cHybridIndex).first = cL1Information;
+                                fEventHitList.at(cHybridIndex).second.clear();
                                 uint8_t cNStripClusters = 0;
                                 if(fIs2S)
                                 {
-                                    cNStripClusters               = (*(cIterator + 2) & (0x7F << 0)) >> 0;
-                                    fNStripClusters[cHybridIndex] = cNStripClusters;
+                                    cNStripClusters                  = (*(cIterator + 2) & (0x7F << 0)) >> 0;
+                                    fNStripClusters.at(cHybridIndex) = cNStripClusters;
                                     // clusters/hit data first
                                     std::vector<std::bitset<CLUSTER_WORD_SIZE>> cL1Words(cNStripClusters, 0);
                                     this->splitStream(pData, cL1Words, cOffset + cEOffset,
@@ -160,7 +160,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                     for(auto cL1Word: cL1Words)
                                     {
                                         uint32_t cWord = cL1Word.to_ulong() | (0 << 31);
-                                        fEventHitList[cHybridIndex].second.push_back(cWord);
+                                        fEventHitList.at(cHybridIndex).second.push_back(cWord);
                                     }
                                 }
                                 else
@@ -169,15 +169,15 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                     cNStripClusters       = (*(cIterator + 2) & (0x7F << 7)) >> 7;
                                     uint8_t cNPxlClusters = (*(cIterator + 2) & 0x7F);
 
-                                    fNPxlClusters[cHybridIndex]   = cNPxlClusters;
-                                    fNStripClusters[cHybridIndex] = cNStripClusters;
+                                    fNPxlClusters.at(cHybridIndex)   = cNPxlClusters;
+                                    fNStripClusters.at(cHybridIndex) = cNStripClusters;
                                     // split stream into s and p clusters
                                     std::vector<std::bitset<S_CLUSTER_WORD_SIZE>> cL1SWords(cNStripClusters, 0);
                                     this->splitStream(pData, cL1SWords, cOffset + cEOffset, cNStripClusters);
                                     for(auto cL1Word: cL1SWords)
                                     {
                                         uint32_t cWord = cL1Word.to_ulong() | (0 << 31);
-                                        fEventHitList[cHybridIndex].second.push_back(cWord);
+                                        fEventHitList.at(cHybridIndex).second.push_back(cWord);
                                     } // push back s clusters
 
                                     cEOffset += (cNStripClusters * S_CLUSTER_WORD_SIZE) / 32;
@@ -186,14 +186,14 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                     for(auto cL1Word: cL1PWords)
                                     {
                                         uint32_t cWord = cL1Word.to_ulong() | (1 << 31);
-                                        fEventHitList[cHybridIndex].second.push_back(cWord);
+                                        fEventHitList.at(cHybridIndex).second.push_back(cWord);
                                     } // push back p clusters
                                 }
                             }
                             else
                             {
-                                fEventRawList[cHybridIndex].first = cL1Information;
-                                fEventRawList[cHybridIndex].second.clear();
+                                fEventRawList.at(cHybridIndex).first = cL1Information;
+                                fEventRawList.at(cHybridIndex).second.clear();
                                 size_t cFullSize = 8; // going to assume that I will always readout 8*275 block of data
 
                                 const size_t                            cNblocks = RAW_L1_CBC * cFullSize / L1_BLOCK_SIZE; // 275 bits per chip ... 8chips... blocks of 11 bits
@@ -214,7 +214,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                             LOG(INFO) << BOLDRED << "\t... un-sparse decoder ... problem decoding block#" << +cIndex << RESET;
                                             continue;
                                         }
-                                        auto& cL1block = cL1Words[cIndex];
+                                        auto& cL1block = cL1Words.at(cIndex);
                                         for(size_t cNbit = 0; cNbit < cL1block.size(); cNbit++)
                                         {
                                             cBitset[cBitset.size() - 1 - cPosition] = cL1block[cL1block.size() - 1 - cNbit];
@@ -222,7 +222,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                         }
                                     }
                                     // LOG(INFO) << BOLDBLUE << "\t...  chip " << +cChipIndex << "\t -- " << std::bitset<RAW_L1_CBC>(cBitset) << RESET;
-                                    fEventRawList[cHybridIndex].second.push_back(cBitset);
+                                    fEventRawList.at(cHybridIndex).second.push_back(cBitset);
                                 }
                             }
                         }
@@ -246,14 +246,14 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                             cStubInformation.first  = (cStubInfo & 0xFFF);
                             cStubInformation.second = (cStubInfo & (0x1FF << 22)) >> 22;
 
-                            fEventStubList[cHybridIndex].first = cStubInformation;
-                            fEventStubList[cHybridIndex].second.clear();
+                            fEventStubList.at(cHybridIndex).first = cStubInformation;
+                            fEventStubList.at(cHybridIndex).second.clear();
                             if(fIs2S)
                             {
                                 std::vector<std::bitset<STUB_WORD_SIZE_2S>> cStubWords(cNStubs, 0);
                                 this->splitStream(pData, cStubWords, cOffset + cHitInfoSize + 2,
                                                   cNStubs); // split 32 bit words in std::vector of STUB_WORD_SIZE_2S bits
-                                for(auto cStubWord: cStubWords) { fEventStubList[cHybridIndex].second.push_back(cStubWord.to_ulong()); }
+                                for(auto cStubWord: cStubWords) { fEventStubList.at(cHybridIndex).second.push_back(cStubWord.to_ulong()); }
                             }
                             else
                             {
@@ -263,7 +263,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                                 for(auto cStubWord: cStubWords)
                                 {
                                     // LOG (INFO) << BOLDBLUE << "Stub word " << std::bitset<STUB_WORD_SIZE_PS>(cStubWord) << RESET;
-                                    fEventStubList[cHybridIndex].second.push_back(cStubWord.to_ulong());
+                                    fEventStubList.at(cHybridIndex).second.push_back(cStubWord.to_ulong());
                                 }
                             }
                         }
@@ -319,7 +319,7 @@ uint8_t D19cCic2Event::GetNStripClusters(uint8_t pHybridId) const
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
     auto cHybridIndex = getHybridIndex(pHybridId);
     if(cHybridIndex >= fNStripClusters.size()) { LOG(INFO) << BOLDRED << " D19cCic2Event::GetNStripClusters out of range..." << RESET; }
-    return fNStripClusters[cHybridIndex];
+    return fNStripClusters.at(cHybridIndex);
 }
 
 uint8_t D19cCic2Event::GetNPixelClusters(uint8_t pHybridId) const
@@ -327,7 +327,7 @@ uint8_t D19cCic2Event::GetNPixelClusters(uint8_t pHybridId) const
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
     auto cHybridIndex = getHybridIndex(pHybridId);
     if(cHybridIndex >= fNStripClusters.size()) { LOG(INFO) << BOLDRED << " D19cCic2Event::GetNPixelClusters out of range..." << RESET; }
-    return fNPxlClusters[cHybridIndex];
+    return fNPxlClusters.at(cHybridIndex);
 }
 
 std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const
@@ -340,11 +340,11 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pHybridId, uint8_t
         LOG(INFO) << BOLDRED << " D19cCic2Event::GetPixelClusters out of range..." << RESET;
         return cPClusters;
     }
-    auto cClusterWords = fEventHitList[cHybridIndex].second;
+    auto cClusterWords = fEventHitList.at(cHybridIndex).second;
     // decltype(fEventHitList[0].second) cClusterWords;
     // try
     // {
-    //     cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
+    //     cClusterWords = fEventHitList.at(getHybridIndex(pHybridId)).second;
     // }
     // catch(const std::exception& e)
     // {
@@ -396,7 +396,7 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pHybridId, uint8_t
         return cSClusters;
     }
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    auto cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
+    auto cClusterWords = fEventHitList.at(getHybridIndex(pHybridId)).second;
     if(cClusterWords.size() == 0) return cSClusters;
 
     auto cIterator = cClusterWords.begin();
@@ -430,7 +430,7 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pHybridId, uint8_t
     // std::vector<SCluster> result;
     // uint8_t NSclus = GetNStripClusters(pHybridId, pReadoutChipId);
     // SCluster aSCluster;
-    // auto&  cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
+    // auto&  cClusterWords = fEventHitList.at(getHybridIndex(pHybridId)).second;
     // //uint8_t cSClusterSize = D19C_SCluster_SIZE_32_MPA;
     // //uint8_t deltaword     = 3*32;
 
@@ -460,9 +460,9 @@ std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word(uint8_t pHybridId, uint8_t p
     size_t cHybridIndex = getHybridIndex(pHybridId);
     // LOG (INFO) << BOLDYELLOW << "D19cCic2Event::getRawL1Word for CIC" << +pHybridId << " CBC" << +pReadoutChipId
     //     << " --- [cHybridIndex,cIndx] == " << +cHybridIndex << "," << +cIndx << " -- raw list has " << fEventRawList.size() << " entries and "
-    //     << " --- list of bit-sets has " << +fEventRawList[cHybridIndex].second.size() << " "
+    //     << " --- list of bit-sets has " << +fEventRawList.at(cHybridIndex).second.size() << " "
     //     << RESET;
-    auto& cDataBitset = fEventRawList[cHybridIndex].second[cIndx];
+    auto& cDataBitset = fEventRawList.at(cHybridIndex).second.at(cIndx);
     return cDataBitset;
 }
 
@@ -529,7 +529,7 @@ uint16_t D19cCic2Event::L1Status(uint8_t pHybridId) const
     if(fIsSparsified)
     {
         // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-        auto& cHitInformation = fEventHitList[getHybridIndex(pHybridId)].first;
+        auto& cHitInformation = fEventHitList.at(getHybridIndex(pHybridId)).first;
         return cHitInformation.second;
     }
     else
@@ -542,7 +542,7 @@ uint32_t D19cCic2Event::Error(uint8_t pHybridId, uint8_t pReadoutChipId) const
     if(fIsSparsified)
     {
         // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-        auto&   cHitInformation = fEventHitList[getHybridIndex(pHybridId)].first;
+        auto&   cHitInformation = fEventHitList.at(getHybridIndex(pHybridId)).first;
         uint8_t cChipIdMapped   = 0;
         if(pReadoutChipId < 8) cChipIdMapped = 1 + this->getChipIdMapped(pHybridId, pReadoutChipId);
         // auto     cChipIdMapped   = std::distance(fFeMapping.begin(), std::find(fFeMapping.begin(), fFeMapping.end(), pReadoutChipId));
@@ -564,14 +564,14 @@ uint32_t D19cCic2Event::Error(uint8_t pHybridId, uint8_t pReadoutChipId) const
 uint32_t D19cCic2Event::BxId(uint8_t pHybridId) const
 {
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    auto& cStubInformation = fEventStubList[getHybridIndex(pHybridId)].first;
+    auto& cStubInformation = fEventStubList.at(getHybridIndex(pHybridId)).first;
     return cStubInformation.first;
 }
 
 uint16_t D19cCic2Event::Status(uint8_t pHybridId) const
 {
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    auto& cStubInformation = fEventStubList[getHybridIndex(pHybridId)].first;
+    auto& cStubInformation = fEventStubList.at(getHybridIndex(pHybridId)).first;
     return cStubInformation.second;
 }
 
@@ -580,7 +580,7 @@ uint32_t D19cCic2Event::L1Id(uint8_t pHybridId, uint8_t pReadoutChipId) const
     if(fIsSparsified)
     {
         // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-        auto& cHitInformation = fEventHitList[getHybridIndex(pHybridId)].first;
+        auto& cHitInformation = fEventHitList.at(getHybridIndex(pHybridId)).first;
         return cHitInformation.first;
     }
     else
@@ -613,7 +613,7 @@ uint32_t D19cCic2Event::PipelineAddress(uint8_t pHybridId, uint8_t pReadoutChipI
 std::bitset<NMPAROWS * NSSACHANNELS> D19cCic2Event::decodePClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    auto&                                cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
+    auto&                                cClusterWords = fEventHitList.at(getHybridIndex(pHybridId)).second;
     std::bitset<NMPAROWS * NSSACHANNELS> cBitSet(0);
     size_t                               cClusterId = 0;
     for(auto cCluster: cClusterWords)
@@ -651,7 +651,7 @@ std::bitset<NMPAROWS * NSSACHANNELS> D19cCic2Event::decodePClusters(uint8_t pHyb
 std::bitset<NCHANNELS> D19cCic2Event::decodeClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    auto&                  cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
+    auto&                  cClusterWords = fEventHitList.at(getHybridIndex(pHybridId)).second;
     std::bitset<NCHANNELS> cBitSet(0);
     size_t                 cClusterId = 0;
     // LOG (INFO) << BOLDBLUE << "Decoding clusters for Hybrid" << +pHybridId << " readout chip " << +pReadoutChipId << RESET;
@@ -732,7 +732,7 @@ std::vector<bool> D19cCic2Event::DataBitVector(uint8_t pHybridId, uint8_t pReado
 std::vector<Stub> D19cCic2Event::StubVector(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    auto&             cStubWords = fEventStubList[getHybridIndex(pHybridId)].second;
+    auto&             cStubWords = fEventStubList.at(getHybridIndex(pHybridId)).second;
     std::vector<Stub> cStubVec;
     for(auto cStubWord: cStubWords)
     {
@@ -878,7 +878,7 @@ void D19cCic2Event::print(std::ostream& os) const
     {
         for(uint8_t cHybridId = 0; cHybridId < fEventRawList.size(); cHybridId++)
         {
-            for(size_t cReadoutChipId = 0; cReadoutChipId < fEventRawList[cHybridId].second.size(); cReadoutChipId++)
+            for(size_t cReadoutChipId = 0; cReadoutChipId < fEventRawList.at(cHybridId).second.size(); cReadoutChipId++)
             {
                 // print out information
                 printL1Header(os, cHybridId, cReadoutChipId);
@@ -935,7 +935,7 @@ std::vector<Cluster> D19cCic2Event::getClusters(uint8_t pHybridId, uint8_t pRead
 {
     std::vector<Cluster> cClusters(0);
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    auto&                  cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
+    auto&                  cClusterWords = fEventHitList.at(getHybridIndex(pHybridId)).second;
     std::bitset<NCHANNELS> cBitSet(0);
     size_t                 cClusterId = 0;
     for(auto cClusterWord: cClusterWords)

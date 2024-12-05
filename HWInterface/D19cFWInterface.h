@@ -322,10 +322,6 @@ class D19cFWInterface : public BeBoardFWInterface
     void syncCDCE();
     void epromCDCE();
 
-    // measures the occupancy of the 2S chips
-    bool Measure2SOccupancy(uint32_t pNEvents, uint8_t**& pErrorCounters, uint8_t***& pChannelCounters);
-    void Manage2SCountersMemory(uint8_t**& pErrorCounters, uint8_t***& pChannelCounters, bool pAllocate);
-
     void SetForceStart(bool bStart) override {}
 
     ///////////////////////////////////////////////////////

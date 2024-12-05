@@ -115,7 +115,7 @@ void DQMHistogramOTPSringOscillatorTest::fillMPAringOscillator(const DetectorDat
                 {
                     if(!theChip->hasSummary()) continue;
                     auto theRingOscillatorChipContainer = theChip->getSummary<GenericDataArray<uint16_t, NMPAROWS + 1>>();
-                    for(int bin = 0; bin < NMPAROWS + 1; ++bin) { theRingOscillatorHistogram->SetBinContent(theChip->getId() % 8 + 1, bin + 1, theRingOscillatorChipContainer[bin]); }
+                    for(int bin = 0; bin < NMPAROWS + 1; ++bin) { theRingOscillatorHistogram->SetBinContent(theChip->getId() % 8 + 1, bin + 1, theRingOscillatorChipContainer.at(bin)); }
                 }
             }
         }
@@ -150,7 +150,7 @@ void DQMHistogramOTPSringOscillatorTest::fillSSAringOscillator(const DetectorDat
                 {
                     if(!theChip->hasSummary()) continue;
                     auto theRingOscillatorChipContainer = theChip->getSummary<GenericDataArray<uint16_t, 4>>();
-                    for(int bin = 0; bin < 4; ++bin) { theRingOscillatorHistogram->SetBinContent(theChip->getId() % 8 + 1, bin + 1, theRingOscillatorChipContainer[bin]); }
+                    for(int bin = 0; bin < 4; ++bin) { theRingOscillatorHistogram->SetBinContent(theChip->getId() % 8 + 1, bin + 1, theRingOscillatorChipContainer.at(bin)); }
                 }
             }
         }

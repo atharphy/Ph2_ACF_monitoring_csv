@@ -51,7 +51,7 @@ bool D19cOpticalInterface::Read(Chip* pChip, std::vector<ChipRegItem>& pRegister
             // Get replies from worker
             auto cReplies = flpGBTSlowControlWorkerInterface->ReadReply(cRegisterBlock.size() + 1); // N words + 1 header
             // Verifiy reply frame integrity - only n_words in the header
-            size_t cNWords = (cReplies[0] & (0xFFFF << 0)) >> 0;
+            size_t cNWords = (cReplies.at(0) & (0xFFFF << 0)) >> 0;
             if(cNWords != cRegisterBlock.size())
             {
                 LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read -- Corrupted CPB reply: cNWords = " << cNWords << " - cDataBlock.size() = " << cRegisterBlock.size() << RESET;
@@ -61,8 +61,8 @@ bool D19cOpticalInterface::Read(Chip* pChip, std::vector<ChipRegItem>& pRegister
             for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
             {
                 if(cReplyIdx == 0) continue; // skip header
-                uint8_t cErrorCode = (cReplies[cReplyIdx] & (0xFF << 8)) >> 8;
-                uint8_t cReadBack  = (cReplies[cReplyIdx] & (0xFF << 0)) >> 0;
+                uint8_t cErrorCode = (cReplies.at(cReplyIdx) & (0xFF << 8)) >> 8;
+                uint8_t cReadBack  = (cReplies.at(cReplyIdx) & (0xFF << 0)) >> 0;
                 if(cErrorCode != 0)
                 {
                     if(pChip->getFrontEndType() == FrontEndType::LpGBT)
@@ -115,7 +115,7 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
             // Get replies from worker
             auto cReplies = flpGBTSlowControlWorkerInterface->ReadReply(cRegisterBlock.size() + 1); // N words + 1 header
             // Verifiy reply frame integrity - only n_words in the header
-            size_t cNWords = (cReplies[0] & (0xFFFF << 0)) >> 0;
+            size_t cNWords = (cReplies.at(0) & (0xFFFF << 0)) >> 0;
             if(cNWords != cRegisterBlock.size())
             {
                 LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Write -- Corrupted CPB reply: cNWords = " << cNWords << " - cDataBlock.size() = " << cRegisterBlock.size() << RESET;
@@ -125,8 +125,8 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
             for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
             {
                 if(cReplyIdx == 0) continue; // skip header
-                uint8_t cErrorCode = (cReplies[cReplyIdx] & (0xFF << 8)) >> 8;
-                uint8_t cReadBack  = (cReplies[cReplyIdx] & (0xFF << 0)) >> 0;
+                uint8_t cErrorCode = (cReplies.at(cReplyIdx) & (0xFF << 8)) >> 8;
+                uint8_t cReadBack  = (cReplies.at(cReplyIdx) & (0xFF << 0)) >> 0;
                 if(cErrorCode != 0)
                 {
                     if(pChip->getFrontEndType() == FrontEndType::LpGBT)
@@ -219,7 +219,7 @@ bool D19cOpticalInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMas
                 // Get replies from worker
                 auto cReplies = flpGBTSlowControlWorkerInterface->ReadReply(cDataBlock.size() + 1); // N words + 1 header
                 // Verifiy reply frame integrity - only n_words in the header
-                size_t cNWords = (cReplies[0] & (0xFFFF << 0)) >> 0;
+                size_t cNWords = (cReplies.at(0) & (0xFFFF << 0)) >> 0;
                 if(cNWords != cDataBlock.size())
                 {
                     LOG(ERROR) << BOLDRED << "D19cOpticalInterface::WriteI2C -- Corrupted CPB reply: cNWords = " << cNWords << " - cDataBlock.size() = " << cDataBlock.size() << RESET;
@@ -229,8 +229,8 @@ bool D19cOpticalInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMas
                 for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
                 {
                     if(cReplyIdx == 0) continue; // skip header
-                    uint8_t cErrorCode = (cReplies[cReplyIdx] & (0xFF << 8)) >> 8;
-                    uint8_t cReadBack  = (cReplies[cReplyIdx] & (0xFF << 0)) >> 0;
+                    uint8_t cErrorCode = (cReplies.at(cReplyIdx) & (0xFF << 8)) >> 8;
+                    uint8_t cReadBack  = (cReplies.at(cReplyIdx) & (0xFF << 0)) >> 0;
                     if(cErrorCode != 0)
                     {
                         LOG(ERROR) << BOLDRED << "D19cOpticalInterface::WriteI2C -- Error Code : " << +cErrorCode << " -- I2C Status : " << LpGBTSlowControlWorker::I2C_STATUS_MAP.at(cReadBack)
@@ -273,7 +273,7 @@ std::vector<uint16_t> D19cOpticalInterface::ReadI2C(Ph2_HwDescription::Chip* pCh
             // Get replies from worker
             auto cReplies = flpGBTSlowControlWorkerInterface->ReadReply(cDataBlock.size() + 1); // N words + 1 header
             // Verifiy reply frame integrity - only n_words in the header
-            size_t cNWords = (cReplies[0] & (0xFFFF << 0)) >> 0;
+            size_t cNWords = (cReplies.at(0) & (0xFFFF << 0)) >> 0;
             if(cNWords != cDataBlock.size())
             {
                 LOG(ERROR) << BOLDRED << "D19cOpticalInterface::ReadI2C -- Corrupted CPB reply: cNWords = " << cNWords << " - cDataBlock.size() = " << cDataBlock.size() << RESET;
@@ -283,8 +283,8 @@ std::vector<uint16_t> D19cOpticalInterface::ReadI2C(Ph2_HwDescription::Chip* pCh
             for(size_t cReplyIdx = 0; cReplyIdx < cReplies.size(); cReplyIdx++)
             {
                 if(cReplyIdx == 0) continue; // skip header
-                uint8_t cErrorCode = (cReplies[cReplyIdx] & (0xFF << 8)) >> 8;
-                uint8_t cReadBack  = (cReplies[cReplyIdx] & (0xFF << 0)) >> 0;
+                uint8_t cErrorCode = (cReplies.at(cReplyIdx) & (0xFF << 8)) >> 8;
+                uint8_t cReadBack  = (cReplies.at(cReplyIdx) & (0xFF << 0)) >> 0;
                 if(cErrorCode != 0)
                 {
                     LOG(ERROR) << BOLDRED << "D19cOpticalInterface::ReadI2C -- Error Code : " << +cErrorCode << " -- I2C Status : " << LpGBTSlowControlWorker::I2C_STATUS_MAP.at(cReadBack) << RESET;
@@ -321,7 +321,7 @@ uint8_t D19cOpticalInterface::SingleSingleByteReadI2C(Ph2_HwDescription::Chip* p
         LOG(INFO) << BOLDGREEN << "D19cOpticalInterface::SingleSingleByteReadI2C No data in read back, returning 0" << RESET;
         return 0;
     }
-    auto cReadBackValue = (cReadBackData[0] & 0xFF);
+    auto cReadBackValue = (cReadBackData.at(0) & 0xFF);
 
     return cReadBackValue;
 }

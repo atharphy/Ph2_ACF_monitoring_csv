@@ -98,6 +98,13 @@ std::vector<uint32_t> BeBoardInterface::ReadBlockBoardReg(BeBoard* pBoard, const
     return fBoardFW->ReadBlockRegValue(pRegNode, pSize);
 }
 
+std::vector<uint32_t> BeBoardInterface::ReadBlockBoardReg(BeBoard* pBoard, const std::string& pRegNode, uint32_t pSize, uint32_t pOffset)
+{
+    setBoard(pBoard->getId());
+    std::unique_lock<std::recursive_mutex> theGuard(fBoardFW->fMutex);
+    return fBoardFW->ReadBlockRegOffset(pRegNode, pSize, pOffset);
+}
+
 uint32_t BeBoardInterface::getBoardInfo(const BeBoard* pBoard)
 {
     setBoard(pBoard->getId());

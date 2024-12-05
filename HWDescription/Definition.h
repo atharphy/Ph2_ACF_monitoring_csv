@@ -25,7 +25,7 @@
 #define NMPAROWS 16
 #define NCHIPS_OT 8
 #define MAXCICCLUSTERS 127
-#define MAXCICCHANNELS 127 * 7 // cluster width is 3 bits so it can be maximum 7
+#define MAXCICCHANNELS 127 * 8 // cluster width is 3 bits so it can be maximum 7
 
 // Fix issue if HOST_NAME_MAX is not declared
 #ifndef HOST_NAME_MAX
@@ -152,6 +152,6 @@ enum class EventType
 #define NUMBER_OF_CIC_PORTS 8
 #define NUMBER_OF_LINES_PER_CIC_PORTS 6
 
-#define TIME_FORMAT "%y-%m-%d %H:%M:%S"
+#define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 
 #endif
