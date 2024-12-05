@@ -17,7 +17,6 @@
 #include "Utils/DataContainer.h"
 #include "Utils/EmptyContainer.h"
 #include "Utils/Occupancy.h"
-// #include "Utils/Utilities.h"
 
 using namespace Ph2_HwDescription;
 
@@ -81,7 +80,6 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
 
 void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
 {
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] event = " << getPatternPrintout(pData, 1, false) << std::endl;
     const uint16_t LENGTH_EVENT_HEADER = 4;
     const uint8_t  VALID_L1_HEADER     = 0x0A;
     const uint8_t  VALID_STUB_HEADER   = 0x05;
