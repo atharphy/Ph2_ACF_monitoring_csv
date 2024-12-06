@@ -54,7 +54,14 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint16_t rawCounterData = (((counterPacket >> 8) & 0x7F) | ((counterPacket & 0x7F) << 7));
                         if(rawCounterData == 0) continue;
                         uint8_t chipId = getChipIdMapped(theHybrid->getId(), (counterPacket >> 15) & 0x7) + (pixelRow < 16 ? 8 : 0);
-                        fTheOccupancyContainer.getChip(theOpticalGroup->getId(), theHybrid->getId(), chipId)->getChannel<uint16_t>(pixelRow % 16, pixelCol) = rawCounterData - 1;
+                        try
+                        {
+                            fTheOccupancyContainer.getChip(theOpticalGroup->getId(), theHybrid->getId(), chipId)->getChannel<uint16_t>(pixelRow % 16, pixelCol) = rawCounterData - 1;
+                        }
+                        catch(const std::exception& e)
+                        {
+                            // do nothing, the chip is disabled
+                        }
                     }
                 }
             }
