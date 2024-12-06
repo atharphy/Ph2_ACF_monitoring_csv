@@ -200,7 +200,8 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
                 }
                 else if(numberOfCounters > numberOfExpectedCounters)
                 {
-                    LOG(ERROR) << ERROR_FORMAT << "Number of counters = " << +numberOfCounters << " greater than 8, not able to handle this case, disabling the whole hybdrid since there may be problem in the CIC to LpGBT stub lines" << RESET;
+                    LOG(ERROR) << ERROR_FORMAT << "Number of counters = " << +numberOfCounters
+                               << " greater than 8, not able to handle this case, disabling the whole hybdrid since there may be problem in the CIC to LpGBT stub lines" << RESET;
                     ExceptionHandler::getInstance()->disableHybrid(theBoard->getId(), theOpticalGroup->getId(), hybridNumber);
                     enabledHybrids = std::bitset<32>(theBoard->getReg("fc7_daq_cnfg.global.hybrid_enable"));
                 }

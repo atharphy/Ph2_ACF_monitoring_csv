@@ -54,8 +54,8 @@ int32_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
     else if(pRegNode == "ADC_output")
     {
         std::vector<std::string> theRegisterList{"ADC_output_MSB", "ADC_output_LSB"};
-        auto theRegisterValues = ReadChipMultReg(pMPA2, theRegisterList);
-        return (theRegisterValues.at(1).second & 0xFF) + ((theRegisterValues.at(0).second & 0xF) << 8); 
+        auto                     theRegisterValues = ReadChipMultReg(pMPA2, theRegisterList);
+        return (theRegisterValues.at(1).second & 0xFF) + ((theRegisterValues.at(0).second & 0xF) << 8);
     }
     else if(pRegNode == "TriggerLatency") { return ((ReadChipReg(pMPA2, "MemoryControl_2_R0") & (0x1)) << 8) | ReadChipReg(pMPA2, "MemoryControl_1_R0"); }
     else if(pRegNode == "PixelControl_ALL" || pRegNode == "PixelControl") { return ReadChipReg(pMPA2, "PixelControl_R0"); }
@@ -836,10 +836,7 @@ uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
 uint32_t MPA2Interface::readADCGround(Ph2_HwDescription::ReadoutChip* pChip)
 {
     uint32_t sumData = 0;
-    for(uint32_t iBlock = 0; iBlock < 7; iBlock++)
-    {
-        sumData += this->ADCMeasure(pChip, iBlock + 1, 7, 1, 1);
-    }
+    for(uint32_t iBlock = 0; iBlock < 7; iBlock++) { sumData += this->ADCMeasure(pChip, iBlock + 1, 7, 1, 1); }
     return uint32_t(float(sumData) / 7.0);
 }
 
@@ -859,7 +856,8 @@ uint32_t MPA2Interface::readVrefRegister(Ph2_HwDescription::ReadoutChip* pChip)
 
 float MPA2Interface::ADCMeasure(Chip* pMPA2, uint8_t block, uint8_t testPoint, uint8_t swEn, uint32_t nreads)
 {
-    std::vector<std::pair<std::string, uint16_t>> listOfRegister{{"Mask", 0xFF}, {"ADC_TEST_selection", ((swEn << 7) + (testPoint << 4) + block)}, {"Mask", 0xE0}, {"ADCcontrol", 0xE0}, {"ADCcontrol", 0xC0}, {"Mask", 0xFF}};
+    std::vector<std::pair<std::string, uint16_t>> listOfRegister{
+        {"Mask", 0xFF}, {"ADC_TEST_selection", ((swEn << 7) + (testPoint << 4) + block)}, {"Mask", 0xE0}, {"ADCcontrol", 0xE0}, {"ADCcontrol", 0xC0}, {"Mask", 0xFF}};
 
     uint32_t ADCReadsAve = 0;
     for(uint32_t i = 0; i < nreads; i++)

@@ -53,8 +53,8 @@ std::vector<uint32_t> D19cDebugFWInterface::L1ADebug(uint8_t pWait_ms, bool pPri
         } while(cNTriggersRxd < 3 && cDuration < pWait_ms * 1e3);
         fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
         fTotalNumberOfTriggers += fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-    
-    // LOG(DEBUG) << BOLDMAGENTA << "First header found after " << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
+
+        // LOG(DEBUG) << BOLDMAGENTA << "First header found after " << fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.first_header_delay") << " clock cycles." << RESET;
 
         std::this_thread::sleep_for(std::chrono::microseconds(10));
         dataReady = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.slvs_debug.slvs_debug_l1_ready") == 1;

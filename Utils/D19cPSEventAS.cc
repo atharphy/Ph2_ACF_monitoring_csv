@@ -62,7 +62,7 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         }
 
         // Last and first pixel not present in the fast readout, but by construction must have the same entries of the neighbour
-        for(auto theOpticalGroup : fTheOccupancyContainer)
+        for(auto theOpticalGroup: fTheOccupancyContainer)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
@@ -70,7 +70,7 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                 {
                     if(theChip->getNumberOfRows() == NMPAROWS)
                     {
-                        theChip->getChannel<uint16_t>(0, 0) = theChip->getChannel<uint16_t>(0, 1);
+                        theChip->getChannel<uint16_t>(0, 0)    = theChip->getChannel<uint16_t>(0, 1);
                         theChip->getChannel<uint16_t>(15, 119) = theChip->getChannel<uint16_t>(15, 118);
                     }
                 }

@@ -210,13 +210,13 @@ uint32_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
     setBoard(pChip->getBeBoardId());
     std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
 
-    std::vector<std::pair<std::string, uint16_t>> writeRegisters {{"ADC_control", 0xE0 | (pInput & 0x1F)}, {"ADC_control",  0xC0 | (pInput & 0x1F)}};
+    std::vector<std::pair<std::string, uint16_t>> writeRegisters{{"ADC_control", 0xE0 | (pInput & 0x1F)}, {"ADC_control", 0xC0 | (pInput & 0x1F)}};
     WriteChipMultReg(pChip, writeRegisters, false);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-    std::vector<std::string> readRegisters {"ADC_out_H", "ADC_out_L"};
-    auto readResults = ReadChipMultReg(pChip, readRegisters);
+    std::vector<std::string> readRegisters{"ADC_out_H", "ADC_out_L"};
+    auto                     readResults = ReadChipMultReg(pChip, readRegisters);
 
     return (readResults.at(0).second << 8) | (readResults.at(1).second);
 }

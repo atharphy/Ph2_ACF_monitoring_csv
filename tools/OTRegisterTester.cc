@@ -89,7 +89,7 @@ void OTRegisterTester::TestRegisters()
 
 float OTRegisterTester::EfficiencyCalculator(Ph2_HwDescription::Chip* theChip, const std::vector<std::string>& theRegisters)
 {
-    auto theAntiPattern = ~fPattern & 0xFF;
+    auto                                          theAntiPattern = ~fPattern & 0xFF;
     std::vector<std::pair<std::string, uint16_t>> theRegisterVectorPattern;
     std::vector<std::pair<std::string, uint16_t>> theRegisterVectorAntiPattern;
     for(const auto& theRegister: theRegisters)
@@ -99,21 +99,24 @@ float OTRegisterTester::EfficiencyCalculator(Ph2_HwDescription::Chip* theChip, c
     }
 
     ChipInterface* theChipInterface;
-    if(theChip->getFrontEndType() == FrontEndType::CIC2) theChipInterface = fCicInterface;
-    else theChipInterface = fReadoutChipInterface;
-
+    if(theChip->getFrontEndType() == FrontEndType::CIC2)
+        theChipInterface = fCicInterface;
+    else
+        theChipInterface = fReadoutChipInterface;
 
     float theEfficiency = 0;
     for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
     {
-        if(iteration % 2 == 0) theChipInterface->WriteChipMultReg(theChip,  theRegisterVectorPattern, false);
-        else theChipInterface->WriteChipMultReg(theChip,  theRegisterVectorAntiPattern, false);
+        if(iteration % 2 == 0)
+            theChipInterface->WriteChipMultReg(theChip, theRegisterVectorPattern, false);
+        else
+            theChipInterface->WriteChipMultReg(theChip, theRegisterVectorAntiPattern, false);
 
         auto theRegisterValueRead = theChipInterface->ReadChipMultReg(theChip, theRegisters);
 
         for(const auto& registerRead: theRegisterValueRead)
         {
-            if(iteration % 2 == 0) 
+            if(iteration % 2 == 0)
             {
                 if(registerRead.second == fPattern) theEfficiency++;
             }
