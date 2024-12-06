@@ -835,16 +835,15 @@ uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
 
 uint32_t MPA2Interface::readADCGround(Ph2_HwDescription::ReadoutChip* pChip)
 {
-    // It seems to be more precise for the ground...
     uint32_t sumData = 0;
     for(uint32_t iBlock = 0; iBlock < 7; iBlock++)
     {
-        sumData += this->ADCMeasure(pChip, iBlock + 1, 7, 1);
+        sumData += this->ADCMeasure(pChip, iBlock + 1, 7, 1, 1);
     }
     return uint32_t(float(sumData) / 7.0);
 }
 
-uint32_t MPA2Interface::readADCBandGap(Ph2_HwDescription::ReadoutChip* pChip) { return readADC(pChip, "VBG"); }
+uint32_t MPA2Interface::readADCBandGap(Ph2_HwDescription::ReadoutChip* pChip) { return readADC(pChip, "VBG", 1); }
 
 uint32_t MPA2Interface::readADCVref(Ph2_HwDescription::ReadoutChip* pChip)
 {
@@ -877,7 +876,7 @@ float MPA2Interface::ADCMeasure(Chip* pMPA2, uint8_t block, uint8_t testPoint, u
 
 float MPA2Interface::calculateADCLSB(ReadoutChip* pMPA2, float theVrefValue)
 {
-    float offset = this->measureGround(pMPA2);
+    float offset = this->readADCGround(pMPA2);
     // LOG(INFO) << BOLDMAGENTA << "ADCLSB "<<theVrefValue/(4095.0 - offset) << RESET;
     return theVrefValue / (4095.0 - offset);
 }
@@ -886,16 +885,6 @@ bool MPA2Interface::selectBlock(Chip* pMPA2, uint8_t block, uint8_t testPoint, u
 {
     std::vector<std::pair<std::string, uint16_t>> registerList{{"Mask", 0xFF}, {"ADC_TEST_selection", ((swEn << 7) + (testPoint << 4) + block)}};
     return this->WriteChipMultReg(pMPA2, registerList, false);
-}
-
-uint32_t MPA2Interface::measureGround(ReadoutChip* pMPA2)
-{
-    uint32_t sumData = 0;
-    for(uint32_t iBlock = 0; iBlock < 7; iBlock++)
-    {
-        sumData += this->ADCMeasure(pMPA2, iBlock + 1, 7, 1); // maybe??
-    }
-    return float(sumData) / 7.0;
 }
 
 uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2, uint8_t version)
