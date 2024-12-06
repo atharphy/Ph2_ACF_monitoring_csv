@@ -95,7 +95,7 @@ float OTRegisterTester::EfficiencyCalculator(Ph2_HwDescription::Chip* theChip, c
     for(const auto& theRegister: theRegisters)
     {
         theRegisterVectorPattern.push_back({theRegister, fPattern});
-        theRegisterVectorPattern.push_back({theRegister, theAntiPattern});
+        theRegisterVectorAntiPattern.push_back({theRegister, theAntiPattern});
     }
 
     ChipInterface* theChipInterface;
