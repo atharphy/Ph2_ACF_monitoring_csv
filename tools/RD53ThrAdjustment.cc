@@ -234,7 +234,7 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
         if(CalibBase::shiftEnable(indx) == true) break;
 
         LOG(INFO) << RESET;
-        LOG(INFO) << BOLDMAGENTA << ">>> Optimizing all frontend chips #" << BOLDYELLOW << indx << BOLDMAGENTA << " <<<" << RESET;
+        LOG(INFO) << BOLDMAGENTA << ">>> Optimizing frontend chip #" << BOLDYELLOW << indx << BOLDMAGENTA << " <<<" << RESET;
 
         for(auto i = 0u; i <= numberOfBits + 1u; i++)
         {
@@ -310,7 +310,12 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
             PixelAlive::doSilentRunning = true;
             PixelAlive::run();
             PixelAlive::doSilentRunning = false;
-            auto output = PixelAlive::analyze();
+            auto output                 = PixelAlive::analyze();
+
+            // ##################
+            // # Reset sequence #
+            // ##################
+            // CalibBase::ResetBoards(); // @TMP@
 
             // ##############################################
             // # Send periodic data to monitor the progress #

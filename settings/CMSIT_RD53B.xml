@@ -77,6 +77,8 @@
               ToTDualEdgeCount       =      "0"
 
               RESISTORI2V            =   "5000"
+              NTCBETA                =   "3435"
+              RNTCAT25C              =     "10"
               ADC_OFFSET_VOLT        =     "63"
               ADC_MAXIMUM_VOLT       =    "839"
               TEMPSENS_IDEAL_FACTOR  =   "1225"
