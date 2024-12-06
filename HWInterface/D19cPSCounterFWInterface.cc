@@ -5,6 +5,7 @@
 #include "HWDescription/Hybrid.h"
 #include "HWDescription/OpticalGroup.h"
 #include "HWDescription/OuterTrackerHybrid.h"
+#include "HWInterface/ExceptionHandler.h"
 #include "HWInterface/FEConfigurationInterface.h"
 #include "HWInterface/FastCommandInterface.h"
 #include "HWInterface/RegManager.h"
@@ -199,8 +200,9 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
                 }
                 else if(numberOfCounters > numberOfExpectedCounters)
                 {
-                    LOG(ERROR) << ERROR_FORMAT << "Number of counters = " << +numberOfCounters << " greater than 8, not able to handle this case" << RESET;
-                    throw std::runtime_error("Number of counters greater than 8");
+                    LOG(ERROR) << ERROR_FORMAT << "Number of counters = " << +numberOfCounters << " greater than 8, not able to handle this case, disabling the whole hybdrid since there may be problem in the CIC to LpGBT stub lines" << RESET;
+                    ExceptionHandler::getInstance()->disableHybrid(theBoard->getId(), theOpticalGroup->getId(), hybridNumber);
+                    enabledHybrids = std::bitset<32>(theBoard->getReg("fc7_daq_cnfg.global.hybrid_enable"));
                 }
             }
         }
@@ -281,7 +283,7 @@ bool D19cPSCounterFWInterface::ReadEvents(const BeBoard* theBoard)
     }
     if(iterationCounter >= maximumNumberOfIterations)
     {
-        LOG(ERROR) << ERROR_FORMAT << "Read event for PS counters failed after " << iterationCounter << " trials" << RESET;
+        LOG(ERROR) << ERROR_FORMAT << "Read event for PS counters failed after " << iterationCounter << " trials, please contact Fabio Ravera" << RESET;
         throw std::runtime_error("Read event for PS counters failed");
     }
 
@@ -410,7 +412,7 @@ bool D19cPSCounterFWInterface::ReadEventsLocal(const Ph2_HwDescription::BeBoard*
         }
         if(searchStartPatternIteration >= maxSearchStartPatternIterations)
         {
-            LOG(ERROR) << ERROR_FORMAT << "Start pattern not found after " << searchStartPatternIteration << " trials" << RESET;
+            LOG(ERROR) << ERROR_FORMAT << "Start pattern not found after " << searchStartPatternIteration << " trials, please contact Fabio Ravera" << RESET;
             throw std::runtime_error("Start pattern not found");
         }
 
