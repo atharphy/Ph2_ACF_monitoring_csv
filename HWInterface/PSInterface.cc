@@ -137,7 +137,7 @@ bool PSInterface::disableTestPadsOutput(ReadoutChip* pPS) { return getInterface(
 
 uint32_t PSInterface::readADCGround(ReadoutChip* pPS) { return getInterface(pPS)->readADCGround(pPS); }
 
-uint32_t PSInterface::readADC(ReadoutChip* pPS, std::string theADCName) { return getInterface(pPS)->readADC(pPS, theADCName); }
+uint32_t PSInterface::readADC(ReadoutChip* pPS, std::string theADCName, uint16_t numberOfRead) { return getInterface(pPS)->readADC(pPS, theADCName, numberOfRead); }
 
 uint32_t PSInterface::readADCVref(ReadoutChip* pPS) { return getInterface(pPS)->readADCVref(pPS); }
 
@@ -344,7 +344,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
 
 float PSInterface::readADCVoltage(Ph2_HwDescription::ReadoutChip* pPS, std::string theADCName)
 {
-    float adcValue            = readADC(pPS, theADCName);
+    float adcValue            = readADC(pPS, theADCName, 1);
     float theConversionFactor = 1;                                             // without the conversion factor the voltages are not visible
     if(theADCName == "AVDD" || theADCName == "DVDD") theConversionFactor *= 2; // keep into account a voltage divider
     return (adcValue * pPS->getADCCalibrationValue("ADC_SLOPE") + pPS->getADCCalibrationValue("ADC_OFFSET")) * theConversionFactor;

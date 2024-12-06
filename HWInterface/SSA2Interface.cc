@@ -193,7 +193,7 @@ uint32_t SSA2Interface::ReadChipFuseID(Chip* pSSA2, uint8_t version)
     return val;
 }
 
-uint32_t SSA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
+uint32_t SSA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName, uint16_t numberOfRead)
 {
     auto theRegister = SSA2_ADC_CONTROL_TABLE.find(pRegName);
     if(theRegister == SSA2_ADC_CONTROL_TABLE.end())
