@@ -77,7 +77,7 @@ class PSInterface : public ReadoutChipInterface
     bool maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerifLoop = false);
 
     uint32_t readADCGround(Ph2_HwDescription::ReadoutChip* pPS);
-    uint32_t readADC(Ph2_HwDescription::ReadoutChip* pPS, std::string theADCName);
+    uint32_t readADC(Ph2_HwDescription::ReadoutChip* pPS, std::string theADCName, uint16_t numberOfRead = 5);
     float    readADCVoltage(Ph2_HwDescription::ReadoutChip* pPS, std::string theADCName);
     float    measureTemperature(Ph2_HwDescription::ReadoutChip* pPS);
     uint32_t readADCBandGap(Ph2_HwDescription::ReadoutChip* pPS);

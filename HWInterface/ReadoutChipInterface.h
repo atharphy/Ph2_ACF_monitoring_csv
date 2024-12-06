@@ -82,7 +82,7 @@ class ReadoutChipInterface : public ChipInterface
      * \brief Read the ADC values of the ADC MUX
      * \param pChip: pointer to Chip object
      */
-    virtual uint32_t readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string theADCName)
+    virtual uint32_t readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string theADCName, uint16_t numberOfRead)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;

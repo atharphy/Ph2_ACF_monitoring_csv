@@ -193,7 +193,7 @@ uint32_t SSA2Interface::ReadChipFuseID(Chip* pSSA2, uint8_t version)
     return val;
 }
 
-uint32_t SSA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
+uint32_t SSA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName, uint16_t numberOfRead)
 {
     auto theRegister = SSA2_ADC_CONTROL_TABLE.find(pRegName);
     if(theRegister == SSA2_ADC_CONTROL_TABLE.end())
@@ -207,24 +207,18 @@ uint32_t SSA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
 
 uint32_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
 {
-    // bool cVerify = true;
     setBoard(pChip->getBeBoardId());
     std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
 
-    // auto cRegMap = pChip->getRegMap();
-    // auto cItem   = cRegMap.at("ADC_control");
-    // cItem.fValue = 0xE0 | (pInput & 0x1F);
-    auto theRegValue = 0xE0 | (pInput & 0x1F);
-    WriteChipReg(pChip, "ADC_control", theRegValue);
-    theRegValue = 0xC0 | (pInput & 0x1F);
-    WriteChipReg(pChip, "ADC_control", theRegValue);
+    std::vector<std::pair<std::string, uint16_t>> writeRegisters{{"ADC_control", 0xE0 | (pInput & 0x1F)}, {"ADC_control", 0xC0 | (pInput & 0x1F)}};
+    WriteChipMultReg(pChip, writeRegisters, false);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-    uint16_t cMSB       = ReadChipReg(pChip, "ADC_out_H");
-    uint16_t cLSB       = ReadChipReg(pChip, "ADC_out_L");
-    auto     finalValue = (cMSB << 8 | cLSB);
-    return finalValue;
+    std::vector<std::string> readRegisters{"ADC_out_H", "ADC_out_L"};
+    auto                     readResults = ReadChipMultReg(pChip, readRegisters);
+
+    return (readResults.at(0).second << 8) | (readResults.at(1).second);
 }
 
 uint32_t SSA2Interface::readADCGround(ReadoutChip* pSSA2)

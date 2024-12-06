@@ -3,6 +3,7 @@
 #include "Utils/Utilities.h"
 #ifdef __USE_ROOT__
 #include <TFile.h>
+#include <algorithm>
 #endif
 
 DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : fDetectorMonitorConfig(theDetectorMonitorConfig)
@@ -19,7 +20,11 @@ DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemCo
         LOG(ERROR) << "Exceptin when trying to create MonitorResults directory: " << e.what();
     }
 
-    fMonitorFileName = monitorOutputDir + "/" + "MonitorDQM" + currentDateTime() + ".root";
+    std::string timeStamp = getTimeStampString();
+    std::replace(timeStamp.begin(), timeStamp.end(), ' ', '_');
+    std::replace(timeStamp.begin(), timeStamp.end(), ':', '-');
+
+    fMonitorFileName = monitorOutputDir + "/" + "MonitorDQM_" + timeStamp + ".root";
     fOutputFile      = new TFile(fMonitorFileName.c_str(), "RECREATE");
 #endif
 
