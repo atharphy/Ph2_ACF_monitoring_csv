@@ -311,13 +311,42 @@ void CalibBase::ResetBoardsReadBkFIFO()
 
 void CalibBase::ResetBoards()
 {
+    const auto            chipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
+    std::vector<uint16_t> chipCommandList;
+    std::vector<uint32_t> hybridCommandList;
+
     for(const auto cBoard: *fDetectorContainer)
     {
         static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetBoard();
         static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ConfigureBoard(cBoard);
         this->ConfigureIT(cBoard);
         this->ConfigureFrontendIT(cBoard);
+
+        // ######################################
+        // # Re-write trigger-latency registers #
+        // ######################################
+        for(const auto cOpticalGroup: *cBoard)
+        {
+            hybridCommandList.clear();
+            for(const auto cHybrid: *cOpticalGroup)
+            {
+                chipCommandList.clear();
+                for(const auto cChip: *cHybrid)
+                {
+                    const auto pRD53    = static_cast<RD53*>(cChip);
+                    const auto frontEnd = pRD53->getFEtype(colStart, colStop);
+                    chipInterface->PackWriteCommand(cChip, frontEnd->latencyReg, pRD53->getRegMap().at(frontEnd->latencyReg).fValue, chipCommandList, true);
+                }
+                chipInterface->PackHybridCommands(cBoard, chipCommandList, cHybrid->getId(), hybridCommandList);
+            }
+            chipInterface->SendHybridCommands(cBoard, hybridCommandList);
+        }
     }
+}
+
+void CalibBase::WriteBroadcastChipReg(const std::string& regName, const uint16_t value)
+{
+    for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, value);
 }
 
 void CalibBase::SilentRunning(bool doSilentRunning)

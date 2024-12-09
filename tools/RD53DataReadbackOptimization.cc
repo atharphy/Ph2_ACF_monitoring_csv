@@ -126,20 +126,19 @@ void DataReadbackOptimization::run()
     ContainerFactory::copyAndInitChip<std::vector<double>>(*fDetectorContainer, theTAP2scanContainer);
     CalibBase::fillVectorContainer<double>(theTAP2scanContainer, dacListTAP2.size(), 0);
 
-    for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x0);
+    CalibBase::WriteBroadcastChipReg("CML_CONFIG_SER_EN_TAP", 0x0);
     DataReadbackOptimization::scanDac("DAC_CML_BIAS_0", dacListTAP0, &theTAP0scanContainer);
     CalibBase::ResetBoardsReadBkFIFO();
     DataReadbackOptimization::analyze("DAC_CML_BIAS_0", dacListTAP0, theTAP0scanContainer, theTAP0Container);
 
-    for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x1);
-    for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_INV_TAP", invTAP1);
+    CalibBase::WriteBroadcastChipReg("CML_CONFIG_SER_EN_TAP", 0x1);
+    CalibBase::WriteBroadcastChipReg("CML_CONFIG_SER_INV_TAP", invTAP1);
     DataReadbackOptimization::scanDac("DAC_CML_BIAS_1", dacListTAP1, &theTAP1scanContainer);
     CalibBase::ResetBoardsReadBkFIFO();
     DataReadbackOptimization::analyze("DAC_CML_BIAS_1", dacListTAP1, theTAP1scanContainer, theTAP1Container);
 
-    for(const auto cBoard: *fDetectorContainer) static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_EN_TAP", 0x3);
-    for(const auto cBoard: *fDetectorContainer)
-        static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteBoardBroadcastChipReg(cBoard, "CML_CONFIG_SER_INV_TAP", bits::pack<1, 1>(invTAP2, invTAP1));
+    CalibBase::WriteBroadcastChipReg("CML_CONFIG_SER_EN_TAP", 0x3);
+    CalibBase::WriteBroadcastChipReg("CML_CONFIG_SER_INV_TAP", bits::pack<1, 1>(invTAP2, invTAP1));
     DataReadbackOptimization::scanDac("DAC_CML_BIAS_2", dacListTAP2, &theTAP2scanContainer);
     CalibBase::ResetBoardsReadBkFIFO();
     DataReadbackOptimization::analyze("DAC_CML_BIAS_2", dacListTAP2, theTAP2scanContainer, theTAP2Container);
@@ -240,7 +239,7 @@ void DataReadbackOptimization::scanDac(const std::string& regName, const std::ve
         // # Download new DAC values #
         // ###########################
         LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " broadcast value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
-        for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, dacList[i]);
+        CalibBase::WriteBroadcastChipReg(regName, dacList[i]);
 
         // ################
         // # Run analysis #

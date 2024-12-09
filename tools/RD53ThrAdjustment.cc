@@ -231,13 +231,13 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
 
     for(auto indx = 0u; indx < RD53FWconstants::NMAXCHIP_HYBRID; indx++)
     {
-        if(CalibBase::shiftEnable(indx) == true) break;
-
         LOG(INFO) << RESET;
         LOG(INFO) << BOLDMAGENTA << ">>> Optimizing frontend chip #" << BOLDYELLOW << indx << BOLDMAGENTA << " <<<" << RESET;
 
         for(auto i = 0u; i <= numberOfBits + 1u; i++)
         {
+            if(CalibBase::shiftEnable(indx) == true) break;
+
             // ###########################
             // # Download new DAC values #
             // ###########################
@@ -315,7 +315,8 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
             // ##################
             // # Reset sequence #
             // ##################
-            // CalibBase::ResetBoards(); // @TMP@
+            CalibBase::ResetBoards();
+            PixelAlive::SetInjectionType();
 
             // ##############################################
             // # Send periodic data to monitor the progress #

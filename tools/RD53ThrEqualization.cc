@@ -362,7 +362,7 @@ void ThrEqualization::scanDac(const std::string& regName, const std::vector<uint
         // # Download new DAC values #
         // ###########################
         LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " broadcast value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
-        for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, dacList[i]);
+        CalibBase::WriteBroadcastChipReg(regName, dacList[i]);
 
         // #########################
         // # Find global threshold #

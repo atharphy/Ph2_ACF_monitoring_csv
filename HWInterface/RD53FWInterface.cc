@@ -580,8 +580,7 @@ void RD53FWInterface::ResetBoard()
     // ##############################################
     // # Reset communication with the frontend chip #
     // ##############################################
-    RegManager::WriteReg("user.ctrl_regs.reset_reg.chip_resync", 1);
-    RegManager::WriteReg("user.ctrl_regs.reset_reg.chip_resync", 0);
+    RD53FWInterface::ToggleRegister("user.ctrl_regs.reset_reg.chip_resync");
 
     // ########
     // # DDR3 #
