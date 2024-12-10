@@ -192,6 +192,7 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
     DetectorDataContainer downloadDACcontainer;
     DetectorDataContainer midLDACcontainer;
     DetectorDataContainer maxDACcontainer;
+    DetectorDataContainer chargeContainer;
 
     ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, outputMidH, zeroF);
     ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, outputMidL, zeroF);
@@ -202,6 +203,8 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, downloadDACcontainer, init = 0);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midLDACcontainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
+
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, chargeContainer);
 
     // #########################################
     // # Set VCAL_HIGH to get target threshold #
@@ -215,13 +218,14 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                         static_cast<RD53*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()))
                             ->getReg("VCAL_MED");
                     uint16_t vcal_high_setting = round(RD53Shared::firstChip->Charge2VCal(targetThreshold)) + vcal_med_setting;
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", vcal_high_setting, true);
+                    chargeContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = vcal_high_setting;
 
                     LOG(INFO) << GREEN << "The target threshold for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
                               << "/" << +cChip->getId() << RESET << GREEN "] is " << std::setprecision(1) << BOLDYELLOW << targetThreshold << RESET << GREEN << " electrons" << RESET;
                     LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << BOLDBLUE << " = " << BOLDYELLOW << vcal_high_setting << BOLDBLUE << " for "
                               << BOLDYELLOW << "VCAL_MED" << BOLDBLUE << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
                 }
+    CalibBase::downloadNewDACvalues(chargeContainer, {"VCAL_HIGH"});
 
     // #######################################################################
     // # Prepare query, disable all chips, and set weak check of data status #
@@ -320,9 +324,10 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
             CalibBase::copyMaskFromDefault("en in");
             CalibBase::setChipEnDis(true);
             CalibBase::ResetBoards();
-            PixelAlive::SetInjectionType();
             CalibBase::setChipEnDis(false);
             CalibBase::shiftEnable(indx);
+            CalibBase::downloadNewDACvalues(chargeContainer, {"VCAL_HIGH"});
+            PixelAlive::SetInjectionType();
 
             // ##############################################
             // # Send periodic data to monitor the progress #
