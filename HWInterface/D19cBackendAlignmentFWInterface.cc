@@ -55,9 +55,7 @@ uint32_t PhaseTuningControl::encodeCommand() const
         if(!fIsOptical) theCommand |= ((fPatternLenght & 0xFF) << 0);
         break;
 
-    case Command::SetSyncPattern:
-        theCommand |= ((fSyncPattern & 0xFFFF) << 0);
-        break;
+    case Command::SetSyncPattern: theCommand |= ((fSyncPattern & 0xFFFF) << 0); break;
 
     case Command::Align:
         if(!fIsOptical) theCommand |= ((fDoPhaseAlignment ? 1 : 0) << 0);
@@ -69,8 +67,8 @@ uint32_t PhaseTuningControl::encodeCommand() const
     default: break;
     }
 
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] 0x" << std::hex << theCommand << std::dec << std::endl;
-    
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] 0x" << std::hex << theCommand << std::dec << std::endl;
+
     return theCommand;
 }
 
@@ -222,7 +220,6 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
         LOG(ERROR) << ERROR_FORMAT << __PRETTY_FUNCTION__ << " does not support not optical modules, aborting" << RESET;
         abort();
     }
-
 
     PhaseTuningControl thePhaseTuningControl(fIsOptical);
     thePhaseTuningControl.setHybridId(hybridId);

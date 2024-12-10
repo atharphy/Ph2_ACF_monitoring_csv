@@ -130,12 +130,11 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 /* OT specific functions */
 /*-----------------------*/
 
-
 bool D19clpGBTInterface::enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalGroup)
 {
-    auto theLpBGT = theOpticalGroup->flpGBT;
+    auto                                          theLpBGT              = theOpticalGroup->flpGBT;
     const std::map<uint8_t, std::vector<uint8_t>> theGroupAndChannelMap = theOpticalGroup->getLpGBTrxGroupsAndChannels();
-    bool is10G = GetChipRate(theLpBGT) == 10;
+    bool                                          is10G                 = GetChipRate(theLpBGT) == 10;
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
 
@@ -149,8 +148,9 @@ bool D19clpGBTInterface::enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalG
     auto getPRBSenableCommand = [&theRegisterVector, &theGroupAndChannelMap](uint16_t registerNumber)
     {
         uint16_t registerValue = 0;
-        for(auto channel : theGroupAndChannelMap.at(registerNumber*2 + 0)) registerValue |= 1 << channel;
-        if(registerNumber < 3) for(auto channel : theGroupAndChannelMap.at(registerNumber*2 + 1)) registerValue |= 1 << (channel + 4);
+        for(auto channel: theGroupAndChannelMap.at(registerNumber * 2 + 0)) registerValue |= 1 << channel;
+        if(registerNumber < 3)
+            for(auto channel: theGroupAndChannelMap.at(registerNumber * 2 + 1)) registerValue |= 1 << (channel + 4);
         return registerValue;
     };
 
@@ -160,28 +160,28 @@ bool D19clpGBTInterface::enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalG
         theRegisterVector.push_back({registerName, getPRBSenableCommand(registerNumber)});
     }
 
-    theRegisterVector.push_back({ "EPRXTrain10", getPRBSenableCommand(0)});
-    theRegisterVector.push_back({ "EPRXTrain32", getPRBSenableCommand(1)});
-    theRegisterVector.push_back({ "EPRXTrain54", getPRBSenableCommand(2)});
-    theRegisterVector.push_back({ "EPRXTrainEc6", getPRBSenableCommand(3)});
+    theRegisterVector.push_back({"EPRXTrain10", getPRBSenableCommand(0)});
+    theRegisterVector.push_back({"EPRXTrain32", getPRBSenableCommand(1)});
+    theRegisterVector.push_back({"EPRXTrain54", getPRBSenableCommand(2)});
+    theRegisterVector.push_back({"EPRXTrainEc6", getPRBSenableCommand(3)});
     WriteChipMultReg(theLpBGT, theRegisterVector);
 
     theRegisterVector.clear();
-    theRegisterVector.push_back({ "EPRXTrain10", 0});
-    theRegisterVector.push_back({ "EPRXTrain32", 0});
-    theRegisterVector.push_back({ "EPRXTrain54", 0});
-    theRegisterVector.push_back({ "EPRXTrainEc6", 0});
+    theRegisterVector.push_back({"EPRXTrain10", 0});
+    theRegisterVector.push_back({"EPRXTrain32", 0});
+    theRegisterVector.push_back({"EPRXTrain54", 0});
+    theRegisterVector.push_back({"EPRXTrainEc6", 0});
     WriteChipMultReg(theLpBGT, theRegisterVector);
 
     bool   allAligned = true;
     size_t attempt    = 0;
 
-    std::vector<std::string> alignmentResultRegister {"EPRX0Locked", "EPRX1Locked", "EPRX2Locked", "EPRX3Locked", "EPRX4Locked", "EPRX5Locked", "EPRX6Locked"};
+    std::vector<std::string> alignmentResultRegister{"EPRX0Locked", "EPRX1Locked", "EPRX2Locked", "EPRX3Locked", "EPRX4Locked", "EPRX5Locked", "EPRX6Locked"};
 
     while(attempt < 100)
     {
         std::this_thread::sleep_for(std::chrono::microseconds(100));
-        allAligned = true;
+        allAligned                 = true;
         auto alignmentResultValues = ReadChipMultReg(theLpBGT, alignmentResultRegister);
 
         for(const auto& theGroupAndChannels: theGroupAndChannelMap)
@@ -196,9 +196,9 @@ bool D19clpGBTInterface::enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalG
             }
             if(!allAligned) break;
         }
-        
+
         if(allAligned) break;
-        
+
         ++attempt;
     }
 
@@ -207,14 +207,8 @@ bool D19clpGBTInterface::enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalG
 
 bool D19clpGBTInterface::disablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalGroup)
 {
-    auto theLpBGT = theOpticalGroup->flpGBT;
-    std::vector<std::pair<std::string, uint16_t>> prbsRegisters
-    {
-        {"EPRXPRBS3", 0x0},
-        {"EPRXPRBS2", 0x0},
-        {"EPRXPRBS1", 0x0},
-        {"EPRXPRBS0", 0x0}
-    };
+    auto                                          theLpBGT = theOpticalGroup->flpGBT;
+    std::vector<std::pair<std::string, uint16_t>> prbsRegisters{{"EPRXPRBS3", 0x0}, {"EPRXPRBS2", 0x0}, {"EPRXPRBS1", 0x0}, {"EPRXPRBS0", 0x0}};
 
     return WriteChipMultReg(theLpBGT, prbsRegisters);
 }

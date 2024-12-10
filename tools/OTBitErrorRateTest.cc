@@ -64,20 +64,22 @@ void OTBitErrorRateTest::bitErrorRateTest()
     {
         for(auto theOpticalGroup: *theBoard)
         {
-            uint16_t iteration = 0;
+            uint16_t iteration                 = 0;
             uint16_t maximumNumberOfIterations = 10;
-            bool allAligned = false;
+            bool     allAligned                = false;
             while(iteration < maximumNumberOfIterations)
             {
-                allAligned =  static_cast<D19clpGBTInterface*>(flpGBTInterface)->enablePRBS(theOpticalGroup);
+                allAligned = static_cast<D19clpGBTInterface*>(flpGBTInterface)->enablePRBS(theOpticalGroup);
                 if(allAligned) break;
                 ++iteration;
-                LOG(WARNING) << WARNING_FORMAT << "Failed to align LpGBT on Board " << theBoard->getId() << " OpticalGroup " << theOpticalGroup->getId() << ", retrying " << maximumNumberOfIterations - iteration << " more times" << RESET;
+                LOG(WARNING) << WARNING_FORMAT << "Failed to align LpGBT on Board " << theBoard->getId() << " OpticalGroup " << theOpticalGroup->getId() << ", retrying "
+                             << maximumNumberOfIterations - iteration << " more times" << RESET;
             }
 
             if(!allAligned)
             {
-                LOG(ERROR) << ERROR_FORMAT << "Failed to align LpGBT on Board " << theBoard->getId() << " OpticalGroup " << theOpticalGroup->getId() << " after " << maximumNumberOfIterations << "trials. OpticalGroup will be disabled" << RESET;
+                LOG(ERROR) << ERROR_FORMAT << "Failed to align LpGBT on Board " << theBoard->getId() << " OpticalGroup " << theOpticalGroup->getId() << " after " << maximumNumberOfIterations
+                           << "trials. OpticalGroup will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
             }
         }
@@ -91,7 +93,6 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
         theAlignerInterface->disableAlignmentOnPRBS();
     }
-
 }
 
 void OTBitErrorRateTest::writeWithComment(BeBoard* theBoard, const std::string& registerName, uint32_t registerValue, const std::string& comment)
@@ -104,7 +105,12 @@ void OTBitErrorRateTest::writeWithComment(BeBoard* theBoard, const std::string& 
     // if(registerValue != readBack) std::cout << BOLDRED << "Readback does not match!!!" << RESET << std::endl;
 };
 
-void OTBitErrorRateTest::readForAllLines(BeBoard* theBoard, const std::string& controlRegisterName, uint32_t controlRegisterValue, const std::string& controlComment, const std::string& statusRegisterName, const std::string& statusComment)
+void OTBitErrorRateTest::readForAllLines(BeBoard*           theBoard,
+                                         const std::string& controlRegisterName,
+                                         uint32_t           controlRegisterValue,
+                                         const std::string& controlComment,
+                                         const std::string& statusRegisterName,
+                                         const std::string& statusComment)
 {
     for(auto theOpticalGroup: *theBoard)
     {
@@ -174,10 +180,10 @@ bool OTBitErrorRateTest::prepareLpGBTforBERT(OpticalGroup* theOpticalGroup)
     {
         usleep(100);
         if(flpGBTInterface->ReadChipReg(theLpGBT, "EPRX0Locked") == 0xf2 && // we observe F2. Originally we put 50
-            flpGBTInterface->ReadChipReg(theLpGBT, "EPRX1Locked") == 0xf2 && // we observe a2
-            flpGBTInterface->ReadChipReg(theLpGBT, "EPRX2Locked") == 0xf2 && flpGBTInterface->ReadChipReg(theLpGBT, "EPRX3Locked") == 0xf2 &&
-            flpGBTInterface->ReadChipReg(theLpGBT, "EPRX4Locked") == 0xf2 && flpGBTInterface->ReadChipReg(theLpGBT, "EPRX5Locked") == 0xf2 &&
-            flpGBTInterface->ReadChipReg(theLpGBT, "EPRX6Locked") == 0xf2)
+           flpGBTInterface->ReadChipReg(theLpGBT, "EPRX1Locked") == 0xf2 && // we observe a2
+           flpGBTInterface->ReadChipReg(theLpGBT, "EPRX2Locked") == 0xf2 && flpGBTInterface->ReadChipReg(theLpGBT, "EPRX3Locked") == 0xf2 &&
+           flpGBTInterface->ReadChipReg(theLpGBT, "EPRX4Locked") == 0xf2 && flpGBTInterface->ReadChipReg(theLpGBT, "EPRX5Locked") == 0xf2 &&
+           flpGBTInterface->ReadChipReg(theLpGBT, "EPRX6Locked") == 0xf2)
         {
             allAligned = true;
             break;
@@ -270,7 +276,6 @@ bool OTBitErrorRateTest::prepareLpGBTforBERT(OpticalGroup* theOpticalGroup)
     return allAligned;
 }
 
-
 void OTBitErrorRateTest::bitErrorRateTestOld()
 {
     LOG(DEBUG) << "BIT ERROR RATE TEST" << std::endl;
@@ -322,12 +327,10 @@ void OTBitErrorRateTest::bitErrorRateTestOld()
 
             std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read WA Status Reg 1 (loop on hybrids and lines)" << std::endl;
             readForAllLines(theBoard, phaseTuningControlRegisterName, 0x00010000, "Reading WA Status Reg 1", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "WA Status Reg 1 reply");
-
         }
         runBitErrorRateTest(theBoard);
     }
 }
-
 
 void OTBitErrorRateTest::runBitErrorRateTest(BeBoard* theBoard)
 {
@@ -353,8 +356,6 @@ void OTBitErrorRateTest::runBitErrorRateTest(BeBoard* theBoard)
 
     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS BER COUNTERS (loop on hybrids and lines)" << std::endl;
     readForAllLines(theBoard, theBertRegisterControl, 0x00040000, "Reading PRBS BER COUNTERS", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS BER COUNTERS");
-
-
 
     writeWithComment(theBoard, theBertRegisterControl, 0xFFF20137, "Configure BERT – DEBUG_MODE = 1, CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 1");
 
@@ -401,5 +402,4 @@ void OTBitErrorRateTest::runBitErrorRateTest(BeBoard* theBoard)
 
         usleep(sleepingTime * 1000000);
     }
-
 }

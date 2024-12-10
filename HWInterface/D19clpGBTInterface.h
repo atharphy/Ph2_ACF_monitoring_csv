@@ -16,7 +16,7 @@ class LpGBTalignmentResult;
 
 namespace Ph2_HwDescription
 {
-    class OpticalGroup;
+class OpticalGroup;
 }
 
 namespace Ph2_HwInterface

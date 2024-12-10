@@ -39,7 +39,6 @@ void OTalignBoardDataWord::Initialise(void)
 
 void OTalignBoardDataWord::initializeContainers()
 {
-
     fNumberOfLines = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
 
     // need to free bitslip when will be accessible
@@ -47,7 +46,6 @@ void OTalignBoardDataWord::initializeContainers()
     std::vector<uint8_t> initialEmptyVector(fNumberOfLines, 0);
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBitSlipContainer, initialEmptyVector);
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fAlignmentRetryContainer, initialEmptyVector);
-
 }
 
 void OTalignBoardDataWord::ConfigureCalibration() {}
@@ -83,10 +81,7 @@ void OTalignBoardDataWord::wordAlignBEdata()
 {
     LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::wordAlignBEdata" << RESET;
 
-    for(auto theBoard: *fDetectorContainer)
-    {
-        boardWordAlignment(theBoard);
-    }
+    for(auto theBoard: *fDetectorContainer) { boardWordAlignment(theBoard); }
 
 #ifdef __USE_ROOT__
     fDQMHistogramOTalignBoardDataWord.fillBitSlipValues(fBitSlipContainer);
@@ -230,7 +225,7 @@ void OTalignBoardDataWord::runAlignment(BeBoard* theBoard)
             if(!cAligned)
             {
                 LOG(INFO) << BOLDRED << "Could not align stub word in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
-                            << " --- OpticalGroup will be disabled" << RESET;
+                          << " --- OpticalGroup will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
                 continue;
             }

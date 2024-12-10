@@ -21,7 +21,7 @@ namespace Ph2_HwDescription
 {
 class OpticalGroup;
 class BeBoard;
-}
+} // namespace Ph2_HwDescription
 
 class OTBitErrorRateTest : public OTalignBoardDataWord
 {
@@ -46,7 +46,12 @@ class OTBitErrorRateTest : public OTalignBoardDataWord
     void bitErrorRateTestOld();
     bool prepareLpGBTforBERT(Ph2_HwDescription::OpticalGroup* theOpticalGroup);
     void writeWithComment(Ph2_HwDescription::BeBoard* theBoard, const std::string& registerName, uint32_t registerValue, const std::string& comment);
-    void readForAllLines(Ph2_HwDescription::BeBoard* theBoard, const std::string& controlRegisterName, uint32_t controlRegisterValue, const std::string& controlComment, const std::string& statusRegisterName, const std::string& statusComment);
+    void readForAllLines(Ph2_HwDescription::BeBoard* theBoard,
+                         const std::string&          controlRegisterName,
+                         uint32_t                    controlRegisterValue,
+                         const std::string&          controlComment,
+                         const std::string&          statusRegisterName,
+                         const std::string&          statusComment);
     void runBitErrorRateTest(Ph2_HwDescription::BeBoard* theBoard);
 
 #ifdef __USE_ROOT__

@@ -62,26 +62,26 @@ class PhaseTuningControl
     uint32_t encodeCommand() const;
 
   private:
-    bool    fIsOptical{true};
-    uint8_t fBitSlip{0};
-    uint8_t fDelay{0};
-    uint8_t fPatternLenght{0};
+    bool     fIsOptical{true};
+    uint8_t  fBitSlip{0};
+    uint8_t  fDelay{0};
+    uint8_t  fPatternLenght{0};
     uint16_t fSyncPattern{0};
-    bool    fDoWordAlignment{false};
-    bool    fDoPhaseAlignment{false};
-    bool    fDoReset{false};
-    bool    fApplyManual{false};
-    uint8_t fMasterLineId{0};
-    bool    fEnableSync{false};
-    bool    fEnablePRBS{false};
-    bool    fEnableLFSR{false};
-    bool    fEnableL1A{false};
-    bool    fEnableLCC{false};
-    Mode    fMode{Mode::Auto};
-    Command fCommand{Command::ReturnConfig};
-    uint8_t fLineId{0};
-    uint8_t fChipId{0};
-    uint8_t fHybridId{0};
+    bool     fDoWordAlignment{false};
+    bool     fDoPhaseAlignment{false};
+    bool     fDoReset{false};
+    bool     fApplyManual{false};
+    uint8_t  fMasterLineId{0};
+    bool     fEnableSync{false};
+    bool     fEnablePRBS{false};
+    bool     fEnableLFSR{false};
+    bool     fEnableL1A{false};
+    bool     fEnableLCC{false};
+    Mode     fMode{Mode::Auto};
+    Command  fCommand{Command::ReturnConfig};
+    uint8_t  fLineId{0};
+    uint8_t  fChipId{0};
+    uint8_t  fHybridId{0};
 
     uint32_t fWait_us{100};
 };
@@ -167,8 +167,8 @@ class D19cBackendAlignmentFWInterface
     D19cBackendAlignmentFWInterface(RegManager* theRegManager);
     ~D19cBackendAlignmentFWInterface();
 
-    void enableAlignmentOnPRBS() {fAlignOnPRBS = true;}
-    void disableAlignmentOnPRBS(){fAlignOnPRBS = false;}
+    void enableAlignmentOnPRBS() { fAlignOnPRBS = true; }
+    void disableAlignmentOnPRBS() { fAlignOnPRBS = false; }
 
     AlignmentResult              alignWord(uint8_t hybridId, uint8_t lineId);
     std::vector<AlignmentResult> alignWordAllLines(uint8_t hybridId, uint8_t numberOfLines);
@@ -182,7 +182,7 @@ class D19cBackendAlignmentFWInterface
     bool        fIsOptical{true};
     std::string fPhaseTuningControlRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
     std::string fPhaseTuningResultRegisterName  = "fc7_daq_stat.physical_interface_block.phase_tuning_reply";
-    bool        fAlignOnPRBS {false};
+    bool        fAlignOnPRBS{false};
 
     AlignmentResult              retrieveAlignmentResult(uint8_t hybridId, uint8_t lineId);
     std::vector<AlignmentResult> retrieveAllLineAlignmentResult(uint8_t hybridId, uint8_t numberOfLines);
