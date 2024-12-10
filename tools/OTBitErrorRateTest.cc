@@ -1,5 +1,6 @@
 #include "tools/OTBitErrorRateTest.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/ExceptionHandler.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 
@@ -30,7 +31,8 @@ void OTBitErrorRateTest::Running()
 {
     LOG(INFO) << "Starting OTBitErrorRateTest measurement.";
     Initialise();
-    bitErrorRateTest();
+    // bitErrorRateTest();
+    bitErrorRateTestOld();
     LOG(INFO) << "Done with OTBitErrorRateTest.";
     Reset();
 }
@@ -53,7 +55,181 @@ void OTBitErrorRateTest::Resume() {}
 
 void OTBitErrorRateTest::Reset() { fRegisterHelper->restoreSnapshot(); }
 
+bool OTBitErrorRateTest::prepareLpGBTforBERT(Ph2_HwDescription::OpticalGroup* theOpticalGroup)
+{
+    // configure lpGBT
+    bool is10G    = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10;
+    auto theLpGBT = theOpticalGroup->flpGBT;
+    // std::string lpGBTRegisterName = "EPRXPRBS0";
+    // uint16_t theBertRegisterControl = 0;
+    // flpGBTInterface->WriteChipReg(theLpGBT, lpGBTRegisterName, theBertRegisterControl);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRX0Control", 0x5a);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRX1Control", 0x5a);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRX2Control", 0x5a);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRX3Control", 0x5a);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRX4Control", 0x5a);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRX5Control", 0x5a);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRX6Control", 0x5a);
+
+    uint16_t phase          = 0x7f;
+    uint8_t  driverStrenght = 3;
+    uint8_t  PS0delayValue  = phase & 0x3f;
+    uint8_t  PS0configValue = ((phase >> 1) & 0x80) | (is10G ? 5 : 4) | (driverStrenght << 3);
+    flpGBTInterface->WriteChipReg(theLpGBT, "PS0Config", PS0configValue);
+    flpGBTInterface->WriteChipReg(theLpGBT, "PS0Delay", PS0delayValue);
+
+    // Default values
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRXPRBS3", 0x15);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRXPRBS2", 0x55);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRXPRBS1", 0x55);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRXPRBS0", 0x55);
+
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain10", 0x55);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain32", 0x55);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain54", 0x55);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrainEc6", 0x05);
+
+    usleep(10000);
+
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain10", 0x00);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain32", 0x00);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain54", 0x00);
+    flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrainEc6", 0x00);
+
+    bool   allAligned = false;
+    size_t attempt    = 0;
+
+    while(!allAligned && attempt < 100)
+    {
+        usleep(100);
+        if(flpGBTInterface->ReadChipReg(theLpGBT, "EPRX0Locked") == 0xf2 && // we observe F2. Originally we put 50
+            flpGBTInterface->ReadChipReg(theLpGBT, "EPRX1Locked") == 0xf2 && // we observe a2
+            flpGBTInterface->ReadChipReg(theLpGBT, "EPRX2Locked") == 0xf2 && flpGBTInterface->ReadChipReg(theLpGBT, "EPRX3Locked") == 0xf2 &&
+            flpGBTInterface->ReadChipReg(theLpGBT, "EPRX4Locked") == 0xf2 && flpGBTInterface->ReadChipReg(theLpGBT, "EPRX5Locked") == 0xf2 &&
+            flpGBTInterface->ReadChipReg(theLpGBT, "EPRX6Locked") == 0xf2)
+        {
+            allAligned = true;
+            break;
+        }
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] attempt " << attempt << std::endl;
+        ++attempt;
+    }
+
+    // debug: print status information regardless of exit status: the EPRX0Locked, EPRX0CurrentPhase10, EPRX0CurrentPhase32
+    if(true)
+    {
+        uint16_t    value = 0;
+        std::string reg   = "";
+        // Locked Registers
+
+        std::cout << std::hex; // print hex values
+        reg   = "EPRX0Locked";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX0CurrentPhase10";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX0CurrentPhase32";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+
+        reg   = "EPRX1Locked";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX1CurrentPhase10";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX1CurrentPhase32";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+
+        reg   = "EPRX2Locked";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX2CurrentPhase10";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX2CurrentPhase32";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+
+        reg   = "EPRX3Locked";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX3CurrentPhase10";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX3CurrentPhase32";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+
+        reg   = "EPRX4Locked";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX4CurrentPhase10";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX4CurrentPhase32";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+
+        reg   = "EPRX5Locked";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX5CurrentPhase10";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX5CurrentPhase32";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+
+        reg   = "EPRX6Locked";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX6CurrentPhase10";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+        reg   = "EPRX6CurrentPhase32";
+        value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
+        std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
+
+        std::cout << std::dec;
+    }
+
+    return allAligned;
+}
+
 void OTBitErrorRateTest::bitErrorRateTest()
+{
+    for(auto theBoard: *fDetectorContainer)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            uint16_t iteration = 0;
+            uint16_t maximumNumberOfIterations = 10;
+            bool allAligned = false;
+            while(iteration < maximumNumberOfIterations)
+            {
+                allAligned =  static_cast<D19clpGBTInterface*>(flpGBTInterface)->enablePRBS(theOpticalGroup);
+                if(allAligned) break;
+                ++iteration;
+                LOG(WARNING) << WARNING_FORMAT << "Failed to align LpGBT on Board " << theBoard->getId() << " OpticalGroup " << theOpticalGroup->getId() << ", retrying " << maximumNumberOfIterations - iteration << " more times" << RESET;
+            }
+
+            if(!allAligned)
+            {
+                LOG(ERROR) << ERROR_FORMAT << "Failed to align LpGBT on Board " << theBoard->getId() << " OpticalGroup " << theOpticalGroup->getId() << " after " << maximumNumberOfIterations << "trials. OpticalGroup will be disabled" << RESET;
+                ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
+            }
+        }
+    }
+
+
+}
+
+
+
+void OTBitErrorRateTest::bitErrorRateTestOld()
 {
     LOG(DEBUG) << "BIT ERROR RATE TEST" << std::endl;
     for(auto theBoard: *fDetectorContainer)
@@ -62,145 +238,8 @@ void OTBitErrorRateTest::bitErrorRateTest()
         {
             std::string phaseTuningControlRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
             std::string theBertRegisterControl         = "fc7_daq_ctrl.physical_interface_block.bert_control";
-
-            // configure lpGBT
-            bool is10G    = static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10;
-            auto theLpGBT = theOpticalGroup->flpGBT;
-            // std::string lpGBTRegisterName = "EPRXPRBS0";
-            // uint16_t theBertRegisterControl = 0;
-            // flpGBTInterface->WriteChipReg(theLpGBT, lpGBTRegisterName, theBertRegisterControl);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRX0Control", 0x5a);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRX1Control", 0x5a);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRX2Control", 0x5a);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRX3Control", 0x5a);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRX4Control", 0x5a);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRX5Control", 0x5a);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRX6Control", 0x5a);
-
-            uint16_t phase          = 0x7f;
-            uint8_t  driverStrenght = 3;
-            uint8_t  PS0delayValue  = phase & 0x3f;
-            uint8_t  PS0configValue = ((phase >> 1) & 0x80) | (is10G ? 5 : 4) | (driverStrenght << 3);
-            flpGBTInterface->WriteChipReg(theLpGBT, "PS0Config", PS0configValue);
-            flpGBTInterface->WriteChipReg(theLpGBT, "PS0Delay", PS0delayValue);
-
-            // Default values
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRXPRBS3", 0x15);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRXPRBS2", 0x55);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRXPRBS1", 0x55);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRXPRBS0", 0x55);
-
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain10", 0x55);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain32", 0x55);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain54", 0x55);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrainEc6", 0x05);
-
-            usleep(10000);
-
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain10", 0x00);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain32", 0x00);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrain54", 0x00);
-            flpGBTInterface->WriteChipReg(theLpGBT, "EPRXTrainEc6", 0x00);
-
-            bool   allAligned = false;
-            size_t attempt    = 0;
-
-            while(!allAligned && attempt < 100)
-            {
-                usleep(100);
-                if(flpGBTInterface->ReadChipReg(theLpGBT, "EPRX0Locked") == 0xf2 && // we observe F2. Originally we put 50
-                   flpGBTInterface->ReadChipReg(theLpGBT, "EPRX1Locked") == 0xf2 && // we observe a2
-                   flpGBTInterface->ReadChipReg(theLpGBT, "EPRX2Locked") == 0xf2 && flpGBTInterface->ReadChipReg(theLpGBT, "EPRX3Locked") == 0xf2 &&
-                   flpGBTInterface->ReadChipReg(theLpGBT, "EPRX4Locked") == 0xf2 && flpGBTInterface->ReadChipReg(theLpGBT, "EPRX5Locked") == 0xf2 &&
-                   flpGBTInterface->ReadChipReg(theLpGBT, "EPRX6Locked") == 0xf2)
-                {
-                    allAligned = true;
-                    break;
-                }
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] attempt " << attempt << std::endl;
-                ++attempt;
-            }
-
-            // debug: print status information regardless of exit status: the EPRX0Locked, EPRX0CurrentPhase10, EPRX0CurrentPhase32
-            if(true)
-            {
-                uint16_t    value = 0;
-                std::string reg   = "";
-                // Locked Registers
-
-                std::cout << std::hex; // print hex values
-                reg   = "EPRX0Locked";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX0CurrentPhase10";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX0CurrentPhase32";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-
-                reg   = "EPRX1Locked";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX1CurrentPhase10";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX1CurrentPhase32";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-
-                reg   = "EPRX2Locked";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX2CurrentPhase10";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX2CurrentPhase32";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-
-                reg   = "EPRX3Locked";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX3CurrentPhase10";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX3CurrentPhase32";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-
-                reg   = "EPRX4Locked";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX4CurrentPhase10";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX4CurrentPhase32";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-
-                reg   = "EPRX5Locked";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX5CurrentPhase10";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX5CurrentPhase32";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-
-                reg   = "EPRX6Locked";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX6CurrentPhase10";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-                reg   = "EPRX6CurrentPhase32";
-                value = flpGBTInterface->ReadChipReg(theLpGBT, reg);
-                std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]: " << reg << " = " << value << std::endl;
-
-                std::cout << std::dec;
-            }
+            
+            bool allAligned = prepareLpGBTforBERT(theOpticalGroup);
 
             auto lineOutputVector = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
             for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
@@ -320,16 +359,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
             for(uint32_t iteration = 0; iteration < numberOfIterations; ++iteration)
             {
-                // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Iteration = " << iteration << std::endl;
                 std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] " << BOLDYELLOW << " Time passed = " << (sleepingTime * iteration) / 60. << " min" << RESET << std::endl;
-
-                // uint32_t numberOfErrorInjections = 10;
-                // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Injecting " << numberOfErrorInjections << " errors" << std::endl;
-
-                // for(uint32_t errorInjection = 0; errorInjection < numberOfErrorInjections; ++errorInjection)
-                // {
-                //     writeWithComment(theBertRegisterControl, 0xFFF50080, "Inject Error – INJ_ERR = 1");
-                // }
 
                 std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read error counters (loop on hybrids and lines) – BER Counter – MODE = 0" << std::endl;
                 writeWithComment(theBertRegisterControl, 0xFFF20137, "Configure BERT – DEBUG_MODE = 1, CHK_MODE = 0 (No Emu), CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 0");
@@ -351,112 +381,6 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
                 usleep(sleepingTime * 1000000);
             }
-
-            /// Old code
-
-            //     writeWithComment(theBertRegisterControl, 0xFFF20005, "Set mode = PRBS");
-
-            //     // writeWithComment(theBertRegisterControl, 0xFFF3FEDE, "Set mode = PRBS");
-
-            //     writeWithComment(theBertRegisterControl, 0xFFF50004, "Sample PRBS data – DATA_LD = 1");
-
-            //     readForAllLines(theBertRegisterControl, 0x00000000, "Select PRBS status 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 0");
-
-            //     readForAllLines(theBertRegisterControl, 0x00010000, "Select PRBS status 1", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 1");
-
-            //     readForAllLines(theBertRegisterControl, 0x00060000, "Select PRBS FIRST DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS FIRST DATA");
-
-            //     readForAllLines(theBertRegisterControl, 0x00070000, "Select PRBS SAMPLED DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS SAMPLED DATA");
-
-            //     writeWithComment(theBertRegisterControl, 0xFFF30080, "Configure BERT – CNTR_THR = 0x80");
-
-            //     writeWithComment(theBertRegisterControl, 0xFFF20035, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1");
-
-            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Configure Word Alignment (WA)" << std::endl;
-
-            //     // writeWithComment(phaseTuningControlRegisterName, 0xFFF44030, "Configure WA – SYNC_PATTERN = 0x4030");
-            //     // writeWithComment(phaseTuningControlRegisterName, 0xFFF4cea7, "Configure WA – SYNC_PATTERN = 0xcea7");
-            //     writeWithComment(phaseTuningControlRegisterName, 0xFFF42cea, "Configure WA – SYNC_PATTERN = 0x2cea");
-
-            //     writeWithComment(phaseTuningControlRegisterName, 0xFFF50008, "Reset WA FSM – FSM_RST = 1");
-
-            //     writeWithComment(phaseTuningControlRegisterName, 0xFFF20300, "Configure WA – MODE = 00 (auto), PRBS_EN = 1, SYNC_EN = 1");
-
-            //     usleep(1000000);
-
-            //     auto lineOutputVectorBefore = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
-            //     for(size_t lineIndex = 0; lineIndex < lineOutputVectorBefore.size(); ++lineIndex)
-            //     {
-            //         std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVectorBefore.at(lineIndex), 1, true) << std::endl;
-            //     }
-
-            //     writeWithComment(phaseTuningControlRegisterName, 0xFFF50002, " Do Word Alignment – DO_WA = 1");
-
-            //     for(int sleepSec = 0; sleepSec < 5; ++sleepSec)
-            //     {
-            //         std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] sleeping 1 sec..." << std::endl;
-            //         usleep(1000000);
-            //     }
-
-            //     // readForAllLines(phaseTuningControlRegisterName, 0x00000000, "Select phase tuning status", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "Phase tuning reply");
-
-            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read WA Status (loop on hybrids and lines)" << std::endl;
-            //     readForAllLines(phaseTuningControlRegisterName, 0x00010000, "Select phase tuning status", "fc7_daq_stat.physical_interface_block.phase_tuning_reply", "Phase tuning reply");
-
-            //     usleep(1000000);
-
-            //     auto lineOutputVectorAfter = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
-            //     for(size_t lineIndex = 0; lineIndex < lineOutputVectorAfter.size(); ++lineIndex)
-            //     {
-            //         std::cout << "Line " << lineIndex << ": " << getPatternPrintout(lineOutputVectorAfter.at(lineIndex), 1, true) << std::endl;
-            //     }
-
-            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Sample PRBS Data" << std::endl;
-
-            //     // writeWithComment(theBertRegisterControl, 0x00050004, "Sample PRBS data – DATA_LD = 1");
-
-            //     // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS First Data (loop on hybrids and lines)" << std::endl;
-
-            //     // readForAllLines(theBertRegisterControl, 0x00060000, "Select PRBS FIRST DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS FIRST DATA");
-
-            //     // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read PRBS Sampled Data (loop on hybrids and lines" << std::endl;
-
-            //     // readForAllLines(theBertRegisterControl, 0x00070000, "Select PRBS SAMPLED DATA", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS SAMPLED DATA");
-
-            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
-            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
-            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
-            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Before PRBS start" << std::endl;
-
-            //     readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
-
-            //     readForAllLines(theBertRegisterControl, 0x00000000, "Select PRBS status 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 0");
-
-            //     writeWithComment(theBertRegisterControl, 0xFFF20037, "Start PRBS Test");
-
-            //     readForAllLines(theBertRegisterControl, 0x00000000, "Select PRBS status 0", "fc7_daq_stat.physical_interface_block.bert_stat", "Read PRBS status 0");
-
-            //     readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
-
-            //     uint32_t numberOfIterations = 5;
-            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Start BER Test with error injection (repeat " << numberOfIterations << " times)" << std::endl;
-
-            //     for(uint32_t iteration = 0; iteration < numberOfIterations; ++iteration)
-            //     {
-            //         std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] !!!!!!!!!!! Start injecting errors - iteration " << iteration << std::endl;
-
-            //         writeWithComment(theBertRegisterControl, 0xFFF200B7, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 1, INJ_ERR = 1");
-
-            //         std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Stop injecting errors" << std::endl;
-
-            //         writeWithComment(theBertRegisterControl, 0xFFF20037, "Configure BERT – CNTR_SEL = 11 (BER_CNT), MODE = 01 (PRBS), RX_EN = 1, CHK_EN = 1, INJ_ERR = 0");
-
-            //         std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Read BER counters (loop on hybrids and lines)" << std::endl;
-
-            //         readForAllLines(theBertRegisterControl, 0x00040000, "Select BER counter", "fc7_daq_stat.physical_interface_block.bert_stat", "Read BER counter");
-            //     }
-
-            //     writeWithComment(theBertRegisterControl, 0x00020035, "Stop PRBS test");
         }
     }
 }

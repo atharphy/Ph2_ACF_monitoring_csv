@@ -42,6 +42,7 @@ class OTBitErrorRateTest : public Tool
 
   private:
     void bitErrorRateTest();
+    void bitErrorRateTestOld();
     bool prepareLpGBTforBERT(Ph2_HwDescription::OpticalGroup* theOpticalGroup);
 
 #ifdef __USE_ROOT__
