@@ -311,6 +311,7 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
             PixelAlive::run();
             PixelAlive::doSilentRunning = false;
             auto output                 = PixelAlive::analyze();
+            CalibBase::copyMaskFromDefault("en in");
 
             // ##################
             // # Reset sequence #
