@@ -206,9 +206,9 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, chargeContainer);
 
-    // #########################################
-    // # Set VCAL_HIGH to get target threshold #
-    // #########################################
+    // ##########################################
+    // # Find VCAL_HIGH to get target threshold #
+    // ##########################################
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -307,25 +307,25 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                             }
             if(i == numberOfBits + 1u) break; // Allows to compute last move
 
+            // ##################
+            // # Reset sequence #
+            // ##################
+            LOG(INFO) << BOLDMAGENTA << ">>> Resetting the system in case it got stuck due to high noise <<<" << RESET;
+            // CalibBase::setChipEnDis(true);
+            CalibBase::ResetBoards();
+            // CalibBase::setChipEnDis(false);
+            // CalibBase::shiftEnable(indx);
+            ThrAdjustment::establishStartingPoint(chargeContainer);
+
             // ################
             // # Run analysis #
             // ################
-            ThrAdjustment::establishStartingPoint(chargeContainer);
             CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames);
             PixelAlive::doSilentRunning = true;
             PixelAlive::run();
             PixelAlive::doSilentRunning = false;
             auto output                 = PixelAlive::analyze();
-
-            // ##################
-            // # Reset sequence #
-            // ##################
-            LOG(INFO) << BOLDMAGENTA << ">>> Resetting the system in case it got stuck due to high noise <<<" << RESET;
-            CalibBase::copyMaskFromDefault("en in");
-            CalibBase::setChipEnDis(true);
-            CalibBase::ResetBoards();
-            CalibBase::setChipEnDis(false);
-            CalibBase::shiftEnable(indx);
+            CalibBase::copyMaskFromDefault("en in"); // @TMP@
 
             // ##############################################
             // # Send periodic data to monitor the progress #
@@ -394,12 +394,18 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
     CalibBase::setChipEnDis(true);
     RD53Event::weakCheckDataStatus = false;
 
+    // ##################
+    // # Reset sequence #
+    // ##################
+    LOG(INFO) << BOLDMAGENTA << ">>> Resetting the system in case it got stuck due to high noise <<<" << RESET;
+    CalibBase::ResetBoards();
+    ThrAdjustment::establishStartingPoint(chargeContainer);
+
     // ###########################
     // # Download new DAC values #
     // ###########################
     LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
     CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames, false, true, 0);
-    ThrAdjustment::establishStartingPoint(chargeContainer);
 
     // #################################
     // # Reset masks to default values #
