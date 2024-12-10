@@ -252,10 +252,10 @@ void CalibBase::setChipEnDis(bool enable)
 
 bool CalibBase::shiftEnable(size_t indx)
 {
-    const auto            chipInterface   = static_cast<RD53Interface*>(this->fReadoutChipInterface);
-    bool                  isDetectorEmpty = false;
+    const auto            chipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
+    bool                  isDetectorEmpty = false;
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -311,9 +311,10 @@ void CalibBase::ResetBoardsReadBkFIFO()
 
 void CalibBase::ResetBoards()
 {
-    const auto            chipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
-    std::vector<uint16_t> chipCommandList;
-    std::vector<uint32_t> hybridCommandList;
+    // @TMP@
+    // const auto            chipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
+    // std::vector<uint16_t> chipCommandList;
+    // std::vector<uint32_t> hybridCommandList;
 
     for(const auto cBoard: *fDetectorContainer)
     {
@@ -325,22 +326,22 @@ void CalibBase::ResetBoards()
         // ######################################
         // # Re-write trigger-latency registers #
         // ######################################
-        for(const auto cOpticalGroup: *cBoard)
-        {
-            hybridCommandList.clear();
-            for(const auto cHybrid: *cOpticalGroup)
-            {
-                chipCommandList.clear();
-                for(const auto cChip: *cHybrid)
-                {
-                    const auto pRD53    = static_cast<RD53*>(cChip);
-                    const auto frontEnd = pRD53->getFEtype(colStart, colStop);
-                    chipInterface->PackWriteCommand(cChip, frontEnd->latencyReg, pRD53->getRegMap().at(frontEnd->latencyReg).fValue, chipCommandList, true);
-                }
-                chipInterface->PackHybridCommands(cBoard, chipCommandList, cHybrid->getId(), hybridCommandList);
-            }
-            chipInterface->SendHybridCommands(cBoard, hybridCommandList);
-        }
+        // for(const auto cOpticalGroup: *cBoard)
+        // {
+        //     hybridCommandList.clear();
+        //     for(const auto cHybrid: *cOpticalGroup)
+        //     {
+        //         chipCommandList.clear();
+        //         for(const auto cChip: *cHybrid)
+        //         {
+        //             const auto pRD53    = static_cast<RD53*>(cChip);
+        //             const auto frontEnd = pRD53->getFEtype(colStart, colStop);
+        //             chipInterface->PackWriteCommand(cChip, frontEnd->latencyReg, pRD53->getRegMap().at(frontEnd->latencyReg).fValue, chipCommandList, true);
+        //         }
+        //         chipInterface->PackHybridCommands(cBoard, chipCommandList, cHybrid->getId(), hybridCommandList);
+        //     }
+        //     chipInterface->SendHybridCommands(cBoard, hybridCommandList);
+        // }
     }
 }
 

@@ -77,18 +77,20 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, u
 {
     ChipRegMap::iterator i = fRegMap.find(pReg);
 
-    if(i == fRegMap.end()) LOG(INFO) << "The Chip object: " << +fChipId << " doesn't have " << pReg;
+    if(i == fRegMap.end()) LOG(ERROR) << BOLDRED << "The Chip object: " << BOLDYELLOW << +fChipId << BOLDRED << " doesn't have the register " << BOLDYELLOW << pReg << RESET;
     if(psetValue > fMaxRegValue)
-        LOG(ERROR) << "Chip register are at most " << fMaxRegValue << " bits, impossible to write " << psetValue << " on registed " << pReg;
+        LOG(ERROR) << BOLDRED << "Chip register are at most " << BOLDYELLOW << fMaxRegValue << BOLDRED << " bits, impossible to write " << BOLDYELLOW << psetValue << BOLDRED << " on registed "
+                   << BOLDYELLOW << pReg << RESET;
     else
     {
         auto oldRegister     = i->second;
         i->second.fValue     = psetValue & fMaxRegValue;
         i->second.fStatusReg = pStatusReg;
-        i->second.fPrmptCfg  = pPrmptCfg;
+        // i->second.fPrmptCfg  = pPrmptCfg; // @TMP@
+
         if(fTrackModifiedRegistersEnabled)
         {
-            if(fModifiedRegisters.find(i->first) == fModifiedRegisters.end()) // check if it already tracked
+            if(fModifiedRegisters.find(i->first) == fModifiedRegisters.end()) // Check if it is already tracked
             {
                 bool isFreeRegister = false;
                 for(const auto& freeRegister: fListOfFreeRegisters)

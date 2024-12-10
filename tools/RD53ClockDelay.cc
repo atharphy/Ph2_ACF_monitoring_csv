@@ -303,12 +303,11 @@ void ClockDelay::writeClkDelaySequence(const Ph2_HwDescription::BeBoard* pBoard,
     // #################################################
     auto clk_delay = pChip->getRegItem("CLK_DATA_DELAY_CLK").fValue;
     auto nameAndValue(static_cast<RD53Interface*>(this->fReadoutChipInterface)->SetSpecialRegister("CLK_DATA_DELAY_CLK", value % maxClkValue, pChip->getRegMap()));
-    pChip->getRegItem("CLK_DATA_DELAY").fValue = nameAndValue.second;
-    auto data_delay                            = (pChip->getRegItem("CLK_DATA_DELAY_DATA").fValue + (value % maxClkValue) - clk_delay) % maxDataValue; // Apply to data the same shift of the clock
-    nameAndValue                               = static_cast<RD53Interface*>(this->fReadoutChipInterface)->SetSpecialRegister("CLK_DATA_DELAY_DATA", data_delay, pChip->getRegMap());
-
-    pChip->getRegItem("CLK_DATA_DELAY_CLK").fValue  = value % maxClkValue;
-    pChip->getRegItem("CLK_DATA_DELAY_DATA").fValue = data_delay;
+    pChip->setReg("CLK_DATA_DELAY", nameAndValue.second);
+    auto data_delay = (pChip->getRegItem("CLK_DATA_DELAY_DATA").fValue + (value % maxClkValue) - clk_delay) % maxDataValue; // Apply to data the same shift of the clock
+    nameAndValue    = static_cast<RD53Interface*>(this->fReadoutChipInterface)->SetSpecialRegister("CLK_DATA_DELAY_DATA", data_delay, pChip->getRegMap());
+    pChip->setReg("CLK_DATA_DELAY_CLK", value % maxClkValue);
+    pChip->setReg("CLK_DATA_DELAY_DATA", data_delay);
 
     static_cast<RD53Interface*>(this->fReadoutChipInterface)->WriteClockDataDelay(pChip, nameAndValue.second);
 }

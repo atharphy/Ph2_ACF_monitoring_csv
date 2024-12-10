@@ -107,6 +107,8 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // # Programmig global registers #
     // ###############################
     const std::set<std::string> registerBlackList = {"RESISTORI2V",
+                                                     "NTCBETA",
+                                                     "RNTCAT25C",
                                                      "ADC_OFFSET_VOLT",
                                                      "ADC_MAXIMUM_VOLT",
                                                      "TEMPSENS_IDEAL_FACTOR",
