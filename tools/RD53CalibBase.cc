@@ -315,8 +315,7 @@ void CalibBase::ResetBoards()
 {
     for(const auto cBoard: *fDetectorContainer)
     {
-        static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetSequence("160"); // @TMP@
-        // static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetBoard();
+        static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetBoard();
         static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ConfigureBoard(cBoard);
         this->ConfigureIT(cBoard);
         this->ConfigureFrontendIT(cBoard);
