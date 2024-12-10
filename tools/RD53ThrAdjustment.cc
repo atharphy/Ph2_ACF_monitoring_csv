@@ -225,7 +225,6 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                     LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << BOLDBLUE << " = " << BOLDYELLOW << vcal_high_setting << BOLDBLUE << " for "
                               << BOLDYELLOW << "VCAL_MED" << BOLDBLUE << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
                 }
-    CalibBase::downloadNewDACvalues(chargeContainer, {"VCAL_HIGH"});
 
     // #######################################################################
     // # Prepare query, disable all chips, and set weak check of data status #
@@ -311,6 +310,7 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
             // ################
             // # Run analysis #
             // ################
+            ThrAdjustment::establishStartingPoint(chargeContainer);
             CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames);
             PixelAlive::doSilentRunning = true;
             PixelAlive::run();
@@ -326,8 +326,6 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
             CalibBase::ResetBoards();
             CalibBase::setChipEnDis(false);
             CalibBase::shiftEnable(indx);
-            CalibBase::downloadNewDACvalues(chargeContainer, {"VCAL_HIGH"});
-            PixelAlive::SetInjectionType();
 
             // ##############################################
             // # Send periodic data to monitor the progress #
@@ -400,7 +398,8 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
     // # Download new DAC values #
     // ###########################
     LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames, true, 0);
+    CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames, false, true, 0);
+    ThrAdjustment::establishStartingPoint(chargeContainer);
 
     // #################################
     // # Reset masks to default values #
@@ -528,7 +527,7 @@ void ThrAdjustment::bitWiseScanGlobal_Zero(const std::vector<const char*>& regNa
     // # Download new DAC values #
     // ###########################
     LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    CalibBase::downloadNewDACvalues(bestDACcontainer, regNames, true, 0);
+    CalibBase::downloadNewDACvalues(bestDACcontainer, regNames, false, true, 0);
 
     // ################
     // # Run analysis #
@@ -540,4 +539,10 @@ void ThrAdjustment::bitWiseScanGlobal_Zero(const std::vector<const char*>& regNa
     // # Reset masks to default values #
     // #################################
     CalibBase::copyMaskFromDefault("en in");
+}
+
+void ThrAdjustment::establishStartingPoint(DetectorDataContainer& chargeContainer)
+{
+    CalibBase::downloadNewDACvalues(chargeContainer, {"VCAL_HIGH"}, true);
+    PixelAlive::SetInjectionType();
 }
