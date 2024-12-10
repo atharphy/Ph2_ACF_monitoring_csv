@@ -56,7 +56,7 @@ uint32_t PhaseTuningControl::encodeCommand() const
         break;
 
     case Command::SetSyncPattern:
-        if(!fIsOptical) theCommand |= ((fSyncPattern & 0xFF) << 0);
+        theCommand |= ((fSyncPattern & 0xFFFF) << 0);
         break;
 
     case Command::Align:
@@ -69,6 +69,8 @@ uint32_t PhaseTuningControl::encodeCommand() const
     default: break;
     }
 
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] 0x" << std::hex << theCommand << std::dec << std::endl;
+    
     return theCommand;
 }
 
@@ -220,12 +222,23 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
         LOG(ERROR) << ERROR_FORMAT << __PRETTY_FUNCTION__ << " does not support not optical modules, aborting" << RESET;
         abort();
     }
+
+
     PhaseTuningControl thePhaseTuningControl(fIsOptical);
     thePhaseTuningControl.setHybridId(hybridId);
     thePhaseTuningControl.setChipId(lineId == 0xF ? 0x7 : 0x0);
     thePhaseTuningControl.setLineId(lineId);
 
+    if(fAlignOnPRBS)
+    {
+        thePhaseTuningControl.resetCommandBits();
+        thePhaseTuningControl.setCommand(PhaseTuningControl::Command::SetSyncPattern);
+        thePhaseTuningControl.setSyncPattern(0x020C);
+        writeCommand(thePhaseTuningControl.encodeCommand());
+    }
+
     // Reset
+    thePhaseTuningControl.resetCommandBits();
     thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Align);
     thePhaseTuningControl.setDoReset(true);
     writeCommand(thePhaseTuningControl.encodeCommand());
@@ -234,6 +247,7 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
     thePhaseTuningControl.resetCommandBits();
     thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Configure);
     thePhaseTuningControl.setEnableSync(true);
+    thePhaseTuningControl.setEnablePRBS(fAlignOnPRBS);
     thePhaseTuningControl.setMode(PhaseTuningControl::Mode::Auto);
     // thePhaseTuningControl.setEnableLCC(true);
     writeCommand(thePhaseTuningControl.encodeCommand());
