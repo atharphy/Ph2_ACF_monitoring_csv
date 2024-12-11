@@ -34,14 +34,14 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 
     // Waiting for at least PauseForDllConfig state before configuring chip. If state beyond, then I can still configure
     uint16_t cIter = 0, cMaxIter = 200;
-    for(auto& ele: fPUSMStatusMap[cChipVersion]) revertedPUSMStatusMap[ele.second] = ele.first;
+    for(auto& ele: fPUSMStatusMap.at(cChipVersion)) revertedPUSMStatusMap[ele.second] = ele.first;
     uint8_t cPUSMState = 0;
     do {
         cPUSMState = GetPUSMStatus(pChip);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cIter++;
-    } while((cPUSMState < revertedPUSMStatusMap["PAUSE_FOR_DLL_CONFIG"]) && (cIter < cMaxIter));
-    if(cIter == cMaxIter) { throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state " + fPUSMStatusMap[cChipVersion][cPUSMState])); }
+    } while((cPUSMState < revertedPUSMStatusMap.at("PAUSE_FOR_DLL_CONFIG")) && (cIter < cMaxIter));
+    if(cIter == cMaxIter) { throw std::runtime_error(std::string("lpGBT Power-Up State Machine Stuck at state " + fPUSMStatusMap.at(cChipVersion).at(cPUSMState))); }
 
     // Configuring chip
     ChipRegMap                                    clpGBTRegMap = pChip->getRegMap();
@@ -173,7 +173,7 @@ std::vector<std::pair<std::string, uint16_t>> D19clpGBTInterface::ReadChipMultRe
     fBoardFW->MultiRegisterRead(pChip, cRegItems);
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
-    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList.at(i), cRegItems.at(i).fValue));
     return theRegisterValues;
 }
 
@@ -355,18 +355,18 @@ void D19clpGBTInterface::InitialPhaseAlignRx(Chip* pChip, const std::vector<uint
     std::vector<uint8_t>                    cOptimalTaps = {};
     std::map<uint8_t, std::vector<uint8_t>> groupsAndChannels;
 
-    for(size_t i = 0; i < pGroups.size(); ++i) { groupsAndChannels[pGroups[i]].push_back(pChannels[i]); }
+    for(size_t i = 0; i < pGroups.size(); ++i) { groupsAndChannels[pGroups.at(i)].push_back(pChannels.at(i)); }
 
     PhaseAlignRx(pChip, groupsAndChannels, 5);
     // find mode
-    for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { cOptimalTaps.push_back(GetPhaseTap(pChip, pGroups[cIndx], pChannels[cIndx])); }
+    for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { cOptimalTaps.push_back(GetPhaseTap(pChip, pGroups.at(cIndx), pChannels.at(cIndx))); }
     std::vector<uint8_t> cTapsHist(15, 0);
-    for(auto cItem: cOptimalTaps) cTapsHist[cItem]++;
+    for(auto cItem: cOptimalTaps) cTapsHist.at(cItem)++;
     // return cTapsHist;
     auto cTapMode = std::max_element(cTapsHist.begin(), cTapsHist.end()) - cTapsHist.begin();
     LOG(INFO) << BOLDGREEN << "Applying Phase " << cTapMode << RESET;
     if(cTapMode != 15)
-        for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups[cIndx], pChannels[cIndx], cTapMode); }
+        for(size_t cIndx = 0; cIndx < pGroups.size(); cIndx++) { ConfigureRxPhase(pChip, pGroups.at(cIndx), pChannels.at(cIndx), cTapMode); }
 }
 
 LpGBTalignmentResult D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* pChip, const std::map<uint8_t, std::vector<uint8_t>>& groupsAndChannels, size_t pMaxAttempts)
@@ -434,7 +434,7 @@ LpGBTalignmentResult D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* p
                 std::this_thread::sleep_for(std::chrono::microseconds(100));
                 cCurrPhase = lpGBTInterface::GetRxPhase(pChip, cGroup, cChannel);
                 // LOG(DEBUG) << BOLDGREEN << "\t\t..Attempt# " << +cAttempt << "\t... RxPhase found  is... " << +cCurrPhase << RESET;
-                bestPhaseHistogram[cCurrPhase]++;
+                bestPhaseHistogram.at(cCurrPhase)++;
             }
 
             // find phase with highest entries
@@ -443,12 +443,12 @@ LpGBTalignmentResult D19clpGBTInterface::PhaseAlignRx(Ph2_HwDescription::Chip* p
             int     numberOfPossiblePhases = 0;
             for(size_t phaseValue = 0; phaseValue < bestPhaseHistogram.size(); ++phaseValue)
             {
-                if(bestPhaseHistogram[phaseValue] > highestCount)
+                if(bestPhaseHistogram.at(phaseValue) > highestCount)
                 {
-                    highestCount = bestPhaseHistogram[phaseValue];
+                    highestCount = bestPhaseHistogram.at(phaseValue);
                     bestPhase    = phaseValue;
                 }
-                if(bestPhaseHistogram[phaseValue] > 0) ++numberOfPossiblePhases;
+                if(bestPhaseHistogram.at(phaseValue) > 0) ++numberOfPossiblePhases;
             }
 
             LOG(INFO) << BOLDGREEN << "Group#" << +cGroup << " Channel#" << +cChannel << "...\t\t..Most frequently found phase is " << +bestPhase << " out of " << numberOfPossiblePhases
@@ -484,7 +484,7 @@ bool D19clpGBTInterface::didAlignmentSucceded(LpGBTalignmentResult& theOpticalGr
             // Check if the group and channel belong to a disabled hybrid
             for(auto cHybrid: *theOpticalGroup)
             {
-                auto hybridAndChannel = theGroupsAndChannelsPerHybrid[std::make_pair(theGoupAlignmenResult.first, theChannelAlignmentResult.first)];
+                auto hybridAndChannel = theGroupsAndChannelsPerHybrid.at(std::make_pair(theGoupAlignmenResult.first, theChannelAlignmentResult.first));
                 if(hybridAndChannel.first != (cHybrid->getId() % 2) && theOpticalGroup->size() != 2) { skipGroupAndChannel = true; }
             }
 
@@ -579,9 +579,9 @@ void D19clpGBTInterface::AddPSROHeLinkProperties(Ph2_HwDescription::Chip* pChip)
     std::vector<uint8_t> cInvrtLeft{1, 1, 0, 1, 1, 1, 1};
     for(size_t cIndx = 0; cIndx < cInvrtLeft.size(); cIndx++)
     {
-        uint8_t cGroup    = cGrpsLeft[cIndx];
-        uint8_t cChannel  = cChnlsLeft[cIndx];
-        uint8_t cRxInvert = cInvrtLeft[cIndx];
+        uint8_t cGroup    = cGrpsLeft.at(cIndx);
+        uint8_t cChannel  = cChnlsLeft.at(cIndx);
+        uint8_t cRxInvert = cInvrtLeft.at(cIndx);
         static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cRxInvert);
     }
     std::vector<uint8_t> cGrpsRight{4, 4, 5, 5, 6, 6, 0};
@@ -589,9 +589,9 @@ void D19clpGBTInterface::AddPSROHeLinkProperties(Ph2_HwDescription::Chip* pChip)
     std::vector<uint8_t> cInvrtRight{0, 0, 0, 0, 0, 0, 1};
     for(size_t cIndx = 0; cIndx < cInvrtLeft.size(); cIndx++)
     {
-        uint8_t cGroup    = cGrpsRight[cIndx];
-        uint8_t cChannel  = cChnlsRight[cIndx];
-        uint8_t cRxInvert = cInvrtRight[cIndx];
+        uint8_t cGroup    = cGrpsRight.at(cIndx);
+        uint8_t cChannel  = cChnlsRight.at(cIndx);
+        uint8_t cRxInvert = cInvrtRight.at(cIndx);
         static_cast<lpGBT*>(pChip)->addRxProperty(cGroup, cChannel, cRxInvert);
     }
 }

@@ -92,7 +92,9 @@ void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCI
     auto& theL1Efficiency = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
                                 ->getObject(theMPA->getOpticalGroupId())
                                 ->getObject(theMPA->getHybridId())
-                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()[theMPA->getId() % 8][0];
+                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()
+                                .at(theMPA->getId() % 8)
+                                .at(0);
 
     // std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList{};
     std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 2)};
@@ -161,7 +163,8 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
     auto& theLineEfficiencyArray = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
                                        ->getObject(theMPA->getOpticalGroupId())
                                        ->getObject(theMPA->getHybridId())
-                                       ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()[theMPA->getId() % 8];
+                                       ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()
+                                       .at(theMPA->getId() % 8);
 
     fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 0); // Use normal stub mode
 
@@ -177,7 +180,7 @@ void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdFo
     size_t stripClusterLine = 0;
     for(auto stripCluster: theStripClusterList)
     {
-        auto& theStubEfficiency = theLineEfficiencyArray[stripClusterLine + 1];
+        auto& theStubEfficiency = theLineEfficiencyArray.at(stripClusterLine + 1);
         LOG(INFO) << BOLDBLUE << "                injecting stub for strip cluster line #" << stripClusterLine << RESET;
         uint8_t colCoordinate = std::get<1>(stripCluster);
 
@@ -345,7 +348,7 @@ PatternMatcher OTverifyMPASSAdataWord::produceL1PatternMatcher(const std::vector
     // add extra zeros for padding
     size_t numberOfPatternBits  = thePatternMatcher.getNumberOfPatternBits();
     size_t numberOfPaddingZeros = numberOfPatternBits % 4;
-    thePatternMatcher.addToPattern(0x0, ~(~0u << numberOfPaddingZeros), numberOfPaddingZeros);
+    if(numberOfPaddingZeros > 0) thePatternMatcher.addToPattern(0x0, ~(~0u << numberOfPaddingZeros), numberOfPaddingZeros);
 
     // add CIC trailing 0 and idle pattern
     if(numberOfStripClusters == 1)

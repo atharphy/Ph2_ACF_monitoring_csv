@@ -211,13 +211,10 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
     }
 
     // Iterate the OpticalGroup node
+    cBeBoard->setOptical(false);
     for(pugi::xml_node pOpticalGroupNode = pBeBordNode.child(OPTICALGROUP_NODE_NAME); pOpticalGroupNode; pOpticalGroupNode = pOpticalGroupNode.next_sibling())
     {
-        if(static_cast<std::string>(pOpticalGroupNode.name()) == OPTICALGROUP_NODE_NAME)
-        {
-            cBeBoard->setOptical(false);
-            parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os);
-        }
+        if(static_cast<std::string>(pOpticalGroupNode.name()) == OPTICALGROUP_NODE_NAME) { parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os); }
     }
 
     pugi::xml_node cSLinkNode = pBeBordNode.child("SLink");

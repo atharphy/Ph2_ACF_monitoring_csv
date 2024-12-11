@@ -121,11 +121,10 @@ class MPA2Interface : public ReadoutChipInterface
     uint16_t             readPixel(Ph2_HwDescription::Chip* pChip, std::string cReg, uint16_t row, uint16_t col);
     bool                 setVrefFromFuseID(Ph2_HwDescription::ReadoutChip* pMPA2) override;
     bool                 setVref(Ph2_HwDescription::ReadoutChip* pMPA2, uint16_t theVrefRegisterValue) override;
-    float                ADCMeasure(Ph2_HwDescription::Chip* pMPA2, uint32_t nreads = 5);
+    float                ADCMeasure(Ph2_HwDescription::Chip* pMPA2, uint8_t block, uint8_t testPoint = 0, uint8_t swEn = 0, uint32_t nreads = 5);
     bool                 selectBlock(Ph2_HwDescription::Chip* pMPA2, uint8_t block, uint8_t testPoint = 0, uint8_t swEn = 0);
     uint32_t             readADCGround(Ph2_HwDescription::ReadoutChip* pMPA2);
-    uint32_t             measureGround(Ph2_HwDescription::ReadoutChip* pMPA2);
-    uint32_t             readADC(Ph2_HwDescription::ReadoutChip* pMPA2, std::string pRegName);
+    uint32_t             readADC(Ph2_HwDescription::ReadoutChip* pMPA2, std::string pRegName, uint16_t numberOfRead = 5);
     uint32_t             readADCVref(Ph2_HwDescription::ReadoutChip* pMPA2);
     uint32_t             readVrefRegister(Ph2_HwDescription::ReadoutChip* pMPA2);
     uint32_t             readADCBandGap(Ph2_HwDescription::ReadoutChip* pMPA2);
@@ -146,6 +145,8 @@ class MPA2Interface : public ReadoutChipInterface
     packLocalRegisters(Ph2_HwDescription::ReadoutChip* pMPA2, const std::string& dacName, const ChipContainer& localRegValues);
 
   private:
+    std::vector<std::pair<std::string, uint16_t>> fTriggerReadAdcSequence{{"Mask", 0xE0}, {"ADCcontrol", 0xE0}, {"ADCcontrol", 0xC0}, {"Mask", 0xFF}};
+
     // pixelEnable bits
     const std::map<std::string, uint8_t> PIXEL_ENABLE_TABLE =
         {{"PixelMask", 0}, {"Polarity", 1}, {"EnEdgeBR", 2}, {"EnLvlBR", 3}, {"CounterEnable", 4}, {"DigitalInjection", 5}, {"AnalogueInjection", 6}, {"BrClk", 7}};

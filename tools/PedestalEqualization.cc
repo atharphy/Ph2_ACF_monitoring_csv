@@ -1,6 +1,7 @@
 #include "tools/PedestalEqualization.h"
 #include "HWDescription/ReadoutChip.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19cPSCounterFWInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/CBCChannelGroupHandler.h"
 #include "Utils/ContainerFactory.h"
@@ -100,8 +101,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fOccupancyAtPedestal     = findValueInSettings<double>("PedestalEqualization_Occupancy", 0.56);
     uint8_t cDefTargetOffset = (fWithCBC) ? 0x7F : 0xF;
     fTargetOffset            = findValueInSettings<double>("PedestalEqualizationTargetOffset", cDefTargetOffset);
-    // uint8_t cEnableFastCounterReadout = (uint8_t)findValueInSettings<double>("EnableFastCounterReadout", 0);
-    // uint8_t cEnablePairSelect         = (uint8_t)findValueInSettings<double>("EnablePairSelect", 0);
+    bool fastCounterReadout  = findValueInSettings<double>("PedestalEqualization_FastCounterReadout", 1) > 0;
 
     LOG(INFO) << BOLDBLUE << "PedestalEqualization::Initialise Occupancy at pedestal is " << fOccupancyAtPedestal << " target offset is " << +fTargetOffset << RESET;
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
@@ -133,6 +133,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
         if(!cForcePSasync) continue;
         cBoard->setEventType(EventType::PSAS);
         static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitializePSCounterFWInterface(cBoard);
+        static_cast<D19cPSCounterFWInterface*>(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->getL1ReadoutInterface())->configureFastReadout(fastCounterReadout);
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -316,9 +317,9 @@ void PedestalEqualization::FindVplus()
                     }
 
                 } // for on chip - end
-            }     // for on hybrid - end
-        }         // for on opticalGroup - end
-    }             // for on board - end
+            } // for on hybrid - end
+        } // for on opticalGroup - end
+    } // for on board - end
 
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.fillVplusPlots(theVcthContainer);
@@ -444,7 +445,6 @@ void PedestalEqualization::FindOffsets()
                             if(cType == FrontEndType::SSA2) cRegName = "THTRIMMING_S" + std::to_string(col + 1);
                             if(cType == FrontEndType::MPA2) cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
                             auto channel = roc->getReg(cRegName);
-                            LOG(DEBUG) << BOLDGREEN << "Offset of channel " << col << " set to " << +channel << RESET;
                             cMeanOffset += roc->getReg(cRegName);
                             chip->getChannel<uint8_t>(row, col) = channel;
                         }
@@ -452,9 +452,9 @@ void PedestalEqualization::FindOffsets()
 
                     LOG(INFO) << BOLDRED << "Mean offset on Chip" << +chip->getId() << " is : " << (cMeanOffset) / (double)roc->getNumberOfChannels() << " Vcth units." << RESET;
                 } // for on chip - end
-            }     // for on hybrid - end
-        }         // for on opticalGroup - end
-    }             // for on board - end
+            } // for on hybrid - end
+        } // for on opticalGroup - end
+    } // for on board - end
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.fillOccupancyPlots(theOccupancyContainer);
     fDQMHistogramPedestalEqualization.fillOffsetPlots(theOffsetsCointainer);

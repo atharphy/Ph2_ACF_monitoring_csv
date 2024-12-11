@@ -845,7 +845,7 @@ void Tool::dumpConfigFiles()
     {
         LOG(INFO) << BOLDYELLOW << "Reading all readable registers for BeBoard " << +theBoard->getId() << RESET;
 
-        const auto theBeBoardFW = this->fBeBoardFWMap[theBoard->getId()];
+        const auto theBeBoardFW = this->fBeBoardFWMap.at(theBoard->getId());
         const auto hwInterface  = theBeBoardFW->getHardwareInterface();
 
         auto theBoardFreeRegisterRegex = theBoard->getFreeRegisterRegex();
@@ -1065,9 +1065,7 @@ std::pair<std::vector<float>, std::vector<float>> Tool::getDerivative(std::vecto
     std::vector<float> cWeights(pData.size());
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
     // replace negative entries with 0s
-    if(pIgnoreNegative)
-        std::replace_if(
-            cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
+    if(pIgnoreNegative) std::replace_if(cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
     cWeights.erase(cWeights.begin(), cWeights.begin() + 1);
     pValues.erase(pValues.begin(), pValues.begin() + 1);
     return std::make_pair(cWeights, pValues);
@@ -1078,9 +1076,7 @@ std::pair<float, float> Tool::evalNoise(std::vector<float> pData, std::vector<fl
     std::vector<float> cWeights(pData.size());
     std::adjacent_difference(pData.begin(), pData.end(), cWeights.begin());
     cWeights.erase(cWeights.begin(), cWeights.begin() + 1);
-    if(pIgnoreNegative)
-        std::replace_if(
-            cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
+    if(pIgnoreNegative) std::replace_if(cWeights.begin(), cWeights.end(), [](float i) { return std::signbit(i); }, 0);
     float cN            = static_cast<float>(cWeights.size() - std::count(cWeights.begin(), cWeights.end(), 0.));
     float cSumOfWeights = std::accumulate(cWeights.begin(), cWeights.end(), 0.);
     // Weighted sum of scan values to get pedestal
@@ -1111,11 +1107,11 @@ void Tool::unmaskPair(Chip* cChip, std::pair<uint8_t, uint8_t> pPair)
     cMaskedChannels.push_back(pPair.first);
 
     uint8_t     cRegisterId  = pPair.first >> 3;
-    std::string cMaskRegName = fChannelMaskMapCBC3[cRegisterId];
+    std::string cMaskRegName = fChannelMaskMapCBC3.at(cRegisterId);
     cMaskedList.insert(std::pair<std::string, MaskedChannels>(cMaskRegName.c_str(), cMaskedChannels));
 
     cRegisterId  = pPair.second >> 3;
-    cMaskRegName = fChannelMaskMapCBC3[cRegisterId];
+    cMaskRegName = fChannelMaskMapCBC3.at(cRegisterId);
     auto it      = cMaskedList.find(cMaskRegName.c_str());
     if(it != cMaskedList.end()) { (it->second).push_back(pPair.second); }
     else
@@ -1203,9 +1199,9 @@ void Tool::scanBeBoardDacDac(uint16_t                                         bo
 
     for(size_t dacIt = 0; dacIt < dac1List.size(); ++dacIt)
     {
-        if(boardId == 0) LOG(INFO) << BOLDBLUE << " Scanning dac1 " << dac1Name << ", value = " << dac1List[dacIt] << " vs " << dac2Name << RESET;
-        setSameDacBeBoard(fDetectorContainer->getObject(boardId), dac1Name, dac1List[dacIt]);
-        scanBeBoardDac(boardId, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector[dacIt], numberOfEventsPerBurst);
+        if(boardId == 0) LOG(INFO) << BOLDBLUE << " Scanning dac1 " << dac1Name << ", value = " << dac1List.at(dacIt) << " vs " << dac2Name << RESET;
+        setSameDacBeBoard(fDetectorContainer->getObject(boardId), dac1Name, dac1List.at(dacIt));
+        scanBeBoardDac(boardId, dac2Name, dac2List, numberOfEvents, detectorContainerVectorOfVector.at(dacIt), numberOfEventsPerBurst);
     }
 }
 
@@ -1474,7 +1470,7 @@ void Tool::bitWiseScanBeBoard(uint16_t boardId, const std::string& dacName, uint
                                                   .fOccupancy;
                         }
                     }
-                    LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
+                    // LOG(DEBUG) << BOLDYELLOW << cOut.str() << RESET;
                 }
             }
         }
@@ -1781,15 +1777,6 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
 
                         if(not currentDoneList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>())
                         {
-                            LOG(INFO) << BOLDBLUE << "currentStepOccupancyContainer "
-                                      << currentStepOccupancyContainer->getObject(boardId)
-                                             ->getObject(cOpticalGroup->getId())
-                                             ->getObject(cHybrid->getId())
-                                             ->getObject(cChip->getId())
-                                             ->getSummary<Occupancy, Occupancy>()
-                                             .fOccupancy
-                                      << RESET;
-
                             if(currentStepOccupancyContainer->getObject(boardId)
                                        ->getObject(cOpticalGroup->getId())
                                        ->getObject(cHybrid->getId())
@@ -2159,13 +2146,6 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
     theScan.setDataContainer(fDetectorDataContainer);
     // Make sure async mode uses ReadNEvents
 
-    bool cUseReadNEvents = fUseReadNEvents;
-    if(fDetectorContainer->getObject(boardId)->getEventType() == EventType::PSAS)
-    {
-        this->setSameGlobalDac("AnalogueAsync", 1);
-        fUseReadNEvents = true;
-    }
-
     doScanOnAllGroupsBeBoard(boardId, numberOfEvents, numberOfEventsPerBurst, &theScan);
 
     if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
@@ -2175,8 +2155,6 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
 
     if(fNormalize)
         fDetectorDataContainer->getObject(boardId)->normalizeAndAverageContainers(fDetectorContainer->getObject(boardId), getChannelGroupHandlerContainer()->getObject(boardId), numberOfEvents);
-
-    fUseReadNEvents = cUseReadNEvents;
 }
 
 class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
@@ -2228,8 +2206,8 @@ void Tool::scanBeBoardDac(uint16_t                             boardId,
 
         for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
         {
-            fDetectorDataContainer = detectorContainerVector[dacIt];
-            setDacAndMeasureBeBoardData(boardId, dacName, dacList[dacIt], numberOfEvents, numberOfEventsPerBurst);
+            fDetectorDataContainer = detectorContainerVector.at(dacIt);
+            setDacAndMeasureBeBoardData(boardId, dacName, dacList.at(dacIt), numberOfEvents, numberOfEventsPerBurst);
             this->sendData();
         }
     }

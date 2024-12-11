@@ -514,7 +514,7 @@ void Eudaq2Producer::ReadoutLoop()
                     fSkipFirstEvent = false;
                 }
             } // end of cBoard loop
-        }     // end of if fEnableInjection
+        } // end of if fEnableInjection
         else
         {
             // Check if any data is pending
@@ -569,9 +569,9 @@ void Eudaq2Producer::ReadoutLoop()
                     if(!fSkipFirstEvent) SendEvent(std::move(cEudaqEvent));
                     fSkipFirstEvent = false;
                 }
-            }               // end of cBoard loop
-        }                   // end of if enable injection
-    }                       // end of !fExitRun loop
+            } // end of cBoard loop
+        } // end of if enable injection
+    } // end of !fExitRun loop
     fSkipFirstEvent = true; // Reset skipping of first event
 }
 
@@ -652,7 +652,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                                           LOG(INFO) << BOLDYELLOW << "  ----- " << RESET;
                             */
                         } // enf of hit loop
-                    }     // end of PCluster loop
+                    } // end of PCluster loop
 
                     // Get strip clusters
                     std::vector<SCluster> cSClusters = static_cast<const D19cCic2Event*>(pPh2Event)->GetStripClusters(cHybridId, cChipId);
@@ -690,9 +690,9 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                             */
 
                         } // end of hit loop
-                    }     // end of SCluster loop
-                }         // end of chip loop
-            }             // end of hybrid loop
+                    } // end of SCluster loop
+                } // end of chip loop
+            } // end of hybrid loop
             // Fill final pixel data container
             // push number of pixel rows in 16bits word
             cPixelDataFinal[0] = (cNPixelColumns >> 0) & 0xFF;
@@ -801,8 +801,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                             cBottomDataOffset += 6; // Offset in Data vector
                         }
                     } // end of hit loop
-                }     // end of chip loop
-            }         // end of hybrid loop
+                } // end of chip loop
+            } // end of hybrid loop
             // Fill final Top data container
             cTopDataFinal[0]   = (cNColumns >> 0) & 0xFF; // First 8bits of cNColumns
             cTopDataFinal[1]   = (cNColumns >> 8) & 0xFF; // Second 8bits of cNColumns
@@ -879,9 +879,9 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                     pEudaqSubEvent->SetTag(cTagName, (uint32_t)cStub.getCenter());
                     cStubId++;
                 } // end of stub loop
-            }     // end of chip loop
-        }         // end of hybrid loop
-    }             // end of optical group loop
+            } // end of chip loop
+        } // end of hybrid loop
+    } // end of optical group loop
 }
 
 bool Eudaq2Producer::EventsPending()
@@ -894,8 +894,8 @@ bool Eudaq2Producer::EventsPending()
             if(theBoard->getBoardType() == BoardType::D19C)
             {
                 if(this->fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_stat.readout_block.general.readout_req") > 0) { return true; } // end of if ReadBoardReg
-            }                                                                                                                            // end of if BoardType
-        }                                                                                                                                // end of cBoard loop
+            } // end of if BoardType
+        } // end of cBoard loop
     }
     return false;
 }

@@ -8,7 +8,7 @@
         
      <OpticalGroup Id="0" enable="1" FMCId="L12" reset="1">
         <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
-        <NTCProperties type="VTRx+"  ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
+        <NTCProperties type="VTRx+"  ADC="ADC6" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
         
         <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
         <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
@@ -95,7 +95,7 @@
     <Setting name="HoleMode">0</Setting>
     <Setting name="VerificationLoop">1</Setting>
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
-    <Setting name="FitSCurves">0</Setting>
+    <Setting name="FitSCurves">1</Setting>
     <Setting name="PlotSCurves">1</Setting>
     <Setting name="TriggerRate">10</Setting>
 
@@ -166,8 +166,11 @@
     <Setting name="PedeNoise_PulseAmplitude">70</Setting>
     <Setting name="PedestalEqualization_PulseAmplitudePix">70</Setting>
     <Setting name="PedeNoise_PulseAmplitudePix">70</Setting>
-    <Setting name="PedestalEqualization_PulseAmplitudeFullScan">20</Setting>
+    <Setting name="PedeNoise_FastCounterReadout">1</Setting>
+
+    <Setting name="PedestalEqualization_PulseAmplitudeFullScan">30</Setting>
     <Setting name="PedestalEqualization_PulseAmplitudePixFullScan">30</Setting>
+    <Setting name="PedestalEqualization_FastCounterReadout">1</Setting>
 
     <Setting name="StartPhase">0</Setting>
     <Setting name="PhaseRange">7</Setting>

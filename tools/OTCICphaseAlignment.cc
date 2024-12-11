@@ -118,7 +118,7 @@ void OTCICphaseAlignment::phaseAlignment()
                 auto& theLockingEfficiency = hybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS>>();
                 for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd)
                 {
-                    for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line) { theLockingEfficiency[frontEnd][line] /= fNumberOfAlignmentIterations; }
+                    for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line) { theLockingEfficiency.at(frontEnd).at(line) /= fNumberOfAlignmentIterations; }
                 }
             }
         }
@@ -133,7 +133,7 @@ void OTCICphaseAlignment::phaseAlignment()
                 {
                     for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
                     {
-                        for(uint8_t phase = 0; phase < 16; ++phase) thePhaseHistogram[frontEnd][line][phase] /= fNumberOfAlignmentIterations;
+                        for(uint8_t phase = 0; phase < 16; ++phase) thePhaseHistogram.at(frontEnd).at(line).at(phase) /= fNumberOfAlignmentIterations;
                     }
                 }
             }
@@ -153,7 +153,7 @@ void OTCICphaseAlignment::phaseAlignment()
                 {
                     for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
                     {
-                        if(theLockingEfficiency[theChip->getId() % 8][line] < fMinLockingSuccessRate)
+                        if(theLockingEfficiency.at(theChip->getId() % 8).at(line) < fMinLockingSuccessRate)
                         {
                             std::stringstream errorMessage;
                             errorMessage << "OTCICphaseAlignment::phaseAlignment - Error in aligning CIC on ";
@@ -161,7 +161,7 @@ void OTCICphaseAlignment::phaseAlignment()
                                 errorMessage << "L1 line";
                             else
                                 errorMessage << "Stub line " << +(line - 1);
-                            errorMessage << " - locking efficiency = " << theLockingEfficiency[theChip->getId() % 8][line] << " less then minimum requited (" << fMinLockingSuccessRate << ")";
+                            errorMessage << " - locking efficiency = " << theLockingEfficiency.at(theChip->getId() % 8).at(line) << " less then minimum requited (" << fMinLockingSuccessRate << ")";
                             errorMessage << " - Chip  " << +theChip->getId() << " Hybrid " << +theHybrid->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " BeBoard " << +theBoard->getId();
                             LOG(ERROR) << BOLDRED << errorMessage.str() << RESET;
                             cLocked = false;
@@ -184,7 +184,7 @@ void OTCICphaseAlignment::phaseAlignment()
                     continue;
                 }
             } // CICs
-        }     // OG
+        } // OG
 
         // Find and set best phases
         for(auto theOpticalGroup: *theBoard)
@@ -207,14 +207,14 @@ void OTCICphaseAlignment::phaseAlignment()
                         uint8_t bestPhase           = 15;
                         for(uint8_t phase = 0; phase < 16; ++phase)
                         {
-                            auto theCurrentEfficiency = thePhaseHistogram[frontEnd][line][phase];
+                            auto theCurrentEfficiency = thePhaseHistogram.at(frontEnd).at(line).at(phase);
                             if(theCurrentEfficiency > bestPhaseEfficiency)
                             {
                                 bestPhase           = phase;
                                 bestPhaseEfficiency = theCurrentEfficiency;
                             }
                         }
-                        theBestPhase[frontEnd][line] = bestPhase;
+                        theBestPhase.at(frontEnd).at(line) = bestPhase;
                     }
                 }
                 auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
@@ -280,8 +280,8 @@ void OTCICphaseAlignment::AlignAllCICinputsPS(BeBoard*            theBoard,
                 {
                     for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
                     {
-                        if(lockingSuccess[frontEnd][line]) theLockingEfficiency[frontEnd][line]++;
-                        thePhaseHistogram[frontEnd][line][optimalPhases[frontEnd][line]]++;
+                        if(lockingSuccess.at(frontEnd).at(line)) theLockingEfficiency.at(frontEnd).at(line)++;
+                        thePhaseHistogram.at(frontEnd).at(line).at(optimalPhases.at(frontEnd).at(line))++;
                     }
                 }
             }
@@ -348,8 +348,8 @@ void OTCICphaseAlignment::AlignAllCICinputs2S(BeBoard*            theBoard,
                 auto optimalPhases  = fCicInterface->getAllOptimalTaps(cCic);
                 for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd)
                 {
-                    if(lockingSuccess[frontEnd][0]) theLockingEfficiency[frontEnd][0]++;
-                    thePhaseHistogram[frontEnd][0][optimalPhases[frontEnd][0]]++;
+                    if(lockingSuccess.at(frontEnd).at(0)) theLockingEfficiency.at(frontEnd).at(0)++;
+                    thePhaseHistogram.at(frontEnd).at(0).at(optimalPhases.at(frontEnd).at(0))++;
                 }
             }
         }
@@ -384,8 +384,8 @@ void OTCICphaseAlignment::AlignAllCICinputs2S(BeBoard*            theBoard,
                 auto optimalPhases  = fCicInterface->getAllOptimalTaps(cCic);
                 for(uint8_t frontEnd = 0; frontEnd < NUMBER_OF_CIC_PORTS; ++frontEnd)
                 {
-                    if(lockingSuccess[frontEnd][1]) theLockingEfficiency[frontEnd][1]++;
-                    thePhaseHistogram[frontEnd][1][optimalPhases[frontEnd][1]]++;
+                    if(lockingSuccess.at(frontEnd).at(1)) theLockingEfficiency.at(frontEnd).at(1)++;
+                    thePhaseHistogram.at(frontEnd).at(1).at(optimalPhases.at(frontEnd).at(1))++;
                 }
             }
         }
@@ -422,8 +422,8 @@ void OTCICphaseAlignment::AlignAllCICinputs2S(BeBoard*            theBoard,
                 {
                     for(uint8_t line = 2; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
                     {
-                        if(lockingSuccess[frontEnd][line]) theLockingEfficiency[frontEnd][line]++;
-                        thePhaseHistogram[frontEnd][line][optimalPhases[frontEnd][line]]++;
+                        if(lockingSuccess.at(frontEnd).at(line)) theLockingEfficiency.at(frontEnd).at(line)++;
+                        thePhaseHistogram.at(frontEnd).at(line).at(optimalPhases.at(frontEnd).at(line))++;
                     }
                 }
             }

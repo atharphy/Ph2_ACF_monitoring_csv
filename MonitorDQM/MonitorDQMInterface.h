@@ -18,8 +18,8 @@ class MonitorDQMInterface
     void configure(const ConfigureInfo& theConfigureInfo);
     void startProcessingData();
     void stopProcessingData(void);
-    void pauseProcessingData(void){};
-    void resumeProcessingData(void){};
+    void pauseProcessingData(void) {};
+    void resumeProcessingData(void) {};
 
     bool running(void);
 

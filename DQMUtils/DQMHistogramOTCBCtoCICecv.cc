@@ -109,7 +109,7 @@ void DQMHistogramOTCBCtoCICecv::fillMatchingEfficiency(DetectorDataContainer& ma
                 {
                     if(!theChip->hasSummary()) continue;
                     auto theChipLineMatchingEfficiency = theChip->getSummary<GenericDataArray<float, 6>>();
-                    for(int line = 0; line < 6; ++line) { thePhaseScanHistogram->SetBinContent(cicPhase + 1, theChip->getId() * 6 + line + 1, theChipLineMatchingEfficiency[line]); }
+                    for(int line = 0; line < 6; ++line) { thePhaseScanHistogram->SetBinContent(cicPhase + 1, theChip->getId() * 6 + line + 1, theChipLineMatchingEfficiency.at(line)); }
                 }
             }
         }

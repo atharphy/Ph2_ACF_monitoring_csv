@@ -99,7 +99,7 @@ void FC7FpgaConfig::downloadFpgaConfig(const std::string& strImage, const std::s
 
     for(size_t iName = 0; iName < lstNames.size(); iName++)
     {
-        if(!strImage.compare(lstNames[iName])) numUploadingFpga = iName + 1;
+        if(!strImage.compare(lstNames.at(iName))) numUploadingFpga = iName + 1;
 
         break;
     }
@@ -121,7 +121,7 @@ void FC7FpgaConfig::downloadImage(const std::string& strImage, const std::string
     // for (const auto& uVal:bitStream.Bitstream())
     for(size_t idx = 0; idx < bitStream1.Bitstream().size(); idx++)
     {
-        if(bitStream1.Bitstream()[idx] != bitStream2.Bitstream()[idx])
+        if(bitStream1.Bitstream().at(idx) != bitStream2.Bitstream().at(idx))
         {
             if(bitStream3.Bitstream().empty())
             {
@@ -129,15 +129,15 @@ void FC7FpgaConfig::downloadImage(const std::string& strImage, const std::string
                 bitStream3     = lNode->FileFromSD(strImage, &progressValue, 66);
             }
 
-            if(bitStream1.Bitstream()[idx] == bitStream3.Bitstream()[idx])
-                oFile << (char)bitStream1.Bitstream()[idx];
-            else if(bitStream2.Bitstream()[idx] == bitStream3.Bitstream()[idx])
-                oFile << (char)bitStream2.Bitstream()[idx];
+            if(bitStream1.Bitstream().at(idx) == bitStream3.Bitstream().at(idx))
+                oFile << (char)bitStream1.Bitstream().at(idx);
+            else if(bitStream2.Bitstream().at(idx) == bitStream3.Bitstream().at(idx))
+                oFile << (char)bitStream2.Bitstream().at(idx);
             else
                 throw fc7::CorruptedFile();
         }
         else
-            oFile << (char)bitStream1.Bitstream()[idx];
+            oFile << (char)bitStream1.Bitstream().at(idx);
     }
 
     oFile.close();
@@ -182,7 +182,7 @@ void FC7FpgaConfig::verifyImageName(const std::string& firmwareName)
 
         for(size_t iName = 0; iName < firmwareList.size(); iName++)
         {
-            if(!firmwareName.compare(firmwareList[iName]))
+            if(!firmwareName.compare(firmwareList.at(iName)))
             {
                 bFound = true;
                 break;

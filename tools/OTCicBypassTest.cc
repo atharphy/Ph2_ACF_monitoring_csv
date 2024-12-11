@@ -69,7 +69,7 @@ void OTCicBypassTest::runCICbypassTest()
             {
                 std::map<uint8_t, std::map<uint8_t, std::pair<uint8_t, uint8_t>>> phyPortAndChannelToChipAndLine;
                 auto&                                                             cCic                = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                auto                                                              theChipToCICMapping = fCicInterface->getMapping(cCic);
+                auto                                                              theChipToCICMapping = cCic->getMapping();
 
                 // inject the same channels on all Readout chips
                 for(auto theChip: *theHybrid)
@@ -97,7 +97,7 @@ void OTCicBypassTest::runCICbypassTest()
                         size_t cNlines          = 4;
                         for(size_t line = 0; line < cNlines; ++line)
                         {
-                            LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " -> " << getPatternPrintout(lineOutputVector[line], numberOfBytesInSinglePacket) << RESET;
+                            LOG(INFO) << BOLDRED << "Phyport " << +phyPort << " line " << line << " -> " << getPatternPrintout(lineOutputVector.at(line), numberOfBytesInSinglePacket) << RESET;
                         }
                     }
                 }
@@ -115,11 +115,11 @@ void OTCicBypassTest::injectStubs2S(Ph2_HwDescription::ReadoutChip* theCBC)
     static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(theCBC, "Sampled", true, true);
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
-    theRegisterVector.push_back({"Bend7", fBendingAndCode[0]}); // bendind = 0 will ouput 5
-    theRegisterVector.push_back({"Bend8", fBendingAndCode[2]}); // bendind = 2 will ouput A
-    theRegisterVector.push_back({"Bend9", fBendingAndCode[4]}); // bendind = 4 will ouput F
-    theRegisterVector.push_back({"CoincWind&Offset12", 0x00});  // set stub window offset to 0
-    theRegisterVector.push_back({"CoincWind&Offset34", 0x00});  // set stub window offset to 0
+    theRegisterVector.push_back({"Bend7", fBendingAndCode.at(0)}); // bendind = 0 will ouput 5
+    theRegisterVector.push_back({"Bend8", fBendingAndCode.at(2)}); // bendind = 2 will ouput A
+    theRegisterVector.push_back({"Bend9", fBendingAndCode.at(4)}); // bendind = 4 will ouput F
+    theRegisterVector.push_back({"CoincWind&Offset12", 0x00});     // set stub window offset to 0
+    theRegisterVector.push_back({"CoincWind&Offset34", 0x00});     // set stub window offset to 0
     fReadoutChipInterface->WriteChipMultReg(theCBC, theRegisterVector);
 
     // inject stubs on CBC to CIC stub lines 0 (first stub address) lines 1 (second stub address), line 3 (first and second stub bend)

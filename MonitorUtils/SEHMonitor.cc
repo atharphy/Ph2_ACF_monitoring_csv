@@ -73,14 +73,14 @@ void SEHMonitor::runLpGBTRegisterMonitor(const std::string& registerName)
         if(board->getFirstObject()->flpGBT == nullptr)
         {
             for(const auto& opticalGroup: *board)
-                theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(0, getTimeStamp());
+                theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(0, getTimeStampString());
             continue;
         }
         for(const auto& opticalGroup: *board)
         {
             uint16_t registerValue = static_cast<D19clpGBTInterface*>(fTheSystemController->flpGBTInterface)->ReadADC(opticalGroup->flpGBT, registerName);
             LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << registerName << " = " << registerValue << RESET;
-            theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStamp());
+            theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStampString());
         }
     }
 
@@ -103,7 +103,7 @@ void SEHMonitor::runPowerSupplyMonitor(const std::string& registerName)
 
     if((registerName.find("HV") != std::string::npos) & (registerName.find("Current") != std::string::npos))
     {
-        std::string message = "GetCurrent,PowerSupplyId:" + seglist[0] + ",ChannelId:" + seglist[1] + "_" + seglist[2];
+        std::string message = "GetCurrent,PowerSupplyId:" + seglist.at(0) + ",ChannelId:" + seglist.at(1) + "_" + seglist.at(2);
         LOG(INFO) << BOLDMAGENTA << message << RESET;
         std::string current = fPowerSupplyClient->sendAndReceivePacket(message);
 
@@ -114,7 +114,7 @@ void SEHMonitor::runPowerSupplyMonitor(const std::string& registerName)
     }
     else
     {
-        std::string message = "GetVoltage,PowerSupplyId:" + seglist[0] + ",ChannelId:" + seglist[1] + "_" + seglist[2];
+        std::string message = "GetVoltage,PowerSupplyId:" + seglist.at(0) + ",ChannelId:" + seglist.at(1) + "_" + seglist.at(2);
         LOG(INFO) << BOLDMAGENTA << message << RESET;
         std::string voltage = fPowerSupplyClient->sendAndReceivePacket(message);
         cValue              = std::stof(voltage);
@@ -122,7 +122,7 @@ void SEHMonitor::runPowerSupplyMonitor(const std::string& registerName)
     }
     DetectorDataContainer thePowerSupplyContainer;
     ContainerFactory::copyAndInitDetector<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, thePowerSupplyContainer);
-    thePowerSupplyContainer.getSummary<ValueAndTime<float>>() = ValueAndTime<float>(cValue, getTimeStamp());
+    thePowerSupplyContainer.getSummary<ValueAndTime<float>>() = ValueAndTime<float>(cValue, getTimeStampString());
 
 #ifdef __USE_ROOT__
     fMonitorPlotDQMSEH->fillPowerSupplyPlots(thePowerSupplyContainer, registerName);
@@ -145,7 +145,7 @@ void SEHMonitor::runTestCardMonitor(const std::string& registerName)
 #endif
     DetectorDataContainer theTestCardContainer;
     ContainerFactory::copyAndInitDetector<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theTestCardContainer);
-    theTestCardContainer.getSummary<ValueAndTime<float>>() = ValueAndTime<float>(cValue, getTimeStamp());
+    theTestCardContainer.getSummary<ValueAndTime<float>>() = ValueAndTime<float>(cValue, getTimeStampString());
 
 #ifdef __USE_ROOT__
     fMonitorPlotDQMSEH->fillTestCardPlots(theTestCardContainer, registerName);
@@ -174,7 +174,7 @@ void SEHMonitor::runInputCurrentMonitor(const std::string& registerName)
             LOG(INFO) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - "
                       << "ADC1"
                       << " = " << registerValue << RESET;
-            // theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStamp());
+            // theLpGBTRegisterContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStampString());
         }
     }
     LOG(INFO) << BOLDMAGENTA << "We pretend to be a measurement" << RESET;

@@ -20,7 +20,6 @@
 #include "tools/OTVTRXLightOff.h"
 #include "tools/OTlpGBTID.h"
 #include "tools/PSAlignment.h"
-#include "tools/PSBiasCal.h"
 #include "tools/PSPixelAlive.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
@@ -138,8 +137,6 @@ int main(int argc, char* argv[])
     cmd.defineOption("read", "Read data from a raw file.  ", ArgvParser::OptionRequiresValue);
     cmd.defineOption("save", "Save the data to a raw file.  ", ArgvParser::NoOptionAttribute);
     cmd.defineOption("skipAlignment", "Skip the back-end alignment step ", ArgvParser::OptionRequiresValue);
-    // general
-    cmd.defineOption("runBias", "Run bias scan", ArgvParser::NoOptionAttribute);
 
     cmd.defineOption("batch", "Run the application in batch mode", ArgvParser::NoOptionAttribute);
     cmd.defineOptionAlternative("batch", "b");
@@ -744,15 +741,6 @@ int main(int argc, char* argv[])
 
     // equalize thresholds on readout chips
 
-    if(cmd.foundOption("runBias") && !cmd.foundOption("read"))
-    {
-        PSBiasCal cPSBiasCal;
-        cPSBiasCal.Inherit(&cTool);
-        cPSBiasCal.Initialise();
-        // cPSBiasCal.CalibrateADC();
-        cPSBiasCal.CalibrateBias();
-    }
-
     if(cmd.foundOption("tuneOffsets") && !cmd.foundOption("read"))
     {
         bool cAllChan = (cmd.foundOption("allChan")) ? true : false;
@@ -828,8 +816,8 @@ int main(int argc, char* argv[])
                                 for(auto cInjection: cInjections) { cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9); }
                             }
                         } // chip
-                    }     // hybrid
-                }         // optica]l group
+                    } // hybrid
+                } // optica]l group
             }
             else if(cInjectionSource.find("analogue") != std::string::npos)
             {

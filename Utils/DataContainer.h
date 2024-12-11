@@ -505,7 +505,7 @@ class ChipDataContainer
 
     virtual ~ChipDataContainer() { ; }
 
-    void remapIdtoPointer(){};
+    void remapIdtoPointer() {};
 
     template <typename S, typename V>
     void initialize()

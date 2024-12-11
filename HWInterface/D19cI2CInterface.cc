@@ -101,19 +101,19 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
                     } // chips
                 }
             } // hybrids
-        }     // modules
+        } // modules
         // and then loop over map and write
         for(auto cIterator = fI2CSlaveMap.begin(); cIterator != fI2CSlaveMap.end(); cIterator++)
         {
             // auto cChipId = cIterator->first;
             auto cDescription = cIterator->second;
             // setting the params
-            uint32_t shifted_i2c_address             = (cDescription[0]) << 25;
-            uint32_t shifted_register_address_nbytes = cDescription[1] << 10;
-            uint32_t shifted_data_wr_nbytes          = cDescription[2] << 5;
-            uint32_t shifted_data_rd_nbytes          = cDescription[3] << 0;
-            uint32_t shifted_stop_for_rd_en          = cDescription[4] << 24;
-            uint32_t shifted_nack_en                 = cDescription[5] << 23;
+            uint32_t shifted_i2c_address             = cDescription.at(0) << 25;
+            uint32_t shifted_register_address_nbytes = cDescription.at(1) << 10;
+            uint32_t shifted_data_wr_nbytes          = cDescription.at(2) << 5;
+            uint32_t shifted_data_rd_nbytes          = cDescription.at(3) << 0;
+            uint32_t shifted_stop_for_rd_en          = cDescription.at(4) << 24;
+            uint32_t shifted_nack_en                 = cDescription.at(5) << 23;
 
             // writing the item to the firmware
             if(!cWithCBC3)
@@ -278,7 +278,7 @@ bool D19cI2CInterface::MultiRead(Chip* pChip, std::vector<ChipRegItem>& pRegiste
             uint8_t cChipId;
             bool    cRead   = true;
             bool    cFailed = false;
-            DecodeReg(cRegItem, cChipId, cVecReq[cIndx], cRead, cFailed);
+            DecodeReg(cRegItem, cChipId, cVecReq.at(cIndx), cRead, cFailed);
             LOG(DEBUG) << BOLDYELLOW << "D19cI2CInterface::MultiRead Reg#" << +cIndx << " at 0x" << std::hex << +cRegItem.fAddress << " set to 0x" << +cRegItem.fValue << " page " << +cRegItem.fPage
                        << std::dec << RESET;
             cSucess = cSucess && !cFailed;
@@ -292,7 +292,7 @@ bool D19cI2CInterface::SingleRead(Chip* pChip, ChipRegItem& pRegisterItem)
     std::vector<ChipRegItem> cItems;
     cItems.push_back(pRegisterItem);
     bool cSuccess = MultiRead(pChip, cItems);
-    pRegisterItem = cItems[0];
+    pRegisterItem = cItems.at(0);
     return cSuccess;
 }
 

@@ -182,9 +182,9 @@ void OTCICtoLpGBTecv::runECV()
                                         {
                                             uint8_t flagCharacter = pattern.first;
                                             uint8_t idleCharacter = pattern.second;
-                                            if(isStubPatternMatched(lineOutputVector[lineIndex], numberOfBytesInSinglePacket, flagCharacter, idleCharacter))
+                                            if(isStubPatternMatched(lineOutputVector.at(lineIndex), numberOfBytesInSinglePacket, flagCharacter, idleCharacter))
                                             {
-                                                ++theHybridPatternMatchingEfficiency[lineIndex + 1];
+                                                ++theHybridPatternMatchingEfficiency.at(lineIndex + 1);
                                                 break;
                                             }
                                             else if(!(fIsKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)))
@@ -238,7 +238,7 @@ void OTCICtoLpGBTecv::runECV()
 
                                         if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket, header, fHeaderMask))
                                         {
-                                            ++theHybridPatternMatchingEfficiency[0];
+                                            ++theHybridPatternMatchingEfficiency.at(0);
                                             break;
                                         }
                                         else { LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET; }
@@ -282,11 +282,11 @@ void OTCICtoLpGBTecv::runECV()
                                     theNumberOfMatches = 0;
                                 }
                             } // hybrid loop
-                        }     // lpgbt phase loop
-                    }         // CIC driver strenght loop
-                }             // clock strenght loop
-            }                 // polarity loop
-        }                     // optical group loop
+                        } // lpgbt phase loop
+                    } // CIC driver strenght loop
+                } // clock strenght loop
+            } // polarity loop
+        } // optical group loop
     }
 }
 

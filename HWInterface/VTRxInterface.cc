@@ -131,7 +131,7 @@ uint32_t VTRxInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip, uint8_t v
     auto theReadBackIdRegisters = ReadChipMultReg(pChip, theIdRegisterList);
 
     uint32_t uniqueId = 0;
-    for(uint8_t registerNumber = 0; registerNumber < numberOfRegisters; ++registerNumber) { uniqueId |= (theReadBackIdRegisters[registerNumber].second << (registerNumber * 8)); }
+    for(uint8_t registerNumber = 0; registerNumber < numberOfRegisters; ++registerNumber) { uniqueId |= (theReadBackIdRegisters.at(registerNumber).second << (registerNumber * 8)); }
 
     return uniqueId;
 }

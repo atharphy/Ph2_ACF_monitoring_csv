@@ -116,8 +116,8 @@ void DQMHistogramOTPSADCCalibration::fillDACPlots(DetectorDataContainer& theVref
                                                 .second);
 
                 } // chip
-            }     // hybrid
-        }         // optical group
+            } // hybrid
+        } // optical group
     }
 }
 //========================================================================================================================
@@ -160,9 +160,9 @@ void DQMHistogramOTPSADCCalibration::fillSlopePlots(DetectorDataContainer& theAD
                     thePol1->SetLineStyle(2);
 
                 } // chip
-            }     // hybrid
-        }         // optical group
-    }             // board
+            } // hybrid
+        } // optical group
+    } // board
 }
 //========================================================================================================================
 void DQMHistogramOTPSADCCalibration::fillVDDPlots(DetectorDataContainer& theVDDContainer, bool isAVDD)
@@ -206,33 +206,33 @@ void DQMHistogramOTPSADCCalibration::fillVDDPlots(DetectorDataContainer& theVDDC
                                       ->getObject(cOpticalGroup->getId())
                                       ->getObject(cHybrid->getId())
                                       ->getObject(cChip->getId())
-                                      ->getSummary<std::pair<uint32_t, float>>()
+                                      ->getSummary<std::pair<uint8_t, float>>()
                                       .first
                                << " "
                                << theVDDContainer.getObject(cBoard->getId())
                                       ->getObject(cOpticalGroup->getId())
                                       ->getObject(cHybrid->getId())
                                       ->getObject(cChip->getId())
-                                      ->getSummary<std::pair<uint32_t, float>>()
+                                      ->getSummary<std::pair<uint8_t, float>>()
                                       .second
                                << RESET;
                     theVDDHistograms->Fill(theVDDContainer.getObject(cBoard->getId())
                                                ->getObject(cOpticalGroup->getId())
                                                ->getObject(cHybrid->getId())
                                                ->getObject(cChip->getId())
-                                               ->getSummary<std::pair<uint32_t, float>>()
+                                               ->getSummary<std::pair<uint8_t, float>>()
                                                .first,
                                            theVDDContainer.getObject(cBoard->getId())
                                                ->getObject(cOpticalGroup->getId())
                                                ->getObject(cHybrid->getId())
                                                ->getObject(cChip->getId())
-                                               ->getSummary<std::pair<uint32_t, float>>()
+                                               ->getSummary<std::pair<uint8_t, float>>()
                                                .second);
 
                 } // chip
-            }     // hybrid
-        }         // optical group
-    }             // board
+            } // hybrid
+        } // optical group
+    } // board
 }
 //========================================================================================================================
 bool DQMHistogramOTPSADCCalibration::fill(std::string& inputStream)

@@ -8,6 +8,8 @@
 */
 
 #include "MonitorDQM/MonitorDQMPlotRD53.h"
+#include "Parser/DetectorMonitorConfig.h"
+#include "TGraph.h"
 
 void MonitorDQMPlotRD53::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const DetectorMonitorConfig& fDetectorMonitorConfig)
 {

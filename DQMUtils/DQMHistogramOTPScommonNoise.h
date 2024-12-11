@@ -67,18 +67,18 @@ class DQMHistogramOTPScommonNoise : public DQMHistogramBase
     template <size_t T2>
     void fillEventsVsHitsHist(const BaseDataContainer* ChipContainer, TH1F& theHistogram)
     {
-        GenericDataArray<uint32_t, T2> cDataSummary = ChipContainer->getSummary<GenericDataArray<uint32_t, T2>>();
-        for(uint16_t iChan = 0; iChan < T2; iChan++) { theHistogram.SetBinContent(iChan + 1, cDataSummary[iChan]); }
+        const GenericDataArray<uint32_t, T2>& cDataSummary = ChipContainer->getSummary<GenericDataArray<uint32_t, T2>>();
+        for(uint16_t iChan = 0; iChan < T2; iChan++) { theHistogram.SetBinContent(iChan + 1, cDataSummary.at(iChan)); }
         theHistogram.Sumw2();
     }
 
     template <size_t T1, size_t T2>
     void fillCorrelationHist(const BaseDataContainer* ChipContainer, TH2F* theHistogram)
     {
-        GenericDataArray<uint32_t, T1, T2> cDataSummary = ChipContainer->getSummary<GenericDataArray<uint32_t, T1, T2>>();
+        const GenericDataArray<uint32_t, T1, T2>& cDataSummary = ChipContainer->getSummary<GenericDataArray<uint32_t, T1, T2>>();
         for(uint16_t iChan2 = 0; iChan2 < T2; iChan2++)
         {
-            for(uint16_t iChan1 = 0; iChan1 < T1; iChan1++) { theHistogram->SetBinContent(iChan1, iChan2, cDataSummary[iChan1][iChan2]); }
+            for(uint16_t iChan1 = 0; iChan1 < T1; iChan1++) { theHistogram->SetBinContent(iChan1, iChan2, cDataSummary.at(iChan1).at(iChan2)); }
         }
         theHistogram->Sumw2();
     }

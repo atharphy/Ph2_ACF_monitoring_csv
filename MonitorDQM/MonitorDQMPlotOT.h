@@ -13,6 +13,7 @@
 #include "Utils/DataContainer.h"
 
 class TFile;
+enum class FrontEndType;
 
 /*!
  * \class MonitorDQMPlotOT

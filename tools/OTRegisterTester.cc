@@ -42,7 +42,7 @@ void OTRegisterTester::TestRegisters()
     bool isPS                 = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
     if(isPS) numberOfReadoutChips = NCHIPS_OT * 2;
     int                      totalNumberOfChips = numberOfReadoutChips + 1;
-    std::vector<std::string> theReadoutChipRegisters{"Threshold", "TriggerLatency1", "Vplus1&2", "Channel001", "Channel254"}; // CBCs chosen registers from both page 0 and page 1. PS registers below
+    std::vector<std::string> theReadoutChipRegisters{"VCth1", "TriggerLatency1", "Vplus1&2", "Channel001", "Channel254"}; // CBCs chosen registers from both page 0 and page 1. PS registers below
     std::vector<std::string> theCICRegisters{"scPhaseSelectB0i0", "scPhaseSelectB2i5", "scDllCurrentSet2", "EXT_WA_DELAY14", "CALIB_PATTERN3"}; // checking different blocks
     for(auto theBoard: *fDetectorContainer)
     {
@@ -62,16 +62,16 @@ void OTRegisterTester::TestRegisters()
                     if(isPS)
                     {
                         if(theChip->getFrontEndType() == FrontEndType::MPA2)
-                            theReadoutChipRegisters = {"Threshold", "ECM", "LatencyRx320", "PixelControl_R7", "TrimDAC_C22_R3"};
+                            theReadoutChipRegisters = {"ThDAC0", "ECM", "LatencyRx320", "PixelControl_R7", "TrimDAC_C22_R3"};
                         else // SSA2
-                            theReadoutChipRegisters = {"Threshold", "control_3", "ClockDeskewing_coarse", "DigCalibPattern_L_S2"};
+                            theReadoutChipRegisters = {"Bias_THDAC", "control_3", "ClockDeskewing_coarse", "DigCalibPattern_L_S2"};
                     }
-                    theRegisterMatchingEfficiency[theChip->getId()] = EfficiencyCalculator(theChip, theReadoutChipRegisters);
+                    theRegisterMatchingEfficiency.at(theChip->getId()) = EfficiencyCalculator(theChip, theReadoutChipRegisters);
                 } // chip loop
 
                 LOG(DEBUG) << BOLDMAGENTA << " Done with chips. Moving to CIC" << RESET;
-                auto& cCic                                            = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                theRegisterMatchingEfficiency[totalNumberOfChips - 1] = EfficiencyCalculator(cCic, theCICRegisters);
+                auto& cCic                                               = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
+                theRegisterMatchingEfficiency.at(totalNumberOfChips - 1) = EfficiencyCalculator(cCic, theCICRegisters);
 
 #ifdef __USE_ROOT__
                 fDQMHistogramOTRegisterTester.fillPatternMatchingEfficiencyResults(fPatternMatchingEfficiencyContainer);
@@ -83,33 +83,50 @@ void OTRegisterTester::TestRegisters()
                 }
 #endif
             } // hybrid loop
-        }     // optical group loop
-    }         // board loop
+        } // optical group loop
+    } // board loop
 }
 
-float OTRegisterTester::EfficiencyCalculator(Ph2_HwDescription::Chip* theChip, std::vector<std::string> theRegisters)
+float OTRegisterTester::EfficiencyCalculator(Ph2_HwDescription::Chip* theChip, const std::vector<std::string>& theRegisters)
 {
-    float theEfficiency = 0;
-    for(auto registerIterator: theRegisters)
+    auto                                          theAntiPattern = ~fPattern & 0xFF;
+    std::vector<std::pair<std::string, uint16_t>> theRegisterVectorPattern;
+    std::vector<std::pair<std::string, uint16_t>> theRegisterVectorAntiPattern;
+    for(const auto& theRegister: theRegisters)
     {
-        for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+        theRegisterVectorPattern.push_back({theRegister, fPattern});
+        theRegisterVectorAntiPattern.push_back({theRegister, theAntiPattern});
+    }
+
+    ChipInterface* theChipInterface;
+    if(theChip->getFrontEndType() == FrontEndType::CIC2)
+        theChipInterface = fCicInterface;
+    else
+        theChipInterface = fReadoutChipInterface;
+
+    float theEfficiency = 0;
+    for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+    {
+        if(iteration % 2 == 0)
+            theChipInterface->WriteChipMultReg(theChip, theRegisterVectorPattern, false);
+        else
+            theChipInterface->WriteChipMultReg(theChip, theRegisterVectorAntiPattern, false);
+
+        auto theRegisterValueRead = theChipInterface->ReadChipMultReg(theChip, theRegisters);
+
+        for(const auto& registerRead: theRegisterValueRead)
         {
-            auto thePattern = fPattern;
-            if(iteration % 2 == 0) thePattern = ~fPattern;
-            uint16_t theRegisterValueRead = 0;
-            if(theChip->getFrontEndType() != FrontEndType::CIC2)
+            if(iteration % 2 == 0)
             {
-                fReadoutChipInterface->WriteChipReg(theChip, registerIterator, thePattern);
-                theRegisterValueRead = fReadoutChipInterface->ReadChipReg(theChip, registerIterator);
+                if(registerRead.second == fPattern) theEfficiency++;
             }
             else
             {
-                fCicInterface->WriteChipReg(theChip, registerIterator, thePattern);
-                theRegisterValueRead = fCicInterface->ReadChipReg(theChip, registerIterator);
+                if(registerRead.second == theAntiPattern) theEfficiency++;
             }
-            if(theRegisterValueRead == thePattern) theEfficiency++;
         }
     }
+
     return theEfficiency /= (fNumberOfIterations * theRegisters.size());
 }
 

@@ -94,7 +94,7 @@
 				<Register name="antenna">0</Register>
 				<Register name="cal_pulse">1</Register>
 				<Register name="cic_veto">0</Register>
-				<Register name="clear_counters">0</Register>
+				<Register name="clear_counters">1</Register>
 				<Register name="close_shutter">1</Register>
 				<Register name="open_shutter">1</Register>
 				<Register name="select_even">0</Register>
@@ -608,9 +608,10 @@
 			<Register name="state_tuning_cbc1">0</Register>
 			<Register name="stub_debug">0</Register>
 			<Register name="async_counter_decode">
-				<Register name="ready">0</Register>
+				<Register name="chip_counters_done">0</Register>
+				<Register name="store_fsm_state">0</Register>
 				<Register name="received_start">0</Register>
-				<Register name="state">0</Register>
+				<Register name="start_pattern_not_found">0</Register>
 			</Register>
 			<Register name="cic_decoder">
 				<Register name="bx0_alignment_state">8</Register>

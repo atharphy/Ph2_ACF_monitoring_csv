@@ -203,7 +203,7 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                                 auto lineOutputVector = theFWinterface->StubDebug(true, numberOfLines, false);
                                 for(uint8_t line = 0; line < numberOfLines; ++line)
                                 {
-                                    phyPortDataVector[line].insert(phyPortDataVector[line].end(), lineOutputVector[line].begin(), lineOutputVector[line].end());
+                                    phyPortDataVector.at(line).insert(phyPortDataVector.at(line).end(), lineOutputVector.at(line).begin(), lineOutputVector.at(line).end());
                                 }
                             }
 
@@ -212,21 +212,22 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                                 float matchingEfficiency = -1;
                                 if(phyPort >= 10) // L1 for 2S case
                                 {
-                                    matchingEfficiency = getMatchingEfficiency2SL1(phyPortDataVector[line]); // PatternMatcher::countMatchingBits
+                                    matchingEfficiency = getMatchingEfficiency2SL1(phyPortDataVector.at(line)); // PatternMatcher::countMatchingBits
                                 }
                                 else
                                 {
                                     uint8_t thePattern;
-                                    thePattern               = fStubPattern2S[(phyPort * 4 + line) % 5];
+                                    thePattern               = fStubPattern2S.at((phyPort * 4 + line) % 5);
                                     auto possiblePatternList = getPossiblePatterns(thePattern, static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10);
-                                    matchingEfficiency       = countMatchingBits(phyPortDataVector[line], possiblePatternList); // Utilities::countMatchingBits
+                                    matchingEfficiency       = countMatchingBits(phyPortDataVector.at(line), possiblePatternList); // Utilities::countMatchingBits
                                 }
 
                                 auto chipIdAndLine = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
                                 try // Handle disable chip
                                 {
                                     matchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first)
-                                        ->getSummary<GenericDataArray<float, 6>>()[chipIdAndLine.second] = matchingEfficiency;
+                                        ->getSummary<GenericDataArray<float, 6>>()
+                                        .at(chipIdAndLine.second) = matchingEfficiency;
                                 }
                                 catch(const std::exception& e)
                                 {
@@ -293,7 +294,7 @@ void OTCBCtoCICecv::prepareForLpGBTalignment2Sstubs()
                     theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
                     fReadoutChipInterface->WriteChipMultReg(theChip, theRegisterVector);
 
-                    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{fStubPattern2S[0], 0}, {fStubPattern2S[1], 0}, {fStubPattern2S[2], 0}};
+                    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{fStubPattern2S.at(0), 0}, {fStubPattern2S.at(1), 0}, {fStubPattern2S.at(2), 0}};
                     theCbcInterface->injectStubs(theChip, stubSeedAndBend);
                 }
             }
