@@ -427,8 +427,8 @@ void BeamTestCheck::UpdateClusterContainers(BeBoard* pBoard, const std::vector<E
                         cClusterOccupancyCS1->getSummary<GenericDataArray<float, VECSIZE>>().at(pIndx) += cNClustersS1 / cNormalizationFactor;
 
                     } // chip vector
-                }     // hybrid vector
-            }         // optical group vector
+                } // hybrid vector
+            } // optical group vector
             cEventIter += (1 + cTriggerMult);
         } while(cEventIter < pEvents.end());
     }
@@ -458,8 +458,8 @@ void BeamTestCheck::UpdateClusterContainers(BeBoard* pBoard, const std::vector<E
                               << cClusterOccupancyCS1->getSummary<GenericDataArray<float, VECSIZE>>().at(pIndx) << " on S1 " << RESET;
 
             } // chip vector
-        }     // hybrid vector
-    }         // optical group vector
+        } // hybrid vector
+    } // optical group vector
 }
 void BeamTestCheck::ScanThreshold(BeBoard* pBoard)
 {
@@ -500,8 +500,8 @@ void BeamTestCheck::ScanThreshold(BeBoard* pBoard)
 
                 LOG(INFO) << BOLDMAGENTA << "Off-latency... 50 percent occupancy level on chip#" << +cChip->getId() << "FE#" << cHybrid->getId() << " found for a threshold of " << cThreshold << RESET;
             } // for on chip - end
-        }     // for on hybrid - end
-    }         // for on opticalGroup - end
+        } // for on hybrid - end
+    } // for on opticalGroup - end
 
     // make sure in sparisified mode for this
     LOG(INFO) << BOLDGREEN << "Setting sparsification ON" << RESET;
@@ -540,8 +540,8 @@ void BeamTestCheck::ScanThreshold(BeBoard* pBoard)
                     fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold + cOffset);
                     if(fThStep % 10 == 0) LOG(INFO) << BOLDBLUE << "Threshold on Chip" << +cChip->getId() << " on Hybrid" << +cHybrid->getId() << " Vcth is " << (cThreshold + cOffset) << RESET;
                 } // for on chip - end
-            }     // for on hybrid - end
-        }         // for on opticalGroup - end
+            } // for on hybrid - end
+        } // for on opticalGroup - end
 
         // measure BeBoard occupancy
         DetectorDataContainer* cOccContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
@@ -603,8 +603,8 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
             for(auto hybrid: *opticalGroup)
             {
                 for(auto chip: *hybrid) { cTotalNChnls += chip->size(); } // chip
-            }                                                             // hybrid
-        }                                                                 // OG
+            } // hybrid
+        } // OG
     }
 
     // zero container that hold TDC information per board
@@ -634,7 +634,7 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
                     cLatencyContainerCoinc->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(cIndx) = 0;
                 }
             } // hybrid
-        }     // optical group
+        } // optical group
     }
 
     // container to hold trigger multiplicity per board
@@ -676,7 +676,7 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
                     cMaxCountThisChip->getSummary<uint32_t>() = 0;
                 }
             } // hybrid
-        }     // optical group
+        } // optical group
     }
 
     // prepare container to hold hit information per chip
@@ -695,8 +695,8 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
                         uint16_t cLatency = fReadoutChipInterface->ReadChipReg(cChip, "TriggerLatency");
                         LOG(DEBUG) << BOLDMAGENTA << "L1 Latency for Chip#" << +cChip->getId() << " set to " << cLatency << RESET;
                     } // chip
-                }     // hybrid
-            }         // optical group
+                } // hybrid
+            } // optical group
         }
         LOG(INFO) << BOLDBLUE << "Latency Step#" << +cLatStep << RESET;
         ContinuousReadout();
@@ -742,8 +742,8 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
                             else
                                 LOG(DEBUG) << BOLDBLUE << "Chip#" << +cChip->getId() << " -- previous maximum was " << cMaxCnt << " -- current hit count is " << cCrntCnt << RESET;
                         } // chip
-                    }     // hybrid
-                }         // optical group
+                    } // hybrid
+                } // optical group
                 // fill containers for DQMUtils
                 for(auto cOpticalGroup: *cBoard)
                 {
@@ -877,7 +877,7 @@ void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
                 //     fReadoutChipInterface->WriteChipReg(cChip, "TriggerLatency", cLatencies[cChip->getId()%8]-1);
                 // }
             } // hybrid
-        }     // optical group
+        } // optical group
         fBeBoardInterface->ChipReSync(cBoard);
     }
     //
@@ -1057,8 +1057,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         }
                     }
                 } // chip
-            }     // hybrid
-        }         // optical group
+            } // hybrid
+        } // optical group
 
         // start at the beginning + trigger id in burst
         auto                   cEventIter            = pEvents.begin() + pTriggerId;
@@ -1446,8 +1446,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         cCoHitCointainer->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint32_t>() += cNCoincidences;
                         cIndx++;
                     } // chip vector
-                }     // hybrid vector
-            }         // optical group vector
+                } // hybrid vector
+            } // optical group vector
 
             // fill correlation plot
             if(pFillCorrelations)
@@ -1523,9 +1523,9 @@ void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinuousReadout)
             for(auto hybrid: *opticalGroup)
             {
                 for(auto chip: *hybrid) { cTotalNChnls += chip->size(); } // chip
-            }                                                             // hybrid
-        }                                                                 // OG
-    }                                                                     // board
+            } // hybrid
+        } // OG
+    } // board
 
     // zero container that hold TDC information per board
     auto cTDCContainer = fTDCContainer.getObject(pBoard->getId());
@@ -1547,7 +1547,7 @@ void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinuousReadout)
                 cLatencyContainerS1->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(cIndx) = 0;
             }
         } // hybrid
-    }     // optical group
+    } // optical group
 
     // use ReadDataRather than ReadNEvents
     auto cRefSensor = findValueInSettings<double>("Check2SRefSensor", 0);
@@ -1599,8 +1599,8 @@ void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinuousReadout)
                                 .at(cIndx) = 0;
                         }
                     } // chip
-                }     // hybrid
-            }         // optical group
+                } // hybrid
+            } // optical group
 
             // start at the beginning + trigger id in burst
             auto cEventIter  = cEvents.begin() + cTriggerId;
@@ -1674,8 +1674,8 @@ void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinuousReadout)
                                 cOccChip->getChannel<Occupancy>(cHit.first, cHit.second).fOccupancy++;
                             }
                         } // chip vector
-                    }     // hybrid vector
-                }         // optical group vector
+                    } // hybrid vector
+                } // optical group vector
                 cEventIter += (1 + cTriggerMult);
             } while(cEventIter < cEvents.end());
             cOccBrd->normalizeAndAverageContainers(fDetectorContainer->getObject(cBrdIndx), getChannelGroupHandlerContainer()->getObject(cOccBrd->getId()), fNReadbackEvents);
@@ -1780,7 +1780,7 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinuousReadout)
                     cLatencyContainer->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(cIndx) = 0;
                 }
             } // hybrid
-        }     // optical group
+        } // optical group
     }
 
     // need a container to hold maximum stub count per chip
@@ -1808,7 +1808,7 @@ void BeamTestCheck::ScanStubLatency(uint8_t pContinuousReadout)
                     cMaxCountThisChip->getSummary<uint32_t>() = 0;
                 }
             } // hybrid
-        }     // optical group
+        } // optical group
     }
 
     // prepare container to hold stub information per OG

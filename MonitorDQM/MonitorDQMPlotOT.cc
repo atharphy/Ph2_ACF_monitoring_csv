@@ -61,7 +61,7 @@ void MonitorDQMPlotOT::fillLpGBTmonitorPlots(DetectorDataContainer& theInputCont
             auto    theValueAndTime = opticalGroup->getSummary<ValueAndTime<float>>();
             LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue);
         } // for on opticalGroup - end
-    }     // for on boards - end
+    } // for on boards - end
 }
 
 //========================================================================================================================
@@ -146,8 +146,8 @@ void MonitorDQMPlotOT::fillReadoutChipPlots(DetectorDataContainer&              
                     if(!chip->hasSummary()) continue;
                     auto theValueAndTime = chip->getSummary<ValueAndTime<float>>();
                     chipDQMPlot->SetPoint(chipDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue); // for on channel - end
-                }                                                                                                                   // for on chip - end
-            }                                                                                                                       // for on hybrid - end
-        }                                                                                                                           // for on opticalGroup - end
-    }                                                                                                                               // for on boards - end
+                } // for on chip - end
+            } // for on hybrid - end
+        } // for on opticalGroup - end
+    } // for on boards - end
 }

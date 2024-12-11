@@ -61,11 +61,11 @@ void CalibrationExample::runCalibrationExample(void)
                             // channel
                             channel += event->DataBit(hybrid->getId(), chip->getId(), channelNumber++);
                         } // for on channel - end
-                    }     // for on chip - end
-                }         // for on hybrid - end
-            }             // for on opticalGroup - end
-        }                 // for on events - end
-    }                     // for on board - end
+                    } // for on chip - end
+                } // for on hybrid - end
+            } // for on opticalGroup - end
+        } // for on events - end
+    } // for on board - end
 
 #ifdef __USE_ROOT__
       // Calibration is not running on the SoC: plotting directly the data, no shipping is done

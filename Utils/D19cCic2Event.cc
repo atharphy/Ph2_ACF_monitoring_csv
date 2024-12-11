@@ -71,7 +71,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
                 fEventRawList.push_back(cRawHybridData);
             }
         } // hybrids
-    }     // opticalGroup
+    } // opticalGroup
     fBeId      = pBoard->getId();
     fFeMapping = (fIs2S) ? fFeMapping2S : fFeMappingPSR;
 
@@ -278,7 +278,7 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         if(cStatusWord == 0x03) { cIterator += cHitInfoSize + cStubInfoSize; }
                     }
                 } // hybrid loop
-            }     // hybrid loop
+            } // hybrid loop
             cEventIterator += cEventSize;
         }
         else
@@ -1060,7 +1060,7 @@ SLinkEvent D19cCic2Event::GetSLinkEvent(BeBoard* pBoard) const
                 }
                 cCbcCounter++;
             } // end of CBC loop
-        }     // end of Hybrid loop
+        } // end of Hybrid loop
 
         // for the hit payload, I need to insert the word with the number of CBCs at the index I remembered before
         // cPayload.insert (cCbcPresenceWord, cFirstBitFePayload );

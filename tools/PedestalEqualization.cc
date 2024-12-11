@@ -317,9 +317,9 @@ void PedestalEqualization::FindVplus()
                     }
 
                 } // for on chip - end
-            }     // for on hybrid - end
-        }         // for on opticalGroup - end
-    }             // for on board - end
+            } // for on hybrid - end
+        } // for on opticalGroup - end
+    } // for on board - end
 
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.fillVplusPlots(theVcthContainer);
@@ -452,9 +452,9 @@ void PedestalEqualization::FindOffsets()
 
                     LOG(INFO) << BOLDRED << "Mean offset on Chip" << +chip->getId() << " is : " << (cMeanOffset) / (double)roc->getNumberOfChannels() << " Vcth units." << RESET;
                 } // for on chip - end
-            }     // for on hybrid - end
-        }         // for on opticalGroup - end
-    }             // for on board - end
+            } // for on hybrid - end
+        } // for on opticalGroup - end
+    } // for on board - end
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.fillOccupancyPlots(theOccupancyContainer);
     fDQMHistogramPedestalEqualization.fillOffsetPlots(theOffsetsCointainer);
