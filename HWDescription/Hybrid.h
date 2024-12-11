@@ -47,7 +47,7 @@ class Hybrid
     Hybrid(const Hybrid&) = delete;
 
     // D'tor
-    ~Hybrid() {};
+    ~Hybrid(){};
 
     /*!
      * \brief acceptor method for HwDescriptionVisitor

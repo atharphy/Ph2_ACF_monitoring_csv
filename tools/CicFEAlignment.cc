@@ -249,9 +249,9 @@ uint8_t CicFEAlignment::GenManPatternOutLine(uint8_t pOutLine)
                         }
                     }
                 } // chip
-            } // hybrid
-        } // OG
-    } // board
+            }     // hybrid
+        }         // OG
+    }             // board
 
     return cExpectedPatterns[pOutLine];
 }
@@ -298,9 +298,9 @@ DetectorDataContainer CicFEAlignment::CheckCicInput(uint8_t pOutLine, uint8_t pP
                     LOG(DEBUG) << BOLDBLUE << "For a sampling phase of " << +pPhase << " " << cErrorCount << " bit errors in the scoped  data : " << cData << " out of " << cData.length() << " bits."
                                << RESET;
                 } // chip
-            } // hybrid
-        } // OG
-    } // board
+            }     // hybrid
+        }         // OG
+    }             // board
 
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillManualPhaseScan(pPhase, pOutLine, cLineErrors, cStubData);
@@ -387,9 +387,9 @@ void CicFEAlignment::CheckOutLine(uint8_t pOutLine, uint8_t pPattern, uint8_t pP
                     cData               = cPhyPortStatus.second;
                     cErrorCount         = cPhyPortStatus.first;
                 } // chip
-            } // hybrid
-        } // OG
-    } // board
+            }     // hybrid
+        }         // OG
+    }             // board
 }
 void CicFEAlignment::SetStaticPhaseAlignment()
 {
@@ -548,7 +548,7 @@ bool CicFEAlignment::PhaseAlignment(uint16_t pWait_us, uint32_t pNTriggers)
                     LOG(INFO) << BOLDBLUE << "Phase aligner on CIC" << +cHybrid->getId() << BOLDRED << " FAILED to LOCK " << BOLDBLUE << " ... storing values and switching to static phase " << RESET;
                 cAligned = cAligned && cLocked;
             } // CICs
-        } // OG
+        }     // OG
     }
     if(cAligned) this->SetStaticPhaseAlignment();
 

@@ -95,7 +95,7 @@ void DQMHistogramBeamTestCheck::book(TFile* theOutputFile, DetectorContainer& th
                 if(cN > cNCh) cNCh = cN;
 
             } // hybrid
-        } // OG
+        }     // OG
         if(cLinks >= cNLinks) cNLinks = cLinks;
     } // board
 
@@ -870,7 +870,7 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                                 cStubMapS1->SetBinError(cBin, cChipStubOCc->getChannel<Occupancy>(row, col).fOccupancyError);
                             }
                         } // col
-                    } // row
+                    }     // row
 
                     auto& cChipHitOCc = theHitMap.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
                     if(cChipHitOCc->hasChannelContainer() == false) continue;
@@ -901,7 +901,7 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                                 cHitMapS1->SetBinError(cBin, cChipHitOCc->getChannel<Occupancy>(row, col).fOccupancyError);
                             }
                         } // col
-                    } // row
+                    }     // row
 
                     // TDC hit map
                     TH2F* cLatencyTDC = fLatencyTDCHistograms.getObject(board->getId())
@@ -928,9 +928,9 @@ void DQMHistogramBeamTestCheck::fillHitMaps(DetectorDataContainer& theHitMap, De
                     }
 
                 } // Chips
-            } // hybrids
-        } // OG
-    } // board
+            }     // hybrids
+        }         // OG
+    }             // board
 }
 void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMapS0, DetectorDataContainer& theHitMapS1, DetectorDataContainer& theStubMap)
 {
@@ -1060,8 +1060,8 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                                             cChnlIndxOthers++;
                                         }
                                     } // chips
-                                } // Hybrds
-                            } // OGs
+                                }     // Hybrds
+                            }         // OGs
                             // look for correlations with hits in sensor 0
                             for(auto cOtherChip: *hybrid)
                             {
@@ -1090,7 +1090,7 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                                     } // print
                                     cChnlIndxS1++;
                                 } /// all hit in S0
-                            } // other chips
+                            }     // other chips
                             // look for correlations with hits in sensor 1
                             for(auto cOtherChip: *hybrid)
                             {
@@ -1119,16 +1119,16 @@ void DQMHistogramBeamTestCheck::fillCorrelations(DetectorDataContainer& theHitMa
                                     } // print
                                     cChnlIndxS1++;
                                 } /// all hit in S1
-                            } // other chips
-                        } // hit in this channel
+                            }     // other chips
+                        }         // hit in this channel
                         cChnlIndx++;
                     } // channels
 
                 } // Chips
 
             } // hybrids
-        } // OG
-    } // board
+        }     // OG
+    }         // board
 }
 void DQMHistogramBeamTestCheck::fillBendPlots(DetectorDataContainer& theMap)
 {
@@ -1151,8 +1151,8 @@ void DQMHistogramBeamTestCheck::fillBendPlots(DetectorDataContainer& theMap)
                 }
 
             } // hybrids
-        } // OG
-    } // board
+        }     // OG
+    }         // board
 }
 // fill counts
 
@@ -1186,8 +1186,8 @@ void DQMHistogramBeamTestCheck::fillCountPlots(DetectorDataContainer& theEventCo
                     }
                 }
             } // hybrids
-        } // OG
-    } // board
+        }     // OG
+    }         // board
 
     // for(auto board: theEventCount)
     // {

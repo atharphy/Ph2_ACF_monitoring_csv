@@ -118,12 +118,12 @@ void LpGBTeyeOpening::run()
 
                     if(nAttempts == RD53Shared::MAXATTEMPTS)
                     {
-                        theEyeArray[time][voltage] = 0;
+                        theEyeArray.at(time).at(voltage) = 0;
                         continue;
                     }
 
                     flpGBTInterface->StartEOM(cOpticalGroup->flpGBT, false);
-                    theEyeArray[time][voltage] = flpGBTInterface->GetEOMCounter(cOpticalGroup->flpGBT);
+                    theEyeArray.at(time).at(voltage) = flpGBTInterface->GetEOMCounter(cOpticalGroup->flpGBT);
                 }
             }
         }

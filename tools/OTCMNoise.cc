@@ -274,7 +274,7 @@ void OTCMNoise::TakeData()
                 } // end events loop
 
             } // end module loop
-        } // end acquisition loop
+        }     // end acquisition loop
     }
 #ifdef __USE_ROOT__
     fDQMHistogramOTCMNoise.fillChipHitPlots(theChipHitContainer, true);

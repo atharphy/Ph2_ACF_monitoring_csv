@@ -116,8 +116,8 @@ void DQMHistogramOTPSADCCalibration::fillDACPlots(DetectorDataContainer& theVref
                                                 .second);
 
                 } // chip
-            } // hybrid
-        } // optical group
+            }     // hybrid
+        }         // optical group
     }
 }
 //========================================================================================================================
@@ -160,9 +160,9 @@ void DQMHistogramOTPSADCCalibration::fillSlopePlots(DetectorDataContainer& theAD
                     thePol1->SetLineStyle(2);
 
                 } // chip
-            } // hybrid
-        } // optical group
-    } // board
+            }     // hybrid
+        }         // optical group
+    }             // board
 }
 //========================================================================================================================
 void DQMHistogramOTPSADCCalibration::fillVDDPlots(DetectorDataContainer& theVDDContainer, bool isAVDD)
@@ -230,9 +230,9 @@ void DQMHistogramOTPSADCCalibration::fillVDDPlots(DetectorDataContainer& theVDDC
                                                .second);
 
                 } // chip
-            } // hybrid
-        } // optical group
-    } // board
+            }     // hybrid
+        }         // optical group
+    }             // board
 }
 //========================================================================================================================
 bool DQMHistogramOTPSADCCalibration::fill(std::string& inputStream)

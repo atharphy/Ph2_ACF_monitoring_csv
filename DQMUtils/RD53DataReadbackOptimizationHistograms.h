@@ -22,7 +22,7 @@ class DataReadbackOptimizationHistograms : public DQMHistogramBase
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::string& inputStream) override;
-    void reset() override {};
+    void reset() override{};
 
     void fillScanTAP0(const DetectorDataContainer& TAP0scanContainer);
     void fillTAP0(const DetectorDataContainer& TAP0Container);

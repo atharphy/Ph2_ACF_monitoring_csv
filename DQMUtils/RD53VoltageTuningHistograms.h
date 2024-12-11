@@ -26,7 +26,7 @@ class VoltageTuningHistograms : public DQMHistogramBase
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::string& inputStream) override;
-    void reset() override {};
+    void reset() override{};
 
     void fillDig(const DetectorDataContainer& DataContainer);
     void fillAna(const DetectorDataContainer& DataContainer);

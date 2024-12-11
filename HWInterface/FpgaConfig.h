@@ -26,7 +26,7 @@ class FpgaConfig
      * \param pbbi Reference to the RegManager
      */
     FpgaConfig(RegManager&& pbbi);
-    virtual ~FpgaConfig() {};
+    virtual ~FpgaConfig(){};
 
     FpgaConfig(const FpgaConfig& theFpgaConfig) = delete;
     FpgaConfig(FpgaConfig&& theFpgaConfig)      = default;

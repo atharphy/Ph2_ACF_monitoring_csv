@@ -49,8 +49,8 @@ void DQMHistogramLatencyScan::book(TFile* theOutputFile, DetectorContainer& theD
                 for(auto chip: *hybrid) { cN += chip->size(); } // chip
                 if(cN > cNCh) cNCh = cN;
             } // hybrid
-        } // OG
-    } // board
+        }     // OG
+    }         // board
 
     // need to get settings from settings map
     parseSettings(pSettingsMap);

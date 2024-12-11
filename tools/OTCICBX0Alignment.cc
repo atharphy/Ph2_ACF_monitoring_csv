@@ -107,7 +107,7 @@ void OTCICBX0Alignment::BX0Alignment()
                 // std::cout << " BXO alignment pattern for chip " << +theFEtoUse->getId() << std::endl;
                 fReadoutChipInterface->produceBX0AlignmentPattern(theFEtoUse);
             } // hybrids
-        } // optical group
+        }     // optical group
 
         // Send Resync to all hybrids connected to one board at once
         LOG(INFO) << BOLDMAGENTA << " Sending Resync !" << RESET;
@@ -136,7 +136,7 @@ void OTCICBX0Alignment::BX0Alignment()
                     continue;
                 }
             } // hybrids
-        } // optical group
+        }     // optical group
     }
 
 #ifdef __USE_ROOT__
@@ -211,7 +211,7 @@ void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
                     // std::cout << " wrote retime pix " << retimepix << std::endl;
                     fReadoutChipInterface->produceBX0AlignmentPattern(theFEtoUse);
                 } // hybrids
-            } // optical group
+            }     // optical group
 
             // Send Resync to all hybrids connected to one board at once
             LOG(INFO) << BOLDMAGENTA << " Sending Resync !" << RESET;
@@ -256,7 +256,7 @@ void OTCICBX0Alignment::ScanRetimePixAndBX0Alignment()
                     fReadoutChipInterface->WriteChipReg(theFEtoUse, "RetimePix", 4);
 
                 } // hybrids
-            } // optical group
+            }     // optical group
         }
 
 #ifdef __USE_ROOT__

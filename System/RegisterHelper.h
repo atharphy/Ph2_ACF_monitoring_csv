@@ -35,7 +35,7 @@ class RegisterHelper
 
     RegisterHelper(const RegisterHelper&) = delete;
 
-    ~RegisterHelper() {};
+    ~RegisterHelper(){};
 
     void takeSnapshot();
     void restoreSnapshot();

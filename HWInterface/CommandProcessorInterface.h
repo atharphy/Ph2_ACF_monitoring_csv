@@ -12,7 +12,7 @@ class CommandProcessorInterface
 {
   public: // constructors
     CommandProcessorInterface(RegManager* theRegManager);
-    virtual ~CommandProcessorInterface() {};
+    virtual ~CommandProcessorInterface(){};
 
   public: // Virtual functions
     virtual void                  Reset();

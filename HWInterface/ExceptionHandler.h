@@ -14,7 +14,7 @@ class ExceptionHandler
 {
   private:
     static ExceptionHandler* fInstance;
-    ExceptionHandler() {}; // Private constructor to prevent instantiation outside of the class
+    ExceptionHandler(){}; // Private constructor to prevent instantiation outside of the class
     ~ExceptionHandler();
     void                   initializeQueryFunctionNameContainer();
     void                   updateFWInformation(uint16_t boardId);

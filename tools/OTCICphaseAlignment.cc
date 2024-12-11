@@ -184,7 +184,7 @@ void OTCICphaseAlignment::phaseAlignment()
                     continue;
                 }
             } // CICs
-        } // OG
+        }     // OG
 
         // Find and set best phases
         for(auto theOpticalGroup: *theBoard)

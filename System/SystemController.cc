@@ -751,8 +751,8 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
             }
 
             for(auto cChip: *cHybrid) { fReadoutChipInterface->ConfigureChip(cChip); } // Chip config
-        } // hybrid
-    } // OG
+        }                                                                              // hybrid
+    }                                                                                  // OG
     LOG(INFO) << BOLDMAGENTA << "Configured OT module" << RESET;
 }
 
@@ -857,7 +857,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
             LOG(INFO) << BOLDYELLOW << "Not launching CIC start-up sequence..." << RESET;
 
         cSuccess = true; // At least one hybrid is working fine
-    } // All hybrids connected to this OG
+    }                    // All hybrids connected to this OG
 #ifdef __TCUSB__
     cSuccess = true; // No hybrids in the SEH/ROH test system
 #endif

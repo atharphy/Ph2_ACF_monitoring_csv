@@ -177,9 +177,9 @@ void OTTool::Prepare()
                     cChip->ClearModifiedRegisterMap();
                     LOG(DEBUG) << BOLDYELLOW << fMyName << "::Prepare Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
                 } // chips
-            } // hybrids
-        } // optical groups
-    } // board
+            }     // hybrids
+        }         // optical groups
+    }             // board
 
     // figure out what type of FEs are connected
     for(auto cBoard: *fDetectorContainer)
@@ -197,8 +197,8 @@ void OTTool::Prepare()
                 auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
                 fWithCIC   = fWithCIC || (cCic != nullptr);
             } // hybrid
-        } // optical group
-    } // board
+        }     // optical group
+    }         // board
 
     // prepare list of Chip registers to perserve
     fDetectorDataContainer = &fChipRegsToPerserve;
@@ -250,9 +250,9 @@ void OTTool::SetChipRegstoPerserve(FrontEndType pType, std::vector<std::string> 
                         cRegsToPerserve.push_back(cRegName);
                     }
                 } // Chips
-            } // Hybrds
-        } // OGs
-    } // brd
+            }     // Hybrds
+        }         // OGs
+    }             // brd
 }
 
 // read data from file
@@ -962,8 +962,8 @@ void OTTool::InjectPattern(BeBoard* pBoard, std::vector<Injection> pInjections, 
                     }
                 }
             } // chip
-        } // hybrid
-    } // optica]l group
+        }     // hybrid
+    }         // optica]l group
 }
 void OTTool::UpdateFromRegMap(BeBoard* pBoard)
 {

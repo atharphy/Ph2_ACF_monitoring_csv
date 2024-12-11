@@ -95,8 +95,8 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
                     fData.push_back(cValue);
                 }
             } // chip loop
-        } // hybrid loop
-    } // board loop
+        }     // hybrid loop
+    }         // board loop
     // PS_Clear_counters();
 }
 

@@ -24,8 +24,8 @@ using namespace std;
 class LogMessage
 {
   public:
-    LogMessage() {};
-    ~LogMessage() {};
+    LogMessage(){};
+    ~LogMessage(){};
     int    level;
     string message;
 };
@@ -57,7 +57,7 @@ class MessageLogger
   private:
     ~MessageLogger();
     MessageLogger();
-    MessageLogger(MessageLogger const&) {};
+    MessageLogger(MessageLogger const&){};
     static MessageLogger*          myInstance_;
     static std::vector<LogMessage> logMessageV;
     static int                     countInstances;

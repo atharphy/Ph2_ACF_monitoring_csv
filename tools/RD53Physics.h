@@ -74,7 +74,7 @@ class Physics : public CalibBase
   protected:
     struct RD53dummyEvtConverter
     {
-        void operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList) {};
+        void operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList){};
     };
 
     // ######################################

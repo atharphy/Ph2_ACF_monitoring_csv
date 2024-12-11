@@ -134,8 +134,8 @@ void PSAlignment::MapMPAOutputs(std::string pSetupType)
                         }
                     }
                 } // chip
-            } // hybrid
-        } // optical group
+            }     // hybrid
+        }         // optical group
     }
 }
 void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
@@ -163,8 +163,8 @@ void PSAlignment::ConfigureDefaultAlignmentParameters(std::string pSetupType)
                         // fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", 0x00); // different for PSv2 /2.1
                     }
                 } // chip
-            } // hybrid
-        } // optical group
+            }     // hybrid
+        }         // optical group
     }
 
     // make sure that we save the values at the end
@@ -232,8 +232,8 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                     fReadoutChipInterface->WriteChipReg(cChip, "DigitalSync_S" + std::to_string(cCol), 0x1);
                 }
             } // chip
-        } // hybrid
-    } // optica]l group
+        }     // hybrid
+    }         // optica]l group
 
     for(auto cOpticalReadout: *pBoard)
     {
@@ -250,8 +250,8 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                 fReadoutChipInterface->WriteChipReg(cChip, "StubMode", 0);
                 fReadoutChipInterface->WriteChipReg(cChip, "StubWindow", cStubWindow);
             } // chip
-        } // hybrid
-    } // optica]l group
+        }     // hybrid
+    }         // optica]l group
 
     // scan phase and check stubs
     // for each chip on a hybrid
@@ -288,8 +288,8 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                                     fReadoutChipInterface->WriteChipReg(cChip, "StubInputPhase", cPhase);
                                     fReadoutChipInterface->WriteChipReg(cChip, "RetimePix", cRetime);
                                 } // chip
-                            } // hybrid
-                        } // optical group
+                            }     // hybrid
+                        }         // optical group
                         std::cout << "Writing common_stubdata_delay " << +cLatency << "," << +cStubOffset << "," << +cRetime << std::endl;
 
                         size_t writeslat = cLatency - (cStubOffset + cRetime); // stub latency
@@ -335,7 +335,7 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                         }
 
                     } // retime loop
-                } // phase loop
+                }     // phase loop
             }
         }
     }
@@ -394,8 +394,8 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                 }
 
             } // chip
-        } // hybrid
-    } // optica]l group
+        }     // hybrid
+    }         // optica]l group
 
     // scan phase and check L1
     bool cCurPhaseFound = true;
@@ -433,8 +433,8 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                         fReadoutChipInterface->WriteChipReg(cChip, "LatencyRx40", cWord);
                                         fReadoutChipInterface->WriteChipReg(cChip, "EdgeSelT1Raw", cES);
                                     } // chip
-                                } // hybrid
-                            } // optical group
+                                }     // hybrid
+                            }         // optical group
 
                             // now read data
                             LOG(INFO) << BOLDBLUE << "Setting L1 input sampling phase and word for MPA#" << +cChipId << " on hybrid to " << +cPhase << " and " << +cWord << RESET;
@@ -496,9 +496,9 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                 cCurPhaseFound = true;
                             }
                         } // word loop
-                    } // ES loop
-                } // phase loop
-            } // chip id loop [up-to 8 chips per hybrid ]
+                    }     // ES loop
+                }         // phase loop
+            }             // chip id loop [up-to 8 chips per hybrid ]
         }
     }
     return cPhaseFound;
@@ -1006,8 +1006,8 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
                         fReadoutChipInterface->WriteChipReg(cChip, "SelectEdgeT1", pEdgeSelT1);
                     }
                 } // Chip - only MPAs and CBCs for this test since I'm eihter in p=p mode or 2S
-            } // hybrid
-        } // OG
+            }     // hybrid
+        }         // OG
         if(!cChipFound) continue;
 
         // send a ReSync since the latency was changed
@@ -1341,9 +1341,9 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
                     } while(cScanEdgeStubs); // stub edges
                     cL1ParIndx++;
                 } // L1A pars
-            } // chips
-        } // hybrids
-    } // links
+            }     // chips
+        }         // hybrids
+    }             // links
     // check that at least one stub alignment parameter was found for each chip
     for(auto cOpticalReadout: *pBoard)
     {

@@ -816,8 +816,8 @@ int main(int argc, char* argv[])
                                 for(auto cInjection: cInjections) { cTool.fReadoutChipInterface->WriteChipReg(cChip, "ENFLAGS_S" + std::to_string(cInjection.fRow), 0x9); }
                             }
                         } // chip
-                    } // hybrid
-                } // optica]l group
+                    }     // hybrid
+                }         // optica]l group
             }
             else if(cInjectionSource.find("analogue") != std::string::npos)
             {

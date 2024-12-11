@@ -7,7 +7,7 @@
 
 struct LpGBTalignmentResult
 {
-    LpGBTalignmentResult() {};
+    LpGBTalignmentResult(){};
 
     void setGroupAndChannelResult(const uint8_t groupNumber, const uint8_t channelNumber, const float alignmentEfficiency, const uint8_t bestPhase, const GenericDataArray<float, 16>& phaseHistogram)
     {

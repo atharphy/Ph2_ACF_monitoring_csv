@@ -57,7 +57,7 @@ void LpGBTeyeOpeningHistograms::fillIntensity(const DetectorDataContainer& Inten
             auto* Intensity2DHist = Intensity2D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
             for(auto i = 0; i < Intensity2DHist->GetNbinsX(); i++)
-                for(auto j = 0; j < Intensity2DHist->GetNbinsY(); j++) Intensity2DHist->SetBinContent(i + 1, j + 1, theEyeArray[i][j]);
+                for(auto j = 0; j < Intensity2DHist->GetNbinsY(); j++) Intensity2DHist->SetBinContent(i + 1, j + 1, theEyeArray.at(i).at(j));
         }
 }
 

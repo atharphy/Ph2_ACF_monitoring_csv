@@ -22,8 +22,8 @@ class ChannelGroupHandler;
 class ChannelGroupBase
 {
   public:
-    ChannelGroupBase() {};
-    ChannelGroupBase(uint16_t numberOfRows, uint16_t numberOfCols) : numberOfRows_(numberOfRows), numberOfCols_(numberOfCols), numberOfEnabledChannels_(numberOfRows * numberOfCols) {};
+    ChannelGroupBase(){};
+    ChannelGroupBase(uint16_t numberOfRows, uint16_t numberOfCols) : numberOfRows_(numberOfRows), numberOfCols_(numberOfCols), numberOfEnabledChannels_(numberOfRows * numberOfCols){};
     virtual ~ChannelGroupBase() { ; }
     virtual void     makeTestGroup(std::shared_ptr<ChannelGroupBase>& currentChannelGroup,
                                    uint32_t                           groupNumber,
@@ -193,10 +193,10 @@ class ChannelGroupHandler
         uint32_t             groupNumber_;
     };
 
-    ChannelGroupHandler() {};
+    ChannelGroupHandler(){};
     ChannelGroupHandler(const ChannelGroupHandler&) = delete;
     ChannelGroupHandler(ChannelGroupHandler&&)      = default;
-    virtual ~ChannelGroupHandler() {};
+    virtual ~ChannelGroupHandler(){};
 
     virtual void setChannelGroupParameters(uint32_t numberOfClustersPerGroup, uint32_t numberOfRowsPerCluster, uint32_t numberOfColsPerCluster);
 

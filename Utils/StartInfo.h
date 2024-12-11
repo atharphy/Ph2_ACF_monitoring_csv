@@ -6,8 +6,8 @@
 class StartInfo
 {
   public:
-    StartInfo() {};
-    ~StartInfo() {};
+    StartInfo(){};
+    ~StartInfo(){};
 
     void setRunNumber(int theRunNumber) { fRunNumber = theRunNumber; }
     int  getRunNumber() const { return fRunNumber; }

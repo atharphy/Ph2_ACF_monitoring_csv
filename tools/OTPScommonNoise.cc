@@ -231,8 +231,8 @@ void OTPScommonNoise::TakeData()
                         .at(cPixelModuleHits) += 1;
 
                 } // end events loop
-            } // end module loop
-        } // end acquisition loop
+            }     // end module loop
+        }         // end acquisition loop
     }
 
     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]"
