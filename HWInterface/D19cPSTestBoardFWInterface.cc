@@ -125,12 +125,12 @@ void D19cPSTestBoardFWInterface::PSInterfaceBoard_SetSlaveMap()
 
     for(int ism = 0; ism < 16; ism++)
     {
-        uint32_t    shifted_i2c_address             = i2c_slave_map[ism][0] << 25;
-        uint32_t    shifted_register_address_nbytes = i2c_slave_map[ism][1] << 6;
-        uint32_t    shifted_data_wr_nbytes          = i2c_slave_map[ism][2] << 4;
-        uint32_t    shifted_data_rd_nbytes          = i2c_slave_map[ism][3] << 2;
-        uint32_t    shifted_stop_for_rd_en          = i2c_slave_map[ism][4] << 1;
-        uint32_t    shifted_nack_en                 = i2c_slave_map[ism][5] << 0;
+        uint32_t    shifted_i2c_address             = i2c_slave_map.at(ism).at(0) << 25;
+        uint32_t    shifted_register_address_nbytes = i2c_slave_map.at(ism).at(1) << 6;
+        uint32_t    shifted_data_wr_nbytes          = i2c_slave_map.at(ism).at(2) << 4;
+        uint32_t    shifted_data_rd_nbytes          = i2c_slave_map.at(ism).at(3) << 2;
+        uint32_t    shifted_stop_for_rd_en          = i2c_slave_map.at(ism).at(4) << 1;
+        uint32_t    shifted_nack_en                 = i2c_slave_map.at(ism).at(5) << 0;
         uint32_t    final_command = shifted_i2c_address + shifted_register_address_nbytes + shifted_data_wr_nbytes + shifted_data_rd_nbytes + shifted_stop_for_rd_en + shifted_nack_en;
         std::string curreg        = "fc7_daq_cnfg.mpa_ssa_board_block.slave_" + std::to_string(ism) + "_config";
         WriteReg(curreg, final_command);

@@ -70,11 +70,11 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                             registerValue = readoutChipInterface->ReadChipReg(cChip, registerName);
 
                         theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ValueAndTime<float>>() =
-                            ValueAndTime<float>(registerValue, getTimeStamp());
+                            ValueAndTime<float>(registerValue, getTimeStampString());
                     }
                     catch(...)
                     {
-                        theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(-1., getTimeStamp());
+                        theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(-1., getTimeStampString());
                         return;
                     }
                 }
@@ -112,18 +112,18 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
                     // #######################
                     // # Monitor environment #
                     // #######################
-                    registerValue = lpGBTInterface->ReadChipMonitor(cOpticalGroup->flpGBT, registerName, fDetectorMonitorConfig.fSilentRunning);
+                    registerValue = lpGBTInterface->ReadChipMonitor(cOpticalGroup, registerName, fDetectorMonitorConfig.fSilentRunning);
                 else
                     // #####################
                     // # Monitor registers #
                     // #####################
                     registerValue = lpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, registerName);
 
-                theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStamp());
+                theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStampString());
             }
             catch(...)
             {
-                theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(-1., getTimeStamp());
+                theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(-1., getTimeStampString());
                 return;
             }
         }

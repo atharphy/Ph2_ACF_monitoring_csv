@@ -84,11 +84,11 @@ void OTPScommonNoise::TakeData()
     setSameDac("control_2", 0x0F);  // maximize cluster cut
 
     DetectorDataContainer theStripHitContainer;
-    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(*fDetectorContainer, theStripHitContainer);
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, MAXCICCHANNELS + 1>>(*fDetectorContainer, theStripHitContainer);
     DetectorDataContainer theStripHybridHitContainer;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(*fDetectorContainer, theStripHybridHitContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, MAXCICCHANNELS + 1>>(*fDetectorContainer, theStripHybridHitContainer);
     DetectorDataContainer theStripModuleHitContainer;
-    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(*fDetectorContainer, theStripModuleHitContainer);
+    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>(*fDetectorContainer, theStripModuleHitContainer);
     fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
@@ -96,23 +96,23 @@ void OTPScommonNoise::TakeData()
     setSameDac("PixelControl_ALL", 0x1D); // disable Hip cut, cluster cut to the maximum, mode select level
 
     DetectorDataContainer thePixelHitContainer;
-    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(*fDetectorContainer, thePixelHitContainer);
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, MAXCICCHANNELS + 1>>(*fDetectorContainer, thePixelHitContainer);
     DetectorDataContainer thePixelHybridHitContainer;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(*fDetectorContainer, thePixelHybridHitContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, MAXCICCHANNELS + 1>>(*fDetectorContainer, thePixelHybridHitContainer);
     DetectorDataContainer thePixelModuleHitContainer;
-    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(*fDetectorContainer, thePixelModuleHitContainer);
+    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>(*fDetectorContainer, thePixelModuleHitContainer);
 
     // Correlation between SSA and MPA pairs, the container is created only for the MPAs and saved per hybrid
     DetectorDataContainer the2DSSAMPACorrelationContainer;
-    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>(*fDetectorContainer, the2DSSAMPACorrelationContainer);
+    ContainerFactory::copyAndInitChip<GenericDataArray<uint32_t, MAXCICCHANNELS + 1, MAXCICCHANNELS + 1>>(*fDetectorContainer, the2DSSAMPACorrelationContainer);
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
 
     // Correlation between strip and pixels on 1 hybrid
     DetectorDataContainer the2DStripPixelHybridCorrelationContainer;
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>(*fDetectorContainer, the2DStripPixelHybridCorrelationContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint32_t, MAXCICCHANNELS + 1, MAXCICCHANNELS + 1>>(*fDetectorContainer, the2DStripPixelHybridCorrelationContainer);
 
     DetectorDataContainer the2DStripPixelModuleCorrelationContainer;
-    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>(*fDetectorContainer, the2DStripPixelModuleCorrelationContainer);
+    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1, MAXCICCHANNELS * 2 + 1>>(*fDetectorContainer, the2DStripPixelModuleCorrelationContainer);
 
     // Prepare SSA and MPA for measurement
     OTMeasureOccupancy measureOccupancy;
@@ -163,7 +163,8 @@ void OTPScommonNoise::TakeData()
                                     ->getObject(cOpticalGroup->getId())
                                     ->getObject(cHybrid->getId())
                                     ->getObject(cChip->getId())
-                                    ->getSummary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>()[cEventHits] += 1;
+                                    ->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS + 1>>()
+                                    .at(cEventHits) += 1;
 
                                 cStripHybridHits += cEventHits;
                             }
@@ -173,7 +174,8 @@ void OTPScommonNoise::TakeData()
                                     ->getObject(cOpticalGroup->getId())
                                     ->getObject(cHybrid->getId())
                                     ->getObject(cChip->getId())
-                                    ->getSummary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>()[cEventHits] += 1;
+                                    ->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS + 1>>()
+                                    .at(cEventHits) += 1;
 
                                 cPixelHybridHits += cEventHits;
 
@@ -183,7 +185,9 @@ void OTPScommonNoise::TakeData()
                                     ->getObject(cOpticalGroup->getId())
                                     ->getObject(cHybrid->getId())
                                     ->getObject(cChip->getId())
-                                    ->getSummary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>()[cStripEventHits][cEventHits] += 1;
+                                    ->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS + 1, MAXCICCHANNELS + 1>>()
+                                    .at(cStripEventHits)
+                                    .at(cEventHits) += 1;
                             }
 
                             LOG(DEBUG) << BOLDBLUE << "cStripHybridHits: " << cStripHybridHits << " cPixelHybridHits: " << cPixelHybridHits << RESET;
@@ -193,12 +197,14 @@ void OTPScommonNoise::TakeData()
                         theStripHybridHitContainer.getObject(theBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
-                            ->getSummary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>()[cStripHybridHits] += 1;
+                            ->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS + 1>>()
+                            .at(cStripHybridHits) += 1;
 
                         thePixelHybridHitContainer.getObject(theBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
-                            ->getSummary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>()[cPixelHybridHits] += 1;
+                            ->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS + 1>>()
+                            .at(cPixelHybridHits) += 1;
 
                         // save per hybrid
                         cStripModuleHits += cStripHybridHits;
@@ -207,21 +213,30 @@ void OTPScommonNoise::TakeData()
                         the2DStripPixelHybridCorrelationContainer.getObject(theBoard->getId())
                             ->getObject(cOpticalGroup->getId())
                             ->getObject(cHybrid->getId())
-                            ->getSummary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>()[cStripHybridHits][cPixelHybridHits] += 1;
+                            ->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS + 1, MAXCICCHANNELS + 1>>()
+                            .at(cStripHybridHits)
+                            .at(cPixelHybridHits) += 1;
                     }
 
-                    theStripModuleHitContainer.getObject(theBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS + 1>>()[cStripModuleHits] += 1;
+                    theStripModuleHitContainer.getObject(theBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>().at(cStripModuleHits) +=
+                        1;
 
-                    thePixelModuleHitContainer.getObject(theBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS + 1>>()[cPixelModuleHits] += 1;
+                    thePixelModuleHitContainer.getObject(theBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>().at(cPixelModuleHits) +=
+                        1;
 
                     the2DStripPixelModuleCorrelationContainer.getObject(theBoard->getId())
                         ->getObject(cOpticalGroup->getId())
-                        ->getSummary<GenericDataArray<uint32_t, (MAXCICCHANNELS + 1), (MAXCICCHANNELS + 1)>>()[cStripModuleHits][cPixelModuleHits] += 1;
+                        ->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1, MAXCICCHANNELS * 2 + 1>>()
+                        .at(cStripModuleHits)
+                        .at(cPixelModuleHits) += 1;
 
                 } // end events loop
-            }     // end module loop
-        }         // end acquisition loop
+            } // end module loop
+        } // end acquisition loop
     }
+
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]"
+              << the2DStripPixelModuleCorrelationContainer.getObject(0)->getObject(0)->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1, MAXCICCHANNELS * 2 + 1>>().size() << std::endl;
 
 #ifdef __USE_ROOT__
     fDQMHistogramOTPScommonNoise.fillChipHitPlots(theStripHitContainer);

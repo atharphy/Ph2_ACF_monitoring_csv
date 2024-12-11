@@ -51,7 +51,12 @@ int32_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
     }
     else if(pRegNode == "Threshold") { return this->ReadChipReg(pMPA2, "ThDAC0"); }
     else if(pRegNode == "InjectedCharge") { return this->ReadChipReg(pMPA2, "CalDAC0"); }
-    else if(pRegNode == "ADC_output") { return (this->ReadChipReg(pMPA2, "ADC_output_LSB") & 0xFF) + ((this->ReadChipReg(pMPA2, "ADC_output_MSB") & 0xF) << 8); }
+    else if(pRegNode == "ADC_output")
+    {
+        std::vector<std::string> theRegisterList{"ADC_output_MSB", "ADC_output_LSB"};
+        auto                     theRegisterValues = ReadChipMultReg(pMPA2, theRegisterList);
+        return (theRegisterValues.at(1).second & 0xFF) + ((theRegisterValues.at(0).second & 0xF) << 8);
+    }
     else if(pRegNode == "TriggerLatency") { return ((ReadChipReg(pMPA2, "MemoryControl_2_R0") & (0x1)) << 8) | ReadChipReg(pMPA2, "MemoryControl_1_R0"); }
     else if(pRegNode == "PixelControl_ALL" || pRegNode == "PixelControl") { return ReadChipReg(pMPA2, "PixelControl_R0"); }
     else if(pRegNode == "ENFLAGS_ALL") { return ReadChipReg(pMPA2, "ENFLAGS_C0_R0"); }
@@ -73,14 +78,14 @@ void MPA2Interface::producePhaseAlignmentPattern(ReadoutChip* pChip, uint8_t pWa
     uint8_t                  cAlignmentPattern = 0xAA;
     std::vector<uint8_t>     cRegValues{0x2, cAlignmentPattern};
     std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
-    for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++) { this->WriteChipReg(pChip, cRegNames[cIndex], cRegValues[cIndex]); } // loop over registers
+    for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++) { this->WriteChipReg(pChip, cRegNames.at(cIndex), cRegValues.at(cIndex)); } // loop over registers
 }
 void MPA2Interface::produceWordAlignmentPattern(ReadoutChip* pChip)
 {
     LOG(INFO) << GREEN << "Producing word alignment pattern on MPA#" << +pChip->getId() << RESET;
-    std::vector<uint8_t>     cRegValues{0x2, fWordAlignmentPatterns[0]};
+    std::vector<uint8_t>     cRegValues{0x2, fWordAlignmentPatterns.at(0)};
     std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};
-    for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++) { this->WriteChipReg(pChip, cRegNames[cIndex], cRegValues[cIndex]); } // loop over registers
+    for(size_t cIndex = 0; cIndex < cRegValues.size(); cIndex++) { this->WriteChipReg(pChip, cRegNames.at(cIndex), cRegValues.at(cIndex)); } // loop over registers
 }
 
 void MPA2Interface::produceBX0AlignmentPattern(ReadoutChip* pChip)
@@ -98,9 +103,9 @@ void MPA2Interface::produceBX0AlignmentPattern(ReadoutChip* pChip)
     this->WriteChipReg(pChip, "CodeM10", 0x0); // bendind = 0 will ouput 0
 
     LOG(INFO) << GREEN << "Producing BX0 alignment pattern on MPA#" << +pChip->getId() << RESET;
-    std::vector<uint8_t>     cRegValues{0x0};          //, fBX0AlignmentPatterns[0]};
+    std::vector<uint8_t>     cRegValues{0x0};          //, fBX0AlignmentPatterns.at(0)};
     std::vector<std::string> cRegNames{"ReadoutMode"}; //, "LFSR_data"};
-    // std::vector<uint8_t>     cRegValues{0x2, fWordAlignmentPatterns[0]};
+    // std::vector<uint8_t>     cRegValues{0x2, fWordAlignmentPatterns.at(0)};
     // std::vector<std::string> cRegNames{"ReadoutMode", "LFSR_data"};}
 }
 
@@ -150,7 +155,7 @@ std::vector<uint8_t> MPA2Interface::readLUT(ReadoutChip* pChip, uint8_t pMode) /
     bool   firstSkipped  = false;
     for(const auto& registerNameAndValue: registerReadList)
     {
-        if(listOfRegisters[registerIndex] != registerNameAndValue.first)
+        if(listOfRegisters.at(registerIndex) != registerNameAndValue.first)
         {
             std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] This should never happen, read registers should be in the same order of the query" << std::endl;
             abort();
@@ -286,7 +291,7 @@ void MPA2Interface::readAllBias(Chip* pChip)
     {
         for(int iblock = 0; iblock < 7; iblock++)
         {
-            std::string DAC    = nameDAC[ipoint] + std::to_string(iblock);
+            std::string DAC    = nameDAC.at(ipoint) + std::to_string(iblock);
             auto        cValue = ReadChipReg(pChip, DAC);
             LOG(INFO) << BOLDBLUE << DAC << ": bias:" << cValue << " on MPA" << +pChip->getId() << RESET;
         }
@@ -601,7 +606,7 @@ std::vector<std::pair<std::string, uint16_t>> MPA2Interface::ReadChipMultReg(Ph2
     fBoardFW->MultiRegisterRead(pChip, cRegItems);
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
-    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList[i], cRegItems[i].fValue));
+    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList.at(i), cRegItems.at(i).fValue));
     return theRegisterValues;
 }
 
@@ -814,7 +819,7 @@ bool MPA2Interface::setAllBiasBlockRegisters(Chip* pMPA2, std::string registerNa
     return success;
 }
 
-uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName)
+uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::string pRegName, uint16_t numberOfRead)
 {
     auto theRegister = ADC_CONTROL_TABLE.find(pRegName);
     if(theRegister == ADC_CONTROL_TABLE.end())
@@ -822,30 +827,20 @@ uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << "not found for this chip type - aborting." << RESET;
         abort();
     }
-    LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA2  register " << pRegName << " block " << +theRegister->second.first << " shift " << +theRegister->second.second << RESET;
-    this->selectBlock(static_cast<ReadoutChip*>(pChip), theRegister->second.first, theRegister->second.second);
-    uint16_t ADC = this->ADCMeasure(static_cast<ReadoutChip*>(pChip));
+    LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA " << +pChip->getId() << " register " << pRegName << " block " << +theRegister->second.first << " shift " << +theRegister->second.second << RESET;
+    uint16_t ADC = this->ADCMeasure(static_cast<ReadoutChip*>(pChip), theRegister->second.first, theRegister->second.second, 0, numberOfRead);
     LOG(DEBUG) << BOLDMAGENTA << " ADC " << ADC << RESET;
     return ADC;
 }
 
 uint32_t MPA2Interface::readADCGround(Ph2_HwDescription::ReadoutChip* pChip)
 {
-    // It seems to be more precise for the ground...
-    this->WriteChipReg(pChip, "ADC_TEST_selection", 0, true);
     uint32_t sumData = 0;
-    for(uint32_t iBlock = 0; iBlock < 7; iBlock++)
-    {
-        this->selectBlock(pChip, iBlock + 1, 7, 1);
-        sumData += this->ADCMeasure(pChip); // maybe??
-    }
-    this->WriteChipReg(pChip, "ADC_TEST_selection", 0, true);
+    for(uint32_t iBlock = 0; iBlock < 7; iBlock++) { sumData += this->ADCMeasure(pChip, iBlock + 1, 7, 1, 1); }
     return uint32_t(float(sumData) / 7.0);
-
-    // return readADC(pChip,"GND");
 }
 
-uint32_t MPA2Interface::readADCBandGap(Ph2_HwDescription::ReadoutChip* pChip) { return readADC(pChip, "VBG"); }
+uint32_t MPA2Interface::readADCBandGap(Ph2_HwDescription::ReadoutChip* pChip) { return readADC(pChip, "VBG", 1); }
 
 uint32_t MPA2Interface::readADCVref(Ph2_HwDescription::ReadoutChip* pChip)
 {
@@ -859,56 +854,35 @@ uint32_t MPA2Interface::readVrefRegister(Ph2_HwDescription::ReadoutChip* pChip)
     return theVrefADC;
 }
 
-float MPA2Interface::ADCMeasure(Chip* pMPA2, uint32_t nreads)
+float MPA2Interface::ADCMeasure(Chip* pMPA2, uint8_t block, uint8_t testPoint, uint8_t swEn, uint32_t nreads)
 {
+    std::vector<std::pair<std::string, uint16_t>> listOfRegister{
+        {"Mask", 0xFF}, {"ADC_TEST_selection", ((swEn << 7) + (testPoint << 4) + block)}, {"Mask", 0xE0}, {"ADCcontrol", 0xE0}, {"ADCcontrol", 0xC0}, {"Mask", 0xFF}};
+
     uint32_t ADCReadsAve = 0;
     for(uint32_t i = 0; i < nreads; i++)
     {
-        // this->WriteChipRegBits(pMPA2, "ADCcontrol", pValue, "Mask", cRegMask, false);
-        this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x7 << 5), "Mask", 0xE0);
-        this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x6 << 5), "Mask", 0xE0);
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
+        WriteChipMultReg(pMPA2, listOfRegister, false);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
         uint16_t ADCRead = this->ReadChipReg(pMPA2, "ADC_output");
         ADCReadsAve += ADCRead;
-        // std::cout<<"ADCRead "<<+ADCRead<<std::endl;
     }
-    // disabling the ADC output after the mesurement
-    this->WriteChipRegBits(pMPA2, "ADCcontrol", (0x0 << 5), "Mask", 0xE0);
 
-    // std::cout<<"ADCReadAVE "<<float(ADCReadsAve)/float(nreads)<<std::endl;
     return float(ADCReadsAve) / float(nreads);
 }
 
 float MPA2Interface::calculateADCLSB(ReadoutChip* pMPA2, float theVrefValue)
 {
-    float offset = this->measureGround(pMPA2);
+    float offset = this->readADCGround(pMPA2);
     // LOG(INFO) << BOLDMAGENTA << "ADCLSB "<<theVrefValue/(4095.0 - offset) << RESET;
     return theVrefValue / (4095.0 - offset);
 }
 
 bool MPA2Interface::selectBlock(Chip* pMPA2, uint8_t block, uint8_t testPoint, uint8_t swEn)
 {
-    auto theCurrentMask = this->ReadChipReg(pMPA2, "Mask");
-
-    std::vector<std::pair<std::string, uint16_t>> registerList;
-    registerList.push_back({"Mask", 0xFF});
-    registerList.push_back({"ADC_TEST_selection", ((swEn << 7) + (testPoint << 4) + block)});
-    registerList.push_back({"Mask", theCurrentMask});
-
-    return this->WriteChipMultReg(pMPA2, registerList, true);
-}
-
-uint32_t MPA2Interface::measureGround(ReadoutChip* pMPA2)
-{
-    this->WriteChipReg(pMPA2, "ADC_TEST_selection", 0, true);
-    uint32_t sumData = 0;
-    for(uint32_t iBlock = 0; iBlock < 7; iBlock++)
-    {
-        this->selectBlock(pMPA2, iBlock + 1, 7, 1);
-        sumData += this->ADCMeasure(pMPA2); // maybe??
-    }
-    this->WriteChipReg(pMPA2, "ADC_TEST_selection", 0, true);
-    return float(sumData) / 7.0;
+    std::vector<std::pair<std::string, uint16_t>> registerList{{"Mask", 0xFF}, {"ADC_TEST_selection", ((swEn << 7) + (testPoint << 4) + block)}};
+    return this->WriteChipMultReg(pMPA2, registerList, false);
 }
 
 uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2, uint8_t version)

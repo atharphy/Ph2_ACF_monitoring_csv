@@ -135,26 +135,28 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                             auto lineOutputVector = theFWinterface->StubDebug(true, numberOfLines, false);
                             for(uint8_t line = 0; line < numberOfLines; ++line)
                             {
-                                phyPortDataVector[line].insert(phyPortDataVector[line].end(), lineOutputVector[line].begin(), lineOutputVector[line].end());
+                                phyPortDataVector.at(line).insert(phyPortDataVector.at(line).end(), lineOutputVector.at(line).begin(), lineOutputVector.at(line).end());
                             }
                         }
 
                         for(uint8_t line = 0; line < numberOfLines; ++line)
                         {
-                            auto& matchingEfficiency =
-                                matchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 15>>()[line][lpgbtPhase];
+                            auto& matchingEfficiency = matchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
+                                                           ->getSummary<GenericDataArray<float, 4, 15>>()
+                                                           .at(line)
+                                                           .at(lpgbtPhase);
                             if(!isPS && phyPort >= 10) // L1 for 2S case
                             {
-                                matchingEfficiency = getMatchingEfficiency2SL1(phyPortDataVector[line]);
+                                matchingEfficiency = getMatchingEfficiency2SL1(phyPortDataVector.at(line));
                             }
                             else
                             {
                                 uint8_t thePattern;
                                 if(isPS)
                                     thePattern = fShiftRegisterPatternMPA;
-                                else { thePattern = fStubPattern2S[(phyPort * 4 + line) % 5]; }
+                                else { thePattern = fStubPattern2S.at((phyPort * 4 + line) % 5); }
                                 auto possiblePatternList = getPossiblePatterns(thePattern, static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theOpticalGroup->flpGBT) == 10);
-                                matchingEfficiency       = countMatchingBits(phyPortDataVector[line], possiblePatternList);
+                                matchingEfficiency       = countMatchingBits(phyPortDataVector.at(line), possiblePatternList);
                             }
                         }
                     }
@@ -175,8 +177,8 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                     auto theCic                = theOuterTrackerHybrid->fCic;
                     for(uint8_t line = 0; line < numberOfLines; ++line)
                     {
-                        auto theBestPhase                                           = getBestPhase(phyPortEfficiencyScanList[line], theOuterTrackerHybrid, line);
-                        theHybrid->getSummary<GenericDataArray<uint8_t, 4>>()[line] = theBestPhase;
+                        auto theBestPhase                                              = getBestPhase(phyPortEfficiencyScanList.at(line), theOuterTrackerHybrid, line);
+                        theHybrid->getSummary<GenericDataArray<uint8_t, 4>>().at(line) = theBestPhase;
                         theCic->setLpGBTphaseForCICbypass(phyPort, line, theBestPhase);
                     }
                 }
@@ -251,7 +253,7 @@ void OTalignLpGBTinputsForBypass::prepareForLpGBTalignment2Sstubs()
                     theRegisterVector.push_back({"CoincWind&Offset34", 0x00}); // set stub window offset to 0
                     fReadoutChipInterface->WriteChipMultReg(theChip, theRegisterVector);
 
-                    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{fStubPattern2S[0], 0}, {fStubPattern2S[1], 0}, {fStubPattern2S[2], 0}};
+                    std::vector<std::pair<uint8_t, int>> stubSeedAndBend{{fStubPattern2S.at(0), 0}, {fStubPattern2S.at(1), 0}, {fStubPattern2S.at(2), 0}};
                     theCbcInterface->injectStubs(theChip, stubSeedAndBend);
                 }
             }
@@ -347,26 +349,26 @@ uint8_t OTalignLpGBTinputsForBypass::getBestPhase(const GenericDataArray<float, 
 
     for(uint8_t lpgbtPhase = 0; lpgbtPhase < 15; ++lpgbtPhase)
     {
-        if(thePhaseEfficiencyList[lpgbtPhase] > maximumEfficiency)
+        if(thePhaseEfficiencyList.at(lpgbtPhase) > maximumEfficiency)
         {
-            maximumEfficiency      = thePhaseEfficiencyList[lpgbtPhase];
+            maximumEfficiency      = thePhaseEfficiencyList.at(lpgbtPhase);
             maximumEfficiencyPhase = lpgbtPhase;
         }
-        if(thePhaseEfficiencyList[lpgbtPhase] < minimumEfficiency)
+        if(thePhaseEfficiencyList.at(lpgbtPhase) < minimumEfficiency)
         {
-            minimumEfficiency      = thePhaseEfficiencyList[lpgbtPhase];
+            minimumEfficiency      = thePhaseEfficiencyList.at(lpgbtPhase);
             minimumEfficiencyPhase = lpgbtPhase;
         }
         if(!firstMinimumFound)
         {
-            if(thePhaseEfficiencyList[lpgbtPhase] < 1) { firstMinimumFound = true; }
+            if(thePhaseEfficiencyList.at(lpgbtPhase) < 1) { firstMinimumFound = true; }
             else
                 continue;
         }
         else
         {
-            if(locationOfFirstOne == 15 && thePhaseEfficiencyList[lpgbtPhase] == 1) locationOfFirstOne = lpgbtPhase;
-            if(locationOfFirstOne != 15 && locationOfLastOne == 15 && thePhaseEfficiencyList[lpgbtPhase] < 1)
+            if(locationOfFirstOne == 15 && thePhaseEfficiencyList.at(lpgbtPhase) == 1) locationOfFirstOne = lpgbtPhase;
+            if(locationOfFirstOne != 15 && locationOfLastOne == 15 && thePhaseEfficiencyList.at(lpgbtPhase) < 1)
             {
                 locationOfLastOne = lpgbtPhase - 1;
                 break;
@@ -404,7 +406,7 @@ uint8_t OTalignLpGBTinputsForBypass::getBestPhase(const GenericDataArray<float, 
     }
     else // odd difference, even number of plateau phases
     {
-        return locationOfFirstOne + (plateauWidth) / 2 + (thePhaseEfficiencyList[locationOfFirstOne - 1] > thePhaseEfficiencyList[locationOfLastOne + 1] ? 0 : 1);
+        return locationOfFirstOne + (plateauWidth) / 2 + (thePhaseEfficiencyList.at(locationOfFirstOne - 1) > thePhaseEfficiencyList.at(locationOfLastOne + 1) ? 0 : 1);
     }
 }
 

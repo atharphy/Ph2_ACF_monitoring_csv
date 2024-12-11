@@ -10,6 +10,8 @@
     <!-- Frontend chip configuration -->
      <OpticalGroup Id="0" enable="1" FMCId="L12">
       <!--
+      <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
+      <NTCProperties type="VTRx"   ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
       <lpGBT_Files path="${PWD}" />
       <lpGBT_ConfigFile fileName="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv" />
       <lpGBT Id="0" version="0" configFile="CMSIT_LpGBTv0.txt" ChipAddress="0x70" RxDataRate="1280" RxHSLPolarity="1" TxDataRate="160" TxHSLPolarity="0">
@@ -79,6 +81,7 @@
               MONITOR_CONFIG_BG      =    "12"
 
               RESISTORI2V            = "10000"
+              NTCBETA                =  "3435"
               ADC_OFFSET_VOLT        =    "63"
               ADC_MAXIMUM_VOLT       =   "839"
               TEMPSENS_IDEAL_FACTOR  =  "1225"
@@ -309,6 +312,8 @@
     <Setting name="VTRxModulationStop">   40 </Setting>
     <Setting name="VTRxModulationStep">    4 </Setting>
 
+    <Setting name="LpGBTattenuation">      0 </Setting>
+
     <Setting name="DoOnlyNGroups">         0 </Setting>
     <Setting name="DisplayHisto">          0 </Setting>
     <Setting name="UpdateChipCfg">         1 </Setting>
@@ -348,6 +353,8 @@
       <MonitoringElement device="RD53"  register="TEMPSENS_1"      enable="1"/>
       <MonitoringElement device="RD53"  register="TEMPSENS_4"      enable="1"/>
 
+      <MonitoringElement device="LpGBT" register="ADC4"            enable="0"/>
+      <MonitoringElement device="LpGBT" register="ADC7"            enable="0"/>
       <MonitoringElement device="LpGBT" register="TEMP"            enable="0"/>
       <MonitoringElement device="LpGBT" register="VDD"             enable="0"/>
       <MonitoringElement device="LpGBT" register="PUSMStatus"      enable="0"/>

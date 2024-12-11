@@ -62,10 +62,10 @@ void DQMHistogramCalibrationExample::fillCalibrationExamplePlots(DetectorDataCon
                     {
                         chipHitHistogram->SetBinContent(channelBin++, channel);
                     } // for on channel - end
-                }     // for on chip - end
-            }         // for on hybrid - end
-        }             // for on opticalGroup - end
-    }                 // for on boards - end
+                } // for on chip - end
+            } // for on hybrid - end
+        } // for on opticalGroup - end
+    } // for on boards - end
 }
 
 //========================================================================================================================
@@ -102,9 +102,9 @@ void DQMHistogramCalibrationExample::process()
                     chipHitHistogram->SetLineColor(kRed);
                     chipHitHistogram->DrawCopy();
                 } // for on chip - end
-            }     // for on hybrid - end
-        }         // for on opticalGroup - end
-    }             // for on boards - end
+            } // for on hybrid - end
+        } // for on opticalGroup - end
+    } // for on boards - end
 }
 
 //========================================================================================================================

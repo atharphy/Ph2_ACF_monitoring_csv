@@ -1,6 +1,6 @@
 /*!
   \file                  RD53VTRxLightYieldScan.h
-  \brief                 Implementaion of VTRx light yield scan
+  \brief                 Header of VTRx light yield scan
   \author                Mauro DINARDO
   \version               1.0
   \date                  29/11/24
@@ -19,9 +19,9 @@
 typedef bool VTRxLightYieldScanHistograms;
 #endif
 
-// ##################
-// # BER test suite #
-// ##################
+// ###################
+// # VTRx test suite #
+// ###################
 class VTRxLightYieldScan : public CalibBase
 {
   public:

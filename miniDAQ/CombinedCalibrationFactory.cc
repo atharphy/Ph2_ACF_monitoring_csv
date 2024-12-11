@@ -1,5 +1,4 @@
 #include "miniDAQ/CombinedCalibrationFactory.h"
-
 #include "MiddlewareController.h"
 #include "tools/BeamTestCheck.h"
 #include "tools/CBCPulseShape.h"
@@ -39,6 +38,7 @@
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/OTverifyCICdataWord.h"
 #include "tools/OTverifyMPASSAdataWord.h"
+#include "tools/PSCounterTest.h"
 #include "tools/PSPhysics.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedeNoisePSLowInjection.h"
@@ -141,20 +141,9 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              PedeNoise,
              KIRA>("Outer Tracker", "calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
 
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, PedeNoise>(
-        "Outer Tracker", "pedenoise");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PedeNoise>("Outer Tracker", "pedenoise");
 
-    Register<TuneLpGBTVref,
-             OTalignLpGBTinputs,
-             OTalignBoardDataWord,
-             OTverifyBoardDataWord,
-             OTalignStubPackage,
-             OTCICphaseAlignment,
-             OTCICwordAlignment,
-             OTverifyCICdataWord,
-             OTverifyMPASSAdataWord,
-             PedestalEqualization,
-             PedeNoise>("Outer Tracker", "calibrationandpedenoise");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PedestalEqualization, PedeNoise>("Outer Tracker", "calibrationandpedenoise");
 
     Register<TuneLpGBTVref,
              OTPSADCCalibration,
@@ -178,7 +167,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              CalibrationExample>("Outer Tracker", "calibrationexample");
-
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PSCounterTest>("Outer Tracker", "pscountertest");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, LatencyScan>(
         "Outer Tracker", "otlatency");
 

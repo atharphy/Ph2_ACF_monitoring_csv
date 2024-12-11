@@ -47,7 +47,7 @@ class SSA2Interface : public ReadoutChipInterface
 
     int32_t  ReadChipReg(Ph2_HwDescription::Chip* pSSA2, const std::string& pRegNode) override;
     uint32_t ReadADC(Ph2_HwDescription::ReadoutChip* pSSA2, uint8_t pInput);
-    uint32_t readADC(Ph2_HwDescription::ReadoutChip* pSSA2, std::string pRegName);
+    uint32_t readADC(Ph2_HwDescription::ReadoutChip* pSSA2, std::string pRegName, uint16_t numberOfRead = 1);
     uint32_t readADCGround(Ph2_HwDescription::ReadoutChip* pSSA2) override;
     uint32_t readADCBandGap(Ph2_HwDescription::ReadoutChip* pSSA2);
     uint32_t readADCVref(Ph2_HwDescription::ReadoutChip* pSSA2);

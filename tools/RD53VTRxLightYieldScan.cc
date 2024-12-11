@@ -91,25 +91,33 @@ void VTRxLightYieldScan::localConfigure(const std::string& histoFileName, int cu
 void VTRxLightYieldScan::run()
 {
     ContainerFactory::copyAndInitOpticalGroup<std::vector<float>>(*fDetectorContainer, theVTRxLightYieldScanContainer);
-    CalibBase::fillVectorContainer<float>(theVTRxLightYieldScanContainer, dac1List.size() * dac2List.size(), 0);
 
     // ####################
     // # Pause monitoring #
     // ####################
     if(this->fDetectorMonitor != nullptr) this->fDetectorMonitor->pauseMonitoring();
 
-    for(auto i = 0u; i < dac1List.size(); i++)
-        for(auto j = 0u; j < dac2List.size(); j++)
-            for(auto cBoard: *fDetectorContainer)
-                for(auto cOpticalGroup: *cBoard)
+    for(auto cBoard: *fDetectorContainer)
+        for(auto cOpticalGroup: *cBoard)
+        {
+            theVTRxLightYieldScanContainer.getOpticalGroup(cBoard->getId(), cOpticalGroup->getId())->getSummary<std::vector<float>>().clear();
+
+            for(auto i = 0u; i < dac1List.size(); i++)
+            {
+                if(cOpticalGroup->flpGBT == nullptr) throw std::runtime_error("LpGBT not enabled in configuration file for optical group ID " + std::to_string(cOpticalGroup->getId()));
+                this->flpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "_I2CVTRxRegCH1BIAS", dac1List[i]);
+
+                for(auto j = 0u; j < dac2List.size(); j++)
                 {
-                    this->flpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "_I2CVTRxRegCH1BIAS", dac1List[i]);
                     this->flpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "_I2CVTRxRegCH1MOD", dac2List[j] | 0x80);
                     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
 
-                    theVTRxLightYieldScanContainer.getOpticalGroup(cBoard->getId(), cOpticalGroup->getId())->getSummary<std::vector<float>>().at(i * dac2List.size() + j) =
-                        static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter("RX", cOpticalGroup->getId());
+                    theVTRxLightYieldScanContainer.getOpticalGroup(cBoard->getId(), cOpticalGroup->getId())
+                        ->getSummary<std::vector<float>>()
+                        .push_back(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter("RX", cOpticalGroup->getId()));
                 }
+            }
+        }
 
     // #####################
     // # Resume monitoring #

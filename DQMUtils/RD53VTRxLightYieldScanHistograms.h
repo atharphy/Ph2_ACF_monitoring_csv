@@ -12,7 +12,6 @@
 
 #include "DQMHistogramBase.h"
 #include "Utils/ContainerFactory.h"
-#include "Utils/RD53Shared.h"
 
 #include <TH2F.h>
 
@@ -22,7 +21,7 @@ class VTRxLightYieldScanHistograms : public DQMHistogramBase
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     void process() override;
     bool fill(std::string& inputStream) override;
-    void reset() override{};
+    void reset() override {};
 
     void fillIntensity(const DetectorDataContainer& IntensityContainer);
 

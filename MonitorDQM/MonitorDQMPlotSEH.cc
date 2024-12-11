@@ -7,6 +7,7 @@
 */
 
 #include "MonitorDQM/MonitorDQMPlotSEH.h"
+#include "Parser/DetectorMonitorConfig.h"
 #include "RootUtils/GraphContainer.h"
 #include "RootUtils/RootContainerFactory.h"
 #include "TAxis.h"
@@ -123,7 +124,7 @@ void MonitorDQMPlotSEH::bookTestCardPlots(TFile* theOutputFile, const DetectorCo
 //         {
 //             if(!opticalGroup->hasSummary()) continue;
 //             size_t  opticalGroupId = opticalGroup->getId();
-//             TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap[registerName].at(boardId)->getObject(opticalGroupId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
+//             TGraph* LpGBTDQMPlot      = fLpGBTRegisterMonitorPlotMap.at(registerName).at(boardId)->getObject(opticalGroupId)->getSummary<GraphContainer<TGraph>>().fTheGraph;
 //             auto theValueAndTime = theThresholdContainer.getSummary<ValueAndTime<float>>();
 //             LpGBTDQMPlot->SetPoint(LpGBTDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue * CONVERSION_FACTOR);
 //         } // for on opticalGroup - end
@@ -140,7 +141,7 @@ void MonitorDQMPlotSEH::fillPowerSupplyPlots(DetectorDataContainer& theThreshold
         throw std::runtime_error(errorMessage);
     }
 
-    TGraph* PowerSupplyDQMPlot = fPowerSupplyMonitorPlotMap[registerName].getSummary<GraphContainer<TGraph>>().fTheGraph;
+    TGraph* PowerSupplyDQMPlot = fPowerSupplyMonitorPlotMap.at(registerName).getSummary<GraphContainer<TGraph>>().fTheGraph;
     auto    theValueAndTime    = theThresholdContainer.getSummary<ValueAndTime<float>>();
     PowerSupplyDQMPlot->SetPoint(PowerSupplyDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue);
 }
@@ -156,7 +157,7 @@ void MonitorDQMPlotSEH::fillTestCardPlots(DetectorDataContainer& theThresholdCon
         throw std::runtime_error(errorMessage);
     }
 
-    TGraph* TestCardDQMPlot = fTestCardMonitorPlotMap[registerName].getSummary<GraphContainer<TGraph>>().fTheGraph;
+    TGraph* TestCardDQMPlot = fTestCardMonitorPlotMap.at(registerName).getSummary<GraphContainer<TGraph>>().fTheGraph;
     auto    theValueAndTime = theThresholdContainer.getSummary<ValueAndTime<float>>();
     TestCardDQMPlot->SetPoint(TestCardDQMPlot->GetN(), getTimeStampForRoot(theValueAndTime.fTime), theValueAndTime.fValue);
 }

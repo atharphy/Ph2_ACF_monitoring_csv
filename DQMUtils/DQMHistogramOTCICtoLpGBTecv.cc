@@ -39,8 +39,8 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
                 // Declare histogram axes titles and number of bins
                 size_t              numberOfXaxisBins = listOfLpGBTPhase.size();
                 size_t              numberOfYaxisBins = numberOfLines;
-                HistContainer<TH2F> ECVEfficiencyHistogram(Form("Efficiency_CIC_Clock_Polarity_%.0f-CIC_Signal_Strength_%.0f-Clock_Strenght_%.0f", polarity, CICStrength, hybridClockStrength),
-                                                           Form("Polarity %.0f CIC Strength %.0f Clock Strenght %.0f", polarity, CICStrength, hybridClockStrength),
+                HistContainer<TH2F> ECVEfficiencyHistogram(Form("Efficiency_CIC_Clock_Polarity_%.0f-CIC_Signal_Strength_%.0f-Clock_Strength_%.0f", polarity, CICStrength, hybridClockStrength),
+                                                           Form("Polarity %.0f CIC Strength %.0f Clock Strength %.0f", polarity, CICStrength, hybridClockStrength),
                                                            numberOfXaxisBins,
                                                            0,
                                                            numberOfXaxisBins,

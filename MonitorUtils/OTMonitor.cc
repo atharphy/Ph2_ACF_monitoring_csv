@@ -46,7 +46,7 @@ void OTMonitor::runMonitorLpGBT(const std::string& monitorValueName)
                 continue;
             }
 
-            ValueAndTime<float> theMonitorValueAndTime(monitorValue, getTimeStamp());
+            ValueAndTime<float> theMonitorValueAndTime(monitorValue, getTimeStampString());
             LOG(DEBUG) << BOLDMAGENTA << "LpGBT " << opticalGroup->getId() << " - " << monitorValueName << " = " << monitorValue << RESET;
             theLpGBTmonitorValueContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<ValueAndTime<float>>() = theMonitorValueAndTime;
         }
@@ -91,7 +91,7 @@ float OTMonitor::readLpGBTmonitorValue(Ph2_HwDescription::OpticalGroup* theOptic
 
     auto readTemperature = [theLpGBRInterface, theOpticalGroup, theLpGBT](const std::string& theNTCtype, float pExpectedROhm)
     {
-        std::string sensorTemperatureADC = theOpticalGroup->getNTCMap()[theNTCtype];
+        std::string sensorTemperatureADC = theOpticalGroup->getNTCMap().at(theNTCtype);
         theLpGBRInterface->CdacSetCurrent(theLpGBT, sensorTemperatureADC, theLpGBRInterface->_CdacCodeToCurrent(theLpGBT, sensorTemperatureADC, 0xaa));
         float resistance = theLpGBRInterface->MeasureResistance(theLpGBT, sensorTemperatureADC, pExpectedROhm, false);
         return NTChandler::getInstance().getTemperature(theNTCtype, resistance);

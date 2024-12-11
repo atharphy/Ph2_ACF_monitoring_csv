@@ -97,7 +97,7 @@ void DQMHistogramOTalignLpGBTinputs::fillPhaseAlignmentResults(DetectorDataConta
                     hybridAlignmentSuccessHistogram->SetBinContent(currentBit, alignmentSuccessRate);
                     hybridBestPhaseHistogramHistogram->SetBinContent(currentBit, bestPhaseValue);
                     for(size_t phaseValue = 0; phaseValue < foundPhaseHistogram.size(); ++phaseValue)
-                        hybridFoundPhasesDistributionHistogram->SetBinContent(currentBit, phaseValue + 1, foundPhaseHistogram[phaseValue]);
+                        hybridFoundPhasesDistributionHistogram->SetBinContent(currentBit, phaseValue + 1, foundPhaseHistogram.at(phaseValue));
                 }
             }
         }

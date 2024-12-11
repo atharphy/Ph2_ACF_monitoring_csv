@@ -66,7 +66,7 @@ void DQMHistogramOTalignLpGBTinputsForBypass::fillMatchingEfficiency(DetectorDat
                 auto theEfficiencyArray = theHybrid->getSummary<GenericDataArray<float, 4, 15>>();
                 for(uint8_t lpgbtPhase = 0; lpgbtPhase < 15; ++lpgbtPhase)
                 {
-                    for(size_t line = 0; line < 4; ++line) { thePhaseScanHistogram->SetBinContent(lpgbtPhase + 1, line + 1, theEfficiencyArray[line][lpgbtPhase]); }
+                    for(size_t line = 0; line < 4; ++line) { thePhaseScanHistogram->SetBinContent(lpgbtPhase + 1, line + 1, theEfficiencyArray.at(line).at(lpgbtPhase)); }
                 }
             }
         }
@@ -83,9 +83,9 @@ void DQMHistogramOTalignLpGBTinputsForBypass::fillBestPhase(DetectorDataContaine
             for(auto theHybrid: *theOpticalGroup)
             {
                 if(!theHybrid->hasSummary()) continue;
-                auto theBestPhaseHistogram = fBestPhase[phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                auto theBestPhaseHistogram = fBestPhase[phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
                 auto theBestPhaseArray     = theHybrid->getSummary<GenericDataArray<uint8_t, 4>>();
-                for(size_t line = 0; line < 4; ++line) { theBestPhaseHistogram->SetBinContent(line + 1, theBestPhaseArray[line]); }
+                for(size_t line = 0; line < 4; ++line) { theBestPhaseHistogram->SetBinContent(line + 1, theBestPhaseArray.at(line)); }
             }
         }
     }

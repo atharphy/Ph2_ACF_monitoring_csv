@@ -137,7 +137,7 @@ bool PSInterface::disableTestPadsOutput(ReadoutChip* pPS) { return getInterface(
 
 uint32_t PSInterface::readADCGround(ReadoutChip* pPS) { return getInterface(pPS)->readADCGround(pPS); }
 
-uint32_t PSInterface::readADC(ReadoutChip* pPS, std::string theADCName) { return getInterface(pPS)->readADC(pPS, theADCName); }
+uint32_t PSInterface::readADC(ReadoutChip* pPS, std::string theADCName, uint16_t numberOfRead) { return getInterface(pPS)->readADC(pPS, theADCName, numberOfRead); }
 
 uint32_t PSInterface::readADCVref(ReadoutChip* pPS) { return getInterface(pPS)->readADCVref(pPS); }
 
@@ -209,7 +209,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
     else
         this->WriteChipReg(theChip, theDACtoTuneName, theDACMinValue);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
-    uint32_t theOffsetValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
+    uint32_t theOffsetValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
     LOG(INFO) << MAGENTA << "The register for " << theDACtoTuneName << " at " << +theDACMinValue << "  gives theOffsetValue " << theOffsetValue << " [ADC]" << RESET;
 
     // now set the DAC value to its max value
@@ -219,7 +219,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
     else
         this->WriteChipReg(theChip, theDACtoTuneName, theDACMaxValue);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
-    uint32_t theMaxValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
+    uint32_t theMaxValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
     LOG(INFO) << MAGENTA << "The register for " << theDACtoTuneName << " at " << +theDACMaxValue << " gives theMaxValue " << theMaxValue << " [ADC]" << RESET;
 
     float theLSB = abs(float(theMaxValue) - float(theOffsetValue)) / float(theDACMaxValue);
@@ -236,7 +236,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
     else
         this->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
-    uint32_t theCurrentValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
+    uint32_t theCurrentValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
     LOG(INFO) << MAGENTA << "The register to tune at nominal value " << +theDACValue << " gives theCurrentValue " << theCurrentValue << " [ADC]" << RESET;
 
     int theStepSign = 0;
@@ -265,7 +265,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
         this->WriteChipReg(theChip, theDACtoTuneName, theDACNewValue);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-    uint32_t theNewValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
+    uint32_t theNewValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
     LOG(INFO) << MAGENTA << "After changing value for DAC " << theDACtoTuneName << " to " << +theDACValue << " the ADC value is " << theNewValue << " [ADC]" << RESET;
 
     // Now checking if we can go even closer to the expected value
@@ -281,7 +281,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
         else
             this->WriteChipReg(theChip, theDACtoTuneName, theDACDownValue);
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
-        uint32_t theNewValueDown = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
+        uint32_t theNewValueDown = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
 
         uint8_t theDACUpValue = std::min(uint8_t(theDACMaxValue), uint8_t(theDACNewValue + 1));
         LOG(DEBUG) << MAGENTA << "theDACUpValue " << +theDACUpValue << RESET;
@@ -290,7 +290,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
         else
             this->WriteChipReg(theChip, theDACtoTuneName, theDACUpValue);
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
-        uint32_t theNewValueUp = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
+        uint32_t theNewValueUp = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
 
         float theExpectedDifference     = std::fabs(theADCDExpectedValue - theNewValue);
         float theExpectedDifferenceDown = std::fabs(theADCDExpectedValue - theNewValueDown);
@@ -320,8 +320,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
                 this->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
             std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-            usleep(100000);
-            uint32_t theCheckValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
+            uint32_t theCheckValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
             LOG(DEBUG) << BOLDGREEN << "Register " << theDACtoTuneName << " gives ADC " << theCheckValue << RESET;
             isSearching = false;
         }
@@ -332,7 +331,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
             this->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
 
-        theNewValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName) : this->readADCBandGap(theChip);
+        theNewValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
 
         theCurrentIteration += 1;
     }
@@ -344,7 +343,7 @@ uint8_t PSInterface::TuneDAC(ReadoutChip* theChip, float theSlope, float theExpe
 
 float PSInterface::readADCVoltage(Ph2_HwDescription::ReadoutChip* pPS, std::string theADCName)
 {
-    float adcValue            = readADC(pPS, theADCName);
+    float adcValue            = readADC(pPS, theADCName, 1);
     float theConversionFactor = 1;                                             // without the conversion factor the voltages are not visible
     if(theADCName == "AVDD" || theADCName == "DVDD") theConversionFactor *= 2; // keep into account a voltage divider
     return (adcValue * pPS->getADCCalibrationValue("ADC_SLOPE") + pPS->getADCCalibrationValue("ADC_OFFSET")) * theConversionFactor;
