@@ -84,15 +84,17 @@ void VoltageTuning::localConfigure(const std::string& histoFileName, int current
 
 void VoltageTuning::run()
 {
-    const size_t      nBitsDig   = RD53Shared::firstChip->getFEtype(colStart, colStop)->nBitTrimDig;
-    const size_t      nBitsAna   = RD53Shared::firstChip->getFEtype(colStart, colStop)->nBitTrimAna;
-    const std::string VDDDreg    = RD53Shared::firstChip->getFEtype(colStart, colStop)->VDDDreadReg;
-    const std::string VDDAreg    = RD53Shared::firstChip->getFEtype(colStart, colStop)->VDDAreadReg;
-    uint16_t          init       = 0;
-    float             targetDig_ = targetDig;
-    float             targetAna_ = targetAna;
-    bool              doRepeatDig;
-    bool              doRepeatAna;
+    const size_t          nBitsDig = RD53Shared::firstChip->getFEtype(colStart, colStop)->nBitTrimDig;
+    const size_t          nBitsAna = RD53Shared::firstChip->getFEtype(colStart, colStop)->nBitTrimAna;
+    const std::string     VDDDreg  = RD53Shared::firstChip->getFEtype(colStart, colStop)->VDDDreadReg;
+    const std::string     VDDAreg  = RD53Shared::firstChip->getFEtype(colStart, colStop)->VDDAreadReg;
+    std::vector<uint16_t> chipCommandList;
+    std::vector<uint16_t> saveRegVal;
+    uint16_t              init       = 0;
+    float                 targetDig_ = targetDig;
+    float                 targetAna_ = targetAna;
+    bool                  doRepeatDig;
+    bool                  doRepeatAna;
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theDigContainer, init);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theAnaContainer, init);
@@ -271,20 +273,15 @@ void VoltageTuning::run()
                     // ###############################
                     // # Save original configuration #
                     // ###############################
-
-                    auto memCoreCol0 = cChip->getRegMap().find("EN_CORE_COL_0")->second.fValue;
-                    auto memCoreCol1 = cChip->getRegMap().find("EN_CORE_COL_1")->second.fValue;
-                    auto memCoreCol2 = cChip->getRegMap().find("EN_CORE_COL_2")->second.fValue;
-                    auto memCoreCol3 = cChip->getRegMap().find("EN_CORE_COL_3")->second.fValue;
+                    saveRegVal.clear();
+                    for(const auto& regName: static_cast<RD53*>(cChip)->getFEtype()->CoreColRegs) saveRegVal.push_back(cChip->getRegMap().find(regName)->second.fValue);
 
                     // ########################
                     // # Disable all channels #
                     // ########################
-
-                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_0", 0);
-                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_1", 0);
-                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_2", 0);
-                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_3", 0);
+                    chipCommandList.clear();
+                    RD53ChipInterface->EnDisChip(cChip, chipCommandList, false);
+                    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommands(chipCommandList, cChip->getHybridId());
 
                     RD53ChipInterface->MaskAllChannels(cChip, true);
                     LOG(INFO) << GREEN << "Disabling all pixels for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
@@ -294,11 +291,9 @@ void VoltageTuning::run()
                     // #######################
                     // # Enable all channels #
                     // #######################
-
-                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_0", 65535);
-                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_1", 65535);
-                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_2", 65535);
-                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_3", 63);
+                    chipCommandList.clear();
+                    RD53ChipInterface->EnDisChip(cChip, chipCommandList, true);
+                    static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->WriteChipCommands(chipCommandList, cChip->getHybridId());
 
                     RD53ChipInterface->MaskAllChannels(cChip, false);
                     LOG(INFO) << GREEN << "Enabling all pixels for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
@@ -308,14 +303,10 @@ void VoltageTuning::run()
                     // ##################################
                     // # Restore original configuration #
                     // ##################################
-
+                    int it(0);
+                    for(const auto& regName: static_cast<RD53*>(cChip)->getFEtype()->CoreColRegs) RD53ChipInterface->WriteChipReg(cChip, regName, saveRegVal.at(it++));
                     static_cast<RD53*>(cChip)->copyMaskFromDefault();
                     RD53ChipInterface->ConfigureChipOriginalMask(cChip, false, true);
-
-                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_0", memCoreCol0);
-                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_1", memCoreCol1);
-                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_2", memCoreCol2);
-                    RD53ChipInterface->WriteChipReg(cChip, "EN_CORE_COL_3", memCoreCol3);
 
                     LOG(INFO) << GREEN << "Analog current consumption for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                               << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
