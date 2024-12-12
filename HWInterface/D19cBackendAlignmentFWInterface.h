@@ -186,7 +186,7 @@ class D19cBackendAlignmentFWInterface
 
     AlignmentResult              retrieveAlignmentResult(uint8_t hybridId, uint8_t lineId);
     std::vector<AlignmentResult> retrieveAllLineAlignmentResult(uint8_t hybridId, uint8_t numberOfLines);
-    void                         writeCommand(uint32_t phaseTunerCommand);
+    void                         writeCommand(const PhaseTuningControl& thePhaseTunerControl);
     void                         runWordAlignment(uint8_t hybridId, uint8_t lineId);
 };
 } // namespace Ph2_HwInterface

@@ -1,5 +1,6 @@
 #include "tools/OTBitErrorRateTest.h"
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
+#include "HWInterface/D19cBERTinterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/ExceptionHandler.h"
 #include "System/RegisterHelper.h"
@@ -60,6 +61,11 @@ void OTBitErrorRateTest::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTBitErrorRateTest::bitErrorRateTest()
 {
+    uint8_t numberOfLines =  fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
+
+    DetectorDataContainer theBERTcounterCountainer;
+    ContainerFactory::copyAndInitHybrid<std::vector<uint32_t>>(*fDetectorContainer, theBERTcounterCountainer);
+
     for(auto theBoard: *fDetectorContainer)
     {
         for(auto theOpticalGroup: *theBoard)
@@ -89,10 +95,32 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
         runAlignment(theBoard);
 
-        runBitErrorRateTest(theBoard);
-
         theAlignerInterface->disableAlignmentOnPRBS();
+
+        D19cBERTinterface* theBERTinterface =  static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
+        
+        auto bertResultsBoardContainer = theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, 5);
+        
+        for(auto theOpticalGroup: bertResultsBoardContainer)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                auto receivedBERTresultsVector = theHybrid->getSummary<std::vector<uint32_t>>();
+                auto storedBERTresultsVector = theBERTcounterCountainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<uint32_t>>();
+                storedBERTresultsVector.assign(receivedBERTresultsVector.begin(), receivedBERTresultsVector.end());
+            }
+        }
     }
+
+#ifdef __USE_ROOT__
+    fDQMHistogramOTBitErrorRateTest.fillErrorCounter(theBERTcounterCountainer);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theErrorCounterSerialization("OTBitErrorRateTestErrorCounter");
+        theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBERTcounterCountainer);
+    }
+#endif
 }
 
 void OTBitErrorRateTest::writeWithComment(BeBoard* theBoard, const std::string& registerName, uint32_t registerValue, const std::string& comment)

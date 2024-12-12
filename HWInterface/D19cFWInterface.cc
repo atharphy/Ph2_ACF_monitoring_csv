@@ -26,6 +26,7 @@
 #include "HWInterface/D19cTriggerInterface.h"
 #include "HWInterface/D19clpGBTSlowControlWorkerInterface.h"
 #include "HWInterface/ExceptionHandler.h"
+#include "HWInterface/D19cBERTinterface.h"
 #include <algorithm>
 #include <chrono>
 #include <time.h>
@@ -39,37 +40,7 @@ namespace Ph2_HwInterface
 D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, BeBoard* theBoard)
     : BeBoardFWInterface(puHalConfigFileName, pBoardId, theBoard), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
-    fResetAttempts = 0;
-    // can only link one type of trigger + FC interface to this type of FW
-    // so do it in the contructor
-    // configure L1 readout interface
-    if(fTriggerInterface == nullptr)
-    {
-        fTriggerInterface = new D19cTriggerInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
-    }
-    if(fFastCommandInterface == nullptr)
-    {
-        fFastCommandInterface = new D19cFastCommandInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
-    }
-    if(fBackendAlignmentInterface == nullptr)
-    {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
-    }
-    if(fDebugInterface == nullptr)
-    {
-        fDebugInterface = new D19cDebugFWInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
-    }
-    if(flpGBTSlowControlWorkerInterface == nullptr)
-    {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
-    }
-    fFEConfigurationInterface = nullptr;
-    fL1ReadoutInterface       = nullptr;
+    createAuxiliaryInterfaces();
 }
 
 D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_t pBoardId, FileHandler* pFileHandler, BeBoard* theBoard)
@@ -79,37 +50,7 @@ D19cFWInterface::D19cFWInterface(const std::string& puHalConfigFileName, uint32_
         fSaveToFile = false;
     else
         fSaveToFile = true;
-    fResetAttempts = 0;
-    // can only link one type of trigger + FC interface to this type of FW
-    // so do it in the contructor
-    // configure L1 readout interface
-    if(fTriggerInterface == nullptr)
-    {
-        fTriggerInterface = new D19cTriggerInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
-    }
-    if(fFastCommandInterface == nullptr)
-    {
-        fFastCommandInterface = new D19cFastCommandInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
-    }
-    if(fBackendAlignmentInterface == nullptr)
-    {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
-    }
-    if(fDebugInterface == nullptr)
-    {
-        fDebugInterface = new D19cDebugFWInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
-    }
-    if(flpGBTSlowControlWorkerInterface == nullptr)
-    {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
-    }
-    fFEConfigurationInterface = nullptr;
-    fL1ReadoutInterface       = nullptr;
+    createAuxiliaryInterfaces();
 }
 
 D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
@@ -117,37 +58,7 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
 {
     LOG(INFO) << BOLDYELLOW << "D19cFWInterface Constructor" << RESET;
     std::cout << pId << "\t" << pUri << "\t" << pAddressTable << "\n";
-    fResetAttempts = 0;
-    // can only link one type of trigger + FC interface to this type of FW
-    // so do it in the contructor
-    // configure L1 readout interface
-    if(fTriggerInterface == nullptr)
-    {
-        fTriggerInterface = new D19cTriggerInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19cTriggerInterface ..." << RESET;
-    }
-    if(fFastCommandInterface == nullptr)
-    {
-        fFastCommandInterface = new D19cFastCommandInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19cFastCommandInterface ..." << RESET;
-    }
-    if(fBackendAlignmentInterface == nullptr)
-    {
-        fBackendAlignmentInterface = new D19cBackendAlignmentFWInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19cBackendAlignmentFWInterface ..." << RESET;
-    }
-    if(fDebugInterface == nullptr)
-    {
-        fDebugInterface = new D19cDebugFWInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19cDebugFWInterface ..." << RESET;
-    }
-    if(flpGBTSlowControlWorkerInterface == nullptr)
-    {
-        flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
-        LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
-    }
-    fFEConfigurationInterface = nullptr;
-    fL1ReadoutInterface       = nullptr;
+    createAuxiliaryInterfaces();
 }
 
 D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler, BeBoard* theBoard)
@@ -157,10 +68,12 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
         fSaveToFile = false;
     else
         fSaveToFile = true;
-    fResetAttempts = 0;
-    // can only link one type of trigger + FC interface to this type of FW
-    // so do it in the contructor
-    // configure L1 readout interface
+    createAuxiliaryInterfaces();
+}
+
+
+void D19cFWInterface::createAuxiliaryInterfaces()
+{
     if(fTriggerInterface == nullptr)
     {
         fTriggerInterface = new D19cTriggerInterface(this);
@@ -186,8 +99,37 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
         flpGBTSlowControlWorkerInterface = new D19clpGBTSlowControlWorkerInterface(this);
         LOG(INFO) << BOLDYELLOW << "Created D19clpGBTSlowControlWorkerInterface ..." << RESET;
     }
+    if(fBERTinterface == nullptr)
+    {
+        fBERTinterface = new D19cBERTinterface(this);
+        LOG(INFO) << BOLDYELLOW << "Created D19cBERTinterface ..." << RESET;
+    }
     fFEConfigurationInterface = nullptr;
     fL1ReadoutInterface       = nullptr;
+}
+
+D19cFWInterface::~D19cFWInterface()
+{
+    delete fFileHandler;
+    fFileHandler = nullptr;
+    delete fBackendAlignmentInterface;
+    fBackendAlignmentInterface = nullptr;
+    delete fDebugInterface;
+    fDebugInterface = nullptr;
+    delete fTriggerInterface;
+    fTriggerInterface = nullptr;
+    delete fL1ReadoutInterface;
+    fL1ReadoutInterface = nullptr;
+    delete fFastCommandInterface;
+    fFastCommandInterface = nullptr;
+    delete fFEConfigurationInterface;
+    fFEConfigurationInterface = nullptr;
+    delete fLinkInterface;
+    fLinkInterface = nullptr;
+    delete flpGBTSlowControlWorkerInterface;
+    flpGBTSlowControlWorkerInterface = nullptr;
+    delete fBERTinterface;
+    fBERTinterface = nullptr;
 }
 
 void D19cFWInterface::setFileHandler(FileHandler* pHandler)
