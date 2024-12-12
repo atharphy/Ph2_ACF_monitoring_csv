@@ -34,7 +34,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
         {
             doWriteClkDataDelay = true;
 
-            pChip->getRegItem("CLK_DATA_DELAY").fValue = SetSpecialRegister(std::string(cRegItem->first), cRegItem->second.fDefValue, pRD53RegMap).second;
+            pChip->setReg("CLK_DATA_DELAY", SetSpecialRegister(std::string(cRegItem->first), cRegItem->second.fDefValue, pRD53RegMap).second);
 
             if(cRegItem->first == "CLK_DATA_DELAY") break;
         }
@@ -53,8 +53,9 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    const std::set<std::string> registerBlackList = {"HighGain_LIN", "RESISTORI2V", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "SAMPLE_N_TIMES", "VREF_ADC"}; // @CONST@
-    const std::set<std::string> registerWhiteList = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"};                  // @CONST@
+    const std::set<std::string> registerBlackList = {
+        "HighGain_LIN", "RESISTORI2V", "NTCBETA", "RNTCAT25C", "ADC_OFFSET_VOLT", "ADC_MAXIMUM_VOLT", "TEMPSENS_IDEAL_FACTOR", "SAMPLE_N_TIMES", "VREF_ADC"};     // @CONST@
+    const std::set<std::string> registerWhiteList = {"PA_IN_BIAS_LIN", "FC_BIAS_LIN", "KRUM_CURR_LIN", "LDAC_LIN", "COMP_LIN", "REF_KRUM_LIN", "Vthreshold_LIN"}; // @CONST@
 
     for(auto& cRegItem: pRD53RegMap)
         if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&
@@ -70,7 +71,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
             RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
         }
         else if((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) != registerBlackList.end()))
-            pChip->getRegItem(cRegItem.first).fValue = cRegItem.second.fDefValue;
+            pChip->setReg(cRegItem.first, cRegItem.second.fDefValue);
 
     // ###################################
     // # Programmig pixel cell registers #

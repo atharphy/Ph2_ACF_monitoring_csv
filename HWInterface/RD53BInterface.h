@@ -57,7 +57,7 @@ class RD53BInterface : public RD53Interface
     // ###########################
     int      getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage, bool silentRunning = false) override;
     uint32_t measureADC(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data) override;
-    float    measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, const std::string& type = "", int beta = 3435) override;
+    float    measureTemperature(Ph2_HwDescription::ReadoutChip* pChip, uint32_t data, const std::string& type, int beta) override;
 };
 
 } // namespace Ph2_HwInterface

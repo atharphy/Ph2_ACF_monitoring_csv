@@ -18,6 +18,7 @@
 #include "tools/RD53GenericDacDacScan.h"
 #include "tools/RD53InjectionDelay.h"
 #include "tools/RD53Latency.h"
+#include "tools/RD53LpGBTeyeOpening.h"
 #include "tools/RD53Physics.h"
 #include "tools/RD53PixelAlive.h"
 #include "tools/RD53SCurve.h"
@@ -121,7 +122,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning gendacdac vtrx]",
+                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning gendacdac vtrx eye]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -536,6 +537,20 @@ int main(int argc, char** argv)
         vs.localConfigure(fileName, runNumber);
         vs.run();
         vs.draw();
+    }
+    else if(whichCalib == "eye")
+    {
+        // ##############################
+        // # Run LpGBT Eye Opening Scan #
+        // ##############################
+        LOG(INFO) << BOLDMAGENTA << "@@@ Performing LpGBT Eye Opening scan @@@" << RESET;
+
+        std::string     fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_LpGBTeyeScan");
+        LpGBTeyeOpening es;
+        es.Inherit(&mySysCntr);
+        es.localConfigure(fileName, runNumber);
+        es.run();
+        es.draw();
     }
     else if(whichCalib == "physics")
     {

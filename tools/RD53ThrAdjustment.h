@@ -60,6 +60,7 @@ class ThrAdjustment : public PixelAlive
 
   private:
     void fillHisto() override;
+    void establishStartingPoint(DetectorDataContainer& chargeContainer);
 
     void bitWiseScanGlobal_Maximum(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue);
     void bitWiseScanGlobal_Zero(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue);

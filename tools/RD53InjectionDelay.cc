@@ -126,7 +126,7 @@ void InjectionDelay::run()
     // ###############
     // # Run Latency #
     // ###############
-    for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "CAL_EDGE_FINE_DELAY", 0);
+    CalibBase::WriteBroadcastChipReg("CAL_EDGE_FINE_DELAY", 0);
 
     la.run();
     la.analyze();
@@ -260,7 +260,7 @@ void InjectionDelay::scanDac(const std::string& regName, const std::vector<uint1
         // # Download new DAC values #
         // ###########################
         LOG(INFO) << BOLDMAGENTA << ">>> " << BOLDYELLOW << regName << BOLDMAGENTA << " value = " << BOLDYELLOW << dacList[i] << BOLDMAGENTA << " <<<" << RESET;
-        for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, dacList[i] % maxRegValue);
+        CalibBase::WriteBroadcastChipReg(regName, dacList[i] % maxRegValue);
 
         // ################
         // # Run analysis #

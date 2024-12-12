@@ -67,8 +67,8 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
     // #######################################
     // # Update both real and fake registers #
     // #######################################
-    pChip->getRegItem(regName).fValue            = data;
-    pChip->getRegItem(nameAndValue.first).fValue = nameAndValue.second;
+    pChip->setReg(regName, data);
+    pChip->setReg(nameAndValue.first, nameAndValue.second);
 
     return status;
 }
@@ -302,7 +302,7 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
 
     if((observableName.find("TEMPSENS") != std::string::npos) || (observableName.find("RADSENS") != std::string::npos) || (observableName.find("INTERNAL_NTC") != std::string::npos))
     {
-        value = measureTemperature(pChip, observable, observableName);
+        value = measureTemperature(pChip, observable, observableName, pChip->getRegItem("NTCBETA").fValue);
         if(silentRunning == false)
             LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << observableName << BOLDBLUE << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE
                       << " C" << std::setprecision(-1) << RESET;

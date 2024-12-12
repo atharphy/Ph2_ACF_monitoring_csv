@@ -62,7 +62,6 @@ void VTRxLightYieldScanHistograms::fillIntensity(const DetectorDataContainer& In
         for(const auto cOpticalGroup: *cBoard)
         {
             if(cOpticalGroup->hasSummary() == false) continue;
-
             auto* Intensity2DHist = Intensity2D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
             for(auto i = 0; i < Intensity2DHist->GetNbinsX(); i++)
