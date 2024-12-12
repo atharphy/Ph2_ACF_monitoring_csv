@@ -57,6 +57,8 @@ class PixelAlive : public CalibBase
     DetectorDataContainer                  theTrgIDContainer;
 
   protected:
+    void SetInjectionType();
+
     // ######################################
     // # Parameters from configuration file #
     // ######################################

@@ -138,7 +138,7 @@ void Gain::run()
     // ##########################
     // # Set new VCAL_MED value #
     // ##########################
-    for(const auto cBoard: *fDetectorContainer) this->fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, "VCAL_MED", offset);
+    CalibBase::WriteBroadcastChipReg("VCAL_MED", offset);
 
     for(auto container: detectorContainerVector) theRecyclingBin.free(container);
     detectorContainerVector.clear();

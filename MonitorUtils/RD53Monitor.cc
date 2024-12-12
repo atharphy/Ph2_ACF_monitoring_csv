@@ -112,7 +112,7 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
                     // #######################
                     // # Monitor environment #
                     // #######################
-                    registerValue = lpGBTInterface->ReadChipMonitor(cOpticalGroup->flpGBT, registerName, fDetectorMonitorConfig.fSilentRunning);
+                    registerValue = lpGBTInterface->ReadChipMonitor(cOpticalGroup, registerName, fDetectorMonitorConfig.fSilentRunning);
                 else
                     // #####################
                     // # Monitor registers #

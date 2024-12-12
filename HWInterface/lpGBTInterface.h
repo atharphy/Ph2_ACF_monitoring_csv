@@ -11,6 +11,7 @@
 #ifndef lpGBTInterface_H
 #define lpGBTInterface_H
 
+#include "HWDescription/OpticalGroup.h"
 #include "HWDescription/lpGBT.h"
 #include "HWInterface/ChipInterface.h"
 #include "HWInterface/ReadoutChipInterface.h"
@@ -225,7 +226,7 @@ class lpGBTInterface : public ChipInterface
     void    VdacSetVout(Ph2_HwDescription::lpGBT* pChip, float pVoltageV, bool pEnable = true);
     float   MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_t pSamples = 1, bool pResetTempSensor = true);
     float   MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip, const std::string& pPowerSupply, uint8_t pSamples = 1, bool pDisableMonitorAfterMeasurement = true);
-    float   ReadChipMonitor(Ph2_HwDescription::lpGBT* pChip, const std::string& registerName, bool silentRunning = false);
+    float   ReadChipMonitor(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, const std::string& registerName, bool silentRunning = false);
 
     uint8_t                        fChosenPhase;
     std::map<std::string, uint8_t> GetPhaseTapMap();

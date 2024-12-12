@@ -276,7 +276,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, float targe
     // # Download new DAC values #
     // ###########################
     LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    CalibBase::downloadNewDACvalues(bestDACcontainer, {regName.c_str()}, true, 0);
+    CalibBase::downloadNewDACvalues(bestDACcontainer, {regName.c_str()}, false, true, 0);
 
     // ################
     // # Run analysis #
