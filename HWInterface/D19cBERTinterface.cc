@@ -41,7 +41,7 @@ uint32_t BitErrorTestControl::encodeCommand() const
         theCommand |= ((fCounterThreshold & 0xFF) << 0);
         break;
 
-    case Command::Execute:
+    case Command::ErrorInject:
         theCommand |= ((fErrorInjection ? 1 : 0) << 7);
         theCommand |= ((fDataLoad ? 1 : 0) << 2);
         break;
@@ -67,6 +67,12 @@ uint32_t BitErrorTestControl::encodeCommand() const
     return theCommand;
 }
 
+void BitErrorTestControl::getLine(const BitErrorTestControl& theBitErrorTestReply)
+{
+    fHybridId = theBitErrorTestReply.fHybridId;
+    fChipId = theBitErrorTestReply.fChipId;
+    fLineId = theBitErrorTestReply.fLineId;
+}
 
 void BitErrorTestControl::resetCommandBits()
 {
@@ -218,29 +224,28 @@ void D19cBERTinterface::writeCommand(BitErrorTestControl theBitErrorTestControl)
 
 void D19cBERTinterface::startBitErrorRateTest(uint8_t hybridId, uint8_t lineId)
 {
-    BitErrorTestControl theBitErrorTestControl;
-    theBitErrorTestControl.setHybridId(hybridId);
-    theBitErrorTestControl.setChipId(lineId == 0xF ? 0x7 : 0x0);
-    theBitErrorTestControl.setLineId(lineId);
+    BitErrorTestControl theBitErrorTestConfigure;
+    theBitErrorTestConfigure.setHybridId(hybridId);
+    theBitErrorTestConfigure.setChipId(lineId == 0xF ? 0x7 : 0x0);
+    theBitErrorTestConfigure.setLineId(lineId);
 
-    theBitErrorTestControl.resetCommandBits();
-    theBitErrorTestControl.setCommand(BitErrorTestControl::Command::Configure);
-    theBitErrorTestControl.setDebugMode(true);
-    theBitErrorTestControl.setCounterSelect(BitErrorTestControl::CounterSelect::BitErrorCounter);
-    theBitErrorTestControl.setMode(BitErrorTestControl::Mode::PRBS);
-    theBitErrorTestControl.setCheckEnable(true);
-    theBitErrorTestControl.setReceiveEnable(true);
-    writeCommand(theBitErrorTestControl);
+    theBitErrorTestConfigure.setCommand(BitErrorTestControl::Command::Configure);
+    theBitErrorTestConfigure.setCounterSelect(BitErrorTestControl::CounterSelect::BitErrorCounter);
+    theBitErrorTestConfigure.setMode(BitErrorTestControl::Mode::PRBS);
+    theBitErrorTestConfigure.setReceiveEnable(true);
+    theBitErrorTestConfigure.setCheckMode(true);
+    writeCommand(theBitErrorTestConfigure);
 
-    theBitErrorTestControl.resetCommandBits();
-    theBitErrorTestControl.setCommand(BitErrorTestControl::Command::SetCounterThreshold);
-    theBitErrorTestControl.setCounterThreshold(0x80);
-    writeCommand(theBitErrorTestControl);
+    BitErrorTestControl theBitErrorTestSetThreshold;
+    theBitErrorTestSetThreshold.getLine(theBitErrorTestConfigure);
+    theBitErrorTestSetThreshold.resetCommandBits();
+    theBitErrorTestSetThreshold.setCommand(BitErrorTestControl::Command::SetCounterThreshold);
+    theBitErrorTestSetThreshold.setCounterThreshold(0x80);
+    writeCommand(theBitErrorTestSetThreshold);
 
-    theBitErrorTestControl.resetCommandBits();
-    theBitErrorTestControl.setCommand(BitErrorTestControl::Command::Execute);
-    theBitErrorTestControl.setDataLoad(true);
-    writeCommand(theBitErrorTestControl);
+    //Add first pattern check on command 6 (first data)
+    theBitErrorTestConfigure.setCheckEnable(true);
+    writeCommand(theBitErrorTestConfigure);
 }
 
 
@@ -251,12 +256,32 @@ void D19cBERTinterface::stopBitErrorRateTest(uint8_t hybridId, uint8_t lineId)
     theBitErrorTestControl.setChipId(lineId == 0xF ? 0x7 : 0x0);
     theBitErrorTestControl.setLineId(lineId);
 
-    theBitErrorTestControl.resetCommandBits();
     theBitErrorTestControl.setCommand(BitErrorTestControl::Command::Configure);
-    theBitErrorTestControl.setCheckEnable(false);
-    theBitErrorTestControl.setReceiveEnable(false);
+    theBitErrorTestControl.setCounterSelect(BitErrorTestControl::CounterSelect::BitErrorCounter);
+    theBitErrorTestControl.setMode(BitErrorTestControl::Mode::PRBS);
+    theBitErrorTestControl.setReceiveEnable(true);
+    theBitErrorTestControl.setCheckMode(true);
+    writeCommand(theBitErrorTestControl);
+
+    // theBitErrorTestControl.setReceiveEnable(false);
+    // writeCommand(theBitErrorTestControl);
+}
+
+
+void D19cBERTinterface::haltBitErrorRateTest(uint8_t hybridId, uint8_t lineId)
+{
+    BitErrorTestControl theBitErrorTestControl;
+    theBitErrorTestControl.setHybridId(hybridId);
+    theBitErrorTestControl.setChipId(lineId == 0xF ? 0x7 : 0x0);
+    theBitErrorTestControl.setLineId(lineId);
+
+    theBitErrorTestControl.setCommand(BitErrorTestControl::Command::Configure);
+    theBitErrorTestControl.setCounterSelect(BitErrorTestControl::CounterSelect::BitErrorCounter);
+    theBitErrorTestControl.setMode(BitErrorTestControl::Mode::PRBS);
+    theBitErrorTestControl.setCheckMode(true);
     writeCommand(theBitErrorTestControl);
 }
+
 
 uint32_t D19cBERTinterface::getBitErrorCounters(uint8_t hybridId, uint8_t lineId)
 {
@@ -266,25 +291,31 @@ uint32_t D19cBERTinterface::getBitErrorCounters(uint8_t hybridId, uint8_t lineId
     theBitErrorTestControl.setLineId(lineId);
 
     theBitErrorTestControl.resetCommandBits();
-    theBitErrorTestControl.setCommand(BitErrorTestControl::Command::Configure);
-    theBitErrorTestControl.setMode(BitErrorTestControl::Mode::PRBS);
-    writeCommand(theBitErrorTestControl);
-
-    theBitErrorTestControl.resetCommandBits();
     theBitErrorTestControl.setCommand(BitErrorTestControl::Command::ReadCounterData);
     writeCommand(theBitErrorTestControl);
 
     BitErrorTestReply theBitErrorTestCounter = readReplay(theBitErrorTestControl);
 
+    return theBitErrorTestCounter.getPRBScounterValue();
+}
+
+
+uint32_t D19cBERTinterface::getFirstData(uint8_t hybridId, uint8_t lineId)
+{
+    BitErrorTestControl theBitErrorTestControl;
+    theBitErrorTestControl.setHybridId(hybridId);
+    theBitErrorTestControl.setChipId(0);
+    theBitErrorTestControl.setLineId(lineId);
+
     theBitErrorTestControl.resetCommandBits();
-    theBitErrorTestControl.setCommand(BitErrorTestControl::Command::ReturnConfig);
+    theBitErrorTestControl.setCommand(BitErrorTestControl::Command::ReadBERTfirstData);
     writeCommand(theBitErrorTestControl);
 
-    BitErrorTestReply theBitErrorTestConfig = readReplay(theBitErrorTestControl);
+    BitErrorTestReply theBitErrorTestCounter = readReplay(theBitErrorTestControl);
 
-    return theBitErrorTestConfig.getPRBScounterOverflow() ? 0xFFFFFFFF : theBitErrorTestCounter.getPRBScounterValue();
-
+    return theBitErrorTestCounter.getPRBScounterValue();
 }
+
 
 BitErrorTestReply D19cBERTinterface::readReplay(const BitErrorTestControl& theBitErrorTestControl)
 {
@@ -296,15 +327,41 @@ BitErrorTestReply D19cBERTinterface::readReplay(const BitErrorTestControl& theBi
     return theBitErrorTestReply;
 }
 
+void D19cBERTinterface::injectError(uint8_t hybridId, uint8_t lineId)
+{
+    BitErrorTestControl theBitErrorTestControl;
+    theBitErrorTestControl.setHybridId(hybridId);
+    theBitErrorTestControl.setChipId(lineId == 0xF ? 0x7 : 0x0);
+    theBitErrorTestControl.setLineId(lineId);
+    theBitErrorTestControl.setCommand(BitErrorTestControl::Command::ErrorInject);
+    theBitErrorTestControl.setErrorInjection(true);
+    writeCommand(theBitErrorTestControl);
+}
+
 
 BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBoardContainer, uint8_t numberOfLines, uint32_t numberOfSeconds)
 {
-    
+    uint8_t hybridId = 0x1F;
+    uint8_t lineId   = 0xF;
+
     BoardDataContainer theBERTcounterResult;
     std::vector<uint32_t> theInitialVector(numberOfLines, 0);
     ContainerFactory::copyAndInitHybrid<std::vector<uint32_t>>(*theBoardContainer, theBERTcounterResult, theInitialVector);
 
-    startBitErrorRateTest(0x1F, 0xF);
+    startBitErrorRateTest(hybridId, lineId);
+
+    for(auto theOpticalGroup: theBERTcounterResult)
+    {
+        for(auto theHybrid: *theOpticalGroup)
+        {
+            for(uint8_t line = 0; line < numberOfLines; ++line)
+            {
+                getFirstData(theHybrid->getId(), line);
+            }
+        }
+    }
+
+    // injectError(hybridId, lineId);
 
     uint32_t sleepingStepSeconds = 10;
     while(numberOfSeconds >= sleepingStepSeconds)
@@ -319,7 +376,7 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
         std::this_thread::sleep_for(std::chrono::seconds(numberOfSeconds));
     }
 
-    stopBitErrorRateTest(0x1F, 0xF);
+    stopBitErrorRateTest(hybridId, lineId);
 
     for(auto theOpticalGroup: theBERTcounterResult)
     {
@@ -332,6 +389,8 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
             }
         }
     }
+
+    haltBitErrorRateTest(hybridId, lineId);
 
     return theBERTcounterResult;
 }

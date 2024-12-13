@@ -25,7 +25,7 @@ class BitErrorTestControl
         Configure              = 2,
         SetCounterThreshold    = 3,
         ReadCounterData        = 4,
-        Execute                = 5,
+        ErrorInject            = 5,
         ReadBERTfirstData      = 6,
         ReadBERTsampledData    = 7
     };
@@ -48,6 +48,8 @@ class BitErrorTestControl
 
     void     resetCommandBits();
     uint32_t encodeCommand() const;
+    void getLine(const BitErrorTestControl& theBitErrorTestReply);
+
 
     void setHybridId(uint8_t theHybridId) { fHybridId = theHybridId; }
     void setChipId(uint8_t theChipId) { fChipId = theChipId; }
@@ -147,7 +149,10 @@ class D19cBERTinterface
 
     void startBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
     void stopBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
+    void haltBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
     uint32_t getBitErrorCounters(uint8_t hybridId, uint8_t lineId);
+    uint32_t getFirstData(uint8_t hybridId, uint8_t lineId);
+    void injectError(uint8_t hybridId, uint8_t lineId);
     
     BoardDataContainer runBERTonAllHybdrids(BoardContainer* theBoardContainer, uint8_t numberOfLines, uint32_t numberOfSeconds);
 

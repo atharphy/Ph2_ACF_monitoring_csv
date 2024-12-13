@@ -269,6 +269,8 @@
     <Setting name="OTPSringOscillatorTest_NumberOfClockCycles">100</Setting>
 
     <Setting name="OTLpGBTEyeOpeningTest_PowerList">1-3</Setting>
+
+    <Setting name="OTBitErrorRateTest_AcquisitionDuration">32</Setting> <!-- in seconds -->
 </Settings>
 
 <MonitoringSettings>

@@ -23,6 +23,8 @@ void OTBitErrorRateTest::Initialise(void)
     initializeContainers();
     fBroadcastAlignSetting = 2;
 
+    fAcquisitionDuration    = findValueInSettings<double>("OTBitErrorRateTest_AcquisitionDuration", 32);
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTBitErrorRateTest.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -97,16 +99,48 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
         theAlignerInterface->disableAlignmentOnPRBS();
 
+        // std::cout << "L1    : " << getPatternPrintout(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->L1ADebug(1, false), 1, true) << std::endl;
+
+        // auto lineOutputVector = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
+        // for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
+        // {
+        //     std::cout << "Stub " << lineIndex << ": " << getPatternPrintout(lineOutputVector.at(lineIndex), 1, true) << std::endl;
+        // }
+
         D19cBERTinterface* theBERTinterface =  static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
         
-        auto bertResultsBoardContainer = theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, 5);
+        auto bertResultsBoardContainer = theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, fAcquisitionDuration);
+
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+
+        theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, fAcquisitionDuration);
+
+
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+
+        theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, fAcquisitionDuration);
+        
+
+
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+
+        theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, fAcquisitionDuration);
         
         for(auto theOpticalGroup: bertResultsBoardContainer)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto receivedBERTresultsVector = theHybrid->getSummary<std::vector<uint32_t>>();
-                auto storedBERTresultsVector = theBERTcounterCountainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<uint32_t>>();
+                const auto& receivedBERTresultsVector = theHybrid->getSummary<std::vector<uint32_t>>();
+                auto& storedBERTresultsVector = theBERTcounterCountainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<uint32_t>>();
                 storedBERTresultsVector.assign(receivedBERTresultsVector.begin(), receivedBERTresultsVector.end());
             }
         }

@@ -96,7 +96,7 @@ GraphContainer<TGraph> MonitorDQMPlotOT::producePlotTemplate(const std::string& 
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetNdivisions(503);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeFormat(TIME_FORMAT);
     theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTimeOffset(0);
-    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("time");
+    theTGraphPedestalContainer.fTheGraph->GetXaxis()->SetTitle("Local Time");
     theTGraphPedestalContainer.fTheGraph->GetYaxis()->SetTitle((monitorValueName + (yAxisUnits.length() > 0 ? (" [" + yAxisUnits) + "]" : "")).c_str());
     theTGraphPedestalContainer.fTheGraph->SetMarkerStyle(20);
     theTGraphPedestalContainer.fTheGraph->SetMarkerSize(0.4);

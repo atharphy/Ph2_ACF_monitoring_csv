@@ -3,6 +3,7 @@
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
+#include "HWDescription/lpGBT.h"
 
 #include "TFile.h"
 #include "TH1F.h"
@@ -23,6 +24,8 @@ void DQMHistogramOTBitErrorRateTest::book(TFile* theOutputFile, DetectorContaine
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
+    uint32_t theAcquisitionDuration = findValueInSettings<double>(pSettingsMap, "OTBitErrorRateTest_AcquisitionDuration", 32);
+
     size_t numberOfLines = (theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
 
     auto setBitLabel = [numberOfLines](TH1F* theHistogram)
@@ -35,7 +38,7 @@ void DQMHistogramOTBitErrorRateTest::book(TFile* theOutputFile, DetectorContaine
         }
     };
 
-    HistContainer<TH1F> errorCounterHistogram("BERTerrorCounter", "BERT error counter", numberOfLines * 2, -0.5, numberOfLines * 2 - 0.5);
+    HistContainer<TH1F> errorCounterHistogram("BERTerrorCounter", Form("BERT error counter - acquisition duration %d s", theAcquisitionDuration), numberOfLines * 2, -0.5, numberOfLines * 2 - 0.5);
     errorCounterHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     errorCounterHistogram.fTheHistogram->GetYaxis()->SetTitle("NumberOfErrors");
     setBitLabel(errorCounterHistogram.fTheHistogram);

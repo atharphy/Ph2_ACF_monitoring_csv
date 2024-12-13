@@ -54,6 +54,8 @@ class OTBitErrorRateTest : public OTalignBoardDataWord
                          const std::string&          statusComment);
     void runBitErrorRateTest(Ph2_HwDescription::BeBoard* theBoard);
 
+    uint32_t fAcquisitionDuration {32};
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTBitErrorRateTest fDQMHistogramOTBitErrorRateTest;

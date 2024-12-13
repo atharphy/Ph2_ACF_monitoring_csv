@@ -16,6 +16,7 @@ class DQMMetadata : public DQMHistogramBase
     void fillObjectNames(const DetectorDataContainer& theNameContainer);
     void fillUsername(const DetectorDataContainer& theUsernameContainer);
     void fillHostName(const DetectorDataContainer& theHostNameContainer);
+    void fillGitBranch(const DetectorDataContainer& theGitBranchContainer);
     void fillGitCommitHash(const DetectorDataContainer& theGitCommitHashContainer);
     void fillFirmwareVersion(const DetectorDataContainer& theFirmwareVersionContainer);
     void fillCalibrationName(const DetectorDataContainer& theCalibrationNameContainer);
@@ -39,6 +40,7 @@ class DQMMetadata : public DQMHistogramBase
     DetectorDataContainer fNameContainer;
     DetectorDataContainer fUsernameContainer;
     DetectorDataContainer fHostNameContainer;
+    DetectorDataContainer fGitBranchContainer;
     DetectorDataContainer fGitCommitHashContainer;
     DetectorDataContainer fFirmwareVersionContainer;
     DetectorDataContainer fCalibrationNameContainer;
