@@ -43,17 +43,7 @@ class OTBitErrorRateTest : public OTalignBoardDataWord
 
   private:
     void bitErrorRateTest();
-    void bitErrorRateTestOld();
-    bool prepareLpGBTforBERT(Ph2_HwDescription::OpticalGroup* theOpticalGroup);
-    void writeWithComment(Ph2_HwDescription::BeBoard* theBoard, const std::string& registerName, uint32_t registerValue, const std::string& comment);
-    void readForAllLines(Ph2_HwDescription::BeBoard* theBoard,
-                         const std::string&          controlRegisterName,
-                         uint32_t                    controlRegisterValue,
-                         const std::string&          controlComment,
-                         const std::string&          statusRegisterName,
-                         const std::string&          statusComment);
-    void runBitErrorRateTest(Ph2_HwDescription::BeBoard* theBoard);
-
+    
     uint32_t fAcquisitionDuration {32};
 
 #ifdef __USE_ROOT__
