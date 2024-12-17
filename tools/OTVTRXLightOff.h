@@ -13,14 +13,14 @@
 #ifndef OTVTRXLightOff_h__
 #define OTVTRXLightOff_h__
 
-#include "OTTool.h"
+#include "tools/Tool.h"
 
 #ifdef __USE_ROOT__
 #endif
 
 using namespace Ph2_HwDescription;
 
-class OTVTRXLightOff : public OTTool
+class OTVTRXLightOff : public Tool
 {
   public:
     OTVTRXLightOff();

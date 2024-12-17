@@ -11,7 +11,6 @@
 #define OTalignBoardDataWord_h__
 
 #include "tools/Tool.h"
-#include <vector>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
 #include "DQMUtils/DQMHistogramOTalignBoardDataWord.h"
@@ -45,6 +44,11 @@ class OTalignBoardDataWord : public Tool
 
     static std::string fCalibrationDescription;
 
+  protected:
+    void initializeContainers();
+    void runAlignment(Ph2_HwDescription::BeBoard* theBoard);
+    int  fBroadcastAlignSetting{0}; // 0 = one line at a time - 1 = one hybrid at a time - 2 = all hybrids in parallel
+
   private:
     DetectorDataContainer fBitSlipContainer;
     DetectorDataContainer fAlignmentRetryContainer;
@@ -60,7 +64,6 @@ class OTalignBoardDataWord : public Tool
 
     bool skip2SkickOff(uint16_t hybridId, uint8_t lineId, bool is2Smodule);
 
-    int     fBroadcastAlignSetting{0}; // 0 = one line at a time - 1 = one hybrid at a time - 2 = all hybrids in parallel
     int     fMaxNumberOfIterations{10};
     uint8_t fNumberOfLines;
 
