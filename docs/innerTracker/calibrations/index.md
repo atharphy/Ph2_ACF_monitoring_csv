@@ -7,7 +7,6 @@ Find below a list of documented scans and calibrations.
 - [PixelAlive](PixelAlive.md)
 - [SCurve](SCurve.md)
 - [Noise scan](Noise.md)
-- [X-talk scan](XTalk.md)
 - [Gain scan](GainScan.md)
 
 ## Pixel tuning
@@ -30,5 +29,7 @@ Find below a list of documented scans and calibrations.
 
 ## Additional information/HOWTOs
 
-- [ModuleTesting](../ModuleTesting.md)
-- [SCCTuning](../SCCTuning.md)
+- [Module Testing](../ModuleTesting.md)
+- [SCC Tuning](../SCCTuning.md)
+- [X-talk Studies](XTalk.md)
+- [Explanation of some IT-related terms](TermExplanations.md)
