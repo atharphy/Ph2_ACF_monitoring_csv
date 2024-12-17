@@ -302,8 +302,6 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
 void D19cBackendAlignmentFWInterface::writeCommand(const PhaseTuningControl& thePhaseTunerControl)
 {
     uint32_t phaseTunerCommand = thePhaseTunerControl.encodeCommand();
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] 0x" << std::hex << phaseTunerCommand << std::dec << std::endl;
-
     fTheRegManager->WriteReg(fPhaseTuningControlRegisterName, phaseTunerCommand);
     std::this_thread::sleep_for(std::chrono::microseconds(100));
 }
