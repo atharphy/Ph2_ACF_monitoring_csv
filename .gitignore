@@ -40,3 +40,13 @@ FEH_PS*/
 pythonUtils/__pycache__/
 RegisterDebugUtils/RegisterDifference
 RegisterDebugUtils/BoardRegisterDifference
+*.aux
+*.fdb_latexmk
+*.fls
+*.out
+*.synctex.gz
+*.xdv
+*.bbl
+*.blg
+*.bcf
+*.run.xml
