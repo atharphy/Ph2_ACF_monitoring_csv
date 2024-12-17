@@ -43,8 +43,8 @@ class OTBitErrorRateTest : public OTalignBoardDataWord
 
   private:
     void bitErrorRateTest();
-    
-    uint32_t fAcquisitionDuration {32};
+
+    uint32_t fAcquisitionDuration{32};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

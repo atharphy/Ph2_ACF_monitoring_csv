@@ -151,10 +151,7 @@ void DQMMetadata::fillUsername(const DetectorDataContainer& theUsernameContainer
 
 void DQMMetadata::fillHostName(const DetectorDataContainer& theHostNameContainer) { fHostNameContainer.getSummary<StringContainer>().saveString(theHostNameContainer.getSummary<std::string>()); }
 
-void DQMMetadata::fillGitBranch(const DetectorDataContainer& theGitBranchContainer)
-{
-    fGitBranchContainer.getSummary<StringContainer>().saveString(theGitBranchContainer.getSummary<std::string>());
-}
+void DQMMetadata::fillGitBranch(const DetectorDataContainer& theGitBranchContainer) { fGitBranchContainer.getSummary<StringContainer>().saveString(theGitBranchContainer.getSummary<std::string>()); }
 
 void DQMMetadata::fillGitCommitHash(const DetectorDataContainer& theGitCommitHashContainer)
 {

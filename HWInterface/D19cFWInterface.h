@@ -94,7 +94,7 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t fEventCounter = 0;
 
     // some useful stuff
-    int fResetAttempts {0};
+    int fResetAttempts{0};
 
   public:
     /*!

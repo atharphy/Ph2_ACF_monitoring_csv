@@ -1254,8 +1254,6 @@ uint8_t lpGBTInterface::GetI2CConfiguration(Ph2_HwDescription::Chip* pChip, uint
 
 bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq, bool verify)
 {
-
-    
     // Write Data to Slave Address using I2C Master
     lpGBTInterface::ConfigureI2C(pChip, pMaster, pFreq, (pNBytes > 1) ? pNBytes : 0, 0, verify);
 
@@ -1299,14 +1297,14 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
         if(cIter == lpGBTconstants::MAXATTEMPTS)
         {
             LOG(INFO) << BOLDRED << "I2C Write transaction failed" << RESET;
-    #if defined(__TCUSB__)
+#if defined(__TCUSB__)
             // In the test system a run time error is undesired
             return false;
-    #else
+#else
             LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
             return false;
-    #endif
+#endif
         }
     }
 

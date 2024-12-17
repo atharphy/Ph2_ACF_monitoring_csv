@@ -1,9 +1,9 @@
 #include "DQMUtils/DQMHistogramOTBitErrorRateTest.h"
+#include "HWDescription/lpGBT.h"
 #include "RootUtils/RootContainerFactory.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
-#include "HWDescription/lpGBT.h"
 
 #include "TFile.h"
 #include "TH1F.h"
@@ -34,7 +34,8 @@ void DQMHistogramOTBitErrorRateTest::book(TFile* theOutputFile, DetectorContaine
         for(uint8_t hybridId = 0; hybridId < hybridSide.size(); ++hybridId)
         {
             theHistogram->GetXaxis()->SetBinLabel(1 + hybridId * numberOfLines, (std::string("L1_") + hybridSide[hybridId]).c_str());
-            for(size_t stubLine = 0; stubLine < numberOfLines - 1; ++stubLine) theHistogram->GetXaxis()->SetBinLabel(stubLine + 2 + hybridId * numberOfLines, (std::string(Form("Stub%d_", int(stubLine))) +  hybridSide[hybridId]).c_str());
+            for(size_t stubLine = 0; stubLine < numberOfLines - 1; ++stubLine)
+                theHistogram->GetXaxis()->SetBinLabel(stubLine + 2 + hybridId * numberOfLines, (std::string(Form("Stub%d_", int(stubLine))) + hybridSide[hybridId]).c_str());
         }
     };
 
@@ -55,18 +56,13 @@ void DQMHistogramOTBitErrorRateTest::fillErrorCounter(DetectorDataContainer& the
             auto theErrorCounterHistogram = fBERTerrorCounterHistogram.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto theErrorCounterVector = theHybrid->getSummary<std::vector<uint32_t>>();
-                uint8_t numberOfLines = theErrorCounterVector.size();
-                for(uint8_t line = 0; line < numberOfLines; ++line)
-                {
-                    theErrorCounterHistogram->SetBinContent(1 + line + (theHybrid->getId() % 2) * numberOfLines, theErrorCounterVector.at(line));
-                }
+                auto    theErrorCounterVector = theHybrid->getSummary<std::vector<uint32_t>>();
+                uint8_t numberOfLines         = theErrorCounterVector.size();
+                for(uint8_t line = 0; line < numberOfLines; ++line) { theErrorCounterHistogram->SetBinContent(1 + line + (theHybrid->getId() % 2) * numberOfLines, theErrorCounterVector.at(line)); }
             }
         }
     }
-
 }
-
 
 //========================================================================================================================
 void DQMHistogramOTBitErrorRateTest::process()

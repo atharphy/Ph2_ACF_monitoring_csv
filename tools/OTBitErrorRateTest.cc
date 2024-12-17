@@ -1,6 +1,6 @@
 #include "tools/OTBitErrorRateTest.h"
-#include "HWInterface/D19cBackendAlignmentFWInterface.h"
 #include "HWInterface/D19cBERTinterface.h"
+#include "HWInterface/D19cBackendAlignmentFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/ExceptionHandler.h"
 #include "System/RegisterHelper.h"
@@ -23,7 +23,7 @@ void OTBitErrorRateTest::Initialise(void)
     initializeContainers();
     fBroadcastAlignSetting = 2;
 
-    fAcquisitionDuration    = findValueInSettings<double>("OTBitErrorRateTest_AcquisitionDuration", 32);
+    fAcquisitionDuration = findValueInSettings<double>("OTBitErrorRateTest_AcquisitionDuration", 32);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -63,7 +63,7 @@ void OTBitErrorRateTest::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTBitErrorRateTest::bitErrorRateTest()
 {
-    uint8_t numberOfLines =  fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
+    uint8_t numberOfLines = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
 
     DetectorDataContainer theBERTcounterCountainer;
     ContainerFactory::copyAndInitHybrid<std::vector<uint32_t>>(*fDetectorContainer, theBERTcounterCountainer);
@@ -99,7 +99,8 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
         theAlignerInterface->disableAlignmentOnPRBS();
 
-        // std::cout << "L1    : " << getPatternPrintout(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->L1ADebug(1, false), 1, true) << std::endl;
+        // std::cout << "L1    : " << getPatternPrintout(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->L1ADebug(1, false), 1, true) <<
+        // std::endl;
 
         // auto lineOutputVector = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
         // for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
@@ -107,13 +108,10 @@ void OTBitErrorRateTest::bitErrorRateTest()
         //     std::cout << "Stub " << lineIndex << ": " << getPatternPrintout(lineOutputVector.at(lineIndex), 1, true) << std::endl;
         // }
 
-        D19cBERTinterface* theBERTinterface =  static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
+        D19cBERTinterface* theBERTinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
 
-        for(int it=0; it<100; ++it)
-        {
-            theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, fAcquisitionDuration);
-        }
-        
+        for(int it = 0; it < 100; ++it) { theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, fAcquisitionDuration); }
+
         auto bertResultsBoardContainer = theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, fAcquisitionDuration);
 
         for(auto theOpticalGroup: bertResultsBoardContainer)
@@ -121,7 +119,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
             for(auto theHybrid: *theOpticalGroup)
             {
                 const auto& receivedBERTresultsVector = theHybrid->getSummary<std::vector<uint32_t>>();
-                auto& storedBERTresultsVector = theBERTcounterCountainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<uint32_t>>();
+                auto&       storedBERTresultsVector   = theBERTcounterCountainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<uint32_t>>();
                 storedBERTresultsVector.assign(receivedBERTresultsVector.begin(), receivedBERTresultsVector.end());
             }
         }

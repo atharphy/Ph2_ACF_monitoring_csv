@@ -15,6 +15,7 @@
 #include "HWDescription/Hybrid.h"
 #include "HWDescription/OuterTrackerHybrid.h"
 #include "HWDescription/lpGBT.h"
+#include "HWInterface/D19cBERTinterface.h"
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
 #include "HWInterface/D19cDebugFWInterface.h"
 #include "HWInterface/D19cFastCommandInterface.h"
@@ -26,7 +27,6 @@
 #include "HWInterface/D19cTriggerInterface.h"
 #include "HWInterface/D19clpGBTSlowControlWorkerInterface.h"
 #include "HWInterface/ExceptionHandler.h"
-#include "HWInterface/D19cBERTinterface.h"
 #include <algorithm>
 #include <chrono>
 #include <time.h>
@@ -70,7 +70,6 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
         fSaveToFile = true;
     createAuxiliaryInterfaces();
 }
-
 
 void D19cFWInterface::createAuxiliaryInterfaces()
 {
