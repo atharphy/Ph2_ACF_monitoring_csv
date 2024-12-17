@@ -289,12 +289,6 @@ uint32_t D19cBERTinterface::getBitErrorCounters(uint8_t hybridId, uint8_t lineId
     BitErrorTestReply theBitErrorTestCounter = readReplay(theBitErrorTestControl);
 
     uint32_t BERTcount = theBitErrorTestCounter.getPRBSbitCounterValueEmulator();
-    // if(BERTcount != 0)
-    // {
-    //     auto BERTcountAgain =theBitErrorTestCounter.getPRBSbitCounterValueEmulator();
-    //     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BERTcount      = 0x" << std::hex << BERTcount << std::dec << std::endl;
-    //     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BERTcountAgain = 0x" << std::hex << BERTcountAgain << std::dec << std::endl;
-    // }
     return BERTcount;
 }
 
@@ -394,13 +388,13 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
             for(uint8_t line = 0; line < numberOfLines; ++line)
             {
                 auto BERTcount = getBitErrorCounters(theHybrid->getId(), line);
-                if(BERTcount != 0)
-                {
-                    auto BERTcountAgain = getBitErrorCounters(theHybrid->getId(), line);
-                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] hybridId = " << +theHybrid->getId() << " lineID = " << +line << std::endl;
-                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BERTcount      = 0x" << std::hex << BERTcount << std::dec << std::endl;
-                    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BERTcountAgain = 0x" << std::hex << BERTcountAgain << std::dec << std::endl;
-                }
+                // if(BERTcount != 0)
+                // {
+                //     auto BERTcountAgain = getBitErrorCounters(theHybrid->getId(), line);
+                //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] hybridId = " << +theHybrid->getId() << " lineID = " << +line << std::endl;
+                //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BERTcount      = 0x" << std::hex << BERTcount << std::dec << std::endl;
+                //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BERTcountAgain = 0x" << std::hex << BERTcountAgain << std::dec << std::endl;
+                // }
                 theCounterVector.at(line) = BERTcount;
             }
         }

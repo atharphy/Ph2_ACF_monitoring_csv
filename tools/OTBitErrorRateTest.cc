@@ -110,8 +110,6 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
         D19cBERTinterface* theBERTinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
 
-        for(int it = 0; it < 100; ++it) { theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, fAcquisitionDuration); }
-
         auto bertResultsBoardContainer = theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, fAcquisitionDuration);
 
         for(auto theOpticalGroup: bertResultsBoardContainer)
