@@ -87,7 +87,9 @@ class BitErrorTestControl
     uint16_t fPackagePatternMSB{0};
 
     static bool fIsDebugModeActivated;
+    static bool fCurrentCheckMode;
     static Mode fCurrentMode;
+    static CounterSelect fCurrentCounterSelect;
 };
 
 
@@ -111,33 +113,40 @@ class BitErrorTestReply
     bool                      getCheckEnable (){return fCheckEnable;}
     bool                      getReceiveEnable (){return fReceiveEnable;}
     uint16_t                  getCounterThreshold (){return fCounterThreshold;}
-    uint32_t                  getPRBScounterValue (){return fPRBScounterValue;}
-    uint32_t                  getLFSRcounterValue (){return fLFSRcounterValue;}
+    uint32_t                  getPRBSframeCounterValueEmulator (){return fPRBSframeCounterValueEmulator;}
+    uint32_t                  getPRBSbitCounterValueEmulator (){return fPRBSbitCounterValueEmulator;}
+    uint32_t                  getPRBSframeCounterValuePredictNext (){return fPRBSframeCounterValuePredictNext;}
+    uint32_t                  getPRBSbitCounterValuePredictNext (){return fPRBSbitCounterValuePredictNext;}
+
     uint32_t                  getPRBSfirstData (){return fPRBSfirstData;}
     uint32_t                  getLFSRfirstData (){return fLFSRfirstData;}
     uint32_t                  getPRBSdata (){return fPRBSdata;}
     uint32_t                  getLFSRdata (){return fLFSRdata;}
 
   private:
-    uint8_t  fHybridId{0};
-    uint8_t  fChipId{0};
-    uint8_t  fLineId{0};
+    uint8_t  fHybridId{99};
+    uint8_t  fChipId{99};
+    uint8_t  fLineId{99};
     bool     fPRBScounterOverflow{false};
     bool     fLFSRcounterOverflow{false};
-    uint8_t  fPRBScheckStateMachineStatus{0};
+    uint8_t  fPRBScheckStateMachineStatus{99};
     bool     fCheckMode{false};
     bool     fCounterReset{false};
-    uint8_t  fCounterSelect{0};
+    uint8_t  fCounterSelect{99};
     BitErrorTestControl::Mode fMode{BitErrorTestControl::Mode::None0};
     bool     fCheckEnable{false};
     bool     fReceiveEnable{false};
-    uint16_t fCounterThreshold{0};
-    uint32_t fPRBScounterValue{0};
-    uint32_t fLFSRcounterValue{0};
-    uint32_t fPRBSfirstData{0};
-    uint32_t fLFSRfirstData{0};
-    uint32_t fPRBSdata{0};
-    uint32_t fLFSRdata{0};
+    uint16_t fCounterThreshold{999};
+    uint32_t fPRBSframeCounterValueEmulator{999};
+    uint32_t fPRBSbitCounterValueEmulator{999};
+    uint32_t fPRBSframeCounterValuePredictNext{999};
+    uint32_t fPRBSbitCounterValuePredictNext{999};
+    uint32_t fPRBSfirstData{999};
+    uint32_t fLFSRfirstData{999};
+    uint32_t fPRBSdata{999};
+    uint32_t fLFSRdata{999};
+    uint32_t fFrameCounterLSB;
+    uint32_t fFrameCounterMSB;
 };
 
 class D19cBERTinterface

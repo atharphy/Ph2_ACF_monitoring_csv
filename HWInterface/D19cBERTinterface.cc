@@ -8,8 +8,10 @@
 
 using namespace Ph2_HwInterface;
 
+bool BitErrorTestControl::fCurrentCheckMode = false;
 bool BitErrorTestControl::fIsDebugModeActivated = false;
 BitErrorTestControl::Mode BitErrorTestControl::fCurrentMode = BitErrorTestControl::Mode::None0;
+BitErrorTestControl::CounterSelect BitErrorTestControl::fCurrentCounterSelect = BitErrorTestControl::CounterSelect::CounterLSB;
 
 uint32_t BitErrorTestControl::encodeCommand() const
 {
@@ -35,6 +37,8 @@ uint32_t BitErrorTestControl::encodeCommand() const
         theCommand |= ((fCheckEnable ? 1 : 0) << 1);
         theCommand |= ((fReceiveEnable ? 1 : 0) << 0);
         fCurrentMode = fMode;
+        fCurrentCounterSelect = fCounterSelect;
+        fCurrentCheckMode = fCheckMode;
         break;
 
     case Command::SetCounterThreshold:
@@ -152,11 +156,50 @@ void BitErrorTestReply::decodeReply(uint32_t reply, const BitErrorTestControl& t
         switch (BitErrorTestControl::fCurrentMode)
         {
         case BitErrorTestControl::Mode::PRBS:
-            fPRBScounterValue = reply;
+            if(BitErrorTestControl::fCurrentCheckMode)
+            {
+                switch (BitErrorTestControl::fCurrentCounterSelect)
+                {
+                case BitErrorTestControl::CounterSelect::CounterLSB:
+                    fFrameCounterLSB = reply;
+                    break;
+                case BitErrorTestControl::CounterSelect::CounterMSB:
+                    fFrameCounterMSB = reply;
+                    break;
+                case BitErrorTestControl::CounterSelect::FrameErrorCounter :
+                    fPRBSframeCounterValueEmulator = reply;
+                    break;
+                case BitErrorTestControl::CounterSelect::BitErrorCounter :
+                    fPRBSbitCounterValueEmulator = reply;
+                    break;
+                default:
+                    break;
+                }
+            }
+            else
+            {
+                switch (BitErrorTestControl::fCurrentCounterSelect)
+                {
+                case BitErrorTestControl::CounterSelect::CounterLSB:
+                    fFrameCounterLSB = reply;
+                    break;
+                case BitErrorTestControl::CounterSelect::CounterMSB:
+                    fFrameCounterMSB = reply;
+                    break;
+                case BitErrorTestControl::CounterSelect::FrameErrorCounter :
+                    fPRBSframeCounterValuePredictNext = reply;
+                    break;
+                case BitErrorTestControl::CounterSelect::BitErrorCounter :
+                    fPRBSbitCounterValuePredictNext = reply;
+                    break;
+                default:
+                    break;
+                }
+            }
             break;
             
         case BitErrorTestControl::Mode::LSFR:
-            fLFSRcounterValue = reply;
+            // not handled by the FW at the moment
             break;
         
         default:
@@ -165,7 +208,7 @@ void BitErrorTestReply::decodeReply(uint32_t reply, const BitErrorTestControl& t
         break;
     
     case BitErrorTestControl::Command::ReadBERTfirstData:
-        if(BitErrorTestControl::fIsDebugModeActivated)
+        if(!BitErrorTestControl::fIsDebugModeActivated)
         {
             switch (BitErrorTestControl::fCurrentMode)
             {
@@ -216,7 +259,7 @@ D19cBERTinterface::~D19cBERTinterface() {}
 void D19cBERTinterface::writeCommand(BitErrorTestControl theBitErrorTestControl)
 {
     uint32_t theCommand = theBitErrorTestControl.encodeCommand();
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.bert_control 0x" << std::hex << theCommand << std::dec << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.bert_control 0x" << std::hex << theCommand << std::dec << std::endl;
 
     fTheRegManager->WriteReg("fc7_daq_ctrl.physical_interface_block.bert_control", theCommand);
     std::this_thread::sleep_for(std::chrono::microseconds(100));
@@ -289,14 +332,19 @@ uint32_t D19cBERTinterface::getBitErrorCounters(uint8_t hybridId, uint8_t lineId
     theBitErrorTestControl.setHybridId(hybridId);
     theBitErrorTestControl.setChipId(0);
     theBitErrorTestControl.setLineId(lineId);
-
-    theBitErrorTestControl.resetCommandBits();
     theBitErrorTestControl.setCommand(BitErrorTestControl::Command::ReadCounterData);
     writeCommand(theBitErrorTestControl);
 
     BitErrorTestReply theBitErrorTestCounter = readReplay(theBitErrorTestControl);
 
-    return theBitErrorTestCounter.getPRBScounterValue();
+    uint32_t BERTcount = theBitErrorTestCounter.getPRBSbitCounterValueEmulator();
+    // if(BERTcount != 0)
+    // {
+    //     auto BERTcountAgain =theBitErrorTestCounter.getPRBSbitCounterValueEmulator();
+    //     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BERTcount      = 0x" << std::hex << BERTcount << std::dec << std::endl;
+    //     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BERTcountAgain = 0x" << std::hex << BERTcountAgain << std::dec << std::endl;
+    // }
+    return BERTcount;
 }
 
 
@@ -313,14 +361,14 @@ uint32_t D19cBERTinterface::getFirstData(uint8_t hybridId, uint8_t lineId)
 
     BitErrorTestReply theBitErrorTestCounter = readReplay(theBitErrorTestControl);
 
-    return theBitErrorTestCounter.getPRBScounterValue();
+    return theBitErrorTestCounter.getPRBSfirstData();
 }
 
 
 BitErrorTestReply D19cBERTinterface::readReplay(const BitErrorTestControl& theBitErrorTestControl)
 {
     uint32_t reply = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.bert_stat");
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_stat.physical_interface_block.bert_stat 0x" << std::hex << reply << std::dec << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_stat.physical_interface_block.bert_stat 0x" << std::hex << reply << std::dec << std::endl;
 
     BitErrorTestReply theBitErrorTestReply;
     theBitErrorTestReply.decodeReply(reply, theBitErrorTestControl);
@@ -356,7 +404,19 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
         {
             for(uint8_t line = 0; line < numberOfLines; ++line)
             {
-                getFirstData(theHybrid->getId(), line);
+                uint16_t iteration = 0;
+                uint16_t maxIterations = 10;
+                while(iteration < maxIterations)
+                {
+                    auto firstData = getFirstData(theHybrid->getId(), line) >> 16;
+                    if(firstData == BERT_ALIGNMENT_PATTERN) break;
+                    ++iteration;
+                }
+                if(iteration >= maxIterations)
+                {
+                    LOG(ERROR) << ERROR_FORMAT << "Failed to find BERT start pattern on line " << +line << " after " << maxIterations << " iterations" << RESET;
+                    throw std::runtime_error("Failed to find BERT start pattern");
+                }
             }
         }
     }
@@ -385,7 +445,15 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
             auto& theCounterVector = theHybrid->getSummary<std::vector<uint32_t>>();
             for(uint8_t line = 0; line < numberOfLines; ++line)
             {
-                theCounterVector.at(line) = getBitErrorCounters(theHybrid->getId(), line);
+                auto BERTcount = getBitErrorCounters(theHybrid->getId(), line);
+                if(BERTcount != 0)
+                {
+                    auto BERTcountAgain = getBitErrorCounters(theHybrid->getId(), line);
+                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] hybridId = " << +theHybrid->getId() << " lineID = " << +line << std::endl;
+                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BERTcount      = 0x" << std::hex << BERTcount << std::dec << std::endl;
+                    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] BERTcountAgain = 0x" << std::hex << BERTcountAgain << std::dec << std::endl;
+                }
+                theCounterVector.at(line) = BERTcount;
             }
         }
     }

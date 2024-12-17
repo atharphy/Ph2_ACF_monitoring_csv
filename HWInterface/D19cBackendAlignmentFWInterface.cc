@@ -229,7 +229,7 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
     {
         thePhaseTuningControl.resetCommandBits();
         thePhaseTuningControl.setCommand(PhaseTuningControl::Command::SetSyncPattern);
-        thePhaseTuningControl.setSyncPattern(0x020C);
+        thePhaseTuningControl.setSyncPattern(BERT_ALIGNMENT_PATTERN);
         writeCommand(thePhaseTuningControl);
     }
 

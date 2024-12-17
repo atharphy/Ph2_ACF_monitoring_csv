@@ -63,7 +63,7 @@ bool VTRxInterface::WriteChipReg(Chip* pChip, const std::string& pRegNode, uint1
     uint8_t  numberOfBytes = 2, frequency = 2;
     uint32_t slaveData = pValue << 8 | theRegister.fAddress;
 
-    bool success = fTheLpGBTinterface->WriteI2C(theLpGBT, masterId, slaveAddress, slaveData, numberOfBytes, frequency);
+    bool success = fTheLpGBTinterface->WriteI2C(theLpGBT, masterId, slaveAddress, slaveData, numberOfBytes, frequency, pVerify);
 
     if(pVerify)
     {
