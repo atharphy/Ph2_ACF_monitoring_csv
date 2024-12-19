@@ -44,7 +44,6 @@ void DQMHistogramOTBitErrorRateTest::book(TFile* theOutputFile, DetectorContaine
     setBitLabel(errorCounterHistogram.fTheHistogram);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBERTerrorCounterHistogram, errorCounterHistogram);
 
-
     HistContainer<TH1F> bitCounterHistogram("BERTtestedBitCounter", "BERT tested bit counter", numberOfLines * 2, -0.5, numberOfLines * 2 - 0.5);
     bitCounterHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     bitCounterHistogram.fTheHistogram->GetYaxis()->SetTitle("Number of tested bits");
@@ -60,7 +59,7 @@ void DQMHistogramOTBitErrorRateTest::fillErrorCounter(DetectorDataContainer& the
         for(auto theOpticalGroup: *theBoard)
         {
             auto theErrorCounterHistogram = fBERTerrorCounterHistogram.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-            auto theBitCounterHistogram = fBERTbitCounterHistogram.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+            auto theBitCounterHistogram   = fBERTbitCounterHistogram.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
             for(auto theHybrid: *theOpticalGroup)
             {
                 auto    theErrorCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
@@ -68,8 +67,8 @@ void DQMHistogramOTBitErrorRateTest::fillErrorCounter(DetectorDataContainer& the
                 for(uint8_t line = 0; line < numberOfLines; ++line)
                 {
                     int binNumber = 1 + line + (theHybrid->getId() % 2) * numberOfLines;
-                    theBitCounterHistogram->SetBinContent(binNumber, theErrorCounterVector.at(line).at(0)*8);
-                    theErrorCounterHistogram->SetBinContent(binNumber, float(theErrorCounterVector.at(line).at(1)) / theErrorCounterVector.at(line).at(0)*8);
+                    theBitCounterHistogram->SetBinContent(binNumber, theErrorCounterVector.at(line).at(0) * 8);
+                    theErrorCounterHistogram->SetBinContent(binNumber, float(theErrorCounterVector.at(line).at(1)) / theErrorCounterVector.at(line).at(0) * 8);
                 }
             }
         }

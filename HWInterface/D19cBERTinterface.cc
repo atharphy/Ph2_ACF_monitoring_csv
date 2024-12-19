@@ -4,10 +4,10 @@
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/DataContainer.h"
+#include "Utils/GenericDataArray.h"
+#include <cmath>
 #include <iostream>
 #include <thread>
-#include <cmath>
-#include "Utils/GenericDataArray.h"
 
 using namespace Ph2_HwInterface;
 
@@ -303,8 +303,10 @@ void D19cBERTinterface::selectFrameCounters(bool isMSB)
     theSetFrameCounterControl.setMode(BitErrorTestControl::Mode::PRBS);
     theSetFrameCounterControl.setReceiveEnable(true);
     theSetFrameCounterControl.setCheckMode(true);
-    if(isMSB) theSetFrameCounterControl.setCounterSelect(BitErrorTestControl::CounterSelect::FrameCounterMSB);
-    else theSetFrameCounterControl.setCounterSelect(BitErrorTestControl::CounterSelect::FrameCounterLSB);
+    if(isMSB)
+        theSetFrameCounterControl.setCounterSelect(BitErrorTestControl::CounterSelect::FrameCounterMSB);
+    else
+        theSetFrameCounterControl.setCounterSelect(BitErrorTestControl::CounterSelect::FrameCounterLSB);
     writeCommand(theSetFrameCounterControl);
 }
 
@@ -367,10 +369,10 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
     float dataRate = 3.2E8;
     if(is10Gmodule) dataRate *= 2.;
 
-    float extimatedWait = numberOfMatchedBits / dataRate + 0.5;
-    uint32_t waitInSec = ceil(extimatedWait);
+    float    extimatedWait = numberOfMatchedBits / dataRate + 0.5;
+    uint32_t waitInSec     = ceil(extimatedWait);
 
-    BoardDataContainer    theBERTcounterResult;
+    BoardDataContainer                         theBERTcounterResult;
     std::vector<GenericDataArray<uint64_t, 2>> theInitialVector(numberOfLines);
     ContainerFactory::copyAndInitHybrid<std::vector<GenericDataArray<uint64_t, 2>>>(*theBoardContainer, theBERTcounterResult, theInitialVector);
 
@@ -399,8 +401,8 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
             }
             if(failedToFindPatternStart)
             {
-                LOG(INFO) << BOLDRED << "Cannot find BERT start pattern for OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id " << +theHybrid->getId()
-                        << " --- Hybrid will be disabled" << RESET;
+                LOG(INFO) << BOLDRED << "Cannot find BERT start pattern for OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id " << +theHybrid->getId() << " --- Hybrid will be disabled"
+                          << RESET;
                 ExceptionHandler::getInstance()->disableHybrid(theBoardContainer->getId(), theOpticalGroup->getId(), theHybrid->getId());
             }
         }
@@ -430,7 +432,7 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
             auto& theCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
             for(uint8_t line = 0; line < numberOfLines; ++line)
             {
-                float BERTcounter = getBitErrorCounters(theHybrid->getId(), line);
+                float BERTcounter               = getBitErrorCounters(theHybrid->getId(), line);
                 theCounterVector.at(line).at(1) = BERTcounter;
             }
         }
@@ -443,10 +445,7 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
         for(auto theHybrid: *theOpticalGroup)
         {
             auto& theCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
-            for(uint8_t line = 0; line < numberOfLines; ++line)
-            {
-                theCounterVector.at(line).at(0) = (getFrameCounters(theHybrid->getId(), line, true) << 32);
-            }
+            for(uint8_t line = 0; line < numberOfLines; ++line) { theCounterVector.at(line).at(0) = (getFrameCounters(theHybrid->getId(), line, true) << 32); }
         }
     }
 
@@ -456,7 +455,7 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
     {
         for(auto theHybrid: *theOpticalGroup)
         {
-            bool missingFrames = false;
+            bool  missingFrames    = false;
             auto& theCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
             for(uint8_t line = 0; line < numberOfLines; ++line)
             {
@@ -471,8 +470,7 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
 
             if(missingFrames)
             {
-                LOG(INFO) << BOLDRED << "Failed to run BERT on OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id " << +theHybrid->getId()
-                        << " --- Hybrid will be disabled" << RESET;
+                LOG(INFO) << BOLDRED << "Failed to run BERT on OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id " << +theHybrid->getId() << " --- Hybrid will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableHybrid(theBoardContainer->getId(), theOpticalGroup->getId(), theHybrid->getId());
             }
         }
