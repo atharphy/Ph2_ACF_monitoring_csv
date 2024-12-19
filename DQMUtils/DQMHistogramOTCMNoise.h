@@ -8,8 +8,8 @@
 #ifndef DQMHistogramOTCMNoise_h_
 #define DQMHistogramOTCMNoise_h_
 #include "DQMUtils/DQMHistogramBase.h"
-#include "Utils/ContainerSerialization.h"
 #include "Utils/Container.h"
+#include "Utils/ContainerSerialization.h"
 #include "Utils/DataContainer.h"
 
 class TFile;
