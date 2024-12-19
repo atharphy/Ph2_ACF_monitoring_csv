@@ -32,8 +32,8 @@ void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStruc
     StringContainer theHostNameStringContainer("HostName");
     RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fHostNameContainer, theHostNameStringContainer);
 
-    StringContainer theGitBranchStringContainer("GitBranch");
-    RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fGitBranchContainer, theGitBranchStringContainer);
+    StringContainer theGitTagStringContainer("GitTag");
+    RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fGitTagContainer, theGitTagStringContainer);
 
     StringContainer theGitCommitHashStringContainer("GitCommitHash");
     RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fGitCommitHashContainer, theGitCommitHashStringContainer);
@@ -151,7 +151,7 @@ void DQMMetadata::fillUsername(const DetectorDataContainer& theUsernameContainer
 
 void DQMMetadata::fillHostName(const DetectorDataContainer& theHostNameContainer) { fHostNameContainer.getSummary<StringContainer>().saveString(theHostNameContainer.getSummary<std::string>()); }
 
-void DQMMetadata::fillGitBranch(const DetectorDataContainer& theGitBranchContainer) { fGitBranchContainer.getSummary<StringContainer>().saveString(theGitBranchContainer.getSummary<std::string>()); }
+void DQMMetadata::fillGitTag(const DetectorDataContainer& theGitTagContainer) { fGitTagContainer.getSummary<StringContainer>().saveString(theGitTagContainer.getSummary<std::string>()); }
 
 void DQMMetadata::fillGitCommitHash(const DetectorDataContainer& theGitCommitHashContainer)
 {
@@ -290,7 +290,7 @@ bool DQMMetadata::fill(std::string& inputStream)
     ContainerSerialization theNameSerialization("MetadataObjectNames");
     ContainerSerialization theUsernameSerialization("MetadataUsername");
     ContainerSerialization theHostNameSerialization("MetadataHostName");
-    ContainerSerialization theGitBranchSerialization("MetadataGitBranch");
+    ContainerSerialization theGitTagSerialization("MetadataGitTag");
     ContainerSerialization theGitCommitHashSerialization("MetadataGitCommitHash");
     ContainerSerialization theFirmwareVersionSerialization("MetadataFirmwareVersion");
     ContainerSerialization theCalibrationNameSerialization("MetadataCalibrationName");
@@ -330,12 +330,12 @@ bool DQMMetadata::fill(std::string& inputStream)
 
         return true;
     }
-    if(theGitBranchSerialization.attachDeserializer(inputStream))
+    if(theGitTagSerialization.attachDeserializer(inputStream))
     {
-        // std::cout << "Matched Metadata GitBranch!!!!!\n";
+        // std::cout << "Matched Metadata GitTag!!!!!\n";
         DetectorDataContainer theDetectorData =
-            theGitBranchSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
-        fillGitBranch(theDetectorData);
+            theGitTagSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
+        fillGitTag(theDetectorData);
         return true;
     }
     if(theGitCommitHashSerialization.attachDeserializer(inputStream))
