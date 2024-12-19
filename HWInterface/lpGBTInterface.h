@@ -303,7 +303,7 @@ class lpGBTInterface : public ChipInterface
                                                        {12, 1UL << 29},
                                                        {13, 1UL << 31},
                                                        {14, 1UL << 33},
-                                                       {15, 1UL < 35}};
+                                                       {15, 1UL << 35}};
 
     std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
 
