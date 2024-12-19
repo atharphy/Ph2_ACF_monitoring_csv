@@ -5,6 +5,7 @@
 #include "HWInterface/ExceptionHandler.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/GenericDataArray.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -23,7 +24,7 @@ void OTBitErrorRateTest::Initialise(void)
     initializeContainers();
     fBroadcastAlignSetting = 2;
 
-    fAcquisitionDuration = findValueInSettings<double>("OTBitErrorRateTest_AcquisitionDuration", 32);
+    fNumberOfFrames = findValueInSettings<double>("OTBitErrorRateTest_NumberOfFrames", 1E10);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -66,7 +67,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
     uint8_t numberOfLines = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
 
     DetectorDataContainer theBERTcounterCountainer;
-    ContainerFactory::copyAndInitHybrid<std::vector<uint32_t>>(*fDetectorContainer, theBERTcounterCountainer);
+    ContainerFactory::copyAndInitHybrid<std::vector<GenericDataArray<uint64_t, 2>>>(*fDetectorContainer, theBERTcounterCountainer);
 
     for(auto theBoard: *fDetectorContainer)
     {
@@ -110,14 +111,14 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
         D19cBERTinterface* theBERTinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
 
-        auto bertResultsBoardContainer = theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, fAcquisitionDuration);
+        auto bertResultsBoardContainer = theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, flpGBTInterface->GetChipRate(theBoard->getFirstObject()->flpGBT) == 10, fNumberOfFrames);
 
         for(auto theOpticalGroup: bertResultsBoardContainer)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                const auto& receivedBERTresultsVector = theHybrid->getSummary<std::vector<uint32_t>>();
-                auto&       storedBERTresultsVector   = theBERTcounterCountainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<uint32_t>>();
+                const auto& receivedBERTresultsVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
+                auto&       storedBERTresultsVector   = theBERTcounterCountainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
                 storedBERTresultsVector.assign(receivedBERTresultsVector.begin(), receivedBERTresultsVector.end());
             }
         }

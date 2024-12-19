@@ -4,6 +4,7 @@
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/GenericDataArray.h"
 
 #include "TFile.h"
 #include "TH1F.h"
@@ -24,8 +25,6 @@ void DQMHistogramOTBitErrorRateTest::book(TFile* theOutputFile, DetectorContaine
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    uint32_t theAcquisitionDuration = findValueInSettings<double>(pSettingsMap, "OTBitErrorRateTest_AcquisitionDuration", 32);
-
     size_t numberOfLines = (theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
 
     auto setBitLabel = [numberOfLines](TH1F* theHistogram)
@@ -39,11 +38,18 @@ void DQMHistogramOTBitErrorRateTest::book(TFile* theOutputFile, DetectorContaine
         }
     };
 
-    HistContainer<TH1F> errorCounterHistogram("BERTerrorCounter", Form("BERT error counter - acquisition duration %d s", theAcquisitionDuration), numberOfLines * 2, -0.5, numberOfLines * 2 - 0.5);
+    HistContainer<TH1F> errorCounterHistogram("BERTerrorCounter", "BERT error counter", numberOfLines * 2, -0.5, numberOfLines * 2 - 0.5);
     errorCounterHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
-    errorCounterHistogram.fTheHistogram->GetYaxis()->SetTitle("NumberOfErrors");
+    errorCounterHistogram.fTheHistogram->GetYaxis()->SetTitle("Number of errors");
     setBitLabel(errorCounterHistogram.fTheHistogram);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBERTerrorCounterHistogram, errorCounterHistogram);
+
+
+    HistContainer<TH1F> bitCounterHistogram("BERTtestedBitCounter", "BERT tested bit counter", numberOfLines * 2, -0.5, numberOfLines * 2 - 0.5);
+    bitCounterHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
+    bitCounterHistogram.fTheHistogram->GetYaxis()->SetTitle("Number of tested bits");
+    setBitLabel(bitCounterHistogram.fTheHistogram);
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBERTbitCounterHistogram, bitCounterHistogram);
 }
 
 //========================================================================================================================
@@ -54,11 +60,17 @@ void DQMHistogramOTBitErrorRateTest::fillErrorCounter(DetectorDataContainer& the
         for(auto theOpticalGroup: *theBoard)
         {
             auto theErrorCounterHistogram = fBERTerrorCounterHistogram.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+            auto theBitCounterHistogram = fBERTbitCounterHistogram.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto    theErrorCounterVector = theHybrid->getSummary<std::vector<uint32_t>>();
+                auto    theErrorCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
                 uint8_t numberOfLines         = theErrorCounterVector.size();
-                for(uint8_t line = 0; line < numberOfLines; ++line) { theErrorCounterHistogram->SetBinContent(1 + line + (theHybrid->getId() % 2) * numberOfLines, theErrorCounterVector.at(line)); }
+                for(uint8_t line = 0; line < numberOfLines; ++line)
+                {
+                    int binNumber = 1 + line + (theHybrid->getId() % 2) * numberOfLines;
+                    theBitCounterHistogram->SetBinContent(binNumber, theErrorCounterVector.at(line).at(0)*8);
+                    theErrorCounterHistogram->SetBinContent(binNumber, float(theErrorCounterVector.at(line).at(1)) / theErrorCounterVector.at(line).at(0)*8);
+                }
             }
         }
     }
@@ -87,7 +99,7 @@ bool DQMHistogramOTBitErrorRateTest::fill(std::string& inputStream)
     {
         // std::cout << "Matched OTBitErrorRateTest ErrorCounter!!!!\n";
         DetectorDataContainer theDetectorData =
-            theErrorCounterSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<uint32_t>, EmptyContainer>(fDetectorContainer);
+            theErrorCounterSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<GenericDataArray<uint64_t, 2>>, EmptyContainer>(fDetectorContainer);
         fillErrorCounter(theDetectorData);
         return true;
     }
