@@ -370,7 +370,7 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
     if(is10Gmodule) dataRate *= 2.;
 
     float    extimatedWaitInMilliseconds = numberOfMatchedBits / dataRate + 1;
-    uint32_t waitInMilliSeconds     = ceil(extimatedWaitInMilliseconds);
+    uint32_t waitInMilliSeconds          = ceil(extimatedWaitInMilliseconds);
 
     BoardDataContainer                         theBERTcounterResult;
     std::vector<GenericDataArray<uint64_t, 2>> theInitialVector(numberOfLines);
@@ -413,14 +413,11 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
     uint32_t sleepingStepMilliSeconds = 5000;
     while(waitInMilliSeconds >= sleepingStepMilliSeconds)
     {
-        LOG(INFO) << BOLDMAGENTA << "Sleeping for other " << waitInMilliSeconds/1000 << " seconds" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "Sleeping for other " << waitInMilliSeconds / 1000 << " seconds" << RESET;
         std::this_thread::sleep_for(std::chrono::milliseconds(sleepingStepMilliSeconds));
         waitInMilliSeconds -= sleepingStepMilliSeconds;
     }
-    if(waitInMilliSeconds > 0)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(waitInMilliSeconds));
-    }
+    if(waitInMilliSeconds > 0) { std::this_thread::sleep_for(std::chrono::milliseconds(waitInMilliSeconds)); }
 
     stopBitErrorRateTest(hybridId, lineId);
 
@@ -429,10 +426,7 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
         for(auto theHybrid: *theOpticalGroup)
         {
             auto& theCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
-            for(uint8_t line = 0; line < numberOfLines; ++line)
-            {
-                theCounterVector.at(line).at(1) = getBitErrorCounters(theHybrid->getId(), line);
-            }
+            for(uint8_t line = 0; line < numberOfLines; ++line) { theCounterVector.at(line).at(1) = getBitErrorCounters(theHybrid->getId(), line); }
         }
     }
 
