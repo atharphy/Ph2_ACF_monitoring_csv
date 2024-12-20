@@ -208,7 +208,7 @@ void OTCMNoise::TakeData()
                         // Re-looping on chips...
                         for(auto cChip: *cHybrid)
                         {
-                            the2DChipCorrelationContainer.getChip(cBoard->getId() ,cOpticalGroup->getId() ,cHybrid->getId() ,cChip->getId())
+                            the2DChipCorrelationContainer.getChip(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId())
                                 ->getSummary<GenericDataArray<uint32_t, NCHANNELS + 1, NCHANNELS * NCHIPS_OT + 1>>()
                                 .at(cChipCorrelationMap.at(cHybrid->getId()).at(cChip->getId()))
                                 .at(cHybridHits) += 1;

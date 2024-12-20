@@ -204,16 +204,10 @@ bool DQMHistogramOTCMNoise::fill(std::string& inputStream)
     if(processInputStream<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, 3 * (NCHANNELS * NCHIPS_OT * 2 + 1)>>(
            "OTCMNoiseModuleHitStream", inputStream, &DQMHistogramOTCMNoise::fillModuleHitPlots))
         return true;
-    if(processInputStream<EmptyContainer,
-                          EmptyContainer,
-                          EmptyContainer,
-                          GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT + 1, NCHANNELS * NCHIPS_OT + 1>>(
+    if(processInputStream<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT + 1, NCHANNELS * NCHIPS_OT + 1>>(
            "OTCMNoise2DHybridCorrelationStream", inputStream, &DQMHistogramOTCMNoise::fillHybridCorrelationPlots))
         return true;
-    if(processInputStream<EmptyContainer,
-                          GenericDataArray<uint32_t, NCHANNELS + 1, NCHANNELS * NCHIPS_OT + 1>,
-                          EmptyContainer,
-                          EmptyContainer>(
+    if(processInputStream<EmptyContainer, GenericDataArray<uint32_t, NCHANNELS + 1, NCHANNELS * NCHIPS_OT + 1>, EmptyContainer, EmptyContainer>(
            "OTCMNoise2DChipCorrelationStream", inputStream, &DQMHistogramOTCMNoise::fillChipCorrelationPlots))
         return true;
     if(processInputStream<EmptyContainer, GenericDataArray<uint32_t, (NCHANNELS / 2 + 1), (NCHANNELS / 2 + 1)>, EmptyContainer, EmptyContainer>(
@@ -236,9 +230,8 @@ bool DQMHistogramOTCMNoise::fill(std::string& inputStream)
 //========================================================================================================================
 void DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData)
 {
+    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-    
     // make a vector of the channel boundaries of each chip
     // checking later I will start with 1, so we can check that a channel is between two bins, add an extra for the last bin and an extra for 0
     std::vector<uint32_t> chipChannelBoundaries;
@@ -454,7 +447,7 @@ void DQMHistogramOTCMNoise::fillHybridHitPlots(DetectorDataContainer& theHitData
             for(auto hybrid: *opticalGroup)
             {
                 if(!hybrid->hasSummary()) continue;
- 
+
                 TH1F* theHistogramBottom =
                     fHybridHitHistogramsBottom.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 TH1F* theHistogramTop =
@@ -622,11 +615,9 @@ void DQMHistogramOTCMNoise::fillHybridCorrelationPlots(DetectorDataContainer& th
     }
 }
 
-
-
 void DQMHistogramOTCMNoise::fillChipCorrelationPlots(DetectorDataContainer& theHybridData)
 {
-   // Fill in hybrid Data:
+    // Fill in hybrid Data:
     for(auto board: theHybridData)
     {
         for(auto opticalGroup: *board)
@@ -657,7 +648,6 @@ void DQMHistogramOTCMNoise::fillChipCorrelationPlots(DetectorDataContainer& theH
         }
     }
 }
-
 
 void DQMHistogramOTCMNoise::fillHitProfile(DetectorDataContainer& theHitData) {}
 

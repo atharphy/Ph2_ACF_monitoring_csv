@@ -125,7 +125,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     TARGET_LINK_LIBRARIES(Ph2_Tools ${LIBS})
     target_compile_definitions(Ph2_Tools PRIVATE
-    "-DGIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"" "-DGIT_BRANCH=\"${GIT_BRANCH}\"")
+    "-DGIT_COMMIT=\"${GIT_COMMIT}\"" "-DGIT_TAG=\"${GIT_TAG}\"")
 
     message("--     ${BoldCyan}#### End ####${Reset}")
 
@@ -162,7 +162,7 @@ else()
             )
 
     target_compile_definitions(Ph2_Tools PRIVATE
-    "-DGIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"" "-DGIT_BRANCH=\"${GIT_BRANCH}\"")
+    "-DGIT_COMMIT=\"${GIT_COMMIT}\"" "-DGIT_TAG=\"${GIT_TAG}\"")
 
     install_headers()
     install_source()
