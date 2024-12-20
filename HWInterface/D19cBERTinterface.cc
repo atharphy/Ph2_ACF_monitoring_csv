@@ -366,11 +366,11 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
     uint8_t hybridId = 0x1F;
     uint8_t lineId   = 0xF;
 
-    float dataRate = 3.2E8;
+    float dataRate = 3.2E5;
     if(is10Gmodule) dataRate *= 2.;
 
-    float    extimatedWait = numberOfMatchedBits / dataRate + 0.5;
-    uint32_t waitInSec     = ceil(extimatedWait);
+    float    extimatedWaitInMilliseconds = numberOfMatchedBits / dataRate + 1;
+    uint32_t waitInMilliSeconds     = ceil(extimatedWaitInMilliseconds);
 
     BoardDataContainer                         theBERTcounterResult;
     std::vector<GenericDataArray<uint64_t, 2>> theInitialVector(numberOfLines);
@@ -410,17 +410,16 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
 
     // injectError(hybridId, lineId);
 
-    uint32_t sleepingStepSeconds = 10;
-    while(waitInSec >= sleepingStepSeconds)
+    uint32_t sleepingStepMilliSeconds = 5000;
+    while(waitInMilliSeconds >= sleepingStepMilliSeconds)
     {
-        LOG(INFO) << BOLDMAGENTA << "Sleeping for other " << waitInSec << " seconds" << RESET;
-        std::this_thread::sleep_for(std::chrono::seconds(sleepingStepSeconds));
-        waitInSec -= sleepingStepSeconds;
+        LOG(INFO) << BOLDMAGENTA << "Sleeping for other " << waitInMilliSeconds/1000 << " seconds" << RESET;
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepingStepMilliSeconds));
+        waitInMilliSeconds -= sleepingStepMilliSeconds;
     }
-    if(waitInSec > 0)
+    if(waitInMilliSeconds > 0)
     {
-        LOG(INFO) << BOLDMAGENTA << "Sleeping for other " << waitInSec << " seconds" << RESET;
-        std::this_thread::sleep_for(std::chrono::seconds(waitInSec));
+        std::this_thread::sleep_for(std::chrono::milliseconds(waitInMilliSeconds));
     }
 
     stopBitErrorRateTest(hybridId, lineId);
@@ -432,8 +431,7 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
             auto& theCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
             for(uint8_t line = 0; line < numberOfLines; ++line)
             {
-                float BERTcounter               = getBitErrorCounters(theHybrid->getId(), line);
-                theCounterVector.at(line).at(1) = BERTcounter;
+                theCounterVector.at(line).at(1) = getBitErrorCounters(theHybrid->getId(), line);
             }
         }
     }
@@ -459,12 +457,13 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
             auto& theCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
             for(uint8_t line = 0; line < numberOfLines; ++line)
             {
-                theCounterVector.at(line).at(0) |= getFrameCounters(theHybrid->getId(), line, false);
-                float totalBitCounter = theCounterVector.at(line).at(0) * 8.;
-                if(totalBitCounter < numberOfMatchedBits)
+                auto& theBitCounterCounter = theCounterVector.at(line).at(0);
+                theBitCounterCounter |= getFrameCounters(theHybrid->getId(), line, false);
+                theBitCounterCounter *= (is10Gmodule ? 16. : 8.);
+                if(theBitCounterCounter < numberOfMatchedBits)
                 {
                     missingFrames = true;
-                    LOG(ERROR) << ERROR_FORMAT << "Number of checked bits " << totalBitCounter << " is less then the expected number " << numberOfMatchedBits << " for line " << +line << RESET;
+                    LOG(ERROR) << ERROR_FORMAT << "Number of checked bits " << theBitCounterCounter << " is less then the expected number " << numberOfMatchedBits << " for line " << +line << RESET;
                 }
             }
 

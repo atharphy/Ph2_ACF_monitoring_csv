@@ -67,8 +67,8 @@ void DQMHistogramOTBitErrorRateTest::fillErrorCounter(DetectorDataContainer& the
                 for(uint8_t line = 0; line < numberOfLines; ++line)
                 {
                     int binNumber = 1 + line + (theHybrid->getId() % 2) * numberOfLines;
-                    theBitCounterHistogram->SetBinContent(binNumber, theErrorCounterVector.at(line).at(0) * 8);
-                    theErrorCounterHistogram->SetBinContent(binNumber, float(theErrorCounterVector.at(line).at(1)) / theErrorCounterVector.at(line).at(0) * 8);
+                    theBitCounterHistogram->SetBinContent(binNumber, theErrorCounterVector.at(line).at(0));
+                    theErrorCounterHistogram->SetBinContent(binNumber, float(theErrorCounterVector.at(line).at(1)) / float(theErrorCounterVector.at(line).at(0)));
                 }
             }
         }
