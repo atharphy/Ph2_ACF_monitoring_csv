@@ -538,6 +538,12 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 {
                     eFuseCode = fReadoutChipInterface->ReadChipFuseID(cChip);
                 }
+                catch(const std::system_error& err)
+                {
+                    LOG(WARNING) << RED << err.what() << RESET;
+                    eFuseCode      = -1;
+                    eFuseCodeCheck = false;
+                }
                 catch(const std::runtime_error& err)
                 {
                     LOG(WARNING) << RED << err.what() << RESET;
@@ -546,7 +552,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 }
                 catch(const std::out_of_range& err)
                 {
-                    LOG(WARNING) << RED << err.what() << RESET;
+                    LOG(DEBUG) << GREEN << "Chip e-fuse code: " << BOLDYELLOW << err.what() << RESET;
                     eFuseCode = atoi(err.what());
                 }
 
