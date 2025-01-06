@@ -72,7 +72,8 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     // {
     //     if(defaulChipReg.at(index).second != cRegVec.at(index).second)
     //     {
-    //         std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Changing " << defaulChipReg.at(index).first << " from 0x" << std::hex << defaulChipReg.at(index).second << " to 0x" << cRegVec.at(index).second << std::dec << std::endl;
+    //         std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Changing " << defaulChipReg.at(index).first << " from 0x" << std::hex << defaulChipReg.at(index).second << " to 0x" <<
+    //         cRegVec.at(index).second << std::dec << std::endl;
     //     }
     // }
 

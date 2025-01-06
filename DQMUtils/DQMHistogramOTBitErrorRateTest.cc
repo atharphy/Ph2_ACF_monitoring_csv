@@ -55,7 +55,6 @@ void DQMHistogramOTBitErrorRateTest::book(TFile* theOutputFile, DetectorContaine
     fecCounterHistogram.fTheHistogram->GetXaxis()->SetTitle("FEC");
     fecCounterHistogram.fTheHistogram->GetYaxis()->SetTitle("FEC counter");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fFECcounterHistogram, fecCounterHistogram);
-
 }
 
 //========================================================================================================================
@@ -95,7 +94,6 @@ void DQMHistogramOTBitErrorRateTest::fillFECcounter(DetectorDataContainer& theEr
     }
 }
 
-
 //========================================================================================================================
 void DQMHistogramOTBitErrorRateTest::process()
 {
@@ -127,8 +125,7 @@ bool DQMHistogramOTBitErrorRateTest::fill(std::string& inputStream)
     if(theFECcounterSerialization.attachDeserializer(inputStream))
     {
         // std::cout << "Matched OTBitErrorRateTest FECcounter!!!!\n";
-        DetectorDataContainer theDetectorData =
-            theErrorCounterSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, uint32_t>(fDetectorContainer);
+        DetectorDataContainer theDetectorData = theErrorCounterSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, uint32_t>(fDetectorContainer);
         fillFECcounter(theDetectorData);
         return true;
     }

@@ -121,13 +121,14 @@ void OTBitErrorRateTest::bitErrorRateTest()
                     theBERTcounterCountainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
                 storedBERTresultsVector.assign(receivedBERTresultsVector.begin(), receivedBERTresultsVector.end());
             }
-            theFECcounterCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.lpgbt_fec_counter");
+            theFECcounterCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint32_t>() =
+                fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.lpgbt_fec_counter");
         }
     }
 
 #ifdef __USE_ROOT__
     fDQMHistogramOTBitErrorRateTest.fillErrorCounter(theBERTcounterCountainer);
-    fDQMHistogramOTBitErrorRateTest.fillFECcounter  (theFECcounterCountainer);
+    fDQMHistogramOTBitErrorRateTest.fillFECcounter(theFECcounterCountainer);
 #else
     if(fDQMStreamerEnabled)
     {
