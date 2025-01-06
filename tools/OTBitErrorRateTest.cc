@@ -135,8 +135,8 @@ void OTBitErrorRateTest::bitErrorRateTest()
         ContainerSerialization theErrorCounterSerialization("OTBitErrorRateTestErrorCounter");
         theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBERTcounterCountainer);
 
-        ContainerSerialization theErrorCounterSerialization("OTBitErrorRateTestFECcounter");
-        theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theFECcounterCountainer);
+        ContainerSerialization theFECcounterSerialization("OTBitErrorRateTestFECcounter");
+        theFECcounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theFECcounterCountainer);
     }
 #endif
 }

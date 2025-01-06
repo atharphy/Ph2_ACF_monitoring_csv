@@ -64,18 +64,18 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
         }
     } // get read/write registers
 
-    // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Reading default register" << std::endl;
-    // auto defaulChipReg = ReadChipMultReg(pChip, readRegisterList);
-    // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Read default register done" << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Reading default register" << std::endl;
+    auto defaulChipReg = ReadChipMultReg(pChip, readRegisterList);
+    std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Read default register done" << std::endl;
 
-    // for(size_t index = 0; index < defaulChipReg.size(); ++index)
-    // {
-    //     if(defaulChipReg.at(index).second != cRegVec.at(index).second)
-    //     {
-    //         std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Changing " << defaulChipReg.at(index).first << " from 0x" << std::hex << defaulChipReg.at(index).second << " to 0x" <<
-    //         cRegVec.at(index).second << std::dec << std::endl;
-    //     }
-    // }
+    for(size_t index = 0; index < defaulChipReg.size(); ++index)
+    {
+        if(defaulChipReg.at(index).second != cRegVec.at(index).second)
+        {
+            std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Changing " << defaulChipReg.at(index).first << " from 0x" << std::hex << defaulChipReg.at(index).second << " to 0x"
+                      << cRegVec.at(index).second << std::dec << std::endl;
+        }
+    }
 
     WriteChipMultReg(pChip, cRegVec);
 
