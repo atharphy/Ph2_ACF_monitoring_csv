@@ -93,7 +93,6 @@ nav:
         - 'innerTracker/calibrations/PixelAlive.md'
         - 'innerTracker/calibrations/SCurve.md'
         - 'innerTracker/calibrations/Noise.md'
-        - 'innerTracker/calibrations/XTalk.md'
         - 'innerTracker/calibrations/GainScan.md'
       - 'Pixel tuning':
         - innerTracker/calibrations/LatencyScan.md
@@ -112,6 +111,8 @@ nav:
       - 'Additional information/HOWTOs':
         - innerTracker/ModuleTesting.md
         - innerTracker/SCCTuning.md
+        - innerTracker/calibrations/XTalk.md
+        - innerTracker/calibrations/TermExplanations.md
     - 'Outer Tracker':
       - 'Outer Tracker': outerTracker/index.md
       - 'Firmware naming conventions': outerTracker/firmware.md
