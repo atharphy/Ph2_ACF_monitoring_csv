@@ -24,7 +24,7 @@ void OTBitErrorRateTest::Initialise(void)
     initializeContainers();
     fBroadcastAlignSetting = 2;
 
-    fNumberOfFrames = findValueInSettings<double>("OTBitErrorRateTest_NumberOfFrames", 1E10);
+    fNumberOfBits = findValueInSettings<double>("OTBitErrorRateTest_NumberOfBits", 1E10);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -69,6 +69,9 @@ void OTBitErrorRateTest::bitErrorRateTest()
     DetectorDataContainer theBERTcounterCountainer;
     ContainerFactory::copyAndInitHybrid<std::vector<GenericDataArray<uint64_t, 2>>>(*fDetectorContainer, theBERTcounterCountainer);
 
+    DetectorDataContainer theFECcounterCountainer;
+    ContainerFactory::copyAndInitOpticalGroup<uint32_t>(*fDetectorContainer, theFECcounterCountainer);
+
     for(auto theBoard: *fDetectorContainer)
     {
         for(auto theOpticalGroup: *theBoard)
@@ -106,7 +109,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_rst_bit", 1);
         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_rst_bit", 0);
 
-        auto bertResultsBoardContainer = theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, flpGBTInterface->GetChipRate(theBoard->getFirstObject()->flpGBT) == 10, fNumberOfFrames);
+        auto bertResultsBoardContainer = theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, flpGBTInterface->GetChipRate(theBoard->getFirstObject()->flpGBT) == 10, fNumberOfBits);
 
         for(auto theOpticalGroup: bertResultsBoardContainer)
         {
@@ -118,18 +121,21 @@ void OTBitErrorRateTest::bitErrorRateTest()
                     theBERTcounterCountainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
                 storedBERTresultsVector.assign(receivedBERTresultsVector.begin(), receivedBERTresultsVector.end());
             }
-            auto fecCounter = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.lpgbt_fec_counter");
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fecCounter = 0x" << std::hex << fecCounter << std::dec << std::endl;
+            theFECcounterCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint32_t>() = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.lpgbt_fec_counter");
         }
     }
 
 #ifdef __USE_ROOT__
     fDQMHistogramOTBitErrorRateTest.fillErrorCounter(theBERTcounterCountainer);
+    fDQMHistogramOTBitErrorRateTest.fillFECcounter  (theFECcounterCountainer);
 #else
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theErrorCounterSerialization("OTBitErrorRateTestErrorCounter");
         theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBERTcounterCountainer);
+
+        ContainerSerialization theErrorCounterSerialization("OTBitErrorRateTestFECcounter");
+        theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theFECcounterCountainer);
     }
 #endif
 }

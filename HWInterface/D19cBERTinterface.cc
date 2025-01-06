@@ -426,7 +426,12 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
         for(auto theHybrid: *theOpticalGroup)
         {
             auto& theCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
-            for(uint8_t line = 0; line < numberOfLines; ++line) { theCounterVector.at(line).at(1) = getBitErrorCounters(theHybrid->getId(), line); }
+            for(uint8_t line = 0; line < numberOfLines; ++line)
+            {
+                theCounterVector.at(line).at(1) = getBitErrorCounters(theHybrid->getId(), line); 
+                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Hybrid = " << theHybrid->getId() << " line = " << +line << " BERT counter = 0x" << std::hex << theCounterVector.at(line).at(1) << std::dec << std::endl;
+                
+            }
         }
     }
 
