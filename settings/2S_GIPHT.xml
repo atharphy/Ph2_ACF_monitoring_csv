@@ -178,7 +178,7 @@
 
     <Setting name="OTLpGBTEyeOpeningTest_PowerList">1-3</Setting>
 
-    <Setting name="OTBitErrorRateTest_AcquisitionDuration">32</Setting> <!-- in seconds -->
+    <Setting name="OTBitErrorRateTest_NumberOfBits">1E10</Setting>
 
     <Setting name="KIRA_ID">    ArduinoTestBox  </Setting>
     <Setting name="KIRA_Port" > 7011 </Setting>

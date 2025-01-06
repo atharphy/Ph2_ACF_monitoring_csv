@@ -48,6 +48,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
     cRegVec.clear();
 
+    // std::vector<std::string> readRegisterList;
     for(const auto& cRegItem: clpGBTRegMap)
     {
         bool isFreeRegister = false;
@@ -56,8 +57,25 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
             isFreeRegister = std::regex_match(cRegItem.first, freeRegister.first);
             if(isFreeRegister) break;
         }
-        if(!isFreeRegister) cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
+        if(!isFreeRegister)
+        {
+            cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
+            // readRegisterList.push_back(cRegItem.first);
+        }
     } // get read/write registers
+
+    // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Reading default register" << std::endl;
+    // auto defaulChipReg = ReadChipMultReg(pChip, readRegisterList);
+    // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Read default register done" << std::endl;
+
+    // for(size_t index = 0; index < defaulChipReg.size(); ++index)
+    // {
+    //     if(defaulChipReg.at(index).second != cRegVec.at(index).second)
+    //     {
+    //         std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Changing " << defaulChipReg.at(index).first << " from 0x" << std::hex << defaulChipReg.at(index).second << " to 0x"
+    //                   << cRegVec.at(index).second << std::dec << std::endl;
+    //     }
+    // }
 
     WriteChipMultReg(pChip, cRegVec);
 

@@ -57,8 +57,12 @@ class DQMHistogramOTBitErrorRateTest : public DQMHistogramBase
 
     void fillErrorCounter(DetectorDataContainer& theErrorCountainer);
 
+    void fillFECcounter(DetectorDataContainer& theErrorCountainer);
+
   private:
     DetectorContainer*    fDetectorContainer;
-    DetectorDataContainer fBERTerrorCounterHistogram;
+    DetectorDataContainer fBERTerrorRateHistogram;
+    DetectorDataContainer fBERTbitCounterHistogram;
+    DetectorDataContainer fFECcounterHistogram;
 };
 #endif

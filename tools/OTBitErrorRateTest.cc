@@ -5,6 +5,7 @@
 #include "HWInterface/ExceptionHandler.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/GenericDataArray.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -23,7 +24,7 @@ void OTBitErrorRateTest::Initialise(void)
     initializeContainers();
     fBroadcastAlignSetting = 2;
 
-    fAcquisitionDuration = findValueInSettings<double>("OTBitErrorRateTest_AcquisitionDuration", 32);
+    fNumberOfBits = findValueInSettings<double>("OTBitErrorRateTest_NumberOfBits", 1E10);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -66,7 +67,10 @@ void OTBitErrorRateTest::bitErrorRateTest()
     uint8_t numberOfLines = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
 
     DetectorDataContainer theBERTcounterCountainer;
-    ContainerFactory::copyAndInitHybrid<std::vector<uint32_t>>(*fDetectorContainer, theBERTcounterCountainer);
+    ContainerFactory::copyAndInitHybrid<std::vector<GenericDataArray<uint64_t, 2>>>(*fDetectorContainer, theBERTcounterCountainer);
+
+    DetectorDataContainer theFECcounterCountainer;
+    ContainerFactory::copyAndInitOpticalGroup<uint32_t>(*fDetectorContainer, theFECcounterCountainer);
 
     for(auto theBoard: *fDetectorContainer)
     {
@@ -99,37 +103,40 @@ void OTBitErrorRateTest::bitErrorRateTest()
 
         theAlignerInterface->disableAlignmentOnPRBS();
 
-        // std::cout << "L1    : " << getPatternPrintout(static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->L1ADebug(1, false), 1, true) <<
-        // std::endl;
-
-        // auto lineOutputVector = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()))->StubDebug(true, 6, false);
-        // for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
-        // {
-        //     std::cout << "Stub " << lineIndex << ": " << getPatternPrintout(lineOutputVector.at(lineIndex), 1, true) << std::endl;
-        // }
-
         D19cBERTinterface* theBERTinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
 
-        auto bertResultsBoardContainer = theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, fAcquisitionDuration);
+        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_en_bit", 1);
+        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_rst_bit", 1);
+        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_rst_bit", 0);
+
+        auto bertResultsBoardContainer = theBERTinterface->runBERTonAllHybdrids(theBoard, numberOfLines, flpGBTInterface->GetChipRate(theBoard->getFirstObject()->flpGBT) == 10, fNumberOfBits);
 
         for(auto theOpticalGroup: bertResultsBoardContainer)
         {
+            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_err_bit", theOpticalGroup->getId());
             for(auto theHybrid: *theOpticalGroup)
             {
-                const auto& receivedBERTresultsVector = theHybrid->getSummary<std::vector<uint32_t>>();
-                auto&       storedBERTresultsVector   = theBERTcounterCountainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<uint32_t>>();
+                const auto& receivedBERTresultsVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
+                auto&       storedBERTresultsVector =
+                    theBERTcounterCountainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
                 storedBERTresultsVector.assign(receivedBERTresultsVector.begin(), receivedBERTresultsVector.end());
             }
+            theFECcounterCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint32_t>() =
+                fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.lpgbt_fec_counter");
         }
     }
 
 #ifdef __USE_ROOT__
     fDQMHistogramOTBitErrorRateTest.fillErrorCounter(theBERTcounterCountainer);
+    fDQMHistogramOTBitErrorRateTest.fillFECcounter(theFECcounterCountainer);
 #else
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theErrorCounterSerialization("OTBitErrorRateTestErrorCounter");
         theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBERTcounterCountainer);
+
+        ContainerSerialization theFECcounterSerialization("OTBitErrorRateTestFECcounter");
+        theFECcounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theFECcounterCountainer);
     }
 #endif
 }

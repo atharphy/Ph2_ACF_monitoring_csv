@@ -191,6 +191,14 @@
                     <node id="link10"         mask="0x00000007"/> 
                     <node id="link11"         mask="0x00000038"/> 
                 </node>
+
+                <node id="lpgbt_fec_config"          address="0x04B">
+                    <node id="fec_err_cnt_en_bit"     mask="0x00000001"/>
+                    <node id="fec_err_cnt_rst_bit"    mask="0x00000002"/>
+                    <node id="fec_err_cnt_err_bit"    mask="0x00000004"/>
+                    <node id="fec_err_cnt_sel_offset" mask="0x00000FF0"/>
+                </node>
+
             </node>
 
             <node id="readout_block"                address="0x5000">
@@ -788,6 +796,10 @@
             <node id="input_lines_debug_done"             address="0x0DE" mask="0xFFFFFFFF" description="debugging of input lines done"/>
             <node id="input_lines_debug_done"             address="0x0DF" mask="0xFFFFFFFF" description="debugging of output lines done"/>
        
+
+            <node id="lpgbt_fec_counter" address="0x125"/>
+            <node id="lpgbt_fec_counter_error_detected_flags" address="0x126"/>
+            
         </node>
 
         <node id="be_proc"                      address="0x4000">

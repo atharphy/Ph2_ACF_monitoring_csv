@@ -32,8 +32,8 @@ class BitErrorTestControl
 
     enum class CounterSelect
     {
-        CounterLSB        = 0,
-        CounterMSB        = 1,
+        FrameCounterLSB   = 0,
+        FrameCounterMSB   = 1,
         FrameErrorCounter = 2,
         BitErrorCounter   = 3
     };
@@ -75,7 +75,7 @@ class BitErrorTestControl
     bool          fDebugMode{false};
     bool          fCheckMode{false};
     bool          fCounterReset{false};
-    CounterSelect fCounterSelect{CounterSelect::CounterLSB};
+    CounterSelect fCounterSelect{CounterSelect::FrameCounterLSB};
     Mode          fMode{Mode::None0};
     bool          fCheckEnable{false};
     bool          fReceiveEnable{false};
@@ -120,6 +120,8 @@ class BitErrorTestReply
     uint32_t getLFSRfirstData() { return fLFSRfirstData; }
     uint32_t getPRBSdata() { return fPRBSdata; }
     uint32_t getLFSRdata() { return fLFSRdata; }
+    uint32_t getFrameCounterLSB() { return fFrameCounterLSB; }
+    uint32_t getFrameCounterMSB() { return fFrameCounterMSB; }
 
   private:
     uint8_t                   fHybridId{99};
@@ -153,17 +155,19 @@ class D19cBERTinterface
     D19cBERTinterface(RegManager* theRegManager);
     ~D19cBERTinterface();
 
-    void     startBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
-    void     stopBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
-    void     haltBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
-    uint32_t getBitErrorCounters(uint8_t hybridId, uint8_t lineId);
-    uint32_t getFirstData(uint8_t hybridId, uint8_t lineId);
-    void     injectError(uint8_t hybridId, uint8_t lineId);
+    void startBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
+    void stopBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
+    void haltBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
 
-    BoardDataContainer runBERTonAllHybdrids(BoardContainer* theBoardContainer, uint8_t numberOfLines, uint32_t numberOfSeconds);
+    BoardDataContainer runBERTonAllHybdrids(BoardContainer* theBoardContainer, uint8_t numberOfLines, bool is10Gmodule, float numberOfMatchedBits);
 
   private:
     RegManager* fTheRegManager{nullptr};
+    uint32_t    getBitErrorCounters(uint8_t hybridId, uint8_t lineId);
+    uint64_t    getFrameCounters(uint8_t hybridId, uint8_t lineId, bool isMSB);
+    uint32_t    getFirstData(uint8_t hybridId, uint8_t lineId);
+    void        injectError(uint8_t hybridId, uint8_t lineId);
+    void        selectFrameCounters(bool isMSB);
 
     void              writeCommand(BitErrorTestControl theBitErrorTestControl);
     BitErrorTestReply readReplay(const BitErrorTestControl& theBitErrorTestControl);
