@@ -270,7 +270,7 @@
     <Setting name="ThrStop">             450 </Setting>
     <Setting name="TargetThr">          2000 </Setting>
     <Setting name="TargetOcc">          1e-6 </Setting>
-    <Setting name="OccPerPixel">        2e-5 </Setting>
+    <Setting name="OccPerPixel">        1e-4 </Setting>
     <Setting name="MaxMaskedPixels">       1 </Setting>
     <Setting name="UnstuckPixels">         0 </Setting>
 
