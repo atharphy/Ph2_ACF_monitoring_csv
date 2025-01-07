@@ -69,18 +69,18 @@ void D19cLinkInterface::GeneralLinkReset(const BeBoard* pBoard)
         ResetLinks();
         for(auto cOpticalReadout: *pBoard)
         {
-            cLinkStatus = cOpticalReadout->fIsLocked;
-            if(!cLinkStatus)
-            {
+            // cLinkStatus = cOpticalReadout->fIsLocked;
+            // if(!cLinkStatus)
+            // {
                 cLinkStatus = GetLinkStatus(cOpticalReadout->getId());
+#ifdef __TCUSB__
                 if(cLinkStatus)
                 {
-                    cOpticalReadout->fIsLocked = true;
-#ifdef __TCUSB__
+                    // cOpticalReadout->fIsLocked = true;
                     break;
-#endif
                 }
-            }
+#endif
+            // }
             cAllLocked = cAllLocked && cLinkStatus;
         }
 #ifdef __TCUSB__

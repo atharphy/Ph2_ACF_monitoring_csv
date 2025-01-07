@@ -2,6 +2,7 @@
 #include "HWInterface/D19cBERTinterface.h"
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19cLinkInterface.h"
 #include "HWInterface/ExceptionHandler.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
@@ -36,12 +37,33 @@ void OTBitErrorRateTest::ConfigureCalibration() {}
 
 void OTBitErrorRateTest::Running()
 {
-    LOG(INFO) << "Starting OTBitErrorRateTest measurement.";
-    Initialise();
-    bitErrorRateTest();
-    // bitErrorRateTestOld();
-    LOG(INFO) << "Done with OTBitErrorRateTest.";
-    Reset();
+    for(size_t index = 0; index < 20; ++index)
+    {
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Iteration " << index << std::endl;
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+        LOG(INFO) << "Starting OTBitErrorRateTest measurement.";
+
+        for(auto theBoard: *fDetectorContainer)
+        {
+            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getLinkInterface()->GeneralLinkReset(theBoard);
+
+            // fBeBoardInterface->ConfigureBoard(theBoard);
+            for(auto cOpticalGroup: *theBoard)
+            {
+                if(!flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT))
+                {
+                    LOG(INFO) << BOLDRED << "SOMETHING FUNNY" << RESET;
+                    continue;
+                }
+            }
+        }
+        Initialise();
+        
+        bitErrorRateTest();
+        LOG(INFO) << "Done with OTBitErrorRateTest.";
+        Reset();
+    }
 }
 
 void OTBitErrorRateTest::Stop(void)
@@ -121,8 +143,10 @@ void OTBitErrorRateTest::bitErrorRateTest()
                     theBERTcounterCountainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
                 storedBERTresultsVector.assign(receivedBERTresultsVector.begin(), receivedBERTresultsVector.end());
             }
-            theFECcounterCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint32_t>() =
-                fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.lpgbt_fec_counter");
+            auto theFECcounter = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.lpgbt_fec_counter");
+            theFECcounterCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint32_t>() = theFECcounter;
+
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Writing theFECcounter = 0x" << std::hex << +theFECcounter << std::dec << std::endl;
         }
     }
 
