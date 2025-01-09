@@ -629,7 +629,7 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip, uint8_t version)
 
     if(status == false)
     {
-        std::error_code e{};
+        std::error_code e{6, std::system_category()};
         throw std::system_error(e, "Problem reading chip e-fuse code");
     }
     else if(static_cast<RD53*>(pChip)->geteFuseCode() < 0)
