@@ -1593,6 +1593,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
     uint32_t     cntr_lo;
     uint32_t     cntr_hi;
     uint64_t     nErrors;
+    uint16_t     FECcounter;
 
     if(given_time == true)
     {
@@ -1626,6 +1627,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
     // #########
     // # Start #
     // #########
+    RD53FWInterface::ToggleRegister("user.ctrl_regs.lpgbt_1.fec_cntr_clear");
     RD53FWInterface::ToggleRegister("user.ctrl_regs.PRBS_checker.start_checker");
 
     // #########################################
@@ -1701,6 +1703,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
             cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
             frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
             nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
+            FECcounter   = RegManager::ReadReg("user.stat_regs.lpgbt_monitoring.fec_cntr");
             results.push_back(nErrors / frames2run);
 
             LOG(INFO) << BOLDGREEN << "Hybrid Id " << BOLDYELLOW << +hybrid_id << BOLDGREEN << " Chip Id " << BOLDYELLOW << +chip_id << BOLDGREEN << " Chip Lane " << BOLDYELLOW << +lane << RESET;
@@ -1709,6 +1712,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
             LOG(INFO) << GREEN << "Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << std::fixed << std::setprecision(3)
                       << results.back() * 100 << RESET << GREEN << "%)" << std::setprecision(-1) << RESET;
             LOG(INFO) << GREEN << "BER test result: " << (nErrors == 0 ? BOLDYELLOW : BOLDRED) << (nErrors == 0 ? "PASSED" : "NOT PASSED") << RESET;
+            LOG(INFO) << GREEN << "Forward Error Correction (FEC) counter: " << BOLDYELLOW << FECcounter << RESET;
         }
     }
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
