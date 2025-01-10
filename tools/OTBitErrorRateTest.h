@@ -42,7 +42,7 @@ class OTBitErrorRateTest : public OTalignBoardDataWord
     static std::string fCalibrationDescription;
 
   private:
-    void bitErrorRateTest();
+    void bitErrorRateTest(uint16_t phaseClockDelay);
 
     float fNumberOfBits{1E10};
 

@@ -49,10 +49,15 @@ void DQMHistogramOTCICphaseAlignment::book(TFile* theOutputFile, DetectorContain
             for(int line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
             {
                 std::string binLabel;
-                if(isPS) { binLabel = Form("MPA%d", port + 8); }
-                else { binLabel = Form("CBC%d", port); }
+                if(isPS) { binLabel = "MPA" + std::to_string(port + 8); }
+                else { binLabel = "CBC%d" + std::to_string(port); }
                 if(line == 0) { binLabel += "_L1"; }
-                else { binLabel += Form("_Stub%d", line - 1); }
+                else 
+                { 
+                    binLabel += "_Stub";
+                    binLabel += std::to_string(line - 1); 
+                }
+                
                 theHistogramAxis->SetBinLabel(port * NUMBER_OF_LINES_PER_CIC_PORTS + line + 1, binLabel.c_str());
             }
         }

@@ -517,7 +517,7 @@ void OTHybridTester::LpGBTTestADC(const std::vector<std::string>& pADCs, uint32_
                     cADCValVect.push_back(cADCValue);
                 }
                 cDACtoADCTree->Fill();
-                auto cDACtoADCGraph = new TGraph(cDACValVect.size(), cDACValVect.data(), cADCValVect.data());
+                auto cDACtoADCGraph = new TGraph(cDACValVect.size(), cDACValVect.c_str(), cADCValVect.c_str());
                 cDACtoADCGraph->SetName(Form("gADC%i", cADCId));
                 cDACtoADCGraph->SetTitle(Form("ADC%i", cADCId));
                 cDACtoADCGraph->SetLineColor(cADCId + 1);

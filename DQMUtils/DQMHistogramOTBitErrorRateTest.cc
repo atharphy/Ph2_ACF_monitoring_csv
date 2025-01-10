@@ -8,6 +8,7 @@
 
 #include "TFile.h"
 #include "TH1F.h"
+#include "TH2F.h"
 #include "TH1I.h"
 
 //========================================================================================================================
@@ -28,7 +29,7 @@ void DQMHistogramOTBitErrorRateTest::book(TFile* theOutputFile, DetectorContaine
 
     size_t numberOfLines = (theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
 
-    auto setBitLabel = [numberOfLines](TH1F* theHistogram)
+    auto setBitLabel = [numberOfLines](TH2F* theHistogram)
     {
         std::vector<std::string> hybridSide{"FEHR", "FEHL"};
         for(uint8_t hybridId = 0; hybridId < hybridSide.size(); ++hybridId)
@@ -39,26 +40,29 @@ void DQMHistogramOTBitErrorRateTest::book(TFile* theOutputFile, DetectorContaine
         }
     };
 
-    HistContainer<TH1F> errorRateHistogram("BERTerrorRate", "BERT error rate", numberOfLines * 2, -0.5, numberOfLines * 2 - 0.5);
+    HistContainer<TH2F> errorRateHistogram("BERTerrorRate", "BERT error rate", numberOfLines * 2, -0.5, numberOfLines * 2 - 0.5, 512, 0, 512);
     errorRateHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
-    errorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Error rate");
+    errorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Clock phase");
+    errorRateHistogram.fTheHistogram->SetStats(false);
     setBitLabel(errorRateHistogram.fTheHistogram);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBERTerrorRateHistogram, errorRateHistogram);
 
-    HistContainer<TH1F> bitCounterHistogram("BERTtestedBitCounter", "BERT tested bit counter", numberOfLines * 2, -0.5, numberOfLines * 2 - 0.5);
+    HistContainer<TH2F> bitCounterHistogram("BERTtestedBitCounter", "BERT tested bit counter", numberOfLines * 2, -0.5, numberOfLines * 2 - 0.5, 512, 0, 512);
     bitCounterHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
-    bitCounterHistogram.fTheHistogram->GetYaxis()->SetTitle("Number of tested bits");
+    bitCounterHistogram.fTheHistogram->GetYaxis()->SetTitle("Clock phase");
+    bitCounterHistogram.fTheHistogram->SetStats(false);
     setBitLabel(bitCounterHistogram.fTheHistogram);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBERTbitCounterHistogram, bitCounterHistogram);
 
     HistContainer<TH1I> fecCounterHistogram("FECerrorCounter", "FEC error counter", 1, -0.5, 0.5);
     fecCounterHistogram.fTheHistogram->GetXaxis()->SetTitle("FEC");
     fecCounterHistogram.fTheHistogram->GetYaxis()->SetTitle("FEC counter");
+    fecCounterHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fFECcounterHistogram, fecCounterHistogram);
 }
 
 //========================================================================================================================
-void DQMHistogramOTBitErrorRateTest::fillErrorCounter(DetectorDataContainer& theErrorCountainer)
+void DQMHistogramOTBitErrorRateTest::fillErrorCounter(DetectorDataContainer& theErrorCountainer, uint16_t phaseDelay)
 {
     for(auto theBoard: theErrorCountainer)
     {
@@ -73,8 +77,8 @@ void DQMHistogramOTBitErrorRateTest::fillErrorCounter(DetectorDataContainer& the
                 for(uint8_t line = 0; line < numberOfLines; ++line)
                 {
                     int binNumber = 1 + line + (theHybrid->getId() % 2) * numberOfLines;
-                    theBitCounterHistogram->SetBinContent(binNumber, theErrorCounterVector.at(line).at(0));
-                    theErrorCounterHistogram->SetBinContent(binNumber, float(theErrorCounterVector.at(line).at(1)) / float(theErrorCounterVector.at(line).at(0)));
+                    theBitCounterHistogram->SetBinContent(binNumber, phaseDelay+1, theErrorCounterVector.at(line).at(0));
+                    theErrorCounterHistogram->SetBinContent(binNumber, phaseDelay+1, theErrorCounterVector.at(line).at(0) > 0 ? float(theErrorCounterVector.at(line).at(1)) / float(theErrorCounterVector.at(line).at(0)) : 1.);
                 }
             }
         }
@@ -119,7 +123,7 @@ bool DQMHistogramOTBitErrorRateTest::fill(std::string& inputStream)
         // std::cout << "Matched OTBitErrorRateTest ErrorCounter!!!!\n";
         DetectorDataContainer theDetectorData =
             theErrorCounterSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<GenericDataArray<uint64_t, 2>>, EmptyContainer>(fDetectorContainer);
-        fillErrorCounter(theDetectorData);
+        fillErrorCounter(theDetectorData, 0);
         return true;
     }
     if(theFECcounterSerialization.attachDeserializer(inputStream))

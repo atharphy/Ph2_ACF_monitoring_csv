@@ -230,8 +230,8 @@ void DQMHistogramPedeNoise::process()
                 std::string validationCanvasName = "Validation_B_" + std::to_string(cBoard->getId()) + "_O_" + std::to_string(cOpticalGroup->getId()) + "_H_" + std::to_string(cHybrid->getId());
                 std::string pedeNoiseCanvasName  = "PedeNoise_B_" + std::to_string(cBoard->getId()) + "_O_" + std::to_string(cOpticalGroup->getId()) + "_H_" + std::to_string(cHybrid->getId());
 
-                TCanvas* cValidation = new TCanvas(validationCanvasName.data(), validationCanvasName.data(), 0, 0, 650, fPlotSCurves ? 900 : 650);
-                TCanvas* cPedeNoise  = new TCanvas(pedeNoiseCanvasName.data(), pedeNoiseCanvasName.data(), 670, 0, 650, 650);
+                TCanvas* cValidation = new TCanvas(validationCanvasName.c_str(), validationCanvasName.c_str(), 0, 0, 650, fPlotSCurves ? 900 : 650);
+                TCanvas* cPedeNoise  = new TCanvas(pedeNoiseCanvasName.c_str(), pedeNoiseCanvasName.c_str(), 670, 0, 650, 650);
 
                 cValidation->Divide(cHybrid->size(), fPlotSCurves ? 3 : 2);
                 cPedeNoise->Divide(cHybrid->size(), 2);

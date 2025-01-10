@@ -37,33 +37,34 @@ void OTBitErrorRateTest::ConfigureCalibration() {}
 
 void OTBitErrorRateTest::Running()
 {
-    for(size_t index = 0; index < 20; ++index)
+    Initialise();
+    for(size_t index = 0; index < 511; ++index)
     {
+        uint16_t phaseDelay = index;
         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Iteration " << index << std::endl;
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Phase delay " << +phaseDelay << std::endl;
         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
         LOG(INFO) << "Starting OTBitErrorRateTest measurement.";
 
-        for(auto theBoard: *fDetectorContainer)
-        {
-            static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getLinkInterface()->GeneralLinkReset(theBoard);
+        // for(auto theBoard: *fDetectorContainer)
+        // {
+        //     // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getLinkInterface()->GeneralLinkReset(theBoard);
 
-            // fBeBoardInterface->ConfigureBoard(theBoard);
-            for(auto cOpticalGroup: *theBoard)
-            {
-                if(!flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT))
-                {
-                    LOG(INFO) << BOLDRED << "SOMETHING FUNNY" << RESET;
-                    continue;
-                }
-            }
-        }
-        Initialise();
+        //     // fBeBoardInterface->ConfigureBoard(theBoard);
+        //     for(auto cOpticalGroup: *theBoard)
+        //     {
+        //         if(!flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT))
+        //         {
+        //             LOG(INFO) << BOLDRED << "SOMETHING FUNNY" << RESET;
+        //             continue;
+        //         }
+        //     }
+        // }
         
-        bitErrorRateTest();
+        bitErrorRateTest(phaseDelay);
         LOG(INFO) << "Done with OTBitErrorRateTest.";
-        Reset();
     }
+    Reset();
 }
 
 void OTBitErrorRateTest::Stop(void)
@@ -84,7 +85,7 @@ void OTBitErrorRateTest::Resume() {}
 
 void OTBitErrorRateTest::Reset() { fRegisterHelper->restoreSnapshot(); }
 
-void OTBitErrorRateTest::bitErrorRateTest()
+void OTBitErrorRateTest::bitErrorRateTest(uint16_t phaseClockDelay)
 {
     uint8_t numberOfLines = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
 
@@ -103,7 +104,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
             bool     allAligned                = false;
             while(iteration < maximumNumberOfIterations)
             {
-                allAligned = static_cast<D19clpGBTInterface*>(flpGBTInterface)->enablePRBS(theOpticalGroup);
+                allAligned = static_cast<D19clpGBTInterface*>(flpGBTInterface)->enablePRBS(theOpticalGroup, phaseClockDelay);
                 if(allAligned) break;
                 ++iteration;
                 LOG(WARNING) << WARNING_FORMAT << "Failed to align LpGBT on Board " << theBoard->getId() << " OpticalGroup " << theOpticalGroup->getId() << ", retrying "
@@ -151,7 +152,7 @@ void OTBitErrorRateTest::bitErrorRateTest()
     }
 
 #ifdef __USE_ROOT__
-    fDQMHistogramOTBitErrorRateTest.fillErrorCounter(theBERTcounterCountainer);
+    fDQMHistogramOTBitErrorRateTest.fillErrorCounter(theBERTcounterCountainer, phaseClockDelay);
     fDQMHistogramOTBitErrorRateTest.fillFECcounter(theFECcounterCountainer);
 #else
     if(fDQMStreamerEnabled)

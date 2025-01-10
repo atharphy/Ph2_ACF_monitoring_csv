@@ -59,15 +59,15 @@ class GraphContainer : public PlotContainer
 
         fTheGraph = new Graph(*(static_cast<const GraphContainer<Graph>*>(reference)->fTheGraph));
 
-        fTheGraph->SetName(name.data());
-        fTheGraph->SetTitle(title.data());
+        fTheGraph->SetName(name.c_str());
+        fTheGraph->SetTitle(title.c_str());
 
         gDirectory->Append(fTheGraph);
     }
 
     void print(void) { std::cout << "GraphContainer " << fTheGraph->GetName() << std::endl; }
 
-    void setNameTitle(std::string GraphogramName, std::string GraphogramTitle) override { fTheGraph->SetNameTitle(GraphogramName.data(), GraphogramTitle.data()); }
+    void setNameTitle(std::string GraphogramName, std::string GraphogramTitle) override { fTheGraph->SetNameTitle(GraphogramName.c_str(), GraphogramTitle.c_str()); }
 
     std::string getName() const override { return fTheGraph->GetName(); }
 

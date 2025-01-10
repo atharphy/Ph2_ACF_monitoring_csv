@@ -403,7 +403,7 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
             {
                 LOG(INFO) << BOLDRED << "Cannot find BERT start pattern for OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id " << +theHybrid->getId() << " --- Hybrid will be disabled"
                           << RESET;
-                ExceptionHandler::getInstance()->disableHybrid(theBoardContainer->getId(), theOpticalGroup->getId(), theHybrid->getId());
+                // ExceptionHandler::getInstance()->disableHybrid(theBoardContainer->getId(), theOpticalGroup->getId(), theHybrid->getId());
             }
         }
     }
@@ -429,8 +429,6 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
             for(uint8_t line = 0; line < numberOfLines; ++line)
             {
                 theCounterVector.at(line).at(1) = getBitErrorCounters(theHybrid->getId(), line);
-                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Hybrid = " << theHybrid->getId() << " line = " << +line << " BERT counter = 0x" << std::hex
-                          << theCounterVector.at(line).at(1) << std::dec << std::endl;
             }
         }
     }
@@ -469,7 +467,7 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
             if(missingFrames)
             {
                 LOG(INFO) << BOLDRED << "Failed to run BERT on OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id " << +theHybrid->getId() << " --- Hybrid will be disabled" << RESET;
-                ExceptionHandler::getInstance()->disableHybrid(theBoardContainer->getId(), theOpticalGroup->getId(), theHybrid->getId());
+                // ExceptionHandler::getInstance()->disableHybrid(theBoardContainer->getId(), theOpticalGroup->getId(), theHybrid->getId());
             }
         }
     }

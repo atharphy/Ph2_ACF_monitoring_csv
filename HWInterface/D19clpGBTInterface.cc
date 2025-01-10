@@ -133,7 +133,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 /* OT specific functions */
 /*-----------------------*/
 
-bool D19clpGBTInterface::enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalGroup)
+bool D19clpGBTInterface::enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalGroup, uint16_t phase)
 {
     auto                                          theLpBGT              = theOpticalGroup->flpGBT;
     const std::map<uint8_t, std::vector<uint8_t>> theGroupAndChannelMap = theOpticalGroup->getLpGBTrxGroupsAndChannels();
@@ -141,12 +141,15 @@ bool D19clpGBTInterface::enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalG
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
 
-    uint16_t phase          = 0x7f;
     uint8_t  driverStrenght = 3;
     uint8_t  PS0delayValue  = phase & 0xff;
-    uint8_t  PS0configValue = ((phase >> 1) & 0x80) | (is10G ? 5 : 4) | (driverStrenght << 3);
+    uint8_t  PS0configValue = ((phase >> 1) & 0x80) | (is10G ? 5 : 4) | (driverStrenght << 3) | 0x40;
     theRegisterVector.push_back({"PS0Config", PS0configValue});
     theRegisterVector.push_back({"PS0Delay", PS0delayValue});
+
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] PS0Config = 0x" << std::hex << +PS0configValue << std::dec << std::endl;
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] PS0Delay = 0x" << std::hex << +PS0delayValue << std::dec << std::endl;
+    
     WriteChipMultReg(theLpBGT, theRegisterVector);
     theRegisterVector.clear();
 
