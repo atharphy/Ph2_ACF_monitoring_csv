@@ -1576,7 +1576,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 // # Bit Error Rate test #
 // #######################
 
-std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, const std::map<uint16_t, std::vector<uint8_t>>& hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed)
+std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, const std::map<uint32_t, std::vector<uint8_t>>& optgroup_id_hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed)
 // ####################
 // # frontendSpeed    #
 // # 1.28 Gbit/s  = 0 #
@@ -1641,10 +1641,10 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
 
         forceDone = true;
-        for(const auto& thePair: hybrid_id_chip_id_chip_lanes)
+        for(const auto& thePair: optgroup_id_hybrid_id_chip_id_chip_lanes)
         {
-            uint8_t hybrid_id = thePair.first >> 8;
-            uint8_t chip_id   = thePair.first & 0x00FF;
+            uint8_t hybrid_id = (thePair.first >> 8) & 0xFF;
+            uint8_t chip_id   = thePair.first & 0xFF;
             LOG(INFO) << GREEN << "\t--> Hybrid Id " << BOLDYELLOW << +hybrid_id << RESET << GREEN << " Chip Id " << BOLDYELLOW << +chip_id << RESET;
             for(const auto& lane: thePair.second)
             {
@@ -1689,11 +1689,24 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
     // # Read PRBS frame counter #
     // ###########################
     std::vector<double> results;
+    uint8_t             optgroup_id_old = 0;
+    bool                optgroup_update = true;
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
-    for(const auto& thePair: hybrid_id_chip_id_chip_lanes)
+    for(const auto& thePair: optgroup_id_hybrid_id_chip_id_chip_lanes)
     {
-        uint8_t hybrid_id = thePair.first >> 8;
-        uint8_t chip_id   = thePair.first & 0x00FF;
+        uint8_t optgroup_id = (thePair.first >> 16) & 0xFF;
+        uint8_t hybrid_id   = (thePair.first >> 8) & 0xFF;
+        uint8_t chip_id     = thePair.first & 0xFF;
+
+        RD53FWInterface::selectLink(optgroup_id);
+        if((optgroup_update == false) && (optgroup_id != optgroup_id_old)) optgroup_update = true;
+        if(optgroup_update == true)
+        {
+            FECcounter = RegManager::ReadReg("user.stat_regs.lpgbt_monitoring.fec_cntr");
+            LOG(INFO) << GREEN << "OpticalGroup Id " << BOLDYELLOW << +optgroup_id << RESET << GREEN << " has Forward Error Correction (FEC) counter: " << BOLDYELLOW << FECcounter << RESET;
+            optgroup_update = false;
+            optgroup_id_old = optgroup_id;
+        }
 
         for(const auto& lane: thePair.second)
         {
@@ -1703,7 +1716,6 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
             cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
             frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
             nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
-            FECcounter   = RegManager::ReadReg("user.stat_regs.lpgbt_monitoring.fec_cntr");
             results.push_back(nErrors / frames2run);
 
             LOG(INFO) << BOLDGREEN << "Hybrid Id " << BOLDYELLOW << +hybrid_id << BOLDGREEN << " Chip Id " << BOLDYELLOW << +chip_id << BOLDGREEN << " Chip Lane " << BOLDYELLOW << +lane << RESET;
@@ -1712,7 +1724,6 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
             LOG(INFO) << GREEN << "Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << std::fixed << std::setprecision(3)
                       << results.back() * 100 << RESET << GREEN << "%)" << std::setprecision(-1) << RESET;
             LOG(INFO) << GREEN << "BER test result: " << (nErrors == 0 ? BOLDYELLOW : BOLDRED) << (nErrors == 0 ? "PASSED" : "NOT PASSED") << RESET;
-            LOG(INFO) << GREEN << "Forward Error Correction (FEC) counter: " << BOLDYELLOW << FECcounter << RESET;
         }
     }
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
