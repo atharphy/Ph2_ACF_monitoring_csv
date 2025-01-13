@@ -1442,17 +1442,17 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
 
         if(cCalibrationLoaded == false)
         {
-            LOG(WARNING) << BOLDRED << "Calibration data not available for LpGBT on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW
+            LOG(WARNING) << BOLDRED << "\t--> Calibration data not available for LpGBT on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW
                          << +pChip->getOpticalGroupId() << BOLDRED << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
             LOG(WARNING) << BOLDBLUE << "\t--> Proceeding without LpGBT ADC calibrations" << RESET;
         }
         else
-            LOG(WARNING) << GREEN << "Calibration data available for LpGBT on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup ID " << BOLDYELLOW
+            LOG(WARNING) << GREEN << "\t--> Calibration data available for LpGBT on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup ID " << BOLDYELLOW
                          << +pChip->getOpticalGroupId() << RESET << GREEN << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pChipId << std::dec << RESET;
     }
     else
     {
-        LOG(WARNING) << BOLDYELLOW << pFileName << BOLDRED << " could not be opened. Please check file path" << RESET;
+        LOG(WARNING) << BOLDRED << "\t--> " << BOLDYELLOW << pFileName << BOLDRED << " could not be opened. Please check file path" << RESET;
         LOG(WARNING) << BOLDBLUE << "\t--> Proceeding without LpGBT ADC calibrations" << RESET;
         throw std::runtime_error(std::string("FileNotFoundError"));
     }
