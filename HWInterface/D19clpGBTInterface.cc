@@ -146,9 +146,6 @@ bool D19clpGBTInterface::enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalG
     uint8_t  PS0configValue = ((phase >> 1) & 0x80) | (is10G ? 5 : 4) | (driverStrenght << 3) | 0x40;
     theRegisterVector.push_back({"PS0Config", PS0configValue});
     theRegisterVector.push_back({"PS0Delay", PS0delayValue});
-
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] PS0Config = 0x" << std::hex << +PS0configValue << std::dec << std::endl;
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] PS0Delay = 0x" << std::hex << +PS0delayValue << std::dec << std::endl;
     
     WriteChipMultReg(theLpBGT, theRegisterVector);
     theRegisterVector.clear();

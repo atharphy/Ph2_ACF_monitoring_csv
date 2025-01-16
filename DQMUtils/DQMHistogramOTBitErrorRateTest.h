@@ -55,12 +55,19 @@ class DQMHistogramOTBitErrorRateTest : public DQMHistogramBase
      */
     void reset(void) override;
 
-    void fillErrorCounter(DetectorDataContainer& theErrorCountainer, uint16_t phaseDelay);
+    void fillErrorCounterPhaseScan(DetectorDataContainer& theErrorCountainer, uint16_t phaseDelay);
+
+    void fillErrorCounter(DetectorDataContainer& theErrorCountainer);
 
     void fillFECcounter(DetectorDataContainer& theErrorCountainer);
 
+    void fillBERTbestPhase(DetectorDataContainer& theErrorCountainer);
+
   private:
     DetectorContainer*    fDetectorContainer;
+    DetectorDataContainer fBERTerrorRatePhaseScanHistogram;
+    DetectorDataContainer fBERTbitCounterPhaseScanHistogram;
+    DetectorDataContainer fBestPhaseHistogram;
     DetectorDataContainer fBERTerrorRateHistogram;
     DetectorDataContainer fBERTbitCounterHistogram;
     DetectorDataContainer fFECcounterHistogram;

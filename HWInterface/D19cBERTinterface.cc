@@ -284,11 +284,23 @@ uint32_t D19cBERTinterface::getBitErrorCounters(uint8_t hybridId, uint8_t lineId
     theBitErrorTestControl.setChipId(0);
     theBitErrorTestControl.setLineId(lineId);
     theBitErrorTestControl.setCommand(BitErrorTestControl::Command::ReadCounterData);
-    writeCommand(theBitErrorTestControl);
+    size_t maxNumberOfIterations = 10;
+    size_t iterationNumber = 0;
+    while(iterationNumber < maxNumberOfIterations)
+    {
+        size_t numberOfRead = 3;
+        std::vector<uint32_t> readValues(numberOfRead);
+        for(size_t readIt = 0; readIt < numberOfRead; ++readIt)
+        {
+            writeCommand(theBitErrorTestControl);
 
-    BitErrorTestReply theBitErrorTestCounter = readReplay(theBitErrorTestControl);
-
-    return theBitErrorTestCounter.getPRBSbitCounterValueEmulator();
+            BitErrorTestReply theBitErrorTestCounter = readReplay(theBitErrorTestControl);
+            readValues.at(readIt) = theBitErrorTestCounter.getPRBSbitCounterValueEmulator();
+        }
+        if (std::adjacent_find(readValues.begin(), readValues.end(), std::not_equal_to<>()) == readValues.end()) return readValues.at(0);
+        else ++iterationNumber;
+    }
+    return 0xFFFFFFFF;
 }
 
 void D19cBERTinterface::selectFrameCounters(bool isMSB)
@@ -317,11 +329,24 @@ uint64_t D19cBERTinterface::getFrameCounters(uint8_t hybridId, uint8_t lineId, b
     theReadDataControl.setChipId(0);
     theReadDataControl.setLineId(lineId);
     theReadDataControl.setCommand(BitErrorTestControl::Command::ReadCounterData);
-    writeCommand(theReadDataControl);
+    size_t maxNumberOfIterations = 10;
+    size_t iterationNumber = 0;
+    while(iterationNumber < maxNumberOfIterations)
+    {
+        size_t numberOfRead = 3;
+        std::vector<uint32_t> readValues(numberOfRead);
+        for(size_t readIt = 0; readIt < numberOfRead; ++readIt)
+        {
+            selectFrameCounters(isMSB);
+            writeCommand(theReadDataControl);
 
-    BitErrorTestReply theFrameLSBcounter = readReplay(theReadDataControl);
-
-    return isMSB ? theFrameLSBcounter.getFrameCounterMSB() : theFrameLSBcounter.getFrameCounterLSB();
+            BitErrorTestReply theFrameLSBcounter = readReplay(theReadDataControl);
+            readValues.at(readIt) = isMSB ? theFrameLSBcounter.getFrameCounterMSB() : theFrameLSBcounter.getFrameCounterLSB();
+        }
+        if (std::adjacent_find(readValues.begin(), readValues.end(), std::not_equal_to<>()) == readValues.end()) return readValues.at(0);
+        else ++iterationNumber;
+    }
+    return 0xFFFFFFFFFFFFFFFF;
 }
 
 uint32_t D19cBERTinterface::getFirstData(uint8_t hybridId, uint8_t lineId)
@@ -343,8 +368,6 @@ uint32_t D19cBERTinterface::getFirstData(uint8_t hybridId, uint8_t lineId)
 BitErrorTestReply D19cBERTinterface::readReplay(const BitErrorTestControl& theBitErrorTestControl)
 {
     uint32_t reply = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.bert_stat");
-    // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_stat.physical_interface_block.bert_stat 0x" << std::hex << reply << std::dec << std::endl;
-
     BitErrorTestReply theBitErrorTestReply;
     theBitErrorTestReply.decodeReply(reply, theBitErrorTestControl);
     return theBitErrorTestReply;
@@ -361,55 +384,14 @@ void D19cBERTinterface::injectError(uint8_t hybridId, uint8_t lineId)
     writeCommand(theBitErrorTestControl);
 }
 
-BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBoardContainer, uint8_t numberOfLines, bool is10Gmodule, float numberOfMatchedBits)
+void D19cBERTinterface::waitForNeededBits(bool is10Gmodule, float numberOfMatchedBits)
 {
-    uint8_t hybridId = 0x1F;
-    uint8_t lineId   = 0xF;
-
     float dataRate = 3.2E5;
     if(is10Gmodule) dataRate *= 2.;
 
     float    extimatedWaitInMilliseconds = numberOfMatchedBits / dataRate + 1;
     uint32_t waitInMilliSeconds          = ceil(extimatedWaitInMilliseconds);
-
-    BoardDataContainer                         theBERTcounterResult;
-    std::vector<GenericDataArray<uint64_t, 2>> theInitialVector(numberOfLines);
-    ContainerFactory::copyAndInitHybrid<std::vector<GenericDataArray<uint64_t, 2>>>(*theBoardContainer, theBERTcounterResult, theInitialVector);
-
-    startBitErrorRateTest(hybridId, lineId);
-
-    for(auto theOpticalGroup: theBERTcounterResult)
-    {
-        for(auto theHybrid: *theOpticalGroup)
-        {
-            bool failedToFindPatternStart = false;
-            for(uint8_t line = 0; line < numberOfLines; ++line)
-            {
-                uint16_t iteration     = 0;
-                uint16_t maxIterations = 10;
-                while(iteration < maxIterations)
-                {
-                    auto firstData = getFirstData(theHybrid->getId(), line) >> 16;
-                    if(firstData == BERT_ALIGNMENT_PATTERN) break;
-                    ++iteration;
-                }
-                if(iteration >= maxIterations)
-                {
-                    failedToFindPatternStart = true;
-                    LOG(ERROR) << ERROR_FORMAT << "Failed to find BERT start pattern on line " << +line << " after " << maxIterations << " iterations" << RESET;
-                }
-            }
-            if(failedToFindPatternStart)
-            {
-                LOG(INFO) << BOLDRED << "Cannot find BERT start pattern for OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id " << +theHybrid->getId() << " --- Hybrid will be disabled"
-                          << RESET;
-                // ExceptionHandler::getInstance()->disableHybrid(theBoardContainer->getId(), theOpticalGroup->getId(), theHybrid->getId());
-            }
-        }
-    }
-
-    // injectError(hybridId, lineId);
-
+    
     uint32_t sleepingStepMilliSeconds = 5000;
     while(waitInMilliSeconds >= sleepingStepMilliSeconds)
     {
@@ -419,60 +401,170 @@ BoardDataContainer D19cBERTinterface::runBERTonAllHybdrids(BoardContainer* theBo
     }
     if(waitInMilliSeconds > 0) { std::this_thread::sleep_for(std::chrono::milliseconds(waitInMilliSeconds)); }
 
+}
+
+bool D19cBERTinterface::isStartPatternFound(OpticalGroupContainer* theOpticalGroupContainer, uint8_t numberOfLines)
+{
+    for(auto theHybrid: *theOpticalGroupContainer)
+    {
+        for(uint8_t line = 0; line < numberOfLines; ++line)
+        {
+            uint16_t iteration     = 0;
+            uint16_t maxIterations = 10;
+            uint32_t firstData;
+            while(iteration < maxIterations)
+            {
+                firstData = getFirstData(theHybrid->getId(), line) >> 16;
+                
+                if(firstData == BERT_ALIGNMENT_PATTERN) break;
+                ++iteration;
+            }
+            if(iteration >= maxIterations)
+            {
+                LOG(WARNING) << WARNING_FORMAT << "Failed to find BERT start pattern on OpticalGroup " << theOpticalGroupContainer->getId() << " Hybrid " << theHybrid->getId() << " line " << +line << " after " << maxIterations << " iterations. Last workd read = 0x" << std::hex << firstData << std::dec << RESET;
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+uint64_t D19cBERTinterface::readNumberOfTestedBit(uint16_t hybridId, uint8_t lineId, bool is10Gmodule)
+{
+    uint64_t theBitCounterCounter = (getFrameCounters(hybridId, lineId, true) << 32);
+    theBitCounterCounter |= getFrameCounters(hybridId, lineId, false);
+    theBitCounterCounter *= (is10Gmodule ? 16. : 8.);
+    return theBitCounterCounter;
+}
+
+
+bool D19cBERTinterface::retrieveBitTestedCounter(OpticalGroupDataContainer* theOpticalGroupContainer, uint8_t numberOfLines, bool is10Gmodule, float numberOfMatchedBits)
+{
+    bool  correctFrameFound    = true;
+    for(auto theHybrid: *theOpticalGroupContainer)
+    {
+        auto& theCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
+        for(uint8_t line = 0; line < numberOfLines; ++line)
+        {
+            auto& theBitCounterCounter = theCounterVector.at(line).at(0);
+            theBitCounterCounter = readNumberOfTestedBit(theHybrid->getId(), line, is10Gmodule);
+            if(theBitCounterCounter < numberOfMatchedBits)
+            {
+                correctFrameFound = false;
+                LOG(ERROR) << ERROR_FORMAT << "Number of checked bits 0x" << std::hex << theBitCounterCounter << std::dec << " is less then the expected number " << numberOfMatchedBits << " for OpticalGroup " << theHybrid->getId()/2 << " Hybrid " << theHybrid->getId() << " line " << +line << RESET;
+                // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] 0x" << std::hex <<  readNumberOfTestedBit(theHybrid->getId(), line, is10Gmodule) << std::dec << std::endl;
+            }
+            if(theBitCounterCounter > numberOfMatchedBits * 100 && numberOfMatchedBits > 9e5)
+            {
+                correctFrameFound = false;
+                LOG(ERROR) << ERROR_FORMAT << "Number of checked bits 0x" << std::hex << theBitCounterCounter << std::dec << " is too large than the expected number " << numberOfMatchedBits << " for OpticalGroup " << theHybrid->getId()/2 << " Hybrid " << theHybrid->getId() << " line " << +line << RESET;
+                // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] 0x" << std::hex <<  readNumberOfTestedBit(theHybrid->getId(), line, is10Gmodule) << std::dec << std::endl;
+            }
+        }
+    }
+
+    return correctFrameFound;
+}
+
+void D19cBERTinterface::retrieveErrorCounter(OpticalGroupDataContainer* theOpticalGroupContainer, uint8_t numberOfLines)
+{
+    for(auto theHybrid: *theOpticalGroupContainer)
+    {
+        auto& theCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
+        for(uint8_t line = 0; line < numberOfLines; ++line)
+        {
+            theCounterVector.at(line).at(1) = getBitErrorCounters(theHybrid->getId(), line);
+        }
+    }
+}
+
+
+// BoardDataContainer D19cBERTinterface::runBERTonAllOpticalGroups(BoardContainer* theBoardContainer, uint8_t numberOfLines, bool is10Gmodule, float numberOfMatchedBits)
+// {
+//     uint8_t hybridId = 0x1F;
+//     uint8_t lineId   = 0xF;
+
+//     BoardDataContainer                         theBERTcounterResult;
+//     std::vector<GenericDataArray<uint64_t, 2>> theInitialVector(numberOfLines);
+//     ContainerFactory::copyAndInitHybrid<std::vector<GenericDataArray<uint64_t, 2>>>(*theBoardContainer, theBERTcounterResult, theInitialVector);
+
+//     size_t maxNumberOfIteration = 10;
+//     size_t iterationNumber = 0;
+//     while(iterationNumber < maxNumberOfIteration)
+//     {
+//         startBitErrorRateTest(hybridId, lineId);
+//         std::this_thread::sleep_for(std::chrono::microseconds(100));
+
+//         bool runCorrectlyStarted = true;
+//         for(auto theOpticalGroup: *theBoardContainer)
+//         {
+//             if(!isStartPatternFound(theOpticalGroup, numberOfLines))
+//             {
+//                 runCorrectlyStarted = false;
+//                 break;
+//             }
+//         }
+
+//         if(runCorrectlyStarted) break;
+//         stopBitErrorRateTest(hybridId, lineId);
+//         haltBitErrorRateTest(hybridId, lineId);
+//         ++iterationNumber;
+//     }
+
+//     if(iterationNumber >= maxNumberOfIteration)
+//     {
+//         LOG(ERROR) << ERROR_FORMAT << "Failed to properly start BERT on after " << maxNumberOfIteration << " trials" << RESET;
+//     }
+
+//     waitForNeededBits(is10Gmodule, numberOfMatchedBits);
+
+//     stopBitErrorRateTest(hybridId, lineId);
+
+//     for(auto theOpticalGroup: theBERTcounterResult)
+//     {
+//         retrieveErrorCounter(theOpticalGroup, numberOfLines);
+//         retrieveBitTestedCounter(theOpticalGroup, numberOfLines, is10Gmodule, numberOfMatchedBits);
+//     }
+
+//     haltBitErrorRateTest(hybridId, lineId);
+
+//     return theBERTcounterResult;
+// }
+
+OpticalGroupDataContainer D19cBERTinterface::runBERTonAllLines(OpticalGroupContainer* theOpticalGroupContainer, uint8_t numberOfLines, bool is10Gmodule, float numberOfMatchedBits)
+{
+    uint8_t hybridId = 0x1F;
+    uint8_t lineId   = 0xF;
+
+    OpticalGroupDataContainer                  theOpticalGroupBERTcounterResult;
+    std::vector<GenericDataArray<uint64_t, 2>> theInitialVector(numberOfLines);
+    ContainerFactory::copyAndInitHybrid<std::vector<GenericDataArray<uint64_t, 2>>>(*theOpticalGroupContainer, theOpticalGroupBERTcounterResult, theInitialVector);
+
+    size_t maxNumberOfIteration = 10;
+    size_t iterationNumber = 0;
+    while(iterationNumber < maxNumberOfIteration)
+    {
+        startBitErrorRateTest(hybridId, lineId);
+        if(isStartPatternFound(theOpticalGroupContainer, numberOfLines)) break;
+        stopBitErrorRateTest(hybridId, lineId);
+        haltBitErrorRateTest(hybridId, lineId);
+        ++iterationNumber;
+    }
+
+    if(iterationNumber >= maxNumberOfIteration)
+    {
+        LOG(ERROR) << ERROR_FORMAT << "Failed to properly start BERT on OpticalGroup " << theOpticalGroupContainer->getId() << " after " << maxNumberOfIteration << " trials" << RESET;
+    }
+
+    waitForNeededBits(is10Gmodule, numberOfMatchedBits);
+
     stopBitErrorRateTest(hybridId, lineId);
 
-    for(auto theOpticalGroup: theBERTcounterResult)
-    {
-        for(auto theHybrid: *theOpticalGroup)
-        {
-            auto& theCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
-            for(uint8_t line = 0; line < numberOfLines; ++line)
-            {
-                theCounterVector.at(line).at(1) = getBitErrorCounters(theHybrid->getId(), line);
-            }
-        }
-    }
-
-    selectFrameCounters(true);
-
-    for(auto theOpticalGroup: theBERTcounterResult)
-    {
-        for(auto theHybrid: *theOpticalGroup)
-        {
-            auto& theCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
-            for(uint8_t line = 0; line < numberOfLines; ++line) { theCounterVector.at(line).at(0) = (getFrameCounters(theHybrid->getId(), line, true) << 32); }
-        }
-    }
-
-    selectFrameCounters(false);
-
-    for(auto theOpticalGroup: theBERTcounterResult)
-    {
-        for(auto theHybrid: *theOpticalGroup)
-        {
-            bool  missingFrames    = false;
-            auto& theCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
-            for(uint8_t line = 0; line < numberOfLines; ++line)
-            {
-                auto& theBitCounterCounter = theCounterVector.at(line).at(0);
-                theBitCounterCounter |= getFrameCounters(theHybrid->getId(), line, false);
-                theBitCounterCounter *= (is10Gmodule ? 16. : 8.);
-                if(theBitCounterCounter < numberOfMatchedBits)
-                {
-                    missingFrames = true;
-                    LOG(ERROR) << ERROR_FORMAT << "Number of checked bits " << theBitCounterCounter << " is less then the expected number " << numberOfMatchedBits << " for line " << +line << RESET;
-                }
-            }
-
-            if(missingFrames)
-            {
-                LOG(INFO) << BOLDRED << "Failed to run BERT on OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id " << +theHybrid->getId() << " --- Hybrid will be disabled" << RESET;
-                // ExceptionHandler::getInstance()->disableHybrid(theBoardContainer->getId(), theOpticalGroup->getId(), theHybrid->getId());
-            }
-        }
-    }
+    retrieveErrorCounter(&theOpticalGroupBERTcounterResult, numberOfLines);
+    retrieveBitTestedCounter(&theOpticalGroupBERTcounterResult, numberOfLines, is10Gmodule, numberOfMatchedBits);
 
     haltBitErrorRateTest(hybridId, lineId);
 
-    return theBERTcounterResult;
+    return theOpticalGroupBERTcounterResult;
 }

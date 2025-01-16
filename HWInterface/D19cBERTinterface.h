@@ -4,7 +4,9 @@
 #include <cstdint>
 
 class BoardContainer;
+class OpticalGroupContainer;
 class BoardDataContainer;
+class OpticalGroupDataContainer;
 
 namespace Ph2_HwInterface
 {
@@ -159,7 +161,8 @@ class D19cBERTinterface
     void stopBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
     void haltBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
 
-    BoardDataContainer runBERTonAllHybdrids(BoardContainer* theBoardContainer, uint8_t numberOfLines, bool is10Gmodule, float numberOfMatchedBits);
+    // BoardDataContainer runBERTonAllOpticalGroups(BoardContainer* theBoardContainer, uint8_t numberOfLines, bool is10Gmodule, float numberOfMatchedBits);
+    OpticalGroupDataContainer runBERTonAllLines(OpticalGroupContainer* theOpticalGroupContainer, uint8_t numberOfLines, bool is10Gmodule, float numberOfMatchedBits);
 
   private:
     RegManager* fTheRegManager{nullptr};
@@ -168,6 +171,11 @@ class D19cBERTinterface
     uint32_t    getFirstData(uint8_t hybridId, uint8_t lineId);
     void        injectError(uint8_t hybridId, uint8_t lineId);
     void        selectFrameCounters(bool isMSB);
+    void        waitForNeededBits(bool is10Gmodule, float numberOfMatchedBits);
+    bool        isStartPatternFound(OpticalGroupContainer* theOpticalGroupContainer, uint8_t numberOfLines);
+    bool        retrieveBitTestedCounter(OpticalGroupDataContainer* theOpticalGroupContainer, uint8_t numberOfLines, bool is10Gmodule, float numberOfMatchedBits);
+    void        retrieveErrorCounter(OpticalGroupDataContainer* theOpticalGroupContainer, uint8_t numberOfLines);
+    uint64_t    readNumberOfTestedBit(uint16_t hybridId, uint8_t lineId, bool is10Gmodule);
 
     void              writeCommand(BitErrorTestControl theBitErrorTestControl);
     BitErrorTestReply readReplay(const BitErrorTestControl& theBitErrorTestControl);

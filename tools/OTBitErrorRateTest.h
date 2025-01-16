@@ -23,6 +23,7 @@ class OpticalGroup;
 class BeBoard;
 } // namespace Ph2_HwDescription
 
+class OpticalGroupDataContainer;
 class OTBitErrorRateTest : public OTalignBoardDataWord
 {
   public:
@@ -42,7 +43,9 @@ class OTBitErrorRateTest : public OTalignBoardDataWord
     static std::string fCalibrationDescription;
 
   private:
-    void bitErrorRateTest(uint16_t phaseClockDelay);
+    // void bitErrorRateTest(uint16_t phaseClockDelay);
+    void bitErrorRateTestPerOpticalGroup(Ph2_HwDescription::OpticalGroup* theOpticalGroup, OpticalGroupDataContainer* theBertContainer,  OpticalGroupDataContainer* theFECContainer, uint16_t phaseClockDelay, float numberOfBits);
+    void bitErrorRateTest();
 
     float fNumberOfBits{1E10};
 

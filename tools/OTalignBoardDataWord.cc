@@ -218,10 +218,9 @@ void OTalignBoardDataWord::runAlignment(BeBoard* theBoard)
         tryAllHybridAlignment(theAlignerInterface, theBoard);
     else
     {
-        D19cDebugFWInterface* theDebugInterface = cInterface->getDebugInterface();
         for(auto theOpticalGroup: *theBoard)
         {
-            bool cAligned = opticalGroupWordAlignment(theOpticalGroup, theAlignerInterface, theDebugInterface);
+            bool cAligned = opticalGroupWordAlignment(theOpticalGroup, theAlignerInterface);
             if(!cAligned)
             {
                 LOG(INFO) << BOLDRED << "Could not align stub word in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
@@ -233,7 +232,7 @@ void OTalignBoardDataWord::runAlignment(BeBoard* theBoard)
     }
 }
 
-bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface, D19cDebugFWInterface* theDebugInterface)
+bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface)
 {
     // align stub lines in the BE
     bool   isPSmodule = theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS;
