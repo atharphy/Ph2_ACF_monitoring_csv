@@ -98,6 +98,6 @@ void InjectionDelayHistograms::fillInjectionDelay(const DetectorDataContainer& I
 
 void InjectionDelayHistograms::process()
 {
-    draw<TH1F>(Occupancy1D);
-    draw<TH1F>(InjectionDelay);
+    drawChip<TH1F>(Occupancy1D);
+    drawChip<TH1F>(InjectionDelay);
 }

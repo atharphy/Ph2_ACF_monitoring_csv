@@ -166,10 +166,10 @@ void PhysicsHistograms::fillTrgID(const DetectorDataContainer& DataContainer)
 
 void PhysicsHistograms::process()
 {
-    draw<TH1F>(ToT1D);
-    draw<TH2F>(ToT2D, "gcolz");
-    draw<TH2F>(Occupancy2D, "gcolz");
-    draw<TH2F>(ErrorReadOut2D, "gcolz");
-    draw<TH1F>(BCID);
-    draw<TH1F>(TriggerID);
+    drawChip<TH1F>(ToT1D);
+    drawChip<TH2F>(ToT2D, "gcolz");
+    drawChip<TH2F>(Occupancy2D, "gcolz");
+    drawChip<TH2F>(ErrorReadOut2D, "gcolz");
+    drawChip<TH1F>(BCID);
+    drawChip<TH1F>(TriggerID);
 }

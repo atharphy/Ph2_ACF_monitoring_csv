@@ -63,4 +63,4 @@ void ThresholdHistograms::fill(const DetectorDataContainer& DataContainer)
                 }
 }
 
-void ThresholdHistograms::process() { draw<TH1F>(Threshold); }
+void ThresholdHistograms::process() { drawChip<TH1F>(Threshold); }

@@ -162,7 +162,7 @@ void GenericDacDacScanHistograms::fillGenericDacDac(const DetectorDataContainer&
 
 void GenericDacDacScanHistograms::process()
 {
-    draw<TH2F>(Occupancy2D, "gcolz");
-    draw<TH1F>(GenericDac1);
-    draw<TH1F>(GenericDac2);
+    drawChip<TH2F>(Occupancy2D, "gcolz");
+    drawChip<TH1F>(GenericDac1);
+    drawChip<TH1F>(GenericDac2);
 }
