@@ -59,6 +59,7 @@ class VTRxLightYieldScan : public CalibBase
     size_t modulationStop;
     size_t modulationStep;
     bool   doDisplay;
+    bool   doUpdateChip;
 };
 
 #endif

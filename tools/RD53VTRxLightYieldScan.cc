@@ -26,6 +26,7 @@ void VTRxLightYieldScan::ConfigureCalibration()
     modulationStop  = this->findValueInSettings<double>("VTRxModulationStop");
     modulationStep  = this->findValueInSettings<double>("VTRxModulationStep", 1);
     doDisplay       = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
 
     // ##############################
     // # Initialize dac scan values #
@@ -127,6 +128,8 @@ void VTRxLightYieldScan::run()
 
 void VTRxLightYieldScan::draw(bool saveData)
 {
+    if(saveData == true) CalibBase::saveChipRegisters(doUpdateChip);
+
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 

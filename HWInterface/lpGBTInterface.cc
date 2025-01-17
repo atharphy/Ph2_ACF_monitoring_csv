@@ -92,7 +92,7 @@ uint32_t lpGBTInterface::ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip)
 {
     uint32_t cChipId        = 0;
     uint8_t  cReadBackValue = 0;
-    ResetI2C(pChip, {0, 1, 2});
+    lpGBTInterface::ResetI2C(pChip, {0, 1, 2});
     std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
     // Configuring I2C Master pull-ups
@@ -100,21 +100,23 @@ uint32_t lpGBTInterface::ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip)
 
     uint8_t cMasterId = 1, cSlaveAddress = 0x50, cNbyte = 1, cFrequency = 2;
 
-    bool cRecent = WriteI2C(pChip, cMasterId, cSlaveAddress, 0x15, cNbyte, cFrequency);
-    if(cRecent) { cReadBackValue = ReadI2C(pChip, cMasterId, cSlaveAddress, cNbyte, cFrequency); }
+    bool cRecent = lpGBTInterface::WriteI2C(pChip, cMasterId, cSlaveAddress, 0x15, cNbyte, cFrequency);
+    if(cRecent == true) cReadBackValue = lpGBTInterface::ReadI2C(pChip, cMasterId, cSlaveAddress, cNbyte, cFrequency);
     if(cReadBackValue == 0x15)
     {
         LOG(INFO) << GREEN << "VTRx+ with LDD version 1.3" << RESET;
 
         for(int i = 0; i < 4; i++)
         {
-            WriteI2C(pChip, cMasterId, cSlaveAddress, i + 0x16, cNbyte, cFrequency);
-            cReadBackValue = ReadI2C(pChip, cMasterId, cSlaveAddress, cNbyte, cFrequency);
+            lpGBTInterface::WriteI2C(pChip, cMasterId, cSlaveAddress, i + 0x16, cNbyte, cFrequency);
+            cReadBackValue = lpGBTInterface::ReadI2C(pChip, cMasterId, cSlaveAddress, cNbyte, cFrequency);
             cChipId        = cChipId | cReadBackValue << (i * 8);
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     }
+
     LOG(INFO) << GREEN << "FuseID from VTRx+ 0x" << BOLDYELLOW << std::hex << +cChipId << std::dec << RESET;
+
     return cChipId;
 }
 
@@ -123,18 +125,18 @@ uint32_t lpGBTInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip, uint8_t 
     if(version == 1)
     {
         uint32_t cChipID   = 0;
-        uint32_t cChipID_0 = ReadChipFusedBlock(pChip, 0, 0);
+        uint32_t cChipID_0 = lpGBTInterface::ReadChipFusedBlock(pChip, 0, 0);
         LOG(DEBUG) << GREEN << "1st FuseID from LpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_0 << std::dec << RESET;
-        uint32_t cChipID_1 = ReadChipFusedBlock(pChip, 0, 8);
+        uint32_t cChipID_1 = lpGBTInterface::ReadChipFusedBlock(pChip, 0, 8);
         cChipID_1          = ((cChipID_1 & 0xFFFFFFC0) >> 6) | ((cChipID_1 & 0x3f) << 26);
         LOG(DEBUG) << GREEN << "2nd FuseID from LpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_1 << std::dec << RESET;
-        uint32_t cChipID_2 = ReadChipFusedBlock(pChip, 0, 12);
+        uint32_t cChipID_2 = lpGBTInterface::ReadChipFusedBlock(pChip, 0, 12);
         cChipID_2          = ((cChipID_2 & 0xFFFFF000) >> 12) | ((cChipID_2 & 0xfff) << 20);
         LOG(DEBUG) << GREEN << "3rd FuseID from LpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_2 << std::dec << RESET;
-        uint32_t cChipID_3 = ReadChipFusedBlock(pChip, 0, 16);
+        uint32_t cChipID_3 = lpGBTInterface::ReadChipFusedBlock(pChip, 0, 16);
         cChipID_3          = ((cChipID_3 & 0xFFFC0000) >> 18) | ((cChipID_3 & 0x3ffff) << 14);
         LOG(DEBUG) << GREEN << "4th FuseID from LpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_3 << std::dec << RESET;
-        uint32_t cChipID_4 = ReadChipFusedBlock(pChip, 0, 20);
+        uint32_t cChipID_4 = lpGBTInterface::ReadChipFusedBlock(pChip, 0, 20);
         cChipID_4          = ((cChipID_4 & 0xFF000000) >> 24) | ((cChipID_4 & 0xffffff) << 8);
         LOG(DEBUG) << GREEN << "5th FuseID from LpGBT 0x" << BOLDYELLOW << std::hex << +cChipID_4 << std::dec << RESET;
         for(int i = 0; i < 32; i++)
