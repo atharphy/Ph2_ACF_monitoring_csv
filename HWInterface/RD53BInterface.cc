@@ -199,7 +199,7 @@ void RD53BInterface::InitRD53Uplinks(Chip* pChip)
     // ########################
     // # Aurora configuration #
     // ########################
-    RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(RD53Shared::setBits(pRD53->laneConfig.nOutputLanes), 0b011010, 0b11), false);
+    RD53Interface::WriteChipReg(pChip, "AuroraConfig", bits::pack<4, 6, 2>(pRD53->laneConfig.packOutputLanes(), 0b011010, 0b11), false);
     // # bit 14:    SendAltOutput
     // # bit 13:    EnablePRBS
     // # bits 9-12: ActiveLanes[3:0] --> Internal output lanes
