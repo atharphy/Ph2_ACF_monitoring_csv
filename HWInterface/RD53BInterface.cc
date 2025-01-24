@@ -627,16 +627,16 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip, uint8_t version)
     uint16_t high      = RD53Interface::ReadChipReg(pChip, "EfusesReadData1");
     uint32_t eFuseCode = low | (high << pChip->getNumberOfBits("EfusesReadData0"));
 
-    if(status == false)
-    {
-        std::error_code e{6, std::system_category()};
-        throw std::system_error(e, "Problem reading chip e-fuse code");
-    }
-    else if(static_cast<RD53*>(pChip)->geteFuseCode() < 0)
+    if(static_cast<RD53*>(pChip)->geteFuseCode() < 0)
     {
         std::stringstream myString;
         myString << eFuseCode;
         throw std::out_of_range(myString.str().c_str());
+    }
+    else if(status == false)
+    {
+        std::error_code e{6, std::system_category()};
+        throw std::system_error(e, "Problem reading chip e-fuse code");
     }
     else if(eFuseCode != static_cast<RD53*>(pChip)->geteFuseCode())
     {
