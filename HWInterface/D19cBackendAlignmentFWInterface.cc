@@ -280,13 +280,10 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
             thePhaseTuningReply.decodeReply(reply, thePhaseTuningControl);
             AlignmentResult theAlignmentResults(thePhaseTuningReply);
 
-            if(!fAlignOnPRBS)
-            {
-                LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << +lineId;
-                LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET << ", WA FSM: " << BOLDGREEN
-                        << theAlignmentResults.fWordAlignmentFSMstate << RESET;
-                LOG(INFO) << "\t\t Delay: " << +theAlignmentResults.fDelay << ", Bitslip: " << +theAlignmentResults.fBitslip;
-            }
+            LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << +lineId;
+            LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET << ", WA FSM: " << BOLDGREEN
+                    << theAlignmentResults.fWordAlignmentFSMstate << RESET;
+            LOG(INFO) << "\t\t Delay: " << +theAlignmentResults.fDelay << ", Bitslip: " << +theAlignmentResults.fBitslip;
 
             return theAlignmentResults;
         }

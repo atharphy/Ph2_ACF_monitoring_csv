@@ -391,7 +391,6 @@
                 <node id="cic_hard_reset"                   mask="0x00000004"/>
                 <node id="decoder_reset"                    mask="0x00000008"/>
                 <node id="stub_debug"                       mask="0x00000010"/>
-                <node id="bert_link_select"                 mask="0xF0000000"/>
 
             </node>
             <node id="phase_tuning_ctrl"          address="0x015" mask="0xFFFFFFFF"/>

@@ -7,6 +7,8 @@
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
+#include "HWInterface/VTRxInterface.h"
+#include "HWDescription/VTRx.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -39,30 +41,6 @@ void OTBitErrorRateTest::Running()
 {
     Initialise();
     bitErrorRateTest();
-    // for(size_t index = 0; index < 512; ++index)
-    // {
-    //     uint16_t phaseDelay = index;
-    //     std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Phase delay " << +phaseDelay << std::endl;
-    //     LOG(INFO) << "Starting OTBitErrorRateTest measurement.";
-
-    //     // for(auto theBoard: *fDetectorContainer)
-    //     // {
-    //     //     // static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getLinkInterface()->GeneralLinkReset(theBoard);
-
-    //     //     // fBeBoardInterface->ConfigureBoard(theBoard);
-    //     //     for(auto cOpticalGroup: *theBoard)
-    //     //     {
-    //     //         if(!flpGBTInterface->ConfigureChip(cOpticalGroup->flpGBT))
-    //     //         {
-    //     //             LOG(INFO) << BOLDRED << "SOMETHING FUNNY" << RESET;
-    //     //             continue;
-    //     //         }
-    //     //     }
-    //     // }
-        
-    //     bitErrorRateTest(phaseDelay);
-    //     LOG(INFO) << "Done with OTBitErrorRateTest.";
-    // }
     Reset();
 }
 
@@ -84,19 +62,97 @@ void OTBitErrorRateTest::Resume() {}
 
 void OTBitErrorRateTest::Reset() { fRegisterHelper->restoreSnapshot(); }
 
-void OTBitErrorRateTest::bitErrorRateTest()
+void OTBitErrorRateTest::bitErrorRateTestPerLine(Ph2_HwDescription::BeBoard* theBoard, BoardDataContainer* theBertContainer,  BoardDataContainer* theFECContainer, BoardDataContainer* thePhaseClockDelayContainer, float numberOfBits, float lineNumber)
 {
+    bool is10Gmodule = flpGBTInterface->GetChipRate(theBoard->getFirstObject()->flpGBT) == 10;
+
+    uint16_t iteration                 = 0;
+    uint16_t maximumNumberOfIterations = 10;
+    bool     allAligned                = false;
+    while(iteration < maximumNumberOfIterations)
+    {
+        allAligned = true;
+        for(auto theOpticalGroup: *theBoard)
+        {
+            if(!static_cast<D19clpGBTInterface*>(flpGBTInterface)->enablePRBS(theOpticalGroup, thePhaseClockDelayContainer->getOpticalGroup(theOpticalGroup->getId())->getSummary<uint16_t>()))
+            {
+                LOG(WARNING) << WARNING_FORMAT << "Failed to align LpGBT on Board " << theOpticalGroup->getBeBoardId() << " OpticalGroup " << theOpticalGroup->getId() << ", retrying "
+                                << maximumNumberOfIterations - iteration << " more times" << RESET;
+                allAligned = false;
+            }
+        }
+        if(allAligned) break;
+        ++iteration;
+    }
+
+    if(!allAligned)
+    {
+        LOG(ERROR) << ERROR_FORMAT << "Failed to align LpGBT on Board " << theBoard->getId() << " after " << maximumNumberOfIterations
+                    << "trials" << RESET;
+    }
+
+    D19cBackendAlignmentFWInterface* theAlignerInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBackendAlignmentInterface();
+    theAlignerInterface->enableAlignmentOnPRBS();
+
+    for(auto theOpticalGroup: *theBoard)
+    {
+        for(auto theHybrid: *theOpticalGroup)
+        {
+            if(!tryLineAlignment(theAlignerInterface, theHybrid, lineNumber))
+            {
+                LOG(ERROR) << ERROR_FORMAT << "Failed to align OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << RESET;
+            }
+        }
+    }
+
+    theAlignerInterface->disableAlignmentOnPRBS();
+
+    D19cBERTinterface* theBERTinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
+
+    fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_en_bit", 1);
+    fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_rst_bit", 1);
+    fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_rst_bit", 0);
+
+    BoardDataContainer bertResultsBoardContainer = theBERTinterface->runBERTonSingleLine(theBoard, lineNumber, is10Gmodule, numberOfBits);
+
+    for(auto theOpticalGroup: bertResultsBoardContainer)
+    {
+        for(auto theHybrid: *theOpticalGroup)
+        {
+            const auto& receivedBERTresultsVector = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
+            theBertContainer->getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>() = receivedBERTresultsVector;
+        }
+    }
+    if(theFECContainer != nullptr)
+    {
+        for(auto theOpticalGroup: *theFECContainer)
+        {
+            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_sel_offset", theOpticalGroup->getId());
+            auto theFECcounter = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.lpgbt_fec_counter");
+            theOpticalGroup->getSummary<uint32_t>() = theFECcounter;
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] FECcounter = 0x" << std::hex << +theFECcounter << std::dec << std::endl;
+        }
+    }
+}
+
+void OTBitErrorRateTest::bitErrorRateTest(uint8_t line)
+{
+    LOG(INFO) << BOLDBLUE << "Running BERT phase scan on line " << +line << RESET;
+
     bool is10Gmodule = flpGBTInterface->GetChipRate(fDetectorContainer->getFirstObject()->getFirstObject()->flpGBT) == 10;
     uint16_t maximumPhase = is10Gmodule ? 32 : 64;
 
     std::map<uint16_t, DetectorDataContainer> thePhaseScanContainer;
     for(uint16_t phase = 0; phase < maximumPhase; ++phase)
     {
-        ContainerFactory::copyAndInitHybrid<std::vector<GenericDataArray<uint64_t, 2>>>(*fDetectorContainer, thePhaseScanContainer[phase]);
+        ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*fDetectorContainer, thePhaseScanContainer[phase]);
     }
 
+    DetectorDataContainer theComulativeCountainer;
+    ContainerFactory::copyAndInitOpticalGroup<std::map<uint16_t, GenericDataArray<float, 2>>>(*fDetectorContainer, theComulativeCountainer);
+
     DetectorDataContainer theBERTcounterCountainer;
-    ContainerFactory::copyAndInitHybrid<std::vector<GenericDataArray<uint64_t, 2>>>(*fDetectorContainer, theBERTcounterCountainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*fDetectorContainer, theBERTcounterCountainer);
 
     DetectorDataContainer theFECcounterCountainer;
     ContainerFactory::copyAndInitOpticalGroup<uint32_t>(*fDetectorContainer, theFECcounterCountainer);
@@ -104,44 +160,62 @@ void OTBitErrorRateTest::bitErrorRateTest()
     DetectorDataContainer theBestPhaseCountainer;
     ContainerFactory::copyAndInitOpticalGroup<uint16_t>(*fDetectorContainer, theBestPhaseCountainer);
     
-    for(auto theBoard: *fDetectorContainer)
+    for(uint16_t phase = 0; phase < maximumPhase; ++phase)
+    {
+        DetectorDataContainer thePhaseCountainer;
+        ContainerFactory::copyAndInitOpticalGroup<uint16_t>(*fDetectorContainer, thePhaseCountainer, phase);
+
+        for(auto theBoard: *fDetectorContainer)
+        {
+            BoardDataContainer thePhaseScanContainerLocal;
+            bitErrorRateTestPerLine(theBoard, thePhaseScanContainer[phase].getBoard(theBoard->getId()), nullptr, thePhaseCountainer.getBoard(theBoard->getId()), 1e6, line);
+
+            for(auto theOpticalGroup: *theBoard)
+            {
+                auto& theMapElement = theComulativeCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<std::map<uint16_t, GenericDataArray<float, 2>>>()[phase];
+                theMapElement.at(0) = 0;
+                theMapElement.at(1) = 0;
+                for(auto theHybrid: *theOpticalGroup)
+                {
+                    const auto& theHybridElement = thePhaseScanContainer[phase].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 2>>();
+                    theMapElement.at(0) += theHybridElement.at(0);
+                    theMapElement.at(1) += theHybridElement.at(1);
+                }
+                theMapElement.at(1) = theMapElement.at(0) == 0 ? 1. : theMapElement.at(1) / theMapElement.at(0);
+            }
+        }
+    }
+
+    // find mimumum BERT
+    DetectorDataContainer theBERTcounterMinimum;
+    float theMinimum = 1.;
+    ContainerFactory::copyAndInitOpticalGroup<float>(*fDetectorContainer, theBERTcounterMinimum, theMinimum);
+
+    for(auto theBoard: theComulativeCountainer)
     {
         for(auto theOpticalGroup: *theBoard)
         {
-            LOG(INFO) << BOLDBLUE << "Running BERT on OpticalGroup " << theOpticalGroup->getId() << RESET;
-            std::map<uint16_t, float> cumulativeErrorRateMap;
-            std::map<uint16_t, float> cumulativeBitCountMap;
-            for(auto phase = 0; phase < maximumPhase; ++phase)
+            auto& theOpticalGroupMinimum = theBERTcounterMinimum.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<float>();
+            for(auto cumulativeErrorRate: theOpticalGroup->getSummary<std::map<uint16_t, GenericDataArray<float, 2>>>())
             {
-                cumulativeErrorRateMap[phase] = 0;
-                cumulativeBitCountMap[phase] = 0;
-                bitErrorRateTestPerOpticalGroup(theOpticalGroup, thePhaseScanContainer[phase].getOpticalGroup(theBoard->getId(), theOpticalGroup->getId()), nullptr, phase, 1e6);
-                for(auto theHybrid: *thePhaseScanContainer[phase].getOpticalGroup(theBoard->getId(), theOpticalGroup->getId()))
-                {
-                    for(auto theBERTValues: theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>())
-                    {
-                        cumulativeBitCountMap[phase] += theBERTValues.at(0);
-                        cumulativeErrorRateMap[phase] += theBERTValues.at(1);
-                    }
-                }
+                if(cumulativeErrorRate.second.at(1) <  theOpticalGroupMinimum) theOpticalGroupMinimum = cumulativeErrorRate.second.at(1);
             }
+        }
+    }
 
-            // find mimumum BERT
-            float theMinimum = 1.;
-            for(auto& cumulativeErrorRate : cumulativeErrorRateMap)
-            {
-                auto cumulativeBitCount = cumulativeBitCountMap[cumulativeErrorRate.first];
-                cumulativeErrorRate.second = cumulativeBitCount == 0 ? 1. : cumulativeErrorRate.second / cumulativeBitCount;
-
-                if(cumulativeErrorRate.second < theMinimum) theMinimum = cumulativeErrorRate.second;
-            }
-
-            // find minimum sequences
-            std::vector<std::pair<uint16_t, uint16_t>> minimumPhaseRanges;
+    // find minimum sequences
+    DetectorDataContainer theBERTcounterMinimumSequences;
+    ContainerFactory::copyAndInitOpticalGroup<std::vector<std::pair<uint16_t, uint16_t>>>(*fDetectorContainer, theBERTcounterMinimumSequences);
+    for(auto theBoard: theComulativeCountainer)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
             bool minimumFound = false;
-            for(auto& cumulativeErrorRate : cumulativeErrorRateMap)
+            auto theOpticalGroupMinimum = theBERTcounterMinimum.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<float>();
+            auto& minimumPhaseRanges = theBERTcounterMinimumSequences.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<std::vector<std::pair<uint16_t, uint16_t>>>();
+            for(auto cumulativeErrorRate: theOpticalGroup->getSummary<std::map<uint16_t, GenericDataArray<float, 2>>>())
             {
-                if(cumulativeErrorRate.second == theMinimum)
+                if(cumulativeErrorRate.second.at(1) == theOpticalGroupMinimum)
                 {
                     if(!minimumFound)
                     {
@@ -155,8 +229,15 @@ void OTBitErrorRateTest::bitErrorRateTest()
                 }
                 else minimumFound = false;
             }
+        }
+    }
 
-            // find longest minimum sequence;
+    // find longest minimum sequences
+    for(auto theBoard: theBERTcounterMinimumSequences)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            const auto& minimumPhaseRanges = theBERTcounterMinimumSequences.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<std::vector<std::pair<uint16_t, uint16_t>>>();
             uint16_t longestSequenceRange = 0;
             uint16_t longestSequenceIndex = 0;
             for(size_t index = 0; index < minimumPhaseRanges.size(); ++index)
@@ -169,181 +250,62 @@ void OTBitErrorRateTest::bitErrorRateTest()
                 }
             }
 
-            uint16_t bestPhase =  minimumPhaseRanges.at(longestSequenceIndex).first + longestSequenceRange/2;
-
-            LOG(INFO) << BOLDBLUE << "Best Phase for BERT on OpticalGroup " << theOpticalGroup->getId() << " = " << bestPhase << RESET;
-
-            theBestPhaseCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint16_t>() = bestPhase;
-
-            bitErrorRateTestPerOpticalGroup(theOpticalGroup, theBERTcounterCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId()), theFECcounterCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId()), bestPhase, fNumberOfBits);
+            theBestPhaseCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint16_t>() = minimumPhaseRanges.at(longestSequenceIndex).first + longestSequenceRange/2;
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theBestPhaseCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint16_t>() = " << theBestPhaseCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint16_t>() << std::endl;
+            
         }
     }
 
+    for(auto theBoard: *fDetectorContainer)
+    {
+        bitErrorRateTestPerLine(theBoard, theBERTcounterCountainer.getBoard(theBoard->getId()), theFECcounterCountainer.getBoard(theBoard->getId()), theBestPhaseCountainer.getBoard(theBoard->getId()), fNumberOfBits, line);
+    }
 
 #ifdef __USE_ROOT__
     for(uint16_t phase = 0; phase < maximumPhase; ++phase)
     {
-        fDQMHistogramOTBitErrorRateTest.fillErrorCounterPhaseScan(thePhaseScanContainer[phase], phase);
+        fDQMHistogramOTBitErrorRateTest.fillErrorCounterPhaseScan(thePhaseScanContainer[phase], phase, line);
     }
-    fDQMHistogramOTBitErrorRateTest.fillBERTbestPhase(theBestPhaseCountainer);
-    fDQMHistogramOTBitErrorRateTest.fillErrorCounter(theBERTcounterCountainer);
-    fDQMHistogramOTBitErrorRateTest.fillFECcounter(theFECcounterCountainer);
+    fDQMHistogramOTBitErrorRateTest.fillBERTbestPhase(theBestPhaseCountainer, line);
+    fDQMHistogramOTBitErrorRateTest.fillErrorCounter(theBERTcounterCountainer, line);
+    fDQMHistogramOTBitErrorRateTest.fillFECcounter(theFECcounterCountainer, line);
 #else
     if(fDQMStreamerEnabled)
     {
         for(uint16_t phase = 0; phase < maximumPhase; ++phase)
         {
             ContainerSerialization theErrorCounterSerialization("OTBitErrorRateTestErrorCounterPhaseScan");
-            theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePhaseScanContainer[phase], phase);
+            theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePhaseScanContainer[phase], phase, line);
         }
 
         ContainerSerialization theBestPhaseSerialization("OTBitErrorRateTestBestPhase");
-        theBestPhaseSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBestPhaseCountainer);
+        theBestPhaseSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBestPhaseCountainer, line);
 
         ContainerSerialization theErrorCounterSerialization("OTBitErrorRateTestErrorCounter");
-        theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBERTcounterCountainer);
+        theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBERTcounterCountainer, line);
 
         ContainerSerialization theFECcounterSerialization("OTBitErrorRateTestFECcounter");
-        theFECcounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theFECcounterCountainer);
+        theFECcounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theFECcounterCountainer, line);
     }
 #endif
 }
 
-void OTBitErrorRateTest::bitErrorRateTestPerOpticalGroup(OpticalGroup* theOpticalGroup, OpticalGroupDataContainer* theBertContainer,  OpticalGroupDataContainer* theFECContainer, uint16_t phaseClockDelay, float numberOfBits)
+
+void OTBitErrorRateTest::bitErrorRateTest()
 {
-    bool is10Gmodule = flpGBTInterface->GetChipRate(theOpticalGroup->flpGBT) == 10;
-    uint8_t numberOfLines = theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
-    auto theBoard = fDetectorContainer->getObject(theOpticalGroup->getBeBoardId());
-
-    fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.physical_interface_block.control.bert_link_select", theOpticalGroup->getId());
-
-    uint16_t iteration                 = 0;
-    uint16_t maximumNumberOfIterations = 10;
-    bool     allAligned                = false;
-    while(iteration < maximumNumberOfIterations)
+    // std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
+    // theRegisterValues.push_back({"CH1BIAS", 40});
+    // theRegisterValues.push_back({"CH1MOD", 18 | 0x80});
+    // for(auto theBoard: *fDetectorContainer)
+    // {
+    //     for(auto theOpticalGroup: *theBoard)
+    //     {
+    //         fVTRxInterface->WriteChipMultReg(theOpticalGroup->fVTRx, theRegisterValues, false);
+    //     }
+    // }
+    uint8_t numberOfLines = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
+    for(uint8_t line = 0; line < numberOfLines; ++line)
     {
-        allAligned = static_cast<D19clpGBTInterface*>(flpGBTInterface)->enablePRBS(theOpticalGroup, phaseClockDelay);
-        if(allAligned) break;
-        ++iteration;
-        LOG(WARNING) << WARNING_FORMAT << "Failed to align LpGBT on Board " << theOpticalGroup->getBeBoardId() << " OpticalGroup " << theOpticalGroup->getId() << ", retrying "
-                        << maximumNumberOfIterations - iteration << " more times" << RESET;
-    }
-
-    if(!allAligned)
-    {
-        LOG(ERROR) << ERROR_FORMAT << "Failed to align LpGBT on Board " << theOpticalGroup->getBeBoardId() << " OpticalGroup " << theOpticalGroup->getId() << " after " << maximumNumberOfIterations
-                    << "trials. OpticalGroup will be disabled" << RESET;
-        ExceptionHandler::getInstance()->disableOpticalGroup(theOpticalGroup->getBeBoardId(), theOpticalGroup->getId());
-    }
-
-    D19cBackendAlignmentFWInterface* theAlignerInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBackendAlignmentInterface();
-    theAlignerInterface->enableAlignmentOnPRBS();
-
-    opticalGroupWordAlignment(theOpticalGroup, theAlignerInterface);
-
-    theAlignerInterface->disableAlignmentOnPRBS();
-
-    D19cBERTinterface* theBERTinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
-
-    fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_en_bit", 1);
-    fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_rst_bit", 1);
-    fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_rst_bit", 0);
-
-    OpticalGroupDataContainer bertResultsOpticalGroupContainer = theBERTinterface->runBERTonAllLines(theOpticalGroup, numberOfLines, is10Gmodule, numberOfBits);
-
-    for(auto theHybrid: bertResultsOpticalGroupContainer)
-    {
-        const auto& receivedBERTresultsVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
-        auto&       storedBERTresultsVector = theBertContainer->getHybrid(theHybrid->getId())->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
-        storedBERTresultsVector.assign(receivedBERTresultsVector.begin(), receivedBERTresultsVector.end());
-    }
-    if(theFECContainer != nullptr)
-    {
-        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_sel_offset", theOpticalGroup->getId());
-        auto theFECcounter = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.lpgbt_fec_counter");
-        theFECContainer->getSummary<uint32_t>() = theFECcounter;
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] FECcounter = 0x" << std::hex << +theFECcounter << std::dec << std::endl;
+        bitErrorRateTest(line);
     }
 }
-
-// void OTBitErrorRateTest::bitErrorRateTest(uint16_t phaseClockDelay)
-// {
-//     uint8_t numberOfLines = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
-
-//     DetectorDataContainer theBERTcounterCountainer;
-//     ContainerFactory::copyAndInitHybrid<std::vector<GenericDataArray<uint64_t, 2>>>(*fDetectorContainer, theBERTcounterCountainer);
-
-//     DetectorDataContainer theFECcounterCountainer;
-//     ContainerFactory::copyAndInitOpticalGroup<uint32_t>(*fDetectorContainer, theFECcounterCountainer);
-
-//     for(auto theBoard: *fDetectorContainer)
-//     {
-//         for(auto theOpticalGroup: *theBoard)
-//         {
-//             uint16_t iteration                 = 0;
-//             uint16_t maximumNumberOfIterations = 10;
-//             bool     allAligned                = false;
-//             while(iteration < maximumNumberOfIterations)
-//             {
-//                 allAligned = static_cast<D19clpGBTInterface*>(flpGBTInterface)->enablePRBS(theOpticalGroup, phaseClockDelay);
-//                 if(allAligned) break;
-//                 ++iteration;
-//                 LOG(WARNING) << WARNING_FORMAT << "Failed to align LpGBT on Board " << theBoard->getId() << " OpticalGroup " << theOpticalGroup->getId() << ", retrying "
-//                              << maximumNumberOfIterations - iteration << " more times" << RESET;
-//             }
-
-//             if(!allAligned)
-//             {
-//                 LOG(ERROR) << ERROR_FORMAT << "Failed to align LpGBT on Board " << theBoard->getId() << " OpticalGroup " << theOpticalGroup->getId() << " after " << maximumNumberOfIterations
-//                            << "trials. OpticalGroup will be disabled" << RESET;
-//                 ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
-//             }
-//         }
-//         // fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.physical_interface_block.control.bert_link_select", fDetectorContainer->getFirstObject()->getFirstObject()->getId());
-
-//         D19cBackendAlignmentFWInterface* theAlignerInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBackendAlignmentInterface();
-//         theAlignerInterface->enableAlignmentOnPRBS();
-
-//         runAlignment(theBoard);
-
-//         theAlignerInterface->disableAlignmentOnPRBS();
-
-//         D19cBERTinterface* theBERTinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
-
-//         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_en_bit", 1);
-//         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_rst_bit", 1);
-//         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_rst_bit", 0);
-
-//         auto bertResultsBoardContainer = theBERTinterface->runBERTonAllOpticalGroups(theBoard, numberOfLines, flpGBTInterface->GetChipRate(theBoard->getFirstObject()->flpGBT) == 10, fNumberOfBits);
-
-//         for(auto theOpticalGroup: bertResultsBoardContainer)
-//         {
-//             for(auto theHybrid: *theOpticalGroup)
-//             {
-//                 const auto& receivedBERTresultsVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
-//                 auto&       storedBERTresultsVector =
-//                     theBERTcounterCountainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
-//                 storedBERTresultsVector.assign(receivedBERTresultsVector.begin(), receivedBERTresultsVector.end());
-//             }
-//             fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_sel_offset", theOpticalGroup->getId());
-//             auto theFECcounter = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.lpgbt_fec_counter");
-//             theFECcounterCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint32_t>() = theFECcounter;
-
-//             std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] FECcounter = 0x" << std::hex << +theFECcounter << std::dec << std::endl;
-//         }
-//     }
-
-// #ifdef __USE_ROOT__
-//     fDQMHistogramOTBitErrorRateTest.fillErrorCounterPhaseScan(theBERTcounterCountainer, phaseClockDelay);
-//     fDQMHistogramOTBitErrorRateTest.fillFECcounter(theFECcounterCountainer);
-// #else
-//     if(fDQMStreamerEnabled)
-//     {
-//         ContainerSerialization theErrorCounterSerialization("OTBitErrorRateTestErrorCounter");
-//         theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBERTcounterCountainer);
-
-//         ContainerSerialization theFECcounterSerialization("OTBitErrorRateTestFECcounter");
-//         theFECcounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, theFECcounterCountainer);
-//     }
-// #endif
-// }

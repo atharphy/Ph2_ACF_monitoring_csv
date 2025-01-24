@@ -23,9 +23,9 @@ class BitErrorTestControl
     enum class Command
     {
         ReturnConfig           = 0,
-        ReturnCounterThreshold = 1,
+        ReturnFirstPattern     = 1,
         Configure              = 2,
-        SetCounterThreshold    = 3,
+        SetFirstPattern        = 3,
         ReadCounterData        = 4,
         ErrorInject            = 5,
         ReadBERTfirstData      = 6,
@@ -55,6 +55,7 @@ class BitErrorTestControl
     void setHybridId(uint8_t theHybridId) { fHybridId = theHybridId; }
     void setChipId(uint8_t theChipId) { fChipId = theChipId; }
     void setLineId(uint8_t theLineId) { fLineId = theLineId; }
+    void setLineSelect(uint8_t theLineSelect) { fLineSelect = theLineSelect; }
     void setCommand(Command theCommand) { fCommand = theCommand; }
     void setDebugMode(bool theDebugMode) { fDebugMode = theDebugMode; }
     void setCheckMode(bool theCheckMode) { fCheckMode = theCheckMode; }
@@ -63,7 +64,7 @@ class BitErrorTestControl
     void setMode(Mode theMode) { fMode = theMode; }
     void setCheckEnable(bool theCheckEnable) { fCheckEnable = theCheckEnable; }
     void setReceiveEnable(bool theReceiveEnable) { fReceiveEnable = theReceiveEnable; }
-    void setCounterThreshold(uint16_t theCounterThreshold) { fCounterThreshold = theCounterThreshold; }
+    void setFirstPattern(uint16_t theFirstPattern) { fFirstPattern = theFirstPattern; }
     void setErrorInjection(bool theErrorInjection) { fErrorInjection = theErrorInjection; }
     void setDataLoad(bool theDataLoad) { fDataLoad = theDataLoad; }
     void setPackagePatternLSB(uint16_t thePackagePatternLSB) { fPackagePatternLSB = thePackagePatternLSB; }
@@ -73,6 +74,7 @@ class BitErrorTestControl
     uint8_t       fHybridId{0};
     uint8_t       fChipId{0};
     uint8_t       fLineId{0};
+    uint8_t       fLineSelect{0};
     Command       fCommand{Command::ReturnConfig};
     bool          fDebugMode{false};
     bool          fCheckMode{false};
@@ -81,7 +83,7 @@ class BitErrorTestControl
     Mode          fMode{Mode::None0};
     bool          fCheckEnable{false};
     bool          fReceiveEnable{false};
-    uint16_t      fCounterThreshold{0};
+    uint16_t      fFirstPattern{0};
     bool          fErrorInjection{false};
     bool          fDataLoad{false};
     uint16_t      fPackagePatternLSB{0};
@@ -112,7 +114,7 @@ class BitErrorTestReply
     BitErrorTestControl::Mode getMode() { return fMode; }
     bool                      getCheckEnable() { return fCheckEnable; }
     bool                      getReceiveEnable() { return fReceiveEnable; }
-    uint16_t                  getCounterThreshold() { return fCounterThreshold; }
+    uint16_t                  getFirstPattern() { return fFirstPattern; }
     uint32_t                  getPRBSframeCounterValueEmulator() { return fPRBSframeCounterValueEmulator; }
     uint32_t                  getPRBSbitCounterValueEmulator() { return fPRBSbitCounterValueEmulator; }
     uint32_t                  getPRBSframeCounterValuePredictNext() { return fPRBSframeCounterValuePredictNext; }
@@ -138,7 +140,7 @@ class BitErrorTestReply
     BitErrorTestControl::Mode fMode{BitErrorTestControl::Mode::None0};
     bool                      fCheckEnable{false};
     bool                      fReceiveEnable{false};
-    uint16_t                  fCounterThreshold{999};
+    uint16_t                  fFirstPattern{999};
     uint32_t                  fPRBSframeCounterValueEmulator{999};
     uint32_t                  fPRBSbitCounterValueEmulator{999};
     uint32_t                  fPRBSframeCounterValuePredictNext{999};
@@ -157,12 +159,12 @@ class D19cBERTinterface
     D19cBERTinterface(RegManager* theRegManager);
     ~D19cBERTinterface();
 
+    void startPatternSyncronization(uint8_t hybridId, uint8_t lineId);
     void startBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
     void stopBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
     void haltBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
 
-    // BoardDataContainer runBERTonAllOpticalGroups(BoardContainer* theBoardContainer, uint8_t numberOfLines, bool is10Gmodule, float numberOfMatchedBits);
-    OpticalGroupDataContainer runBERTonAllLines(OpticalGroupContainer* theOpticalGroupContainer, uint8_t numberOfLines, bool is10Gmodule, float numberOfMatchedBits);
+    BoardDataContainer runBERTonSingleLine(BoardContainer* theBoardContainer, uint8_t lineNumber, bool is10Gmodule, float numberOfMatchedBits);
 
   private:
     RegManager* fTheRegManager{nullptr};
@@ -172,13 +174,20 @@ class D19cBERTinterface
     void        injectError(uint8_t hybridId, uint8_t lineId);
     void        selectFrameCounters(bool isMSB);
     void        waitForNeededBits(bool is10Gmodule, float numberOfMatchedBits);
-    bool        isStartPatternFound(OpticalGroupContainer* theOpticalGroupContainer, uint8_t numberOfLines);
-    bool        retrieveBitTestedCounter(OpticalGroupDataContainer* theOpticalGroupContainer, uint8_t numberOfLines, bool is10Gmodule, float numberOfMatchedBits);
+    bool        isStartPatternFound(BoardContainer* theBoardContainer, uint8_t lineNumber);
+    bool        retrieveBitTestedCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber, bool is10Gmodule, float numberOfMatchedBits);
     void        retrieveErrorCounter(OpticalGroupDataContainer* theOpticalGroupContainer, uint8_t numberOfLines);
+    void        retrieveErrorCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber);
     uint64_t    readNumberOfTestedBit(uint16_t hybridId, uint8_t lineId, bool is10Gmodule);
+    void        loadSampleData(uint16_t hybridId, uint8_t lineId);
+    void        readSampleData(uint16_t hybridId, uint8_t lineId);
+    bool        isStateMachineStarted(BoardContainer* theBoardContainer, uint8_t lineNumber);
+    uint8_t     getCheckerFSMstatus(uint8_t hybridId, uint8_t lineId);
 
     void              writeCommand(BitErrorTestControl theBitErrorTestControl);
     BitErrorTestReply readReplay(const BitErrorTestControl& theBitErrorTestControl);
+
+    uint8_t fLineSelect;
 };
 
 } // namespace Ph2_HwInterface
