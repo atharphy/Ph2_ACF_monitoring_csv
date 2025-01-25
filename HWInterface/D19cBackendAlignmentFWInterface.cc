@@ -52,8 +52,8 @@ uint32_t PhaseTuningControl::encodeCommand() const
         }
         break;
 
-    case Command::SetPatternLength:
-        if(!fIsOptical) theCommand |= ((fPatternLenght & 0xFF) << 0);
+    case Command::SetSyncPatternMask:
+        theCommand |= ((fSyncPatternMask & 0xFFFF) << 0);
         break;
 
     case Command::SetSyncPattern: theCommand |= ((fSyncPattern & 0xFFFF) << 0); break;
@@ -75,7 +75,7 @@ void PhaseTuningControl::resetCommandBits()
 {
     fBitSlip          = 0;
     fDelay            = 0;
-    fPatternLenght    = 0;
+    fSyncPatternMask  = 0;
     fSyncPattern      = 0;
     fDoWordAlignment  = false;
     fDoPhaseAlignment = false;
@@ -225,11 +225,28 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
     thePhaseTuningControl.setChipId(lineId == 0xF ? 0x7 : 0x0);
     thePhaseTuningControl.setLineId(lineId);
 
-    if(fAlignOnPRBS)
+    if(fAlignOnCustomPattern)
     {
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+        
         thePhaseTuningControl.resetCommandBits();
         thePhaseTuningControl.setCommand(PhaseTuningControl::Command::SetSyncPattern);
-        thePhaseTuningControl.setSyncPattern(BERT_ALIGNMENT_PATTERN);
+        thePhaseTuningControl.setSyncPattern(fCustomAlignmentPattern);
+        writeCommand(thePhaseTuningControl);
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+
+        thePhaseTuningControl.resetCommandBits();
+        thePhaseTuningControl.setCommand(PhaseTuningControl::Command::SetSyncPatternMask);
+        thePhaseTuningControl.setSyncPatternMask(fCustomAlignmentPatternMask);
+        writeCommand(thePhaseTuningControl);
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
+
+    }
+    else
+    {
+        thePhaseTuningControl.resetCommandBits();
+        thePhaseTuningControl.setCommand(PhaseTuningControl::Command::SetSyncPatternMask);
+        thePhaseTuningControl.setSyncPatternMask(0xFFFF);
         writeCommand(thePhaseTuningControl);
     }
 
@@ -243,7 +260,7 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
     thePhaseTuningControl.resetCommandBits();
     thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Configure);
     thePhaseTuningControl.setEnableSync(true);
-    thePhaseTuningControl.setEnablePRBS(fAlignOnPRBS);
+    thePhaseTuningControl.setEnableCustomPattern(fAlignOnCustomPattern);
     thePhaseTuningControl.setMode(PhaseTuningControl::Mode::Auto);
     // thePhaseTuningControl.setEnableLCC(true);
     writeCommand(thePhaseTuningControl);
@@ -303,6 +320,8 @@ void D19cBackendAlignmentFWInterface::writeCommand(const PhaseTuningControl& the
 {
     uint32_t phaseTunerCommand = thePhaseTunerControl.encodeCommand();
     fTheRegManager->WriteReg(fPhaseTuningControlRegisterName, phaseTunerCommand);
+    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.bert_control = 0x"  << std::hex << phaseTunerCommand << std::dec << std::endl;
+
     std::this_thread::sleep_for(std::chrono::microseconds(100));
 }
 

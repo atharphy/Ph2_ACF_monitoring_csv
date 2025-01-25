@@ -58,6 +58,7 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
+#include "tools/OTPatternCheckerTest.h"
 
 using namespace MessageUtils;
 
@@ -98,6 +99,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              //  OTCICBX0Alignment,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord>("Outer Tracker", "alignment");
+
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTPatternCheckerTest>("Outer Tracker", "patternChecker");
 
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTCicBypassTest>("Outer Tracker", "testCICbypass");
 

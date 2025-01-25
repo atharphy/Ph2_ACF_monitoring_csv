@@ -189,7 +189,7 @@ bool DQMHistogramOTBitErrorRateTest::fill(std::string& inputStream)
         uint16_t phase;
         uint8_t line;
         DetectorDataContainer theDetectorData =
-            theErrorCounterPhaseScanSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<GenericDataArray<uint64_t, 2>>, EmptyContainer>(fDetectorContainer, phase, line);
+            theErrorCounterPhaseScanSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint64_t, 2>, EmptyContainer>(fDetectorContainer, phase, line);
         fillErrorCounterPhaseScan(theDetectorData, phase, line);
         return true;
     }
@@ -206,7 +206,7 @@ bool DQMHistogramOTBitErrorRateTest::fill(std::string& inputStream)
         // std::cout << "Matched OTBitErrorRateTest ErrorCounter!!!!\n";
         uint8_t line;
         DetectorDataContainer theDetectorData =
-            theErrorCounterSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<GenericDataArray<uint64_t, 2>>, EmptyContainer>(fDetectorContainer, line);
+            theErrorCounterSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint64_t, 2>, EmptyContainer>(fDetectorContainer, line);
         fillErrorCounter(theDetectorData, line);
         return true;
     }
@@ -214,7 +214,7 @@ bool DQMHistogramOTBitErrorRateTest::fill(std::string& inputStream)
     {
         // std::cout << "Matched OTBitErrorRateTest FECcounter!!!!\n";
         uint8_t line;
-        DetectorDataContainer theDetectorData = theFECcounterSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, uint32_t>(fDetectorContainer, line);
+        DetectorDataContainer theDetectorData = theFECcounterSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, uint32_t, EmptyContainer>(fDetectorContainer, line);
         fillFECcounter(theDetectorData, line);
         return true;
     }

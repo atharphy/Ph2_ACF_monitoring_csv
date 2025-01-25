@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "HWDescription/Definition.h"
 
 class BoardContainer;
 class BoardDataContainer;
@@ -23,13 +24,13 @@ class PhaseTuningControl
     PhaseTuningControl(bool isOptical) : fIsOptical(isOptical) {};
     enum class Command
     {
-        ReturnConfig     = 0,
-        ReturnResult     = 1,
-        Configure        = 2,
-        SetPatternLength = 3,
-        SetSyncPattern   = 4,
-        Align            = 5,
-        ReturnFSMstatus  = 6
+        ReturnConfig       = 0,
+        ReturnResult       = 1,
+        Configure          = 2,
+        SetSyncPatternMask = 3,
+        SetSyncPattern     = 4,
+        Align              = 5,
+        ReturnFSMstatus    = 6
     };
     enum class Mode
     {
@@ -40,14 +41,14 @@ class PhaseTuningControl
     // setter
     void setBitSlip(uint8_t theBitSlip) { fBitSlip = theBitSlip; }
     void setDelay(uint8_t theDelay) { fDelay = theDelay; }
-    void setPatternLenght(uint8_t thePatternLenght) { fPatternLenght = thePatternLenght; }
+    void setSyncPatternMask(uint16_t theSyncPatternMask) { fSyncPatternMask = theSyncPatternMask; }
     void setSyncPattern(uint16_t theSyncPattern) { fSyncPattern = theSyncPattern; }
     void setEnableSync(bool enableSync) { fEnableSync = enableSync; }
     void setDoWordAlignment(bool doWordAlignment) { fDoWordAlignment = doWordAlignment; }
     void setDoPhaseAlignment(bool doPhaseAlignment) { fDoPhaseAlignment = doPhaseAlignment; }
     void setDoReset(bool doReset) { fDoReset = doReset; }
     void setApplyManual(bool applyManual) { fApplyManual = applyManual; }
-    void setEnablePRBS(bool enablePRBS) { fEnablePRBS = enablePRBS; }
+    void setEnableCustomPattern(bool enablePRBS) { fEnablePRBS = enablePRBS; }
     void setMasterLineId(uint8_t theMasterLineId) { fMasterLineId = theMasterLineId; }
     void setEnableLFSR(bool enableLFSR) { fEnableLFSR = enableLFSR; }
     void setEnableL1A(bool enableL1A) { fEnableL1A = enableL1A; }
@@ -65,7 +66,7 @@ class PhaseTuningControl
     bool     fIsOptical{true};
     uint8_t  fBitSlip{0};
     uint8_t  fDelay{0};
-    uint8_t  fPatternLenght{0};
+    uint16_t fSyncPatternMask{0};
     uint16_t fSyncPattern{0};
     bool     fDoWordAlignment{false};
     bool     fDoPhaseAlignment{false};
@@ -167,8 +168,11 @@ class D19cBackendAlignmentFWInterface
     D19cBackendAlignmentFWInterface(RegManager* theRegManager);
     ~D19cBackendAlignmentFWInterface();
 
-    void enableAlignmentOnPRBS() { fAlignOnPRBS = true; }
-    void disableAlignmentOnPRBS() { fAlignOnPRBS = false; }
+    void enableAlignmentOnPRBS() { fAlignOnCustomPattern = true; fCustomAlignmentPattern = BERT_ALIGNMENT_PATTERN; fCustomAlignmentPatternMask = 0xffff;}
+    void disableAlignmentOnPRBS() { fAlignOnCustomPattern = false; }
+
+    void enableAlignmentOnCustomPattern(uint16_t thePattern, uint16_t thePatternMask) { fAlignOnCustomPattern = true; fCustomAlignmentPattern = thePattern; fCustomAlignmentPatternMask = thePatternMask;}
+    void disableAlignmentOnCustomPattern() { fAlignOnCustomPattern = false; }
 
     AlignmentResult              alignWord(uint8_t hybridId, uint8_t lineId);
     std::vector<AlignmentResult> alignWordAllLines(uint8_t hybridId, uint8_t numberOfLines);
@@ -182,7 +186,9 @@ class D19cBackendAlignmentFWInterface
     bool        fIsOptical{true};
     std::string fPhaseTuningControlRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
     std::string fPhaseTuningResultRegisterName  = "fc7_daq_stat.physical_interface_block.phase_tuning_reply";
-    bool        fAlignOnPRBS{false};
+    bool        fAlignOnCustomPattern{false};
+    uint16_t    fCustomAlignmentPattern {0x0};
+    uint16_t    fCustomAlignmentPatternMask {0x0};
 
     AlignmentResult              retrieveAlignmentResult(uint8_t hybridId, uint8_t lineId);
     std::vector<AlignmentResult> retrieveAllLineAlignmentResult(uint8_t hybridId, uint8_t numberOfLines);

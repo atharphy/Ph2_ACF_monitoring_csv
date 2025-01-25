@@ -2,7 +2,6 @@
 #include "HWInterface/D19cBERTinterface.h"
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
-#include "HWInterface/D19cLinkInterface.h"
 #include "HWInterface/ExceptionHandler.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
@@ -14,7 +13,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-std::string OTBitErrorRateTest::fCalibrationDescription = "Insert brief calibration description here";
+std::string OTBitErrorRateTest::fCalibrationDescription = "Bit error rate test";
 
 OTBitErrorRateTest::OTBitErrorRateTest() : OTalignBoardDataWord() {}
 
@@ -25,7 +24,7 @@ void OTBitErrorRateTest::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
     initializeContainers();
-    fBroadcastAlignSetting = 2;
+    fBroadcastAlignSetting = 1;
 
     fNumberOfBits = findValueInSettings<double>("OTBitErrorRateTest_NumberOfBits", 1E10);
 
@@ -108,6 +107,8 @@ void OTBitErrorRateTest::bitErrorRateTestPerLine(Ph2_HwDescription::BeBoard* the
     theAlignerInterface->disableAlignmentOnPRBS();
 
     D19cBERTinterface* theBERTinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
+
+    theBERTinterface->setUsePRBS(true);
 
     fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_en_bit", 1);
     fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_rst_bit", 1);

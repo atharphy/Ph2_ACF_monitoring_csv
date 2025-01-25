@@ -27,9 +27,7 @@ void DQMHistogramOTLpGBTEyeOpeningTest::book(TFile* theOutputFile, DetectorConta
     auto thePowerList = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTLpGBTEyeOpeningTest_PowerList", "1-3"));
 
     float numberOfTimePoints    = 64;
-    float numberOfVoltagePoints = 31;
     float timeStepSize          = 6.1;
-    float voltageStepSize       = 40.;
 
     for(auto thePower: thePowerList)
     {
@@ -38,11 +36,11 @@ void DQMHistogramOTLpGBTEyeOpeningTest::book(TFile* theOutputFile, DetectorConta
                                                    numberOfTimePoints,
                                                    -(timeStepSize / 2),
                                                    (numberOfTimePoints - 0.5) * timeStepSize,
-                                                   numberOfVoltagePoints,
-                                                   -(voltageStepSize / 2),
-                                                   (numberOfVoltagePoints - 0.5) * voltageStepSize);
+                                                   31,
+                                                   -0.5,
+                                                   30.5);
         theEyeOpeningHistogram.fTheHistogram->GetXaxis()->SetTitle("time [ps]");
-        theEyeOpeningHistogram.fTheHistogram->GetYaxis()->SetTitle("voltage [mV]");
+        theEyeOpeningHistogram.fTheHistogram->GetYaxis()->SetTitle("voltage [DAC units]");
         theEyeOpeningHistogram.fTheHistogram->SetStats(false);
         RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fEyeOpeningHystogramContainerMap[thePower], theEyeOpeningHistogram);
     }
