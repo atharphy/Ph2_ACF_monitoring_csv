@@ -112,10 +112,18 @@ void VTRxLightYieldScan::run()
                 {
                     this->flpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "_I2CVTRxRegCH1MOD", dac2List[j] | 0x80);
                     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+                    auto value = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter("RX", cOpticalGroup->getId());
 
-                    theVTRxLightYieldScanContainer.getOpticalGroup(cBoard->getId(), cOpticalGroup->getId())
-                        ->getSummary<std::vector<float>>()
-                        .push_back(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter("RX", cOpticalGroup->getId()));
+                    // #################
+                    // # Progress menu #
+                    // #################
+                    LOG(INFO) << CYAN << "************ " << GREEN << "Scanning" << CYAN << " ************" << RESET;
+                    LOG(INFO) << GREEN << "Bias: " << BOLDYELLOW << std::setw(2) << std::fixed << dac1List[i] << "(" << dac1List[dac1List.size() - 1] << ")" << RESET << GREEN
+                              << " -- Modulation: " << BOLDYELLOW << std::setw(2) << std::fixed << dac2List[j] << "(" << dac2List[dac2List.size() - 1] << ")" << RESET;
+                    LOG(INFO) << CYAN << "**********************************" << RESET;
+                    if((i < dac1List.size() - 1) || (j < dac2List.size() - 1)) std::cout << std::setprecision(-1) << "\x1b[A\x1b[A\x1b[A";
+
+                    theVTRxLightYieldScanContainer.getOpticalGroup(cBoard->getId(), cOpticalGroup->getId())->getSummary<std::vector<float>>().push_back(value);
                 }
             }
         }
