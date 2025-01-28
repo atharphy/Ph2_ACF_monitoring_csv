@@ -88,7 +88,7 @@ int32_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
     return cValue;
 }
 
-uint32_t lpGBTInterface::ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip)
+uint32_t lpGBTInterface::ReadVTRxChipFuseID(Chip* pChip)
 {
     uint32_t cChipId        = 0;
     uint8_t  cReadBackValue = 0;
@@ -120,7 +120,19 @@ uint32_t lpGBTInterface::ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip)
     return cChipId;
 }
 
-uint32_t lpGBTInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip, uint8_t version)
+void lpGBTInterface::DumpChipRegisters(Chip* pChip)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    for(auto& cRegItem: pChip->getRegMap())
+    {
+        auto value = ReadChipReg(pChip, cRegItem.first);
+        std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(24) << cRegItem.first << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")"
+                  << std::endl;
+    }
+}
+
+uint32_t lpGBTInterface::ReadChipFuseID(Chip* pChip, uint8_t version)
 {
     if(version == 1)
     {
@@ -163,7 +175,7 @@ uint32_t lpGBTInterface::ReadChipFuseID(Ph2_HwDescription::Chip* pChip, uint8_t 
     return 0;
 }
 
-uint32_t lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t cFuseH, uint8_t cFuseL)
+uint32_t lpGBTInterface::ReadChipFusedBlock(Chip* pChip, uint8_t cFuseH, uint8_t cFuseL)
 {
     WriteChipReg(pChip, "FUSEControl", 2);
     int      cReadBack = 0;
@@ -202,7 +214,7 @@ uint32_t lpGBTInterface::ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint
     return cResult;
 }
 
-bool lpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerify)
+bool lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerify)
 {
     bool writeGood = true;
     for(const auto& cReg: pRegVec) writeGood &= WriteChipReg(pChip, cReg.first, cReg.second);
@@ -456,7 +468,7 @@ std::map<std::string, uint8_t> lpGBTInterface::GetPhaseTapMap() { return fPhaseT
 // # LpGBT specific routine functions #
 // ####################################
 
-bool lpGBTInterface::ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnable, uint8_t pCorrection)
+bool lpGBTInterface::ConfigureVref(Chip* pChip, uint8_t pEnable, uint8_t pCorrection)
 {
     uint8_t cVal     = pEnable << 7 | (pCorrection & 0x3F);
     bool    cSuccess = WriteChipReg(pChip, "VREFCNTR", cVal);
@@ -466,9 +478,9 @@ bool lpGBTInterface::ConfigureVref(Ph2_HwDescription::Chip* pChip, uint8_t pEnab
     return cSuccess;
 }
 
-bool lpGBTInterface::EnableInternalVref(Ph2_HwDescription::Chip* pChip, bool pEnable) { return true; }
+bool lpGBTInterface::EnableInternalVref(Chip* pChip, bool pEnable) { return true; }
 
-bool lpGBTInterface::SetVrefTune(Ph2_HwDescription::Chip* pChip, uint8_t pVrefTune)
+bool lpGBTInterface::SetVrefTune(Chip* pChip, uint8_t pVrefTune)
 {
     uint8_t     cNbits   = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 5 : 8;
     std::string cRegName = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? "VREFCNTR" : "VREFTUNE";
@@ -482,7 +494,7 @@ bool lpGBTInterface::SetVrefTune(Ph2_HwDescription::Chip* pChip, uint8_t pVrefTu
     return cVrefTune == pVrefTune;
 }
 
-uint8_t lpGBTInterface::GetVrefTune(Ph2_HwDescription::Chip* pChip)
+uint8_t lpGBTInterface::GetVrefTune(Chip* pChip)
 {
     uint8_t     cNbits    = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? 5 : 8;
     std::string cRegName  = (static_cast<lpGBT*>(pChip)->getVersion() == 0) ? "VREFCNTR" : "VREFTUNE";
@@ -492,7 +504,7 @@ uint8_t lpGBTInterface::GetVrefTune(Ph2_HwDescription::Chip* pChip)
     return (mask & cVrefTune);
 }
 
-float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string& pADC, uint16_t pVinput) // pVinput in mV!
+float lpGBTInterface::GetVref(Chip* pChip, const std::string& pADC, uint16_t pVinput) // pVinput in mV!
 {
     auto cGain   = lpGBTInterface::GetADCGain(pChip, false);
     auto cOffset = lpGBTInterface::GetADCOffset(pChip, false);
@@ -500,7 +512,7 @@ float lpGBTInterface::GetVref(Ph2_HwDescription::Chip* pChip, const std::string&
     return ((int)pVinput / 1000. * cGain * 512) / (cADC - cOffset * (1 - cGain / 2.));
 }
 
-uint8_t lpGBTInterface::TuneVref(Ph2_HwDescription::Chip* pChip)
+uint8_t lpGBTInterface::TuneVref(Chip* pChip)
 {
     const std::string pADC         = static_cast<lpGBT*>(pChip)->getTuneVrefADC();
     uint16_t          pVinput      = static_cast<lpGBT*>(pChip)->getTuneVrefVoltage();
@@ -761,7 +773,7 @@ void lpGBTInterface::ConfigureGPIOPull(Chip* pChip, const std::vector<uint8_t>& 
     WriteChipReg(pChip, "PIOUpDownL", cUpDownL);
 }
 
-bool lpGBTInterface::ReadGPIO(Ph2_HwDescription::Chip* pChip, uint8_t pGPIO)
+bool lpGBTInterface::ReadGPIO(Chip* pChip, uint8_t pGPIO)
 {
     LOG(INFO) << GREEN << "Reading GPIO value from " << BOLDYELLOW << std::to_string(pGPIO) << RESET;
     uint8_t cPIOInH = ReadChipReg(pChip, "PIOInH");
@@ -1223,7 +1235,7 @@ uint16_t lpGBTInterface::GetEOMCounter(Chip* pChip) { return (ReadChipReg(pChip,
 // # LpGBT I2C Masters functions (Slow Control) #
 // ##############################################
 
-void lpGBTInterface::ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters)
+void lpGBTInterface::ResetI2C(Chip* pChip, const std::vector<uint8_t>& pMasters)
 {
     LOG(INFO) << GREEN << "Reseting I2C Masters" << RESET;
     std::vector<uint8_t> cBitPosition = {2, 1, 0};
@@ -1236,7 +1248,7 @@ void lpGBTInterface::ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<
     WriteChipReg(pChip, "RST0", 0);
 }
 
-void lpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode)
+void lpGBTInterface::ConfigureI2C(Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode)
 {
     // Write configuration data into the I2C Master Data register
     std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "Data0";
@@ -1248,13 +1260,13 @@ void lpGBTInterface::ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaste
     WriteChipReg(pChip, cI2CCmdReg, 0x00);
 }
 
-uint8_t lpGBTInterface::GetI2CConfiguration(Ph2_HwDescription::Chip* pChip, uint8_t pMaster)
+uint8_t lpGBTInterface::GetI2CConfiguration(Chip* pChip, uint8_t pMaster)
 {
     std::string cI2CCntrReg = "I2CM" + std::to_string(pMaster) + "Ctrl";
     return ReadChipReg(pChip, cI2CCntrReg);
 }
 
-bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq)
+bool lpGBTInterface::WriteI2C(Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq)
 {
     // Write Data to Slave Address using I2C Master
     lpGBTInterface::ConfigureI2C(pChip, pMaster, pFreq, (pNBytes > 1) ? pNBytes : 0, 0);
@@ -1310,7 +1322,7 @@ bool lpGBTInterface::WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, u
     return true;
 }
 
-uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq)
+uint32_t lpGBTInterface::ReadI2C(Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq)
 {
     // Read Data from Slave Address using I2C Master
     lpGBTInterface::ConfigureI2C(pChip, pMaster, pFreq, pNBytes, 0);
@@ -1366,7 +1378,7 @@ uint32_t lpGBTInterface::ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster
     }
 }
 
-uint8_t lpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster)
+uint8_t lpGBTInterface::GetI2CStatus(Chip* pChip, uint8_t pMaster)
 {
     std::string cI2CStatReg = "I2CM" + std::to_string(pMaster) + "Status";
     uint8_t     cStatus     = ReadChipReg(pChip, cI2CStatReg);
@@ -1374,11 +1386,11 @@ uint8_t lpGBTInterface::GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMa
     return cStatus;
 }
 
-std::string lpGBTInterface::GetI2CState(Ph2_HwDescription::Chip* pChip, uint8_t pStatus) { return fI2CStatusMap[pStatus]; }
+std::string lpGBTInterface::GetI2CState(Chip* pChip, uint8_t pStatus) { return fI2CStatusMap[pStatus]; }
 
-bool lpGBTInterface::IsI2CSuccess(Ph2_HwDescription::Chip* pChip, uint8_t pMaster) { return (lpGBTInterface::GetI2CStatus(pChip, pMaster) == 4); }
+bool lpGBTInterface::IsI2CSuccess(Chip* pChip, uint8_t pMaster) { return (lpGBTInterface::GetI2CStatus(pChip, pMaster) == 4); }
 
-void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32_t pChipId, std::string pFileName)
+void lpGBTInterface::LoadCalibrationData(lpGBT* pChip, uint32_t pChipId, std::string pFileName)
 {
     // # Load fCalibration data from a local CSV file based for the specific chipid
 
@@ -1463,7 +1475,7 @@ void lpGBTInterface::LoadCalibrationData(Ph2_HwDescription::lpGBT* pChip, uint32
     file.close();
 }
 
-float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::lpGBT* pChip, bool pResetTempSensor)
+float lpGBTInterface::EstimateTemperatureUncalibVref(lpGBT* pChip, bool pResetTempSensor)
 {
     // # Estimate temperature using internal temperature sensor and uncalibrated VREF.
     // # WARNING: this routine WILL NOT WORK for irradiated chips (TID>0)
@@ -1509,7 +1521,7 @@ float lpGBTInterface::EstimateTemperatureUncalibVref(Ph2_HwDescription::lpGBT* p
     return cTemperature;
 }
 
-void lpGBTInterface::TuneVrefControlLib(Ph2_HwDescription::lpGBT* pChip, bool pEnable)
+void lpGBTInterface::TuneVrefControlLib(lpGBT* pChip, bool pEnable)
 {
     /*  Calculate the optimum VREFTUNE code based on the junction temperature
            and apply the setting to the chip. Prior calling this method, the user
@@ -1528,7 +1540,7 @@ void lpGBTInterface::TuneVrefControlLib(Ph2_HwDescription::lpGBT* pChip, bool pE
     SetVrefTune(pChip, cCodeOpt);
 }
 
-void lpGBTInterface::AutoTuneVref(Ph2_HwDescription::lpGBT* pChip, bool pResetTempSensor)
+void lpGBTInterface::AutoTuneVref(lpGBT* pChip, bool pResetTempSensor)
 {
     /*  Auto tune VREF based on the internal temperature sensor.
 
@@ -1550,7 +1562,7 @@ void lpGBTInterface::AutoTuneVref(Ph2_HwDescription::lpGBT* pChip, bool pResetTe
     TuneVrefControlLib(pChip);
 }
 
-void lpGBTInterface::VdacSetVout(Ph2_HwDescription::lpGBT* pChip, float pVoltageV, bool pEnable)
+void lpGBTInterface::VdacSetVout(lpGBT* pChip, float pVoltageV, bool pEnable)
 {
     /*  """Set requested voltage at the output of the lpGBT voltage DAC.
 
@@ -1579,7 +1591,7 @@ void lpGBTInterface::VdacSetVout(Ph2_HwDescription::lpGBT* pChip, float pVoltage
     }
 }
 
-float lpGBTInterface::AdcGetVin(Ph2_HwDescription::lpGBT* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain, uint8_t pSamples)
+float lpGBTInterface::AdcGetVin(lpGBT* pChip, const std::string& pADCInputP, const std::string& pADCInputN, uint8_t pGain, uint8_t pSamples)
 {
     /* Get input voltage.
 
@@ -1607,7 +1619,7 @@ float lpGBTInterface::AdcGetVin(Ph2_HwDescription::lpGBT* pChip, const std::stri
     return cCalRes;
 }
 
-float lpGBTInterface::_CdacCodeToCurrent(Ph2_HwDescription::lpGBT* pChip, const std::string& pChannel, uint8_t pCode)
+float lpGBTInterface::_CdacCodeToCurrent(lpGBT* pChip, const std::string& pChannel, uint8_t pCode)
 {
     /* """Return estimate of the CDAC current for specific code.
 
@@ -1629,7 +1641,7 @@ float lpGBTInterface::_CdacCodeToCurrent(Ph2_HwDescription::lpGBT* pChip, const 
            (pChip->getADCCalibrationData()["CDAC" + std::to_string(cChannel) + "_SLOPE"] + pChip->getTemperature() * pChip->getADCCalibrationData()["CDAC" + std::to_string(cChannel) + "_SLOPE_TEMP"]);
 }
 
-float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::lpGBT* pChip, const std::string& pChannel, uint8_t pCode)
+float lpGBTInterface::_CdacCodeToRout(lpGBT* pChip, const std::string& pChannel, uint8_t pCode)
 {
     /* """Return estimate of the CDAC output resistance for specific code
 
@@ -1655,7 +1667,7 @@ float lpGBTInterface::_CdacCodeToRout(Ph2_HwDescription::lpGBT* pChip, const std
     return cR0 / pCode;
 }
 
-uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::lpGBT* pChip, const std::string& pChannel, float pCurrentA)
+uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(lpGBT* pChip, const std::string& pChannel, float pCurrentA)
 {
     /* """Return optimum CDAC code for the requested current (in amps)
 
@@ -1706,7 +1718,7 @@ uint8_t lpGBTInterface::_CdacGetOptimumCodeForCurrent(Ph2_HwDescription::lpGBT* 
     return cCode;
 }
 
-void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::lpGBT* pChip, const std::string& pChannel, float pCurrentA)
+void lpGBTInterface::CdacSetCurrent(lpGBT* pChip, const std::string& pChannel, float pCurrentA)
 {
     /* """Configure the lpGBT current DAC
 
@@ -1733,7 +1745,7 @@ void lpGBTInterface::CdacSetCurrent(Ph2_HwDescription::lpGBT* pChip, const std::
     ConfigureCurrentDAC(pChip, std::vector<std::string>{pChannel}, {cCode});
 }
 
-float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const std::string& pChannel, bool pImprovePrecision)
+float lpGBTInterface::MeasureResistance(lpGBT* pChip, const std::string& pChannel, bool pImprovePrecision)
 {
     LOG(INFO) << GREEN << "pExpectedROhm not provided. Performing auto ranging" << RESET;
 
@@ -1751,7 +1763,7 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const s
     return MeasureResistance(pChip, pChannel, cExpectedROhm, pImprovePrecision);
 }
 
-float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const std::string& pChannel, float pExpectedROhm, bool pImprovePrecision)
+float lpGBTInterface::MeasureResistance(lpGBT* pChip, const std::string& pChannel, float pExpectedROhm, bool pImprovePrecision)
 {
     /* """Measure resistance connected between the ground (VSS) and a given ADC channel.
        If the pExpectedROhm is provided (see overloaded function), it will be used to set the current source
@@ -1821,7 +1833,7 @@ float lpGBTInterface::MeasureResistance(Ph2_HwDescription::lpGBT* pChip, const s
     return (std::accumulate(cRloadsVec.begin(), cRloadsVec.end(), 0.) / cRloadsVec.size());
 }
 
-float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_t pSamples, bool pResetTempSensor)
+float lpGBTInterface::MeasureTemperature(lpGBT* pChip, uint8_t pSamples, bool pResetTempSensor)
 {
     /* """Measure junction temperature
 
@@ -1863,7 +1875,7 @@ float lpGBTInterface::MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_
     return cTemp;
 }
 
-float lpGBTInterface::MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip, const std::string& pPowerSupply, uint8_t pSamples, bool pDisableMonitorAfterMeasurement)
+float lpGBTInterface::MeasurePowerSupplyVoltage(lpGBT* pChip, const std::string& pPowerSupply, uint8_t pSamples, bool pDisableMonitorAfterMeasurement)
 {
     /* """Measure power supply voltage
 

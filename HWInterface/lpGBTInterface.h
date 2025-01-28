@@ -72,6 +72,7 @@ class lpGBTInterface : public ChipInterface
     uint32_t ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t cFuseH, uint8_t cFuseL);
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerify = true) override;
     uint32_t ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip);
+    void     DumpChipRegisters(Ph2_HwDescription::Chip* pChip);
 
     // #######################################
     // # LpGBT block configuration functions #
