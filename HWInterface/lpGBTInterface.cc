@@ -693,6 +693,19 @@ uint8_t lpGBTInterface::GetRxDllStatus(Chip* pChip, uint8_t pGroup)
     return ReadChipReg(pChip, cRXDllStatReg);
 }
 
+uint8_t lpGBTInterface::GetSFPchannel(const OpticalGroup* pOpticalGroup)
+{
+    __attribute__((unused)) const uint8_t L8{8};   // @CONST@
+    __attribute__((unused)) const uint8_t L12{12}; // @CONST@
+
+    // @TMP@
+    // const std::string FMCtype{"OPTO_QUAD"}; // @CONST@
+    const std::string FMCtype{"OPTO_OCTA"}; // @CONST@
+
+    uint8_t channel = pOpticalGroup->getId() - (pOpticalGroup->getFMCId() == L8 ? 0 : (FMCtype == "OPTO_QUAD" ? 4 : 8));
+    return 3 - channel % 4 + 4 * (channel / 4);
+}
+
 // ########################
 // # LpGBT GPIO functions #
 // ########################

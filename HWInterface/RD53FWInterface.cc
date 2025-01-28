@@ -1163,12 +1163,18 @@ float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
     int  nAttempts = 0, error = 0;
     bool timeOut = false;
 
-    if(parameter == "T") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 96);
-    if(parameter == "V") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 98);
-    if(parameter == "I") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 100);
-    if(parameter == "TX") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 102);
-    if(parameter == "RX") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 104);
-    if(parameter == "raw") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 96);
+    if(parameter == "T")
+        RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 96);
+    else if(parameter == "V")
+        RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 98);
+    else if(parameter == "I")
+        RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 100);
+    else if(parameter == "TX")
+        RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 102);
+    else if(parameter == "RX")
+        RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 104);
+    else if(parameter == "raw")
+        RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 96);
 
     RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.channel_number", channel);
     RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.enable", 1);
@@ -1196,27 +1202,27 @@ float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
     float result = RegManager::ReadReg("user.stat_regs.lpgbt_monitoring.sfp_i2c_data_out");
     if(parameter == "T")
     {
-        result = result / 256.0;
+        result /= 256.0;
         LOG(DEBUG) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
     }
     else if(parameter == "V")
     {
-        result = result / 10.0;
+        result /= 10.0;
         LOG(DEBUG) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
     }
     else if(parameter == "I")
     {
-        result = result * 0.002;
+        result *= 0.002;
         LOG(DEBUG) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
     }
     else if(parameter == "TX")
     {
-        result = result * 0.1;
+        result *= 0.1;
         LOG(DEBUG) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
     }
     else if(parameter == "RX")
     {
-        result = result * 0.1;
+        result *= 0.1;
         LOG(DEBUG) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
     }
     else if(parameter == "raw")
