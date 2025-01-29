@@ -69,6 +69,15 @@ void OTTool::Prepare()
     // retreive number of events from settings file
     fNevents = findValueInSettings<double>("Nevents", 10);
 
+    // retrieve json output file path and set output fstream
+    std::string fJsonOutputPath = findValueInSettings<std::string>("JsonOutfile", "");
+    if (fJsonOutputPath != "")
+    {
+            LOG(INFO) << BOLDYELLOW << "Writing json output to : " << fJsonOutputPath << RESET;
+	    std::ofstream* outStream = new std::ofstream(fJsonOutputPath);
+	    setOfStream(outStream);
+    }
+
     if(fReadoutMode == 1) return;
     // retreive original settings for all chips and all back-end boards
     fBoardRegContainer.reset();
