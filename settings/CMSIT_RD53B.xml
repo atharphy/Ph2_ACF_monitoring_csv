@@ -303,10 +303,10 @@
 
     <Setting name="VTRxBiasStart">        40 </Setting>
     <Setting name="VTRxBiasStop">         56 </Setting>
-    <Setting name="VTRxBiasStep">          2 </Setting>
+    <Setting name="VTRxBiasStep">          1 </Setting>
     <Setting name="VTRxModulationStart">  24 </Setting>
     <Setting name="VTRxModulationStop">   40 </Setting>
-    <Setting name="VTRxModulationStep">    2 </Setting>
+    <Setting name="VTRxModulationStep">    1 </Setting>
 
     <Setting name="LpGBTattenuation">      0 </Setting>
 
