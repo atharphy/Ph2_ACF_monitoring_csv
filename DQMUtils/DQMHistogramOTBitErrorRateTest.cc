@@ -57,7 +57,7 @@ void DQMHistogramOTBitErrorRateTest::book(TFile* theOutputFile, DetectorContaine
 
     HistContainer<TH2F> bitCounterPhaseScanHistogram("BERTtestedBitCounterPhaseScan", "BERT tested bit counter phase scan", fNumberOfLines * 2, -0.5, fNumberOfLines * 2 - 0.5, 64, -0.5, 63.5);
     bitCounterPhaseScanHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
-    bitCounterPhaseScanHistogram.fTheHistogram->GetYaxis()->SetTitle("Clock phase");
+    bitCounterPhaseScanHistogram.fTheHistogram->GetYaxis()->SetTitle("PRBS clock phase");
     bitCounterPhaseScanHistogram.fTheHistogram->SetStats(false);
     setBitLabel(bitCounterPhaseScanHistogram.fTheHistogram->GetXaxis());
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBERTbitCounterPhaseScanHistogram, bitCounterPhaseScanHistogram);

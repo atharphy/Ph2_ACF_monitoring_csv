@@ -518,9 +518,13 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     std::vector<std::pair<std::string, uint32_t>> cBoardRegs;
     for(auto const& it: cRegMap)
     {
-        cBoardRegs.push_back({it.first, it.second.fValue});
         if(it.first == "fc7_daq_cnfg.dio5_block.dio5_en") cEnableDIO5 = (bool)it.second.fValue;
-        if(it.first == "fc7_daq_cnfg.readout_block.global.zero_suppression_enable") { cBoardRegs.push_back({it.first, pBoard->getEventType() == EventType::ZS}); }
+        if(it.first == "fc7_daq_cnfg.readout_block.global.zero_suppression_enable") 
+        { 
+            cBoardRegs.push_back({it.first, pBoard->getEventType() == EventType::ZS}); 
+            continue;
+        }
+        cBoardRegs.push_back({it.first, it.second.fValue});
     }
     // configure CDCE - if needed
     std::pair<std::string, float> cCDCEselect;
@@ -1028,8 +1032,7 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     if(fL1ReadoutInterface->ReadEvents(pBoard)) { pData = fL1ReadoutInterface->getData(); }
     else
     {
-        LOG(INFO) << BOLDRED << "Failed to ReadNEvents. Contact Fabio Ravera and/or Irene Zoi." << RESET;
-        // throw Exception("Failed to ReadNEvents....");
+        throw Exception("Failed to ReadNEvents....");
     }
     if(fSaveToFile) fFileHandler->setData(pData);
 }

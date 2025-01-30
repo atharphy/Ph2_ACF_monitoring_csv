@@ -213,7 +213,7 @@
 		</Register>
 		<Register name="readout_block">
 			<Register name="packet_nbr">999</Register>
-			<Register name="timeout">400</Register>
+			<Register name="timeout">0xfff</Register>
 			<Register name="global">
 				<Register name="common_stubdata_delay">217</Register>
 				<Register name="data_handshake_enable">0</Register>

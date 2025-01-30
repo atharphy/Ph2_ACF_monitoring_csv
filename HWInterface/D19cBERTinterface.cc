@@ -177,8 +177,8 @@ void BitErrorTestReply::decodeReply(uint32_t reply, const BitErrorTestControl& t
             {
             case BitErrorTestControl::CounterSelect::FrameCounterLSB: fFrameCounterLSB = reply; break;
             case BitErrorTestControl::CounterSelect::FrameCounterMSB: fFrameCounterMSB = reply; break;
-            case BitErrorTestControl::CounterSelect::FrameErrorCounter: fPRBSframeCounterValuePredictNext = reply; break;
-            case BitErrorTestControl::CounterSelect::BitErrorCounter: fPRBSbitCounterValuePredictNext = reply; break;
+            case BitErrorTestControl::CounterSelect::FrameErrorCounter: fPRBSframeCounterValueEmulator = reply; break;
+            case BitErrorTestControl::CounterSelect::BitErrorCounter: fPRBSbitCounterValueEmulator = reply; break;
             default: break;
             }
             break;
@@ -193,8 +193,8 @@ void BitErrorTestReply::decodeReply(uint32_t reply, const BitErrorTestControl& t
             switch(BitErrorTestControl::fCurrentMode)
             {
             case BitErrorTestControl::Mode::PRBS: fPRBSfirstData = reply; break;
-
             case BitErrorTestControl::Mode::LSFR: fLFSRfirstData = reply; break;
+            case BitErrorTestControl::Mode::Pattern: fPRBSfirstData = reply; break;
 
             default: break;
             }
@@ -227,7 +227,7 @@ void D19cBERTinterface::writeCommand(BitErrorTestControl theBitErrorTestControl)
 {
     uint32_t theCommand = theBitErrorTestControl.encodeCommand();
     fTheRegManager->WriteReg("fc7_daq_ctrl.physical_interface_block.bert_control", theCommand);
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.bert_control = 0x"  << std::hex << theCommand << std::dec << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.bert_control = 0x"  << std::hex << theCommand << std::dec << std::endl;
     
     std::this_thread::sleep_for(std::chrono::microseconds(100));
 }
@@ -261,15 +261,14 @@ void D19cBERTinterface::startPatternSyncronization(uint8_t hybridId, uint8_t lin
     theBitErrorTestConfigure.setChipId(lineId == 0xF ? 0x7 : 0x0);
     theBitErrorTestConfigure.setLineId(lineId);
     theBitErrorTestConfigure.setLineSelect(fLineSelect);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
     BitErrorTestControl selectSyncMaskCommand;
     selectSyncMaskCommand.getLine(theBitErrorTestConfigure);
     selectSyncMaskCommand.resetCommandBits();
     selectSyncMaskCommand.setCommand(BitErrorTestControl::Command::Configure);
     selectSyncMaskCommand.setIsMask(false);
+    selectSyncMaskCommand.setLineSelect(fLineSelect);
     writeCommand(selectSyncMaskCommand);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
     BitErrorTestControl theBitErrorTestSetAlignmentPattern;
     theBitErrorTestSetAlignmentPattern.getLine(theBitErrorTestConfigure);
@@ -282,12 +281,30 @@ std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
     }
     writeCommand(theBitErrorTestSetAlignmentPattern);
 
+    BitErrorTestControl setDebugModeCommand;
+    setDebugModeCommand.getLine(theBitErrorTestConfigure);
+    setDebugModeCommand.setCommand(BitErrorTestControl::Command::Configure);
+    setDebugModeCommand.setIsMask(true);
+    setDebugModeCommand.setLineSelect(fLineSelect);
+    writeCommand(setDebugModeCommand);
+
+    BitErrorTestControl setSyncPatternMask;
+    setSyncPatternMask.getLine(theBitErrorTestConfigure);
+    setSyncPatternMask.setCommand(BitErrorTestControl::Command::SetFirstPattern);
+
+    if(fUsePRBS) setSyncPatternMask.setFirstPattern(0xffff);
+    else
+    {
+        setSyncPatternMask.setFirstPattern(fCheckedPatternMask.at(0) >> 16);
+    }
+    writeCommand(setSyncPatternMask);
+
     theBitErrorTestConfigure.setCommand(BitErrorTestControl::Command::Configure);
     theBitErrorTestConfigure.setCounterSelect(BitErrorTestControl::CounterSelect::BitErrorCounter);
-    theBitErrorTestConfigure.setMode(BitErrorTestControl::Mode::PRBS);
-    // theBitErrorTestConfigure.setMode(fUsePRBS ? BitErrorTestControl::Mode::PRBS : BitErrorTestControl::Mode::Pattern);
+    theBitErrorTestConfigure.setMode(fUsePRBS ? BitErrorTestControl::Mode::PRBS : BitErrorTestControl::Mode::Pattern);
     theBitErrorTestConfigure.setReceiveEnable(true);
     theBitErrorTestConfigure.setCheckMode(true);
+    theBitErrorTestConfigure.setLineSelect(fLineSelect);
     writeCommand(theBitErrorTestConfigure);
 }
 
@@ -303,8 +320,7 @@ void D19cBERTinterface::startBitErrorRateTest(uint8_t hybridId, uint8_t lineId)
 
     theBitErrorTestConfigure.setCommand(BitErrorTestControl::Command::Configure);
     theBitErrorTestConfigure.setCounterSelect(BitErrorTestControl::CounterSelect::BitErrorCounter);
-    theBitErrorTestConfigure.setMode(BitErrorTestControl::Mode::PRBS);
-    // theBitErrorTestConfigure.setMode(fUsePRBS ? BitErrorTestControl::Mode::PRBS : BitErrorTestControl::Mode::Pattern);
+    theBitErrorTestConfigure.setMode(fUsePRBS ? BitErrorTestControl::Mode::PRBS : BitErrorTestControl::Mode::Pattern);
     theBitErrorTestConfigure.setReceiveEnable(true);
     theBitErrorTestConfigure.setCheckMode(true);
     theBitErrorTestConfigure.setCheckEnable(true);
@@ -321,8 +337,7 @@ void D19cBERTinterface::stopBitErrorRateTest(uint8_t hybridId, uint8_t lineId)
 
     theBitErrorTestControl.setCommand(BitErrorTestControl::Command::Configure);
     theBitErrorTestControl.setCounterSelect(BitErrorTestControl::CounterSelect::BitErrorCounter);
-    theBitErrorTestControl.setMode(BitErrorTestControl::Mode::PRBS);
-    // theBitErrorTestControl.setMode(fUsePRBS ? BitErrorTestControl::Mode::PRBS : BitErrorTestControl::Mode::Pattern);
+    theBitErrorTestControl.setMode(fUsePRBS ? BitErrorTestControl::Mode::PRBS : BitErrorTestControl::Mode::Pattern);
     theBitErrorTestControl.setReceiveEnable(true);
     theBitErrorTestControl.setCheckMode(true);
     writeCommand(theBitErrorTestControl);
@@ -454,7 +469,7 @@ BitErrorTestReply D19cBERTinterface::readReplay(const BitErrorTestControl& theBi
         writeCommand(theBitErrorTestControl);
 
         uint32_t reply = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.bert_stat");
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_stat.physical_interface_block.bert_stat = 0x"  << std::hex << reply << std::dec << std::endl;
+        // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_stat.physical_interface_block.bert_stat = 0x"  << std::hex << reply << std::dec << std::endl;
         
         try
         {
@@ -486,6 +501,15 @@ void D19cBERTinterface::waitForNeededBits(bool is10Gmodule, float numberOfMatche
 {
     float dataRate = 3.2E5;
     if(is10Gmodule) dataRate *= 2.;
+    if(!fUsePRBS)
+    {
+        if(fNumberOfCheckedBits == 0)
+        {
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fNumberOfCheckedBits = 0, impossible to measure meaninless pattern error bits, aborting" << std::endl;
+            abort();
+        }
+        dataRate *= fNumberOfCheckedBits / (32. * fCheckedPatternMask.size());
+    }
 
     float    extimatedWaitInMilliseconds = numberOfMatchedBits / dataRate + 1;
     uint32_t waitInMilliSeconds          = ceil(extimatedWaitInMilliseconds);
@@ -568,7 +592,13 @@ uint64_t D19cBERTinterface::readNumberOfTestedBit(uint16_t hybridId, uint8_t lin
     theBitCounterCounter |= getFrameCounters(hybridId, lineId, false);
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theBitCounterCounter = " << std::hex << theBitCounterCounter << std::dec << std::endl;
 
-    theBitCounterCounter *= (is10Gmodule ? 16. : 8.);
+    float numberOfCheckedBits = (is10Gmodule ? 16. : 8.);
+    if(!fUsePRBS)
+    {
+        numberOfCheckedBits *= fNumberOfCheckedBits / (32. * fCheckedPatternMask.size());
+    }
+
+    theBitCounterCounter *= numberOfCheckedBits;
     return theBitCounterCounter;
 }
 
@@ -685,13 +715,12 @@ void D19cBERTinterface::setCheckedPattern(const std::vector<uint32_t>& theChecke
     for(size_t index = 0; index < fCheckedPattern.size(); ++index)
     {
         fCheckedPattern.at(index) = theCheckedPattern.at(index);
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fCheckedPattern.at(index) = 0x" << std::hex << fCheckedPattern.at(index) << std::dec << std::endl;
-        
     }
 }
 
 void D19cBERTinterface::setCheckedPatternMask(const std::vector<uint32_t>& theCheckedPatternMask)
 {
+    fNumberOfCheckedBits = 0; 
     if(theCheckedPatternMask.size() != fCheckedPatternMask.size())
     {
         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of Pattern Mask " << theCheckedPatternMask.size() << " does not match expected size " << fCheckedPatternMask.size() << ". Aborting..." << std::endl;
@@ -699,8 +728,8 @@ void D19cBERTinterface::setCheckedPatternMask(const std::vector<uint32_t>& theCh
     }
     for(size_t index = 0; index < fCheckedPatternMask.size(); ++index)
     {
+        fNumberOfCheckedBits += std::bitset<32>(theCheckedPatternMask.at(index)).count();
         fCheckedPatternMask.at(index) = theCheckedPatternMask.at(index);
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fCheckedPatternMask.at(index) = 0x" << std::hex << fCheckedPatternMask.at(index) << std::dec << std::endl;
     }
 }
 
@@ -730,55 +759,33 @@ void  D19cBERTinterface::loadCheckedPattern(uint8_t hybridId, uint8_t lineId)
 
             setPatternWordIndex.setIsMask(false);
             setPatternWordIndex.setDebugMode(true);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
             writeCommand(setPatternWordIndex);
             setPatternCommand.setPattern(currentPattern);
             writeCommand(setPatternCommand);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
             setPatternWordIndex.setIsMask(true);
             setPatternWordIndex.setDebugMode(true);
             writeCommand(setPatternWordIndex);
             setPatternCommand.setPattern(currentPatternMask);
             writeCommand(setPatternCommand);
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
         }
     }
+
+    setPatternWordIndex.setIsMask(false);
+    setPatternWordIndex.setDebugMode(false);
+    writeCommand(setPatternWordIndex);
 }
 
 void D19cBERTinterface::loadAllCheckedPatternsInBoard(BoardContainer* theBoardContainer)
 {
-    for(auto theOpticalGroup: *theBoardContainer)
+    if(!fUsePRBS)
     {
-        for(auto theHybrid: *theOpticalGroup)
+        for(auto theOpticalGroup: *theBoardContainer)
         {
-            if(!fUsePRBS)
+            for(auto theHybrid: *theOpticalGroup)
             {
-                loadCheckedPattern(theHybrid->getId(), fLineSelect);
+                    loadCheckedPattern(theHybrid->getId(), fLineSelect);
             }
-
-            BitErrorTestControl setDebugModeCommand;
-            setDebugModeCommand.setHybridId(0x1f);
-            setDebugModeCommand.setChipId(0x7);
-            setDebugModeCommand.setLineId(0xf);
-            setDebugModeCommand.setCommand(BitErrorTestControl::Command::Configure);
-            setDebugModeCommand.setIsMask(true);
-            writeCommand(setDebugModeCommand);
-
-            BitErrorTestControl setSyncPatternMask;
-            setSyncPatternMask.setHybridId(0x1f);
-            setSyncPatternMask.setChipId(0x7);
-            setSyncPatternMask.setLineId(0xf);
-            setSyncPatternMask.setCommand(BitErrorTestControl::Command::SetFirstPattern);
-
-            if(fUsePRBS) setSyncPatternMask.setFirstPattern(0xffff);
-            else
-            {
-                setSyncPatternMask.setFirstPattern(fCheckedPatternMask.at(0) >> 16);
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fCheckedPatternMask.at(0)  = 0x" << std::hex << fCheckedPatternMask.at(0)  << std::dec << std::endl;
-                
-            }
-            writeCommand(setSyncPatternMask);
-        }
-    } 
+        } 
+    }
 }

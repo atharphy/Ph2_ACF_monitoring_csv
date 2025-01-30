@@ -101,7 +101,6 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyMPASSAdataWord>("Outer Tracker", "alignment");
 
     Register<OTalignLpGBTinputs,
-             OTalignBoardDataWord,
              OTPatternCheckerTest>("Outer Tracker", "patternChecker");
 
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTCicBypassTest>("Outer Tracker", "testCICbypass");

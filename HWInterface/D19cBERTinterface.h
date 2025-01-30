@@ -141,15 +141,15 @@ class BitErrorTestReply
     BitErrorTestControl::Mode fMode{BitErrorTestControl::Mode::None0};
     bool                      fCheckEnable{false};
     bool                      fReceiveEnable{false};
-    uint16_t                  fFirstPattern{999};
-    uint32_t                  fPRBSframeCounterValueEmulator{999};
-    uint32_t                  fPRBSbitCounterValueEmulator{999};
-    uint32_t                  fPRBSframeCounterValuePredictNext{999};
-    uint32_t                  fPRBSbitCounterValuePredictNext{999};
-    uint32_t                  fPRBSfirstData{999};
-    uint32_t                  fLFSRfirstData{999};
-    uint32_t                  fPRBSdata{999};
-    uint32_t                  fLFSRdata{999};
+    uint16_t                  fFirstPattern{0x999};
+    uint32_t                  fPRBSframeCounterValueEmulator{0x999};
+    uint32_t                  fPRBSbitCounterValueEmulator{0x999};
+    uint32_t                  fPRBSframeCounterValuePredictNext{0x999};
+    uint32_t                  fPRBSbitCounterValuePredictNext{0x999};
+    uint32_t                  fPRBSfirstData{0x999};
+    uint32_t                  fLFSRfirstData{0x999};
+    uint32_t                  fPRBSdata{0x999};
+    uint32_t                  fLFSRdata{0x999};
     uint32_t                  fFrameCounterLSB;
     uint32_t                  fFrameCounterMSB;
 };
@@ -199,6 +199,7 @@ class D19cBERTinterface
     std::vector<uint32_t> fCheckedPattern {0x0, 0x0, 0x0, 0x0};
     std::vector<uint32_t> fCheckedPatternMask {0x0, 0x0, 0x0, 0x0};
     bool fUsePRBS = true;
+    float fNumberOfCheckedBits = 0;
 };
 
 } // namespace Ph2_HwInterface

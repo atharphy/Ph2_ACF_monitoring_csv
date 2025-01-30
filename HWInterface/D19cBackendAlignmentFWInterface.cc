@@ -227,20 +227,15 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
 
     if(fAlignOnCustomPattern)
     {
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-        
         thePhaseTuningControl.resetCommandBits();
         thePhaseTuningControl.setCommand(PhaseTuningControl::Command::SetSyncPattern);
         thePhaseTuningControl.setSyncPattern(fCustomAlignmentPattern);
         writeCommand(thePhaseTuningControl);
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
         thePhaseTuningControl.resetCommandBits();
         thePhaseTuningControl.setCommand(PhaseTuningControl::Command::SetSyncPatternMask);
         thePhaseTuningControl.setSyncPatternMask(fCustomAlignmentPatternMask);
         writeCommand(thePhaseTuningControl);
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-
     }
     else
     {
@@ -320,7 +315,7 @@ void D19cBackendAlignmentFWInterface::writeCommand(const PhaseTuningControl& the
 {
     uint32_t phaseTunerCommand = thePhaseTunerControl.encodeCommand();
     fTheRegManager->WriteReg(fPhaseTuningControlRegisterName, phaseTunerCommand);
-    std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.bert_control = 0x"  << std::hex << phaseTunerCommand << std::dec << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.bert_control = 0x"  << std::hex << phaseTunerCommand << std::dec << std::endl;
 
     std::this_thread::sleep_for(std::chrono::microseconds(100));
 }
