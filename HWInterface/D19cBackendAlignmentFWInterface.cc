@@ -52,9 +52,7 @@ uint32_t PhaseTuningControl::encodeCommand() const
         }
         break;
 
-    case Command::SetSyncPatternMask:
-        theCommand |= ((fSyncPatternMask & 0xFFFF) << 0);
-        break;
+    case Command::SetSyncPatternMask: theCommand |= ((fSyncPatternMask & 0xFFFF) << 0); break;
 
     case Command::SetSyncPattern: theCommand |= ((fSyncPattern & 0xFFFF) << 0); break;
 
@@ -294,7 +292,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
 
             LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << +lineId;
             LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET << ", WA FSM: " << BOLDGREEN
-                    << theAlignmentResults.fWordAlignmentFSMstate << RESET;
+                      << theAlignmentResults.fWordAlignmentFSMstate << RESET;
             LOG(INFO) << "\t\t Delay: " << +theAlignmentResults.fDelay << ", Bitslip: " << +theAlignmentResults.fBitslip;
 
             return theAlignmentResults;

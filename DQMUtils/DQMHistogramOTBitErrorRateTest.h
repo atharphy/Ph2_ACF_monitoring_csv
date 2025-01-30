@@ -71,6 +71,6 @@ class DQMHistogramOTBitErrorRateTest : public DQMHistogramBase
     DetectorDataContainer fBERTerrorRateHistogram;
     DetectorDataContainer fBERTbitCounterHistogram;
     DetectorDataContainer fFECcounterHistogram;
-    uint8_t fNumberOfLines;
+    uint8_t               fNumberOfLines;
 };
 #endif

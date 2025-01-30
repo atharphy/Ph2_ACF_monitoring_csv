@@ -52,12 +52,12 @@ void DQMHistogramOTCICphaseAlignment::book(TFile* theOutputFile, DetectorContain
                 if(isPS) { binLabel = "MPA" + std::to_string(port + 8); }
                 else { binLabel = "CBC%d" + std::to_string(port); }
                 if(line == 0) { binLabel += "_L1"; }
-                else 
-                { 
+                else
+                {
                     binLabel += "_Stub";
-                    binLabel += std::to_string(line - 1); 
+                    binLabel += std::to_string(line - 1);
                 }
-                
+
                 theHistogramAxis->SetBinLabel(port * NUMBER_OF_LINES_PER_CIC_PORTS + line + 1, binLabel.c_str());
             }
         }

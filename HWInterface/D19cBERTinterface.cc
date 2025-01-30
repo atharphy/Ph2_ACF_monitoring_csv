@@ -76,16 +76,16 @@ void BitErrorTestControl::getLine(const BitErrorTestControl& theBitErrorTestRepl
 
 void BitErrorTestControl::resetCommandBits()
 {
-    fCommand           = Command::ReturnConfig;
-    fDebugMode         = false;
-    fCheckMode         = false;
-    fCounterSelect     = CounterSelect::FrameCounterLSB;
-    fMode              = Mode::None0;
-    fCheckEnable       = false;
-    fReceiveEnable     = false;
-    fFirstPattern      = 0;
-    fErrorInjection    = false;
-    fDataLoad          = false;
+    fCommand        = Command::ReturnConfig;
+    fDebugMode      = false;
+    fCheckMode      = false;
+    fCounterSelect  = CounterSelect::FrameCounterLSB;
+    fMode           = Mode::None0;
+    fCheckEnable    = false;
+    fReceiveEnable  = false;
+    fFirstPattern   = 0;
+    fErrorInjection = false;
+    fDataLoad       = false;
 }
 
 void BitErrorTestReply::decodeReply(uint32_t reply, const BitErrorTestControl& theBitErrorTestControl)
@@ -228,7 +228,7 @@ void D19cBERTinterface::writeCommand(BitErrorTestControl theBitErrorTestControl)
     uint32_t theCommand = theBitErrorTestControl.encodeCommand();
     fTheRegManager->WriteReg("fc7_daq_ctrl.physical_interface_block.bert_control", theCommand);
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.bert_control = 0x"  << std::hex << theCommand << std::dec << std::endl;
-    
+
     std::this_thread::sleep_for(std::chrono::microseconds(100));
 }
 
@@ -274,11 +274,9 @@ void D19cBERTinterface::startPatternSyncronization(uint8_t hybridId, uint8_t lin
     theBitErrorTestSetAlignmentPattern.getLine(theBitErrorTestConfigure);
     theBitErrorTestSetAlignmentPattern.resetCommandBits();
     theBitErrorTestSetAlignmentPattern.setCommand(BitErrorTestControl::Command::SetFirstPattern);
-    if(fUsePRBS) theBitErrorTestSetAlignmentPattern.setFirstPattern(BERT_ALIGNMENT_PATTERN);
-    else
-    {
-        theBitErrorTestSetAlignmentPattern.setFirstPattern(fCheckedPattern.at(0) >> 16);
-    }
+    if(fUsePRBS)
+        theBitErrorTestSetAlignmentPattern.setFirstPattern(BERT_ALIGNMENT_PATTERN);
+    else { theBitErrorTestSetAlignmentPattern.setFirstPattern(fCheckedPattern.at(0) >> 16); }
     writeCommand(theBitErrorTestSetAlignmentPattern);
 
     BitErrorTestControl setDebugModeCommand;
@@ -292,11 +290,9 @@ void D19cBERTinterface::startPatternSyncronization(uint8_t hybridId, uint8_t lin
     setSyncPatternMask.getLine(theBitErrorTestConfigure);
     setSyncPatternMask.setCommand(BitErrorTestControl::Command::SetFirstPattern);
 
-    if(fUsePRBS) setSyncPatternMask.setFirstPattern(0xffff);
-    else
-    {
-        setSyncPatternMask.setFirstPattern(fCheckedPatternMask.at(0) >> 16);
-    }
+    if(fUsePRBS)
+        setSyncPatternMask.setFirstPattern(0xffff);
+    else { setSyncPatternMask.setFirstPattern(fCheckedPatternMask.at(0) >> 16); }
     writeCommand(setSyncPatternMask);
 
     theBitErrorTestConfigure.setCommand(BitErrorTestControl::Command::Configure);
@@ -307,8 +303,6 @@ void D19cBERTinterface::startPatternSyncronization(uint8_t hybridId, uint8_t lin
     theBitErrorTestConfigure.setLineSelect(fLineSelect);
     writeCommand(theBitErrorTestConfigure);
 }
-
-
 
 void D19cBERTinterface::startBitErrorRateTest(uint8_t hybridId, uint8_t lineId)
 {
@@ -366,18 +360,20 @@ uint32_t D19cBERTinterface::getBitErrorCounters(uint8_t hybridId, uint8_t lineId
     theBitErrorTestControl.setLineId(lineId);
     theBitErrorTestControl.setCommand(BitErrorTestControl::Command::ReadCounterData);
     size_t maxNumberOfIterations = 10;
-    size_t iterationNumber = 0;
+    size_t iterationNumber       = 0;
     while(iterationNumber < maxNumberOfIterations)
     {
-        size_t numberOfRead = 3;
+        size_t                numberOfRead = 3;
         std::vector<uint32_t> readValues(numberOfRead);
         for(size_t readIt = 0; readIt < numberOfRead; ++readIt)
         {
             BitErrorTestReply theBitErrorTestCounter = readReplay(theBitErrorTestControl);
-            readValues.at(readIt) = theBitErrorTestCounter.getPRBSbitCounterValueEmulator();
+            readValues.at(readIt)                    = theBitErrorTestCounter.getPRBSbitCounterValueEmulator();
         }
-        if (std::adjacent_find(readValues.begin(), readValues.end(), std::not_equal_to<>()) == readValues.end()) return readValues.at(0);
-        else ++iterationNumber;
+        if(std::adjacent_find(readValues.begin(), readValues.end(), std::not_equal_to<>()) == readValues.end())
+            return readValues.at(0);
+        else
+            ++iterationNumber;
     }
     return 0xFFFFFFFF;
 }
@@ -410,23 +406,24 @@ uint64_t D19cBERTinterface::getFrameCounters(uint8_t hybridId, uint8_t lineId, b
     theReadDataControl.setLineId(lineId);
     theReadDataControl.setCommand(BitErrorTestControl::Command::ReadCounterData);
     size_t maxNumberOfIterations = 10;
-    size_t iterationNumber = 0;
+    size_t iterationNumber       = 0;
     while(iterationNumber < maxNumberOfIterations)
     {
-        size_t numberOfRead = 3;
+        size_t                numberOfRead = 3;
         std::vector<uint32_t> readValues(numberOfRead);
         for(size_t readIt = 0; readIt < numberOfRead; ++readIt)
         {
             selectFrameCounters(isMSB);
             BitErrorTestReply theFrameLSBcounter = readReplay(theReadDataControl);
-            readValues.at(readIt) = isMSB ? theFrameLSBcounter.getFrameCounterMSB() : theFrameLSBcounter.getFrameCounterLSB();
+            readValues.at(readIt)                = isMSB ? theFrameLSBcounter.getFrameCounterMSB() : theFrameLSBcounter.getFrameCounterLSB();
         }
-        if (std::adjacent_find(readValues.begin(), readValues.end(), std::not_equal_to<>()) == readValues.end()) 
+        if(std::adjacent_find(readValues.begin(), readValues.end(), std::not_equal_to<>()) == readValues.end())
         {
             // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] frame = " << std::hex << readValues.at(0) << std::dec << " is MSB? " << isMSB <<  std::endl;
             return readValues.at(0);
         }
-        else ++iterationNumber;
+        else
+            ++iterationNumber;
     }
     return 0xFFFFFFFFFFFFFFFF;
 }
@@ -442,8 +439,6 @@ uint8_t D19cBERTinterface::getCheckerFSMstatus(uint8_t hybridId, uint8_t lineId)
 
     return theConfig.getPRBScheckStateMachineStatus();
 }
-
-
 
 uint32_t D19cBERTinterface::getFirstData(uint8_t hybridId, uint8_t lineId)
 {
@@ -461,8 +456,8 @@ uint32_t D19cBERTinterface::getFirstData(uint8_t hybridId, uint8_t lineId)
 
 BitErrorTestReply D19cBERTinterface::readReplay(const BitErrorTestControl& theBitErrorTestControl)
 {
-    uint16_t iteration     = 0;
-    uint16_t maxIterations = 10;
+    uint16_t          iteration     = 0;
+    uint16_t          maxIterations = 10;
     BitErrorTestReply theBitErrorTestReply;
     while(iteration < maxIterations)
     {
@@ -470,7 +465,7 @@ BitErrorTestReply D19cBERTinterface::readReplay(const BitErrorTestControl& theBi
 
         uint32_t reply = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.bert_stat");
         // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_stat.physical_interface_block.bert_stat = 0x"  << std::hex << reply << std::dec << std::endl;
-        
+
         try
         {
             theBitErrorTestReply.decodeReply(reply, theBitErrorTestControl);
@@ -480,7 +475,6 @@ BitErrorTestReply D19cBERTinterface::readReplay(const BitErrorTestControl& theBi
         {
             ++iteration;
         }
-        
     }
 
     return theBitErrorTestReply;
@@ -505,7 +499,7 @@ void D19cBERTinterface::waitForNeededBits(bool is10Gmodule, float numberOfMatche
     {
         if(fNumberOfCheckedBits == 0)
         {
-            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fNumberOfCheckedBits = 0, impossible to measure meaninless pattern error bits, aborting" << std::endl;
+            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fNumberOfCheckedBits = 0, impossible to measure meaninless pattern error bits, aborting" << std::endl;
             abort();
         }
         dataRate *= fNumberOfCheckedBits / (32. * fCheckedPatternMask.size());
@@ -513,7 +507,7 @@ void D19cBERTinterface::waitForNeededBits(bool is10Gmodule, float numberOfMatche
 
     float    extimatedWaitInMilliseconds = numberOfMatchedBits / dataRate + 1;
     uint32_t waitInMilliSeconds          = ceil(extimatedWaitInMilliseconds);
-    
+
     uint32_t sleepingStepMilliSeconds = 5000;
     while(waitInMilliSeconds >= sleepingStepMilliSeconds)
     {
@@ -522,7 +516,6 @@ void D19cBERTinterface::waitForNeededBits(bool is10Gmodule, float numberOfMatche
         waitInMilliSeconds -= sleepingStepMilliSeconds;
     }
     if(waitInMilliSeconds > 0) { std::this_thread::sleep_for(std::chrono::milliseconds(waitInMilliSeconds)); }
-
 }
 
 bool D19cBERTinterface::isStartPatternFound(BoardContainer* theBoardContainer, uint8_t lineNumber)
@@ -538,14 +531,15 @@ bool D19cBERTinterface::isStartPatternFound(BoardContainer* theBoardContainer, u
             while(iteration < maxIterations)
             {
                 firstData = getFirstData(theHybrid->getId(), lineNumber);
-                
+
                 if((firstData >> 16) == BERT_ALIGNMENT_PATTERN && fUsePRBS) break;
                 if((firstData >> 16) == (fCheckedPattern.at(0) >> 16) && !fUsePRBS) break;
                 ++iteration;
             }
             if(iteration >= maxIterations)
             {
-                LOG(WARNING) << WARNING_FORMAT << "Failed to find BERT start pattern on OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << " after " << maxIterations << " iterations. Last word read = 0x" << std::hex << firstData << std::dec << RESET;
+                LOG(WARNING) << WARNING_FORMAT << "Failed to find BERT start pattern on OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +lineNumber
+                             << " after " << maxIterations << " iterations. Last word read = 0x" << std::hex << firstData << std::dec << RESET;
                 allLineStarted = false;
             }
         }
@@ -553,7 +547,6 @@ bool D19cBERTinterface::isStartPatternFound(BoardContainer* theBoardContainer, u
 
     return allLineStarted;
 }
-
 
 bool D19cBERTinterface::isStateMachineStarted(BoardContainer* theBoardContainer, uint8_t lineNumber)
 {
@@ -568,13 +561,14 @@ bool D19cBERTinterface::isStateMachineStarted(BoardContainer* theBoardContainer,
             while(iteration < maxIterations)
             {
                 checkerFSMstatus = getCheckerFSMstatus(theHybrid->getId(), lineNumber);
-                
-                if(checkerFSMstatus  == 0x2) break;
+
+                if(checkerFSMstatus == 0x2) break;
                 ++iteration;
             }
             if(iteration >= maxIterations)
             {
-                LOG(WARNING) << WARNING_FORMAT << "Failed to start BERT checker on OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << " after " << maxIterations << " iterations. FSM status = 0x" << std::hex << +checkerFSMstatus << std::dec << RESET;
+                LOG(WARNING) << WARNING_FORMAT << "Failed to start BERT checker on OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +lineNumber
+                             << " after " << maxIterations << " iterations. FSM status = 0x" << std::hex << +checkerFSMstatus << std::dec << RESET;
                 allLineStarted = false;
             }
         }
@@ -583,20 +577,16 @@ bool D19cBERTinterface::isStateMachineStarted(BoardContainer* theBoardContainer,
     return allLineStarted;
 }
 
-
 uint64_t D19cBERTinterface::readNumberOfTestedBit(uint16_t hybridId, uint8_t lineId, bool is10Gmodule)
 {
     uint64_t theBitCounterCounter = (getFrameCounters(hybridId, lineId, true) << 32);
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theBitCounterCounter = " << std::hex << theBitCounterCounter << std::dec << std::endl;
-    
+
     theBitCounterCounter |= getFrameCounters(hybridId, lineId, false);
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theBitCounterCounter = " << std::hex << theBitCounterCounter << std::dec << std::endl;
 
     float numberOfCheckedBits = (is10Gmodule ? 16. : 8.);
-    if(!fUsePRBS)
-    {
-        numberOfCheckedBits *= fNumberOfCheckedBits / (32. * fCheckedPatternMask.size());
-    }
+    if(!fUsePRBS) { numberOfCheckedBits *= fNumberOfCheckedBits / (32. * fCheckedPatternMask.size()); }
 
     theBitCounterCounter *= numberOfCheckedBits;
     return theBitCounterCounter;
@@ -604,23 +594,25 @@ uint64_t D19cBERTinterface::readNumberOfTestedBit(uint16_t hybridId, uint8_t lin
 
 bool D19cBERTinterface::retrieveBitTestedCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber, bool is10Gmodule, float numberOfMatchedBits)
 {
-    bool  correctFrameFound    = true;
+    bool correctFrameFound = true;
     for(auto theOpticalGroup: *theBoardContainer)
     {
         for(auto theHybrid: *theOpticalGroup)
         {
-            auto& theCounterVector = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
+            auto& theCounterVector     = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
             auto& theBitCounterCounter = theCounterVector.at(0);
-            theBitCounterCounter = readNumberOfTestedBit(theHybrid->getId(), lineNumber, is10Gmodule);
+            theBitCounterCounter       = readNumberOfTestedBit(theHybrid->getId(), lineNumber, is10Gmodule);
             if(theBitCounterCounter < numberOfMatchedBits)
             {
                 correctFrameFound = false;
-                LOG(ERROR) << ERROR_FORMAT << "Number of checked bits 0x" << std::hex << theBitCounterCounter << std::dec << " is less then the expected number " << numberOfMatchedBits << " for OpticalGroup " << theHybrid->getId()/2 << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << RESET;
+                LOG(ERROR) << ERROR_FORMAT << "Number of checked bits 0x" << std::hex << theBitCounterCounter << std::dec << " is less then the expected number " << numberOfMatchedBits
+                           << " for OpticalGroup " << theHybrid->getId() / 2 << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << RESET;
             }
             if(theBitCounterCounter > numberOfMatchedBits * 100 && numberOfMatchedBits > 9e5)
             {
                 correctFrameFound = false;
-                LOG(ERROR) << ERROR_FORMAT << "Number of checked bits 0x" << std::hex << theBitCounterCounter << std::dec << " is too large than the expected number " << numberOfMatchedBits << " for OpticalGroup " << theHybrid->getId()/2 << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << RESET;
+                LOG(ERROR) << ERROR_FORMAT << "Number of checked bits 0x" << std::hex << theBitCounterCounter << std::dec << " is too large than the expected number " << numberOfMatchedBits
+                           << " for OpticalGroup " << theHybrid->getId() / 2 << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << RESET;
             }
         }
     }
@@ -633,10 +625,7 @@ void D19cBERTinterface::retrieveErrorCounter(OpticalGroupDataContainer* theOptic
     for(auto theHybrid: *theOpticalGroupContainer)
     {
         auto& theCounterVector = theHybrid->getSummary<std::vector<GenericDataArray<uint64_t, 2>>>();
-        for(uint8_t line = 0; line < numberOfLines; ++line)
-        {
-            theCounterVector.at(line).at(1) = getBitErrorCounters(theHybrid->getId(), line);
-        }
+        for(uint8_t line = 0; line < numberOfLines; ++line) { theCounterVector.at(line).at(1) = getBitErrorCounters(theHybrid->getId(), line); }
     }
 }
 
@@ -652,19 +641,18 @@ void D19cBERTinterface::retrieveErrorCounterLine(BoardDataContainer* theBoardCon
     }
 }
 
-
 BoardDataContainer D19cBERTinterface::runBERTonSingleLine(BoardContainer* theBoardContainer, uint8_t lineNumber, bool is10Gmodule, float numberOfMatchedBits)
 {
     fLineSelect = lineNumber;
-    
+
     uint8_t hybridId = 0x1F;
     uint8_t lineId   = 0xF;
 
-    BoardDataContainer                  theBoardBERTcounterResult;
+    BoardDataContainer theBoardBERTcounterResult;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*theBoardContainer, theBoardBERTcounterResult);
 
     size_t maxNumberOfIteration = 10;
-    size_t iterationNumber = 0;
+    size_t iterationNumber      = 0;
     while(iterationNumber < maxNumberOfIteration)
     {
         loadAllCheckedPatternsInBoard(theBoardContainer);
@@ -674,10 +662,7 @@ BoardDataContainer D19cBERTinterface::runBERTonSingleLine(BoardContainer* theBoa
         if(isStartPatternFound(theBoardContainer, lineNumber))
         {
             startBitErrorRateTest(hybridId, lineId);
-            if(isStateMachineStarted(theBoardContainer, lineNumber))
-            {
-                break;
-            }
+            if(isStateMachineStarted(theBoardContainer, lineNumber)) { break; }
         }
         ++iterationNumber;
         if(iterationNumber >= maxNumberOfIteration) break;
@@ -685,10 +670,7 @@ BoardDataContainer D19cBERTinterface::runBERTonSingleLine(BoardContainer* theBoa
         haltBitErrorRateTest(hybridId, lineId);
     }
 
-    if(iterationNumber >= maxNumberOfIteration)
-    {
-        LOG(ERROR) << ERROR_FORMAT << "Failed to properly start BERT on line " << lineNumber << " after " << maxNumberOfIteration << " trials" << RESET;
-    }
+    if(iterationNumber >= maxNumberOfIteration) { LOG(ERROR) << ERROR_FORMAT << "Failed to properly start BERT on line " << lineNumber << " after " << maxNumberOfIteration << " trials" << RESET; }
 
     waitForNeededBits(is10Gmodule, numberOfMatchedBits);
 
@@ -702,28 +684,24 @@ BoardDataContainer D19cBERTinterface::runBERTonSingleLine(BoardContainer* theBoa
     return theBoardBERTcounterResult;
 }
 
-
-
-
 void D19cBERTinterface::setCheckedPattern(const std::vector<uint32_t>& theCheckedPattern)
 {
     if(theCheckedPattern.size() != fCheckedPattern.size())
     {
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of Pattern " << theCheckedPattern.size() << " does not match expected size " << fCheckedPattern.size() << ". Aborting..." << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of Pattern " << theCheckedPattern.size() << " does not match expected size " << fCheckedPattern.size() << ". Aborting..."
+                  << std::endl;
         abort();
     }
-    for(size_t index = 0; index < fCheckedPattern.size(); ++index)
-    {
-        fCheckedPattern.at(index) = theCheckedPattern.at(index);
-    }
+    for(size_t index = 0; index < fCheckedPattern.size(); ++index) { fCheckedPattern.at(index) = theCheckedPattern.at(index); }
 }
 
 void D19cBERTinterface::setCheckedPatternMask(const std::vector<uint32_t>& theCheckedPatternMask)
 {
-    fNumberOfCheckedBits = 0; 
+    fNumberOfCheckedBits = 0;
     if(theCheckedPatternMask.size() != fCheckedPatternMask.size())
     {
-        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of Pattern Mask " << theCheckedPatternMask.size() << " does not match expected size " << fCheckedPatternMask.size() << ". Aborting..." << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of Pattern Mask " << theCheckedPatternMask.size() << " does not match expected size " << fCheckedPatternMask.size()
+                  << ". Aborting..." << std::endl;
         abort();
     }
     for(size_t index = 0; index < fCheckedPatternMask.size(); ++index)
@@ -733,7 +711,7 @@ void D19cBERTinterface::setCheckedPatternMask(const std::vector<uint32_t>& theCh
     }
 }
 
-void  D19cBERTinterface::loadCheckedPattern(uint8_t hybridId, uint8_t lineId)
+void D19cBERTinterface::loadCheckedPattern(uint8_t hybridId, uint8_t lineId)
 {
     BitErrorTestControl setPatternWordIndex;
     setPatternWordIndex.setHybridId(0x1f);
@@ -752,10 +730,10 @@ void  D19cBERTinterface::loadCheckedPattern(uint8_t hybridId, uint8_t lineId)
     {
         for(size_t subPattern = 0; subPattern < 2; ++subPattern)
         {
-            uint16_t currentPattern = (fCheckedPattern.at(fCheckedPattern.size() - index - 1) >> (16*subPattern) ) & 0xFFFF;
-            uint16_t currentPatternMask = (fCheckedPatternMask.at(fCheckedPatternMask.size() - index - 1) >> (16*subPattern) ) & 0xFFFF;
-            
-            setPatternWordIndex.setPatternWordIndex(index*2 + subPattern);
+            uint16_t currentPattern     = (fCheckedPattern.at(fCheckedPattern.size() - index - 1) >> (16 * subPattern)) & 0xFFFF;
+            uint16_t currentPatternMask = (fCheckedPatternMask.at(fCheckedPatternMask.size() - index - 1) >> (16 * subPattern)) & 0xFFFF;
+
+            setPatternWordIndex.setPatternWordIndex(index * 2 + subPattern);
 
             setPatternWordIndex.setIsMask(false);
             setPatternWordIndex.setDebugMode(true);
@@ -782,10 +760,7 @@ void D19cBERTinterface::loadAllCheckedPatternsInBoard(BoardContainer* theBoardCo
     {
         for(auto theOpticalGroup: *theBoardContainer)
         {
-            for(auto theHybrid: *theOpticalGroup)
-            {
-                    loadCheckedPattern(theHybrid->getId(), fLineSelect);
-            }
-        } 
+            for(auto theHybrid: *theOpticalGroup) { loadCheckedPattern(theHybrid->getId(), fLineSelect); }
+        }
     }
 }

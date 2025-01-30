@@ -56,10 +56,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
             isFreeRegister = std::regex_match(cRegItem.first, freeRegister.first);
             if(isFreeRegister) break;
         }
-        if(!isFreeRegister)
-        {
-            cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
-        }
+        if(!isFreeRegister) { cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue)); }
     } // get read/write registers
 
     WriteChipMultReg(pChip, cRegVec);
@@ -141,12 +138,12 @@ bool D19clpGBTInterface::enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalG
 
     std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
 
-    uint8_t  driverStrenght = 3;
-    uint8_t  PS0delayValue  = phase & 0xff;
-    uint8_t  PS0configValue = ((phase >> 1) & 0x80) | (is10G ? 5 : 4) | (driverStrenght << 3) | 0x40;
+    uint8_t driverStrenght = 3;
+    uint8_t PS0delayValue  = phase & 0xff;
+    uint8_t PS0configValue = ((phase >> 1) & 0x80) | (is10G ? 5 : 4) | (driverStrenght << 3) | 0x40;
     theRegisterVector.push_back({"PS0Config", PS0configValue});
     theRegisterVector.push_back({"PS0Delay", PS0delayValue});
-    
+
     WriteChipMultReg(theLpBGT, theRegisterVector);
     theRegisterVector.clear();
 

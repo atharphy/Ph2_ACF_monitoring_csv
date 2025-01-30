@@ -23,7 +23,7 @@ void DQMHistogramOTPatternCheckerTest::book(TFile* theOutputFile, DetectorContai
     // make fDetectorContainer ready to receive the information fromm the stream
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
-    
+
     fNumberOfLines = (theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
 
     auto setBitLabel = [this](TAxis* theXaxis)
@@ -56,7 +56,6 @@ void DQMHistogramOTPatternCheckerTest::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================
@@ -64,7 +63,6 @@ void DQMHistogramOTPatternCheckerTest::reset(void)
 {
     // Clear histograms if needed
 }
-
 
 //========================================================================================================================
 void DQMHistogramOTPatternCheckerTest::fillErrorCounter(DetectorDataContainer& theErrorCountainer, uint8_t line)
@@ -77,8 +75,8 @@ void DQMHistogramOTPatternCheckerTest::fillErrorCounter(DetectorDataContainer& t
             auto theBitCounterHistogram   = fPatternBitCounterHistogram.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto    theErrorCounter = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
-                int binNumber = line + (theHybrid->getId() % 2) * fNumberOfLines;
+                auto theErrorCounter = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
+                int  binNumber       = line + (theHybrid->getId() % 2) * fNumberOfLines;
                 theBitCounterHistogram->SetBinContent(binNumber, theErrorCounter.at(0));
                 theErrorCounterHistogram->SetBinContent(binNumber, theErrorCounter.at(0) > 0 ? float(theErrorCounter.at(1)) / float(theErrorCounter.at(0)) : 1.);
             }
@@ -99,9 +97,9 @@ bool DQMHistogramOTPatternCheckerTest::fill(std::string& inputStream)
     if(theErrorCounterSerialization.attachDeserializer(inputStream))
     {
         // std::cout << "Matched OTBitErrorRateTest ErrorCounter!!!!\n";
-        uint8_t line;
+        uint8_t               line;
         DetectorDataContainer theDetectorData =
-            theErrorCounterSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer,GenericDataArray<uint64_t, 2>, EmptyContainer>(fDetectorContainer, line);
+            theErrorCounterSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint64_t, 2>, EmptyContainer>(fDetectorContainer, line);
         fillErrorCounter(theDetectorData, line);
         return true;
     }

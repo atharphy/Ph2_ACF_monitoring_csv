@@ -519,9 +519,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     for(auto const& it: cRegMap)
     {
         if(it.first == "fc7_daq_cnfg.dio5_block.dio5_en") cEnableDIO5 = (bool)it.second.fValue;
-        if(it.first == "fc7_daq_cnfg.readout_block.global.zero_suppression_enable") 
-        { 
-            cBoardRegs.push_back({it.first, pBoard->getEventType() == EventType::ZS}); 
+        if(it.first == "fc7_daq_cnfg.readout_block.global.zero_suppression_enable")
+        {
+            cBoardRegs.push_back({it.first, pBoard->getEventType() == EventType::ZS});
             continue;
         }
         cBoardRegs.push_back({it.first, it.second.fValue});
@@ -1030,10 +1030,7 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     fTriggerInterface->setTimeout((uint32_t)(1.5e6 * pNEvents / (cTriggerRate * 1.0e3)));
     fL1ReadoutInterface->setNEvents(pNEvents);
     if(fL1ReadoutInterface->ReadEvents(pBoard)) { pData = fL1ReadoutInterface->getData(); }
-    else
-    {
-        throw Exception("Failed to ReadNEvents....");
-    }
+    else { throw Exception("Failed to ReadNEvents...."); }
     if(fSaveToFile) fFileHandler->setData(pData);
 }
 

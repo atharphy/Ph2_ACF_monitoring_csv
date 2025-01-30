@@ -57,11 +57,10 @@ class DQMHistogramOTPatternCheckerTest : public DQMHistogramBase
 
     void fillErrorCounter(DetectorDataContainer& theErrorCountainer, uint8_t line);
 
-
   private:
     DetectorContainer*    fDetectorContainer;
     DetectorDataContainer fPatternErrorRateHistogram;
     DetectorDataContainer fPatternBitCounterHistogram;
-    uint8_t fNumberOfLines;
+    uint8_t               fNumberOfLines;
 };
 #endif

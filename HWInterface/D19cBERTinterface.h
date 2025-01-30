@@ -23,14 +23,14 @@ class BitErrorTestControl
 
     enum class Command
     {
-        ReturnConfig           = 0,
-        ReturnFirstPattern     = 1,
-        Configure              = 2,
-        SetFirstPattern        = 3,
-        ReadCounterData        = 4,
-        ErrorInject            = 5,
-        ReadBERTfirstData      = 6,
-        ReadBERTsampledData    = 7
+        ReturnConfig        = 0,
+        ReturnFirstPattern  = 1,
+        Configure           = 2,
+        SetFirstPattern     = 3,
+        ReadCounterData     = 4,
+        ErrorInject         = 5,
+        ReadBERTfirstData   = 6,
+        ReadBERTsampledData = 7
     };
 
     enum class CounterSelect
@@ -67,9 +67,9 @@ class BitErrorTestControl
     void setFirstPattern(uint16_t theFirstPattern) { fFirstPattern = theFirstPattern; }
     void setErrorInjection(bool theErrorInjection) { fErrorInjection = theErrorInjection; }
     void setDataLoad(bool theDataLoad) { fDataLoad = theDataLoad; }
-    void setIsMask(bool isMask) {fIsMask = isMask;}
-    void setPatternWordIndex(uint8_t thePatternWordIndex) {fPatternWordIndex = thePatternWordIndex;}
-    void setPattern(uint16_t thePattern) {fPattern = thePattern;}
+    void setIsMask(bool isMask) { fIsMask = isMask; }
+    void setPatternWordIndex(uint8_t thePatternWordIndex) { fPatternWordIndex = thePatternWordIndex; }
+    void setPattern(uint16_t thePattern) { fPattern = thePattern; }
 
   private:
     uint8_t       fHybridId{0};
@@ -169,7 +169,7 @@ class D19cBERTinterface
 
     void setCheckedPattern(const std::vector<uint32_t>& theCheckedPattern);
     void setCheckedPatternMask(const std::vector<uint32_t>& theCheckedPatternMask);
-    void setUsePRBS(bool usePRBS) {fUsePRBS = usePRBS;}
+    void setUsePRBS(bool usePRBS) { fUsePRBS = usePRBS; }
 
   private:
     RegManager* fTheRegManager{nullptr};
@@ -196,10 +196,10 @@ class D19cBERTinterface
 
     uint8_t fLineSelect;
 
-    std::vector<uint32_t> fCheckedPattern {0x0, 0x0, 0x0, 0x0};
-    std::vector<uint32_t> fCheckedPatternMask {0x0, 0x0, 0x0, 0x0};
-    bool fUsePRBS = true;
-    float fNumberOfCheckedBits = 0;
+    std::vector<uint32_t> fCheckedPattern{0x0, 0x0, 0x0, 0x0};
+    std::vector<uint32_t> fCheckedPatternMask{0x0, 0x0, 0x0, 0x0};
+    bool                  fUsePRBS             = true;
+    float                 fNumberOfCheckedBits = 0;
 };
 
 } // namespace Ph2_HwInterface

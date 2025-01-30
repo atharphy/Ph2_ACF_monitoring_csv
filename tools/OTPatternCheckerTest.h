@@ -34,14 +34,14 @@ class OTPatternCheckerTest : public OTalignBoardDataWord
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
     void PatternCheckerTest(Ph2_HwDescription::BeBoard* theBoard, BoardDataContainer* thePatternTestContainer, float numberOfBits, float lineNumber);
     void PatternCheckerTest();
     void PatternCheckerTest(uint8_t line);
 
     float fNumberOfBits;
-    
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTPatternCheckerTest fDQMHistogramOTPatternCheckerTest;

@@ -335,12 +335,13 @@ bool D19cOpticalInterface::testLinkStability(Ph2_HwDescription::Chip* pLpGBT)
 {
     if(pLpGBT->getFrontEndType() != FrontEndType::LpGBT)
     {
-        LOG(ERROR) << ERROR_FORMAT << "D19cOpticalInterface::testLinkStability can be used only for LpGBT, " << FrontEndDescription::getFrontEndName(pLpGBT->getFrontEndType()) << " provided instead, aborting" << RESET;
+        LOG(ERROR) << ERROR_FORMAT << "D19cOpticalInterface::testLinkStability can be used only for LpGBT, " << FrontEndDescription::getFrontEndName(pLpGBT->getFrontEndType())
+                   << " provided instead, aborting" << RESET;
         abort();
     }
     std::lock_guard<std::recursive_mutex> theGuard(fTheRegManager->fMutex);
     flpGBTSlowControlWorkerInterface->SelectLink(pLpGBT->getOpticalGroupId());
-    uint8_t cFunctionId = LpGBTSlowControlWorker::READ_IC;
+    uint8_t     cFunctionId = LpGBTSlowControlWorker::READ_IC;
     ChipRegItem theChipId0register;
     theChipId0register.fAddress = 0x000;
     theChipId0register.fPage    = 0x000;
@@ -363,6 +364,5 @@ bool D19cOpticalInterface::testLinkStability(Ph2_HwDescription::Chip* pLpGBT)
     }
     return true;
 }
-
 
 } // namespace Ph2_HwInterface

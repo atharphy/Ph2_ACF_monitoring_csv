@@ -44,7 +44,12 @@ class OTBitErrorRateTest : public OTalignBoardDataWord
     static std::string fCalibrationDescription;
 
   private:
-    void bitErrorRateTestPerLine(Ph2_HwDescription::BeBoard* theBoard, BoardDataContainer* theBertContainer,  BoardDataContainer* theFECContainer, BoardDataContainer* thePhaseClockDelayContainer, float numberOfBits, float lineNumber);
+    void bitErrorRateTestPerLine(Ph2_HwDescription::BeBoard* theBoard,
+                                 BoardDataContainer*         theBertContainer,
+                                 BoardDataContainer*         theFECContainer,
+                                 BoardDataContainer*         thePhaseClockDelayContainer,
+                                 float                       numberOfBits,
+                                 float                       lineNumber);
     void bitErrorRateTest();
     void bitErrorRateTest(uint8_t line);
 

@@ -1,11 +1,11 @@
 #ifndef __D19cBackendAlignmentFWInterface_H__
 #define __D19cBackendAlignmentFWInterface_H__
 
+#include "HWDescription/Definition.h"
 #include <cstdint>
 #include <map>
 #include <string>
 #include <vector>
-#include "HWDescription/Definition.h"
 
 class BoardContainer;
 class BoardDataContainer;
@@ -168,10 +168,20 @@ class D19cBackendAlignmentFWInterface
     D19cBackendAlignmentFWInterface(RegManager* theRegManager);
     ~D19cBackendAlignmentFWInterface();
 
-    void enableAlignmentOnPRBS() { fAlignOnCustomPattern = true; fCustomAlignmentPattern = BERT_ALIGNMENT_PATTERN; fCustomAlignmentPatternMask = 0xffff;}
+    void enableAlignmentOnPRBS()
+    {
+        fAlignOnCustomPattern       = true;
+        fCustomAlignmentPattern     = BERT_ALIGNMENT_PATTERN;
+        fCustomAlignmentPatternMask = 0xffff;
+    }
     void disableAlignmentOnPRBS() { fAlignOnCustomPattern = false; }
 
-    void enableAlignmentOnCustomPattern(uint16_t thePattern, uint16_t thePatternMask) { fAlignOnCustomPattern = true; fCustomAlignmentPattern = thePattern; fCustomAlignmentPatternMask = thePatternMask;}
+    void enableAlignmentOnCustomPattern(uint16_t thePattern, uint16_t thePatternMask)
+    {
+        fAlignOnCustomPattern       = true;
+        fCustomAlignmentPattern     = thePattern;
+        fCustomAlignmentPatternMask = thePatternMask;
+    }
     void disableAlignmentOnCustomPattern() { fAlignOnCustomPattern = false; }
 
     AlignmentResult              alignWord(uint8_t hybridId, uint8_t lineId);
@@ -187,8 +197,8 @@ class D19cBackendAlignmentFWInterface
     std::string fPhaseTuningControlRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
     std::string fPhaseTuningResultRegisterName  = "fc7_daq_stat.physical_interface_block.phase_tuning_reply";
     bool        fAlignOnCustomPattern{false};
-    uint16_t    fCustomAlignmentPattern {0x0};
-    uint16_t    fCustomAlignmentPatternMask {0x0};
+    uint16_t    fCustomAlignmentPattern{0x0};
+    uint16_t    fCustomAlignmentPatternMask{0x0};
 
     AlignmentResult              retrieveAlignmentResult(uint8_t hybridId, uint8_t lineId);
     std::vector<AlignmentResult> retrieveAllLineAlignmentResult(uint8_t hybridId, uint8_t numberOfLines);

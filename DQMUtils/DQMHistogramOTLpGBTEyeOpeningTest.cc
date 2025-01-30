@@ -26,8 +26,8 @@ void DQMHistogramOTLpGBTEyeOpeningTest::book(TFile* theOutputFile, DetectorConta
 
     auto thePowerList = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTLpGBTEyeOpeningTest_PowerList", "1-3"));
 
-    float numberOfTimePoints    = 64;
-    float timeStepSize          = 6.1;
+    float numberOfTimePoints = 64;
+    float timeStepSize       = 6.1;
 
     for(auto thePower: thePowerList)
     {

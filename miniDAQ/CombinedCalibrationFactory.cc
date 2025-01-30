@@ -23,6 +23,7 @@
 #include "tools/OTPSADCCalibration.h"
 #include "tools/OTPScommonNoise.h"
 #include "tools/OTPSringOscillatorTest.h"
+#include "tools/OTPatternCheckerTest.h"
 #include "tools/OTRegisterTester.h"
 #include "tools/OTSSAtoMPAecv.h"
 #include "tools/OTSSAtoSSAecv.h"
@@ -58,7 +59,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/OTPatternCheckerTest.h"
 
 using namespace MessageUtils;
 
@@ -100,8 +100,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord>("Outer Tracker", "alignment");
 
-    Register<OTalignLpGBTinputs,
-             OTPatternCheckerTest>("Outer Tracker", "patternChecker");
+    Register<OTalignLpGBTinputs, OTPatternCheckerTest>("Outer Tracker", "patternChecker");
 
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTCicBypassTest>("Outer Tracker", "testCICbypass");
 
