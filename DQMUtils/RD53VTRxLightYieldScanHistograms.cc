@@ -38,7 +38,7 @@ void VTRxLightYieldScanHistograms::book(TFile* theOutputFile, DetectorContainer&
                                         (modulationStop - modulationStart) / modulationStep + 1,
                                         modulationStart,
                                         modulationStop + modulationStep);
-    bookChipImplementer(theOutputFile, theDetectorStructure, Intensity2D, hInt2D, "Bias (DAC units)", "Modulation (DAC units)");
+    bookOpticalGroupImplementer(theOutputFile, theDetectorStructure, Intensity2D, hInt2D, "Bias (DAC units)", "Modulation (DAC units)");
 
     AreHistoBooked = true;
 }
@@ -70,4 +70,4 @@ void VTRxLightYieldScanHistograms::fillIntensity(const DetectorDataContainer& In
         }
 }
 
-void VTRxLightYieldScanHistograms::process() { draw<TH2F>(Intensity2D, "gcolz"); }
+void VTRxLightYieldScanHistograms::process() { drawOpticalGroup<TH2F>(Intensity2D, "gcolz"); }

@@ -55,4 +55,4 @@ void BERtestHistograms::fillBERtest(const DetectorDataContainer& BERtestContaine
                 }
 }
 
-void BERtestHistograms::process() { draw<TH1F>(BERtest); }
+void BERtestHistograms::process() { drawChip<TH1F>(BERtest); }

@@ -26,8 +26,8 @@ void LpGBTeyeOpeningHistograms::book(TFile* theOutputFile, DetectorContainer& th
     // # Make proper axis for secial cases #
     // #####################################
     auto hInt2D =
-        CanvasContainer<TH2F>("LpGBTeyeOpening", ("LpGBT Eyey Opening Scan (attenuation = " + std::to_string(lpGBTattenuation) + ")").c_str(), TIMEMAX, 0, TIMEMAX - 1, VOLTMAX, 0, VOLTMAX - 1);
-    bookChipImplementer(theOutputFile, theDetectorStructure, Intensity2D, hInt2D, "Time (s)", "Volt (V)");
+        CanvasContainer<TH2F>("LpGBTeyeOpening", ("LpGBT Eye Opening Scan (attenuation = " + std::to_string(lpGBTattenuation) + ")").c_str(), TIMEMAX, 0, TIMEMAX - 1, VOLTMAX, 0, VOLTMAX - 1);
+    bookOpticalGroupImplementer(theOutputFile, theDetectorStructure, Intensity2D, hInt2D, "Time (ps)", "Volt (mV)");
 
     AreHistoBooked = true;
 }
@@ -53,12 +53,12 @@ void LpGBTeyeOpeningHistograms::fillIntensity(const DetectorDataContainer& Inten
         {
             if(cOpticalGroup->hasSummary() == false) continue;
 
-            auto  theEyeArray     = cOpticalGroup->getSummary<GenericDataArray<uint16_t, TIMEMAX, VOLTMAX>>();
-            auto* Intensity2DHist = Intensity2D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
+            const auto& theEyeArray     = cOpticalGroup->getSummary<GenericDataArray<uint16_t, TIMEMAX, VOLTMAX>>();
+            auto*       Intensity2DHist = Intensity2D.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<CanvasContainer<TH2F>>().fTheHistogram;
 
             for(auto i = 0; i < Intensity2DHist->GetNbinsX(); i++)
                 for(auto j = 0; j < Intensity2DHist->GetNbinsY(); j++) Intensity2DHist->SetBinContent(i + 1, j + 1, theEyeArray.at(i).at(j));
         }
 }
 
-void LpGBTeyeOpeningHistograms::process() { draw<TH2F>(Intensity2D, "gcolz"); }
+void LpGBTeyeOpeningHistograms::process() { drawOpticalGroup<TH2F>(Intensity2D, "gcolz"); }

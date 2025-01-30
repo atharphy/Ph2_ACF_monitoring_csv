@@ -151,7 +151,28 @@ class DQMHistogramBase
     }
 
     template <typename Hist>
-    void draw(DetectorDataContainer& HistDataContainer, const char* opt = "", const std::string additionalAxisType = "", const char* additionalAxisTitle = "", bool isNoise = false)
+    void bookOpticalGroupImplementer(TFile*                       theOutputFile,
+                                     const DetectorContainer&     theDetectorStructure,
+                                     DetectorDataContainer&       dataContainer,
+                                     const CanvasContainer<Hist>& histContainer,
+                                     const char*                  XTitle = nullptr,
+                                     const char*                  YTitle = nullptr,
+                                     const char*                  ZTitle = nullptr)
+    {
+        if(XTitle != nullptr) histContainer.fTheHistogram->GetXaxis()->SetTitle(XTitle);
+        if(YTitle != nullptr) histContainer.fTheHistogram->GetYaxis()->SetTitle(YTitle);
+        if(ZTitle != nullptr)
+        {
+            CallSetZTitle<Hist, has_SetDirectory<Hist>::value> setZTitleFunctor;
+            setZTitleFunctor(histContainer.fTheHistogram, ZTitle);
+        }
+
+        dataContainer.reset();
+        RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, dataContainer, histContainer);
+    }
+
+    template <typename Hist>
+    void drawChip(DetectorDataContainer& HistDataContainer, const char* opt = "", const std::string additionalAxisType = "", const char* additionalAxisTitle = "", bool isNoise = false)
     {
         for(auto cBoard: HistDataContainer)
             for(auto cOpticalGroup: *cBoard)
@@ -196,6 +217,52 @@ class DQMHistogramBase
                             canvas->Update();
                         }
                     }
+    }
+
+    template <typename Hist>
+    void drawOpticalGroup(DetectorDataContainer& HistDataContainer, const char* opt = "", const std::string additionalAxisType = "", const char* additionalAxisTitle = "", bool isNoise = false)
+    {
+        for(auto cBoard: HistDataContainer)
+            for(auto cOpticalGroup: *cBoard)
+            {
+                auto canvas = cOpticalGroup->getSummary<CanvasContainer<Hist>>().fCanvas;
+                auto hist   = cOpticalGroup->getSummary<CanvasContainer<Hist>>().fTheHistogram;
+
+                canvas->cd();
+                hist->Draw(opt);
+                canvas->Modified();
+                canvas->Update();
+
+                if(additionalAxisType != "")
+                {
+                    auto myPad = static_cast<TPad*>(canvas->GetPad(0));
+                    myPad->SetTopMargin(0.16);
+
+                    if(additionalAxisType == "electron")
+                        axes.emplace_back(new TGaxis(myPad->GetUxmin(),
+                                                     myPad->GetUymax(),
+                                                     myPad->GetUxmax(),
+                                                     myPad->GetUymax(),
+                                                     RD53Shared::firstChip->VCal2Charge(hist->GetXaxis()->GetBinLowEdge(1), isNoise),
+                                                     RD53Shared::firstChip->VCal2Charge(hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetNbins()), isNoise),
+                                                     510,
+                                                     "-"));
+
+                    axes.back()->SetTitle(additionalAxisTitle);
+                    axes.back()->SetTitleOffset(1.2);
+                    axes.back()->SetTitleSize(0.035);
+                    axes.back()->SetTitleFont(40);
+                    axes.back()->SetLabelOffset(0.001);
+                    axes.back()->SetLabelSize(0.035);
+                    axes.back()->SetLabelFont(42);
+                    axes.back()->SetLabelColor(kRed);
+                    axes.back()->SetLineColor(kRed);
+                    axes.back()->Draw();
+
+                    canvas->Modified();
+                    canvas->Update();
+                }
+            }
     }
 
     template <typename T>

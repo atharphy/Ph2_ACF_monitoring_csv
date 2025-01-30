@@ -88,6 +88,6 @@ void VoltageTuningHistograms::fillAna(const DetectorDataContainer& DataContainer
 
 void VoltageTuningHistograms::process()
 {
-    draw<TH1F>(VoltageDig);
-    draw<TH1F>(VoltageAna);
+    drawChip<TH1F>(VoltageDig);
+    drawChip<TH1F>(VoltageAna);
 }

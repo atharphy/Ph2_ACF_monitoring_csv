@@ -176,9 +176,9 @@ void ThrEqualizationHistograms::fillTDACGain(const DetectorDataContainer& TDACGa
 
 void ThrEqualizationHistograms::process()
 {
-    draw<TH1F>(ThrEqualization);
-    draw<TH1F>(TDAC1D);
-    draw<TH2F>(TDAC2D, "gcolz");
-    draw<TH1F>(Occupancy1D);
-    draw<TH1F>(TDACGain);
+    drawChip<TH1F>(ThrEqualization);
+    drawChip<TH1F>(TDAC1D);
+    drawChip<TH2F>(TDAC2D, "gcolz");
+    drawChip<TH1F>(Occupancy1D);
+    drawChip<TH1F>(TDACGain);
 }

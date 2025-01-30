@@ -160,7 +160,7 @@ PIOOutH                   0x055         0x00              0x00                  
 PIOOutL                   0x056         0x00              0x00                          8
 PIOPullEnaH               0x057         0x00              0x00                          8
 PIOPullEnaL               0x058         0x00              0x00                          8
-PIOUpDownH                0x058         0x00              0x00                          8
+PIOUpDownH                0x059         0x00              0x00                          8
 PIOUpDownL                0x05a         0x00              0x00                          8
 PIODriveStrengthH         0x05b         0x00              0x00                          8
 PIODriveStrengthL         0x05c         0x00              0x00                          8
@@ -758,7 +758,7 @@ PORBOR                    0x1d8         0x00              0x00                  
 PUSMStatus                0x1d9         0x00              0x00                          8
 PUSMPLLWATCHDOG           0x1da         0x00              0x00                          8
 PUSMDLLWATCHDOG           0x1db         0x00              0x00                          8
-PUSMDLLWATCHDOG           0x1dc         0x00              0x00                          8
+PUSMCSUMWATCHDOG          0x1dc         0x00              0x00                          8
 PUSMBROWNOUTWATCHDOG      0x1dd         0x00              0x00                          8
 PUSMPLLTIMEOUT            0x1de         0x00              0x00                          8
 PUSMDLLTIMEOUT            0x1df         0x00              0x00                          8

@@ -97,6 +97,6 @@ void LatencyHistograms::fillLatency(const DetectorDataContainer& LatencyContaine
 
 void LatencyHistograms::process()
 {
-    draw<TH1F>(Occupancy1D);
-    draw<TH1F>(Latency);
+    drawChip<TH1F>(Occupancy1D);
+    drawChip<TH1F>(Latency);
 }

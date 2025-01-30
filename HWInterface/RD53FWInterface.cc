@@ -1163,12 +1163,18 @@ float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
     int  nAttempts = 0, error = 0;
     bool timeOut = false;
 
-    if(parameter == "T") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 96);
-    if(parameter == "V") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 98);
-    if(parameter == "I") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 100);
-    if(parameter == "TX") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 102);
-    if(parameter == "RX") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 104);
-    if(parameter == "raw") RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 96);
+    if(parameter == "T")
+        RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 96);
+    else if(parameter == "V")
+        RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 98);
+    else if(parameter == "I")
+        RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 100);
+    else if(parameter == "TX")
+        RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 102);
+    else if(parameter == "RX")
+        RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 104);
+    else if(parameter == "raw")
+        RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 96);
 
     RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.channel_number", channel);
     RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.enable", 1);
@@ -1196,27 +1202,27 @@ float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
     float result = RegManager::ReadReg("user.stat_regs.lpgbt_monitoring.sfp_i2c_data_out");
     if(parameter == "T")
     {
-        result = result / 256.0;
+        result /= 256.0;
         LOG(DEBUG) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
     }
     else if(parameter == "V")
     {
-        result = result / 10.0;
+        result /= 10.0;
         LOG(DEBUG) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
     }
     else if(parameter == "I")
     {
-        result = result * 0.002;
+        result *= 0.002;
         LOG(DEBUG) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
     }
     else if(parameter == "TX")
     {
-        result = result * 0.1;
+        result *= 0.1;
         LOG(DEBUG) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
     }
     else if(parameter == "RX")
     {
-        result = result * 0.1;
+        result *= 0.1;
         LOG(DEBUG) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
     }
     else if(parameter == "raw")
@@ -1576,7 +1582,7 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 // # Bit Error Rate test #
 // #######################
 
-std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, const std::map<uint16_t, std::vector<uint8_t>>& hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed)
+std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, const std::map<uint32_t, std::vector<uint8_t>>& optgroup_id_hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed)
 // ####################
 // # frontendSpeed    #
 // # 1.28 Gbit/s  = 0 #
@@ -1593,6 +1599,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
     uint32_t     cntr_lo;
     uint32_t     cntr_hi;
     uint64_t     nErrors;
+    uint16_t     FECcounter;
 
     if(given_time == true)
     {
@@ -1626,6 +1633,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
     // #########
     // # Start #
     // #########
+    RD53FWInterface::ToggleRegister("user.ctrl_regs.lpgbt_1.fec_cntr_clear");
     RD53FWInterface::ToggleRegister("user.ctrl_regs.PRBS_checker.start_checker");
 
     // #########################################
@@ -1639,10 +1647,10 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
         std::this_thread::sleep_for(std::chrono::seconds(static_cast<unsigned int>(time_per_step)));
 
         forceDone = true;
-        for(const auto& thePair: hybrid_id_chip_id_chip_lanes)
+        for(const auto& thePair: optgroup_id_hybrid_id_chip_id_chip_lanes)
         {
-            uint8_t hybrid_id = thePair.first >> 8;
-            uint8_t chip_id   = thePair.first & 0x00FF;
+            uint8_t hybrid_id = (thePair.first >> 8) & 0xFF;
+            uint8_t chip_id   = thePair.first & 0xFF;
             LOG(INFO) << GREEN << "\t--> Hybrid Id " << BOLDYELLOW << +hybrid_id << RESET << GREEN << " Chip Id " << BOLDYELLOW << +chip_id << RESET;
             for(const auto& lane: thePair.second)
             {
@@ -1687,11 +1695,24 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
     // # Read PRBS frame counter #
     // ###########################
     std::vector<double> results;
+    uint8_t             optgroup_id_old = 0;
+    bool                optgroup_update = true;
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
-    for(const auto& thePair: hybrid_id_chip_id_chip_lanes)
+    for(const auto& thePair: optgroup_id_hybrid_id_chip_id_chip_lanes)
     {
-        uint8_t hybrid_id = thePair.first >> 8;
-        uint8_t chip_id   = thePair.first & 0x00FF;
+        uint8_t optgroup_id = (thePair.first >> 16) & 0xFF;
+        uint8_t hybrid_id   = (thePair.first >> 8) & 0xFF;
+        uint8_t chip_id     = thePair.first & 0xFF;
+
+        RD53FWInterface::selectLink(optgroup_id);
+        if((optgroup_update == false) && (optgroup_id != optgroup_id_old)) optgroup_update = true;
+        if(optgroup_update == true)
+        {
+            FECcounter = RegManager::ReadReg("user.stat_regs.lpgbt_monitoring.fec_cntr");
+            LOG(INFO) << GREEN << "OpticalGroup Id " << BOLDYELLOW << +optgroup_id << RESET << GREEN << " has Forward Error Correction (FEC) counter: " << BOLDYELLOW << FECcounter << RESET;
+            optgroup_update = false;
+            optgroup_id_old = optgroup_id;
+        }
 
         for(const auto& lane: thePair.second)
         {
