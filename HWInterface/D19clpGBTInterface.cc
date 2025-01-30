@@ -48,6 +48,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     std::vector<std::pair<std::string, uint16_t>> cRegVec;
     cRegVec.clear();
 
+    // std::vector<std::string> readRegisterList;
     for(const auto& cRegItem: clpGBTRegMap)
     {
         bool isFreeRegister = false;
@@ -56,8 +57,25 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
             isFreeRegister = std::regex_match(cRegItem.first, freeRegister.first);
             if(isFreeRegister) break;
         }
-        if(!isFreeRegister) cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
+        if(!isFreeRegister)
+        {
+            cRegVec.push_back(std::make_pair(cRegItem.first, cRegItem.second.fValue));
+            // readRegisterList.push_back(cRegItem.first);
+        }
     } // get read/write registers
+
+    // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Reading default register" << std::endl;
+    // auto defaulChipReg = ReadChipMultReg(pChip, readRegisterList);
+    // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Read default register done" << std::endl;
+
+    // for(size_t index = 0; index < defaulChipReg.size(); ++index)
+    // {
+    //     if(defaulChipReg.at(index).second != cRegVec.at(index).second)
+    //     {
+    //         std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] Changing " << defaulChipReg.at(index).first << " from 0x" << std::hex << defaulChipReg.at(index).second << " to 0x"
+    //                   << cRegVec.at(index).second << std::dec << std::endl;
+    //     }
+    // }
 
     WriteChipMultReg(pChip, cRegVec);
 
@@ -129,6 +147,89 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
 /*-----------------------*/
 /* OT specific functions */
 /*-----------------------*/
+
+bool D19clpGBTInterface::enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalGroup)
+{
+    auto                                          theLpBGT              = theOpticalGroup->flpGBT;
+    const std::map<uint8_t, std::vector<uint8_t>> theGroupAndChannelMap = theOpticalGroup->getLpGBTrxGroupsAndChannels();
+    bool                                          is10G                 = GetChipRate(theLpBGT) == 10;
+
+    std::vector<std::pair<std::string, uint16_t>> theRegisterVector;
+
+    uint16_t phase          = 0x7f;
+    uint8_t  driverStrenght = 3;
+    uint8_t  PS0delayValue  = phase & 0x3f;
+    uint8_t  PS0configValue = ((phase >> 1) & 0x80) | (is10G ? 5 : 4) | (driverStrenght << 3);
+    theRegisterVector.push_back({"PS0Config", PS0configValue});
+    theRegisterVector.push_back({"PS0Delay", PS0delayValue});
+
+    auto getPRBSenableCommand = [&theRegisterVector, &theGroupAndChannelMap](uint16_t registerNumber)
+    {
+        uint16_t registerValue = 0;
+        for(auto channel: theGroupAndChannelMap.at(registerNumber * 2 + 0)) registerValue |= 1 << channel;
+        if(registerNumber < 3)
+            for(auto channel: theGroupAndChannelMap.at(registerNumber * 2 + 1)) registerValue |= 1 << (channel + 4);
+        return registerValue;
+    };
+
+    for(uint16_t registerNumber = 0; registerNumber < 4; ++registerNumber)
+    {
+        std::string registerName = "EPRXPRBS" + std::to_string(registerNumber);
+        theRegisterVector.push_back({registerName, getPRBSenableCommand(registerNumber)});
+    }
+
+    theRegisterVector.push_back({"EPRXTrain10", getPRBSenableCommand(0)});
+    theRegisterVector.push_back({"EPRXTrain32", getPRBSenableCommand(1)});
+    theRegisterVector.push_back({"EPRXTrain54", getPRBSenableCommand(2)});
+    theRegisterVector.push_back({"EPRXTrainEc6", getPRBSenableCommand(3)});
+    WriteChipMultReg(theLpBGT, theRegisterVector);
+
+    theRegisterVector.clear();
+    theRegisterVector.push_back({"EPRXTrain10", 0});
+    theRegisterVector.push_back({"EPRXTrain32", 0});
+    theRegisterVector.push_back({"EPRXTrain54", 0});
+    theRegisterVector.push_back({"EPRXTrainEc6", 0});
+    WriteChipMultReg(theLpBGT, theRegisterVector);
+
+    bool   allAligned = true;
+    size_t attempt    = 0;
+
+    std::vector<std::string> alignmentResultRegister{"EPRX0Locked", "EPRX1Locked", "EPRX2Locked", "EPRX3Locked", "EPRX4Locked", "EPRX5Locked", "EPRX6Locked"};
+
+    while(attempt < 100)
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        allAligned                 = true;
+        auto alignmentResultValues = ReadChipMultReg(theLpBGT, alignmentResultRegister);
+
+        for(const auto& theGroupAndChannels: theGroupAndChannelMap)
+        {
+            for(auto theChannel: theGroupAndChannels.second)
+            {
+                if(((alignmentResultValues.at(theGroupAndChannels.first).second >> (4 + theChannel)) & 0x1) != 1)
+                {
+                    allAligned = false;
+                    break;
+                }
+            }
+            if(!allAligned) break;
+        }
+
+        if(allAligned) break;
+
+        ++attempt;
+    }
+
+    return allAligned;
+}
+
+bool D19clpGBTInterface::disablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalGroup)
+{
+    auto                                          theLpBGT = theOpticalGroup->flpGBT;
+    std::vector<std::pair<std::string, uint16_t>> prbsRegisters{{"EPRXPRBS3", 0x0}, {"EPRXPRBS2", 0x0}, {"EPRXPRBS1", 0x0}, {"EPRXPRBS0", 0x0}};
+
+    return WriteChipMultReg(theLpBGT, prbsRegisters);
+}
 
 bool D19clpGBTInterface::WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& pRegVec, bool pVerify)
 {

@@ -1261,16 +1261,16 @@ void lpGBTInterface::ResetI2C(Chip* pChip, const std::vector<uint8_t>& pMasters)
     WriteChipReg(pChip, "RST0", 0);
 }
 
-void lpGBTInterface::ConfigureI2C(Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode)
+void lpGBTInterface::ConfigureI2C(Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode, bool verify)
 {
     // Write configuration data into the I2C Master Data register
     std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "Data0";
     uint8_t     cValueData  = (pFreq << 0) | (pNBytes << 2) | (pSCLDriveMode << 7);
-    WriteChipReg(pChip, cI2CDataReg, cValueData);
+    WriteChipReg(pChip, cI2CDataReg, cValueData, verify);
 
     // Write Command (0x00) to the Command register to tranfer Configuration to the I2C Master Control register
     std::string cI2CCmdReg = "I2CM" + std::to_string(pMaster) + "Cmd";
-    WriteChipReg(pChip, cI2CCmdReg, 0x00);
+    WriteChipReg(pChip, cI2CCmdReg, 0x00, verify);
 }
 
 uint8_t lpGBTInterface::GetI2CConfiguration(Chip* pChip, uint8_t pMaster)
@@ -1279,24 +1279,24 @@ uint8_t lpGBTInterface::GetI2CConfiguration(Chip* pChip, uint8_t pMaster)
     return ReadChipReg(pChip, cI2CCntrReg);
 }
 
-bool lpGBTInterface::WriteI2C(Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq)
+bool lpGBTInterface::WriteI2C(Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq, bool verify)
 {
     // Write Data to Slave Address using I2C Master
-    lpGBTInterface::ConfigureI2C(pChip, pMaster, pFreq, (pNBytes > 1) ? pNBytes : 0, 0);
+    lpGBTInterface::ConfigureI2C(pChip, pMaster, pFreq, (pNBytes > 1) ? pNBytes : 0, 0, verify);
 
     // Prepare Address Register
     // Write Slave Address
     std::string cI2CAddressReg = "I2CM" + std::to_string(pMaster) + "Address";
-    WriteChipReg(pChip, cI2CAddressReg, pSlaveAddress);
+    WriteChipReg(pChip, cI2CAddressReg, pSlaveAddress, verify);
 
     // Write Data to Data Register
     for(uint8_t cByte = 0; cByte < 4; cByte++)
     {
         std::string cI2CDataReg = "I2CM" + std::to_string(pMaster) + "Data" + std::to_string(cByte);
         if(cByte < pNBytes)
-            WriteChipReg(pChip, cI2CDataReg, (pData & (0xFF << 8 * cByte)) >> 8 * cByte);
+            WriteChipReg(pChip, cI2CDataReg, (pData & (0xFF << 8 * cByte)) >> 8 * cByte, verify);
         else
-            WriteChipReg(pChip, cI2CDataReg, 0x00);
+            WriteChipReg(pChip, cI2CDataReg, 0x00, verify);
     }
 
     // Prepare Command Register
@@ -1305,31 +1305,34 @@ bool lpGBTInterface::WriteI2C(Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddres
     // FIXME for now this only provides a maximum of 32 bits (4 Bytes) write
     // Write Command to launch I2C transaction
     if(pNBytes == 1)
-        WriteChipReg(pChip, cI2CCmdReg, 0x2);
+        WriteChipReg(pChip, cI2CCmdReg, 0x2, verify);
     else
     {
-        WriteChipReg(pChip, cI2CCmdReg, 0x8);
-        WriteChipReg(pChip, cI2CCmdReg, 0xC);
+        WriteChipReg(pChip, cI2CCmdReg, 0x8, verify);
+        WriteChipReg(pChip, cI2CCmdReg, 0xC, verify);
     }
 
     // Wait until the transaction is done
-    uint8_t cIter = 0;
-    do {
-        // LOG(DEBUG) << GREEN << "Waiting for I2C Write transaction to finisih" << RESET;
-        cIter++;
-    } while(cIter < lpGBTconstants::MAXATTEMPTS && !IsI2CSuccess(pChip, pMaster));
-
-    if(cIter == lpGBTconstants::MAXATTEMPTS)
+    if(verify)
     {
-        LOG(INFO) << BOLDRED << "I2C Write transaction failed" << RESET;
+        uint8_t cIter = 0;
+        do {
+            // LOG(DEBUG) << GREEN << "Waiting for I2C Write transaction to finisih" << RESET;
+            cIter++;
+        } while(cIter < lpGBTconstants::MAXATTEMPTS && !IsI2CSuccess(pChip, pMaster));
+
+        if(cIter == lpGBTconstants::MAXATTEMPTS)
+        {
+            LOG(INFO) << BOLDRED << "I2C Write transaction failed" << RESET;
 #if defined(__TCUSB__)
-        // In the test system a run time error is undesired
-        return false;
+            // In the test system a run time error is undesired
+            return false;
 #else
-        LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
-        ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
-        return false;
+            LOG(WARNING) << BOLDBLUE << "\t--> OpticalGroup will be disabled" << RESET;
+            ExceptionHandler::getInstance()->disableOpticalGroup(pChip->getBeBoardId(), pChip->getOpticalGroupId());
+            return false;
 #endif
+        }
     }
 
     return true;

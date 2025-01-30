@@ -180,9 +180,9 @@ class lpGBTInterface : public ChipInterface
     // # LpGBT I2C Masters functions (Slow Control) #
     // ##############################################
     void        ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
-    void        ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode);
+    void        ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode, bool verify = true);
     uint8_t     GetI2CConfiguration(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
-    bool        WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
+    bool        WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */, bool verify = true);
     uint32_t    ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
     uint8_t     GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
     std::string GetI2CState(Ph2_HwDescription::Chip* pChip, uint8_t pStatus);

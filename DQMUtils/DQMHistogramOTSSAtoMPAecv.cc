@@ -69,7 +69,7 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
                                                             numberOfMPA * numberOfStubLinesPerMPA,
                                                             -0.5,
                                                             numberOfMPA * numberOfStubLinesPerMPA - 0.5);
-        phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("sampling egde");
+        phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("Sampling egde");
         phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(1, "falling");
         phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(2, "rising");
         setYaxisBinLabelForStubs(phaseScanStubMatchingEfficiency.fTheHistogram);

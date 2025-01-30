@@ -2,7 +2,7 @@
 <HwDescription>
     <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1" configure="1">
         <!-- B598 skeleton -->
-        <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.20:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
+        <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.7.20:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
         <configuration file_name="${PH2ACF_BASE_DIR}/settings/BeBoardFiles/uDTC_registers_2S.xml"/>
         <CDCE configure="0" clockRate="320"/>
 
@@ -564,6 +564,8 @@
     <Setting name="OTCBCtoCICecv_ListOfCBCslvsCurrents"> 0, 8, 14</Setting>
 
     <Setting name="OTLpGBTEyeOpeningTest_PowerList">1-3</Setting>
+
+    <Setting name="OTBitErrorRateTest_NumberOfBits">1E10</Setting>
 </Settings>
 
 

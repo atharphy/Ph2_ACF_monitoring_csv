@@ -108,10 +108,9 @@ bool DQMHistogramOTCICtoLpGBTecv::fill(std::string& inputStream)
     if(theECVlpGBTCICContainerSerialization.attachDeserializer(inputStream))
     {
         // It matched! Decoding data
-        std::cout << "Matched OTCICtoLpGBTecv EfficiencyHistogram!!!!!\n";
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
         uint8_t               pClockPolarity, pClockStrengthIndex, pCicStrength, pPhaseIndex;
-        DetectorDataContainer theDetectorData = theECVlpGBTCICContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, float, EmptyContainer>(
+        DetectorDataContainer theDetectorData = theECVlpGBTCICContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<float>, EmptyContainer>(
             fDetectorContainer, pClockPolarity, pClockStrengthIndex, pCicStrength, pPhaseIndex);
 
         // Filling the histograms

@@ -29,6 +29,16 @@ void OTalignBoardDataWord::Initialise(void)
 
     fBroadcastAlignSetting = findValueInSettings<double>("OTalignBoardDataWord_BroadcastAlignSetting", 0);
 
+    initializeContainers();
+
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: plots are booked during initialization
+    fDQMHistogramOTalignBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
+}
+
+void OTalignBoardDataWord::initializeContainers()
+{
     fNumberOfLines = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
 
     // need to free bitslip when will be accessible
@@ -36,11 +46,6 @@ void OTalignBoardDataWord::Initialise(void)
     std::vector<uint8_t> initialEmptyVector(fNumberOfLines, 0);
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fBitSlipContainer, initialEmptyVector);
     ContainerFactory::copyAndInitHybrid<std::vector<uint8_t>>(*fDetectorContainer, fAlignmentRetryContainer, initialEmptyVector);
-
-#ifdef __USE_ROOT__
-    // Calibration is not running on the SoC: plots are booked during initialization
-    fDQMHistogramOTalignBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
-#endif
 }
 
 void OTalignBoardDataWord::ConfigureCalibration() {}
@@ -76,37 +81,7 @@ void OTalignBoardDataWord::wordAlignBEdata()
 {
     LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::wordAlignBEdata" << RESET;
 
-    for(auto theBoard: *fDetectorContainer)
-    {
-        boardWordAlignment(theBoard);
-        LOG(INFO) << BOLDYELLOW << "OTalignBoardDataWord::wordAlignBEdata ... trying to readout L1 data.. " << RESET;
-        // ReadNEvents(theBoard, 10);
-    }
-
-    // for(auto theBoard: *fDetectorContainer)
-    // {
-    //     for(uint8_t bitSlip = 0; bitSlip<32; ++bitSlip)
-    //     {
-    //         std::string controlPhaseRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
-    //         std::string statusPhaseRegisterName  = "fc7_daq_stat.physical_interface_block.phase_tuning_reply";
-    //         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.physical_interface_block.link6_hybrid0_L1A_bitslip", (0x80000000 | bitSlip));
-    //         fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0x60010000);
-    //         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusPhaseRegisterName) << std::dec << std::endl;
-    //         try
-    //         {
-    //             ReadNEvents(theBoard, 10);
-    //         }
-    //         catch(const std::exception& e)
-    //         {
-    //             // std::cerr << e.what() << '\n';
-    //             std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] bitslip = " << +bitSlip << " not working" << std::endl;
-    //             continue;
-    //         }
-
-    //         std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] bitslip = " << +bitSlip << BOLDGREEN << " WORKING!!!!!!!" << RESET << std::endl;
-
-    //     }
-    // }
+    for(auto theBoard: *fDetectorContainer) { boardWordAlignment(theBoard); }
 
 #ifdef __USE_ROOT__
     fDQMHistogramOTalignBoardDataWord.fillBitSlipValues(fBitSlipContainer);
@@ -155,78 +130,7 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
     fBeBoardInterface->ChipReSync(theBoard);
     fBeBoardInterface->Start(theBoard);
 
-    auto                             cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
-    D19cBackendAlignmentFWInterface* theAlignerInterface = cInterface->getBackendAlignmentInterface();
-    if(fBroadcastAlignSetting == 2)
-        tryAllHybridAlignment(theAlignerInterface, theBoard);
-    else
-    {
-        D19cDebugFWInterface* theDebugInterface = cInterface->getDebugInterface();
-        for(auto theOpticalGroup: *theBoard)
-        {
-            // uint8_t hybdridShift = 27;
-            // size_t numberOfStubLines = (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 6 : 5;
-            // for(auto theHybrid: *theOpticalGroup)
-            // {
-            //     auto& cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-            //     fCicInterface->SelectOutput(cCic, true);
-            //     fCicInterface->EnableFEs(cCic, {0, 1, 2, 3, 4, 5, 6, 7}, false);
-
-            //     // broadcast
-            //     std::string controlRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
-            //     uint8_t     theHybridFWid       = theHybrid->getId() % 2 + 2 * theOpticalGroup->getId();
-            //     theHybridFWid = 0x1F;
-            //     uint32_t    configureCommand    = 0x7f21100 | (theHybridFWid << hybdridShift);
-            //     fBeBoardInterface->WriteBoardReg(theBoard, controlRegisterName, configureCommand);
-            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << configureCommand << std::dec << std::endl;
-            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, controlRegisterName) << std::dec << std::endl;
-
-            //     uint32_t doWordAlignmentCommand = 0x7f50002 | (theHybridFWid << hybdridShift);
-            //     fBeBoardInterface->WriteBoardReg(theBoard, controlRegisterName, doWordAlignmentCommand);
-            //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << doWordAlignmentCommand << std::dec << std::endl;
-            //     usleep(100000);
-            //     theHybridFWid       = theHybrid->getId() % 2 + 2 * theOpticalGroup->getId();
-            //     for(uint32_t line = 0; line < numberOfStubLines + 1; ++line)
-            //     {
-            //         uint32_t readCommand = 0x10000 | (theHybridFWid << hybdridShift) | ((line) << 20);
-            //         fBeBoardInterface->WriteBoardReg(theBoard, controlRegisterName, readCommand);
-            //         std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line " << line << " command 0x" << std::hex << readCommand << std::dec << std::endl;
-            //         uint32_t readValue = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.phase_tuning_reply");
-            //         std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line " << line << " reply 0x" << std::hex << readValue << std::dec << std::endl;
-            //     }
-
-            //     // one line at a time
-            //     // std::string controlRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
-            //     // uint8_t     theHybridFWid       = theHybrid->getId() % 2 + 2 * theOpticalGroup->getId();
-            //     // for(uint32_t line = 0; line < numberOfStubLines; ++line)
-            //     // {
-            //     //     uint32_t    configureCommand    = 0x20100 | (theHybridFWid << hybdridShift) | ((line + 1) <<20);
-            //     //     fBeBoardInterface->WriteBoardReg(theBoard, controlRegisterName, configureCommand);
-            //     //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << configureCommand << std::dec << std::endl;
-            //     //     uint32_t doWordAlignmentCommand = 0x50002 | (theHybridFWid << hybdridShift) | ((line + 1) <<20);
-            //     //     fBeBoardInterface->WriteBoardReg(theBoard, controlRegisterName, doWordAlignmentCommand);
-            //     //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] command 0x" << std::hex << doWordAlignmentCommand << std::dec << std::endl;
-            //     //     usleep(100000);
-            //     //     uint32_t readCommand = 0x10000 | (theHybridFWid << hybdridShift) | ((line + 1) << 20);
-            //     //     fBeBoardInterface->WriteBoardReg(theBoard, controlRegisterName, readCommand);
-            //     //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line " << line << " command 0x" << std::hex << readCommand << std::dec << std::endl;
-            //     //     uint32_t readValue = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.phase_tuning_reply");
-            //     //     std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line " << line << " reply 0x" << std::hex << readValue << std::dec << std::endl;
-            //     // }
-            // }
-            // fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0xfff50008);
-            // fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, 0xfff20100);
-
-            bool cAligned = opticalGroupWordAlignment(theOpticalGroup, theAlignerInterface, theDebugInterface);
-            if(!cAligned)
-            {
-                LOG(INFO) << BOLDRED << "Could not align stub word in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
-                          << " --- OpticalGroup will be disabled" << RESET;
-                ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
-                continue;
-            }
-        } // optical groups connected to this  board
-    }
+    runAlignment(theBoard);
 
     fBeBoardInterface->Stop(theBoard);
 
@@ -303,6 +207,29 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
         fBeBoardInterface->WriteBoardReg(theBoard, controlPhaseRegisterName, value);
         std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing = 0x" << std::hex << value << std::dec << std::endl;
         std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] reading = 0x" << std::hex << fBeBoardInterface->ReadBoardReg(theBoard, statusPhaseRegisterName) << std::dec << std::endl;
+    }
+}
+
+void OTalignBoardDataWord::runAlignment(BeBoard* theBoard)
+{
+    auto                             cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
+    D19cBackendAlignmentFWInterface* theAlignerInterface = cInterface->getBackendAlignmentInterface();
+    if(fBroadcastAlignSetting == 2)
+        tryAllHybridAlignment(theAlignerInterface, theBoard);
+    else
+    {
+        D19cDebugFWInterface* theDebugInterface = cInterface->getDebugInterface();
+        for(auto theOpticalGroup: *theBoard)
+        {
+            bool cAligned = opticalGroupWordAlignment(theOpticalGroup, theAlignerInterface, theDebugInterface);
+            if(!cAligned)
+            {
+                LOG(INFO) << BOLDRED << "Could not align stub word in OTalignBoardDataWord on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId()
+                          << " --- OpticalGroup will be disabled" << RESET;
+                ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
+                continue;
+            }
+        } // optical groups connected to this  board
     }
 }
 
