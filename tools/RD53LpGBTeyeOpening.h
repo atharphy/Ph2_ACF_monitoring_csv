@@ -59,6 +59,7 @@ class LpGBTeyeOpening : public CalibBase
     // ######################################
     int  lpGBTattenuation;
     bool doDisplay;
+    bool doUpdateChip;
 };
 
 #endif

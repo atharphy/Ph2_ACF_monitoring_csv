@@ -235,9 +235,6 @@ void OTPScommonNoise::TakeData()
         } // end acquisition loop
     }
 
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]"
-              << the2DStripPixelModuleCorrelationContainer.getObject(0)->getObject(0)->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1, MAXCICCHANNELS * 2 + 1>>().size() << std::endl;
-
 #ifdef __USE_ROOT__
     fDQMHistogramOTPScommonNoise.fillChipHitPlots(theStripHitContainer);
     fDQMHistogramOTPScommonNoise.fillChipHitPlots(thePixelHitContainer);

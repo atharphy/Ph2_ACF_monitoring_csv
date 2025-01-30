@@ -48,6 +48,7 @@ class D19cBackendAlignmentFWInterface;
 class D19cDebugFWInterface;
 class D19cOpticalInterface;
 class D19clpGBTSlowControlWorkerInterface;
+class D19cBERTinterface;
 
 /*
  * \brief init/config of the Fc7 and its Chip's
@@ -63,6 +64,7 @@ class D19cFWInterface : public BeBoardFWInterface
     D19cBackendAlignmentFWInterface*     fBackendAlignmentInterface{nullptr};
     D19cDebugFWInterface*                fDebugInterface{nullptr};
     D19clpGBTSlowControlWorkerInterface* flpGBTSlowControlWorkerInterface{nullptr};
+    D19cBERTinterface*                   fBERTinterface{nullptr};
 
     FileHandler* fFileHandler;
     uint32_t     fBroadcastCbcId;
@@ -92,7 +94,7 @@ class D19cFWInterface : public BeBoardFWInterface
     uint32_t fEventCounter = 0;
 
     // some useful stuff
-    int fResetAttempts;
+    int fResetAttempts{0};
 
   public:
     /*!
@@ -111,6 +113,8 @@ class D19cFWInterface : public BeBoardFWInterface
      * \param pAddressTable: address tabel string
      */
 
+    void createAuxiliaryInterfaces();
+
     D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, Ph2_HwDescription::BeBoard* theBoard);
     D19cFWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, FileHandler* pFileHandler, Ph2_HwDescription::BeBoard* theBoard);
     void setFileHandler(FileHandler* pHandler);
@@ -124,6 +128,7 @@ class D19cFWInterface : public BeBoardFWInterface
     FEConfigurationInterface*            getFEConfigurationInterface() { return fFEConfigurationInterface; }
     LinkInterface*                       getLinkInterface() { return fLinkInterface; }
     D19clpGBTSlowControlWorkerInterface* getlpGBTSlowControlInterface() { return flpGBTSlowControlWorkerInterface; }
+    D19cBERTinterface*                   getBERTinterface() { return fBERTinterface; }
     //
     void ConfigureInterfaces(const Ph2_HwDescription::BeBoard* pBoard);
 
@@ -132,10 +137,7 @@ class D19cFWInterface : public BeBoardFWInterface
      * \brief Destructor of the Cbc3Fc7FWInterface class
      */
 
-    ~D19cFWInterface()
-    {
-        if(fFileHandler) delete fFileHandler;
-    }
+    ~D19cFWInterface();
 
     ///////////////////////////////////////////////////////
     //      d19c Methods                                //
@@ -331,7 +333,7 @@ class D19cFWInterface : public BeBoardFWInterface
     // ##############################
     // # Pseudo Random Bit Sequence #
     // ##############################
-    std::vector<double> RunBERtest(bool given_time, double frames_or_time, const std::map<uint16_t, std::vector<uint8_t>>& hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed) override { return {}; };
+    std::vector<double> RunBERtest(bool given_time, double frames_or_time, const std::map<uint32_t, std::vector<uint8_t>>& hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed) override { return {}; };
 
     // ############################
     // # Read/Write Optical Group #

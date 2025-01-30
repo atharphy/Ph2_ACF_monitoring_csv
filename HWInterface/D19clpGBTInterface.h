@@ -14,6 +14,11 @@
 
 class LpGBTalignmentResult;
 
+namespace Ph2_HwDescription
+{
+class OpticalGroup;
+}
+
 namespace Ph2_HwInterface
 {
 class D19clpGBTInterface : public lpGBTInterface
@@ -38,6 +43,9 @@ class D19clpGBTInterface : public lpGBTInterface
 
     void hold2SModuleResets(Ph2_HwDescription::Chip* pChip);
     void holdPSModuleResets(Ph2_HwDescription::Chip* pChip);
+
+    bool enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalGroup);
+    bool disablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalGroup);
 
     // Sets the flag used to select which lpGBT configuration interface to use
     void SetConfigMode(bool pOptical, bool pToggleTC = false);

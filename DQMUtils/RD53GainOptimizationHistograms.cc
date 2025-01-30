@@ -63,4 +63,4 @@ void GainOptimizationHistograms::fill(const DetectorDataContainer& DataContainer
                 }
 }
 
-void GainOptimizationHistograms::process() { draw<TH1F>(KrumCurr); }
+void GainOptimizationHistograms::process() { drawChip<TH1F>(KrumCurr); }

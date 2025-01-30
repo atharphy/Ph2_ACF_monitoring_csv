@@ -72,6 +72,7 @@ class lpGBTInterface : public ChipInterface
     uint32_t ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t cFuseH, uint8_t cFuseL);
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerify = true) override;
     uint32_t ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip);
+    void     DumpChipRegisters(Ph2_HwDescription::Chip* pChip);
 
     // #######################################
     // # LpGBT block configuration functions #
@@ -124,6 +125,7 @@ class lpGBTInterface : public ChipInterface
     uint8_t GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
     bool    IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
     uint8_t GetRxDllStatus(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
+    uint8_t GetSFPchannel(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
 
     // ########################
     // # LpGBT GPIO functions #
@@ -178,9 +180,9 @@ class lpGBTInterface : public ChipInterface
     // # LpGBT I2C Masters functions (Slow Control) #
     // ##############################################
     void        ResetI2C(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pMasters);
-    void        ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode);
+    void        ConfigureI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pFreq, uint8_t pNBytes, uint8_t pSCLDriveMode, bool verify = true);
     uint8_t     GetI2CConfiguration(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
-    bool        WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
+    bool        WriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint32_t pData, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */, bool verify = true);
     uint32_t    ReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMaster, uint8_t pSlaveAddress, uint8_t pNBytes, uint8_t pFreq = 3 /* 3   1 MHz */);
     uint8_t     GetI2CStatus(Ph2_HwDescription::Chip* pChip, uint8_t pMaster);
     std::string GetI2CState(Ph2_HwDescription::Chip* pChip, uint8_t pStatus);
@@ -303,7 +305,7 @@ class lpGBTInterface : public ChipInterface
                                                        {12, 1UL << 29},
                                                        {13, 1UL << 31},
                                                        {14, 1UL << 33},
-                                                       {15, 1UL < 35}};
+                                                       {15, 1UL << 35}};
 
     std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
 

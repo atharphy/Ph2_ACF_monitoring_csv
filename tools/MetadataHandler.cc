@@ -59,7 +59,12 @@ void MetadataHandler::fillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theHostNameContainer);
     theHostNameContainer.getSummary<std::string>() = theHostName;
 
-    std::string           theGitCommitHash = GIT_COMMIT_HASH;
+    std::string           theGitTag = GIT_TAG;
+    DetectorDataContainer theGitTagContainer;
+    ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theGitTagContainer);
+    theGitTagContainer.getSummary<std::string>() = theGitTag;
+
+    std::string           theGitCommitHash = GIT_COMMIT;
     DetectorDataContainer theGitCommitHashContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theGitCommitHashContainer);
     theGitCommitHashContainer.getSummary<std::string>() = theGitCommitHash;
@@ -102,6 +107,7 @@ void MetadataHandler::fillInitialConditions()
     if(fNameContainer != nullptr) fDQMMetadata->fillObjectNames(*fNameContainer);
     fDQMMetadata->fillUsername(theUsernameContainer);
     fDQMMetadata->fillHostName(theHostNameContainer);
+    fDQMMetadata->fillGitTag(theGitTagContainer);
     fDQMMetadata->fillGitCommitHash(theGitCommitHashContainer);
     fDQMMetadata->fillCalibrationName(theCalibrationNameContainer);
     fDQMMetadata->fillDetectorConfiguration(theDetectorInitialConfigurationContainer, isInitialValue);
@@ -125,6 +131,9 @@ void MetadataHandler::fillInitialConditions()
 
         ContainerSerialization theGitCommitHashSerialization("MetadataGitCommitHash");
         theGitCommitHashSerialization.streamByDetectorContainer(fDQMStreamer, theGitCommitHashContainer);
+
+        ContainerSerialization theGitTagSerialization("MetadataGitTag");
+        theGitTagSerialization.streamByDetectorContainer(fDQMStreamer, theGitTagContainer);
 
         ContainerSerialization theCalibrationNameSerialization("MetadataCalibrationName");
         theCalibrationNameSerialization.streamByDetectorContainer(fDQMStreamer, theCalibrationNameContainer);

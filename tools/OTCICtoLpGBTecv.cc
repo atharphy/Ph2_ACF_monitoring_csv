@@ -133,7 +133,7 @@ void OTCICtoLpGBTecv::runECV()
             for(uint8_t clockPolarity: fListOfClockPolarity)
             {
                 LOG(INFO) << BOLDMAGENTA << "CLOCK POLARITY: " << +clockPolarity << RESET;
-                for(auto clockStrength: fListOfClockStrength)
+                for(uint8_t clockStrength: fListOfClockStrength)
                 {
                     LOG(INFO) << BOLDMAGENTA << "    CLOCK STRENGTH: " << +clockStrength << RESET;
                     static_cast<D19clpGBTInterface*>(flpGBTInterface)->setCICClockPolarityAndStrength(theOpticalGroup->flpGBT, clockPolarity, clockStrength, theOpticalGroup);

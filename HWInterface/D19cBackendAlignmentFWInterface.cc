@@ -5,6 +5,7 @@
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/DataContainer.h"
+#include <thread>
 
 using namespace Ph2_HwDescription;
 
@@ -55,9 +56,7 @@ uint32_t PhaseTuningControl::encodeCommand() const
         if(!fIsOptical) theCommand |= ((fPatternLenght & 0xFF) << 0);
         break;
 
-    case Command::SetSyncPattern:
-        if(!fIsOptical) theCommand |= ((fSyncPattern & 0xFF) << 0);
-        break;
+    case Command::SetSyncPattern: theCommand |= ((fSyncPattern & 0xFFFF) << 0); break;
 
     case Command::Align:
         if(!fIsOptical) theCommand |= ((fDoPhaseAlignment ? 1 : 0) << 0);
@@ -202,13 +201,13 @@ AlignmentResult D19cBackendAlignmentFWInterface::tunePhase(uint8_t hybridId, uin
     thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Configure);
     thePhaseTuningControl.setEnableSync(true);
     thePhaseTuningControl.setMode(PhaseTuningControl::Mode::Auto);
-    writeCommand(thePhaseTuningControl.encodeCommand());
+    writeCommand(thePhaseTuningControl);
 
     // align line
     thePhaseTuningControl.resetCommandBits();
     thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Align);
     thePhaseTuningControl.setDoPhaseAlignment(true);
-    writeCommand(thePhaseTuningControl.encodeCommand());
+    writeCommand(thePhaseTuningControl);
 
     return retrieveAlignmentResult(hybridId, lineId);
 }
@@ -220,29 +219,40 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
         LOG(ERROR) << ERROR_FORMAT << __PRETTY_FUNCTION__ << " does not support not optical modules, aborting" << RESET;
         abort();
     }
+
     PhaseTuningControl thePhaseTuningControl(fIsOptical);
     thePhaseTuningControl.setHybridId(hybridId);
     thePhaseTuningControl.setChipId(lineId == 0xF ? 0x7 : 0x0);
     thePhaseTuningControl.setLineId(lineId);
 
+    if(fAlignOnPRBS)
+    {
+        thePhaseTuningControl.resetCommandBits();
+        thePhaseTuningControl.setCommand(PhaseTuningControl::Command::SetSyncPattern);
+        thePhaseTuningControl.setSyncPattern(BERT_ALIGNMENT_PATTERN);
+        writeCommand(thePhaseTuningControl);
+    }
+
     // Reset
+    thePhaseTuningControl.resetCommandBits();
     thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Align);
     thePhaseTuningControl.setDoReset(true);
-    writeCommand(thePhaseTuningControl.encodeCommand());
+    writeCommand(thePhaseTuningControl);
 
     // Configure command
     thePhaseTuningControl.resetCommandBits();
     thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Configure);
     thePhaseTuningControl.setEnableSync(true);
+    thePhaseTuningControl.setEnablePRBS(fAlignOnPRBS);
     thePhaseTuningControl.setMode(PhaseTuningControl::Mode::Auto);
     // thePhaseTuningControl.setEnableLCC(true);
-    writeCommand(thePhaseTuningControl.encodeCommand());
+    writeCommand(thePhaseTuningControl);
 
     // align line
     thePhaseTuningControl.resetCommandBits();
     thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Align);
     thePhaseTuningControl.setDoWordAlignment(true);
-    writeCommand(thePhaseTuningControl.encodeCommand());
+    writeCommand(thePhaseTuningControl);
 }
 
 AlignmentResult D19cBackendAlignmentFWInterface::alignWord(uint8_t hybridId, uint8_t lineId)
@@ -261,7 +271,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
         thePhaseTuningControl.setHybridId(hybridId);
         thePhaseTuningControl.setLineId(lineId);
         thePhaseTuningControl.setCommand(PhaseTuningControl::Command::ReturnResult);
-        writeCommand(thePhaseTuningControl.encodeCommand());
+        writeCommand(thePhaseTuningControl);
 
         uint32_t         reply = fTheRegManager->ReadReg(fPhaseTuningResultRegisterName);
         PhaseTuningReply thePhaseTuningReply;
@@ -270,7 +280,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
             thePhaseTuningReply.decodeReply(reply, thePhaseTuningControl);
             AlignmentResult theAlignmentResults(thePhaseTuningReply);
 
-            LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << lineId;
+            LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << +lineId;
             LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET << ", WA FSM: " << BOLDGREEN
                       << theAlignmentResults.fWordAlignmentFSMstate << RESET;
             LOG(INFO) << "\t\t Delay: " << +theAlignmentResults.fDelay << ", Bitslip: " << +theAlignmentResults.fBitslip;
@@ -289,8 +299,9 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
     return theAlignmentResults;
 }
 
-void D19cBackendAlignmentFWInterface::writeCommand(uint32_t phaseTunerCommand)
+void D19cBackendAlignmentFWInterface::writeCommand(const PhaseTuningControl& thePhaseTunerControl)
 {
+    uint32_t phaseTunerCommand = thePhaseTunerControl.encodeCommand();
     fTheRegManager->WriteReg(fPhaseTuningControlRegisterName, phaseTunerCommand);
     std::this_thread::sleep_for(std::chrono::microseconds(100));
 }

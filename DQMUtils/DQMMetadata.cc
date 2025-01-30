@@ -32,6 +32,9 @@ void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStruc
     StringContainer theHostNameStringContainer("HostName");
     RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fHostNameContainer, theHostNameStringContainer);
 
+    StringContainer theGitTagStringContainer("GitTag");
+    RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fGitTagContainer, theGitTagStringContainer);
+
     StringContainer theGitCommitHashStringContainer("GitCommitHash");
     RootContainerFactory::bookDetectorHistograms<StringContainer>(theOutputFile, theDetectorStructure, fGitCommitHashContainer, theGitCommitHashStringContainer);
 
@@ -147,6 +150,8 @@ void DQMMetadata::fillObjectNames(const DetectorDataContainer& theNameContainer)
 void DQMMetadata::fillUsername(const DetectorDataContainer& theUsernameContainer) { fUsernameContainer.getSummary<StringContainer>().saveString(theUsernameContainer.getSummary<std::string>()); }
 
 void DQMMetadata::fillHostName(const DetectorDataContainer& theHostNameContainer) { fHostNameContainer.getSummary<StringContainer>().saveString(theHostNameContainer.getSummary<std::string>()); }
+
+void DQMMetadata::fillGitTag(const DetectorDataContainer& theGitTagContainer) { fGitTagContainer.getSummary<StringContainer>().saveString(theGitTagContainer.getSummary<std::string>()); }
 
 void DQMMetadata::fillGitCommitHash(const DetectorDataContainer& theGitCommitHashContainer)
 {
@@ -285,6 +290,7 @@ bool DQMMetadata::fill(std::string& inputStream)
     ContainerSerialization theNameSerialization("MetadataObjectNames");
     ContainerSerialization theUsernameSerialization("MetadataUsername");
     ContainerSerialization theHostNameSerialization("MetadataHostName");
+    ContainerSerialization theGitTagSerialization("MetadataGitTag");
     ContainerSerialization theGitCommitHashSerialization("MetadataGitCommitHash");
     ContainerSerialization theFirmwareVersionSerialization("MetadataFirmwareVersion");
     ContainerSerialization theCalibrationNameSerialization("MetadataCalibrationName");
@@ -322,6 +328,14 @@ bool DQMMetadata::fill(std::string& inputStream)
             theHostNameSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
         fillHostName(theDetectorData);
 
+        return true;
+    }
+    if(theGitTagSerialization.attachDeserializer(inputStream))
+    {
+        // std::cout << "Matched Metadata GitTag!!!!!\n";
+        DetectorDataContainer theDetectorData =
+            theGitTagSerialization.deserializeDetectorContainer<EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
+        fillGitTag(theDetectorData);
         return true;
     }
     if(theGitCommitHashSerialization.attachDeserializer(inputStream))

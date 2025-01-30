@@ -14,7 +14,7 @@
       <NTCProperties type="VTRx"   ADC="ADC7" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
       <lpGBT_Files path="${PWD}" />
       <lpGBT_ConfigFile fileName="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpgbt_calibration.csv" />
-      <lpGBT Id="0" version="0" configFile="CMSIT_LpGBTv0.txt" ChipAddress="0x70" RxDataRate="1280" RxHSLPolarity="1" TxDataRate="160" TxHSLPolarity="0">
+      <lpGBT Id="0" version="1" configFile="CMSIT_LpGBTv1.txt" ChipAddress="0x70" RxDataRate="1280" RxHSLPolarity="0" TxDataRate="160" TxHSLPolarity="0">
       -->
       <!-- Put here any LpGBT register, if needed
             EPRX60ChnCntr_phase = "6" -->
@@ -27,7 +27,7 @@
         <RD53_Files path="${PWD}/" />
 
         <!-- Available Comment fields are: 50x50, 25x100origR0C0, 25x100origR1C0, unknown, combined with RD53A, RD53B, dual, quad -->
-        <RD53A Id="0" enable="1" Lane="0" configFile="CMSIT_RD53A.txt" RxGroups="0006" RxPolarity="0" TxGroup="3" TxChannel="0" TxPolarity="0" Comment="RD53A 50x50">
+        <RD53A Id="0" enable="1" Lane="0" configFile="CMSIT_RD53A.txt" RxGroups="0001" RxPolarity="0" TxGroup="2" TxChannel="0" TxPolarity="0" Comment="RD53A 50x50">
           <!-- Overwrite .txt configuration file settings -->
           <Settings
               PA_IN_BIAS_LIN         =   "350"
@@ -274,7 +274,7 @@
     <Setting name="ThrStop">             440 </Setting>
     <Setting name="TargetThr">          2000 </Setting>
     <Setting name="TargetOcc">          1e-6 </Setting>
-    <Setting name="OccPerPixel">        2e-5 </Setting>
+    <Setting name="OccPerPixel">        1e-4 </Setting>
     <Setting name="MaxMaskedPixels">       1 </Setting>
     <Setting name="UnstuckPixels">         0 </Setting>
 

@@ -149,15 +149,17 @@ void DQMHistogramOTPSADCCalibration::fillSlopePlots(DetectorDataContainer& theAD
                         theADCSlopeGraphs->SetPointX(i, ADCs[i]);
                         theADCSlopeGraphs->SetPointY(i, voltages[i]);
                     }
-
-                    theADCSlopeGraphs->Fit("pol1", "Q");
-                    LOG(DEBUG) << BLUE << " cChipContainer.fOffset " << cChipContainer.fOffset << " cChipContainer.fSlope " << cChipContainer.fSlope << RESET;
-                    TF1* thePol1 = theADCSlopeGraphs->GetFunction("pol1");
-                    thePol1->SetParameter(0, cChipContainer.fOffset);
-                    thePol1->SetParameter(1, cChipContainer.fSlope);
-                    thePol1->SetRange(0, 4095);
-                    thePol1->SetLineColor(kRed + 1);
-                    thePol1->SetLineStyle(2);
+                    if(cChipContainer.fADC_VBG != 0)
+                    {
+                        theADCSlopeGraphs->Fit("pol1", "Q");
+                        LOG(DEBUG) << BLUE << " cChipContainer.fOffset " << cChipContainer.fOffset << " cChipContainer.fSlope " << cChipContainer.fSlope << RESET;
+                        TF1* thePol1 = theADCSlopeGraphs->GetFunction("pol1");
+                        thePol1->SetParameter(0, cChipContainer.fOffset);
+                        thePol1->SetParameter(1, cChipContainer.fSlope);
+                        thePol1->SetRange(0, 4095);
+                        thePol1->SetLineColor(kRed + 1);
+                        thePol1->SetLineStyle(2);
+                    }
 
                 } // chip
             } // hybrid

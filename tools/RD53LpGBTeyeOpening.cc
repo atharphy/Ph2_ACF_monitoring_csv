@@ -21,6 +21,7 @@ void LpGBTeyeOpening::ConfigureCalibration()
     CalibBase::ConfigureCalibration();
     lpGBTattenuation = this->findValueInSettings<double>("LpGBTattenuation");
     doDisplay        = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip     = this->findValueInSettings<double>("UpdateChipCfg");
 }
 
 void LpGBTeyeOpening::Running()
@@ -105,7 +106,7 @@ void LpGBTeyeOpening::run()
 
                 for(auto cOpticalGroup: *cBoard)
                 {
-                    auto     theEyeArray = theLpGBTeyeOpeningContainer.getOpticalGroup(cBoard->getId(), cOpticalGroup->getId())->getSummary<GenericDataArray<uint16_t, TIMEMAX, VOLTMAX>>();
+                    auto&    theEyeArray = theLpGBTeyeOpeningContainer.getOpticalGroup(cBoard->getId(), cOpticalGroup->getId())->getSummary<GenericDataArray<uint16_t, TIMEMAX, VOLTMAX>>();
                     uint8_t  EOMStatus   = flpGBTInterface->GetEOMStatus(cOpticalGroup->flpGBT);
                     uint16_t nAttempts   = 0;
 
@@ -122,8 +123,17 @@ void LpGBTeyeOpening::run()
                         continue;
                     }
 
-                    flpGBTInterface->StartEOM(cOpticalGroup->flpGBT, false);
+                    // #################
+                    // # Progress menu #
+                    // #################
+                    LOG(INFO) << CYAN << "************* " << GREEN << "Scanning" << CYAN << " *************" << RESET;
+                    LOG(INFO) << GREEN << "Volt: " << BOLDYELLOW << std::setw(2) << std::fixed << +voltage << " mV (" << VOLTMAX - 1 << ") " << RESET << GREEN << "-- Time: " << BOLDYELLOW
+                              << std::setw(2) << std::fixed << +time << " ps (" << TIMEMAX - 1 << ")" << RESET;
+                    LOG(INFO) << CYAN << "************************************" << RESET;
+                    if((voltage < VOLTMAX - 1) || (time < TIMEMAX - 1)) std::cout << std::setprecision(-1) << "\x1b[A\x1b[A\x1b[A";
+
                     theEyeArray.at(time).at(voltage) = flpGBTInterface->GetEOMCounter(cOpticalGroup->flpGBT);
+                    flpGBTInterface->StartEOM(cOpticalGroup->flpGBT, false);
                 }
             }
         }
@@ -137,6 +147,8 @@ void LpGBTeyeOpening::run()
 
 void LpGBTeyeOpening::draw(bool saveData)
 {
+    if(saveData == true) CalibBase::saveChipRegisters(doUpdateChip);
+
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 

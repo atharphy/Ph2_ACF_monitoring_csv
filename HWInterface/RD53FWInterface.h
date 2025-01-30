@@ -75,7 +75,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void Pause() override;
     void Resume() override;
 
-    std::vector<double> RunBERtest(bool given_time, double frames_or_time, const std::map<uint16_t, std::vector<uint8_t>>& hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed) override;
+    std::vector<double> RunBERtest(bool given_time, double frames_or_time, const std::map<uint32_t, std::vector<uint8_t>>& hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed) override;
     void                ReadNEvents(Ph2_HwDescription::BeBoard* pBoard, uint32_t pNEvents, std::vector<uint32_t>& pData, bool pWait = true) override;
     uint32_t            ReadData(Ph2_HwDescription::BeBoard* pBoard, bool pBreakTrigger, std::vector<uint32_t>& pData, bool pWait = true) override;
     void                ChipReset() override;

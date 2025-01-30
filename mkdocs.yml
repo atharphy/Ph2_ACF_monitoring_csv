@@ -75,6 +75,7 @@ nav:
       - 'Installing additionally required software': general/required_install.md
       - 'Installing rarpd': general/rarpd.md
       - 'Setting up the Ph2_ACF software': general/ph2acf_install.md
+      - 'FC7 nomenclature': general/FC7nomenclature.md
     - 'Inner Tracker':
       - 'Inner Tracker': innerTracker/index.md
       - 'Introduction': innerTracker/Intro.md
@@ -92,7 +93,6 @@ nav:
         - 'innerTracker/calibrations/PixelAlive.md'
         - 'innerTracker/calibrations/SCurve.md'
         - 'innerTracker/calibrations/Noise.md'
-        - 'innerTracker/calibrations/XTalk.md'
         - 'innerTracker/calibrations/GainScan.md'
       - 'Pixel tuning':
         - innerTracker/calibrations/LatencyScan.md
@@ -111,6 +111,11 @@ nav:
       - 'Additional information/HOWTOs':
         - innerTracker/ModuleTesting.md
         - innerTracker/SCCTuning.md
+        - innerTracker/calibrations/XTalk.md
+        - innerTracker/calibrations/TermExplanations.md
     - 'Outer Tracker':
       - 'Outer Tracker': outerTracker/index.md
+      - 'Firmware naming conventions': outerTracker/firmware.md
+      - '2S module': outerTracker/2SConfiguration.md
+  
     - 'Interesting links': interesting_links/index.md

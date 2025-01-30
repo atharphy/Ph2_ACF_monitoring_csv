@@ -10,7 +10,7 @@
 #ifndef OTBitErrorRateTest_h__
 #define OTBitErrorRateTest_h__
 
-#include "tools/Tool.h"
+#include "tools/OTalignBoardDataWord.h"
 #include <map>
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
@@ -20,9 +20,10 @@
 namespace Ph2_HwDescription
 {
 class OpticalGroup;
-}
+class BeBoard;
+} // namespace Ph2_HwDescription
 
-class OTBitErrorRateTest : public Tool
+class OTBitErrorRateTest : public OTalignBoardDataWord
 {
   public:
     OTBitErrorRateTest();
@@ -42,7 +43,8 @@ class OTBitErrorRateTest : public Tool
 
   private:
     void bitErrorRateTest();
-    bool prepareLpGBTforBERT(Ph2_HwDescription::OpticalGroup* theOpticalGroup);
+
+    float fNumberOfBits{1E10};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

@@ -47,10 +47,11 @@
     </OpticalGroup>
   </BeBoard>
 
+
 <Settings>
     <Setting name="isKickoff">0</Setting>
     <!--PedestalEqualization-->
-    <Setting name="Nevents">100</Setting>
+	<Setting name="Nevents">1000</Setting>
 	<Setting name="CMNoise_Nevents">10000</Setting>
 	<Setting name="CMNoise_manualVcth">0</Setting>
 	<Setting name="CMNoise_2DHistograms">0</Setting> <!-- Create additional Correlation plots. CPU & RAM intensive -->
@@ -59,14 +60,20 @@
     <Setting name="MaskChannelsFromOtherGroups">0</Setting>
     <Setting name="FitSCurves">1</Setting>
     <Setting name="PlotSCurves">1</Setting>
-    <Setting name="PedestalEqualization_PulseAmplitude">0</Setting>
-    <Setting name="PedeNoise_PulseAmplitude">0</Setting>
-    <Setting name="TriggerRate">10</Setting>
-    <Setting name="StubAlignmentThreshold">590</Setting>
-    <Setting name="StubAlignmentScanStart">70</Setting>
+    <Setting name="NoiseMeasurementLimit">10</Setting>
+    <Setting name="NeventsForValidation">100000</Setting>
+    <Setting name="MaskingThreshold">0.001</Setting>
+    <!-- <Setting name="PedeNoise_MinThreshold">375</Setting>
+    <Setting name="PedeNoise_MaxThreshold">750</Setting> -->
 
-    <Setting name="StartLatency">85</Setting>
+    <!-- <Setting name="PedestalEqualization_PulseAmplitude">70</Setting>
+    <Setting name="PedeNoise_PulseAmplitude">70</Setting> -->
+    <Setting name="TriggerRate">10</Setting>
+    <Setting name="StubAlignmentThreshold">550</Setting>
+    <Setting name="StubAlignmentScanStart">67</Setting>
+    <Setting name="StartLatency">190</Setting>
     <Setting name="LatencyRange">20</Setting>
+
 
     <Setting name="TargetVcth">0x78</Setting>
     <Setting name="TargetOffset">0x50</Setting>
@@ -113,25 +120,22 @@
 
     <Setting name="UseFcmdBram">0</Setting>
     <Setting name="MeanTriggerSeparation">100</Setting>
-    
+
     <Setting name="Check2SUseReadNEvents">0</Setting>
-    <Setting name="Check2Swait">2000</Setting>   <!-- wait is in ms --> 
+    <Setting name="Check2Swait">2000</Setting>   <!-- wait is in ms -->
     <Setting name="Check2STPamplitude">10</Setting>
     <Setting name="Check2STPdelay">10</Setting>
     <Setting name="Check2Sthreshold">550</Setting>
-    <Setting name="Check2SRefSensor">0</Setting>   <!--bottom == 0 ; top == 1 --> 
-    <Setting name="Check2SRefSide">1</Setting>   <!-- L == 1  ; R== 0 --> 
-    <Setting name="Check2SRefChip">0</Setting>   <!-- L == 1  ; R== 0 --> 
-    
-    <Setting name="KIRA_ID">    ArduinoTestBox  </Setting>
-    <Setting name="KIRA_Port" > 7011 </Setting>
-    <Setting name="KiraLatencyLed" > 4</Setting>
-    <Setting name="KiraLatencySensor" > 0</Setting>
-    <Setting name="KiraLatencyIntensity" >30000</Setting>
-    <Setting name="KiraIntensity" >30000</Setting>
-    <Setting name="KiraCalibrationIntensityStart" > 29000 </Setting>
-    <Setting name="KiraCalibrationIntensityStop" > 31500 </Setting>
-    <Setting name="KiraCalibrationIntensityStep" > 100 </Setting>
+    <Setting name="Check2SRefSensor">0</Setting>   <!--bottom == 0 ; top == 1 -->
+    <Setting name="Check2SRefSide">1</Setting>   <!-- L == 1  ; R== 0 -->
+    <Setting name="Check2SRefChip">0</Setting>   <!-- L == 1  ; R== 0 -->
+
+    <Setting name="PulseShape_Nevents"       >100</Setting>
+    <Setting name="PulseShape_InitialDelay"  >  0</Setting>
+    <Setting name="PulseShape_FinalDelay"    > 75</Setting>
+    <Setting name="PulseShape_DelayStep"     >  1</Setting>
+    <Setting name="PulseShape_PulseAmplitude">200</Setting>
+    <Setting name="PulseShape_ChannelGroup"  >  0</Setting>
 
     <Setting name="DoManualVrefTuning"      >  0</Setting>
 
@@ -139,7 +143,6 @@
 
     <Setting name="OTRegisterTester_NumberOfIterations">1000</Setting>
     <Setting name="OTRegisterTester_Pattern">0xAA</Setting>
-    
     <Setting name="OTverifyBoardDataWord_NumberOfIterations">100</Setting>
     <Setting name="OTCICtoLpGBTecv_CICStrength">1, 3, 5</Setting>
     <Setting name="OTCICtoLpGBTecv_ClockPolarity">0-1</Setting>
@@ -174,6 +177,19 @@
     <Setting name="OTCBCtoCICecv_ListOfCBCslvsCurrents"> 0, 8, 14</Setting>
 
     <Setting name="OTLpGBTEyeOpeningTest_PowerList">1-3</Setting>
+
+    <Setting name="OTBitErrorRateTest_NumberOfBits">1E10</Setting>
+
+    <Setting name="KIRA_ID">    ArduinoTestBox  </Setting>
+    <Setting name="KIRA_Port" > 7011 </Setting>
+    <Setting name="KiraLatencyLed" > 4</Setting>
+    <Setting name="KiraLatencySensor" > 0</Setting>
+    <Setting name="KiraLatencyIntensity" >30000</Setting>
+    <Setting name="KiraIntensity" >30000</Setting>
+    <Setting name="KiraCalibrationIntensityStart" > 29000 </Setting>
+    <Setting name="KiraCalibrationIntensityStop" > 31500 </Setting>
+    <Setting name="KiraCalibrationIntensityStep" > 100 </Setting>
+
 </Settings>
 
 <MonitoringSettings>
