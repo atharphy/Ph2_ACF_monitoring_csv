@@ -26,6 +26,7 @@ void VTRxLightYieldScan::ConfigureCalibration()
     modulationStop  = this->findValueInSettings<double>("VTRxModulationStop");
     modulationStep  = this->findValueInSettings<double>("VTRxModulationStep", 1);
     doDisplay       = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
 
     // ##############################
     // # Initialize dac scan values #
@@ -105,16 +106,24 @@ void VTRxLightYieldScan::run()
             for(auto i = 0u; i < dac1List.size(); i++)
             {
                 if(cOpticalGroup->flpGBT == nullptr) throw std::runtime_error("LpGBT not enabled in configuration file for optical group ID " + std::to_string(cOpticalGroup->getId()));
-                this->flpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "_I2CVTRxRegCH1BIAS", dac1List[i]);
+                this->flpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "_I2CVTRxRegCH0BIAS", dac1List[i]);
 
                 for(auto j = 0u; j < dac2List.size(); j++)
                 {
-                    this->flpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "_I2CVTRxRegCH1MOD", dac2List[j] | 0x80);
+                    this->flpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "_I2CVTRxRegCH0MOD", dac2List[j] | 0x80);
                     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
+                    auto value = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter("RX", flpGBTInterface->GetSFPchannel(cOpticalGroup));
 
-                    theVTRxLightYieldScanContainer.getOpticalGroup(cBoard->getId(), cOpticalGroup->getId())
-                        ->getSummary<std::vector<float>>()
-                        .push_back(static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter("RX", cOpticalGroup->getId()));
+                    // #################
+                    // # Progress menu #
+                    // #################
+                    LOG(INFO) << CYAN << "************* " << GREEN << "Scanning" << CYAN << " *************" << RESET;
+                    LOG(INFO) << GREEN << "Bias: " << BOLDYELLOW << std::setw(3) << std::fixed << dac1List[i] << "/" << std::setw(3) << std::fixed << dac1List[dac1List.size() - 1] << RESET << GREEN
+                              << " -- Modulation: " << BOLDYELLOW << std::setw(3) << std::fixed << dac2List[j] << "/" << std::setw(3) << std::fixed << dac2List[dac2List.size() - 1] << RESET;
+                    LOG(INFO) << CYAN << "************************************" << RESET;
+                    if((i < dac1List.size() - 1) || (j < dac2List.size() - 1)) std::cout << std::setprecision(-1) << "\x1b[A\x1b[A\x1b[A";
+
+                    theVTRxLightYieldScanContainer.getOpticalGroup(cBoard->getId(), cOpticalGroup->getId())->getSummary<std::vector<float>>().push_back(value);
                 }
             }
         }
@@ -127,6 +136,8 @@ void VTRxLightYieldScan::run()
 
 void VTRxLightYieldScan::draw(bool saveData)
 {
+    if(saveData == true) CalibBase::saveChipRegisters(doUpdateChip);
+
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 

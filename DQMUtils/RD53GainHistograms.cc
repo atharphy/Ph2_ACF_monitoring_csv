@@ -253,20 +253,20 @@ void GainHistograms::fillGain(const DetectorDataContainer& GainContainer)
 
 void GainHistograms::process()
 {
-    draw<TH2F>(Occupancy2D, "gcolz", "electron", "Charge (electrons)");
-    draw<TH3F>(Occupancy3D, "gcolz");
-    draw<TH2F>(ErrorReadOut2D, "gcolz");
-    draw<TH2F>(ErrorFit2D, "gcolz");
+    drawChip<TH2F>(Occupancy2D, "gcolz", "electron", "Charge (electrons)");
+    drawChip<TH3F>(Occupancy3D, "gcolz");
+    drawChip<TH2F>(ErrorReadOut2D, "gcolz");
+    drawChip<TH2F>(ErrorFit2D, "gcolz");
 
-    draw<TH1F>(InterceptHighQ1D);
-    draw<TH1F>(SlopeHighQ1D, "", "electron", "Slope for high charge range (ToT/electrons)");
-    draw<TH1F>(InterceptLowQ1D);
-    draw<TH1F>(SlopeLowQ1D, "", "electron", "Slope for low charge range (ToT/electrons)");
-    draw<TH1F>(Chi2DoF1D);
+    drawChip<TH1F>(InterceptHighQ1D);
+    drawChip<TH1F>(SlopeHighQ1D, "", "electron", "Slope for high charge range (ToT/electrons)");
+    drawChip<TH1F>(InterceptLowQ1D);
+    drawChip<TH1F>(SlopeLowQ1D, "", "electron", "Slope for low charge range (ToT/electrons)");
+    drawChip<TH1F>(Chi2DoF1D);
 
-    draw<TH2F>(InterceptHighQ2D, "gcolz");
-    draw<TH2F>(SlopeHighQ2D, "gcolz");
-    draw<TH2F>(InterceptLowQ2D, "gcolz");
-    draw<TH2F>(SlopeLowQ2D, "gcolz");
-    draw<TH2F>(Chi2DoF2D, "gcolz");
+    drawChip<TH2F>(InterceptHighQ2D, "gcolz");
+    drawChip<TH2F>(SlopeHighQ2D, "gcolz");
+    drawChip<TH2F>(InterceptLowQ2D, "gcolz");
+    drawChip<TH2F>(SlopeLowQ2D, "gcolz");
+    drawChip<TH2F>(Chi2DoF2D, "gcolz");
 }

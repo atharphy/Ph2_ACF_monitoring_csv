@@ -1482,15 +1482,15 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
                 value.erase(std::remove(value.begin(), value.end(), ' '), value.end());
                 pSettingsMap[theSettingValue] = value;
 
-                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << theSettingValue << RESET << ":" << BOLDYELLOW << boost::any_cast<std::string>(pSettingsMap[theSettingValue])
-                   << RESET << std::endl;
+                os << BOLDRED << SETTING_NODE_NAME << RESET << GREEN << " -- " << BOLDCYAN << theSettingValue << RESET << GREEN << ":" << BOLDYELLOW
+                   << boost::any_cast<std::string>(pSettingsMap[theSettingValue]) << RESET << std::endl;
             }
             else
             {
                 pSettingsMap[theSettingValue] = convertAnyDouble(nSetting.first_child().value());
 
-                os << BOLDRED << SETTING_NODE_NAME << RESET << " -- " << BOLDCYAN << theSettingValue << RESET << ":" << BOLDYELLOW << boost::any_cast<double>(pSettingsMap[theSettingValue]) << RESET
-                   << std::endl;
+                os << BOLDRED << SETTING_NODE_NAME << RESET << GREEN << " -- " << BOLDCYAN << theSettingValue << RESET << GREEN << ":" << BOLDYELLOW
+                   << boost::any_cast<double>(pSettingsMap[theSettingValue]) << RESET << std::endl;
             }
         }
     }
@@ -1561,7 +1561,7 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
 
     const uint32_t    chipId      = theChipNode.attribute(COMMON_ID_ATTRIBUTE_NAME).as_uint();
     const uint32_t    chipLane    = theChipNode.attribute("Lane").as_uint();
-    const int64_t     eFuseCode   = (theChipNode.attribute("eFuseCode") ? theChipNode.attribute("eFuseCode").as_uint() : 0);
+    const int64_t     eFuseCode   = (theChipNode.attribute("eFuseCode") ? theChipNode.attribute("eFuseCode").as_int() : 0);
     const std::string cRxGroups   = theChipNode.attribute("RxGroups").as_string("0000");
     const uint8_t     cRxChannel  = (theChipNode.attribute("RxChannel") ? theChipNode.attribute("RxChannel").as_uint() : 0);
     const uint8_t     cRxPolarity = theChipNode.attribute("RxPolarity").as_uint();
@@ -1700,7 +1700,10 @@ void FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfi
     std::string silenRunString               = (theMonitorNode.attribute(MONITORING_NODE_SILENTRUN_ATTRIBUTE_NAME) ? theMonitorNode.attribute(MONITORING_NODE_SILENTRUN_ATTRIBUTE_NAME).value() : "0");
 
     if(enableString == "1")
+    {
         theDetectorMonitorConfig.fEnable = true;
+        os << std::endl;
+    }
     else if(enableString == "0")
         theDetectorMonitorConfig.fEnable = false;
     else
@@ -1715,14 +1718,13 @@ void FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfi
 
     theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child(MONITORINGSLEEPTIME_NODE_NAME).first_child().value());
 
-    os << std::endl;
-
     for(pugi::xml_node monitorElement = theMonitorNode.child(MONITORINGELEMENT_NODE_NAME); monitorElement; monitorElement = monitorElement.next_sibling())
     {
         const std::string chipName     = monitorElement.attribute(MONITORINGELEMENT_DEVICE_ATTRIBUTE_NAME).value();
         const std::string registerName = monitorElement.attribute(MONITORINGELEMENT_REGISTER_ATTRIBUTE_NAME).value();
         const bool        enable       = convertAnyInt(monitorElement.attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME).value()) != 0;
-        if(enable) os << BOLDRED << "Monitoring" << RESET << " -- " << BOLDCYAN << chipName << RESET << ":" << BOLDYELLOW << "Register " << registerName << RESET << std::endl;
+        if((enableString == "1") && (enable == true))
+            os << BOLDRED << "Monitoring" << RESET << GREEN << " -- " << BOLDCYAN << chipName << RESET << GREEN << ":Register " << BOLDYELLOW << registerName << RESET << std::endl;
         theDetectorMonitorConfig.addElementToMonitor(chipName, registerName, enable);
     }
 

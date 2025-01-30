@@ -220,14 +220,14 @@ void PixelAliveHistograms::fillTrgID(const DetectorDataContainer& DataContainer)
 
 void PixelAliveHistograms::process()
 {
-    draw<TH1F>(Occupancy1D);
-    draw<TH2F>(Occupancy2D, "gcolz");
-    draw<TH2F>(ErrorReadOut2D, "gcolz");
-    draw<TH1F>(Mask1Dcol);
-    draw<TH1F>(Mask1Drow);
-    draw<TH1F>(ToT1D);
-    draw<TH2F>(ToT2D, "gcolz");
-    draw<TH1F>(BCID);
-    draw<TH1F>(TriggerID);
-    draw<TH2F>(Masked2D, "gcolz");
+    drawChip<TH1F>(Occupancy1D);
+    drawChip<TH2F>(Occupancy2D, "gcolz");
+    drawChip<TH2F>(ErrorReadOut2D, "gcolz");
+    drawChip<TH1F>(Mask1Dcol);
+    drawChip<TH1F>(Mask1Drow);
+    drawChip<TH1F>(ToT1D);
+    drawChip<TH2F>(ToT2D, "gcolz");
+    drawChip<TH1F>(BCID);
+    drawChip<TH1F>(TriggerID);
+    drawChip<TH2F>(Masked2D, "gcolz");
 }

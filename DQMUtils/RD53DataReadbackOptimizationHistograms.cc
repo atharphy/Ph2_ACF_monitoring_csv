@@ -208,10 +208,10 @@ void DataReadbackOptimizationHistograms::fillTAP2(const DetectorDataContainer& T
 
 void DataReadbackOptimizationHistograms::process()
 {
-    draw<TH1F>(TAP0scan);
-    draw<TH1F>(TAP0);
-    draw<TH1F>(TAP1scan);
-    draw<TH1F>(TAP1);
-    draw<TH1F>(TAP2scan);
-    draw<TH1F>(TAP2);
+    drawChip<TH1F>(TAP0scan);
+    drawChip<TH1F>(TAP0);
+    drawChip<TH1F>(TAP1scan);
+    drawChip<TH1F>(TAP1);
+    drawChip<TH1F>(TAP2scan);
+    drawChip<TH1F>(TAP2);
 }

@@ -246,9 +246,11 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     }
 
     lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), this->ReadChipFuseID(static_cast<lpGBT*>(pChip), cChipVersion), configFilePathCSV);
+    LOG(INFO) << YELLOW << "Calibrating LpGBT Vref..." << RESET;
     lpGBTInterface::EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
     lpGBTInterface::TuneVrefControlLib(static_cast<lpGBT*>(pChip));
     lpGBTInterface::AutoTuneVref(static_cast<lpGBT*>(pChip));
+    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
     return true;
 }

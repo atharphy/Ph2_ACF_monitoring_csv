@@ -72,6 +72,7 @@ class lpGBTInterface : public ChipInterface
     uint32_t ReadChipFusedBlock(Ph2_HwDescription::Chip* pChip, uint8_t cFuseH, uint8_t cFuseL);
     bool     WriteChipMultReg(Ph2_HwDescription::Chip* pChip, const std::vector<std::pair<std::string, uint16_t>>& RegVec, bool pVerify = true) override;
     uint32_t ReadVTRxChipFuseID(Ph2_HwDescription::Chip* pChip);
+    void     DumpChipRegisters(Ph2_HwDescription::Chip* pChip);
 
     // #######################################
     // # LpGBT block configuration functions #
@@ -124,6 +125,7 @@ class lpGBTInterface : public ChipInterface
     uint8_t GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
     bool    IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
     uint8_t GetRxDllStatus(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
+    uint8_t GetSFPchannel(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
 
     // ########################
     // # LpGBT GPIO functions #
@@ -303,7 +305,7 @@ class lpGBTInterface : public ChipInterface
                                                        {12, 1UL << 29},
                                                        {13, 1UL << 31},
                                                        {14, 1UL << 33},
-                                                       {15, 1UL < 35}};
+                                                       {15, 1UL << 35}};
 
     std::map<uint8_t, std::string> fEOMStatusMap = {{0, "smIdle"}, {1, "smResetCounters"}, {2, "smCount"}, {3, "smEndOfCount"}};
 

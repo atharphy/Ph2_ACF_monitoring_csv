@@ -446,7 +446,6 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
         if(cOpticalGroup->flpGBT != nullptr)
         {
             LOG(INFO) << CYAN << "=== Initializing communication to Low-power Gigabit Transceiver (LpGBT): " << BOLDYELLOW << +cOpticalGroup->getId() << RESET << CYAN << " ===" << RESET;
-
             static_cast<RD53lpGBTInterface*>(flpGBTInterface)->SetDownLinkMapping(cOpticalGroup);
             static_cast<RD53lpGBTInterface*>(flpGBTInterface)->SetUpLinkMapping(cOpticalGroup);
             LOG(INFO) << BOLDBLUE << "\t--> Configured up and down link mapping in firmware" << RESET;
@@ -538,6 +537,12 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 {
                     eFuseCode = fReadoutChipInterface->ReadChipFuseID(cChip);
                 }
+                catch(const std::system_error& err)
+                {
+                    LOG(WARNING) << RED << err.what() << RESET;
+                    eFuseCode      = -1;
+                    eFuseCodeCheck = false;
+                }
                 catch(const std::runtime_error& err)
                 {
                     LOG(WARNING) << RED << err.what() << RESET;
@@ -546,7 +551,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
                 }
                 catch(const std::out_of_range& err)
                 {
-                    LOG(WARNING) << RED << err.what() << RESET;
+                    LOG(DEBUG) << GREEN << "Chip e-fuse code: " << BOLDYELLOW << err.what() << RESET;
                     eFuseCode = atoi(err.what());
                 }
 
@@ -1296,6 +1301,18 @@ void SystemController::DumpRegisters()
                               << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     fReadoutChipInterface->DumpChipRegisters(cChip);
                 }
+
+    // ######################################################
+    // # Dump OpticalGroup registers of the entire detector #
+    // ######################################################
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            if(cOpticalGroup->flpGBT != nullptr)
+            {
+                LOG(INFO) << GREEN << "OpticalGroup chip register content for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]"
+                          << RESET;
+                flpGBTInterface->DumpChipRegisters(cOpticalGroup->flpGBT);
+            }
 }
 
 } // namespace Ph2_System

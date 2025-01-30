@@ -98,6 +98,6 @@ void ClockDelayHistograms::fillClockDelay(const DetectorDataContainer& ClockDela
 
 void ClockDelayHistograms::process()
 {
-    draw<TH1F>(Occupancy1D);
-    draw<TH1F>(ClockDelay);
+    drawChip<TH1F>(Occupancy1D);
+    drawChip<TH1F>(ClockDelay);
 }
