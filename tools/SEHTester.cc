@@ -125,7 +125,7 @@ void SEHTester::RampPowerSupply(std::string powerSupplyId, std::string channelId
     }
     cUinIinTree->Fill();
 
-    auto cUinIinGraph = new TGraph(cUinValVect.size(), cUinValVect.c_str(), cIinValVect.c_str());
+    auto cUinIinGraph = new TGraph(cUinValVect.size(), cUinValVect.data(), cIinValVect.data());
     cUinIinGraph->SetName("gUinIin");
     cUinIinGraph->SetTitle("Uin to Iin during power-up");
     cUinIinGraph->SetLineWidth(3);
@@ -173,7 +173,7 @@ int SEHTester::exampleFit()
     LOG(INFO) << BOLDBLUE << "Using custom class: Parameter 1  " << Reg_Classint.b_0 << " +/- " << Reg_Classint.b_0_error << "  Parameter 2   " << Reg_Classint.b_1 << " +/- " << Reg_Classint.b_1_error
               << RESET;
 
-    auto cGraph = new TGraphErrors(X.size(), X.c_str(), Y.c_str(), 0, Yerrors.c_str());
+    auto cGraph = new TGraphErrors(X.size(), X.data(), Y.data(), 0, Yerrors.data());
     cGraph->Fit("pol1");
     cGraph->SetName("test");
     cGraph->SetTitle("test");
@@ -234,7 +234,7 @@ void SEHTester::TestBiasVoltage()
     cDACtoHVMultiGraph->SetName("mgDACtoHV");
     cDACtoHVMultiGraph->SetTitle("Bias voltage sensor side");
 
-    auto cDACtoVHVJ7Graph = new TGraph(cDACValVect.size(), cDACValVect.c_str(), cVHVJ7ValVect.c_str());
+    auto cDACtoVHVJ7Graph = new TGraph(cDACValVect.size(), cDACValVect.data(), cVHVJ7ValVect.data());
     cDACtoVHVJ7Graph->SetName("gVHVJ7");
     cDACtoVHVJ7Graph->SetTitle("VHVJ7");
     cDACtoVHVJ7Graph->SetLineColor(1);
@@ -243,7 +243,7 @@ void SEHTester::TestBiasVoltage()
     cDACtoVHVJ7Graph->SetMarkerStyle(20);
     cDACtoHVMultiGraph->Add(cDACtoVHVJ7Graph);
 
-    auto cDACtoVHVJ8Graph = new TGraph(cDACValVect.size(), cDACValVect.c_str(), cVHVJ8ValVect.c_str());
+    auto cDACtoVHVJ8Graph = new TGraph(cDACValVect.size(), cDACValVect.data(), cVHVJ8ValVect.data());
     cDACtoVHVJ8Graph->SetName("gVHVJ8");
     cDACtoVHVJ8Graph->SetTitle("VHVJ8");
     cDACtoVHVJ8Graph->SetLineColor(2);
@@ -252,7 +252,7 @@ void SEHTester::TestBiasVoltage()
     cDACtoVHVJ8Graph->SetMarkerStyle(21);
     cDACtoHVMultiGraph->Add(cDACtoVHVJ8Graph);
 
-    auto cDACtoMonGraph = new TGraph(cDACValVect.size(), cDACValVect.c_str(), cUMonValVect.c_str());
+    auto cDACtoMonGraph = new TGraph(cDACValVect.size(), cDACValVect.data(), cUMonValVect.data());
     cDACtoMonGraph->SetName("gUMon");
     cDACtoMonGraph->SetTitle("UMon");
     cDACtoMonGraph->SetLineColor(3);
@@ -353,14 +353,14 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
     auto cLeakMultiGraph = new TMultiGraph();
     cLeakMultiGraph->SetName("mgILeak");
     cLeakMultiGraph->SetTitle("Leakage Current");
-    auto cleakGraph = new TGraph(cTimeValVect.size(), cTimeValVect.c_str(), cILeakValVect.c_str());
+    auto cleakGraph = new TGraph(cTimeValVect.size(), cTimeValVect.data(), cILeakValVect.data());
     cleakGraph->SetName("gILeakTC");
     cleakGraph->SetTitle("Leakage Current Test Card");
     cleakGraph->SetLineColor(2);
     cleakGraph->SetFillColor(0);
     cleakGraph->SetLineWidth(3);
     cLeakMultiGraph->Add(cleakGraph);
-    auto cPSleakGraph = new TGraph(cTimeValVect.size(), cTimeValVect.c_str(), cIMeaValVect.c_str());
+    auto cPSleakGraph = new TGraph(cTimeValVect.size(), cTimeValVect.data(), cIMeaValVect.data());
     cPSleakGraph->SetName("gILeakPS");
     cPSleakGraph->SetTitle("Leakage Current Power Supply");
     cPSleakGraph->SetLineColor(3);
@@ -376,7 +376,7 @@ void SEHTester::ExternalTestLeakageCurrent(uint16_t pHvSet, double measurementTi
     cLeakMultiGraph->Write();
     cLeakCanvas->Write();
 
-    auto cMonGraph = new TGraph(cTimeValVect.size(), cTimeValVect.c_str(), cHvMeaValVect.c_str());
+    auto cMonGraph = new TGraph(cTimeValVect.size(), cTimeValVect.data(), cHvMeaValVect.data());
     cMonGraph->SetName("gHvMea");
     cMonGraph->SetTitle("Monitoring Voltage");
     cMonGraph->SetLineColor(2);
@@ -459,7 +459,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     cDACtoHVMultiGraph->SetName("mgDACtoHV");
     cDACtoHVMultiGraph->SetTitle("Bias voltage sensor side");
 
-    auto cDACtoVHVJ7Graph = new TGraph(cHvSetValVect.size(), cHvSetValVect.c_str(), cVHVJ7ValVect.c_str());
+    auto cDACtoVHVJ7Graph = new TGraph(cHvSetValVect.size(), cHvSetValVect.data(), cVHVJ7ValVect.data());
     cDACtoVHVJ7Graph->SetName("gVHVJ7");
     cDACtoVHVJ7Graph->SetTitle("VHVJ7");
     cDACtoVHVJ7Graph->SetLineColor(1);
@@ -468,7 +468,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     cDACtoVHVJ7Graph->SetMarkerStyle(20);
     cDACtoHVMultiGraph->Add(cDACtoVHVJ7Graph);
 
-    auto cDACtoVHVJ8Graph = new TGraph(cHvSetValVect.size(), cHvSetValVect.c_str(), cVHVJ8ValVect.c_str());
+    auto cDACtoVHVJ8Graph = new TGraph(cHvSetValVect.size(), cHvSetValVect.data(), cVHVJ8ValVect.data());
     cDACtoVHVJ8Graph->SetName("gVHVJ8");
     cDACtoVHVJ8Graph->SetTitle("VHVJ8");
     cDACtoVHVJ8Graph->SetLineColor(2);
@@ -477,7 +477,7 @@ void SEHTester::ExternalTestBiasVoltage(std::string powerSupplyId, std::string c
     cDACtoVHVJ8Graph->SetMarkerStyle(21);
     cDACtoHVMultiGraph->Add(cDACtoVHVJ8Graph);
 
-    auto cDACtoMonGraph = new TGraph(cHvSetValVect.size(), cHvSetValVect.c_str(), cPlotHvMeaValVect.c_str());
+    auto cDACtoMonGraph = new TGraph(cHvSetValVect.size(), cHvSetValVect.data(), cPlotHvMeaValVect.data());
     cDACtoMonGraph->SetName("gHvMea*1/1000");
     cDACtoMonGraph->SetTitle("HvMea*1/1000");
     cDACtoMonGraph->SetLineColor(3);
@@ -617,7 +617,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
     fResultFile->cd();
     // cLeakTree->Write();
 
-    auto cleakGraph = new TGraph(cTimeValVect.size(), cTimeValVect.c_str(), cILeakValVect.c_str());
+    auto cleakGraph = new TGraph(cTimeValVect.size(), cTimeValVect.data(), cILeakValVect.data());
     cleakGraph->SetName("ILeak");
     cleakGraph->SetTitle("Leakage Current");
     cleakGraph->SetLineColor(2);
@@ -630,7 +630,7 @@ void SEHTester::TestLeakageCurrent(uint32_t pHvDacValue, double measurementTime)
 
     cLeakCanvas->Write();
 
-    auto cMonGraph = new TGraph(cTimeValVect.size(), cTimeValVect.c_str(), cUMonValVect.c_str());
+    auto cMonGraph = new TGraph(cTimeValVect.size(), cTimeValVect.data(), cUMonValVect.data());
     cMonGraph->SetName("Umon");
     cMonGraph->SetTitle("Monitoring Voltage");
     cMonGraph->SetLineColor(2);
@@ -750,7 +750,7 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
         }
         cEfficiencyTree->Fill();
 
-        auto    cIouttoIinGraph = new TGraph(cIoutValVect.size(), cIoutValVect.c_str(), cIinValVect.c_str());
+        auto    cIouttoIinGraph = new TGraph(cIoutValVect.size(), cIoutValVect.data(), cIinValVect.data());
         TString str             = cSide;
         cIouttoIinGraph->SetName(str);
         cIouttoIinGraph->SetTitle(str);
@@ -760,7 +760,7 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
         cIouttoIinGraph->SetMarkerStyle(iterator + 20);
         cIouttoIinMultiGraph->Add(cIouttoIinGraph);
 
-        auto cEfficiencyGraph = new TGraph(cIoutValVect.size(), cIoutValVect.c_str(), cEfficiencyValVect.c_str());
+        auto cEfficiencyGraph = new TGraph(cIoutValVect.size(), cIoutValVect.data(), cEfficiencyValVect.data());
         cEfficiencyGraph->SetName(str);
         cEfficiencyGraph->SetTitle(str);
         cEfficiencyGraph->SetLineColor(iterator);
@@ -769,7 +769,7 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
         cEfficiencyGraph->SetMarkerStyle(iterator + 20);
         cEfficiencyMultiGraph->Add(cEfficiencyGraph);
 
-        auto cUoutRtoIoutRGraph = new TGraph(cIoutRValVect.size(), cIoutRValVect.c_str(), cUoutRValVect.c_str());
+        auto cUoutRtoIoutRGraph = new TGraph(cIoutRValVect.size(), cIoutRValVect.data(), cUoutRValVect.data());
         str                     = "Voltage right side current drawn " + cSide;
         cUoutRtoIoutRGraph->SetName(str);
         cUoutRtoIoutRGraph->SetTitle(str);
@@ -779,7 +779,7 @@ void SEHTester::TestEfficiency(uint32_t pMinLoadValue, uint32_t pMaxLoadValue, u
         cUoutRtoIoutRGraph->SetMarkerStyle(iterator + 20);
         cUouttoIoutMultiGraph->Add(cUoutRtoIoutRGraph);
 
-        auto cUoutLtoIoutLGraph = new TGraph(cIoutLValVect.size(), cIoutLValVect.c_str(), cUoutLValVect.c_str());
+        auto cUoutLtoIoutLGraph = new TGraph(cIoutLValVect.size(), cIoutLValVect.data(), cUoutLValVect.data());
         str                     = "Voltage left side current drawn " + cSide;
         cUoutLtoIoutLGraph->SetName(str);
         cUoutLtoIoutLGraph->SetTitle(str);
