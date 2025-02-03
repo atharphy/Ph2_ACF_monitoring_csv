@@ -23,6 +23,7 @@
 #include "tools/OTPSADCCalibration.h"
 #include "tools/OTPScommonNoise.h"
 #include "tools/OTPSringOscillatorTest.h"
+#include "tools/OTPatternCheckerTest.h"
 #include "tools/OTRegisterTester.h"
 #include "tools/OTSSAtoMPAecv.h"
 #include "tools/OTSSAtoSSAecv.h"
@@ -98,6 +99,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              //  OTCICBX0Alignment,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord>("Outer Tracker", "alignment");
+
+    Register<OTalignLpGBTinputs, OTPatternCheckerTest>("Outer Tracker", "patternChecker");
 
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTCicBypassTest>("Outer Tracker", "testCICbypass");
 

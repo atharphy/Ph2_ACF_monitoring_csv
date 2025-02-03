@@ -180,6 +180,9 @@
 
     <Setting name="OTBitErrorRateTest_NumberOfBits">1E10</Setting>
 
+    <Setting name="OTPatternCheckerTest_NumberOfBits">1E10</Setting>
+
+
     <Setting name="KIRA_ID">    ArduinoTestBox  </Setting>
     <Setting name="KIRA_Port" > 7011 </Setting>
     <Setting name="KiraLatencyLed" > 4</Setting>

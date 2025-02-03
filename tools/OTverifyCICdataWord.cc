@@ -191,7 +191,7 @@ void OTverifyCICdataWord::injectL12S(Ph2_HwDescription::ReadoutChip* theChip, ui
     {
         auto lineOutputVector        = theFWInterface->L1ADebug(1, false);
         auto orderedLineOutputVector = reorderPattern(lineOutputVector, numberOfBytesInSinglePacket);
-        // std::cout << "L1 Line -> " << getPatternPrintout(orderedLineOutputVector, orderedLineOutputVector) << std::endl;
+        // std::cout << "L1 Line -> " << getPatternPrintout(orderedLineOutputVector, 1,) << std::endl;
         if(matchL1Pattern(orderedLineOutputVector, thePatternMatcher, numberOfBytesInSinglePacket))
         {
             ++theL1Efficiency;

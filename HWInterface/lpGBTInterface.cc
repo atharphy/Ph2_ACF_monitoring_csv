@@ -1997,4 +1997,13 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
     return value;
 }
 
+void lpGBTInterface::hardReset(Ph2_HwDescription::Chip* pChip)
+{
+    LOG(INFO) << BOLDMAGENTA << "Sending hard reset to LpGBT" << RESET;
+    WriteChipReg(pChip, "RST2", 0x40, false);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    WriteChipReg(pChip, "RST2", 0x00);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+}
+
 } // namespace Ph2_HwInterface

@@ -69,7 +69,7 @@ void DQMHistogramECV::process()
             {
                 std::string cCanvasName =
                     "ECV_BitterrorRate_HybridClockParity0_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                TCanvas* berCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
+                TCanvas* berCanvas = new TCanvas(cCanvasName.c_str(), cCanvasName.c_str(), 500, 500);
                 berCanvas->cd();
                 TH2F* p0 = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 p0->GetXaxis()->SetTitle("Channel : Hybrid clock strength");
@@ -111,7 +111,7 @@ void DQMHistogramECV::process()
             {
                 std::string cCanvasName =
                     "ECV_BitterrorRate_HybridClockParity1_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                TCanvas* berCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
+                TCanvas* berCanvas = new TCanvas(cCanvasName.c_str(), cCanvasName.c_str(), 500, 500);
                 berCanvas->cd();
                 TH2F* p1 = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 p1->GetXaxis()->SetTitle("Channel : Hybrid clock strength");
@@ -155,7 +155,7 @@ void DQMHistogramECV::process()
             {
                 std::string cCanvasName =
                     "ECV_WordAlignment_CICClockParity0_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                TCanvas* berCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
+                TCanvas* berCanvas = new TCanvas(cCanvasName.c_str(), cCanvasName.c_str(), 500, 500);
                 berCanvas->cd();
                 TH2F* p0 = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 p0->GetXaxis()->SetTitle("Channel : CIC clock strength");
@@ -197,7 +197,7 @@ void DQMHistogramECV::process()
             {
                 std::string cCanvasName =
                     "ECV_WordAlignment_CICClockParity1_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                TCanvas* berCanvas = new TCanvas(cCanvasName.data(), cCanvasName.data(), 500, 500);
+                TCanvas* berCanvas = new TCanvas(cCanvasName.c_str(), cCanvasName.c_str(), 500, 500);
                 berCanvas->cd();
                 TH2F* p1 = hybrid->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 p1->GetXaxis()->SetTitle("Channel : CIC clock strength");

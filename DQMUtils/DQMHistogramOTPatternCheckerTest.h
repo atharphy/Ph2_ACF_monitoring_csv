@@ -1,12 +1,12 @@
 /*!
-        \file                DQMHistogramOTBitErrorRateTest.h
-        \brief               DQM class for OTBitErrorRateTest
+        \file                DQMHistogramOTPatternCheckerTest.h
+        \brief               DQM class for OTPatternCheckerTest
         \author              Fabio Ravera
-        \date                02/07/24
+        \date                24/01/25
 */
 
-#ifndef DQMHistogramOTBitErrorRateTest_h_
-#define DQMHistogramOTBitErrorRateTest_h_
+#ifndef DQMHistogramOTPatternCheckerTest_h_
+#define DQMHistogramOTPatternCheckerTest_h_
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -14,21 +14,21 @@
 class TFile;
 
 /*!
- * \class DQMHistogramOTBitErrorRateTest
- * \brief Class for OTBitErrorRateTest monitoring histograms
+ * \class DQMHistogramOTPatternCheckerTest
+ * \brief Class for OTPatternCheckerTest monitoring histograms
  */
-class DQMHistogramOTBitErrorRateTest : public DQMHistogramBase
+class DQMHistogramOTPatternCheckerTest : public DQMHistogramBase
 {
   public:
     /*!
      * constructor
      */
-    DQMHistogramOTBitErrorRateTest();
+    DQMHistogramOTPatternCheckerTest();
 
     /*!
      * destructor
      */
-    ~DQMHistogramOTBitErrorRateTest();
+    ~DQMHistogramOTPatternCheckerTest();
 
     /*!
      * \brief Book histograms
@@ -55,22 +55,12 @@ class DQMHistogramOTBitErrorRateTest : public DQMHistogramBase
      */
     void reset(void) override;
 
-    void fillErrorCounterPhaseScan(DetectorDataContainer& theErrorCountainer, uint16_t phaseDelay, uint8_t line);
-
     void fillErrorCounter(DetectorDataContainer& theErrorCountainer, uint8_t line);
-
-    void fillFECcounter(DetectorDataContainer& theFECContainer, uint8_t line);
-
-    void fillBERTbestPhase(DetectorDataContainer& BestPhaseContainer, uint8_t line);
 
   private:
     DetectorContainer*    fDetectorContainer;
-    DetectorDataContainer fBERTerrorRatePhaseScanHistogram;
-    DetectorDataContainer fBERTbitCounterPhaseScanHistogram;
-    DetectorDataContainer fBestPhaseHistogram;
-    DetectorDataContainer fBERTerrorRateHistogram;
-    DetectorDataContainer fBERTbitCounterHistogram;
-    DetectorDataContainer fFECcounterHistogram;
+    DetectorDataContainer fPatternErrorRateHistogram;
+    DetectorDataContainer fPatternBitCounterHistogram;
     uint8_t               fNumberOfLines;
 };
 #endif

@@ -390,7 +390,8 @@
                 <node id="cbc3_tune_again"                  mask="0x00000002"/>
                 <node id="cic_hard_reset"                   mask="0x00000004"/>
                 <node id="decoder_reset"                    mask="0x00000008"/>
-                <node id="stub_debug"                    mask="0x00000010"/>
+                <node id="stub_debug"                       mask="0x00000010"/>
+
             </node>
             <node id="phase_tuning_ctrl"          address="0x015" mask="0xFFFFFFFF"/>
             <node id="bert_control"               address="0x017" mask="0xFFFFFFFF"/>
