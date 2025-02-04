@@ -28,6 +28,8 @@ namespace Ph2_HwInterface
 class D19cFWInterface;
 }
 
+class OTPatternCheckerHelper;
+
 class OTverifyBoardDataWord : public Tool
 {
   public:
@@ -52,11 +54,11 @@ class OTverifyBoardDataWord : public Tool
 
   private:
     void runIntegrityTest();
-    void runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
+    void runStubIntegrityTestSoftwareMatch(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
+    void runStubIntegrityTestFirmwareMatch(Ph2_HwDescription::BeBoard* theBoard);
     void runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
 
   protected:
-    size_t             fNumberOfIterations{1000};
     std::vector<float> fListOfLpGBTPhase{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
     std::vector<float> fListOfCICStrength{1, 2, 3, 4, 5};
     std::vector<float> fListOfClockPolarity{0, 1};
@@ -69,7 +71,11 @@ class OTverifyBoardDataWord : public Tool
     uint8_t            getNumberOfBytesInSinglePacket(Ph2_HwDescription::OpticalGroup* cOpticalGroup) const;
 
     bool                  fIsKickoff{false};
-    DetectorDataContainer fPatternMatchingEfficiencyContainer;
+    bool                  fDoMatchingInFirmware{true};
+    DetectorDataContainer fPatternMatchingBitErrorContainer;
+    OTPatternCheckerHelper* fPatternCheckerHelper;
+    float fNumberOfStubBits {1e8};
+    float fNumberOfL1Bits   {320000};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

@@ -3,6 +3,7 @@
 #include "HWInterface/D19cFWInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/GenericDataArray.h"
 #include <algorithm>
 #include <unordered_set>
 
@@ -20,7 +21,8 @@ void OTCICtoLpGBTecv::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
-    fNumberOfIterations  = findValueInSettings<double>("OTCICtoLpGBTecv_NumberOfIterations", 1000);
+    fNumberOfL1Bits      = findValueInSettings<double>("OTCICtoLpGBTecv_NumberOfL1Bits", 32000);
+    fNumberOfStubBits    = findValueInSettings<double>("OTCICtoLpGBTecv_NumberOfStubBits", 32000);
     fListOfLpGBTPhase    = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_LpGBTPhase", "0-14"));
     fListOfCICStrength   = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_CICStrength", "1, 3, 5"));
     fListOfClockPolarity = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_ClockPolarity", "0-1"));
@@ -101,8 +103,11 @@ void OTCICtoLpGBTecv::Initialise(void)
     }
 
     size_t             numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
-    std::vector<float> initialEmptyVector(numberOfLines, 0);
-    ContainerFactory::copyAndInitHybrid<std::vector<float>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer, initialEmptyVector);
+    GenericDataArray<float, 2> theInitialBitAndError;
+    theInitialBitAndError.at(0) = 0.;
+    theInitialBitAndError.at(1) = 0.;
+    std::vector<GenericDataArray<float, 2>> theInitialVector(numberOfLines, theInitialBitAndError);
+    ContainerFactory::copyAndInitHybrid<std::vector<GenericDataArray<float, 2>>>(*fDetectorContainer, fPatternMatchingBitErrorContainer, theInitialVector);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -124,6 +129,9 @@ void OTCICtoLpGBTecv::Running()
 void OTCICtoLpGBTecv::runECV()
 {
     LOG(INFO) << BOLDYELLOW << "OTCICtoLpGBTecv::runIntegrityTest ... start integrity test" << RESET;
+    size_t numberOfStubIterations = fNumberOfStubBits/32;
+    size_t numberOfL1Iterations = fNumberOfL1Bits/32;
+    float numberOfMatchedBits = std::bitset<32>(fHeaderMask).count();
 
     for(auto theBoard: *fDetectorContainer)
     {
@@ -166,29 +174,30 @@ void OTCICtoLpGBTecv::runECV()
 
                             for(auto theHybrid: *theOpticalGroup)
                             {
-                                auto& theHybridPatternMatchingEfficiency = fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())
+                                auto& theHybridPatternMatchingEfficiency = fPatternMatchingBitErrorContainer.getObject(theBoard->getId())
                                                                                ->getObject(theOpticalGroup->getId())
                                                                                ->getObject(theHybrid->getId())
-                                                                               ->getSummary<std::vector<float>>();
+                                                                               ->getSummary<std::vector<GenericDataArray<float, 2>>>();
                                 // LOG(INFO) << BOLDMAGENTA << "Running runStubIntegrityTest on Hybrid " << +theHybrid->getId() << RESET;
                                 prepareHybridForStubIntegrityTest(theHybrid);
 
-                                for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+                                for(size_t iteration = 0; iteration < numberOfStubIterations; iteration++)
                                 {
                                     auto lineOutputVector = theFWInterface->StubDebug(true, cNlines, false);
                                     for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
                                     {
                                         for(auto pattern: stubPatterns)
                                         {
+                                            size_t wordBitSize = lineOutputVector.at(lineIndex).size() * 32;
                                             uint8_t flagCharacter = pattern.first;
                                             uint8_t idleCharacter = pattern.second;
-                                            if(isStubPatternMatched(lineOutputVector.at(lineIndex), numberOfBytesInSinglePacket, flagCharacter, idleCharacter))
+                                            theHybridPatternMatchingEfficiency.at(lineIndex + 1).at(0) += wordBitSize;
+                                            if(!isStubPatternMatched(lineOutputVector.at(lineIndex), numberOfBytesInSinglePacket, flagCharacter, idleCharacter))
                                             {
-                                                ++theHybridPatternMatchingEfficiency.at(lineIndex + 1);
-                                                break;
+                                                theHybridPatternMatchingEfficiency.at(lineIndex + 1).at(1) += wordBitSize;
+                                                if(!(fIsKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)))
+                                                    LOG(DEBUG) << BOLDRED << "Error on stub line " << lineIndex + 1 << " occurred in iteration number " << +iteration << RESET;
                                             }
-                                            else if(!(fIsKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)))
-                                                LOG(DEBUG) << BOLDRED << "Error on stub line " << lineIndex + 1 << " occurred in iteration number " << +iteration << RESET;
                                         }
                                     }
                                 }
@@ -214,7 +223,7 @@ void OTCICtoLpGBTecv::runECV()
                                 LOG(DEBUG) << BOLDBLUE << "Started triggers ...." << RESET;
                                 uint8_t  pWait_ms             = 1;
                                 uint32_t previousNTriggersRxd = 0;
-                                for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+                                for(size_t iteration = 0; iteration < numberOfL1Iterations; iteration++)
                                 {
                                     auto cNTriggersRxd = theFWInterface->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
                                     auto cStartTime = std::chrono::high_resolution_clock::now(), cEndTime = cStartTime;
@@ -236,50 +245,42 @@ void OTCICtoLpGBTecv::runECV()
                                     {
                                         uint32_t header = pattern;
 
-                                        if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket, header, fHeaderMask))
+                                        theHybridPatternMatchingEfficiency.at(0).at(0) += numberOfMatchedBits;
+                                        if(!isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket, header, fHeaderMask))
                                         {
-                                            ++theHybridPatternMatchingEfficiency.at(0);
-                                            break;
+                                            theHybridPatternMatchingEfficiency.at(0).at(1) += numberOfMatchedBits;
+                                            LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET;
                                         }
-                                        else { LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET; }
                                     }
                                 }
                                 // stop triggers
-                                theFWInterface->WriteReg("fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-                                for(auto& theNumberOfMatches: fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())
-                                                                  ->getObject(theOpticalGroup->getId())
-                                                                  ->getObject(theHybrid->getId())
-                                                                  ->getSummary<std::vector<float>>())
-                                {
-                                    theNumberOfMatches /= fNumberOfIterations;
-                                }
-
                             } // hybrid loop
                             auto    phaseIterator = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
                             uint8_t phaseIndex    = std::distance(fListOfLpGBTPhase.begin(), phaseIterator) + 1;
 #ifdef __USE_ROOT__
                             // Find the pClockStrength and pPhase indices
 
-                            fDQMHistogramOTCICtoLpGBTecv.fillEfficiency(clockPolarity, clockStrength, cicStrength, phaseIndex, fPatternMatchingEfficiencyContainer);
+                            fDQMHistogramOTCICtoLpGBTecv.fillEfficiency(clockPolarity, clockStrength, cicStrength, phaseIndex, fPatternMatchingBitErrorContainer);
 #else
                             if(fDQMStreamerEnabled)
                             {
                                 // Find the pClockStrength and pPhase indices
                                 ContainerSerialization theECVlpGBTCICContainerSerialization("OTCICtoLpGBTecvEfficiencyHistogram");
                                 theECVlpGBTCICContainerSerialization.streamByOpticalGroupContainer(
-                                    fDQMStreamer, fPatternMatchingEfficiencyContainer, clockPolarity, clockStrength, cicStrength, phaseIndex);
+                                    fDQMStreamer, fPatternMatchingBitErrorContainer, clockPolarity, clockStrength, cicStrength, phaseIndex);
                             }
 #endif
 
                             // reset the number of matches!!
                             for(auto theHybrid: *theOpticalGroup)
                             {
-                                for(auto& theNumberOfMatches: fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())
+                                for(auto& theNumberOfBitsAndErrors: fPatternMatchingBitErrorContainer.getObject(theBoard->getId())
                                                                   ->getObject(theOpticalGroup->getId())
                                                                   ->getObject(theHybrid->getId())
-                                                                  ->getSummary<std::vector<float>>())
+                                                                  ->getSummary<std::vector<GenericDataArray<float, 2>>>())
                                 {
-                                    theNumberOfMatches = 0;
+                                    theNumberOfBitsAndErrors.at(0) = 0;
+                                    theNumberOfBitsAndErrors.at(1) = 0;
                                 }
                             } // hybrid loop
                         } // lpgbt phase loop

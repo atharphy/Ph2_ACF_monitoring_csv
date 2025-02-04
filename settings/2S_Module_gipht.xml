@@ -281,7 +281,9 @@
 
     <Setting name="OTalignBoardDataWord_BroadcastAlignSetting">0</Setting> <!-- 0 = One line at a time - 1 = One hybrid at a time = 2 = all hybrids together -->
 
-    <Setting name="OTverifyBoardDataWord_NumberOfIterations">100</Setting>
+    <Setting name="OTverifyBoardDataWord_NumberOfTestedL1Bits">320000</Setting>
+    <Setting name="OTverifyBoardDataWord_NumberOfTestedStubBits">1e8</Setting>
+    <Setting name="OTverifyBoardDataWord_DoMatchingInFirmware">1</Setting>
     <Setting name="OTCICtoLpGBTecv_CICStrength">1, 3, 5</Setting>
     <Setting name="OTCICtoLpGBTecv_ClockPolarity">0-1</Setting>
     <Setting name="OTCICtoLpGBTecv_ClockStrength">1, 4, 7</Setting>
@@ -318,7 +320,7 @@
 
     <Setting name="OTBitErrorRateTest_NumberOfBits">1E10</Setting>
 
-    <Setting name="OTPatternCheckerTest_NumberOfBits">1E10</Setting>
+    <Setting name="OTPatternCheckerHelper_NumberOfBits">1E10</Setting>
 
 </Settings>
 

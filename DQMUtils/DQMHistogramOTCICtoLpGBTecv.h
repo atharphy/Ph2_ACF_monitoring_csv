@@ -58,6 +58,7 @@ class DQMHistogramOTCICtoLpGBTecv : public DQMHistogramBase
 
   private:
     DetectorContainer*                       fDetectorContainer;
-    std::map<uint8_t, DetectorDataContainer> fEfficiency;
+    std::map<uint8_t, DetectorDataContainer> fErrorRate;
+    std::map<uint8_t, DetectorDataContainer> fTestedBits;
 };
 #endif

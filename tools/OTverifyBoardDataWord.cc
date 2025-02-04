@@ -1,9 +1,12 @@
+#include "tools/OTPatternCheckerHelper.h"
 #include "tools/OTverifyBoardDataWord.h"
 #include "HWDescription/BeBoard.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/Utilities.h"
+#include "Utils/GenericDataArray.h"
+#include "Utils/PatternMatcher.h"
 #include <sstream>
 
 using namespace Ph2_HwDescription;
@@ -14,20 +17,30 @@ std::string OTverifyBoardDataWord::fCalibrationDescription = "Use features of th
 
 OTverifyBoardDataWord::OTverifyBoardDataWord() : Tool() {}
 
-OTverifyBoardDataWord::~OTverifyBoardDataWord() {}
+OTverifyBoardDataWord::~OTverifyBoardDataWord() 
+{
+    delete fPatternCheckerHelper;
+}
 
 void OTverifyBoardDataWord::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
-
-    fNumberOfIterations = findValueInSettings<double>("OTverifyBoardDataWord_NumberOfIterations", 1000);
-    fIsKickoff          = findValueInSettings<double>("isKickoff", 0) > 0;
+    fNumberOfStubBits     = findValueInSettings<double>("OTverifyBoardDataWord_NumberOfTestedStubBits", 1e8);
+    fNumberOfL1Bits     = findValueInSettings<double>("OTverifyBoardDataWord_NumberOfTestedL1Bits", 320000);
+    fDoMatchingInFirmware = findValueInSettings<double>("OTverifyBoardDataWord_DoMatchingInFirmware", 1) > 0;
+    fIsKickoff            = findValueInSettings<double>("isKickoff", 0) > 0;
 
     size_t             numberOfLines = (fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
-    std::vector<float> initialEmptyVector(numberOfLines, 0);
-    ContainerFactory::copyAndInitHybrid<std::vector<float>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer, initialEmptyVector);
+    GenericDataArray<float, 2> theInitialBitAndError;
+    theInitialBitAndError.at(0) = 0.;
+    theInitialBitAndError.at(1) = 0.;
+    std::vector<GenericDataArray<float, 2>> theInitialVector(numberOfLines, theInitialBitAndError);
+    ContainerFactory::copyAndInitHybrid<std::vector<GenericDataArray<float, 2>>>(*fDetectorContainer, fPatternMatchingBitErrorContainer, theInitialVector);
 
+    fPatternCheckerHelper = new OTPatternCheckerHelper();
+    fPatternCheckerHelper->Inherit(this);
+    fPatternCheckerHelper->prepareCalibration();
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -70,36 +83,63 @@ void OTverifyBoardDataWord::runIntegrityTest()
     for(auto theBoard: *fDetectorContainer)
     {
         auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
-        runStubIntegrityTest(theBoard, theFWInterface);
+        if(fDoMatchingInFirmware) runStubIntegrityTestFirmwareMatch(theBoard);
+        else runStubIntegrityTestSoftwareMatch(theBoard, theFWInterface);
         runL1IntegrityTest(theBoard, theFWInterface);
     }
 
-    // normalize
-    for(auto theBoard: fPatternMatchingEfficiencyContainer)
-    {
-        for(auto theOpticalGroup: *theBoard)
-        {
-            for(auto theHybrid: *theOpticalGroup)
-            {
-                for(auto& theNumberOfMatches: theHybrid->getSummary<std::vector<float>>()) theNumberOfMatches /= fNumberOfIterations;
-            }
-        }
-    }
-
 #ifdef __USE_ROOT__
-    fDQMHistogramOTverifyBoardDataWord.fillPatternMatchingEfficiency(fPatternMatchingEfficiencyContainer);
+    fDQMHistogramOTverifyBoardDataWord.fillPatternErrorRate(fPatternMatchingBitErrorContainer);
 #else
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theMatchingEfficiencyContainerSerialization("OTverifyBoardDataWordMatchingEfficiency");
-        theMatchingEfficiencyContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fPatternMatchingEfficiencyContainer);
+        theMatchingEfficiencyContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fPatternMatchingBitErrorContainer);
     }
 #endif
 }
 
-void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface)
+void OTverifyBoardDataWord::runStubIntegrityTestFirmwareMatch(BeBoard* theBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Running runStubIntegrityTest" << RESET;
+
+    size_t cNlines = (theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ? 7 : 6;
+
+    for(auto theOpticalGroup: *theBoard)
+    {
+        for(auto theHybrid: *theOpticalGroup)
+        {
+            prepareHybridForStubIntegrityTest(theHybrid);
+        }
+    }
+
+    std::vector<uint32_t> pattern{0xeaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa};
+    std::vector<uint32_t> patternMask{0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff};
+
+    for(size_t line=1; line<cNlines; ++line)
+    {
+        BoardDataContainer thePatternCounterCountainer;
+        ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*theBoard, thePatternCounterCountainer);
+        fPatternCheckerHelper->patternCheckerTest(&thePatternCounterCountainer, line, pattern, patternMask, fNumberOfStubBits, false);
+
+        for(auto theOpticalGroup: *fPatternMatchingBitErrorContainer.getBoard(theBoard->getId()))
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                auto& theOutputErrorInfo = theHybrid->getSummary<std::vector<GenericDataArray<float, 2>>>().at(line);
+                const auto& theRecorderdErroInfo = thePatternCounterCountainer.getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>();
+                
+                theOutputErrorInfo.at(0) = theRecorderdErroInfo.at(0);
+                theOutputErrorInfo.at(1) = theRecorderdErroInfo.at(1);
+            }
+        }
+    }
+}
+
+void OTverifyBoardDataWord::runStubIntegrityTestSoftwareMatch(BeBoard* theBoard, D19cFWInterface* theFWInterface)
+{
+    LOG(INFO) << BOLDMAGENTA << "Running runStubIntegrityTest" << RESET;
+    size_t numberOfIterations = fNumberOfStubBits/320;
 
     for(auto theOpticalGroup: *theBoard)
     {
@@ -110,24 +150,30 @@ void OTverifyBoardDataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterf
         for(auto theHybrid: *theOpticalGroup)
         {
             auto& theHybridPatternMatchingEfficiency =
-                fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
+                fPatternMatchingBitErrorContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<GenericDataArray<float, 2>>>();
 
             prepareHybridForStubIntegrityTest(theHybrid);
 
-            for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+            for(size_t iteration = 0; iteration < numberOfIterations; iteration++)
             {
                 auto lineOutputVector = theFWInterface->StubDebug(true, cNlines, false);
                 for(size_t lineIndex = 0; lineIndex < lineOutputVector.size(); ++lineIndex)
                 {
-                    if(isStubPatternMatched(lineOutputVector.at(lineIndex), numberOfBytesInSinglePacket, fFlagCharacter, fIdleCharacter))
-                        ++theHybridPatternMatchingEfficiency.at(lineIndex + 1);
-                    else if(!(fIsKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)))
-                        LOG(ERROR) << BOLDRED << "Error on stub line " << lineIndex + 1 << " occurred in iteration number " << +iteration << RESET;
+                    size_t wordBitSize = lineOutputVector.at(lineIndex).size() * 32;
+                    
+                    theHybridPatternMatchingEfficiency.at(lineIndex + 1).at(0) += wordBitSize;
+                    if(!isStubPatternMatched(lineOutputVector.at(lineIndex), numberOfBytesInSinglePacket, fFlagCharacter, fIdleCharacter))
+                    {
+                        theHybridPatternMatchingEfficiency.at(lineIndex + 1).at(1) += wordBitSize;
+                        if(!(fIsKickoff && ((theHybrid->getId() % 2) == 0) && ((lineIndex) == 4) && (theOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)))
+                            LOG(ERROR) << BOLDRED << "Error on stub line " << lineIndex + 1 << " occurred in iteration number " << +iteration << RESET;
+                    }
                 }
             }
         }
     }
 }
+
 
 void OTverifyBoardDataWord::prepareHybridForStubIntegrityTest(Hybrid* theHybrid)
 {
@@ -237,22 +283,58 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterfac
     LOG(INFO) << BOLDMAGENTA << "Running runL1IntegrityTest" << RESET;
     prepareFWForL1IntegrityTest(theBoard);
 
+    bool isPS = theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
+
+    PatternMatcher thePatternMatcher;
+    thePatternMatcher.addToPattern(0x0ffffffe, 0xffffffff, 32); // CIC header plus 0 in front added in the transmission
+    thePatternMatcher.addToPattern(0x0, 0x1ff, 9);
+    thePatternMatcher.addToPattern(0x0, 0x0, 9);
+    thePatternMatcher.addToPattern(0, 0x7f, 7);
+    thePatternMatcher.addToPattern(0x0, 0x1, 1);
+    if(isPS)
+    {
+        thePatternMatcher.addToPattern(0, 0x7f, 7);
+        thePatternMatcher.addToPattern(0, 0x7, 3); // padding
+        thePatternMatcher.addToPattern(0xaaaaaaa, 0xfffffff, 28);
+    }
+    else
+    {
+        thePatternMatcher.addToPattern(0, 0x3f, 6); // padding
+        thePatternMatcher.addToPattern(0xaaaaaaaa, 0xffffffff, 32);
+    }
+
+    for(size_t index = 0; index < 47; ++index)
+    {
+        thePatternMatcher.addToPattern(0xaaaaaaaa, 0xffffffff, 32);
+    }
+
+    float numberOfMatchedBits = thePatternMatcher.getNumberOfMaskedBits();
+
+    size_t numberOfIterations =  std::ceil(fNumberOfL1Bits/numberOfMatchedBits);
+
     for(auto theOpticalGroup: *theBoard)
     {
         uint8_t numberOfBytesInSinglePacket = getNumberOfBytesInSinglePacket(theOpticalGroup);
         for(auto theHybrid: *theOpticalGroup)
         {
             auto& theHybridPatternMatchingEfficiency =
-                fPatternMatchingEfficiencyContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<float>>();
+                fPatternMatchingBitErrorContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<std::vector<GenericDataArray<float, 2>>>();
 
             prepareHybridForL1IntegrityTest(theHybrid);
 
-            for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+            for(size_t iteration = 0; iteration < numberOfIterations; iteration++)
             {
                 auto lineOutputVector = theFWInterface->L1ADebug(1, false);
-                if(isL1HeaderFound(lineOutputVector, numberOfBytesInSinglePacket, fHeader, fHeaderMask))
-                    ++theHybridPatternMatchingEfficiency.at(0);
-                else { LOG(DEBUG) << BOLDRED << "Error occurred in iteration number " << +iteration << RESET; }
+                auto orderedLineOutputVector = reorderPattern(lineOutputVector, numberOfBytesInSinglePacket);
+
+                float numberOrErrorBits = numberOfMatchedBits - thePatternMatcher.countMatchingBits(orderedLineOutputVector);
+                theHybridPatternMatchingEfficiency.at(0).at(0) += numberOfMatchedBits;
+                theHybridPatternMatchingEfficiency.at(0).at(1) += numberOrErrorBits;
+                if(numberOrErrorBits > 0)
+                {
+                    LOG(INFO) << BOLDRED << "Pattern did not match for iteration number " << +iteration << RESET;
+                    LOG(DEBUG) << BOLDRED << "pattern received did not match expected one: " << getPatternPrintout(lineOutputVector, numberOfBytesInSinglePacket, true) << RESET;
+                }
             }
         }
     }
