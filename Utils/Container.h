@@ -50,6 +50,7 @@ class BaseContainer
     virtual void                 setEnabledAll(bool enable) = 0;
 
   protected:
+    virtual void setId(uint16_t id) {id_ = id;}
     uint16_t id_;
 
   private:

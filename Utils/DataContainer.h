@@ -358,6 +358,8 @@ class DataContainer
         }
     }
 
+    void setId(uint16_t id) override {BaseContainer::setId(id);}
+
     template <typename S, typename V>
     void initialize()
     {
@@ -506,6 +508,8 @@ class ChipDataContainer
     virtual ~ChipDataContainer() { ; }
 
     void remapIdtoPointer() {};
+
+    void setId(uint16_t id) override {BaseContainer::setId(id);}
 
     template <typename S, typename V>
     void initialize()

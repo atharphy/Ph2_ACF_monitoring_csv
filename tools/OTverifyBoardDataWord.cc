@@ -115,6 +115,7 @@ void OTverifyBoardDataWord::runStubIntegrityTestFirmwareMatch(BeBoard* theBoard)
 
     std::vector<uint32_t> pattern{0xeaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa};
     std::vector<uint32_t> patternMask{0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff};
+    if(static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theBoard->getFirstObject()->flpGBT) == 5) pattern.at(2) = 0xeaaaaaaa;
 
     for(size_t line=1; line<cNlines; ++line)
     {
