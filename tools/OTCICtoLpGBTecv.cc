@@ -4,8 +4,8 @@
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
-#include "tools/OTPatternCheckerHelper.h"
 #include "Utils/PatternMatcher.h"
+#include "tools/OTPatternCheckerHelper.h"
 #include <algorithm>
 #include <unordered_set>
 
@@ -109,10 +109,10 @@ void OTCICtoLpGBTecv::Initialise(void)
 
     ContainerFactory::copyAndInitBoard<PatternMatcher>(*fDetectorContainer, fTheBoardPatternMatcher);
     ContainerFactory::copyAndInitBoard<uint8_t>(*fDetectorContainer, fTheBoardNumberOfBytesInPattern);
-    
+
     for(auto theBoard: *fDetectorContainer)
     {
-        fTheBoardPatternMatcher.getObject(theBoard->getId())->getSummary<PatternMatcher>() = createTheL1PatternMatcher(theBoard);
+        fTheBoardPatternMatcher.getObject(theBoard->getId())->getSummary<PatternMatcher>()  = createTheL1PatternMatcher(theBoard);
         fTheBoardNumberOfBytesInPattern.getObject(theBoard->getId())->getSummary<uint8_t>() = getNumberOfBytesInSinglePacket(theBoard->getFirstObject());
     }
 
@@ -142,10 +142,7 @@ void OTCICtoLpGBTecv::runECV()
 
         for(auto theOpticalGroup: *theBoard)
         {
-            for(auto theHybrid: *theOpticalGroup)
-            {
-                prepareHybridForStubIntegrityTest(theHybrid);
-            }
+            for(auto theHybrid: *theOpticalGroup) { prepareHybridForStubIntegrityTest(theHybrid); }
         }
     }
 
@@ -193,10 +190,8 @@ void OTCICtoLpGBTecv::runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, 
                 fCicInterface->ConfigureDriveStrength(cCic, cicStrength);
 
                 // reset the number of matches!!
-                for(auto& theNumberOfBitsAndErrors: fPatternMatchingBitErrorContainer.getHybrid(theBoard->getId(),
-                                                            theOpticalGroup->getId(),
-                                                            theHybrid->getId())
-                                                            ->getSummary<std::vector<GenericDataArray<float, 2>>>())
+                for(auto& theNumberOfBitsAndErrors:
+                    fPatternMatchingBitErrorContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<GenericDataArray<float, 2>>>())
                 {
                     theNumberOfBitsAndErrors.at(0) = 0;
                     theNumberOfBitsAndErrors.at(1) = 0;
@@ -206,10 +201,7 @@ void OTCICtoLpGBTecv::runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, 
     }
 
     // run stub integrity test
-    for(auto theBoard: *fDetectorContainer)
-    {
-        runStubIntegrityTestFirmwareMatch(theBoard, true);
-    }
+    for(auto theBoard: *fDetectorContainer) { runStubIntegrityTestFirmwareMatch(theBoard, true); }
 
     // prepare and align L1
     for(auto theBoard: *fDetectorContainer)
@@ -219,10 +211,7 @@ void OTCICtoLpGBTecv::runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, 
         fBeBoardInterface->Start(theBoard);
         for(auto theOpticalGroup: *theBoard)
         {
-            for(auto theHybrid: *theOpticalGroup)
-            {
-                fPatternCheckerHelper->tryLineAlignment(theAlignerInterface, theHybrid, 0);
-            }
+            for(auto theHybrid: *theOpticalGroup) { fPatternCheckerHelper->tryLineAlignment(theAlignerInterface, theHybrid, 0); }
         }
         // fBeBoardInterface->Stop(theBoard);
     }
@@ -231,9 +220,12 @@ void OTCICtoLpGBTecv::runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, 
     for(auto theBoard: *fDetectorContainer)
     {
         auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
-        runL1IntegrityTest(theBoard, theFWInterface, fTheBoardNumberOfBytesInPattern.getObject(theBoard->getId())->getSummary<uint8_t>() ,fTheBoardPatternMatcher.getObject(theBoard->getId())->getSummary<PatternMatcher>());
+        runL1IntegrityTest(theBoard,
+                           theFWInterface,
+                           fTheBoardNumberOfBytesInPattern.getObject(theBoard->getId())->getSummary<uint8_t>(),
+                           fTheBoardPatternMatcher.getObject(theBoard->getId())->getSummary<PatternMatcher>());
     }
-              
+
     auto    phaseIterator = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
     uint8_t phaseIndex    = std::distance(fListOfLpGBTPhase.begin(), phaseIterator) + 1;
 #ifdef __USE_ROOT__
@@ -245,12 +237,10 @@ void OTCICtoLpGBTecv::runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, 
     {
         // Find the pClockStrength and pPhase indices
         ContainerSerialization theECVlpGBTCICContainerSerialization("OTCICtoLpGBTecvEfficiencyHistogram");
-        theECVlpGBTCICContainerSerialization.streamByOpticalGroupContainer(
-            fDQMStreamer, fPatternMatchingBitErrorContainer, clockPolarity, clockStrength, cicStrength, phaseIndex);
+        theECVlpGBTCICContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fPatternMatchingBitErrorContainer, clockPolarity, clockStrength, cicStrength, phaseIndex);
     }
 #endif
 }
-
 
 void OTCICtoLpGBTecv::Stop(void)
 {

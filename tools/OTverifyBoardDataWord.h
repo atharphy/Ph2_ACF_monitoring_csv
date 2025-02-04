@@ -58,24 +58,24 @@ class OTverifyBoardDataWord : public Tool
     void runStubIntegrityTestSoftwareMatch(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket);
 
   protected:
-    void runStubIntegrityTestFirmwareMatch(Ph2_HwDescription::BeBoard* theBoard, bool runAlignment = false);
-    void runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket, PatternMatcher& thePatternMatcher);
-    bool               isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t flagCharacter, uint8_t idleCharacter);
-    bool               isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t header, uint32_t headerMask);
-    void               prepareHybridForStubIntegrityTest(Ph2_HwDescription::Hybrid* theHybrid);
-    void               prepareHybridForL1IntegrityTest(Ph2_HwDescription::Hybrid* theHybrid);
-    void               prepareFWForL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, uint32_t theTriggerFrequency = 100);
-    uint8_t            getNumberOfBytesInSinglePacket(Ph2_HwDescription::OpticalGroup* cOpticalGroup) const;
-    void               setUpPatternMatching();
-    PatternMatcher     createTheL1PatternMatcher(Ph2_HwDescription::BeBoard* theBoard);
+    void           runStubIntegrityTestFirmwareMatch(Ph2_HwDescription::BeBoard* theBoard, bool runAlignment = false);
+    void           runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket, PatternMatcher& thePatternMatcher);
+    bool           isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t flagCharacter, uint8_t idleCharacter);
+    bool           isL1HeaderFound(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint32_t header, uint32_t headerMask);
+    void           prepareHybridForStubIntegrityTest(Ph2_HwDescription::Hybrid* theHybrid);
+    void           prepareHybridForL1IntegrityTest(Ph2_HwDescription::Hybrid* theHybrid);
+    void           prepareFWForL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, uint32_t theTriggerFrequency = 100);
+    uint8_t        getNumberOfBytesInSinglePacket(Ph2_HwDescription::OpticalGroup* cOpticalGroup) const;
+    void           setUpPatternMatching();
+    PatternMatcher createTheL1PatternMatcher(Ph2_HwDescription::BeBoard* theBoard);
 
-    bool                  fIsKickoff{false};
-    bool                  fDoMatchingInFirmware{true};
-    DetectorDataContainer fPatternMatchingBitErrorContainer;
+    bool                    fIsKickoff{false};
+    bool                    fDoMatchingInFirmware{true};
+    DetectorDataContainer   fPatternMatchingBitErrorContainer;
     OTPatternCheckerHelper* fPatternCheckerHelper;
-    float fNumberOfStubBits {1e8};
-    float fNumberOfL1Bits   {320000};
-    bool fPrintError{true};
+    float                   fNumberOfStubBits{1e8};
+    float                   fNumberOfL1Bits{320000};
+    bool                    fPrintError{true};
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

@@ -43,7 +43,7 @@ class OTalignBoardDataWord : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-    bool tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::Hybrid* theHybrid, uint8_t lineId);
+    bool               tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::Hybrid* theHybrid, uint8_t lineId);
 
   protected:
     void initializeContainers();

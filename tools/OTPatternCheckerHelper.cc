@@ -36,7 +36,6 @@ void OTPatternCheckerHelper::prepareCalibration()
     fBroadcastAlignSetting = 0;
 }
 
-
 void OTPatternCheckerHelper::ConfigureCalibration() {}
 
 void OTPatternCheckerHelper::Running()
@@ -66,7 +65,12 @@ void OTPatternCheckerHelper::Resume() {}
 
 void OTPatternCheckerHelper::Reset() { fRegisterHelper->restoreSnapshot(); }
 
-void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitContained, uint8_t line, const std::vector<uint32_t>& pattern, const std::vector<uint32_t>& patternMask, float numberOfBits, bool runAlignment)
+void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer*          theErrorBitContained,
+                                                uint8_t                      line,
+                                                const std::vector<uint32_t>& pattern,
+                                                const std::vector<uint32_t>& patternMask,
+                                                float                        numberOfBits,
+                                                bool                         runAlignment)
 {
     LOG(INFO) << BOLDBLUE << "Running Pattern Checker on line " << +line << RESET;
 
@@ -104,7 +108,7 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitC
     {
         for(auto theHybrid: *theOpticalGroup)
         {
-            const auto& receivedBERTresultsVector = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
+            const auto& receivedBERTresultsVector                                                                                      = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
             theErrorBitContained->getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>() = receivedBERTresultsVector;
         }
     }
@@ -128,7 +132,7 @@ void OTPatternCheckerHelper::patternCheckerTest()
 
     uint8_t numberOfLines = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
     for(uint8_t line = 1; line < numberOfLines; ++line)
-    { 
+    {
         DetectorDataContainer thePatternCounterCountainer;
         ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*fDetectorContainer, thePatternCounterCountainer);
         for(auto theBoard: thePatternCounterCountainer)
@@ -139,14 +143,14 @@ void OTPatternCheckerHelper::patternCheckerTest()
             patternCheckerTest(theBoard, line, pattern, patternMask, fNumberOfBits, true);
         }
 
-        #ifdef __USE_ROOT__
-            fDQMHistogramOTPatternCheckerHelper.fillErrorCounter(thePatternCounterCountainer, line);
-        #else
-            if(fDQMStreamerEnabled)
-            {
-                ContainerSerialization theErrorCounterSerialization("OTPatternCheckerHelperErrorCounter");
-                theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePatternCounterCountainer, line);
-            }
-        #endif
+#ifdef __USE_ROOT__
+        fDQMHistogramOTPatternCheckerHelper.fillErrorCounter(thePatternCounterCountainer, line);
+#else
+        if(fDQMStreamerEnabled)
+        {
+            ContainerSerialization theErrorCounterSerialization("OTPatternCheckerHelperErrorCounter");
+            theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePatternCounterCountainer, line);
+        }
+#endif
     }
 }

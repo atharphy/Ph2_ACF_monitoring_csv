@@ -39,7 +39,7 @@ class OTCICtoLpGBTecv : public OTverifyBoardDataWord
 
   private:
     void                                     runECV();
-    void runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, uint8_t cicStrength, uint8_t phase);
+    void                                     runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, uint8_t cicStrength, uint8_t phase);
     std::vector<std::pair<uint8_t, uint8_t>> stubPatterns{
         std::make_pair(0xea, 0xaa), // default
         std::make_pair(0x75, 0x55), // shift 1 -> patterns

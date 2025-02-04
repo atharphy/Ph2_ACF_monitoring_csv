@@ -79,7 +79,7 @@ void DQMHistogramOTverifyBoardDataWord::fillPatternErrorRate(DetectorDataContain
                 for(size_t lineId = 0; lineId < theHybridMatchingEfficiencyVector.size(); ++lineId)
                 {
                     auto testedBits = theHybridMatchingEfficiencyVector.at(lineId).at(0);
-                    auto errorRate = testedBits > 0 ? theHybridMatchingEfficiencyVector.at(lineId).at(1)/testedBits : 1.;
+                    auto errorRate  = testedBits > 0 ? theHybridMatchingEfficiencyVector.at(lineId).at(1) / testedBits : 1.;
                     hybridTestedBitsHistogram->SetBinContent(lineId + 1, testedBits);
                     hybridErrorRateHistogram->SetBinContent(lineId + 1, errorRate);
                 }
