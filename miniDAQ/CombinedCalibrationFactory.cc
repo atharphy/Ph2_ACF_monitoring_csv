@@ -77,7 +77,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTVTRxLightYieldScan>("Outer Tracker", "vtrxLightYield");
 
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICtoLpGBTecv>("Outer Tracker", "OTCICtoLpGBTecv");
+    Register<OTalignLpGBTinputs, OTCICtoLpGBTecv>("Outer Tracker", "OTCICtoLpGBTecv");
 
     Register<OTRegisterTester>("Outer Tracker", "OTRegisterTester");
 

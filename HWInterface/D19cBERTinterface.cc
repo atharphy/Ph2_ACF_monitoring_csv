@@ -229,7 +229,7 @@ void D19cBERTinterface::writeCommand(BitErrorTestControl theBitErrorTestControl)
     fTheRegManager->WriteReg("fc7_daq_ctrl.physical_interface_block.bert_control", theCommand);
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.bert_control = 0x"  << std::hex << theCommand << std::dec << std::endl;
 
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
 }
 
 void D19cBERTinterface::loadSampleData(uint16_t hybridId, uint8_t lineId)

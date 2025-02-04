@@ -290,10 +290,13 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
             thePhaseTuningReply.decodeReply(reply, thePhaseTuningControl);
             AlignmentResult theAlignmentResults(thePhaseTuningReply);
 
-            LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << +lineId;
-            LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET << ", WA FSM: " << BOLDGREEN
-                      << theAlignmentResults.fWordAlignmentFSMstate << RESET;
-            LOG(INFO) << "\t\t Delay: " << +theAlignmentResults.fDelay << ", Bitslip: " << +theAlignmentResults.fBitslip;
+            if(!fAlignOnCustomPattern)
+            {
+                LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << +lineId;
+                LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET << ", WA FSM: " << BOLDGREEN
+                        << theAlignmentResults.fWordAlignmentFSMstate << RESET;
+                LOG(INFO) << "\t\t Delay: " << +theAlignmentResults.fDelay << ", Bitslip: " << +theAlignmentResults.fBitslip;
+            }
 
             return theAlignmentResults;
         }
@@ -315,7 +318,7 @@ void D19cBackendAlignmentFWInterface::writeCommand(const PhaseTuningControl& the
     fTheRegManager->WriteReg(fPhaseTuningControlRegisterName, phaseTunerCommand);
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.bert_control = 0x"  << std::hex << phaseTunerCommand << std::dec << std::endl;
 
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
 }
 
 std::vector<AlignmentResult> D19cBackendAlignmentFWInterface::alignWordAllLines(uint8_t hybridId, uint8_t numberOfLines)

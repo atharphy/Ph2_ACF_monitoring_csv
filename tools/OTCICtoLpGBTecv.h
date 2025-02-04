@@ -39,6 +39,7 @@ class OTCICtoLpGBTecv : public OTverifyBoardDataWord
 
   private:
     void                                     runECV();
+    void runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, uint8_t cicStrength, uint8_t phase);
     std::vector<std::pair<uint8_t, uint8_t>> stubPatterns{
         std::make_pair(0xea, 0xaa), // default
         std::make_pair(0x75, 0x55), // shift 1 -> patterns
@@ -53,6 +54,14 @@ class OTCICtoLpGBTecv : public OTverifyBoardDataWord
         0x1ffffffc, // shift 1 <- patterns
         0x3ffffffe  // shift 2 <- patterns
     };
+
+    std::vector<float> fListOfLpGBTPhase{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+    std::vector<float> fListOfCICStrength{1, 2, 3, 4, 5};
+    std::vector<float> fListOfClockPolarity{0, 1};
+    std::vector<float> fListOfClockStrength{1, 2, 3, 4, 5, 6, 7};
+
+    DetectorDataContainer fTheBoardPatternMatcher;
+    DetectorDataContainer fTheBoardNumberOfBytesInPattern;
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
