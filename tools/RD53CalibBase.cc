@@ -380,7 +380,7 @@ bool CalibBase::splitHistoFileByHybrid(TFile* theInputFile)
                 // # Create new output file #
                 // ##########################
                 std::string theOutputFileName = theInputFile->GetName();
-                theOutputFileName.replace(theOutputFileName.find(".root"), 5, "_Hybrid_" + std::to_string(cHybrid->getId()) + ".root");
+                theOutputFileName.replace(theOutputFileName.find(".root"), 5, "_" + boardFolder + "_" + hybridFolder + ".root");
                 TFile* theOutputFile = TFile::Open(theOutputFileName.c_str(), "RECREATE");
 
                 // ################
