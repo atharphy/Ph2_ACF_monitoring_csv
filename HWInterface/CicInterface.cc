@@ -1462,7 +1462,7 @@ bool CicInterface::StartUp(Chip* pChip)
 
     auto boardId        = pChip->getBeBoardId();
     auto opticalGroupId = pChip->getOpticalGroupId();
-    auto hybridId       = pChip->getOpticalGroupId();
+    auto hybridId       = pChip->getHybridId();
 
     auto exceptionHandleFunction = [boardId, opticalGroupId, hybridId, this](const std::string&& failMode)
     {
