@@ -45,10 +45,10 @@ The current run number is saved in `./RunNumber.txt` and used for the next run.
 ```
 latency pixelalive noise scurve gain threqu gainopt thrmin 
 thradj injdelay clkdelay datarbopt datatrtest physics eudaq
-bertest voltagetuning gendacdac
+bertest voltagetuning gendacdac vtrx eye
 ```
 
-Calibrations and parameters are described under `Scans and tunings`
+Calibrations and parameters are described under [IT Calibrations](calibrations/index.md).
 
 ### Physics mode
 
@@ -59,6 +59,7 @@ The run time for this scan as defined in the `<Settings>` section can be overrid
 --runtime <value>, -t <value>
     Set running time for physics mode (in seconds)
 ```
+More details can be found in the [Physics Scan](calibrations/Physics.md) page.
 
 ## EUDAQ mode
 
