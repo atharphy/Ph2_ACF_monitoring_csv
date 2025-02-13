@@ -64,11 +64,15 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                             registerValue =
                                 fTheSystemController->fBeBoardInterface->ReadChipMonitor(fTheSystemController->fReadoutChipInterface, cChip, registerName, fDetectorMonitorConfig.fSilentRunning);
                         else
+                        {
                             // #####################
                             // # Monitor registers #
                             // #####################
                             registerValue = readoutChipInterface->ReadChipReg(cChip, registerName);
-
+                            if(fDetectorMonitorConfig.fSilentRunning == false)
+                                LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = 0x" << BOLDYELLOW << std::setprecision(0) << std::hex << registerValue << std::dec
+                                          << RESET;
+                        }
                         theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ValueAndTime<float>>() =
                             ValueAndTime<float>(registerValue, getTimeStampString());
                     }
@@ -114,10 +118,14 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
                     // #######################
                     registerValue = lpGBTInterface->ReadChipMonitor(cOpticalGroup, registerName, fDetectorMonitorConfig.fSilentRunning);
                 else
+                {
                     // #####################
                     // # Monitor registers #
                     // #####################
                     registerValue = lpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, registerName);
+                    if(fDetectorMonitorConfig.fSilentRunning == false)
+                        LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = 0x" << BOLDYELLOW << std::setprecision(0) << std::hex << registerValue << std::dec << RESET;
+                }
 
                 theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStampString());
             }
