@@ -354,4 +354,9 @@ float PSInterface::measureTemperature(Ph2_HwDescription::ReadoutChip* pPS)
     return (readADCVoltage(pPS, "temperature") - pPS->getADCCalibrationValue("TEMP_OFFSET")) / pPS->getADCCalibrationValue("TEMP_SLOPE") + 25;
 }
 
+bool PSInterface::MaskAllChannels(Ph2_HwDescription::ReadoutChip* pPS, bool mask, bool pVerifLoop)
+{
+    if(pPS->getFrontEndType() == FrontEndType::MPA2) { return fTheMPA2Interface->MaskAllChannels(pPS, mask, false); }
+    else { return fTheSSA2Interface->MaskAllChannels(pPS, mask, false); }
+}
 } // namespace Ph2_HwInterface
