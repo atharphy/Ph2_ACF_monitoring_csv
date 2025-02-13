@@ -115,6 +115,7 @@ class lpGBTInterface : public ChipInterface
     uint8_t TuneVref(Ph2_HwDescription::Chip* pChip);
     void    PhaseTrainRx(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
     void    ResetRxDll(Ph2_HwDescription::Chip* pChip, const std::vector<uint8_t>& pGroups);
+    void    hardReset(Ph2_HwDescription::Chip* pChip);
 
     // ################################
     // # LpGBT block status functions #

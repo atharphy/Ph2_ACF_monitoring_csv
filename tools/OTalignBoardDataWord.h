@@ -48,6 +48,8 @@ class OTalignBoardDataWord : public Tool
     void initializeContainers();
     void runAlignment(Ph2_HwDescription::BeBoard* theBoard);
     int  fBroadcastAlignSetting{0}; // 0 = one line at a time - 1 = one hybrid at a time - 2 = all hybrids in parallel
+    bool opticalGroupWordAlignment(const Ph2_HwDescription::OpticalGroup* theOpticalGroup, Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface);
+    bool tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::Hybrid* theHybrid, uint8_t lineId);
 
   private:
     DetectorDataContainer fBitSlipContainer;
@@ -55,10 +57,6 @@ class OTalignBoardDataWord : public Tool
 
     void wordAlignBEdata();
     void boardWordAlignment(Ph2_HwDescription::BeBoard* theBoard);
-    bool opticalGroupWordAlignment(const Ph2_HwDescription::OpticalGroup*            theOpticalGroup,
-                                   Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface,
-                                   Ph2_HwInterface::D19cDebugFWInterface*            theDebugInterface);
-    bool tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::Hybrid* theHybrid, uint8_t lineId);
     bool tryAllLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::Hybrid* theHybrid);
     bool tryAllHybridAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::BeBoard* theBoard);
 

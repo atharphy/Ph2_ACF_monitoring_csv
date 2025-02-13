@@ -119,7 +119,7 @@ void DQMHistogramPSPixelAlive::process()
             {
                 std::string occupancyCanvasName = "Occupancy_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
 
-                TCanvas* occupancyCanvas = new TCanvas(occupancyCanvasName.data(), occupancyCanvasName.data(), 0, 0, 650, 650);
+                TCanvas* occupancyCanvas = new TCanvas(occupancyCanvasName.c_str(), occupancyCanvasName.c_str(), 0, 0, 650, 650);
 
                 occupancyCanvas->Divide(hybrid->size());
 

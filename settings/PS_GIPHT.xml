@@ -271,6 +271,9 @@
     <Setting name="OTLpGBTEyeOpeningTest_PowerList">1-3</Setting>
 
     <Setting name="OTBitErrorRateTest_NumberOfBits">1E10</Setting>
+
+    <Setting name="OTPatternCheckerTest_NumberOfBits">1E10</Setting>
+
 </Settings>
 
 <MonitoringSettings>

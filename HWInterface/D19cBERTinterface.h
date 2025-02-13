@@ -2,9 +2,12 @@
 #define __D19C_BERT_INTERFACE_H__
 
 #include <cstdint>
+#include <vector>
 
 class BoardContainer;
+class OpticalGroupContainer;
 class BoardDataContainer;
+class OpticalGroupDataContainer;
 
 namespace Ph2_HwInterface
 {
@@ -20,14 +23,14 @@ class BitErrorTestControl
 
     enum class Command
     {
-        ReturnConfig           = 0,
-        ReturnCounterThreshold = 1,
-        Configure              = 2,
-        SetCounterThreshold    = 3,
-        ReadCounterData        = 4,
-        ErrorInject            = 5,
-        ReadBERTfirstData      = 6,
-        ReadBERTsampledData    = 7
+        ReturnConfig        = 0,
+        ReturnFirstPattern  = 1,
+        Configure           = 2,
+        SetFirstPattern     = 3,
+        ReadCounterData     = 4,
+        ErrorInject         = 5,
+        ReadBERTfirstData   = 6,
+        ReadBERTsampledData = 7
     };
 
     enum class CounterSelect
@@ -40,10 +43,10 @@ class BitErrorTestControl
 
     enum class Mode
     {
-        None0 = 0,
-        PRBS  = 1,
-        LSFR  = 2,
-        None3 = 3
+        None0   = 0,
+        PRBS    = 1,
+        LSFR    = 2,
+        Pattern = 3
     };
 
     void     resetCommandBits();
@@ -53,37 +56,39 @@ class BitErrorTestControl
     void setHybridId(uint8_t theHybridId) { fHybridId = theHybridId; }
     void setChipId(uint8_t theChipId) { fChipId = theChipId; }
     void setLineId(uint8_t theLineId) { fLineId = theLineId; }
+    void setLineSelect(uint8_t theLineSelect) { fLineSelect = theLineSelect; }
     void setCommand(Command theCommand) { fCommand = theCommand; }
     void setDebugMode(bool theDebugMode) { fDebugMode = theDebugMode; }
     void setCheckMode(bool theCheckMode) { fCheckMode = theCheckMode; }
-    void setCounterReset(bool theCounterReset) { fCounterReset = theCounterReset; }
     void setCounterSelect(CounterSelect theCounterSelect) { fCounterSelect = theCounterSelect; }
     void setMode(Mode theMode) { fMode = theMode; }
     void setCheckEnable(bool theCheckEnable) { fCheckEnable = theCheckEnable; }
     void setReceiveEnable(bool theReceiveEnable) { fReceiveEnable = theReceiveEnable; }
-    void setCounterThreshold(uint16_t theCounterThreshold) { fCounterThreshold = theCounterThreshold; }
+    void setFirstPattern(uint16_t theFirstPattern) { fFirstPattern = theFirstPattern; }
     void setErrorInjection(bool theErrorInjection) { fErrorInjection = theErrorInjection; }
     void setDataLoad(bool theDataLoad) { fDataLoad = theDataLoad; }
-    void setPackagePatternLSB(uint16_t thePackagePatternLSB) { fPackagePatternLSB = thePackagePatternLSB; }
-    void setPackagePatternMSB(uint16_t thePackagePatternMSB) { fPackagePatternMSB = thePackagePatternMSB; }
+    void setIsMask(bool isMask) { fIsMask = isMask; }
+    void setPatternWordIndex(uint8_t thePatternWordIndex) { fPatternWordIndex = thePatternWordIndex; }
+    void setPattern(uint16_t thePattern) { fPattern = thePattern; }
 
   private:
     uint8_t       fHybridId{0};
     uint8_t       fChipId{0};
     uint8_t       fLineId{0};
+    uint8_t       fLineSelect{0};
     Command       fCommand{Command::ReturnConfig};
     bool          fDebugMode{false};
     bool          fCheckMode{false};
-    bool          fCounterReset{false};
     CounterSelect fCounterSelect{CounterSelect::FrameCounterLSB};
     Mode          fMode{Mode::None0};
     bool          fCheckEnable{false};
     bool          fReceiveEnable{false};
-    uint16_t      fCounterThreshold{0};
+    uint16_t      fFirstPattern{0};
     bool          fErrorInjection{false};
     bool          fDataLoad{false};
-    uint16_t      fPackagePatternLSB{0};
-    uint16_t      fPackagePatternMSB{0};
+    bool          fIsMask{false};
+    uint8_t       fPatternWordIndex{0};
+    uint16_t      fPattern{0};
 
     static bool          fIsDebugModeActivated;
     static bool          fCurrentCheckMode;
@@ -110,7 +115,7 @@ class BitErrorTestReply
     BitErrorTestControl::Mode getMode() { return fMode; }
     bool                      getCheckEnable() { return fCheckEnable; }
     bool                      getReceiveEnable() { return fReceiveEnable; }
-    uint16_t                  getCounterThreshold() { return fCounterThreshold; }
+    uint16_t                  getFirstPattern() { return fFirstPattern; }
     uint32_t                  getPRBSframeCounterValueEmulator() { return fPRBSframeCounterValueEmulator; }
     uint32_t                  getPRBSbitCounterValueEmulator() { return fPRBSbitCounterValueEmulator; }
     uint32_t                  getPRBSframeCounterValuePredictNext() { return fPRBSframeCounterValuePredictNext; }
@@ -136,15 +141,15 @@ class BitErrorTestReply
     BitErrorTestControl::Mode fMode{BitErrorTestControl::Mode::None0};
     bool                      fCheckEnable{false};
     bool                      fReceiveEnable{false};
-    uint16_t                  fCounterThreshold{999};
-    uint32_t                  fPRBSframeCounterValueEmulator{999};
-    uint32_t                  fPRBSbitCounterValueEmulator{999};
-    uint32_t                  fPRBSframeCounterValuePredictNext{999};
-    uint32_t                  fPRBSbitCounterValuePredictNext{999};
-    uint32_t                  fPRBSfirstData{999};
-    uint32_t                  fLFSRfirstData{999};
-    uint32_t                  fPRBSdata{999};
-    uint32_t                  fLFSRdata{999};
+    uint16_t                  fFirstPattern{0x999};
+    uint32_t                  fPRBSframeCounterValueEmulator{0x999};
+    uint32_t                  fPRBSbitCounterValueEmulator{0x999};
+    uint32_t                  fPRBSframeCounterValuePredictNext{0x999};
+    uint32_t                  fPRBSbitCounterValuePredictNext{0x999};
+    uint32_t                  fPRBSfirstData{0x999};
+    uint32_t                  fLFSRfirstData{0x999};
+    uint32_t                  fPRBSdata{0x999};
+    uint32_t                  fLFSRdata{0x999};
     uint32_t                  fFrameCounterLSB;
     uint32_t                  fFrameCounterMSB;
 };
@@ -155,11 +160,16 @@ class D19cBERTinterface
     D19cBERTinterface(RegManager* theRegManager);
     ~D19cBERTinterface();
 
+    void startPatternSyncronization(uint8_t hybridId, uint8_t lineId);
     void startBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
     void stopBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
     void haltBitErrorRateTest(uint8_t hybridId, uint8_t lineId);
 
-    BoardDataContainer runBERTonAllHybdrids(BoardContainer* theBoardContainer, uint8_t numberOfLines, bool is10Gmodule, float numberOfMatchedBits);
+    BoardDataContainer runBERTonSingleLine(BoardContainer* theBoardContainer, uint8_t lineNumber, bool is10Gmodule, float numberOfMatchedBits);
+
+    void setCheckedPattern(const std::vector<uint32_t>& theCheckedPattern);
+    void setCheckedPatternMask(const std::vector<uint32_t>& theCheckedPatternMask);
+    void setUsePRBS(bool usePRBS) { fUsePRBS = usePRBS; }
 
   private:
     RegManager* fTheRegManager{nullptr};
@@ -168,9 +178,28 @@ class D19cBERTinterface
     uint32_t    getFirstData(uint8_t hybridId, uint8_t lineId);
     void        injectError(uint8_t hybridId, uint8_t lineId);
     void        selectFrameCounters(bool isMSB);
+    void        waitForNeededBits(bool is10Gmodule, float numberOfMatchedBits);
+    bool        isStartPatternFound(BoardContainer* theBoardContainer, uint8_t lineNumber);
+    bool        retrieveBitTestedCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber, bool is10Gmodule, float numberOfMatchedBits);
+    void        retrieveErrorCounter(OpticalGroupDataContainer* theOpticalGroupContainer, uint8_t numberOfLines);
+    void        retrieveErrorCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber);
+    uint64_t    readNumberOfTestedBit(uint16_t hybridId, uint8_t lineId, bool is10Gmodule);
+    void        loadSampleData(uint16_t hybridId, uint8_t lineId);
+    void        readSampleData(uint16_t hybridId, uint8_t lineId);
+    bool        isStateMachineStarted(BoardContainer* theBoardContainer, uint8_t lineNumber);
+    uint8_t     getCheckerFSMstatus(uint8_t hybridId, uint8_t lineId);
+    void        loadCheckedPattern(uint8_t hybridId, uint8_t lineId);
 
     void              writeCommand(BitErrorTestControl theBitErrorTestControl);
     BitErrorTestReply readReplay(const BitErrorTestControl& theBitErrorTestControl);
+    void              loadAllCheckedPatternsInBoard(BoardContainer* theBoardContainer);
+
+    uint8_t fLineSelect;
+
+    std::vector<uint32_t> fCheckedPattern{0x0, 0x0, 0x0, 0x0};
+    std::vector<uint32_t> fCheckedPatternMask{0x0, 0x0, 0x0, 0x0};
+    bool                  fUsePRBS             = true;
+    float                 fNumberOfCheckedBits = 0;
 };
 
 } // namespace Ph2_HwInterface

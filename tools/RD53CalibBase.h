@@ -143,7 +143,7 @@ class CalibBase : public Tool
     size_t      nEvents;
     size_t      nEvtsBurst;
     size_t      nTRIGxEvent;
-    bool        splitByHybrid;
+    bool        splitFile;
     std::string dataOutputDir;
 
     int  theCurrentRun;
@@ -152,12 +152,12 @@ class CalibBase : public Tool
   private:
     virtual void fillHisto() = 0;
 
-    // ###############################
-    // # Split output file by Hybrid #
-    // ###############################
+    // #######################################
+    // # Split output file by Board & Hybrid #
+    // #######################################
 #ifdef __USE_ROOT__
-    bool splitHistoFileByHybrid(TFile* theInputFile);
-    void copyDirectories(TFile* theInputFile, TFile* theOutputFile, const std::string& hybridName);
+    bool splitHistoFile(TFile* theInputFile);
+    void copyDirectories(TFile* theInputFile, TFile* theOutputFile, const std::string& boardName, const std::string& hybridName);
     void copyContent(TFile* theInputFile, TFile* theOutputFile, const std::string& dirName);
     bool openRootFileFolder(TFile* theInputFile, const std::string& folderName);
 #endif
