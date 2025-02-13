@@ -44,7 +44,7 @@ class D19clpGBTInterface : public lpGBTInterface
     void hold2SModuleResets(Ph2_HwDescription::Chip* pChip);
     void holdPSModuleResets(Ph2_HwDescription::Chip* pChip);
 
-    bool enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalGroup);
+    bool enablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalGroup, uint16_t phase = 0x7f);
     bool disablePRBS(Ph2_HwDescription::OpticalGroup* theOpticalGroup);
 
     // Sets the flag used to select which lpGBT configuration interface to use

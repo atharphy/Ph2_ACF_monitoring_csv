@@ -498,9 +498,9 @@ void CalibBase::copyContent(TFile* theInputFile, TFile* theOutputFile, const std
 
 bool CalibBase::openRootFileFolder(TFile* theInputFile, const std::string& folderName)
 {
-    if(theInputFile->GetDirectory(folderName.data()) != nullptr)
+    if(theInputFile->GetDirectory(folderName.c_str()) != nullptr)
     {
-        theInputFile->cd(folderName.data());
+        theInputFile->cd(folderName.c_str());
         return true;
     }
 

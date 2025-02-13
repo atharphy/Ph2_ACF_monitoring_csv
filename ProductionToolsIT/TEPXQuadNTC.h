@@ -39,7 +39,7 @@ class TEPXQuadNTC : public CalibBase
     void draw(bool saveData = true) override;
 
     void  analyze();
-    float TfromR(float R);
+    float TfromR(float R, const float& R25C, const float& beta);
 
   private:
     void         fillHisto() override;

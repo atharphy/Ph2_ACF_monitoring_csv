@@ -82,7 +82,7 @@ void DQMHistogramPhaseScan::process()
             for(auto hybrid: *opticalGroup)
             {
                 std::string canvasName  = "Phase_B_" + std::to_string(board->getId()) + "_O_" + std::to_string(opticalGroup->getId()) + "_H_" + std::to_string(hybrid->getId());
-                TCanvas*    PhaseCanvas = new TCanvas(canvasName.data(), canvasName.data(), 500, 500);
+                TCanvas*    PhaseCanvas = new TCanvas(canvasName.c_str(), canvasName.c_str(), 500, 500);
                 // PhaseCanvas->DivideSquare(hybrid->size());
                 PhaseCanvas->cd();
                 TH1F* PhaseHistogram = hybrid->getSummary<HistContainer<TH1F>>().fTheHistogram;

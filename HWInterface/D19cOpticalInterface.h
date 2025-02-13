@@ -33,6 +33,8 @@ class D19cOpticalInterface : public FEConfigurationInterface
     bool                  MultiMultiByteWriteI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, std::vector<uint32_t>& pSlaveData);
     std::vector<uint16_t> MultiSingleByteReadI2C(Ph2_HwDescription::Chip* pChip, uint8_t pMasterId, uint8_t pMasterConfig, std::vector<uint32_t>& pSlaveData);
 
+    bool testLinkStability(Ph2_HwDescription::Chip* pLpGBT);
+
   private:
     D19clpGBTSlowControlWorkerInterface* flpGBTSlowControlWorkerInterface{nullptr};
 

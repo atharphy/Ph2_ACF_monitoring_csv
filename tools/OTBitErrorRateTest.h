@@ -23,6 +23,8 @@ class OpticalGroup;
 class BeBoard;
 } // namespace Ph2_HwDescription
 
+class OpticalGroupDataContainer;
+class BoardDataContainer;
 class OTBitErrorRateTest : public OTalignBoardDataWord
 {
   public:
@@ -42,7 +44,14 @@ class OTBitErrorRateTest : public OTalignBoardDataWord
     static std::string fCalibrationDescription;
 
   private:
+    void bitErrorRateTestPerLine(Ph2_HwDescription::BeBoard* theBoard,
+                                 BoardDataContainer*         theBertContainer,
+                                 BoardDataContainer*         theFECContainer,
+                                 BoardDataContainer*         thePhaseClockDelayContainer,
+                                 float                       numberOfBits,
+                                 float                       lineNumber);
     void bitErrorRateTest();
+    void bitErrorRateTest(uint8_t line);
 
     float fNumberOfBits{1E10};
 

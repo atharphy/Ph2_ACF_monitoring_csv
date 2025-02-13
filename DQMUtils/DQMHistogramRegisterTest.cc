@@ -84,7 +84,7 @@ void DQMHistogramRegisterTest::process()
                     std::string cCanvasName  = "MismatchesPg0_" + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
                     std::string cCanvasTitle = "Mismatches [Pg0] " + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
 
-                    TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                    TCanvas* cCanvas = new TCanvas(cCanvasName.c_str(), cCanvasTitle.c_str(), 500, 500);
                     cCanvas->cd();
                     auto& cHistogram = chip->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     cHistogram->GetXaxis()->SetTitle("Number of Register Writes");
@@ -106,7 +106,7 @@ void DQMHistogramRegisterTest::process()
                     std::string cCanvasName  = "MismatchesPg1_" + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
                     std::string cCanvasTitle = "Mismatches [Pg1] " + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
 
-                    TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                    TCanvas* cCanvas = new TCanvas(cCanvasName.c_str(), cCanvasTitle.c_str(), 500, 500);
                     cCanvas->cd();
                     auto& cHistogram = chip->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     cHistogram->GetXaxis()->SetTitle("Number of Register Writes");
@@ -128,7 +128,7 @@ void DQMHistogramRegisterTest::process()
                     std::string cCanvasName  = "RdMismatchesPg0_" + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
                     std::string cCanvasTitle = "Read Mismatches [Pg0] " + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
 
-                    TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                    TCanvas* cCanvas = new TCanvas(cCanvasName.c_str(), cCanvasTitle.c_str(), 500, 500);
                     cCanvas->cd();
                     auto& cHistogram = chip->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     cHistogram->GetXaxis()->SetTitle("Number of Register Reads");
@@ -150,7 +150,7 @@ void DQMHistogramRegisterTest::process()
                     std::string cCanvasName  = "RdMismatchesPg1_" + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
                     std::string cCanvasTitle = "Read Mismatches [Pg1] " + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
 
-                    TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                    TCanvas* cCanvas = new TCanvas(cCanvasName.c_str(), cCanvasTitle.c_str(), 500, 500);
                     cCanvas->cd();
                     auto& cHistogram = chip->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     cHistogram->GetXaxis()->SetTitle("Number of Register Reads");
@@ -172,7 +172,7 @@ void DQMHistogramRegisterTest::process()
                     std::string cCanvasName  = "WriteCount_" + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
                     std::string cCanvasTitle = "Transaction Count [Writes] " + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
 
-                    TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                    TCanvas* cCanvas = new TCanvas(cCanvasName.c_str(), cCanvasTitle.c_str(), 500, 500);
                     cCanvas->cd();
                     auto& cHistogram = chip->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     cHistogram->GetXaxis()->SetTitle("");
@@ -196,7 +196,7 @@ void DQMHistogramRegisterTest::process()
                     std::string cCanvasName  = "ReadCount_" + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
                     std::string cCanvasTitle = "Transaction Count [Reads] " + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
 
-                    TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                    TCanvas* cCanvas = new TCanvas(cCanvasName.c_str(), cCanvasTitle.c_str(), 500, 500);
                     cCanvas->cd();
                     auto& cHistogram = chip->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     cHistogram->GetXaxis()->SetTitle("");

@@ -331,4 +331,38 @@ std::vector<uint16_t> D19cOpticalInterface::MultiSingleByteReadI2C(Ph2_HwDescrip
     return ReadI2C(pChip, pMasterId, pMasterConfig, pSlaveData);
 }
 
+bool D19cOpticalInterface::testLinkStability(Ph2_HwDescription::Chip* pLpGBT)
+{
+    if(pLpGBT->getFrontEndType() != FrontEndType::LpGBT)
+    {
+        LOG(ERROR) << ERROR_FORMAT << "D19cOpticalInterface::testLinkStability can be used only for LpGBT, " << FrontEndDescription::getFrontEndName(pLpGBT->getFrontEndType())
+                   << " provided instead, aborting" << RESET;
+        abort();
+    }
+    std::lock_guard<std::recursive_mutex> theGuard(fTheRegManager->fMutex);
+    flpGBTSlowControlWorkerInterface->SelectLink(pLpGBT->getOpticalGroupId());
+    uint8_t     cFunctionId = LpGBTSlowControlWorker::READ_IC;
+    ChipRegItem theChipId0register;
+    theChipId0register.fAddress = 0x000;
+    theChipId0register.fPage    = 0x000;
+    std::vector<ChipRegItem> theRegisterList(LpGBTSlowControlWorker::BLOCK_SIZE, theChipId0register);
+
+    auto cCommand = flpGBTSlowControlWorkerInterface->EncodeCommand(cFunctionId, pLpGBT, theRegisterList);
+    flpGBTSlowControlWorkerInterface->WriteCommand(cCommand);
+    // Wait for worker to be done
+    if(!flpGBTSlowControlWorkerInterface->WaitDone(cFunctionId))
+    {
+        LOG(ERROR) << BOLDRED << "D19cOpticalInterface::Read : Tool stuck ... Sending soft reset" << RESET;
+        return false;
+    }
+
+    uint8_t cTryCntr = flpGBTSlowControlWorkerInterface->GetTryCounter(cFunctionId);
+    if(cTryCntr > 0)
+    {
+        return false;
+        LOG(WARNING) << WARNING_FORMAT << "D19cOpticalInterface::testLinkStability : try counter  " << +cTryCntr << " >  0" << RESET;
+    }
+    return true;
+}
+
 } // namespace Ph2_HwInterface

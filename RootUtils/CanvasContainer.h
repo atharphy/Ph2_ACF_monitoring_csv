@@ -105,11 +105,11 @@ class CanvasContainer : public PlotContainer
     {
         fHasToBeDeletedManually = false;
 
-        fCanvas = new TCanvas(name.data(), title.data());
+        fCanvas = new TCanvas(name.c_str(), title.c_str());
 
         fTheHistogram = new Hist(*(static_cast<const CanvasContainer<Hist>*>(reference)->fTheHistogram));
-        fTheHistogram->SetName(name.data());
-        fTheHistogram->SetTitle(title.data());
+        fTheHistogram->SetName(name.c_str());
+        fTheHistogram->SetTitle(title.c_str());
         CallSetDirectory<Hist, has_SetDirectory<Hist>::value> setDirectoryFunctor;
         setDirectoryFunctor(fTheHistogram);
 
@@ -118,7 +118,7 @@ class CanvasContainer : public PlotContainer
 
     void print(void) { std::cout << "CanvasContainer " << fTheHistogram->GetName() << std::endl; }
 
-    void setNameTitle(std::string histogramName, std::string histogramTitle) override { fTheHistogram->SetNameTitle(histogramName.data(), histogramTitle.data()); }
+    void setNameTitle(std::string histogramName, std::string histogramTitle) override { fTheHistogram->SetNameTitle(histogramName.c_str(), histogramTitle.c_str()); }
 
     std::string getName() const override { return fTheHistogram->GetName(); }
 

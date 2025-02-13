@@ -1185,7 +1185,7 @@ bool OTHybridTester::LpGBTCheckClocks()
         return cStatus;
     }
 
-    for(const auto cClockTestType: cClockTestTypes)
+    for(const auto& cClockTestType: cClockTestTypes)
     {
         for(auto cBoard: *fDetectorContainer)
         {

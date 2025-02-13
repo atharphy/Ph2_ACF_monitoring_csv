@@ -56,7 +56,7 @@ void DQMHistogramCicFEAlignment::process()
                     std::string cCanvasName  = "ManualPhaseScan_" + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
                     std::string cCanvasTitle = "Manual Phase Scan CIC inputs " + std::to_string(chip->getId()) + std::to_string(hybrid->getId());
 
-                    TCanvas* cCanvas = new TCanvas(cCanvasName.data(), cCanvasTitle.data(), 500, 500);
+                    TCanvas* cCanvas = new TCanvas(cCanvasName.c_str(), cCanvasTitle.c_str(), 500, 500);
                     cCanvas->cd();
                     auto& cHistogram = chip->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     cHistogram->GetXaxis()->SetTitle("CIC Input Sampling Phase");
