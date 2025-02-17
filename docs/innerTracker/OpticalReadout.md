@@ -41,7 +41,7 @@ Here, <code><t style="color: CornflowerBlue;">OpticalGroup</t> Id</code> maps th
 
 The code can handle both LpGBT-v0 and LpGBT-v1, transparently to the user. The user just needs to specify the version (`version`) and the appropriate register file (`configFile`) for this LpGBT chip in the following line:
 
-<code><t style="color: CornflowerBlue;"><lpGBT</t> Id=<t style="color: MediumSeaGreen;">"0"</t> <b>version=</b><b style="color: MediumSeaGreen;"><u>"1"</u></b>  <b>configFile=</b><b style="color: MediumSeaGreen;"><u>"CMSIT_LpGBTv1.txt"</u></b>...<t style="color: CornflowerBlue;">></t></code>
+<code><t style="color: CornflowerBlue;">&lt;lpGBT</t> Id=<t style="color: MediumSeaGreen;">"0"</t> <b>version=</b><b style="color: MediumSeaGreen;"><u>"1"</u></b>  <b>configFile=</b><b style="color: MediumSeaGreen;"><u>"CMSIT_LpGBTv1.txt"</u></b>...<t style="color: CornflowerBlue;">></t></code>
 
 `RxGroups` maps the groups to the chip lanes (meaningful only for primary chips).
 E.g., if you wrote <code>outputLanes=<t style="color: MediumSeaGreen;">"0012"</t></code>, and you want to associate `RxGroup` 3 to lane 1 and `RxGroup` 6 to lane 2, then you need to write <code>RxGroups=<t style="color: MediumSeaGreen;">"NN63"</t></code>.
