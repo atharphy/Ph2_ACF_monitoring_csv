@@ -36,7 +36,8 @@ class OTPatternCheckerHelper : public OTalignBoardDataWord
     void Reset();
 
     static std::string fCalibrationDescription;
-    void patternCheckerTest(BoardDataContainer* theErrorBitContainer, uint8_t line, const std::vector<uint32_t>& pattern, const std::vector<uint32_t>& patternMask, float numberOfBits, bool runAlignment);
+    void
+    patternCheckerTest(BoardDataContainer* theErrorBitContainer, uint8_t line, const std::vector<uint32_t>& pattern, const std::vector<uint32_t>& patternMask, float numberOfBits, bool runAlignment);
     void patternCheckerTest(BoardDataContainer* theErrorBitContainer, uint8_t line, BoardDataContainer& thePatternAndMaskContainer, float numberOfBits, bool runAlignment);
     void prepareCalibration();
 

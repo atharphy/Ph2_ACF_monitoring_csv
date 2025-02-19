@@ -240,10 +240,10 @@ void D19cBERTinterface::writeCommand(BitErrorTestControl theBitErrorTestControl)
     }
     if(iterationNumber >= maxNumberOfIterations)
     {
-        LOG(ERROR) << ERROR_FORMAT << "D19cBERTinterface::writeCommandWithCheck: Failed to write command 0x" << std::hex << theCommand << std::dec << " after " << iterationNumber << " iterations" << RESET;
+        LOG(ERROR) << ERROR_FORMAT << "D19cBERTinterface::writeCommandWithCheck: Failed to write command 0x" << std::hex << theCommand << std::dec << " after " << iterationNumber << " iterations"
+                   << RESET;
     }
 }
-
 
 void D19cBERTinterface::loadSampleData(uint16_t hybridId, uint8_t lineId)
 {
@@ -434,10 +434,7 @@ uint64_t D19cBERTinterface::getFrameCounters(uint8_t hybridId, uint8_t lineId, b
             BitErrorTestReply theFrameLSBcounter = readReplay(theReadDataControl);
             readValues.at(readIt)                = isMSB ? theFrameLSBcounter.getFrameCounterMSB() : theFrameLSBcounter.getFrameCounterLSB();
         }
-        if(std::adjacent_find(readValues.begin(), readValues.end(), std::not_equal_to<>()) == readValues.end())
-        {
-            return readValues.at(0);
-        }
+        if(std::adjacent_find(readValues.begin(), readValues.end(), std::not_equal_to<>()) == readValues.end()) { return readValues.at(0); }
         else
             ++iterationNumber;
     }
@@ -713,8 +710,7 @@ void D19cBERTinterface::setCheckedPattern(uint8_t hybridId, const std::vector<ui
 {
     if(theCheckedPattern.size() != 4)
     {
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of Pattern " << theCheckedPattern.size() << " does not match expected size 4. Aborting..."
-                  << std::endl;
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of Pattern " << theCheckedPattern.size() << " does not match expected size 4. Aborting..." << std::endl;
         abort();
     }
     fCheckedPatternMap[hybridId] = theCheckedPattern;
@@ -728,10 +724,7 @@ void D19cBERTinterface::setCheckedPatternMask(uint8_t hybridId, const std::vecto
         abort();
     }
     fNumberOfCheckedBitsMap[hybridId] = 0;
-    for(size_t index = 0; index < theCheckedPatternMask.size(); ++index)
-    {
-        fNumberOfCheckedBitsMap[hybridId] += std::bitset<32>(theCheckedPatternMask.at(index)).count();
-    }
+    for(size_t index = 0; index < theCheckedPatternMask.size(); ++index) { fNumberOfCheckedBitsMap[hybridId] += std::bitset<32>(theCheckedPatternMask.at(index)).count(); }
     fCheckedPatternMaskMap[hybridId] = theCheckedPatternMask;
 }
 
@@ -750,7 +743,7 @@ void D19cBERTinterface::loadCheckedPattern(uint8_t hybridId, uint8_t lineId)
     setPatternCommand.setLineId(lineId);
     setPatternCommand.setCommand(BitErrorTestControl::Command::ReadBERTfirstData);
 
-    auto theCheckedPattern = fCheckedPatternMap.at(hybridId);
+    auto theCheckedPattern     = fCheckedPatternMap.at(hybridId);
     auto theCheckedPatternMask = fCheckedPatternMaskMap.at(hybridId);
 
     for(size_t index = 0; index < theCheckedPattern.size(); ++index)
@@ -789,14 +782,11 @@ void D19cBERTinterface::loadAllCheckedPatternsInBoard(BoardContainer* theBoardCo
         for(auto theOpticalGroup: *theBoardContainer)
         {
             for(auto theHybrid: *theOpticalGroup)
-            { 
+            {
                 loadAlignmentPattern(theHybrid->getId(), fLineSelect);
                 loadCheckedPattern(theHybrid->getId(), fLineSelect);
             }
         }
     }
-    else
-    {
-        loadAlignmentPattern(0x1F, 0xF);
-    }
+    else { loadAlignmentPattern(0x1F, 0xF); }
 }

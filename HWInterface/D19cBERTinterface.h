@@ -2,8 +2,8 @@
 #define __D19C_BERT_INTERFACE_H__
 
 #include <cstdint>
-#include <vector>
 #include <map>
+#include <vector>
 
 class BoardContainer;
 class OpticalGroupContainer;
@@ -202,7 +202,7 @@ class D19cBERTinterface
     std::map<uint8_t, std::vector<uint32_t>> fCheckedPatternMap;
     std::map<uint8_t, std::vector<uint32_t>> fCheckedPatternMaskMap;
     std::map<uint8_t, float>                 fNumberOfCheckedBitsMap;
-    bool                  fUsePRBS             = true;
+    bool                                     fUsePRBS = true;
 };
 
 } // namespace Ph2_HwInterface

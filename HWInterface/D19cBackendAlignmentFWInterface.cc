@@ -210,7 +210,6 @@ AlignmentResult D19cBackendAlignmentFWInterface::tunePhase(uint8_t hybridId, uin
     return retrieveAlignmentResult(hybridId, lineId);
 }
 
-
 void D19cBackendAlignmentFWInterface::enableAlignmentOnPRBS(uint8_t hybridId)
 {
     fAlignOnCustomPattern[hybridId]       = true;
@@ -218,10 +217,7 @@ void D19cBackendAlignmentFWInterface::enableAlignmentOnPRBS(uint8_t hybridId)
     fCustomAlignmentPatternMask[hybridId] = 0xffff;
 }
 
-void D19cBackendAlignmentFWInterface::disableAlignmentOnPRBS(uint8_t hybridId)
-{
-    fAlignOnCustomPattern[hybridId] = false;
-}
+void D19cBackendAlignmentFWInterface::disableAlignmentOnPRBS(uint8_t hybridId) { fAlignOnCustomPattern[hybridId] = false; }
 
 void D19cBackendAlignmentFWInterface::enableAlignmentOnCustomPattern(uint8_t hybridId, uint16_t thePattern, uint16_t thePatternMask)
 {
@@ -230,10 +226,7 @@ void D19cBackendAlignmentFWInterface::enableAlignmentOnCustomPattern(uint8_t hyb
     fCustomAlignmentPatternMask[hybridId] = thePatternMask;
 }
 
-void D19cBackendAlignmentFWInterface::disableAlignmentOnCustomPattern(uint8_t hybridId)
-{
-    fAlignOnCustomPattern[hybridId] = false;
-}
+void D19cBackendAlignmentFWInterface::disableAlignmentOnCustomPattern(uint8_t hybridId) { fAlignOnCustomPattern[hybridId] = false; }
 
 void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t lineId)
 {
@@ -317,10 +310,10 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
 
             // if(!fAlignOnCustomPattern.at(hybridId))
             // {
-                LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << +lineId;
-                LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET
-                          << ", WA FSM: " << BOLDGREEN << theAlignmentResults.fWordAlignmentFSMstate << RESET;
-                LOG(INFO) << "\t\t Delay: " << +theAlignmentResults.fDelay << ", Bitslip: " << +theAlignmentResults.fBitslip;
+            LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << +lineId;
+            LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET << ", WA FSM: " << BOLDGREEN
+                      << theAlignmentResults.fWordAlignmentFSMstate << RESET;
+            LOG(INFO) << "\t\t Delay: " << +theAlignmentResults.fDelay << ", Bitslip: " << +theAlignmentResults.fBitslip;
             // }
 
             return theAlignmentResults;

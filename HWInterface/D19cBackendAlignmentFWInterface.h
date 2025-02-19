@@ -181,13 +181,13 @@ class D19cBackendAlignmentFWInterface
     void setIsOptical(bool isOptical) { fIsOptical = isOptical; }
 
   private:
-    RegManager* fTheRegManager{nullptr};
-    bool        fIsOptical{true};
-    std::string fPhaseTuningControlRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
-    std::string fPhaseTuningResultRegisterName  = "fc7_daq_stat.physical_interface_block.phase_tuning_reply";
-    std::map<uint8_t, bool>        fAlignOnCustomPattern;
-    std::map<uint8_t, uint16_t>    fCustomAlignmentPattern;
-    std::map<uint8_t, uint16_t>    fCustomAlignmentPatternMask;
+    RegManager*                 fTheRegManager{nullptr};
+    bool                        fIsOptical{true};
+    std::string                 fPhaseTuningControlRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
+    std::string                 fPhaseTuningResultRegisterName  = "fc7_daq_stat.physical_interface_block.phase_tuning_reply";
+    std::map<uint8_t, bool>     fAlignOnCustomPattern;
+    std::map<uint8_t, uint16_t> fCustomAlignmentPattern;
+    std::map<uint8_t, uint16_t> fCustomAlignmentPatternMask;
 
     AlignmentResult              retrieveAlignmentResult(uint8_t hybridId, uint8_t lineId);
     std::vector<AlignmentResult> retrieveAllLineAlignmentResult(uint8_t hybridId, uint8_t numberOfLines);

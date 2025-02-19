@@ -71,11 +71,12 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer*          the
                                                 const std::vector<uint32_t>& patternMask,
                                                 float                        numberOfBits,
                                                 bool                         runAlignment)
-                                                
+
 {
-    BoardDataContainer thePatternAndMaskContainer;
-    std::pair<std::vector<uint32_t>, std::vector<uint32_t>> theInitialPatternAndMask {pattern, patternMask};
-    ContainerFactory::copyAndInitHybrid<std::pair<std::vector<uint32_t>, std::vector<uint32_t>>>(*fDetectorContainer->getObject(theErrorBitContainer->getId()), thePatternAndMaskContainer, theInitialPatternAndMask);
+    BoardDataContainer                                      thePatternAndMaskContainer;
+    std::pair<std::vector<uint32_t>, std::vector<uint32_t>> theInitialPatternAndMask{pattern, patternMask};
+    ContainerFactory::copyAndInitHybrid<std::pair<std::vector<uint32_t>, std::vector<uint32_t>>>(
+        *fDetectorContainer->getObject(theErrorBitContainer->getId()), thePatternAndMaskContainer, theInitialPatternAndMask);
     patternCheckerTest(theErrorBitContainer, line, thePatternAndMaskContainer, numberOfBits, runAlignment);
 }
 
@@ -95,7 +96,8 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitC
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                const auto& thePatternAndMask = thePatternAndMaskContainer.getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::pair<std::vector<uint32_t>, std::vector<uint32_t>>>();
+                const auto& thePatternAndMask =
+                    thePatternAndMaskContainer.getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::pair<std::vector<uint32_t>, std::vector<uint32_t>>>();
                 theAlignerInterface->enableAlignmentOnCustomPattern(theHybrid->getId(), (thePatternAndMask.first.at(0) >> 16 & 0xffff), (thePatternAndMask.second.at(0) >> 16 & 0xffff));
                 if(!tryLineAlignment(theAlignerInterface, theHybrid, line))
                 {
@@ -174,15 +176,15 @@ void OTPatternCheckerHelper::patternCheckerTest()
                     }
                 }
             }
-    #ifdef __USE_ROOT__
+#ifdef __USE_ROOT__
             fDQMHistogramOTPatternCheckerHelper.fillErrorCounter(thePatternCounterCountainer, line);
-    #else
+#else
             if(fDQMStreamerEnabled)
             {
                 ContainerSerialization theErrorCounterSerialization("OTPatternCheckerHelperErrorCounter");
                 theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePatternCounterCountainer, line);
             }
-    #endif
+#endif
         }
     }
 }
