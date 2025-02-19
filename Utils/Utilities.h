@@ -40,7 +40,7 @@ template <class T, size_t N>
 auto parseString(const std::string& data)
 {
     std::array<T, N> result;
-    std::transform(data.begin(), data.end(), result.begin(), [](char c) { return c - '0'; });
+    std::transform(data.begin(), data.end(), result.begin(), [](char c) { return (c == 'N' ? 0xFF : c - '0'); });
     return result;
 }
 

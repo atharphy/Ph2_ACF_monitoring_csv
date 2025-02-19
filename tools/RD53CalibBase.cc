@@ -17,7 +17,7 @@ void CalibBase::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    splitByHybrid = this->findValueInSettings<double>("DoSplitByHybrid", false);
+    splitFile     = this->findValueInSettings<double>("DoSplitByBoardHybrid", false);
     rowStart      = this->findValueInSettings<double>("ROWstart");
     rowStop       = this->findValueInSettings<double>("ROWstop");
     colStart      = this->findValueInSettings<double>("COLstart");
@@ -34,7 +34,7 @@ void CalibBase::Stop()
     Tool::Stop();
 
 #ifdef __USE_ROOT__
-    if((splitByHybrid == true) && (this->fResultFile != nullptr) && (this->fResultFile->IsOpen())) splitHistoFileByHybrid(this->fResultFile);
+    if((splitFile == true) && (this->fResultFile != nullptr) && (this->fResultFile->IsOpen())) splitHistoFile(this->fResultFile);
 #endif
     this->CloseResultFile();
 
@@ -346,14 +346,14 @@ void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)
     }
 }
 
-// ###############################
-// # Split output file by Hybrid #
-// ###############################
+// #######################################
+// # Split output file by Board & Hybrid #
+// #######################################
 
 #ifdef __USE_ROOT__
-bool CalibBase::splitHistoFileByHybrid(TFile* theInputFile)
+bool CalibBase::splitHistoFile(TFile* theInputFile)
 {
-    LOG(INFO) << GREEN << "Splitting ROOT file by Hybrid" << RESET;
+    LOG(INFO) << GREEN << "Splitting ROOT file by Board & Hybrid" << RESET;
 
     const std::string detectorFolder = "Detector";
     if(CalibBase::openRootFileFolder(theInputFile, detectorFolder) == false) return false;
@@ -380,13 +380,13 @@ bool CalibBase::splitHistoFileByHybrid(TFile* theInputFile)
                 // # Create new output file #
                 // ##########################
                 std::string theOutputFileName = theInputFile->GetName();
-                theOutputFileName.replace(theOutputFileName.find(".root"), 5, "_Hybrid_" + std::to_string(cHybrid->getId()) + ".root");
+                theOutputFileName.replace(theOutputFileName.find(".root"), 5, "_" + boardFolder + "_" + hybridFolder + ".root");
                 TFile* theOutputFile = TFile::Open(theOutputFileName.c_str(), "RECREATE");
 
                 // ################
                 // # Copy content #
                 // ################
-                if(theOutputFile && (theOutputFile->IsZombie() == false)) CalibBase::copyDirectories(theInputFile, theOutputFile, hybridFolder);
+                if(theOutputFile && (theOutputFile->IsZombie() == false)) CalibBase::copyDirectories(theInputFile, theOutputFile, boardFolder, hybridFolder);
 
                 // #####################
                 // # Close output file #
@@ -401,14 +401,17 @@ bool CalibBase::splitHistoFileByHybrid(TFile* theInputFile)
     return true;
 }
 
-void CalibBase::copyDirectories(TFile* theInputFile, TFile* theOutputFile, const std::string& hybridName)
+void CalibBase::copyDirectories(TFile* theInputFile, TFile* theOutputFile, const std::string& boardName, const std::string& hybridName)
 {
     const std::string detectorFolder = "Detector";
     CalibBase::copyContent(theInputFile, theOutputFile, detectorFolder);
 
     for(const auto cBoard: *fDetectorContainer)
     {
-        const std::string boardFolder     = "Board_" + std::to_string(cBoard->getId());
+        const std::string boardFolder = "Board_" + std::to_string(cBoard->getId());
+
+        if(boardFolder != boardName) continue;
+
         const std::string fullBoardFolder = detectorFolder + "/" + boardFolder;
         CalibBase::copyContent(theInputFile, theOutputFile, fullBoardFolder);
 

@@ -139,8 +139,8 @@ std::map<std::string, RD53::SpecialRegInfo> RD53B::specialRegMap = {{"CDR_CONFIG
                                                                     {"ManualMode", {"PhaseDetectorConfig", 1}},
                                                                     {"FixedMode", {"PhaseDetectorConfig", 5}},
 
-                                                                    {"ChipIdWireBonds", {"PadReadout", 0}},
-                                                                    {"IrefWireBonds", {"PadReadout", 4}}};
+                                                                    {"IrefWireBonds", {"PadReadout", 0}},
+                                                                    {"ChipIdWireBonds", {"PadReadout", 4}}};
 
 RD53B::RD53B(const FrontEndType& frontEndType,
              uint8_t             pBeId,
