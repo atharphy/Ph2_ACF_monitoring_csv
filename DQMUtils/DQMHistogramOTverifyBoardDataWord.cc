@@ -3,6 +3,7 @@
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/GenericDataArray.h"
 
 #include "TFile.h"
 #include "TH1F.h"
@@ -31,11 +32,19 @@ void DQMHistogramOTverifyBoardDataWord::book(TFile* theOutputFile, DetectorConta
         for(size_t stubLine = 0; stubLine < numberOfLines - 1; ++stubLine) theHistogram->GetXaxis()->SetBinLabel(stubLine + 2, Form("Stub%d", int(stubLine)));
     };
 
-    HistContainer<TH1F> bitSlipHistogram("PatternMatchingEfficiency", "Pattern Matching Efficiency", numberOfLines, -0.5, numberOfLines - 0.5);
-    bitSlipHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
-    bitSlipHistogram.fTheHistogram->GetYaxis()->SetTitle("Efficiency");
-    setBitLabel(bitSlipHistogram.fTheHistogram);
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fMatchingEfficiencyHistogramContainer, bitSlipHistogram);
+    HistContainer<TH1F> errorRateHistogram("PatternMatchingErrorRate", "Pattern Matching Error Rate", numberOfLines, -0.5, numberOfLines - 0.5);
+    errorRateHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
+    errorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Error rate");
+    errorRateHistogram.fTheHistogram->SetStats(false);
+    setBitLabel(errorRateHistogram.fTheHistogram);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fMatchingErrorRateHistogramContainer, errorRateHistogram);
+
+    HistContainer<TH1F> testedBitsHistogram("PatternMatchingTestedBits", "Pattern Matching Tested bits", numberOfLines, -0.5, numberOfLines - 0.5);
+    testedBitsHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
+    testedBitsHistogram.fTheHistogram->GetYaxis()->SetTitle("Tested bits");
+    testedBitsHistogram.fTheHistogram->SetStats(false);
+    setBitLabel(testedBitsHistogram.fTheHistogram);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fMatchingTestedBitsHistogramContainer, testedBitsHistogram);
 }
 
 //========================================================================================================================
@@ -53,21 +62,26 @@ void DQMHistogramOTverifyBoardDataWord::reset(void)
 
 //========================================================================================================================
 
-void DQMHistogramOTverifyBoardDataWord::fillPatternMatchingEfficiency(DetectorDataContainer& thePatternMatchingEfficiencyContainer)
+void DQMHistogramOTverifyBoardDataWord::fillPatternErrorRate(DetectorDataContainer& thePatternErrorRateContainer)
 {
-    for(auto board: thePatternMatchingEfficiencyContainer)
+    for(auto board: thePatternErrorRateContainer)
     {
         for(auto opticalGroup: *board)
         {
             for(auto hybrid: *opticalGroup)
             {
                 if(!hybrid->hasSummary()) continue;
-                TH1F* hybridMatchingEfficiencyHistogram =
-                    fMatchingEfficiencyHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                auto theHybridMatchingEfficiencyVector = hybrid->getSummary<std::vector<float>>();
+                TH1F* hybridErrorRateHistogram =
+                    fMatchingErrorRateHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                TH1F* hybridTestedBitsHistogram =
+                    fMatchingTestedBitsHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                auto theHybridMatchingEfficiencyVector = hybrid->getSummary<std::vector<GenericDataArray<float, 2>>>();
                 for(size_t lineId = 0; lineId < theHybridMatchingEfficiencyVector.size(); ++lineId)
                 {
-                    hybridMatchingEfficiencyHistogram->SetBinContent(lineId + 1, theHybridMatchingEfficiencyVector[lineId]);
+                    auto testedBits = theHybridMatchingEfficiencyVector.at(lineId).at(0);
+                    auto errorRate  = testedBits > 0 ? theHybridMatchingEfficiencyVector.at(lineId).at(1) / testedBits : 1.;
+                    hybridTestedBitsHistogram->SetBinContent(lineId + 1, testedBits);
+                    hybridErrorRateHistogram->SetBinContent(lineId + 1, errorRate);
                 }
             }
         }
@@ -84,8 +98,8 @@ bool DQMHistogramOTverifyBoardDataWord::fill(std::string& inputStream)
     {
         // std::cout << "Matched OTverifyBoardDataWord MatchingEfficiency!!!!\n";
         DetectorDataContainer theDetectorData =
-            theMatchingEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<float>, EmptyContainer>(fDetectorContainer);
-        fillPatternMatchingEfficiency(theDetectorData);
+            theMatchingEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<GenericDataArray<float, 2>>, EmptyContainer>(fDetectorContainer);
+        fillPatternErrorRate(theDetectorData);
         return true;
     }
 

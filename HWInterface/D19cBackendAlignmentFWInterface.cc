@@ -210,6 +210,24 @@ AlignmentResult D19cBackendAlignmentFWInterface::tunePhase(uint8_t hybridId, uin
     return retrieveAlignmentResult(hybridId, lineId);
 }
 
+void D19cBackendAlignmentFWInterface::enableAlignmentOnPRBS(uint8_t hybridId)
+{
+    fAlignOnCustomPattern[hybridId]       = true;
+    fCustomAlignmentPattern[hybridId]     = BERT_ALIGNMENT_PATTERN;
+    fCustomAlignmentPatternMask[hybridId] = 0xffff;
+}
+
+void D19cBackendAlignmentFWInterface::disableAlignmentOnPRBS(uint8_t hybridId) { fAlignOnCustomPattern[hybridId] = false; }
+
+void D19cBackendAlignmentFWInterface::enableAlignmentOnCustomPattern(uint8_t hybridId, uint16_t thePattern, uint16_t thePatternMask)
+{
+    fAlignOnCustomPattern[hybridId]       = true;
+    fCustomAlignmentPattern[hybridId]     = thePattern;
+    fCustomAlignmentPatternMask[hybridId] = thePatternMask;
+}
+
+void D19cBackendAlignmentFWInterface::disableAlignmentOnCustomPattern(uint8_t hybridId) { fAlignOnCustomPattern[hybridId] = false; }
+
 void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t lineId)
 {
     if(!fIsOptical)
@@ -223,16 +241,16 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
     thePhaseTuningControl.setChipId(lineId == 0xF ? 0x7 : 0x0);
     thePhaseTuningControl.setLineId(lineId);
 
-    if(fAlignOnCustomPattern)
+    if(fAlignOnCustomPattern.at(hybridId))
     {
         thePhaseTuningControl.resetCommandBits();
         thePhaseTuningControl.setCommand(PhaseTuningControl::Command::SetSyncPattern);
-        thePhaseTuningControl.setSyncPattern(fCustomAlignmentPattern);
+        thePhaseTuningControl.setSyncPattern(fCustomAlignmentPattern.at(hybridId));
         writeCommand(thePhaseTuningControl);
 
         thePhaseTuningControl.resetCommandBits();
         thePhaseTuningControl.setCommand(PhaseTuningControl::Command::SetSyncPatternMask);
-        thePhaseTuningControl.setSyncPatternMask(fCustomAlignmentPatternMask);
+        thePhaseTuningControl.setSyncPatternMask(fCustomAlignmentPatternMask.at(hybridId));
         writeCommand(thePhaseTuningControl);
     }
     else
@@ -253,7 +271,7 @@ void D19cBackendAlignmentFWInterface::runWordAlignment(uint8_t hybridId, uint8_t
     thePhaseTuningControl.resetCommandBits();
     thePhaseTuningControl.setCommand(PhaseTuningControl::Command::Configure);
     thePhaseTuningControl.setEnableSync(true);
-    thePhaseTuningControl.setEnableCustomPattern(fAlignOnCustomPattern);
+    thePhaseTuningControl.setEnableCustomPattern(fAlignOnCustomPattern.at(hybridId));
     thePhaseTuningControl.setMode(PhaseTuningControl::Mode::Auto);
     // thePhaseTuningControl.setEnableLCC(true);
     writeCommand(thePhaseTuningControl);
@@ -290,10 +308,13 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
             thePhaseTuningReply.decodeReply(reply, thePhaseTuningControl);
             AlignmentResult theAlignmentResults(thePhaseTuningReply);
 
+            // if(!fAlignOnCustomPattern.at(hybridId))
+            // {
             LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << +lineId;
             LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET << ", WA FSM: " << BOLDGREEN
                       << theAlignmentResults.fWordAlignmentFSMstate << RESET;
             LOG(INFO) << "\t\t Delay: " << +theAlignmentResults.fDelay << ", Bitslip: " << +theAlignmentResults.fBitslip;
+            // }
 
             return theAlignmentResults;
         }
@@ -315,7 +336,7 @@ void D19cBackendAlignmentFWInterface::writeCommand(const PhaseTuningControl& the
     fTheRegManager->WriteReg(fPhaseTuningControlRegisterName, phaseTunerCommand);
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.bert_control = 0x"  << std::hex << phaseTunerCommand << std::dec << std::endl;
 
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
 }
 
 std::vector<AlignmentResult> D19cBackendAlignmentFWInterface::alignWordAllLines(uint8_t hybridId, uint8_t numberOfLines)

@@ -705,9 +705,9 @@ void D19clpGBTInterface::updateCICinputClockToMatchPSrate(Ph2_HwDescription::Chi
         if((theCurrentRegisterValue & 0x7) != expectedCicClockSetting)
         {
             uint16_t theNewRegisterValue = (theCurrentRegisterValue & 0xF8) | (expectedCicClockSetting & 0x7);
-            LOG(INFO) << BOLDYELLOW << "Attention! Updating " << registerName << " from 0x" << std::hex << +theCurrentRegisterValue << " to 0x" << +theNewRegisterValue << std::dec
-                      << " to provide the CIC with the correct clock based on the LpGBT data rate (" << +theChipRate << "Gb) for on BeBoard " << +pChip->getBeBoardId() << " OpticalGroup "
-                      << +pChip->getOpticalGroupId() << RESET;
+            LOG(DEBUG) << BOLDYELLOW << "Attention! Updating " << registerName << " from 0x" << std::hex << +theCurrentRegisterValue << " to 0x" << +theNewRegisterValue << std::dec
+                       << " to provide the CIC with the correct clock based on the LpGBT data rate (" << +theChipRate << "Gb) for on BeBoard " << +pChip->getBeBoardId() << " OpticalGroup "
+                       << +pChip->getOpticalGroupId() << RESET;
             this->WriteChipReg(pChip, registerName, theNewRegisterValue);
         }
     };
@@ -732,8 +732,8 @@ void D19clpGBTInterface::setCICClockPolarityAndStrength(Ph2_HwDescription::Chip*
         if((theCurrentRegisterValue & 0xC0) != pPolarity || (theCurrentRegisterValue & 0x38) != pStrength)
         {
             uint16_t theNewRegisterValue = pPolarity << 6 | pStrength << 3 | (theCurrentRegisterValue & 0x7);
-            LOG(INFO) << BOLDYELLOW << "Attention! Updating " << registerName << " from 0x" << std::hex << +theCurrentRegisterValue << " to 0x" << +theNewRegisterValue << std::dec
-                      << " to update the CIC clock polarity and strenght on BeBoard " << +pChip->getBeBoardId() << " OpticalGroup " << +pChip->getOpticalGroupId() << RESET;
+            LOG(DEBUG) << BOLDYELLOW << "Attention! Updating " << registerName << " from 0x" << std::hex << +theCurrentRegisterValue << " to 0x" << +theNewRegisterValue << std::dec
+                       << " to update the CIC clock polarity and strenght on BeBoard " << +pChip->getBeBoardId() << " OpticalGroup " << +pChip->getOpticalGroupId() << RESET;
             this->WriteChipReg(pChip, registerName, theNewRegisterValue);
         }
     };

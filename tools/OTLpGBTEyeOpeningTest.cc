@@ -91,7 +91,7 @@ void OTLpGBTEyeOpeningTest::runEyeOpeningTest()
                 for(uint8_t cTimeStep = 0; cTimeStep < 64; cTimeStep++)
                 {
                     for(auto theOpticalGroup: *theBoard) { flpGBTInterface->SelectEOMPhase(theOpticalGroup->flpGBT, cTimeStep); }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+                    std::this_thread::sleep_for(std::chrono::microseconds(50));
 
                     for(auto theOpticalGroup: *theBoard) { flpGBTInterface->StartEOM(theOpticalGroup->flpGBT, true); }
 
@@ -103,9 +103,9 @@ void OTLpGBTEyeOpeningTest::runEyeOpeningTest()
                         uint16_t maximumAllowedAttempts = 10;
                         while((cEOMStatus & (0x1 << 1) >> 1) && !(cEOMStatus & (0x1 << 0)))
                         {
-                            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                            std::this_thread::sleep_for(std::chrono::microseconds(50));
                             cEOMStatus = flpGBTInterface->GetEOMStatus(theOpticalGroup->flpGBT);
-                            if(numberOfAttempts++ > 10) break;
+                            if(numberOfAttempts++ >= 10) break;
                             ;
                         }
                         if(numberOfAttempts == maximumAllowedAttempts)

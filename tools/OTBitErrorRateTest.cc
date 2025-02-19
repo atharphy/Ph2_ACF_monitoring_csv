@@ -92,20 +92,19 @@ void OTBitErrorRateTest::bitErrorRateTestPerLine(Ph2_HwDescription::BeBoard* the
     if(!allAligned) { LOG(ERROR) << ERROR_FORMAT << "Failed to align LpGBT on Board " << theBoard->getId() << " after " << maximumNumberOfIterations << "trials" << RESET; }
 
     D19cBackendAlignmentFWInterface* theAlignerInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBackendAlignmentInterface();
-    theAlignerInterface->enableAlignmentOnPRBS();
 
     for(auto theOpticalGroup: *theBoard)
     {
         for(auto theHybrid: *theOpticalGroup)
         {
+            theAlignerInterface->enableAlignmentOnPRBS(theHybrid->getId());
             if(!tryLineAlignment(theAlignerInterface, theHybrid, lineNumber))
             {
                 LOG(ERROR) << ERROR_FORMAT << "Failed to align OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << RESET;
             }
+            theAlignerInterface->disableAlignmentOnPRBS(theHybrid->getId());
         }
     }
-
-    theAlignerInterface->disableAlignmentOnPRBS();
 
     D19cBERTinterface* theBERTinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
 

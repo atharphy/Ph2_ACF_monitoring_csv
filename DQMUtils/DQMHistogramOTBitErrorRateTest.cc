@@ -75,17 +75,17 @@ void DQMHistogramOTBitErrorRateTest::book(TFile* theOutputFile, DetectorContaine
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBERTbitCounterHistogram, bitCounterHistogram);
 
     HistContainer<TH1I> bestPhaseHistogram("BERTbestPhase", "Bert best phase", fNumberOfLines, -0.5, fNumberOfLines - 0.5);
-    errorRateHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
+    bestPhaseHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     bestPhaseHistogram.fTheHistogram->GetYaxis()->SetTitle("Best phase");
-    setBitLabelOpticalGroup(errorRateHistogram.fTheHistogram->GetXaxis());
     bestPhaseHistogram.fTheHistogram->SetStats(false);
+    setBitLabelOpticalGroup(bestPhaseHistogram.fTheHistogram->GetXaxis());
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBestPhaseHistogram, bestPhaseHistogram);
 
     HistContainer<TH1I> fecCounterHistogram("FECerrorCounter", "FEC error counter", fNumberOfLines, -0.5, fNumberOfLines - 0.5);
-    bitCounterHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
+    fecCounterHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     fecCounterHistogram.fTheHistogram->GetYaxis()->SetTitle("FEC counter");
-    setBitLabelOpticalGroup(errorRateHistogram.fTheHistogram->GetXaxis());
     fecCounterHistogram.fTheHistogram->SetStats(false);
+    setBitLabelOpticalGroup(fecCounterHistogram.fTheHistogram->GetXaxis());
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fFECcounterHistogram, fecCounterHistogram);
 }
 
@@ -101,7 +101,7 @@ void DQMHistogramOTBitErrorRateTest::fillErrorCounterPhaseScan(DetectorDataConta
             for(auto theHybrid: *theOpticalGroup)
             {
                 auto theErrorCounterVector = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
-                int  binNumber             = 1 + line + (theHybrid->getId() % 2) * 7;
+                int  binNumber             = 1 + line + (theHybrid->getId() % 2) * fNumberOfLines;
                 theBitCounterHistogram->SetBinContent(binNumber, phaseDelay + 1, theErrorCounterVector.at(0));
                 theErrorCounterHistogram->SetBinContent(binNumber, phaseDelay + 1, theErrorCounterVector.at(0) > 0 ? float(theErrorCounterVector.at(1)) / float(theErrorCounterVector.at(0)) : 1.);
             }

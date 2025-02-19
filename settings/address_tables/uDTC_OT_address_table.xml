@@ -618,6 +618,7 @@
         <node id="physical_interface_block"     address="0x3000">
             <node id="phase_tuning_reply"       address="0x001" mask="0xFFFFFFFF"/>
             <node id="bert_stat"                address="0x101" mask="0xFFFFFFFF"/>
+            <node id="bert_readback"            address="0x102" mask="0xFFFFFFFF"/>
             <node id="hardware_ready"           address="0x002" mask="0x00010000"/>
             <node id="delay5_done_cbc0"         address="0x002" mask="0x00000001"/>
             <node id="serializer_done_cbc0"     address="0x002" mask="0x00000002"/>
