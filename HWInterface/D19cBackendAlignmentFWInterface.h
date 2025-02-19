@@ -168,21 +168,10 @@ class D19cBackendAlignmentFWInterface
     D19cBackendAlignmentFWInterface(RegManager* theRegManager);
     ~D19cBackendAlignmentFWInterface();
 
-    void enableAlignmentOnPRBS()
-    {
-        fAlignOnCustomPattern       = true;
-        fCustomAlignmentPattern     = BERT_ALIGNMENT_PATTERN;
-        fCustomAlignmentPatternMask = 0xffff;
-    }
-    void disableAlignmentOnPRBS() { fAlignOnCustomPattern = false; }
-
-    void enableAlignmentOnCustomPattern(uint16_t thePattern, uint16_t thePatternMask)
-    {
-        fAlignOnCustomPattern       = true;
-        fCustomAlignmentPattern     = thePattern;
-        fCustomAlignmentPatternMask = thePatternMask;
-    }
-    void disableAlignmentOnCustomPattern() { fAlignOnCustomPattern = false; }
+    void enableAlignmentOnPRBS(uint8_t hybridId);
+    void disableAlignmentOnPRBS(uint8_t hybridId);
+    void enableAlignmentOnCustomPattern(uint8_t hybridId, uint16_t thePattern, uint16_t thePatternMask);
+    void disableAlignmentOnCustomPattern(uint8_t hybridId);
 
     AlignmentResult              alignWord(uint8_t hybridId, uint8_t lineId);
     std::vector<AlignmentResult> alignWordAllLines(uint8_t hybridId, uint8_t numberOfLines);
@@ -196,9 +185,9 @@ class D19cBackendAlignmentFWInterface
     bool        fIsOptical{true};
     std::string fPhaseTuningControlRegisterName = "fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl";
     std::string fPhaseTuningResultRegisterName  = "fc7_daq_stat.physical_interface_block.phase_tuning_reply";
-    bool        fAlignOnCustomPattern{false};
-    uint16_t    fCustomAlignmentPattern{0x0};
-    uint16_t    fCustomAlignmentPatternMask{0x0};
+    std::map<uint8_t, bool>        fAlignOnCustomPattern;
+    std::map<uint8_t, uint16_t>    fCustomAlignmentPattern;
+    std::map<uint8_t, uint16_t>    fCustomAlignmentPatternMask;
 
     AlignmentResult              retrieveAlignmentResult(uint8_t hybridId, uint8_t lineId);
     std::vector<AlignmentResult> retrieveAllLineAlignmentResult(uint8_t hybridId, uint8_t numberOfLines);

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <map>
 
 class BoardContainer;
 class OpticalGroupContainer;
@@ -167,8 +168,8 @@ class D19cBERTinterface
 
     BoardDataContainer runBERTonSingleLine(BoardContainer* theBoardContainer, uint8_t lineNumber, bool is10Gmodule, float numberOfMatchedBits);
 
-    void setCheckedPattern(const std::vector<uint32_t>& theCheckedPattern);
-    void setCheckedPatternMask(const std::vector<uint32_t>& theCheckedPatternMask);
+    void setCheckedPattern(uint8_t hybridId, const std::vector<uint32_t>& theCheckedPattern);
+    void setCheckedPatternMask(uint8_t hybridId, const std::vector<uint32_t>& theCheckedPatternMask);
     void setUsePRBS(bool usePRBS) { fUsePRBS = usePRBS; }
 
   private:
@@ -194,12 +195,14 @@ class D19cBERTinterface
     BitErrorTestReply readReplay(const BitErrorTestControl& theBitErrorTestControl);
     void              loadAllCheckedPatternsInBoard(BoardContainer* theBoardContainer);
 
+    void loadAlignmentPattern(uint16_t hybridId, uint8_t lineId);
+
     uint8_t fLineSelect;
 
-    std::vector<uint32_t> fCheckedPattern{0x0, 0x0, 0x0, 0x0};
-    std::vector<uint32_t> fCheckedPatternMask{0x0, 0x0, 0x0, 0x0};
+    std::map<uint8_t, std::vector<uint32_t>> fCheckedPatternMap;
+    std::map<uint8_t, std::vector<uint32_t>> fCheckedPatternMaskMap;
+    std::map<uint8_t, float>                 fNumberOfCheckedBitsMap;
     bool                  fUsePRBS             = true;
-    float                 fNumberOfCheckedBits = 0;
 };
 
 } // namespace Ph2_HwInterface

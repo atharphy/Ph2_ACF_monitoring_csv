@@ -55,9 +55,9 @@ class OTverifyBoardDataWord : public Tool
 
   private:
     void runIntegrityTest();
-    void runStubIntegrityTestSoftwareMatch(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket);
 
   protected:
+    void           runStubIntegrityTestSoftwareMatch(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket);
     void           runStubIntegrityTestFirmwareMatch(Ph2_HwDescription::BeBoard* theBoard, bool runAlignment = false);
     void           runL1IntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket, PatternMatcher& thePatternMatcher);
     bool           isStubPatternMatched(const std::vector<uint32_t>& theWordVector, uint8_t numberOfBytesInSinglePacket, uint8_t flagCharacter, uint8_t idleCharacter);

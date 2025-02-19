@@ -65,42 +65,59 @@ void OTPatternCheckerHelper::Resume() {}
 
 void OTPatternCheckerHelper::Reset() { fRegisterHelper->restoreSnapshot(); }
 
-void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer*          theErrorBitContained,
+void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer*          theErrorBitContainer,
                                                 uint8_t                      line,
                                                 const std::vector<uint32_t>& pattern,
                                                 const std::vector<uint32_t>& patternMask,
                                                 float                        numberOfBits,
                                                 bool                         runAlignment)
+                                                
+{
+    BoardDataContainer thePatternAndMaskContainer;
+    std::pair<std::vector<uint32_t>, std::vector<uint32_t>> theInitialPatternAndMask {pattern, patternMask};
+    ContainerFactory::copyAndInitHybrid<std::pair<std::vector<uint32_t>, std::vector<uint32_t>>>(*fDetectorContainer->getObject(theErrorBitContainer->getId()), thePatternAndMaskContainer, theInitialPatternAndMask);
+    patternCheckerTest(theErrorBitContainer, line, thePatternAndMaskContainer, numberOfBits, runAlignment);
+}
+
+void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitContainer, uint8_t line, BoardDataContainer& thePatternAndMaskContainer, float numberOfBits, bool runAlignment)
 {
     LOG(INFO) << BOLDBLUE << "Running Pattern Checker on line " << +line << RESET;
 
-    auto theBoard = fDetectorContainer->getObject(theErrorBitContained->getId());
+    auto theBoard = fDetectorContainer->getObject(theErrorBitContainer->getId());
 
     bool is10Gmodule = flpGBTInterface->GetChipRate(theBoard->getFirstObject()->flpGBT) == 10;
 
     if(runAlignment)
     {
         D19cBackendAlignmentFWInterface* theAlignerInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBackendAlignmentInterface();
-        theAlignerInterface->enableAlignmentOnCustomPattern((pattern.at(0) >> 16 & 0xffff), (patternMask.at(0) >> 16 & 0xffff));
 
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
+                const auto& thePatternAndMask = thePatternAndMaskContainer.getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::pair<std::vector<uint32_t>, std::vector<uint32_t>>>();
+                theAlignerInterface->enableAlignmentOnCustomPattern(theHybrid->getId(), (thePatternAndMask.first.at(0) >> 16 & 0xffff), (thePatternAndMask.second.at(0) >> 16 & 0xffff));
                 if(!tryLineAlignment(theAlignerInterface, theHybrid, line))
                 {
                     LOG(ERROR) << ERROR_FORMAT << "Failed to align OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +line << RESET;
                 }
+                theAlignerInterface->disableAlignmentOnCustomPattern(theHybrid->getId());
             }
         }
-        theAlignerInterface->disableAlignmentOnCustomPattern();
     }
 
     D19cBERTinterface* theBERTinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
 
     theBERTinterface->setUsePRBS(false);
-    theBERTinterface->setCheckedPattern(pattern);
-    theBERTinterface->setCheckedPatternMask(patternMask);
+    for(auto theOpticalGroup: *theBoard)
+    {
+        for(auto theHybrid: *theOpticalGroup)
+        {
+            const auto& thePatternAndMask = thePatternAndMaskContainer.getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::pair<std::vector<uint32_t>, std::vector<uint32_t>>>();
+            theBERTinterface->setCheckedPattern(theHybrid->getId(), thePatternAndMask.first);
+            theBERTinterface->setCheckedPatternMask(theHybrid->getId(), thePatternAndMask.second);
+        }
+    }
 
     BoardDataContainer bertResultsBoardContainer = theBERTinterface->runBERTonSingleLine(theBoard, line, is10Gmodule, numberOfBits);
 
@@ -109,7 +126,7 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer*          the
         for(auto theHybrid: *theOpticalGroup)
         {
             const auto& receivedBERTresultsVector                                                                                      = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
-            theErrorBitContained->getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>() = receivedBERTresultsVector;
+            theErrorBitContainer->getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>() = receivedBERTresultsVector;
         }
     }
 }
@@ -130,27 +147,42 @@ void OTPatternCheckerHelper::patternCheckerTest()
         }
     }
 
-    uint8_t numberOfLines = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
-    for(uint8_t line = 1; line < numberOfLines; ++line)
-    {
-        DetectorDataContainer thePatternCounterCountainer;
-        ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*fDetectorContainer, thePatternCounterCountainer);
-        for(auto theBoard: thePatternCounterCountainer)
-        {
-            std::vector<uint32_t> pattern{0xeaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa};
-            std::vector<uint32_t> patternMask{0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff};
-            if(static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(fDetectorContainer->getObject(theBoard->getId())->getFirstObject()->flpGBT) == 5) pattern.at(2) = 0xeaaaaaaa;
-            patternCheckerTest(theBoard, line, pattern, patternMask, fNumberOfBits, true);
-        }
+    bool errorFound = false;
 
-#ifdef __USE_ROOT__
-        fDQMHistogramOTPatternCheckerHelper.fillErrorCounter(thePatternCounterCountainer, line);
-#else
-        if(fDQMStreamerEnabled)
+    while(!errorFound)
+    {
+        uint8_t numberOfLines = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
+        for(uint8_t line = 1; line < numberOfLines; ++line)
         {
-            ContainerSerialization theErrorCounterSerialization("OTPatternCheckerHelperErrorCounter");
-            theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePatternCounterCountainer, line);
+            DetectorDataContainer thePatternCounterCountainer;
+            ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*fDetectorContainer, thePatternCounterCountainer);
+            for(auto theBoard: thePatternCounterCountainer)
+            {
+                std::vector<uint32_t> pattern{0xeaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa};
+                std::vector<uint32_t> patternMask{0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff};
+                if(static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(fDetectorContainer->getObject(theBoard->getId())->getFirstObject()->flpGBT) == 5) pattern.at(2) = 0xeaaaaaaa;
+                patternCheckerTest(theBoard, line, pattern, patternMask, fNumberOfBits, true);
+            }
+
+            for(auto theBoard: thePatternCounterCountainer)
+            {
+                for(auto theOpticalGroup: *theBoard)
+                {
+                    for(auto theHybrid: *theOpticalGroup)
+                    {
+                        if(theHybrid->getSummary<GenericDataArray<uint64_t, 2>>().at(1) > 0) errorFound = true;
+                    }
+                }
+            }
+    #ifdef __USE_ROOT__
+            fDQMHistogramOTPatternCheckerHelper.fillErrorCounter(thePatternCounterCountainer, line);
+    #else
+            if(fDQMStreamerEnabled)
+            {
+                ContainerSerialization theErrorCounterSerialization("OTPatternCheckerHelperErrorCounter");
+                theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePatternCounterCountainer, line);
+            }
+    #endif
         }
-#endif
     }
 }

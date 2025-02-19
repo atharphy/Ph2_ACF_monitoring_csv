@@ -331,19 +331,21 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterfac
 
             prepareHybridForL1IntegrityTest(theHybrid);
 
-            for(size_t iteration = 0; iteration < numberOfIterations; iteration++)
+            for(size_t iteration = 0; iteration < numberOfIterations; )
             {
                 auto lineOutputVector        = theFWInterface->L1ADebug(1, false);
                 auto orderedLineOutputVector = reorderPattern(lineOutputVector, numberOfBytesInSinglePacket);
 
                 float numberOrErrorBits = numberOfMatchedBits - thePatternMatcher.countMatchingBits(orderedLineOutputVector);
-                theHybridPatternMatchingEfficiency.at(0).at(0) += numberOfMatchedBits;
-                theHybridPatternMatchingEfficiency.at(0).at(1) += numberOrErrorBits;
                 if(numberOrErrorBits > 0)
                 {
+                    if(std::all_of(orderedLineOutputVector.begin(), orderedLineOutputVector.end(), [](int i){ return i == 0; })) continue;
                     if(fPrintError) LOG(INFO) << BOLDRED << "Pattern did not match for iteration number " << +iteration << RESET;
                     LOG(DEBUG) << BOLDRED << "pattern received did not match expected one: " << getPatternPrintout(lineOutputVector, numberOfBytesInSinglePacket, true) << RESET;
                 }
+                theHybridPatternMatchingEfficiency.at(0).at(0) += numberOfMatchedBits;
+                theHybridPatternMatchingEfficiency.at(0).at(1) += numberOrErrorBits;
+                ++iteration;
             }
         }
     }
