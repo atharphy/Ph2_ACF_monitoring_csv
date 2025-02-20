@@ -312,7 +312,11 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
     return true;
 }
 
-void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket, PatternMatcher& thePatternMatcher, BoardDataContainer* theAlignmentResultContainer)
+void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard*            theBoard,
+                                               D19cFWInterface*    theFWInterface,
+                                               uint8_t             numberOfBytesInSinglePacket,
+                                               PatternMatcher&     thePatternMatcher,
+                                               BoardDataContainer* theAlignmentResultContainer)
 {
     LOG(INFO) << BOLDMAGENTA << "Running runL1IntegrityTest" << RESET;
 
@@ -341,7 +345,7 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterfac
 
             prepareHybridForL1IntegrityTest(theHybrid);
 
-            for(size_t iteration = 0; iteration < numberOfIterations; )
+            for(size_t iteration = 0; iteration < numberOfIterations;)
             {
                 auto lineOutputVector        = theFWInterface->L1ADebug(1, false);
                 auto orderedLineOutputVector = reorderPattern(lineOutputVector, numberOfBytesInSinglePacket);
@@ -349,17 +353,17 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterfac
                 float numberOrErrorBits = numberOfMatchedBits - thePatternMatcher.countMatchingBits(orderedLineOutputVector);
                 if(numberOrErrorBits > 0)
                 {
-                    if(std::all_of(orderedLineOutputVector.begin(), orderedLineOutputVector.end(), [](int i){ return i == 0; })) continue;
+                    if(std::all_of(orderedLineOutputVector.begin(), orderedLineOutputVector.end(), [](int i) { return i == 0; })) continue;
                     size_t numberOfEmpyWords = 0;
                     for(auto theWord: orderedLineOutputVector)
                     {
                         if(theWord == 0) ++numberOfEmpyWords;
                     }
-                    if(numberOfEmpyWords > orderedLineOutputVector.size()/10) continue; // greater than 10% means very likely the fifo did not save properly the data
+                    if(numberOfEmpyWords > orderedLineOutputVector.size() / 10) continue; // greater than 10% means very likely the fifo did not save properly the data
                     if(fPrintError) LOG(INFO) << BOLDRED << "Pattern did not match for iteration number " << +iteration << RESET;
 
                     LOG(DEBUG) << BOLDRED << "OTverifyBoardDataWord::runL1IntegrityTest - Error, expected L1 pattern not found for Board " << +theBoard->getId() << " OpticalGroup "
-                            << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId() << RESET;
+                               << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId() << RESET;
                     LOG(DEBUG) << BOLDRED << "L1 data received    " << getPatternPrintout(orderedLineOutputVector, numberOfBytesInSinglePacket) << RESET;
                     LOG(DEBUG) << BOLDRED << "L1 pattern expected " << getPatternPrintout(thePatternMatcher.getPattern(), numberOfBytesInSinglePacket) << RESET;
                     LOG(DEBUG) << BOLDRED << "L1 pattern mask     " << getPatternPrintout(thePatternMatcher.getMask(), numberOfBytesInSinglePacket) << RESET;
@@ -401,10 +405,7 @@ void OTverifyBoardDataWord::prepareFWForL1IntegrityTest(Ph2_HwDescription::BeBoa
 
     for(auto theOpticalGroup: *theBoard)
     {
-        for(auto theHybrid: *theOpticalGroup)
-        {
-            fCicInterface->SetSparsification(static_cast<OuterTrackerHybrid*>(theHybrid)->fCic, true);
-        }
+        for(auto theHybrid: *theOpticalGroup) { fCicInterface->SetSparsification(static_cast<OuterTrackerHybrid*>(theHybrid)->fCic, true); }
     }
 }
 

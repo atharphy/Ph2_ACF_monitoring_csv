@@ -215,8 +215,9 @@ void OTCICtoLpGBTecv::runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, 
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
-            { 
-                alignmentResultContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<bool>() = fPatternCheckerHelper->tryLineAlignment(theAlignerInterface, theHybrid, 0); 
+            {
+                alignmentResultContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<bool>() =
+                    fPatternCheckerHelper->tryLineAlignment(theAlignerInterface, theHybrid, 0);
             }
         }
         // fBeBoardInterface->Stop(theBoard);
@@ -229,7 +230,8 @@ void OTCICtoLpGBTecv::runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, 
         runL1IntegrityTest(theBoard,
                            theFWInterface,
                            fTheBoardNumberOfBytesInPattern.getObject(theBoard->getId())->getSummary<uint8_t>(),
-                           fTheBoardPatternMatcher.getObject(theBoard->getId())->getSummary<PatternMatcher>(), alignmentResultContainer.getBoard(theBoard->getId()));
+                           fTheBoardPatternMatcher.getObject(theBoard->getId())->getSummary<PatternMatcher>(),
+                           alignmentResultContainer.getBoard(theBoard->getId()));
     }
 
     auto    phaseIterator = std::find(fListOfLpGBTPhase.begin(), fListOfLpGBTPhase.end(), phase);
