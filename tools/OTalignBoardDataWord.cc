@@ -263,6 +263,7 @@ bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpti
 
 bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* theAlignerInterface, Hybrid* theHybrid, uint8_t lineId)
 {
+    theAlignerInterface->disableAlignmentOnCustomPattern(theHybrid->getId());
     bool isLineAligned          = false;
     int  currentIterationNumber = 0;
 
@@ -277,7 +278,7 @@ bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* the
         isLineAligned                      = theAlignmentResult.fWordAlignmentSuccess;
         if(!isLineAligned)
         {
-            LOG(INFO) << BOLDYELLOW << "Alignment on line " << +lineId << " failed, retrying " << fMaxNumberOfIterations - currentIterationNumber << " more times before giving up" << RESET;
+            LOG(WARNING) << WARNING_FORMAT<< "Alignment on line " << +lineId << " failed, retrying " << fMaxNumberOfIterations - currentIterationNumber << " more times before giving up" << RESET;
             theHybridAlignmentRetryVector.at(lineId)++;
             continue;
         }
