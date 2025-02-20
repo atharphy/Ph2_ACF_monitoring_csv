@@ -84,6 +84,7 @@ void SSA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^Ring_oscillator_out_loc[TB][LCR]_T[12]_[HL]$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^bist_memory_sram_output_[HL]_[0-9A-F]$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex(".*ync_SEUcnt_.*"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ADC_control$"), RegisterType::Utility));
 
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^mask_strip$"), RegisterType::Utility));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^mask_peri_[AD]$"), RegisterType::Utility));
