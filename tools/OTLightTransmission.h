@@ -11,7 +11,7 @@ using namespace Ph2_HwDescription;
 class OTLightTransmission : public OTTool
 {
   public:
-    OTLightTransmission(int);
+    OTLightTransmission();
     ~OTLightTransmission();
 
     void Initialise();
@@ -20,9 +20,8 @@ class OTLightTransmission : public OTTool
     void Pause() override;
     void Resume() override;
 
-    void ReadRegisters();
+    static std::string fCalibrationDescription;
 
-  private:
-    int cChannel;
+    void ReadRegisters();
 };
 #endif

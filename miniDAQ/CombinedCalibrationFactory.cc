@@ -17,6 +17,7 @@
 #include "tools/OTCMNoise.h"
 #include "tools/OTChipToCICecv.h"
 #include "tools/OTCicBypassTest.h"
+#include "tools/OTLightTransmission.h"
 #include "tools/OTLpGBTEyeOpeningTest.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
@@ -35,6 +36,7 @@
 #include "tools/OTalignStubPackage.h"
 #include "tools/OTinjectionDelayOptimization.h"
 #include "tools/OTinjectionOccupancyScan.h"
+#include "tools/OTlpGBTID.h"
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/OTverifyCICdataWord.h"
 #include "tools/OTverifyMPASSAdataWord.h"
@@ -64,6 +66,11 @@ using namespace MessageUtils;
 
 CombinedCalibrationFactory::CombinedCalibrationFactory()
 {
+    // reduced test set for integration
+    Register<OTlpGBTID>("Integration", "LPGBTID");
+
+    Register<TuneLpGBTVref, OTVTRxLightYieldScan, OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord>("Integration", "MinimalTest");
+
     // Common calibrations
     Register<TuneLpGBTVref>("Common", "tunelpgbtvref");
 

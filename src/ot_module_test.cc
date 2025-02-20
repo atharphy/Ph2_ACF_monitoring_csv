@@ -205,7 +205,7 @@ int main(int argc, char* argv[])
     cmd.defineOption("readlpGBTIDs", "Read IDs of lpGBTs", ArgvParser::NoOptionAttribute);
     cmd.defineOption("readSensorTemperature", "Read sensor temperature", ArgvParser::NoOptionAttribute);
     cmd.defineOption("measureQuickNoise", "measure occupancy of all channels");
-    cmd.defineOption("measureChannelTransmission", "measure data about transmission for given acquisition card channel", ArgvParser::OptionRequiresValue);
+    cmd.defineOption("measureChannelTransmission", "measure data about transmission");
     cmd.defineOption("latency", "scan the trigger latency", ArgvParser::NoOptionAttribute);
     cmd.defineOption("stublatency", "scan the stub latency", ArgvParser::NoOptionAttribute);
 
@@ -230,7 +230,6 @@ int main(int argc, char* argv[])
     bool        cKiraCalibration    = cmd.foundOption("kiracalibration");
     std::string cDirectory          = (cmd.foundOption("output")) ? cmd.optionValue("output") : "Results/";
     bool        cPulseShape         = (cmd.foundOption("pulseShape")) ? true : false;
-    int         cTansmissionChannel = (cmd.foundOption("measureChannelTransmission")) ? convertAnyInt(cmd.optionValue("measureChannelTransmission").c_str()) : -1;
     bool        cLatency            = (cmd.foundOption("latency")) ? true : false;
     bool        cStubLatency        = (cmd.foundOption("stublatency")) ? true : false;
     bool        cEcv                = (cmd.foundOption("ecv")) ? true : false;
@@ -355,10 +354,10 @@ int main(int argc, char* argv[])
         cQuickNoiseReader.waitForRunToBeCompleted();
     }
 
-    if(cTansmissionChannel > 0)
+    if(cmd.foundOption("measureChannelTransmission"))
     {
         LOG(INFO) << BOLDBLUE << "Getting transciever data" << RESET;
-        OTLightTransmission cLightTransmissionReader(cTansmissionChannel);
+        OTLightTransmission cLightTransmissionReader;
         cLightTransmissionReader.Inherit(&cTool);
         StartInfo theStartInfo;
         theStartInfo.setRunNumber(cRunNumber);

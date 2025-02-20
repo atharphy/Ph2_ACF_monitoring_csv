@@ -6,6 +6,8 @@
 #include "MonitorUtils/DetectorMonitor.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -61,6 +63,8 @@ void OTVTRxLightYieldScan::scanVTRxLightYield()
 {
     if(fDetectorMonitor != nullptr) fDetectorMonitor->pauseMonitoring();
 
+    json j;
+    j["type"] = "data";
     for(int biasValue = 40; biasValue <= 56; biasValue += 4)
     {
         LOG(INFO) << BOLDYELLOW << "Setting VTRx bias to 0x" << std::hex << +biasValue << std::dec << RESET;
@@ -81,7 +85,12 @@ void OTVTRxLightYieldScan::scanVTRxLightYield()
                 {
                     fVTRxInterface->WriteChipMultReg(theOpticalGroup->fVTRx, theRegisterValues, false);
                     usleep(10000);
-                    theOpticalPowerContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<float>() = theFWinterface->GetSFPParameter(theOpticalGroup, "RX");
+                    float VTRxLightYieldRX                                                                                     = theFWinterface->GetSFPParameter(theOpticalGroup, "RX");
+                    theOpticalPowerContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<float>() = VTRxLightYieldRX;
+                    if(fOfStream != nullptr)
+                    {
+                        j["data"][std::to_string(theBoard->getId())][std::to_string(theOpticalGroup->getId())][std::to_string(biasValue)][std::to_string(modulationValue)] = VTRxLightYieldRX;
+                    }
                 }
             }
 #ifdef __USE_ROOT__
@@ -95,6 +104,7 @@ void OTVTRxLightYieldScan::scanVTRxLightYield()
 #endif
         }
     }
+    if(fOfStream != nullptr) { *(fOfStream) << j << std::endl; }
 
     if(fDetectorMonitor != nullptr) fDetectorMonitor->resumeMonitoring();
 }
