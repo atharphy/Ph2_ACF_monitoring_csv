@@ -54,9 +54,9 @@ void D19cTriggerInterface::TriggerConfiguration()
     auto cSource                         = fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.trigger_source");
     if(fTriggerConfiguration.fTriggerSource != cSource)
     {
-        LOG(ERROR) << BOLDRED << "Mismatch in trigger source configuration... going to reload and check again " << RESET;
+        LOG(WARNING) << WARNING_FORMAT << "Mismatch in trigger source configuration... going to reload and check again " << RESET;
         std::vector<std::pair<std::string, uint32_t>> cRegVec;
-        LOG(INFO) << BOLDRED << "Re-configuring trigger source to be " << +cSource << RESET;
+        LOG(WARNING) << WARNING_FORMAT << "Re-configuring trigger source to be " << +cSource << RESET;
         cRegVec.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", cSource});
         cRegVec.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
         fTheRegManager->WriteStackReg(cRegVec);

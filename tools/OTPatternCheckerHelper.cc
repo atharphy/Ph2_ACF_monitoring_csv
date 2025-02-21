@@ -149,42 +149,27 @@ void OTPatternCheckerHelper::patternCheckerTest()
         }
     }
 
-    bool errorFound = false;
-
-    while(!errorFound)
+    uint8_t numberOfLines = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
+    for(uint8_t line = 1; line < numberOfLines; ++line)
     {
-        uint8_t numberOfLines = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ? 7 : 6;
-        for(uint8_t line = 1; line < numberOfLines; ++line)
+        DetectorDataContainer thePatternCounterCountainer;
+        ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*fDetectorContainer, thePatternCounterCountainer);
+        for(auto theBoard: thePatternCounterCountainer)
         {
-            DetectorDataContainer thePatternCounterCountainer;
-            ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*fDetectorContainer, thePatternCounterCountainer);
-            for(auto theBoard: thePatternCounterCountainer)
-            {
-                std::vector<uint32_t> pattern{0xeaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa};
-                std::vector<uint32_t> patternMask{0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff};
-                if(static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(fDetectorContainer->getObject(theBoard->getId())->getFirstObject()->flpGBT) == 5) pattern.at(2) = 0xeaaaaaaa;
-                patternCheckerTest(theBoard, line, pattern, patternMask, fNumberOfBits, true);
-            }
-
-            for(auto theBoard: thePatternCounterCountainer)
-            {
-                for(auto theOpticalGroup: *theBoard)
-                {
-                    for(auto theHybrid: *theOpticalGroup)
-                    {
-                        if(theHybrid->getSummary<GenericDataArray<uint64_t, 2>>().at(1) > 0) errorFound = true;
-                    }
-                }
-            }
-#ifdef __USE_ROOT__
-            fDQMHistogramOTPatternCheckerHelper.fillErrorCounter(thePatternCounterCountainer, line);
-#else
-            if(fDQMStreamerEnabled)
-            {
-                ContainerSerialization theErrorCounterSerialization("OTPatternCheckerHelperErrorCounter");
-                theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePatternCounterCountainer, line);
-            }
-#endif
+            std::vector<uint32_t> pattern{0xeaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa};
+            std::vector<uint32_t> patternMask{0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff};
+            if(static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(fDetectorContainer->getObject(theBoard->getId())->getFirstObject()->flpGBT) == 5) pattern.at(2) = 0xeaaaaaaa;
+            patternCheckerTest(theBoard, line, pattern, patternMask, fNumberOfBits, true);
         }
+
+#ifdef __USE_ROOT__
+        fDQMHistogramOTPatternCheckerHelper.fillErrorCounter(thePatternCounterCountainer, line);
+#else
+        if(fDQMStreamerEnabled)
+        {
+            ContainerSerialization theErrorCounterSerialization("OTPatternCheckerHelperErrorCounter");
+            theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePatternCounterCountainer, line);
+        }
+#endif
     }
 }

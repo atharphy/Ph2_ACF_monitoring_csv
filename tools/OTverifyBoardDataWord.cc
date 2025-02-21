@@ -132,7 +132,7 @@ PatternMatcher OTverifyBoardDataWord::createTheL1PatternMatcher(Ph2_HwDescriptio
     }
     else
     {
-        thePatternMatcher.addToPattern(0, 0x3f, 6); // padding
+        thePatternMatcher.addToPattern(0x0a, 0x3f, 6); // padding
         thePatternMatcher.addToPattern(0xaaaaaaaa, 0xffffffff, 32);
     }
 
@@ -312,7 +312,11 @@ bool OTverifyBoardDataWord::isStubPatternMatched(const std::vector<uint32_t>& th
     return true;
 }
 
-void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket, PatternMatcher& thePatternMatcher)
+void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard*            theBoard,
+                                               D19cFWInterface*    theFWInterface,
+                                               uint8_t             numberOfBytesInSinglePacket,
+                                               PatternMatcher&     thePatternMatcher,
+                                               BoardDataContainer* theAlignmentResultContainer)
 {
     LOG(INFO) << BOLDMAGENTA << "Running runL1IntegrityTest" << RESET;
 
@@ -329,6 +333,16 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterfac
                                                            ->getObject(theHybrid->getId())
                                                            ->getSummary<std::vector<GenericDataArray<float, 2>>>();
 
+            if(theAlignmentResultContainer != nullptr)
+            {
+                if(!theAlignmentResultContainer->getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<bool>())
+                {
+                    theHybridPatternMatchingEfficiency.at(0).at(0) = numberOfMatchedBits;
+                    theHybridPatternMatchingEfficiency.at(0).at(1) = numberOfMatchedBits;
+                    continue;
+                }
+            }
+
             prepareHybridForL1IntegrityTest(theHybrid);
 
             for(size_t iteration = 0; iteration < numberOfIterations;)
@@ -340,8 +354,19 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard* theBoard, D19cFWInterfac
                 if(numberOrErrorBits > 0)
                 {
                     if(std::all_of(orderedLineOutputVector.begin(), orderedLineOutputVector.end(), [](int i) { return i == 0; })) continue;
+                    size_t numberOfEmpyWords = 0;
+                    for(auto theWord: orderedLineOutputVector)
+                    {
+                        if(theWord == 0) ++numberOfEmpyWords;
+                    }
+                    if(numberOfEmpyWords > orderedLineOutputVector.size() / 10) continue; // greater than 10% means very likely the fifo did not save properly the data
                     if(fPrintError) LOG(INFO) << BOLDRED << "Pattern did not match for iteration number " << +iteration << RESET;
-                    LOG(DEBUG) << BOLDRED << "pattern received did not match expected one: " << getPatternPrintout(lineOutputVector, numberOfBytesInSinglePacket, true) << RESET;
+
+                    LOG(DEBUG) << BOLDRED << "OTverifyBoardDataWord::runL1IntegrityTest - Error, expected L1 pattern not found for Board " << +theBoard->getId() << " OpticalGroup "
+                               << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId() << RESET;
+                    LOG(DEBUG) << BOLDRED << "L1 data received    " << getPatternPrintout(orderedLineOutputVector, numberOfBytesInSinglePacket) << RESET;
+                    LOG(DEBUG) << BOLDRED << "L1 pattern expected " << getPatternPrintout(thePatternMatcher.getPattern(), numberOfBytesInSinglePacket) << RESET;
+                    LOG(DEBUG) << BOLDRED << "L1 pattern mask     " << getPatternPrintout(thePatternMatcher.getMask(), numberOfBytesInSinglePacket) << RESET;
                 }
                 theHybridPatternMatchingEfficiency.at(0).at(0) += numberOfMatchedBits;
                 theHybridPatternMatchingEfficiency.at(0).at(1) += numberOrErrorBits;
@@ -377,6 +402,11 @@ void OTverifyBoardDataWord::prepareFWForL1IntegrityTest(Ph2_HwDescription::BeBoa
     cVecReg.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0x0});
     cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
     fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
+
+    for(auto theOpticalGroup: *theBoard)
+    {
+        for(auto theHybrid: *theOpticalGroup) { fCicInterface->SetSparsification(static_cast<OuterTrackerHybrid*>(theHybrid)->fCic, true); }
+    }
 }
 
 uint8_t OTverifyBoardDataWord::getNumberOfBytesInSinglePacket(OpticalGroup* cOpticalGroup) const
