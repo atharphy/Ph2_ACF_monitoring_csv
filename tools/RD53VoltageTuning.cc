@@ -161,8 +161,8 @@ void VoltageTuning::run()
                         int minDigIndex    = std::min_element(trimVoltageDig.begin(), trimVoltageDig.end()) - trimVoltageDig.begin();
                         int vdddNewSetting = trimVoltageDigIndex[minDigIndex];
 
-                        LOG(INFO) << GREEN << "VDDD best setting: " << BOLDYELLOW << vdddNewSetting << std::setprecision(3) << RESET << GREEN << ", difference with respect to target = " << BOLDYELLOW
-                                  << trimVoltageDig[minDigIndex] << RESET << GREEN << " V" << RESET;
+                        LOG(INFO) << BOLDYELLOW << "VDDD" << RESET << GREEN << " best setting: " << BOLDYELLOW << vdddNewSetting << std::setprecision(3) << RESET << GREEN
+                                  << ", difference with respect to target = " << BOLDYELLOW << trimVoltageDig[minDigIndex] << RESET << GREEN << " V" << RESET;
 
                         if(trimVoltageDig[minDigIndex] > toleranceDig)
                         {
@@ -211,8 +211,8 @@ void VoltageTuning::run()
                         int minAnaIndex    = std::min_element(trimVoltageAna.begin(), trimVoltageAna.end()) - trimVoltageAna.begin();
                         int vddaNewSetting = trimVoltageAnaIndex[minAnaIndex];
 
-                        LOG(INFO) << GREEN << "VDDA best setting: " << BOLDYELLOW << vddaNewSetting << std::setprecision(3) << RESET << GREEN << ", difference with respect to target = " << BOLDYELLOW
-                                  << trimVoltageAna[minAnaIndex] << RESET << GREEN << " V" << RESET;
+                        LOG(INFO) << BOLDYELLOW << "VDDA" << RESET << GREEN << " best setting: " << BOLDYELLOW << vddaNewSetting << std::setprecision(3) << RESET << GREEN
+                                  << ", difference with respect to target = " << BOLDYELLOW << trimVoltageAna[minAnaIndex] << RESET << GREEN << " V" << RESET;
 
                         if(trimVoltageAna[minAnaIndex] > toleranceAna)
                         {
