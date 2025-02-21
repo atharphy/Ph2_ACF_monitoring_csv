@@ -95,14 +95,14 @@ void SSA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^DigCalibPattern_[LH]$"), RegisterType::Utility));
 }
 
-void SSA2::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg)
+void SSA2::setReg(const std::string& pReg, uint16_t psetValue, uint8_t pStatusReg)
 {
     if(std::find(fListOfGlobalRegisters.begin(), fListOfGlobalRegisters.end(), pReg) != fListOfGlobalRegisters.end())
     {
-        for(uint8_t strip = 0; strip < getNumberOfCols(); ++strip) Chip::setReg(getStripRegisterName(pReg, strip), psetValue, pPrmptCfg, pStatusReg);
+        for(uint8_t strip = 0; strip < getNumberOfCols(); ++strip) Chip::setReg(getStripRegisterName(pReg, strip), psetValue, pStatusReg);
     }
 
-    Chip::setReg(pReg, psetValue, pPrmptCfg, pStatusReg);
+    Chip::setReg(pReg, psetValue, pStatusReg);
     return;
 }
 

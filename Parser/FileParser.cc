@@ -327,7 +327,8 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                 {
                     std::string regname  = attr.name();
                     uint16_t    regvalue = convertAnyInt(attr.value());
-                    thelpGBT->setReg(regname, regvalue, true);
+                    thelpGBT->setReg(regname, regvalue);
+                    thelpGBT->getRegItem(regname).fPrmptCfg = true;
                     os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
                 }
             }

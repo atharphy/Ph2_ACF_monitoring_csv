@@ -46,7 +46,7 @@ class MPA2 : public ReadoutChip
 
     MPA2(const MPA2&) = delete;
 
-    void setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg) override;
+    void setReg(const std::string& pReg, uint16_t psetValue, uint8_t pStatusReg) override;
 
     void initializeFreeRegisters() override;
 

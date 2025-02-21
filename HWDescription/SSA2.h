@@ -41,7 +41,7 @@ class SSA2 : public ReadoutChip
     SSA2(const SSA2&) = delete;
 
     void initializeFreeRegisters() override;
-    void setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg) override;
+    void setReg(const std::string& pReg, uint16_t psetValue, uint8_t pStatusReg) override;
 
     uint8_t           fPartnerId;
     uint8_t           getPartid() { return fPartnerId; }
