@@ -237,7 +237,8 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         std::string cId           = theBoard->getConnectionId();
         std::string cUri          = theBoard->getConnectionUri();
         std::string cAddressTable = theBoard->getAddressTable();
-        if(theBoard->getBoardType() == BoardType::D19C) { fBeBoardFWMap[theBoard->getId()] = new D19cFWInterface(cId, cUri, cAddressTable, theBoard); }
+        if(theBoard->getBoardType() == BoardType::D19C)
+            fBeBoardFWMap[theBoard->getId()] = new D19cFWInterface(cId, cUri, cAddressTable, theBoard);
         else if(theBoard->getBoardType() == BoardType::RD53)
             fBeBoardFWMap[theBoard->getId()] = new RD53FWInterface(cId, cUri, cAddressTable, theBoard);
     }
@@ -380,9 +381,12 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         {
             bool cWithLpGBT = (cOpticalGroup->flpGBT != nullptr);
 
-            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->AddPSROHeLinkProperties(cOpticalGroup->flpGBT); }
-            else if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->Add2SSEHeLinkProperties(cOpticalGroup->flpGBT); }
-            else if(cWithLpGBT && flpGBTInterface != nullptr) { static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType()); }
+            if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS)
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->AddPSROHeLinkProperties(cOpticalGroup->flpGBT);
+            else if(cOpticalGroup->getFrontEndType() == FrontEndType::OuterTracker2S)
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->Add2SSEHeLinkProperties(cOpticalGroup->flpGBT);
+            else if(cWithLpGBT && flpGBTInterface != nullptr)
+                static_cast<D19clpGBTInterface*>(flpGBTInterface)->setFrontEndType(cOpticalGroup->getFrontEndType());
             else
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
         }

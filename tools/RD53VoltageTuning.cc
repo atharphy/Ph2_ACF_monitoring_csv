@@ -167,7 +167,7 @@ void VoltageTuning::run()
                         if(trimVoltageDig[minDigIndex] > toleranceDig)
                         {
                             doRepeatDig = true;
-                            LOG(WARNING) << GREEN << "Optimal value not found: " << BOLDYELLOW << "RETRY" << RESET;
+                            LOG(WARNING) << RED << "Optimal value not found: " << BOLDYELLOW << "RETRY" << RESET;
                             break;
                         }
                         else
@@ -217,7 +217,7 @@ void VoltageTuning::run()
                         if(trimVoltageAna[minAnaIndex] > toleranceAna)
                         {
                             doRepeatAna = true;
-                            LOG(WARNING) << GREEN << "Optimal value not found: " << BOLDYELLOW << "RETRY" << RESET;
+                            LOG(WARNING) << RED << "Optimal value not found: " << BOLDYELLOW << "RETRY" << RESET;
                             break;
                         }
                         else
