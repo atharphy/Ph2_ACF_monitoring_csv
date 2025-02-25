@@ -25,17 +25,18 @@ void DQMHistogramOTverifyCICdataWord::book(TFile* theOutputFile, DetectorContain
     // SoC utilities only - END
 
     bool isPS = theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
-
+    std::string chipName   = "CBC";
     std::string xAxisTitle = "CBC Id";
     int         idOffset   = 0;
     if(isPS)
     {
         xAxisTitle = "MPA Id";
         idOffset   = 8;
+        chipName   = "MPA";
     }
 
     HistContainer<TH2F> patternMatchingEfficiencyHistogram(
-        "PatternMatchingEfficiencyCIC", "Pattern Matching Efficiency CIC", NUMBER_OF_CIC_PORTS, idOffset - 0.5, idOffset + NUMBER_OF_CIC_PORTS - 0.5, 2, -0.5, 1.5);
+        (chipName+"toCIC_WordAlignmentMatchingEfficiency").c_str(), (chipName+" to CIC word alignment matching efficiency").c_str(), NUMBER_OF_CIC_PORTS, idOffset - 0.5, idOffset + NUMBER_OF_CIC_PORTS - 0.5, 2, -0.5, 1.5);
     patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
     patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");

@@ -27,11 +27,12 @@ void DQMHistogramOTCICphaseAlignment::book(TFile* theOutputFile, DetectorContain
     // SoC utilities only - END
 
     bool isPS = theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
-
+    std::string chipName   = "CBC";
     std::string xAxisTitle = "CBC Id";
     int         idOffset   = 0;
     if(isPS)
     {
+        chipName   = "MPA";
         xAxisTitle = "MPA Id";
         idOffset   = 8;
     }
@@ -63,24 +64,24 @@ void DQMHistogramOTCICphaseAlignment::book(TFile* theOutputFile, DetectorContain
         }
     };
 
-    HistContainer<TH2F> phaseHistogram("CICinputPhaseHistogram",
-                                       "CIC Input Phase Histogram",
+    HistContainer<TH2F> phaseHistogram((chipName+"toCIC_InputPhase").c_str(),
+                                       (chipName+" to CIC input phase").c_str(),
                                        NUMBER_OF_CIC_PORTS * NUMBER_OF_LINES_PER_CIC_PORTS,
                                        -0.5,
                                        NUMBER_OF_CIC_PORTS * NUMBER_OF_LINES_PER_CIC_PORTS - 0.5,
                                        16,
                                        -0.5,
                                        16 - 0.5);
-    phaseHistogram.fTheHistogram->GetXaxis()->SetTitle("chipId_line");
+    phaseHistogram.fTheHistogram->GetXaxis()->SetTitle("ChipId_line");
     setPhaseHistogramBinLabels(phaseHistogram.fTheHistogram->GetXaxis());
-    phaseHistogram.fTheHistogram->GetYaxis()->SetTitle("phase");
+    phaseHistogram.fTheHistogram->GetYaxis()->SetTitle("Phase");
     phaseHistogram.fTheHistogram->SetMinimum(0);
     phaseHistogram.fTheHistogram->SetMaximum(1);
     phaseHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseHistogramContainer, phaseHistogram);
 
-    HistContainer<TH2I> bestPhaseHistogram("BestCICinputPhases",
-                                           "Best CIC For Input Phases",
+    HistContainer<TH2I> bestPhaseHistogram((chipName+"toCIC_BestInputPhases").c_str(),
+                                           (chipName+" to CIC best input phases").c_str(),
                                            NUMBER_OF_CIC_PORTS,
                                            idOffset - 0.5,
                                            idOffset + NUMBER_OF_CIC_PORTS - 0.5,
@@ -95,8 +96,8 @@ void DQMHistogramOTCICphaseAlignment::book(TFile* theOutputFile, DetectorContain
     bestPhaseHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBestPhaseHistogramContainer, bestPhaseHistogram);
 
-    HistContainer<TH2F> lockingEfficiencyHistogram("LockingEfficiencyCICinput",
-                                                   "Locking Efficiency Of CIC Input",
+    HistContainer<TH2F> lockingEfficiencyHistogram((chipName+"toCIC_LockingEfficiency").c_str(),
+                                                   (chipName+" to CIC locking efficiency").c_str(),
                                                    NUMBER_OF_CIC_PORTS,
                                                    idOffset - 0.5,
                                                    idOffset + NUMBER_OF_CIC_PORTS - 0.5,

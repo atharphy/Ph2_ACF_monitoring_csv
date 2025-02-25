@@ -49,22 +49,22 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
         }
     };
 
-    HistContainer<TH1F> alignmentSuccessHistogram("LpGBTinputAlignmentSuccess", "LpGBT input best phase", numberOfBins, -0.5, numberOfBins - 0.5);
+    HistContainer<TH1F> alignmentSuccessHistogram("LpGBT_InputAlignmentSuccess", "LpGBT input best phase", numberOfBins, -0.5, numberOfBins - 0.5);
     alignmentSuccessHistogram.fTheHistogram->GetXaxis()->SetTitle("");
     setBinLabels(alignmentSuccessHistogram.fTheHistogram->GetXaxis());
-    alignmentSuccessHistogram.fTheHistogram->GetYaxis()->SetTitle("alignment efficiency");
+    alignmentSuccessHistogram.fTheHistogram->GetYaxis()->SetTitle("Alignment efficiency");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fAlignmentSuccessHistogramContainer, alignmentSuccessHistogram);
 
-    HistContainer<TH1I> bestPhaseHistogram("LpGBTinputBestPhase", "LpGBT input best phase", numberOfBins, -0.5, numberOfBins - 0.5);
+    HistContainer<TH1I> bestPhaseHistogram("LpGBT_InputBestPhase", "LpGBT input best phase", numberOfBins, -0.5, numberOfBins - 0.5);
     bestPhaseHistogram.fTheHistogram->GetXaxis()->SetTitle("");
     setBinLabels(bestPhaseHistogram.fTheHistogram->GetXaxis());
-    bestPhaseHistogram.fTheHistogram->GetYaxis()->SetTitle("best phase value");
+    bestPhaseHistogram.fTheHistogram->GetYaxis()->SetTitle("Best phase value");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBestPhaseHistogramContainer, bestPhaseHistogram);
 
-    HistContainer<TH2F> foundPhasesDistributionHistogram("LpGBTinputFoundPhasesDistribution", "LpGBT input found phases distribution", numberOfBins, -0.5, numberOfBins - 0.5, 16, -0.5, 15.5);
+    HistContainer<TH2F> foundPhasesDistributionHistogram("LpGBT_InputFoundPhasesEfficiency", "LpGBT input found phases efficiency", numberOfBins, -0.5, numberOfBins - 0.5, 16, -0.5, 15.5);
     foundPhasesDistributionHistogram.fTheHistogram->GetXaxis()->SetTitle("");
     setBinLabels(foundPhasesDistributionHistogram.fTheHistogram->GetXaxis());
-    foundPhasesDistributionHistogram.fTheHistogram->GetYaxis()->SetTitle("phase");
+    foundPhasesDistributionHistogram.fTheHistogram->GetYaxis()->SetTitle("Phase");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fFoundPhasesDistributionHistogramContainer, foundPhasesDistributionHistogram);
 }
 

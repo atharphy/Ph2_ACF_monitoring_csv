@@ -23,9 +23,9 @@ void DQMHistogramOTVTRxLightYieldScan::book(TFile* theOutputFile, DetectorContai
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    HistContainer<TH2F> lightYieldHistogram("VTRxLightYieldScan", "VTRx Light Yield Scan - Power (#muW)", 5, 38, 58, 5, 22, 42);
-    lightYieldHistogram.fTheHistogram->GetXaxis()->SetTitle("bias [DAC units]");
-    lightYieldHistogram.fTheHistogram->GetYaxis()->SetTitle("modulation [DAC units]");
+    HistContainer<TH2F> lightYieldHistogram("VTRx_LightYieldScan", "VTRx Light Yield Scan - Power (#muW)", 5, 38, 58, 5, 22, 42);
+    lightYieldHistogram.fTheHistogram->GetXaxis()->SetTitle("Bias [DAC units]");
+    lightYieldHistogram.fTheHistogram->GetYaxis()->SetTitle("Modulation [DAC units]");
     lightYieldHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fLightYieldScanContainer, lightYieldHistogram);
 }
