@@ -162,6 +162,7 @@ void bookHistogramsFromStructure(TFile*                   theOutputFile,
                 for(const auto chip: *hybrid)
                 {
                     std::string chipFolderType = "Chip";
+                    if((chip)->getFrontEndType() == FrontEndType::CBC3) chipFolderType = "CBC";
                     if((chip)->getFrontEndType() == FrontEndType::MPA2) chipFolderType = "MPA";
                     if((chip)->getFrontEndType() == FrontEndType::SSA2) chipFolderType = "SSA";
                     std::string chipFolder     = "/" + chipFolderType + "_" + std::to_string(chip->getId());
