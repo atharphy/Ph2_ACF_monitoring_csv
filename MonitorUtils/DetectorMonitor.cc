@@ -23,6 +23,16 @@ DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemCo
     std::string timeStamp = getTimeStampString();
     std::replace(timeStamp.begin(), timeStamp.end(), ' ', '_');
     std::replace(timeStamp.begin(), timeStamp.end(), ':', '-');
+    if(std::getenv("GIPHT_RESULT_FOLDER"))
+    {
+        LOG(INFO) << "OT Module GUI (GIPHT) result directory environmental variable set: " << std::getenv("GIPHT_RESULT_FOLDER") << RESET;
+        monitorOutputDir = std::getenv("GIPHT_RESULT_FOLDER");
+        LOG(INFO) << "Use " << monitorOutputDir << " for file dump" << RESET;
+    }
+    else
+    {
+        LOG(INFO) << "Use default directory " << monitorOutputDir << " for file dump" << RESET;
+    }
 
     fMonitorFileName = monitorOutputDir + "/" + "MonitorDQM_" + timeStamp + ".root";
     fOutputFile      = new TFile(fMonitorFileName.c_str(), "RECREATE");
