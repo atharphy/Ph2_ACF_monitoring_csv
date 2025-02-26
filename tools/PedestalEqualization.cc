@@ -320,16 +320,16 @@ void PedestalEqualization::FindVplus()
             } // for on hybrid - end
         } // for on opticalGroup - end
     } // for on board - end
-
-#ifdef __USE_ROOT__
-    fDQMHistogramPedestalEqualization.fillVplusPlots(theVcthContainer);
-#else
-    if(fDQMStreamerEnabled)
-    {
-        ContainerSerialization theContainerSerialization("PedestalEqualizationVCth");
-        theContainerSerialization.streamByHybridContainer(fDQMStreamer, theVcthContainer);
-    }
-#endif
+// Vplus was relevant for CBC2, now it is saving the threshold... not relevant anymore
+// #ifdef __USE_ROOT__
+//     fDQMHistogramPedestalEqualization.fillVplusPlots(theVcthContainer);
+// #else
+//     if(fDQMStreamerEnabled)
+//     {
+//         ContainerSerialization theContainerSerialization("PedestalEqualizationVCth");
+//         theContainerSerialization.streamByHybridContainer(fDQMStreamer, theVcthContainer);
+//     }
+// #endif
 
     fStripTargetVcth = uint16_t(cMeanStripsValue / cNStripChips);
     fPixelTargetVcth = uint16_t(cMeanPixelsValue / cNPixelChips);

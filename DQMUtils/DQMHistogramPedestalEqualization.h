@@ -53,7 +53,7 @@ class DQMHistogramPedestalEqualization : public DQMHistogramBase
     void reset(void) override;
     // virtual void summarizeHistos();
 
-    void fillVplusPlots(DetectorDataContainer& theVthr);
+    // void fillVplusPlots(DetectorDataContainer& theVthr);
 
     void fillOffsetPlots(DetectorDataContainer& theOffsets);
 
@@ -62,7 +62,7 @@ class DQMHistogramPedestalEqualization : public DQMHistogramBase
   private:
     DetectorContainer*    fDetectorContainer;
     uint32_t              NCH = 0;
-    DetectorDataContainer fDetectorVplusHistograms;
+    // DetectorDataContainer fDetectorVplusHistograms;
     DetectorDataContainer fDetectorOffsetHistograms;
     DetectorDataContainer fDetectorOccupancyHistograms;
 

@@ -35,13 +35,14 @@ void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, DetectorContai
 
     NCH = theDetectorStructure.getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject()->size();
 
-    HistContainer<TH1I> hVplus("VplusValue", "Vplus Value", 1, 0, 1);
-    RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorVplusHistograms, hVplus);
+    // Vplus was relevant for CBC2, now it is saving the threshold... not relevant anymore
+    // HistContainer<TH1I> hVplus("VplusValue", "Vplus value", 1, 0, 1);
+    // RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorVplusHistograms, hVplus);
 
-    HistContainer<TH1I> hOffset("OffsetValues", "Offset Values", NCH, -0.5, float(NCH) - 0.5);
+    HistContainer<TH1I> hOffset("ChannelOffsetValues", "Channel offset values", NCH, -0.5, float(NCH) - 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOffsetHistograms, hOffset);
 
-    HistContainer<TH1F> hOccupancy("OccupancyAfterOffsetEqualization", "Occupancy After Offset Equalization", NCH, -0.5, float(NCH) - 0.5);
+    HistContainer<TH1F> hOccupancy("ChannelOccupancyAfterOffsetEqualization", "Channel occupancy after offset equalization", NCH, -0.5, float(NCH) - 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOccupancyHistograms, hOccupancy);
 }
 
@@ -56,7 +57,7 @@ bool DQMHistogramPedestalEqualization::fill(std::string& inputStream)
     {
         // std::cout << "Matched PedestalEqualization Vcth!!!!!\n";
         DetectorDataContainer theDetectorData = theVCthSerialization.deserializeHybridContainer<EmptyContainer, uint16_t, EmptyContainer>(fDetectorContainer);
-        fillVplusPlots(theDetectorData);
+        // fillVplusPlots(theDetectorData);
         return true;
     }
     if(theOccupancySerialization.attachDeserializer(inputStream))
@@ -124,29 +125,29 @@ void DQMHistogramPedestalEqualization::process()
 void DQMHistogramPedestalEqualization::reset(void) {}
 
 //========================================================================================================================
-void DQMHistogramPedestalEqualization::fillVplusPlots(DetectorDataContainer& theVthr)
-{
-    for(auto board: theVthr)
-    {
-        for(auto opticalGroup: *board)
-        {
-            for(auto hybrid: *opticalGroup)
-            {
-                for(auto chip: *hybrid)
-                {
-                    if(!chip->hasSummary()) continue;
-                    TH1I* chipVplusHistogram = fDetectorVplusHistograms.getObject(board->getId())
-                                                   ->getObject(opticalGroup->getId())
-                                                   ->getObject(hybrid->getId())
-                                                   ->getObject(chip->getId())
-                                                   ->getSummary<HistContainer<TH1I>>()
-                                                   .fTheHistogram;
-                    chipVplusHistogram->SetBinContent(1, chip->getSummary<uint16_t>());
-                }
-            }
-        }
-    }
-}
+// void DQMHistogramPedestalEqualization::fillVplusPlots(DetectorDataContainer& theVthr)
+// {
+//     for(auto board: theVthr)
+//     {
+//         for(auto opticalGroup: *board)
+//         {
+//             for(auto hybrid: *opticalGroup)
+//             {
+//                 for(auto chip: *hybrid)
+//                 {
+//                     if(!chip->hasSummary()) continue;
+//                     TH1I* chipVplusHistogram = fDetectorVplusHistograms.getObject(board->getId())
+//                                                    ->getObject(opticalGroup->getId())
+//                                                    ->getObject(hybrid->getId())
+//                                                    ->getObject(chip->getId())
+//                                                    ->getSummary<HistContainer<TH1I>>()
+//                                                    .fTheHistogram;
+//                     chipVplusHistogram->SetBinContent(1, chip->getSummary<uint16_t>());
+//                 }
+//             }
+//         }
+//     }
+// }
 
 //========================================================================================================================
 
