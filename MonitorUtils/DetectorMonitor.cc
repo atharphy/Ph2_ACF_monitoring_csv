@@ -29,10 +29,7 @@ DetectorMonitor::DetectorMonitor(const Ph2_System::SystemController* theSystemCo
         monitorOutputDir = std::getenv("GIPHT_RESULT_FOLDER");
         LOG(INFO) << "Use " << monitorOutputDir << " for file dump" << RESET;
     }
-    else
-    {
-        LOG(INFO) << "Use default directory " << monitorOutputDir << " for file dump" << RESET;
-    }
+    else { LOG(INFO) << "Use default directory " << monitorOutputDir << " for file dump" << RESET; }
 
     fMonitorFileName = monitorOutputDir + "/" + "MonitorDQM_" + timeStamp + ".root";
     fOutputFile      = new TFile(fMonitorFileName.c_str(), "RECREATE");
