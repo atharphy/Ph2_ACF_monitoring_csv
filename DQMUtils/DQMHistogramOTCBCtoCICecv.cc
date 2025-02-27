@@ -36,8 +36,8 @@ void DQMHistogramOTCBCtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
 
     for(auto cbcStrength: listOfCBCslvsCurrents)
     {
-        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("CBCtoCICecvEfficiency_CbcStrength%d", int(cbcStrength)),
-                                                        Form("CBC to CIC ecv Efficiency CbcStrength %d", int(cbcStrength)),
+        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("CBCtoCIC_Efficiency_CBCStrength%d", int(cbcStrength)),
+                                                        Form("CBC to CIC eficiency CBC Strength %d", int(cbcStrength)),
                                                         numberOfPhases,
                                                         -0.5,
                                                         numberOfPhases - 0.5,

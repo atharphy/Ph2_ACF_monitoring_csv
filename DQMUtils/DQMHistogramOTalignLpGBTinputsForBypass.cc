@@ -28,23 +28,23 @@ void DQMHistogramOTalignLpGBTinputsForBypass::book(TFile* theOutputFile, Detecto
     uint8_t numberOfLines = 4;
     for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
     {
-        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("LpGBTforCICbypassPhaseScan_phyPort%d", phyPort),
-                                                        Form("LpGBT for CIC Bypass Phase Scan Matching Efficiency - phyPort %d", phyPort),
+        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("LpGBTforCICbypass_PhaseScan_phyPort%d", phyPort),
+                                                        Form("LpGBT for CIC bypass phase scan matching efficiency - phyPort %d", phyPort),
                                                         15,
                                                         -0.5,
                                                         14.5,
                                                         numberOfLines,
                                                         -0.5,
                                                         numberOfLines - 0.5);
-        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("phase");
+        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("Phase");
         for(uint8_t line = 0; line < numberOfLines; ++line) phaseScanMatchingEfficiency.fTheHistogram->GetYaxis()->SetBinLabel(line + 1, Form("Stub%d", line + 1));
         phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
         phaseScanMatchingEfficiency.fTheHistogram->SetMaximum(1);
         phaseScanMatchingEfficiency.fTheHistogram->SetStats(false);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanMatchingEfficiencies[phyPort], phaseScanMatchingEfficiency);
 
-        HistContainer<TH1I> bestPhase(Form("LpGBTforCICbypassBestPhase_phyPort%d", phyPort), Form("LpGBT for CIC Bypass best phase - phyPort %d", phyPort), numberOfLines, -0.5, numberOfLines - 0.5);
-        bestPhase.fTheHistogram->GetXaxis()->SetTitle("line");
+        HistContainer<TH1I> bestPhase(Form("LpGBTforCICbypass_BestPhase_phyPort%d", phyPort), Form("LpGBT for CIC bypass best phase - phyPort %d", phyPort), numberOfLines, -0.5, numberOfLines - 0.5);
+        bestPhase.fTheHistogram->GetXaxis()->SetTitle("Line");
         for(uint8_t line = 0; line < numberOfLines; ++line) bestPhase.fTheHistogram->GetXaxis()->SetBinLabel(line + 1, Form("Stub%d", line + 1));
         bestPhase.fTheHistogram->SetStats(false);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBestPhase[phyPort], bestPhase);
