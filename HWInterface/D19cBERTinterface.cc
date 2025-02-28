@@ -511,11 +511,17 @@ void D19cBERTinterface::waitForNeededBits(bool is10Gmodule, float numberOfMatche
     if(!fUsePRBS)
     {
         float theMinimumNumber = 1e10;
+        bool minimumFound = false;
         for(const auto& theNumberOfCheckedBits: fNumberOfCheckedBitsMap)
         {
-            if(theNumberOfCheckedBits.second < theMinimumNumber) theMinimumNumber = theNumberOfCheckedBits.second;
+            if(theNumberOfCheckedBits.second == 0) continue;
+            if(theNumberOfCheckedBits.second < theMinimumNumber)
+            {
+                theMinimumNumber = theNumberOfCheckedBits.second;
+                minimumFound = true;
+            }
         }
-        if(theMinimumNumber == 0)
+        if(!minimumFound)
         {
             std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theMinimumNumber = 0, impossible to measure meaninless pattern error bits, aborting" << std::endl;
             abort();
@@ -556,7 +562,7 @@ bool D19cBERTinterface::isStartPatternFound(BoardContainer* theBoardContainer, u
                 }
                 else
                 {
-                    if((firstData >> 16) == ((fCheckedPatternMap.at(theHybrid->getId()).at(0) & fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16)) break;
+                    if(((firstData && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16) == ((fCheckedPatternMap.at(theHybrid->getId()).at(0) && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16)) break;
                 }
                 ++iteration;
             }

@@ -261,13 +261,14 @@
     <Setting name="OTCICtoLpGBTecv_LpGBTPhase">0-14</Setting>
    <Setting name="OTCICtoLpGBTecv_NumberOfL1Bits">1e5</Setting>
     <Setting name="OTCICtoLpGBTecv_NumberOfStubBits">1e6</Setting>
-    <Setting name="OTverifyBoardDataWord_DoMatchingInFirmware">1</Setting>
     <Setting name="OTalignLpGBTinputs_NumberOfAlignmentIterations">100</Setting>
     <Setting name="OTalignLpGBTinputs_MinAlignmentSuccessRate">0.99</Setting>
 
     <Setting name="OTCICphaseAlignment_NumberOfAlignmentIterations">100</Setting>
     <Setting name="OTCICphaseAlignment_MinLockingSuccessRate">0.90</Setting>
-    <Setting name="OTverifyCICdataWord_NumberOfIterations">1000</Setting>
+    <Setting name="OTverifyCICdataWord_NumberOfTestedStubBits">1e5</Setting>
+    <Setting name="OTverifyCICdataWord_NumberOfTestedL1Bits">1e5</Setting>
+    <Setting name="OTverifyCICdataWord_DoMatchingInFirmware">1</Setting>
     <Setting name="OTverifyMPASSAdataWord_NumberOfIterations">1000</Setting>
 
     <Setting name="OTinjectionDelayOptimization_NumberOfEvents">100</Setting>

@@ -19,7 +19,8 @@ void OTSSAtoSSAecv::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
-    fNumberOfIterations    = findValueInSettings<double>("OTSSAtoSSAecv_NumberOfIterations", 1000);
+    fNumberOfStubBits      = findValueInSettings<double>("OTverifyCICdataWord_NumberOfTestedStubBits", 1e8);
+    fNumberOfL1Bits        = findValueInSettings<double>("OTverifyCICdataWord_NumberOfTestedL1Bits", 1e6);
     fListOfSSAslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>("OTSSAtoSSAecv_ListOfSSAslvsCurrents", "1, 4, 7"));
 
     ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);
@@ -116,7 +117,7 @@ void OTSSAtoSSAecv::runSSAtoSSAecvScan()
                         }
                     }
                     auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
-                    runStubIntegrityTest(theBoard, theFWInterface);
+                    runStubIntegrityTestPS(theBoard, theFWInterface);
                 }
 
 #ifdef __USE_ROOT__

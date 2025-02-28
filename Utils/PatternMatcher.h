@@ -120,6 +120,8 @@ class PatternMatcher
         return maximumEfficiency;
     }
 
+    void addTrailingZeros(size_t totalNumberOfBitNeeded);
+
   private:
     size_t                                     fPatternNumberOfBits{0};
     size_t                                     fPatternNumberOfMaskedBits{0};

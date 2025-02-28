@@ -82,8 +82,6 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer*          the
 
 void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitContainer, uint8_t line, BoardDataContainer& thePatternAndMaskContainer, float numberOfBits, bool runAlignment)
 {
-    LOG(INFO) << BOLDBLUE << "Running Pattern Checker on line " << +line << RESET;
-
     auto theBoard = fDetectorContainer->getObject(theErrorBitContainer->getId());
 
     bool is10Gmodule = flpGBTInterface->GetChipRate(theBoard->getFirstObject()->flpGBT) == 10;

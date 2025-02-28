@@ -176,3 +176,23 @@ bool PatternMatcher::isSubsetMatched(const std::vector<uint32_t>& theWordVector,
 
     return theSubsetPatternMatcher.isMatched(theSubsetWordVector);
 }
+
+void PatternMatcher::addTrailingZeros(size_t totalNumberOfBitNeeded)
+{
+    if(totalNumberOfBitNeeded < fPatternNumberOfBits)
+    {
+        std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] totalNumberOfBitNeeded (" << totalNumberOfBitNeeded << ") is less then the number of bits already present in the pattern (" << fPatternNumberOfBits << "). Aborting" << std::endl;
+        abort();
+    }
+    size_t numberOfEmptyBits = totalNumberOfBitNeeded - fPatternNumberOfBits;
+
+    if(numberOfEmptyBits > 0)
+    {
+        size_t numberOfPaddingBits = numberOfEmptyBits % 32;
+        if(numberOfPaddingBits > 0) addToPattern(0x0, 0x0, numberOfPaddingBits);
+        for(size_t trailingEmptyWordNumber = 0; trailingEmptyWordNumber < numberOfEmptyBits/32; ++trailingEmptyWordNumber)
+        {
+            addToPattern(0x0, 0x0, 32);
+        }
+    }
+}

@@ -248,6 +248,7 @@ bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpti
                 std::string lineName = "L1";
                 if(lineId != 0) lineName = "Stub line# " + std::to_string(lineId - 1);
                 LOG(INFO) << BOLDMAGENTA << "Aligning " << lineName << " on Hybrid#" << +theHybrid->getId() << RESET;
+                theAlignerInterface->disableAlignmentOnCustomPattern(theHybrid->getId());
                 bool isLineAligned = tryLineAlignment(theAlignerInterface, theHybrid, lineId);
 
                 if(!isLineAligned)
@@ -263,7 +264,6 @@ bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpti
 
 bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* theAlignerInterface, Hybrid* theHybrid, uint8_t lineId)
 {
-    theAlignerInterface->disableAlignmentOnCustomPattern(theHybrid->getId());
     bool isLineAligned          = false;
     int  currentIterationNumber = 0;
 
