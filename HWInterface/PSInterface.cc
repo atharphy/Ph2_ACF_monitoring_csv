@@ -162,7 +162,7 @@ float PSInterface::getVrefPrecision(ReadoutChip* pPS) { return getInterface(pPS)
 float PSInterface::getVrefMinValue(ReadoutChip* pPS) { return getInterface(pPS)->getVrefMinValue(pPS); }
 float PSInterface::getVrefMaxValue(ReadoutChip* pPS) { return getInterface(pPS)->getVrefMaxValue(pPS); }
 
-bool PSInterface::injectNoiseClusters(ReadoutChip* pPS, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
+bool PSInterface::injectNoiseClusters(ReadoutChip* pPS, std::vector<Cluster> theClusterList)
 {
     if(pPS->getFrontEndType() == FrontEndType::MPA2) { return fTheMPA2Interface->injectNoiseClusters(pPS, theClusterList); }
     else { return fTheSSA2Interface->injectNoiseClusters(pPS, theClusterList); }
@@ -175,8 +175,8 @@ bool PSInterface::injectNoiseStubs(ReadoutChip* pMPA, ReadoutChip* pSSA, std::ve
         std::cerr << __PRETTY_FUNCTION__ << " MPA2 and SSA2 must be provided in the correct order! Aborting..." << std::endl;
         abort();
     }
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> pixelClusterList;
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> stripClusterList;
+    std::vector<Cluster> pixelClusterList;
+    std::vector<Cluster> stripClusterList;
 
     for(const auto& theStub: theStubVector)
     {
@@ -188,8 +188,8 @@ bool PSInterface::injectNoiseStubs(ReadoutChip* pMPA, ReadoutChip* pSSA, std::ve
         uint8_t correlationCol         = correlationHit / 2;
         uint8_t correlationClusterSize = 1 + correlationHit % 2;
 
-        pixelClusterList.push_back({seedRow, seedCol, seedClusterSize});
-        stripClusterList.push_back({0, correlationCol, correlationClusterSize});
+        pixelClusterList.push_back(Cluster(seedRow, seedCol, seedClusterSize));
+        stripClusterList.push_back(Cluster(0, correlationCol, correlationClusterSize));
     }
 
     return fTheMPA2Interface->injectNoiseClusters(pMPA, pixelClusterList) && fTheSSA2Interface->injectNoiseClusters(pSSA, stripClusterList);

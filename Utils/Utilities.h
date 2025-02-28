@@ -27,6 +27,28 @@
 #include <string>
 #include <vector>
 
+struct Cluster
+{
+    Cluster(uint8_t theRow, uint8_t theFirstCol, uint8_t theColWidth)
+    : fRow(theRow)
+    , fFirstCol(theFirstCol)
+    , fColWidth(theColWidth) {}
+    uint8_t fRow;
+    uint8_t fFirstCol;
+    uint8_t fColWidth;
+};
+
+struct Stub
+{
+    Stub(uint8_t theSeed, uint8_t theBend, uint8_t theZ)
+    : fSeed(theSeed)
+    , fBend(theBend)
+    , fZ(theZ) {}
+    uint8_t fSeed;
+    uint8_t fBend;
+    uint8_t fZ;
+};
+
 template <typename... Args>
 std::string string_format(const std::string& format, Args... args)
 {

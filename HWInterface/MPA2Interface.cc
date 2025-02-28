@@ -96,7 +96,7 @@ void MPA2Interface::produceBX0AlignmentPattern(ReadoutChip* pChip)
     // std::cout << " read back masking MPAs 0x" << std::hex <<  masked << std::dec << std::endl;
 
     // use stubs
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 1)};
+    std::vector<Cluster> theClusterList{Cluster(0xA, 0x55, 1)};
     this->injectNoiseClusters(pChip, theClusterList);
     this->WriteChipReg(pChip, "StubMode", 2); // Use pixel mode to exclude possible SSA communication issues
     this->WriteChipReg(pChip, "StubWindow", 31);
@@ -975,7 +975,7 @@ void MPA2Interface::Cleardata()
 
 bool MPA2Interface::MaskAllChannels(ReadoutChip* pMPA, bool mask, bool pVerify) { return WriteChipRegBits(pMPA, "ENFLAGS_ALL", mask ? 0 : 1, "Mask_ALL", 0x01, pVerify); }
 
-bool MPA2Interface::injectNoiseClusters(ReadoutChip* pMPA, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
+bool MPA2Interface::injectNoiseClusters(ReadoutChip* pMPA, std::vector<Cluster> theClusterList)
 {
     std::vector<std::pair<std::string, uint16_t>> listOfRegisters;
 
@@ -988,9 +988,9 @@ bool MPA2Interface::injectNoiseClusters(ReadoutChip* pMPA, std::vector<std::tupl
 
     for(const auto& theCluster: theClusterList)
     {
-        for(uint8_t colIndex = 0; colIndex < std::get<2>(theCluster); ++colIndex)
+        for(uint8_t colIndex = 0; colIndex < theCluster.fColWidth; ++colIndex)
         {
-            listOfRegisters.push_back({MPA2::getPixelRegisterName("ENFLAGS", std::get<0>(theCluster), std::get<1>(theCluster) + colIndex), 0x0}); // inverting polarity for the pixels to inject
+            listOfRegisters.push_back({MPA2::getPixelRegisterName("ENFLAGS", theCluster.fRow, theCluster.fFirstCol + colIndex), 0x0}); // inverting polarity for the pixels to inject
         }
     }
 

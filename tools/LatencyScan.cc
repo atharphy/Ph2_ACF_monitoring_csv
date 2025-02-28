@@ -689,7 +689,7 @@ void LatencyScan::ScanLatency2D()
                                 for(auto cCbc: *cHybrid)
                                 {
                                     int               cHitCounter  = cEvent->GetNHits(cHybrid->getId(), cCbc->getId());
-                                    std::vector<Stub> cStubs       = cEvent->StubVector(cHybrid->getId(), cCbc->getId());
+                                    std::vector<EventStub> cStubs       = cEvent->StubVector(cHybrid->getId(), cCbc->getId());
                                     int               cStubCounter = cStubs.size();
 
                                     if(cHitCounter == 0) {}

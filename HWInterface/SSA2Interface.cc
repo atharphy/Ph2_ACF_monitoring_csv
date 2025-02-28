@@ -954,7 +954,7 @@ bool SSA2Interface::ConfigureChipOriginalMask(ReadoutChip* pSSA2, bool pVerify, 
 
 bool SSA2Interface::MaskAllChannels(ReadoutChip* pSSA2, bool mask, bool pVerify) { return WriteChipRegBitsLocal(pSSA2, "ENFLAGS", mask ? 0 : 1, "mask_strip", 0x01, pVerify); }
 
-bool SSA2Interface::injectNoiseClusters(ReadoutChip* pSSA2, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList)
+bool SSA2Interface::injectNoiseClusters(ReadoutChip* pSSA2, std::vector<Cluster> theClusterList)
 {
     WriteChipReg(pSSA2, "ENFLAGS", 0x20);       // masking all MPA and setting readout mode to OR
     WriteChipReg(pSSA2, "StripControl2", 0x07); // disable HIP cut
@@ -969,9 +969,9 @@ bool SSA2Interface::injectNoiseClusters(ReadoutChip* pSSA2, std::vector<std::tup
 
     for(const auto& theCluster: theClusterList)
     {
-        for(uint8_t stripIndex = 0; stripIndex < std::get<2>(theCluster); ++stripIndex)
+        for(uint8_t stripIndex = 0; stripIndex < theCluster.fColWidth; ++stripIndex)
         {
-            std::string registerName = SSA2::getStripRegisterName("ENFLAGS", std::get<1>(theCluster) + stripIndex);
+            std::string registerName = SSA2::getStripRegisterName("ENFLAGS", theCluster.fFirstCol + stripIndex);
             listOfRegisters.push_back({registerName, 0x23}); // Enabling the channel and inverting polarity
         }
     }

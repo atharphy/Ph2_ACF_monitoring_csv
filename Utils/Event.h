@@ -30,10 +30,10 @@ namespace Ph2_HwInterface
 using EventDataMap = std::map<uint16_t, std::vector<uint32_t>>;
 
 /*!
- * \class Cluster
- * \brief Cluster object for the Event
+ * \class EventCluster
+ * \brief EventCluster object for the Event
  */
-class Cluster
+class EventCluster
 {
   public:
     uint8_t  fSensor;
@@ -71,16 +71,16 @@ class SCluster
     float   getBaricentre();
 };
 
-class Stub
+class EventStub
 {
   public:
-    Stub(uint8_t pPosition, uint8_t pBend, uint8_t pRow = 0) : fPosition(pPosition), fBend(pBend), fRow(pRow)
+    EventStub(uint8_t pPosition, uint8_t pBend, uint8_t pRow = 0) : fPosition(pPosition), fBend(pBend), fRow(pRow)
     {
         // with Strips starting at 0
         fCenter = static_cast<float>((pPosition / 2.)); // for PS
         // fCenter = static_cast<float>((pPosition / 2.) - 1); // is this correct for 2S?
     }
-    Stub() : fPosition(255u), fBend(255u), fRow(255u), fCenter(-999.) {};
+    EventStub() : fPosition(255u), fBend(255u), fRow(255u), fCenter(-999.) {};
     uint8_t getPosition() { return fPosition; }
     uint8_t getBend() { return fBend; }
     uint8_t getRow() { return fRow; }
@@ -355,7 +355,7 @@ class Event
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      */
-    virtual std::vector<Stub> StubVector(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
+    virtual std::vector<EventStub> StubVector(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
 
     /*!
      * \brief Function to count the Hits in this event
@@ -394,7 +394,7 @@ class Event
         return out;
     }
 
-    virtual std::vector<Cluster> getClusters(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
+    virtual std::vector<EventCluster> getClusters(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
     virtual void                 fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup);
     virtual void                 fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) = 0;
 

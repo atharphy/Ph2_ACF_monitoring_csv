@@ -312,7 +312,7 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                                     {
                                         if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                                         if(cChip->getId() != cChipId) continue;
-                                        std::vector<Stub> stubs = static_cast<D19cCic2Event*>(ev)->StubVector(cHybrid->getId(), cChip->getId());
+                                        std::vector<EventStub> stubs = static_cast<D19cCic2Event*>(ev)->StubVector(cHybrid->getId(), cChip->getId());
                                         for(auto& st: stubs)
                                         {
                                             if((2 * cCol) == st.getPosition() and (cRow - 1) == st.getRow()) MatchNStubtot += 1; // Match row and column
@@ -652,7 +652,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs(ReadoutChip* pC
     } customSortSclus;
     struct
     {
-        bool operator()(Stub a, Stub b) const { return a.fPosition < b.fPosition; }
+        bool operator()(EventStub a, EventStub b) const { return a.fPosition < b.fPosition; }
     } customSortStubs;
 
     std::vector<std::pair<uint8_t, uint8_t>> cGoodCombinationsStubs;
@@ -1586,7 +1586,7 @@ bool PSAlignment::CheckFullMatch(ReadoutChip* pChip, const std::vector<Event*>& 
     } customSortSclus;
     struct
     {
-        bool operator()(Stub a, Stub b) const { return a.fPosition < b.fPosition; }
+        bool operator()(EventStub a, EventStub b) const { return a.fPosition < b.fPosition; }
     } customSortStubs;
 
     float  cMatchingCount   = (pTriggerMult == 0) ? (pEvents.size() - 1) : pEvents.size() / (float)(1 + pTriggerMult);
