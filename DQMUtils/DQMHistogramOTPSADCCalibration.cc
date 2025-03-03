@@ -40,17 +40,6 @@ void DQMHistogramOTPSADCCalibration::book(TFile* theOutputFile, DetectorContaine
     theTGraphChipSlope.fTheGraph->GetXaxis()->SetTitle("ADC output [ADC]");
     theTGraphChipSlope.fTheGraph->GetYaxis()->SetTitle("ADC output [V]");
     RootContainerFactory::bookChipHistograms<GraphContainer<TGraph>>(theOutputFile, theDetectorStructure, fChipSlopeGraphs, theTGraphChipSlope);
-
-    HistContainer<TH1F> theTH1FChipAVDD("AVDD", "AVDD", 4096, -0.5, 4095.5);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fChipAVDDHistograms, theTH1FChipAVDD);
-    theTH1FChipAVDD.fTheHistogram->GetXaxis()->SetTitle("VDD [ADC]");
-    theTH1FChipAVDD.fTheHistogram->GetYaxis()->SetTitle("VDD [V]");
-    theTH1FChipAVDD.fTheHistogram->SetMarkerStyle(20);
-    HistContainer<TH1F> theTH1FChipDVDD("DVDD", "DVDD", 4096, -0.5, 4095.5);
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fChipDVDDHistograms, theTH1FChipDVDD);
-    theTH1FChipDVDD.fTheHistogram->GetXaxis()->SetTitle("VDD [ADC]");
-    theTH1FChipDVDD.fTheHistogram->GetYaxis()->SetTitle("VDD [V]");
-    theTH1FChipDVDD.fTheHistogram->SetMarkerStyle(20);
 }
 
 //========================================================================================================================
