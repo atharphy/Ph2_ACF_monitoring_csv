@@ -51,15 +51,15 @@ void DQMHistogramOTMPAtoCICecv::book(TFile* theOutputFile, DetectorContainer& th
 
     for(auto slvsCurrent: listOfMPAslvsCurrents)
     {
-        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("MPAtoCICPhaseScan_SLVScurrent_%d", int(slvsCurrent)),
-                                                        Form("MPA to CIC Phase Scan Matching efficiency - SLVScurrent = %d", int(slvsCurrent)),
+        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("MPAtoCIC_Efficiency_SLVScurrent_%d", int(slvsCurrent)),
+                                                        Form("MPA to CIC efficiency - SLVScurrent = %d", int(slvsCurrent)),
                                                         15,
                                                         -0.5,
                                                         14.5,
                                                         numberOfMPA * numberOfLinesPerMPA,
                                                         -0.5,
                                                         numberOfMPA * numberOfLinesPerMPA - 0.5);
-        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("phase");
+        phaseScanMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("Phase");
         setYaxisBinLable(phaseScanMatchingEfficiency.fTheHistogram);
         phaseScanMatchingEfficiency.fTheHistogram->SetMinimum(0);
         phaseScanMatchingEfficiency.fTheHistogram->SetMaximum(1);

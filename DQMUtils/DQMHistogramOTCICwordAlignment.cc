@@ -25,7 +25,7 @@ void DQMHistogramOTCICwordAlignment::book(TFile* theOutputFile, DetectorContaine
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    bool isPS = theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
+    bool        isPS       = theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
     std::string chipName   = "CBC";
     std::string xAxisTitle = "CBC Id";
     int         idOffset   = 0;
@@ -41,8 +41,8 @@ void DQMHistogramOTCICwordAlignment::book(TFile* theOutputFile, DetectorContaine
         for(int line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS - 1; ++line) { theHistogramAxis->SetBinLabel(line + 1, Form("Stub%d", line)); }
     };
 
-    HistContainer<TH2I> wordAlignmentDelayHistogram((chipName+"toCIC_WordAlignmentDelay").c_str(),
-                                                    (chipName+" to CIC word alignment delay").c_str(),
+    HistContainer<TH2I> wordAlignmentDelayHistogram((chipName + "toCIC_WordAlignmentDelay").c_str(),
+                                                    (chipName + " to CIC word alignment delay").c_str(),
                                                     NUMBER_OF_CIC_PORTS,
                                                     idOffset - 0.5,
                                                     idOffset + NUMBER_OF_CIC_PORTS - 0.5,

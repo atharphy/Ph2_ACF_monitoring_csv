@@ -73,14 +73,15 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
                 size_t numberOfYaxisBins                   = numberOfLines;
                 auto   ClockCICStrengthPolarityCombination = (hybridClockStrength * 100) + (CICStrength * 10) + polarity;
 
-                HistContainer<TH2F> ECVTestedBitsHistogram(Form("CICtoLpGBT_TestedBits_CIC_Clock_Polarity_%.0f-CIC_Signal_Strength_%.0f-Clock_Strength_%.0f", polarity, CICStrength, hybridClockStrength),
-                                                           Form("CIC to LpGBT tested bits - Polarity %.0f CIC Strength %.0f Clock Strength %.0f", polarity, CICStrength, hybridClockStrength),
-                                                           numberOfXaxisBins,
-                                                           0,
-                                                           numberOfXaxisBins,
-                                                           numberOfYaxisBins,
-                                                           0,
-                                                           numberOfYaxisBins);
+                HistContainer<TH2F> ECVTestedBitsHistogram(
+                    Form("CICtoLpGBT_TestedBits_CIC_Clock_Polarity_%.0f-CIC_Signal_Strength_%.0f-Clock_Strength_%.0f", polarity, CICStrength, hybridClockStrength),
+                    Form("CIC to LpGBT tested bits - Polarity %.0f CIC Strength %.0f Clock Strength %.0f", polarity, CICStrength, hybridClockStrength),
+                    numberOfXaxisBins,
+                    0,
+                    numberOfXaxisBins,
+                    numberOfYaxisBins,
+                    0,
+                    numberOfYaxisBins);
                 prepareHistogram(ECVTestedBitsHistogram.fTheHistogram);
                 RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fTestedBits[ClockCICStrengthPolarityCombination], ECVTestedBitsHistogram);
 

@@ -63,7 +63,8 @@ void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     HistContainer<TH1F> hHybridHits(("CommonNoiseHits" + suffix).c_str(), ("Common noise hits" + suffix).c_str(), NCHANNELS * NCHIPS_OT + 2, -0.5, NCHANNELS * NCHIPS_OT + 1 + 0.5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHybridHitHistograms, hHybridHits);
 
-    HistContainer<TH1F> hHybridHitsBottom(("CommonNoiseHitsBottom" + suffix).c_str(), ("Common noise hits bottom" + suffix).c_str(), 0.5 * NCHANNELS * NCHIPS_OT + 1, -0.5, 0.5 * NCHANNELS * NCHIPS_OT + 0.5);
+    HistContainer<TH1F> hHybridHitsBottom(
+        ("CommonNoiseHitsBottom" + suffix).c_str(), ("Common noise hits bottom" + suffix).c_str(), 0.5 * NCHANNELS * NCHIPS_OT + 1, -0.5, 0.5 * NCHANNELS * NCHIPS_OT + 0.5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fHybridHitHistogramsBottom, hHybridHitsBottom);
 
     HistContainer<TH1F> hHybridHitsTop(("CommonNoiseHitsTop" + suffix).c_str(), ("Common noise hits top" + suffix).c_str(), 0.5 * NCHANNELS * NCHIPS_OT + 1, -0.5, 0.5 * NCHANNELS * NCHIPS_OT + 0.5);
@@ -76,7 +77,8 @@ void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         ("CommonNoiseHitsBottom" + suffix).c_str(), ("Common noise hits bottom" + suffix).c_str(), 0.5 * NCHANNELS * NCHIPS_OT * 2 + 1, -0.5, 0.5 * NCHANNELS * NCHIPS_OT * 2 + 0.5);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleHitHistogramsBottom, hModuleHitsBottom);
 
-    HistContainer<TH1F> hModuleHitsTop(("CommonNoiseHitsTop" + suffix).c_str(), ("Common noise hits top" + suffix).c_str(), 0.5 * NCHANNELS * NCHIPS_OT * 2 + 1, -0.5, 0.5 * NCHANNELS * NCHIPS_OT * 2 + 0.5);
+    HistContainer<TH1F> hModuleHitsTop(
+        ("CommonNoiseHitsTop" + suffix).c_str(), ("Common noise hits top" + suffix).c_str(), 0.5 * NCHANNELS * NCHIPS_OT * 2 + 1, -0.5, 0.5 * NCHANNELS * NCHIPS_OT * 2 + 0.5);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fModuleHitHistogramsTop, hModuleHitsTop);
 
     HistContainer<TH2F> h2DModuleSensorCorrelation(("CommonNoiseTopBottomCorrelation" + suffix).c_str(),
@@ -99,8 +101,14 @@ void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDet
                                                    NCHANNELS * NCHIPS_OT / 2 + 1 + 0.5);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, f2DHybridSensorCorrelation, h2DHybridSensorCorrelation);
 
-    HistContainer<TH2F> h2DChipSensorCorrelation(
-        ("CommonNoiseTopBottomCorrelation" + suffix).c_str(), ("Common noise top bottom correlation" + suffix).c_str(), NCHANNELS / 2 + 2, -0.5, NCHANNELS / 2 + 1 + 0.5, NCHANNELS / 2 + 2, -0.5, NCHANNELS / 2 + 1 + 0.5);
+    HistContainer<TH2F> h2DChipSensorCorrelation(("CommonNoiseTopBottomCorrelation" + suffix).c_str(),
+                                                 ("Common noise top bottom correlation" + suffix).c_str(),
+                                                 NCHANNELS / 2 + 2,
+                                                 -0.5,
+                                                 NCHANNELS / 2 + 1 + 0.5,
+                                                 NCHANNELS / 2 + 2,
+                                                 -0.5,
+                                                 NCHANNELS / 2 + 1 + 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, f2DChipSensorCorrelation, h2DChipSensorCorrelation);
 
     HistContainer<TH2F> h2DHybridCorrelation(("CommonNoiseCrossHybridCorrelation" + suffix).c_str(),
@@ -113,8 +121,14 @@ void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDet
                                              NCHANNELS * NCHIPS_OT + 1 + 0.5);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, f2DHybridCorrelation, h2DHybridCorrelation);
 
-    HistContainer<TH2F> h2DChipCorrelation(
-        ("CommonNoiseHybridCorrelation" + suffix).c_str(), ("Common noise hybrid correlation" + suffix).c_str(), NCHANNELS + 2, -0.5, NCHANNELS + 1 + 0.5, NCHANNELS * NCHIPS_OT + 2, -0.5, NCHANNELS * NCHIPS_OT + 1 + 0.5);
+    HistContainer<TH2F> h2DChipCorrelation(("CommonNoiseHybridCorrelation" + suffix).c_str(),
+                                           ("Common noise hybrid correlation" + suffix).c_str(),
+                                           NCHANNELS + 2,
+                                           -0.5,
+                                           NCHANNELS + 1 + 0.5,
+                                           NCHANNELS * NCHIPS_OT + 2,
+                                           -0.5,
+                                           NCHANNELS * NCHIPS_OT + 1 + 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, f2DChipCorrelation, h2DChipCorrelation);
 
     if(f2DHistograms)
