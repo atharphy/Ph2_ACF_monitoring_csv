@@ -40,6 +40,7 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
     HistContainer<TH1F> hSSAHits("CommonNoiseHits", "Common noise hits", MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
     hSSAHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits ");
     hSSAHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
+    hSSAHits.fTheHistogram->GetXaxis()->SetRangeUser(0, 120);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fStripHitHistograms, hSSAHits);
 
     HistContainer<TH1F> hStripHybridHits("CommonNoiseHitsStrips", "Common noise hits strips", MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
