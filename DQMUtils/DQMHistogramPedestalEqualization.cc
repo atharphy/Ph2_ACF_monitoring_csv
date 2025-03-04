@@ -67,25 +67,13 @@ void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, DetectorContai
     fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
-    HistContainer<TH2I> hOffsetMPA("ChannelOffsetValues", "Channel offset values", 
-        NSSACHANNELS,
-        -0.5,
-        NSSACHANNELS - 0.5,
-        NMPAROWS,
-        -0.5,
-        NMPAROWS - 0.5);
+    HistContainer<TH2I> hOffsetMPA("ChannelOffsetValues", "Channel offset values", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOffsetHistograms, hOffsetMPA);
 
-    HistContainer<TH2F> hOccupancyMPA("ChannelOccupancyAfterOffsetEqualization", "Channel occupancy after offset equalization",
-        NSSACHANNELS,
-        -0.5,
-        NSSACHANNELS - 0.5,
-        NMPAROWS,
-        -0.5,
-        NMPAROWS - 0.5);
+    HistContainer<TH2F> hOccupancyMPA("ChannelOccupancyAfterOffsetEqualization", "Channel occupancy after offset equalization", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOccupancyHistograms, hOccupancyMPA);
 
-    fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);    
+    fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
 }
 
 //========================================================================================================================
@@ -204,14 +192,14 @@ void DQMHistogramPedestalEqualization::fillOccupancyPlots(DetectorDataContainer&
                 for(auto chip: *hybrid)
                 {
                     if(chip->hasChannelContainer() == false) continue;
-                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
+                    ReadoutChip*             theReadoutChip   = fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
                     const ChipDataContainer* theChipContainer = fDetectorOccupancyHistograms.getChip(board->getId(), opticalGroup->getId(), hybrid->getId(), chip->getId());
                     // using TH1F and TH2F inheritance from TH1
                     TH1* chipOccupancyHistogram;
                     if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
                         chipOccupancyHistogram = theChipContainer->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     else
-                        chipOccupancyHistogram = theChipContainer->getSummary<HistContainer<TH1F>>().fTheHistogram;                    
+                        chipOccupancyHistogram = theChipContainer->getSummary<HistContainer<TH1F>>().fTheHistogram;
                     for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
@@ -226,7 +214,7 @@ void DQMHistogramPedestalEqualization::fillOccupancyPlots(DetectorDataContainer&
                             {
                                 chipOccupancyHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, chip->getChannel<Occupancy>(row, col).fOccupancy);
                                 chipOccupancyHistogram->SetBinError(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, chip->getChannel<Occupancy>(row, col).fOccupancyError);
-                            }                            
+                            }
                         }
                     }
                 }
@@ -248,30 +236,18 @@ void DQMHistogramPedestalEqualization::fillOffsetPlots(DetectorDataContainer& th
                 for(auto chip: *hybrid)
                 {
                     if(chip->hasChannelContainer() == false) continue;
-                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
+                    ReadoutChip*             theReadoutChip   = fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
                     const ChipDataContainer* theChipContainer = fDetectorOffsetHistograms.getChip(board->getId(), opticalGroup->getId(), hybrid->getId(), chip->getId());
                     // using TH1F and TH2F inheritance from TH1
                     TH1* chipOffsetHistogram;
-                    if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
-                    {
-                        chipOffsetHistogram = theChipContainer->getSummary<HistContainer<TH2I>>().fTheHistogram;
-                    }
-                    else
-                    {
-                        chipOffsetHistogram = theChipContainer->getSummary<HistContainer<TH1I>>().fTheHistogram;
-                    }
+                    if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2) { chipOffsetHistogram = theChipContainer->getSummary<HistContainer<TH2I>>().fTheHistogram; }
+                    else { chipOffsetHistogram = theChipContainer->getSummary<HistContainer<TH1I>>().fTheHistogram; }
                     for(uint16_t row = 0; row < chip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < chip->getNumberOfCols(); ++col)
                         {
-                            if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
-                            {
-                                chipOffsetHistogram->SetBinContent(col + 1, row + 1, chip->getChannel<uint8_t>(row, col));
-                            }
-                            else
-                            {
-                                chipOffsetHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, chip->getChannel<uint8_t>(row, col));
-                            }
+                            if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2) { chipOffsetHistogram->SetBinContent(col + 1, row + 1, chip->getChannel<uint8_t>(row, col)); }
+                            else { chipOffsetHistogram->SetBinContent(linearizeRowAndCols(row, col, chip->getNumberOfCols()) + 1, chip->getChannel<uint8_t>(row, col)); }
                         }
                     }
                 }
