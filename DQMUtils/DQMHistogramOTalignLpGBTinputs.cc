@@ -49,7 +49,7 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
         }
     };
 
-    HistContainer<TH1F> alignmentSuccessHistogram("LpGBT_InputAlignmentSuccess", "LpGBT input best phase", numberOfBins, -0.5, numberOfBins - 0.5);
+    HistContainer<TH1F> alignmentSuccessHistogram("LpGBT_InputAlignmentEfficiency", "LpGBT input alignment efficiency", numberOfBins, -0.5, numberOfBins - 0.5);
     alignmentSuccessHistogram.fTheHistogram->GetXaxis()->SetTitle("");
     setBinLabels(alignmentSuccessHistogram.fTheHistogram->GetXaxis());
     alignmentSuccessHistogram.fTheHistogram->GetYaxis()->SetTitle("Alignment efficiency");
@@ -61,7 +61,7 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
     bestPhaseHistogram.fTheHistogram->GetYaxis()->SetTitle("Best phase value");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBestPhaseHistogramContainer, bestPhaseHistogram);
 
-    HistContainer<TH2F> foundPhasesDistributionHistogram("LpGBT_InputFoundPhasesEfficiency", "LpGBT input found phases efficiency", numberOfBins, -0.5, numberOfBins - 0.5, 16, -0.5, 15.5);
+    HistContainer<TH2F> foundPhasesDistributionHistogram("LpGBT_InputFoundPhaseDistribution", "LpGBT input found phase distribution", numberOfBins, -0.5, numberOfBins - 0.5, 16, -0.5, 15.5);
     foundPhasesDistributionHistogram.fTheHistogram->GetXaxis()->SetTitle("");
     setBinLabels(foundPhasesDistributionHistogram.fTheHistogram->GetXaxis());
     foundPhasesDistributionHistogram.fTheHistogram->GetYaxis()->SetTitle("Phase");

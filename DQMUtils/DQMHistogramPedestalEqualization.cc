@@ -67,10 +67,12 @@ void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, DetectorContai
     fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
-    HistContainer<TH2I> hOffsetMPA("ChannelOffsetValues", "Channel offset values", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
+    HistContainer<TH2I> hOffsetMPA("2DChannelOffsetValues", "2D channel offset values", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
+    hOffsetMPA.fTheHistogram->SetStats(false);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOffsetHistograms, hOffsetMPA);
 
-    HistContainer<TH2F> hOccupancyMPA("ChannelOccupancyAfterOffsetEqualization", "Channel occupancy after offset equalization", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
+    HistContainer<TH2F> hOccupancyMPA("2DChannelOccupancyAfterOffsetEqualization", "2D channel occupancy after offset equalization", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
+    hOccupancyMPA.fTheHistogram->SetStats(false);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOccupancyHistograms, hOccupancyMPA);
 
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);

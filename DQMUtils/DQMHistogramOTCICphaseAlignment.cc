@@ -64,8 +64,8 @@ void DQMHistogramOTCICphaseAlignment::book(TFile* theOutputFile, DetectorContain
         }
     };
 
-    HistContainer<TH2F> phaseHistogram((chipName + "toCIC_InputPhase").c_str(),
-                                       (chipName + " to CIC input phase").c_str(),
+    HistContainer<TH2F> phaseHistogram((chipName + "toCIC_InputPhaseDistribution").c_str(),
+                                       (chipName + " to CIC input phase distribution").c_str(),
                                        NUMBER_OF_CIC_PORTS * NUMBER_OF_LINES_PER_CIC_PORTS,
                                        -0.5,
                                        NUMBER_OF_CIC_PORTS * NUMBER_OF_LINES_PER_CIC_PORTS - 0.5,
