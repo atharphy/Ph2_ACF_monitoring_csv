@@ -71,7 +71,8 @@ void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, DetectorContai
     hOffsetMPA.fTheHistogram->SetStats(false);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOffsetHistograms, hOffsetMPA);
 
-    HistContainer<TH2F> hOccupancyMPA("2DChannelOccupancyAfterOffsetEqualization", "2D channel occupancy after offset equalization", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
+    HistContainer<TH2F> hOccupancyMPA(
+        "2DChannelOccupancyAfterOffsetEqualization", "2D channel occupancy after offset equalization", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
     hOccupancyMPA.fTheHistogram->SetStats(false);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOccupancyHistograms, hOccupancyMPA);
 
