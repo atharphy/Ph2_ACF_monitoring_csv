@@ -28,8 +28,8 @@ void DQMHistogramOTalignLpGBTinputsForBypass::book(TFile* theOutputFile, Detecto
     uint8_t numberOfLines = 4;
     for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
     {
-        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("LpGBTforCICbypass_PhaseScan_phyPort%d", phyPort),
-                                                        Form("LpGBT for CIC bypass phase scan matching efficiency - phyPort %d", phyPort),
+        HistContainer<TH2F> phaseScanMatchingEfficiency(Form("LpGBTforCICbypass_PhaseScanEfficiency_phyPort%d", phyPort),
+                                                        Form("LpGBT for CIC bypass phase scan efficiency - phyPort %d", phyPort),
                                                         15,
                                                         -0.5,
                                                         14.5,

@@ -32,7 +32,7 @@ void DQMHistogramOTLpGBTEyeOpeningTest::book(TFile* theOutputFile, DetectorConta
     for(auto thePower: thePowerList)
     {
         HistContainer<TH2I> theEyeOpeningHistogram(Form("LpGBT_EyeOpeningScan_Power_%f", thePower / 3.),
-                                                   Form("Eye Opening Scan - Power = %f", thePower / 3.),
+                                                   Form("LpGBT eye opening scan - Power = %f", thePower / 3.),
                                                    numberOfTimePoints,
                                                    -(timeStepSize / 2),
                                                    (numberOfTimePoints - 0.5) * timeStepSize,

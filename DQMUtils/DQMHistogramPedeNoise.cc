@@ -185,7 +185,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelPixelPedestalHistograms, theTH1FChannelPixelPedestalContainer);
 
         // Noise
-        HistContainer<TH1F> theTH1FHybridPixelNoiseContainer("ChannelPixelNoise", "Channel pixel noise", fNPixelChannels * 8, -0.5, float(fNPixelChannels) * 8 - 0.5);
+        HistContainer<TH1F> theTH1FHybridPixelNoiseContainer("PixelChannelNoise", "Channel pixel noise", fNPixelChannels * 8, -0.5, float(fNPixelChannels) * 8 - 0.5);
         theTH1FHybridPixelNoiseContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
         theTH1FHybridPixelNoiseContainer.fTheHistogram->GetYaxis()->SetTitle("Noise [VcTh]");
         RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridPixelNoiseHistograms, theTH1FHybridPixelNoiseContainer);

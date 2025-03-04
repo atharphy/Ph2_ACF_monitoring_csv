@@ -60,6 +60,7 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
     HistContainer<TH1F> hMPAHits("CommonNoiseHits", "Common noise hits", MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
     hMPAHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits ");
     hMPAHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
+    hMPAHits.fTheHistogram->GetXaxis()->SetRangeUser(0, 120);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fPixelHitHistograms, hMPAHits);
 
     HistContainer<TH1F> hPixelHybridHits("CommonNoiseHitsPixels", "Common noise hits pixels", MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
@@ -74,8 +75,8 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
 
     for(uint8_t chip = NCHIPS_OT; chip < 2 * NCHIPS_OT; chip++)
     {
-        HistContainer<TH2F> hSSAtoMPAcorrelation(Form("SSA(%d)toMPA(%d)_Correlation", chip - NCHIPS_OT, chip),
-                                                 Form("SSA(%d) to MPA(%d) correlation", chip - NCHIPS_OT, chip),
+        HistContainer<TH2F> hSSAtoMPAcorrelation(Form("SSA(%d)toMPA(%d)_CommonNoiseCorrelation", chip - NCHIPS_OT, chip),
+                                                 Form("SSA(%d) to MPA(%d) common noise correlation", chip - NCHIPS_OT, chip),
                                                  MAXCICCHANNELS + 2,
                                                  -0.5,
                                                  MAXCICCHANNELS + 1 + 0.5,
@@ -84,6 +85,8 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
                                                  MAXCICCHANNELS + 1 + 0.5);
         hSSAtoMPAcorrelation.fTheHistogram->GetYaxis()->SetTitle("Number of hits MPA");
         hSSAtoMPAcorrelation.fTheHistogram->GetXaxis()->SetTitle("Number of hits SSA");
+        hSSAtoMPAcorrelation.fTheHistogram->GetXaxis()->SetRangeUser(0, 120);
+        hSSAtoMPAcorrelation.fTheHistogram->GetYaxis()->SetRangeUser(0, 120);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fSSAtoMPAcorrelation[chip], hSSAtoMPAcorrelation);
     }
 
