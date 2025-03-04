@@ -355,16 +355,16 @@ void PedeNoise::Validate()
     this->measureData(fNeventsForValidation, fMaxNevents);
     LOG(INFO) << "setting al channels v2";
     this->setTestAllChannels(originalAllChannelFlag);
-// now Occupancy measured in OTinjectionOccupancyScan
-// #ifdef __USE_ROOT__
-//     fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
-// #else
-//     if(fDQMStreamerEnabled)
-//     {
-//         ContainerSerialization theContainerSerialization("PedeNoiseValidation");
-//         theContainerSerialization.streamByHybridContainer(fDQMStreamer, theOccupancyContainer);
-//     }
-// #endif
+    // now Occupancy measured in OTinjectionOccupancyScan
+    // #ifdef __USE_ROOT__
+    //     fDQMHistogramPedeNoise.fillValidationPlots(theOccupancyContainer);
+    // #else
+    //     if(fDQMStreamerEnabled)
+    //     {
+    //         ContainerSerialization theContainerSerialization("PedeNoiseValidation");
+    //         theContainerSerialization.streamByHybridContainer(fDQMStreamer, theOccupancyContainer);
+    //     }
+    // #endif
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
