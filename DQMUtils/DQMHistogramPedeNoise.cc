@@ -203,6 +203,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         HistContainer<TH2F> theTH2FChannel2DPixelNoiseContainer("2DChannelNoise", "2D channel noise", 120, -0.5, float(120) - 0.5, fNPixelChannels / 120, -0.5, float(fNPixelChannels / 120) - 0.5);
         theTH2FChannel2DPixelNoiseContainer.fTheHistogram->GetXaxis()->SetTitle("Col");
         theTH2FChannel2DPixelNoiseContainer.fTheHistogram->GetYaxis()->SetTitle("Row");
+        theTH2FChannel2DPixelNoiseContainer.fTheHistogram->SetStats(false);
         RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChannel2DPixelNoiseHistograms, theTH2FChannel2DPixelNoiseContainer);
 
         // Validation -> now Occupancy measured in OTinjectionOccupancyScan
