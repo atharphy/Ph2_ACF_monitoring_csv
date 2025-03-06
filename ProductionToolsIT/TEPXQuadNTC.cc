@@ -112,7 +112,8 @@ void TEPXQuadNTC::run()
                               << +cChip->getId() << "   R25NTC=" << R25NTC << "   NTCBETA=" << beta << RESET;
                     if(!((abs(R25NTC - 10.) < 0.001) && (abs(beta - 3380.) < 0.1)) && !((abs(R25NTC - 1.5) < 0.001) && (abs(beta - 3500.) < 0.1)))
                     {
-                        LOG(WARNING) << RED << "[TEPXQuadNTC::run]  NTC parameters, " << "   R25NTC=" << R25NTC << "   NTCBETA=" << beta << ",  do not correspond to a known NTC type." << RESET;
+                        LOG(WARNING) << RED << "[TEPXQuadNTC::run]  NTC parameters, "
+                                     << "   R25NTC=" << R25NTC << "   NTCBETA=" << beta << ",  do not correspond to a known NTC type." << RESET;
                     }
                     // raw ADC: for a list of "observables" see RD53BInterface::getADCobservable  in HWInterface/RD53BInterface.cc
                     // create arrays to store values of each chip

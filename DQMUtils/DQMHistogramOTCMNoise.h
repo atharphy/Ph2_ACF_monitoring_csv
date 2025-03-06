@@ -52,6 +52,7 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
     void fillSensorModuleCorrelationPlots(DetectorDataContainer& theHitData);
 
     void fill2DHitPlots(DetectorDataContainer& theHitData);
+    void fill2DHitLightPlots(DetectorDataContainer& theHitData);
     void fillHybridCorrelationPlots(DetectorDataContainer& theHybridData);
     void fillChipCorrelationPlots(DetectorDataContainer& theHybridData);
     void fillHitProfile(DetectorDataContainer& theHitData); // Not used at the moment
@@ -107,6 +108,7 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
     DetectorDataContainer f2DChipHitHistograms;
     DetectorDataContainer f2DHybridHitHistograms;
     DetectorDataContainer f2DModuleHitHistograms;
+    DetectorDataContainer f2DModuleHitHistogramsLight;
     DetectorDataContainer f2DModuleHitHistogramsBottom;
     DetectorDataContainer f2DModuleHitHistogramsTop;
     DetectorDataContainer f2DHybridHitHistograms_chip;
@@ -121,6 +123,7 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
 
     uint32_t fNevents;
     bool     f2DHistograms;
+    bool     f2DHistogramsLight;
 
     // fitting function
     void   fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint32_t pRange);
