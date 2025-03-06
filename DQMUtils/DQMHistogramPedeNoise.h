@@ -58,7 +58,7 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
      * \brief Fill validation histograms
      * \param theOccupancy : DataContainer for the occupancy
      */
-    void fillValidationPlots(DetectorDataContainer& theOccupancy);
+    // void fillValidationPlots(DetectorDataContainer& theOccupancy);
 
     /*!
      * \brief Fill validation histograms
@@ -91,8 +91,8 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     DetectorDataContainer fDetectorChannelStripSCurveHistograms;
     DetectorDataContainer fDetectorChannelPixelSCurveHistograms;
 
-    DetectorDataContainer fDetectorStripValidationHistograms;
-    DetectorDataContainer fDetectorPixelValidationHistograms;
+    // DetectorDataContainer fDetectorStripValidationHistograms;
+    // DetectorDataContainer fDetectorPixelValidationHistograms;
 
     DetectorDataContainer fDetectorChipStripPedestalHistograms;
     DetectorDataContainer fDetectorChipPixelPedestalHistograms;

@@ -45,8 +45,8 @@ void DQMHistogramOTSSAtoSSAecv::book(TFile* theOutputFile, DetectorContainer& th
 
     for(auto slvsCurrent: listOfSSAslvsCurrents)
     {
-        HistContainer<TH2F> phaseScanStubMatchingEfficiency(Form("SSAtoSSAStubPhaseScan_SLVScurrent_%d", int(slvsCurrent)),
-                                                            Form("SSA to SSA Stub Phase Scan Matching efficiency - SLVScurrent = %d", int(slvsCurrent)),
+        HistContainer<TH2F> phaseScanStubMatchingEfficiency(Form("SSAtoSSA_StubSamplingEdgeEfficiency_SLVScurrent_%d", int(slvsCurrent)),
+                                                            Form("SSA to SSA stub sampling edge efficiency - SLVScurrent = %d", int(slvsCurrent)),
                                                             2,
                                                             -0.5,
                                                             1.5,
@@ -54,8 +54,8 @@ void DQMHistogramOTSSAtoSSAecv::book(TFile* theOutputFile, DetectorContainer& th
                                                             -0.5,
                                                             (numberOfSSA - 1) * numberOfDirections - 0.5);
         phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("Sampling egde");
-        phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(1, "falling");
-        phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(2, "rising");
+        phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(1, "Falling");
+        phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(2, "Rising");
         setYaxisBinLabelForStubs(phaseScanStubMatchingEfficiency.fTheHistogram);
         phaseScanStubMatchingEfficiency.fTheHistogram->SetMinimum(0);
         phaseScanStubMatchingEfficiency.fTheHistogram->SetMaximum(1);

@@ -33,7 +33,7 @@ void DQMHistogramOTRegisterTester::book(TFile* theOutputFile, DetectorContainer&
         binLabel     = "SSA";
     }
     numberOfBins += 1; // adding CIC
-    HistContainer<TH1F> patternMatchingEfficiencyHistogram("RegisterMatchingEfficiency", "Register Matching Efficiency", numberOfBins, -0.5, numberOfBins - 0.5);
+    HistContainer<TH1F> patternMatchingEfficiencyHistogram("RegisterMatchingEfficiency", "Register matching efficiency", numberOfBins, -0.5, numberOfBins - 0.5);
     patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle("Chip");
     patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("Efficiency");
 
