@@ -548,17 +548,16 @@ std::vector<std::pair<std::string, uint16_t>> CbcInterface::ReadChipMultReg(Ph2_
     std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
     // Now re order the read values as the order of the input vector theRegisterList
     for(auto cReq: theRegisterList)
-    {   
-        auto cIterator = cRegMap.find(cReq);
-        ChipRegItem cItem = cIterator->second;
-        auto matchItem = std::find(cRegItemsPage0.begin(), cRegItemsPage0.end(), cItem);
-        if( matchItem != cRegItemsPage0.end())
+    {
+        auto        cIterator = cRegMap.find(cReq);
+        ChipRegItem cItem     = cIterator->second;
+        auto        matchItem = std::find(cRegItemsPage0.begin(), cRegItemsPage0.end(), cItem);
+        if(matchItem != cRegItemsPage0.end())
             theRegisterValues.push_back(std::make_pair(cReq, matchItem->fValue));
         else
         {
             matchItem = std::find(cRegItemsPage1.begin(), cRegItemsPage1.end(), cItem);
-            if( matchItem != cRegItemsPage1.end())
-                theRegisterValues.push_back(std::make_pair(cReq, matchItem->fValue));
+            if(matchItem != cRegItemsPage1.end()) theRegisterValues.push_back(std::make_pair(cReq, matchItem->fValue));
         }
     }
     return theRegisterValues;
