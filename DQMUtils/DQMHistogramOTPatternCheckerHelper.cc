@@ -1,4 +1,4 @@
-#include "DQMUtils/DQMHistogramOTPatternCheckerTest.h"
+#include "DQMUtils/DQMHistogramOTPatternCheckerHelper.h"
 #include "RootUtils/RootContainerFactory.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
@@ -9,13 +9,13 @@
 #include "TH1F.h"
 
 //========================================================================================================================
-DQMHistogramOTPatternCheckerTest::DQMHistogramOTPatternCheckerTest() {}
+DQMHistogramOTPatternCheckerHelper::DQMHistogramOTPatternCheckerHelper() {}
 
 //========================================================================================================================
-DQMHistogramOTPatternCheckerTest::~DQMHistogramOTPatternCheckerTest() {}
+DQMHistogramOTPatternCheckerHelper::~DQMHistogramOTPatternCheckerHelper() {}
 
 //========================================================================================================================
-void DQMHistogramOTPatternCheckerTest::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
+void DQMHistogramOTPatternCheckerHelper::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
@@ -36,7 +36,7 @@ void DQMHistogramOTPatternCheckerTest::book(TFile* theOutputFile, DetectorContai
         }
     };
 
-    HistContainer<TH1F> errorRateHistogram("PatternTrrorRate", "Pattern error rate", fNumberOfLines * 2, -0.5, fNumberOfLines * 2 - 0.5);
+    HistContainer<TH1F> errorRateHistogram("PatternErrorRate", "Pattern error rate", fNumberOfLines * 2, -0.5, fNumberOfLines * 2 - 0.5);
     errorRateHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     errorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Error rate");
     errorRateHistogram.fTheHistogram->SetStats(false);
@@ -52,20 +52,20 @@ void DQMHistogramOTPatternCheckerTest::book(TFile* theOutputFile, DetectorContai
 }
 
 //========================================================================================================================
-void DQMHistogramOTPatternCheckerTest::process()
+void DQMHistogramOTPatternCheckerHelper::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
 }
 
 //========================================================================================================================
-void DQMHistogramOTPatternCheckerTest::reset(void)
+void DQMHistogramOTPatternCheckerHelper::reset(void)
 {
     // Clear histograms if needed
 }
 
 //========================================================================================================================
-void DQMHistogramOTPatternCheckerTest::fillErrorCounter(DetectorDataContainer& theErrorCountainer, uint8_t line)
+void DQMHistogramOTPatternCheckerHelper::fillErrorCounter(DetectorDataContainer& theErrorCountainer, uint8_t line)
 {
     for(auto theBoard: theErrorCountainer)
     {
@@ -85,14 +85,14 @@ void DQMHistogramOTPatternCheckerTest::fillErrorCounter(DetectorDataContainer& t
 }
 
 //========================================================================================================================
-bool DQMHistogramOTPatternCheckerTest::fill(std::string& inputStream)
+bool DQMHistogramOTPatternCheckerHelper::fill(std::string& inputStream)
 {
     // SoC utilities only - BEGIN
     // THIS PART IT IS JUST TO SHOW HOW DATA ARE DECODED FROM THE TCP STREAM WHEN WE WILL GO ON THE SOC
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
     // SoC utilities only - BEGIN
-    ContainerSerialization theErrorCounterSerialization("OTPatternCheckerTestErrorCounter");
+    ContainerSerialization theErrorCounterSerialization("TPatternCheckerHelperErrorCounter");
 
     if(theErrorCounterSerialization.attachDeserializer(inputStream))
     {

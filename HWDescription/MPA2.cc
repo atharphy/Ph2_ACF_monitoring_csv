@@ -81,6 +81,7 @@ void MPA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^RO_.*"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^EfuseProg[0-3]$"), RegisterType::Utility));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^Mask$"), RegisterType::Utility));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ADC.*"), RegisterType::Utility));
     // Brodcast registers cannot be reset to avoid overriding local changes
     fListOfFreeRegisters.push_back(std::make_pair(std::regex(".*_ALL"), RegisterType::Utility));
 }

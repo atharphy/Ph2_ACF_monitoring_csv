@@ -1,13 +1,33 @@
 # XML configuration file
 
-Main configuration file describing the setup, scan and monitoring settings (can be outsourced in another file)
+Main configuration file describing the setup, scan and monitoring settings (can be outsourced in another file):
 
-(`Ph2_ACF/settings/CMSIT.xml`)
+* `Ph2_ACF/settings/CMSIT_RD53A.xml` for RD53A
+* `Ph2_ACF/settings/CMSIT_RD53B.xml` for RD53B
 
 ## Chip definition
 
 !!! info "TODO: module/chip definition"
-!!! info "TODO: monitoring setup"
+
+The chip is defined as follows in the XML, followed by the chip settings:
+
+* For RD53A:
+  ```xml
+  <RD53A Id="0" enable="1" Lane="0" configFile="CMSIT_RD53A.txt" RxGroups="0001" RxPolarity="0" TxGroup="2" TxChannel="0" TxPolarity="0" Comment="RD53A 50x50">
+  ```
+* For RD53Bv1 (CROCv1):
+  ```xml
+  <RD53Bv1 Id="15" enable="1" Lane="0" eFuseCode = "0" configFile="CMSIT_RD53Bv1.txt" RxGroups="0001" RxPolarity="0" TxGroup="2" TxChannel="0" TxPolarity="0" Comment="RD53B 50x50">
+  ```
+* For RD53Bv2 (CROCv2):
+  ```xml
+  <RD53Bv2 Id="15" enable="1" Lane="0" eFuseCode = "0" configFile="CMSIT_RD53Bv2.txt" RxGroups="0001" RxPolarity="0" TxGroup="2" TxChannel="0" TxPolarity="0" Comment="RD53B 50x50">
+  ```
+The corresponding configuration txt files should be copied from the `Ph2_ACF/settings/RD53Files` directory to the working directory and set to the `configFile` setting accordingly.
+
+### Chip monitoring
+
+The chip **monitoring setup** is described [here](Monitoring.md).
 
 ### Data merging
 

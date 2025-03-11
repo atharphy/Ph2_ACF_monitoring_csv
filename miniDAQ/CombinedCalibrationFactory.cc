@@ -23,7 +23,7 @@
 #include "tools/OTPSADCCalibration.h"
 #include "tools/OTPScommonNoise.h"
 #include "tools/OTPSringOscillatorTest.h"
-#include "tools/OTPatternCheckerTest.h"
+#include "tools/OTPatternCheckerHelper.h"
 #include "tools/OTRegisterTester.h"
 #include "tools/OTSSAtoMPAecv.h"
 #include "tools/OTSSAtoSSAecv.h"
@@ -77,7 +77,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTVTRxLightYieldScan>("Outer Tracker", "vtrxLightYield");
 
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICtoLpGBTecv>("Outer Tracker", "OTCICtoLpGBTecv");
+    Register<OTalignLpGBTinputs, OTCICtoLpGBTecv>("Outer Tracker", "OTCICtoLpGBTecv");
 
     Register<OTRegisterTester>("Outer Tracker", "OTRegisterTester");
 
@@ -85,7 +85,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTalignBoardDataWord>("Outer Tracker", "OTalignBoardDataWord");
 
-    Register<OTalignBoardDataWord, OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord>("Outer Tracker", "OTverifyBoardDataWord");
 
     Register<OTalignBoardDataWord, OTalignStubPackage>("Outer Tracker", "OTalignStubPackage");
 
@@ -100,7 +100,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord>("Outer Tracker", "alignment");
 
-    Register<OTalignLpGBTinputs, OTPatternCheckerTest>("Outer Tracker", "patternChecker");
+    Register<OTalignLpGBTinputs, OTPatternCheckerHelper>("Outer Tracker", "patternChecker");
 
     Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTCicBypassTest>("Outer Tracker", "testCICbypass");
 

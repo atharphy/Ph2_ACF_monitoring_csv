@@ -55,9 +55,9 @@ void DQMHistogramOTMeasureOccupancy::bookPlotsForInjection(TFile* theOutputFile,
 
     fDetectorContainer->addReadoutChipQueryFunction(selectCBCfunction, selectCBCfunctionName);
     HistContainer<TH1F> theCBCoccupancyHistogram(
-        Form("ChannelOccupancy_injection_%.3f_MIP", theCBCtestPulseValue), Form("Channel Occupancy - injection = %.3f MIP", theCBCtestPulseValue), NCHANNELS, -0.5, NCHANNELS - 0.5);
-    theCBCoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("channel");
-    theCBCoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("occupancy");
+        Form("ChannelOccupancy_Injection_%.3f_MIP", theCBCtestPulseValue), Form("Channel Occupancy - Injection = %.3f MIP", theCBCtestPulseValue), NCHANNELS, -0.5, NCHANNELS - 0.5);
+    theCBCoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("Channel");
+    theCBCoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("Occupancy");
     theCBCoccupancyHistogram.fTheHistogram->SetMaximum(1.2);
     theCBCoccupancyHistogram.fTheHistogram->SetMinimum(theCBCtestPulseValue > 0 ? 0. : 0.5 / theNumberOfEvents); // to allow go into log mode
     theCBCoccupancyHistogram.fTheHistogram->SetStats(false);
@@ -66,9 +66,9 @@ void DQMHistogramOTMeasureOccupancy::bookPlotsForInjection(TFile* theOutputFile,
 
     fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
     HistContainer<TH1F> theSSAoccupancyHistogram(
-        Form("ChannelOccupancy_injection_%.3f_MIP", theSSAtestPulseValue), Form("Channel Occupancy - injection = %.3f MIP", theSSAtestPulseValue), NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
-    theSSAoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("channel");
-    theSSAoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("occupancy");
+        Form("ChannelOccupancy_Injection_%.3f_MIP", theSSAtestPulseValue), Form("Channel Occupancy - Injection = %.3f MIP", theSSAtestPulseValue), NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
+    theSSAoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("Channel");
+    theSSAoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("Occupancy");
     theSSAoccupancyHistogram.fTheHistogram->SetMaximum(1.2);
     theSSAoccupancyHistogram.fTheHistogram->SetMinimum(theSSAtestPulseValue > 0 ? 0. : 0.5 / theNumberOfEvents); // to allow go into log mode
     theSSAoccupancyHistogram.fTheHistogram->SetStats(false);
@@ -76,16 +76,16 @@ void DQMHistogramOTMeasureOccupancy::bookPlotsForInjection(TFile* theOutputFile,
     fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
-    HistContainer<TH2F> theMPAoccupancyHistogram(Form("ChannelOccupancy_injection_%.3f_MIP", theMPAtestPulseValue),
-                                                 Form("Channel Occupancy - injection = %.3f MIP", theMPAtestPulseValue),
+    HistContainer<TH2F> theMPAoccupancyHistogram(Form("ChannelOccupancy_Injection_%.3f_MIP", theMPAtestPulseValue),
+                                                 Form("Channel Occupancy - Injection = %.3f MIP", theMPAtestPulseValue),
                                                  NSSACHANNELS,
                                                  -0.5,
                                                  NSSACHANNELS - 0.5,
                                                  NMPAROWS,
                                                  -0.5,
                                                  NMPAROWS - 0.5);
-    theMPAoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("col");
-    theMPAoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("row");
+    theMPAoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("Col");
+    theMPAoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("Row");
     theMPAoccupancyHistogram.fTheHistogram->SetMaximum(1.);
     theMPAoccupancyHistogram.fTheHistogram->SetMinimum(theMPAtestPulseValue > 0 ? 0. : 0.5 / theNumberOfEvents); // to allow go into log mode
     theMPAoccupancyHistogram.fTheHistogram->SetStats(false);

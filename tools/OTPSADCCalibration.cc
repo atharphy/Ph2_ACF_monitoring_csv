@@ -57,10 +57,6 @@ void OTPSADCCalibration::CalibrateBias()
     ContainerFactory::copyAndInitChip<std::pair<uint8_t, float>>(*fDetectorContainer, theVREFDACContainer);
     DetectorDataContainer theADCSlopeContainer;
     ContainerFactory::copyAndInitChip<ADCSlope>(*fDetectorContainer, theADCSlopeContainer);
-    DetectorDataContainer theAVDDContainer;
-    ContainerFactory::copyAndInitChip<std::pair<uint8_t, float>>(*fDetectorContainer, theAVDDContainer);
-    DetectorDataContainer theDVDDContainer;
-    ContainerFactory::copyAndInitChip<std::pair<uint8_t, float>>(*fDetectorContainer, theDVDDContainer);
 
     for(const auto theBoard: *fDetectorContainer)
     {
@@ -123,8 +119,6 @@ void OTPSADCCalibration::CalibrateBias()
 #ifdef __USE_ROOT__
     fDQMHistogramOTPSADCCalibration.fillDACPlots(theVREFDACContainer);
     fDQMHistogramOTPSADCCalibration.fillSlopePlots(theADCSlopeContainer);
-    fDQMHistogramOTPSADCCalibration.fillVDDPlots(theAVDDContainer, true);
-    fDQMHistogramOTPSADCCalibration.fillVDDPlots(theDVDDContainer, false);
 #else
     if(fDQMStreamerEnabled)
     {
@@ -132,10 +126,6 @@ void OTPSADCCalibration::CalibrateBias()
         theContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theVREFDACContainer);
         ContainerSerialization theSecondContainerSerialization("OTPSADCCalibrationADCSlope");
         theSecondContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theADCSlopeContainer);
-        ContainerSerialization theAVDDContainerSerialization("OTPSADCCalibrationAVDD");
-        theAVDDContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theAVDDContainer);
-        ContainerSerialization theDVDDContainerSerialization("OTPSADCCalibrationDVDD");
-        theDVDDContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theDVDDContainer);
     }
 #endif
 }
