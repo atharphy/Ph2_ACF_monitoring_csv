@@ -45,7 +45,7 @@ class Gain : public CalibBase
     void   localConfigure(const std::string& histoFileName, int currentRun) override;
     void   run() override;
     void   draw(bool saveData = true) override;
-    size_t getNumberIterations() override { return theChnGroupHandler->getNumberOfGroups() * nSteps; }
+    size_t getNumberIterations() override { return theChnGroupHandler->getNumberOfGroups() * nSteps * fDetectorContainer->size(); }
 
     std::shared_ptr<DetectorDataContainer> analyze();
     static float                           gainFunction(const std::vector<float>& par, float q, const Ph2_HwDescription::RD53::FrontEnd* frontEnd);
