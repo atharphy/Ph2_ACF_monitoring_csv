@@ -327,7 +327,8 @@ void FileParser::parseOpticalGroupContainer(pugi::xml_node pOpticalGroupNode, Be
                 {
                     std::string regname  = attr.name();
                     uint16_t    regvalue = convertAnyInt(attr.value());
-                    thelpGBT->setReg(regname, regvalue, true);
+                    thelpGBT->setReg(regname, regvalue);
+                    thelpGBT->getRegItem(regname).fPrmptCfg = true;
                     os << GREEN << "|\t|\t|\t|----" << regname << ": " << BOLDYELLOW << std::hex << "0x" << std::uppercase << regvalue << std::dec << " (" << regvalue << ")" << RESET << std::endl;
                 }
             }
@@ -1516,7 +1517,9 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             // ###################
             const std::string RxGroupsConfig = cChild.attribute("RxGroups").as_string("0000");
             if(RxGroupsConfig.size() != NCHIPLANES) throw std::runtime_error("The \"RxGroups\" attribute of RD53 should contain 4 characters ('0' up to '9')");
-            auto    cRxGroups   = parseString<uint8_t, NCHIPLANES>(RxGroupsConfig);
+            auto                    cRxGroups = parseString<uint8_t, NCHIPLANES>(RxGroupsConfig);
+            std::unordered_set<int> theSet(cRxGroups.begin(), cRxGroups.end());
+            if(theSet.size() < cRxGroups.size() - std::count(cRxGroups.begin(), cRxGroups.end(), 0xFF) + 1) throw std::runtime_error("The \"RxGroups\" attribute has a group used with multiple lanes");
             uint8_t cRxChannel  = (cChild.attribute("RxChannel") ? convertAnyInt(cChild.attribute("RxChannel").value()) : 0);
             uint8_t cRxPolarity = convertAnyInt(cChild.attribute("RxPolarity").value());
             uint8_t cTxGroup    = convertAnyInt(cChild.attribute("TxGroup").value());

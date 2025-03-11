@@ -259,7 +259,7 @@ class RD53 : public ReadoutChip
     std::vector<uint8_t>                     getRxGroups()
     {
         std::vector<uint8_t> RxGroups;
-        for(auto RxGroupChipLane: fLpGBTmap.RxGroupsChipLanes) RxGroups.push_back(RxGroupChipLane.second);
+        for(auto RxGroupChipLane: fLpGBTmap.RxGroupsChipLanes) RxGroups.push_back(RxGroupChipLane.first);
         return RxGroups;
     }
     uint8_t getRxChannel() { return fLpGBTmap.RxChannel; }

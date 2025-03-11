@@ -1651,7 +1651,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
         {
             uint8_t hybrid_id = (thePair.first >> 8) & 0xFF;
             uint8_t chip_id   = thePair.first & 0xFF;
-            LOG(INFO) << GREEN << "\t--> Hybrid Id " << BOLDYELLOW << +hybrid_id << RESET << GREEN << " Chip Id " << BOLDYELLOW << +chip_id << RESET;
+            LOG(INFO) << GREEN << "\t--> Hybrid Id " << BOLDYELLOW << +hybrid_id << RESET << GREEN << " Chip internal Id " << BOLDYELLOW << +chip_id << RESET;
             for(const auto& lane: thePair.second)
             {
                 RegManager::WriteStackReg(
@@ -1662,8 +1662,8 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
                 nErrors = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
 
                 if(bits::pack<32, 32>(cntr_hi, cntr_lo) == 0)
-                    LOG(WARNING) << BOLDRED << "No clock was detected for Hybrid Id " << BOLDYELLOW << +hybrid_id << BOLDRED << " Chip Id " << BOLDYELLOW << +chip_id << BOLDRED << " Chip Lane "
-                                 << BOLDYELLOW << +lane << RESET;
+                    LOG(WARNING) << BOLDRED << "No clock was detected for Hybrid Id " << BOLDYELLOW << +hybrid_id << BOLDRED << " Chip internal Id " << BOLDYELLOW << +chip_id << BOLDRED
+                                 << " Chip Lane " << BOLDYELLOW << +lane << RESET;
                 else
                 {
                     frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
@@ -1675,8 +1675,8 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
             }
         }
 
-        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << frameCounter / frames2run * 100. << RESET << GREEN << "% done)"
-                  << RESET;
+        LOG(INFO) << GREEN << "I've been running for " << BOLDYELLOW << time_per_step * idx << RESET << GREEN << "s (" << BOLDYELLOW << std::fixed << std::setprecision(3)
+                  << frameCounter / frames2run * 100. << std::setprecision(-1) << RESET << GREEN << "% done)" << RESET;
 
         if(given_time == true)
             runDone = (time_per_step * idx >= time2run);
@@ -1724,7 +1724,8 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
             nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
             results.push_back(nErrors / frames2run);
 
-            LOG(INFO) << BOLDGREEN << "Hybrid Id " << BOLDYELLOW << +hybrid_id << BOLDGREEN << " Chip Id " << BOLDYELLOW << +chip_id << BOLDGREEN << " Chip Lane " << BOLDYELLOW << +lane << RESET;
+            LOG(INFO) << BOLDGREEN << "Hybrid Id " << BOLDYELLOW << +hybrid_id << BOLDGREEN << " Chip internal Id " << BOLDYELLOW << +chip_id << BOLDGREEN << " Chip Lane " << BOLDYELLOW << +lane
+                      << RESET;
             LOG(INFO) << GREEN << "Number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
             LOG(INFO) << GREEN << "Frames with error(s): " << BOLDYELLOW << nErrors << RESET;
             LOG(INFO) << GREEN << "Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << std::fixed << std::setprecision(3)

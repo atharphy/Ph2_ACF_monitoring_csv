@@ -415,12 +415,12 @@ void lpGBTInterface::ConfigureTxSource(Chip* pChip, uint8_t pGroup, uint8_t pSou
     WriteChipReg(pChip, "ULDataSource5", cULDataSrcValue);
 }
 
-void lpGBTInterface::ConfigureRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase)
+bool lpGBTInterface::ConfigureRxPhase(Chip* pChip, uint8_t pGroup, uint8_t pChannel, uint8_t pPhase)
 {
     std::string cRegName      = "EPRX" + std::to_string(pGroup) + std::to_string(pChannel) + "ChnCntr";
     uint8_t     cValueChnCntr = ReadChipReg(pChip, cRegName);
     cValueChnCntr             = (cValueChnCntr & ~(0xF << 4)) | (pPhase << 4);
-    WriteChipReg(pChip, cRegName, cValueChnCntr);
+    return WriteChipReg(pChip, cRegName, cValueChnCntr);
 }
 
 void lpGBTInterface::ConfigureAllRxPhase(Chip* pChip, uint8_t pPhase, std::map<uint8_t, std::vector<uint8_t>> theGroupsAndChannels)

@@ -97,8 +97,8 @@ int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
         if(regReadback.size() == 0)
         {
             if(RD53Interface::silentRunning == false)
-                LOG(WARNING) << BLUE << "Empty register readback from chip id " << BOLDYELLOW << pChip->getId() << BLUE << ", attempt n. " << BOLDYELLOW << attempt + 1 << BLUE << "/" << BOLDYELLOW
-                             << +RD53Shared::MAXATTEMPTS << RESET;
+                LOG(WARNING) << BLUE << "Empty register readback from chip id " << BOLDYELLOW << pChip->getId() << RESET << BLUE << ", attempt n. " << BOLDYELLOW << attempt + 1 << RESET << BLUE << "/"
+                             << BOLDYELLOW << +RD53Shared::MAXATTEMPTS << RESET;
             static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO(); // @TMP@ : Temporary fix to avoid FIFO empty at readback
             SendRD53Clear(pRD53);                                       // @TMP@ : Temporary fix to avoid FIFO empty at readback
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));

@@ -186,7 +186,7 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             auto                      eudaqEvent = static_cast<eudaq::RawEvent*>(ev.get());
             auto                      tluTrigId  = RD53EvtList[it].tlu_trigger_id;
             CMSITEventData::EventData theEvent{
-                std::time(nullptr), eudaqProducer->RD53sysCntrPhys.nTRIGxEvent, RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
+                std::time(nullptr), static_cast<uint32_t>(eudaqProducer->RD53sysCntrPhys.nTRIGxEvent), RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
 
             // ########################################################
             // # @TMP@ : choose between internal vs TLU event counter #
