@@ -647,7 +647,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
             LOG(INFO) << BOLDBLUE << "Configuring CIC" << +(cHybrid->getId() % 2) << " on link " << +cHybrid->getOpticalGroupId() << " on hybrid " << +cHybrid->getId() << RESET;
             if(!fCicInterface->ConfigureChip(cCic))
             {
-                LOG(INFO) << BOLDRED << "FAILED to configure CIC on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId()
+                LOG(INFO) << BOLDRED << "FAILED to configure CIC on Board Id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id " << +cHybrid->getId()
                           << " --- Hybrid will be disabled" << RESET;
                 ExceptionHandler::getInstance()->disableHybrid(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId());
                 continue;
@@ -656,7 +656,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
         if(!CicStartUp(cOpticalGroup, true))
         {
-            LOG(INFO) << BOLDRED << "Failed CIC start-up sequence on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId()
+            LOG(INFO) << BOLDRED << "Failed CIC start-up sequence on Board Id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId()
                       << " for all its hybrids --- OpticalGroup will be disabled" << RESET;
             ExceptionHandler::getInstance()->disableOpticalGroup(pBoard->getId(), cOpticalGroup->getId());
             continue;
@@ -697,7 +697,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
                 if(fCicInterface->GetResyncRequest(cCic))
                 {
-                    LOG(INFO) << BOLDYELLOW << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id "
+                    LOG(INFO) << BOLDYELLOW << "FAILED to clear CIC ReSync request on Board Id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id "
                               << +cHybrid->getId() << " --- trying to change fast command sampling edge" << RESET;
 
                     // Change the sampling edge of the fast command and then resync again
@@ -708,7 +708,7 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
                     if(fCicInterface->GetResyncRequest(cCic))
                     {
-                        LOG(INFO) << BOLDRED << "FAILED to clear CIC ReSync request on Board id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id "
+                        LOG(INFO) << BOLDRED << "FAILED to clear CIC ReSync request on Board Id " << +pBoard->getId() << " OpticalGroup id" << +cOpticalGroup->getId() << " Hybrid id "
                                   << +cHybrid->getId() << " --- Hybrid will be disabled" << RESET;
                         ExceptionHandler::getInstance()->disableHybrid(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId());
                         continue;
@@ -805,7 +805,7 @@ bool SystemController::CicStartUp(const OpticalGroup* pOpticalGroup, bool cStart
 
     auto exceptionHandleFunction = [cBoardId, cOpticalGroupId, this](uint16_t hybridId, const std::string&& failMode)
     {
-        LOG(INFO) << BOLDRED << "FAILED to " << failMode << " for Board id " << +cBoardId << " OpticalGroup id " << +cOpticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;
+        LOG(INFO) << BOLDRED << "FAILED to " << failMode << " for Board Id " << +cBoardId << " OpticalGroup id " << +cOpticalGroupId << " Hybrid id " << +hybridId << " --- Disabled" << RESET;
         ExceptionHandler::getInstance()->disableHybrid(cBoardId, cOpticalGroupId, hybridId);
     };
 
@@ -885,12 +885,18 @@ void SystemController::ConfigureHw(bool pReInitialize)
     LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from XML file @@@" << RESET;
     for(const auto cBoard: *fDetectorContainer)
     {
+        std::cout << std::endl;
+
         cBoard->printBoardType();
         if(cBoard->getToConfigure()) fBeBoardInterface->ConfigureBoard(cBoard);
     }
 
     for(const auto cBoard: *fDetectorContainer)
     {
+        std::cout << std::endl;
+
+        LOG(INFO) << BOLDMAGENTA << "@@@ Configuring frontend for Board Id: " << BOLDYELLOW << cBoard->getId() << BOLDMAGENTA << " @@@" << RESET;
+
         // #################
         // # Outer Tracker #
         // #################
