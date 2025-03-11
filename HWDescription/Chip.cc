@@ -73,7 +73,7 @@ uint16_t Chip::getReg(const std::string& pReg) const
         return i->second.fValue & fMaxRegValue;
 }
 
-void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg)
+void Chip::setReg(const std::string& pReg, uint16_t psetValue, uint8_t pStatusReg)
 {
     ChipRegMap::iterator i = fRegMap.find(pReg);
 
@@ -86,7 +86,6 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, u
         auto oldRegister     = i->second;
         i->second.fValue     = psetValue & fMaxRegValue;
         i->second.fStatusReg = pStatusReg;
-        // i->second.fPrmptCfg  = pPrmptCfg; // @TMP@ : maybe to be removed permanently
 
         if(fTrackModifiedRegistersEnabled)
         {

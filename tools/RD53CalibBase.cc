@@ -316,7 +316,9 @@ void CalibBase::ResetBoards()
     for(const auto cBoard: *fDetectorContainer)
     {
         static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetBoard();
+        std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::SUPERDEEPSLEEP));
         static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ConfigureBoard(cBoard);
+        std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::SUPERDEEPSLEEP));
         this->ConfigureIT(cBoard);
         this->ConfigureFrontendIT(cBoard);
     }

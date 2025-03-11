@@ -23,7 +23,7 @@
 
 - Text-based User Interface (TUI) - aka Dirigent: <https://gitlab.cern.ch/cms_tk_ph2/dirigent/>
 - Graphical-based User Interface (GUI) - aka Ohio-GUI: <https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF_GUI/>
-- Grading Software - aka Panthera: https://panthera.fit.edu/
+- Grading Software - aka Panthera: <https://panthera.fit.edu/>
 
 ### Miscellanea
 

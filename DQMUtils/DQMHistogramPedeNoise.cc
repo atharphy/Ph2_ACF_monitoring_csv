@@ -75,52 +75,74 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
             uint16_t nYbins = (fWithSSA) ? 255 : 1024;
 
             HistContainer<TH2F> theTH2FChipStripSCurve("SCurve", "SCurve", fNStripChannels, -0.5, fNStripChannels - 0.5, nYbins, -0.5, float(nYbins) - 0.5);
+            theTH2FChipStripSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
+            theTH2FChipStripSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
             RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipStripSCurveHistograms, theTH2FChipStripSCurve);
 
             if(fFitSCurves)
             {
                 HistContainer<TH1F> theTH1FChannelStripSCurveContainer("SCurve", "SCurve", nYbins, -0.5, float(nYbins) - 0.5);
+                theTH1FChannelStripSCurveContainer.fTheHistogram->GetXaxis()->SetTitle("Threshold [VcTh]");
+                theTH1FChannelStripSCurveContainer.fTheHistogram->GetYaxis()->SetTitle("Efficiency");
                 RootContainerFactory::bookChannelHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripSCurveHistograms, theTH1FChannelStripSCurveContainer);
             }
         }
 
         // Pedestal
-        HistContainer<TH1F> theTH1FChipStripPedestalContainer("PedestalDistribution", "PedestalDistribution", 2048, -0.5, 1023.5);
+        HistContainer<TH1F> theTH1FChipStripPedestalContainer("PedestalDistribution", "Pedestal distribution", 2048, -0.5, 1023.5);
+        theTH1FChipStripPedestalContainer.fTheHistogram->GetXaxis()->SetTitle("Threshold [VcTh]");
+        theTH1FChipStripPedestalContainer.fTheHistogram->GetYaxis()->SetTitle("Entries");
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripPedestalHistograms, theTH1FChipStripPedestalContainer);
         //
-        HistContainer<TH1F> theTH1FChannelStripPedestalContainer("ChannelPedestalDistribution", "ChannelPedestal", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
+        HistContainer<TH1F> theTH1FChannelStripPedestalContainer("ChannelPedestal", "Channel pedestal", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
+        theTH1FChannelStripPedestalContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
+        theTH1FChannelStripPedestalContainer.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripPedestalHistograms, theTH1FChannelStripPedestalContainer);
 
         // Noise
-        HistContainer<TH1F> theTH1FHybridStripNoiseContainer("HybridStripNoiseDistribution", "HybridStripNoise", fNStripChannels * 8, -0.5, float(fNStripChannels) * 8 - 0.5);
+        HistContainer<TH1F> theTH1FHybridStripNoiseContainer("StripChannelNoise", "Strip channel noise", fNStripChannels * 8, -0.5, float(fNStripChannels) * 8 - 0.5);
+        theTH1FHybridStripNoiseContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
+        theTH1FHybridStripNoiseContainer.fTheHistogram->GetYaxis()->SetTitle("Noise [VcTh]");
         RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseHistograms, theTH1FHybridStripNoiseContainer);
         //
-        HistContainer<TH1F> theTH1FChipStripNoiseContainer("NoiseDistribution", "NoiseDistribution", 200, 0., 20.);
+        HistContainer<TH1F> theTH1FChipStripNoiseContainer("NoiseDistribution", "Noise distribution", 200, 0., 20.);
+        theTH1FChipStripNoiseContainer.fTheHistogram->GetXaxis()->SetTitle("Noise [VcTh]");
+        theTH1FChipStripNoiseContainer.fTheHistogram->GetYaxis()->SetTitle("Entries");
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripNoiseHistograms, theTH1FChipStripNoiseContainer);
         //
-        HistContainer<TH1F> theTH1FChannelStripNoiseContainer("ChannelNoiseDistribution", "ChannelNoise", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
+        HistContainer<TH1F> theTH1FChannelStripNoiseContainer("ChannelNoise", "Channel noise", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
+        theTH1FChannelStripNoiseContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
+        theTH1FChannelStripNoiseContainer.fTheHistogram->GetYaxis()->SetTitle("Noise [VcTh]");
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripNoiseHistograms, theTH1FChannelStripNoiseContainer);
 
         if(fWithCBC)
         {
             // Strip Noise Bottom
-            HistContainer<TH1F> theTH1FHybridStripNoiseBottomContainer("HybridNoiseBottomDistribution", "HybridNoiseBottom", fNStripChannels * 4, -0.5, float(fNStripChannels) * 4 - 0.5);
+            HistContainer<TH1F> theTH1FHybridStripNoiseBottomContainer("StripChannelNoiseBottom", "Channel noise bottom", fNStripChannels * 4, -0.5, float(fNStripChannels) * 4 - 0.5);
+            theTH1FHybridStripNoiseBottomContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
+            theTH1FHybridStripNoiseBottomContainer.fTheHistogram->GetYaxis()->SetTitle("Noise [VcTh]");
             RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseBottomHistograms, theTH1FHybridStripNoiseBottomContainer);
             //
-            HistContainer<TH1F> theTH1FChannelStripNoiseBottomContainer("ChannelNoiseBottomDistribution", "ChannelNoiseBottom", fNStripChannels / 2, -0.5, float(fNStripChannels / 2) - 0.5);
+            HistContainer<TH1F> theTH1FChannelStripNoiseBottomContainer("ChannelNoiseBottom", "Channel noise bottom", fNStripChannels / 2, -0.5, float(fNStripChannels / 2) - 0.5);
+            theTH1FChannelStripNoiseBottomContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
+            theTH1FChannelStripNoiseBottomContainer.fTheHistogram->GetYaxis()->SetTitle("Noise [VcTh]");
             RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripNoiseBottomHistograms, theTH1FChannelStripNoiseBottomContainer);
 
             // Strip Noise Top
-            HistContainer<TH1F> theTH1FHybridStripNoiseTopContainer("HybridNoiseTopDistribution", "HybridNoiseTop", fNStripChannels * 4, -0.5, float(fNStripChannels) * 4 - 0.5);
+            HistContainer<TH1F> theTH1FHybridStripNoiseTopContainer("StripChannelNoiseTop", "Channel noise top", fNStripChannels * 4, -0.5, float(fNStripChannels) * 4 - 0.5);
+            theTH1FHybridStripNoiseTopContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
+            theTH1FHybridStripNoiseTopContainer.fTheHistogram->GetYaxis()->SetTitle("Noise [VcTh]");
             RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridStripNoiseTopHistograms, theTH1FHybridStripNoiseTopContainer);
             //
-            HistContainer<TH1F> theTH1FChannelStripNoiseTopContainer("ChannelNoiseTopDistribution", "ChannelNoiseTop", fNStripChannels / 2, -0.5, float(fNStripChannels / 2) - 0.5);
+            HistContainer<TH1F> theTH1FChannelStripNoiseTopContainer("ChannelNoiseTop", "Channel noise top", fNStripChannels / 2, -0.5, float(fNStripChannels / 2) - 0.5);
+            theTH1FChannelStripNoiseTopContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
+            theTH1FChannelStripNoiseTopContainer.fTheHistogram->GetYaxis()->SetTitle("Noise [VcTh]");
             RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripNoiseTopHistograms, theTH1FChannelStripNoiseTopContainer);
         }
 
-        // Validation
-        HistContainer<TH1F> theTH1FStripValidationContainer("Occupancy", "Occupancy", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
-        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripValidationHistograms, theTH1FStripValidationContainer);
+        // Validation -> now Occupancy measured in OTinjectionOccupancyScan
+        // HistContainer<TH1F> theTH1FStripValidationContainer("ChannelOccupancy", "Channel occupancy", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
+        // RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorStripValidationHistograms, theTH1FStripValidationContainer);
 
         // Reset query function from only including strip chips in the data container
         fDetectorContainer->removeReadoutChipQueryFunction(queryFunctionName);
@@ -138,38 +160,55 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
             float    maxY   = 254.5;
 
             HistContainer<TH2F> theTH2FChipPixelSCurve("SCurve", "SCurve", fNPixelChannels, -0.5, fNPixelChannels - 0.5, nYbins, minY, maxY);
+            theTH2FChipPixelSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
+            theTH2FChipPixelSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
             RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelSCurveHistograms, theTH2FChipPixelSCurve);
 
             if(fFitSCurves)
             {
                 HistContainer<TH1F> theTH1FChannelPixelSCurveContainer("SCurve", "SCurve", nYbins, minY, maxY);
+                theTH1FChannelPixelSCurveContainer.fTheHistogram->GetXaxis()->SetTitle("Threshold [VcTh]");
+                theTH1FChannelPixelSCurveContainer.fTheHistogram->GetYaxis()->SetTitle("Efficiency");
                 RootContainerFactory::bookChannelHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelPixelSCurveHistograms, theTH1FChannelPixelSCurveContainer);
             }
         }
 
         // Pedestal
-        HistContainer<TH1F> theTH1FChipPixelPedestalContainer("PedestalDistribution", "PedestalDistribution", 2048, -0.5, 1023.5);
+        HistContainer<TH1F> theTH1FChipPixelPedestalContainer("PedestalDistribution", "Pedestal distribution", 2048, -0.5, 1023.5);
+        theTH1FChipPixelPedestalContainer.fTheHistogram->GetXaxis()->SetTitle("Threshold [VcTh]");
+        theTH1FChipPixelPedestalContainer.fTheHistogram->GetYaxis()->SetTitle("Entries");
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelPedestalHistograms, theTH1FChipPixelPedestalContainer);
         //
-        HistContainer<TH1F> theTH1FChannelPixelPedestalContainer("ChannelPedestalDistribution", "ChannelPedestal", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
+        HistContainer<TH1F> theTH1FChannelPixelPedestalContainer("ChannelPedestal", "Channel pedestal", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
+        theTH1FChannelPixelPedestalContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
+        theTH1FChannelPixelPedestalContainer.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelPixelPedestalHistograms, theTH1FChannelPixelPedestalContainer);
 
         // Noise
-        HistContainer<TH1F> theTH1FHybridPixelNoiseContainer("HybridPixelNoiseDistribution", "HybridPixelNoise", fNPixelChannels * 8, -0.5, float(fNPixelChannels) * 8 - 0.5);
+        HistContainer<TH1F> theTH1FHybridPixelNoiseContainer("PixelChannelNoise", "Pixel channel noise", fNPixelChannels * 8, -0.5, float(fNPixelChannels) * 8 - 0.5);
+        theTH1FHybridPixelNoiseContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
+        theTH1FHybridPixelNoiseContainer.fTheHistogram->GetYaxis()->SetTitle("Noise [VcTh]");
         RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridPixelNoiseHistograms, theTH1FHybridPixelNoiseContainer);
         //
-        HistContainer<TH1F> theTH1FChipPixelNoiseContainer("NoiseDistribution", "NoiseDistribution", 200, -0.5, 20.);
+        HistContainer<TH1F> theTH1FChipPixelNoiseContainer("NoiseDistribution", "Noise distribution", 200, -0.5, 20.);
+        theTH1FChipPixelNoiseContainer.fTheHistogram->GetXaxis()->SetTitle("Noise [VcTh]");
+        theTH1FChipPixelNoiseContainer.fTheHistogram->GetYaxis()->SetTitle("Entries");
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelNoiseHistograms, theTH1FChipPixelNoiseContainer);
         // 1D pixel noise
-        HistContainer<TH1F> theTH1FChannelPixelNoiseContainer("ChannelNoiseDistribution", "ChannelNoise", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
+        HistContainer<TH1F> theTH1FChannelPixelNoiseContainer("ChannelNoise", "Channel noise", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
+        theTH1FChannelPixelNoiseContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
+        theTH1FChannelPixelNoiseContainer.fTheHistogram->GetYaxis()->SetTitle("Noise [VcTh]");
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelPixelNoiseHistograms, theTH1FChannelPixelNoiseContainer);
         // 2D Pixel Noise
-        HistContainer<TH2F> theTH2FChannel2DPixelNoiseContainer("2DPixelNoise", "2DChannelNoise", 120, -0.5, float(120) - 0.5, fNPixelChannels / 120, -0.5, float(fNPixelChannels / 120) - 0.5);
+        HistContainer<TH2F> theTH2FChannel2DPixelNoiseContainer("2DChannelNoise", "2D channel noise", 120, -0.5, float(120) - 0.5, fNPixelChannels / 120, -0.5, float(fNPixelChannels / 120) - 0.5);
+        theTH2FChannel2DPixelNoiseContainer.fTheHistogram->GetXaxis()->SetTitle("Col");
+        theTH2FChannel2DPixelNoiseContainer.fTheHistogram->GetYaxis()->SetTitle("Row");
+        theTH2FChannel2DPixelNoiseContainer.fTheHistogram->SetStats(false);
         RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChannel2DPixelNoiseHistograms, theTH2FChannel2DPixelNoiseContainer);
 
-        // Validation
-        HistContainer<TH1F> theTH1FPixelValidationContainer("Occupancy", "Occupancy", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
-        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorPixelValidationHistograms, theTH1FPixelValidationContainer);
+        // Validation -> now Occupancy measured in OTinjectionOccupancyScan
+        // HistContainer<TH1F> theTH1FPixelValidationContainer("ChannelOccupancy", "Channel occupancy", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
+        // RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorPixelValidationHistograms, theTH1FPixelValidationContainer);
 
         // Reset query function from only including strip chips in the data container
         fDetectorContainer->removeReadoutChipQueryFunction(queryFunctionName);
@@ -179,7 +218,7 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
     if(fPlotSCurves && fFitSCurves) { ContainerFactory::copyAndInitStructure<ThresholdAndNoise>(theDetectorStructure, fThresholdAndNoiseContainer); }
 
     // Hybrid Noise
-    HistContainer<TH1F> theTH1FHybridNoiseContainer("HybridNoiseDistribution", "HybridNoiseDistribution", 200, 0., 20.);
+    HistContainer<TH1F> theTH1FHybridNoiseContainer("NoiseDistribution", "Noise distribution", 200, 0., 20.);
     RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridNoiseHistograms, theTH1FHybridNoiseContainer);
 }
 
@@ -209,7 +248,7 @@ bool DQMHistogramPedeNoise::fill(std::string& inputStream)
     {
         // std::cout << "Matched PedeNoise Validation!!!!!\n";
         DetectorDataContainer theDetectorData = theValidationSerialization.deserializeHybridContainer<Occupancy, Occupancy, Occupancy>(fDetectorContainer);
-        fillValidationPlots(theDetectorData);
+        // fillValidationPlots(theDetectorData);
         return true;
     }
 
@@ -227,13 +266,13 @@ void DQMHistogramPedeNoise::process()
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                std::string validationCanvasName = "Validation_B_" + std::to_string(cBoard->getId()) + "_O_" + std::to_string(cOpticalGroup->getId()) + "_H_" + std::to_string(cHybrid->getId());
-                std::string pedeNoiseCanvasName  = "PedeNoise_B_" + std::to_string(cBoard->getId()) + "_O_" + std::to_string(cOpticalGroup->getId()) + "_H_" + std::to_string(cHybrid->getId());
+                // std::string validationCanvasName = "Validation_B_" + std::to_string(cBoard->getId()) + "_O_" + std::to_string(cOpticalGroup->getId()) + "_H_" + std::to_string(cHybrid->getId());
+                std::string pedeNoiseCanvasName = "PedeNoise_B_" + std::to_string(cBoard->getId()) + "_O_" + std::to_string(cOpticalGroup->getId()) + "_H_" + std::to_string(cHybrid->getId());
 
-                TCanvas* cValidation = new TCanvas(validationCanvasName.c_str(), validationCanvasName.c_str(), 0, 0, 650, fPlotSCurves ? 900 : 650);
-                TCanvas* cPedeNoise  = new TCanvas(pedeNoiseCanvasName.c_str(), pedeNoiseCanvasName.c_str(), 670, 0, 650, 650);
+                // TCanvas* cValidation = new TCanvas(validationCanvasName.c_str(), validationCanvasName.c_str(), 0, 0, 650, fPlotSCurves ? 900 : 650);
+                TCanvas* cPedeNoise = new TCanvas(pedeNoiseCanvasName.c_str(), pedeNoiseCanvasName.c_str(), 670, 0, 650, 650);
 
-                cValidation->Divide(cHybrid->size(), fPlotSCurves ? 3 : 2);
+                // cValidation->Divide(cHybrid->size(), fPlotSCurves ? 3 : 2);
                 cPedeNoise->Divide(cHybrid->size(), 2);
 
                 for(auto cChip: *cHybrid)
@@ -241,15 +280,15 @@ void DQMHistogramPedeNoise::process()
                     auto cType = cChip->getFrontEndType();
                     if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
                     {
-                        cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 0);
-                        TH1F* validationHistogram = fDetectorStripValidationHistograms.getObject(cBoard->getId())
-                                                        ->getObject(cOpticalGroup->getId())
-                                                        ->getObject(cHybrid->getId())
-                                                        ->getObject(cChip->getId())
-                                                        ->getSummary<HistContainer<TH1F>>()
-                                                        .fTheHistogram;
-                        validationHistogram->SetStats(false);
-                        validationHistogram->DrawCopy();
+                        // cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 0);
+                        // TH1F* validationHistogram = fDetectorStripValidationHistograms.getObject(cBoard->getId())
+                        //                                 ->getObject(cOpticalGroup->getId())
+                        //                                 ->getObject(cHybrid->getId())
+                        //                                 ->getObject(cChip->getId())
+                        //                                 ->getSummary<HistContainer<TH1F>>()
+                        //                                 .fTheHistogram;
+                        // validationHistogram->SetStats(false);
+                        // validationHistogram->DrawCopy();
                         gPad->SetLogy();
 
                         cPedeNoise->cd(cChip->getId() + 1 + cHybrid->size() * 1);
@@ -270,7 +309,7 @@ void DQMHistogramPedeNoise::process()
 
                         if(fWithCBC)
                         {
-                            cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 1);
+                            // cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 1);
                             TH1F* cChannelStripNoiseBottomHistogram = fDetectorChannelStripNoiseBottomHistograms.getObject(cBoard->getId())
                                                                           ->getObject(cOpticalGroup->getId())
                                                                           ->getObject(cHybrid->getId())
@@ -312,15 +351,15 @@ void DQMHistogramPedeNoise::process()
                     }
                     else if(cType == FrontEndType::MPA2)
                     {
-                        cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 0);
-                        TH1F* validationHistogram = fDetectorPixelValidationHistograms.getObject(cBoard->getId())
-                                                        ->getObject(cOpticalGroup->getId())
-                                                        ->getObject(cHybrid->getId())
-                                                        ->getObject(cChip->getId())
-                                                        ->getSummary<HistContainer<TH1F>>()
-                                                        .fTheHistogram;
-                        validationHistogram->SetStats(false);
-                        validationHistogram->DrawCopy();
+                        // cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 0);
+                        // TH1F* validationHistogram = fDetectorPixelValidationHistograms.getObject(cBoard->getId())
+                        //                                 ->getObject(cOpticalGroup->getId())
+                        //                                 ->getObject(cHybrid->getId())
+                        //                                 ->getObject(cChip->getId())
+                        //                                 ->getSummary<HistContainer<TH1F>>()
+                        //                                 .fTheHistogram;
+                        // validationHistogram->SetStats(false);
+                        // validationHistogram->DrawCopy();
                         gPad->SetLogy();
 
                         cPedeNoise->cd(cChip->getId() + 1 + cHybrid->size() * 1);
@@ -362,7 +401,7 @@ void DQMHistogramPedeNoise::process()
 
                             cChipStripSCurveHist->GetYaxis()->SetRangeUser(minLimit, maxLimit);
                             delete cTmp;
-                            cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 2);
+                            // cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 2);
                             cChipStripSCurveHist->SetStats(false);
                             cChipStripSCurveHist->DrawCopy("colz");
 
@@ -393,7 +432,7 @@ void DQMHistogramPedeNoise::process()
                             cChipPixelSCurveHist->GetYaxis()->SetRangeUser(minLimit, maxLimit);
                             // cSCurveHist->GetZaxis()->SetRangeUser(0,1.);
                             delete cTmp;
-                            cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 2);
+                            // cValidation->cd(cChip->getId() + 1 + cHybrid->size() * 2);
                             cChipPixelSCurveHist->SetStats(false);
                             cChipPixelSCurveHist->DrawCopy("colz");
 
@@ -495,54 +534,54 @@ void DQMHistogramPedeNoise::process()
 void DQMHistogramPedeNoise::reset(void) {}
 
 //========================================================================================================================
-void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer& theOccupancy)
-{
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    TH1F* cChipValidationHistogram = nullptr;
-                    auto  cType                    = cChip->getFrontEndType();
-                    if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
-                    {
-                        cChipValidationHistogram = fDetectorStripValidationHistograms.getObject(cBoard->getId())
-                                                       ->getObject(cOpticalGroup->getId())
-                                                       ->getObject(cHybrid->getId())
-                                                       ->getObject(cChip->getId())
-                                                       ->getSummary<HistContainer<TH1F>>()
-                                                       .fTheHistogram;
-                    }
-                    else if(cType == FrontEndType::MPA2)
-                    {
-                        cChipValidationHistogram = fDetectorPixelValidationHistograms.getObject(cBoard->getId())
-                                                       ->getObject(cOpticalGroup->getId())
-                                                       ->getObject(cHybrid->getId())
-                                                       ->getObject(cChip->getId())
-                                                       ->getSummary<HistContainer<TH1F>>()
-                                                       .fTheHistogram;
-                    }
+// void DQMHistogramPedeNoise::fillValidationPlots(DetectorDataContainer& theOccupancy)
+// {
+//     for(auto cBoard: *fDetectorContainer)
+//     {
+//         for(auto cOpticalGroup: *cBoard)
+//         {
+//             for(auto cHybrid: *cOpticalGroup)
+//             {
+//                 for(auto cChip: *cHybrid)
+//                 {
+//                     TH1F* cChipValidationHistogram = nullptr;
+//                     auto  cType                    = cChip->getFrontEndType();
+//                     if(cType == FrontEndType::CBC3 || cType == FrontEndType::SSA2)
+//                     {
+//                         cChipValidationHistogram = fDetectorStripValidationHistograms.getObject(cBoard->getId())
+//                                                        ->getObject(cOpticalGroup->getId())
+//                                                        ->getObject(cHybrid->getId())
+//                                                        ->getObject(cChip->getId())
+//                                                        ->getSummary<HistContainer<TH1F>>()
+//                                                        .fTheHistogram;
+//                     }
+//                     else if(cType == FrontEndType::MPA2)
+//                     {
+//                         cChipValidationHistogram = fDetectorPixelValidationHistograms.getObject(cBoard->getId())
+//                                                        ->getObject(cOpticalGroup->getId())
+//                                                        ->getObject(cHybrid->getId())
+//                                                        ->getObject(cChip->getId())
+//                                                        ->getSummary<HistContainer<TH1F>>()
+//                                                        .fTheHistogram;
+//                     }
 
-                    auto theChipContainer = theOccupancy.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                    if(theChipContainer->hasChannelContainer() == false) continue;
-                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
-                    {
-                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
-                        {
-                            cChipValidationHistogram->SetBinContent(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()) + 1,
-                                                                    theChipContainer->getChannel<Occupancy>(row, col).fOccupancy);
-                            cChipValidationHistogram->SetBinError(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()) + 1,
-                                                                  theChipContainer->getChannel<Occupancy>(row, col).fOccupancyError);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+//                     auto theChipContainer = theOccupancy.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+//                     if(theChipContainer->hasChannelContainer() == false) continue;
+//                     for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+//                     {
+//                         for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+//                         {
+//                             cChipValidationHistogram->SetBinContent(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()) + 1,
+//                                                                     theChipContainer->getChannel<Occupancy>(row, col).fOccupancy);
+//                             cChipValidationHistogram->SetBinError(linearizeRowAndCols(row, col, theChipContainer->getNumberOfCols()) + 1,
+//                                                                   theChipContainer->getChannel<Occupancy>(row, col).fOccupancyError);
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
 
 //========================================================================================================================
 void DQMHistogramPedeNoise::fillPedestalAndNoisePlots(DetectorDataContainer& thePedestalAndNoise)

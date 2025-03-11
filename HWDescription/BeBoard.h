@@ -126,8 +126,8 @@ class BeBoard : public BoardContainer
     BoardType getBoardType() const { return fBoardType; }
     void      printBoardType()
     {
-        if(fBoardType == BoardType::RD53) LOG(INFO) << BOLDBLUE << "\t--> Found an Inner Tracker Readout-board" << RESET;
-        if(fBoardType == BoardType::D19C) LOG(INFO) << BOLDBLUE << "\t--> Found an Outer Tracker Readout-board" << RESET;
+        if(fBoardType == BoardType::RD53) LOG(INFO) << GREEN << "Found an " << BOLDYELLOW << "Inner Tracker" << RESET << GREEN << " Readout-board" << RESET;
+        if(fBoardType == BoardType::D19C) LOG(INFO) << GREEN << "Found an " << BOLDYELLOW << "Outer Tracker" << RESET << GREEN << " Readout-board" << RESET;
     }
 
     void setEventType(const EventType pEventType) { fEventType = pEventType; }

@@ -26,6 +26,8 @@ Find below a list of documented scans and calibrations.
 - [Generic DAC-DAC scan](GenericDacDac.md)
 - [Physics](Physics.md)
 - [Data read-back optimisation](DataReadBackOptimisation.md)
+- [LpGBT Eye Diagram Scan](LpGBTeye.md)
+- [VTRx+ Light Yield Scan](VTRxScan.md)
 
 ## Additional information/HOWTOs
 

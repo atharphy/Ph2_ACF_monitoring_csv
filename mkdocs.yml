@@ -84,9 +84,12 @@ nav:
       - 'Software setup': innerTracker/SWsetup.md
       - 'FPGA configuration': innerTracker/FPGAcfg.md
       - 'Running Ph2_ACF': innerTracker/Running.md
+      - 'Module Testing': innerTracker/ModuleTesting.md
       - 'IT Configuration':
         - 'Config file': innerTracker/ConfigFile.md
         - 'Voltage settings': innerTracker/VoltageSettings.md
+        - 'Monitoring': innerTracker/Monitoring.md
+        - 'Optical Readout': innerTracker/OpticalReadout.md
     - 'IT Calibrations':
       - innerTracker/calibrations/index.md
       - 'Scans':

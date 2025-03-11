@@ -46,7 +46,7 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
 
     auto setXaxisBinLabelForL1 = [numberOfMPA, this](TH2F* theHistogram)
     {
-        std::vector<std::string> edgeLabel           = {"falling", "rising"};
+        std::vector<std::string> edgeLabel           = {"Falling", "Rising"};
         int                      totalNumberOfShifts = fMaximum320PhaseShift - fMinimum320PhaseShift + 1;
         auto                     theAxis             = theHistogram->GetXaxis();
         for(size_t labelIndex = 0; labelIndex < edgeLabel.size(); ++labelIndex)
@@ -61,8 +61,8 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
 
     for(auto slvsCurrent: listOfSSAslvsCurrents)
     {
-        HistContainer<TH2F> phaseScanStubMatchingEfficiency(Form("SSAtoMPAStubPhaseScan_SLVScurrent_%d", int(slvsCurrent)),
-                                                            Form("SSA to MPA Stub Phase Scan Matching efficiency - SLVScurrent = %d", int(slvsCurrent)),
+        HistContainer<TH2F> phaseScanStubMatchingEfficiency(Form("SSAtoMPA_StubSamplingEdgeEfficiency_SLVScurrent_%d", int(slvsCurrent)),
+                                                            Form("SSA to MPA stub sampling edge efficiency - SLVScurrent = %d", int(slvsCurrent)),
                                                             2,
                                                             -0.5,
                                                             1.5,
@@ -70,23 +70,23 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
                                                             -0.5,
                                                             numberOfMPA * numberOfStubLinesPerMPA - 0.5);
         phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("Sampling egde");
-        phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(1, "falling");
-        phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(2, "rising");
+        phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(1, "Falling");
+        phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(2, "Rising");
         setYaxisBinLabelForStubs(phaseScanStubMatchingEfficiency.fTheHistogram);
         phaseScanStubMatchingEfficiency.fTheHistogram->SetMinimum(0);
         phaseScanStubMatchingEfficiency.fTheHistogram->SetMaximum(1);
         phaseScanStubMatchingEfficiency.fTheHistogram->SetStats(false);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubPhaseScanMatchingEfficiencies[slvsCurrent], phaseScanStubMatchingEfficiency);
 
-        HistContainer<TH2F> phaseScanL1MatchingEfficiency(Form("SSAtoMPAL1PhaseScan_SLVScurrent_%d", int(slvsCurrent)),
-                                                          Form("SSA to MPA L1 Phase Scan Matching efficiency - SLVScurrent = %d", int(slvsCurrent)),
+        HistContainer<TH2F> phaseScanL1MatchingEfficiency(Form("SSAtoMPA_L1SamplingEdgeAndClockEfficiency_SLVScurrent_%d", int(slvsCurrent)),
+                                                          Form("SSA to MPA L1 sampling edge and clock efficiency - SLVScurrent = %d", int(slvsCurrent)),
                                                           2 * totalNumberOfShifts,
                                                           -0.5,
                                                           2 * totalNumberOfShifts - 1,
                                                           numberOfMPA,
                                                           -0.5,
                                                           numberOfMPA - 0.5);
-        phaseScanL1MatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("sampling egde : 320MHz clock shift");
+        phaseScanL1MatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("Sampling egde : 320MHz clock shift");
         setXaxisBinLabelForL1(phaseScanL1MatchingEfficiency.fTheHistogram);
         setYaxisBinLabelForL1(phaseScanL1MatchingEfficiency.fTheHistogram);
         phaseScanL1MatchingEfficiency.fTheHistogram->SetMinimum(0);

@@ -31,16 +31,16 @@ void DQMHistogramOTLpGBTEyeOpeningTest::book(TFile* theOutputFile, DetectorConta
 
     for(auto thePower: thePowerList)
     {
-        HistContainer<TH2I> theEyeOpeningHistogram(Form("EyeOpeningScan_power_%f", thePower / 3.),
-                                                   Form("Eye Opening Scan - power = %f", thePower / 3.),
+        HistContainer<TH2I> theEyeOpeningHistogram(Form("LpGBT_EyeOpeningScan_Power_%f", thePower / 3.),
+                                                   Form("LpGBT eye opening scan - Power = %f", thePower / 3.),
                                                    numberOfTimePoints,
                                                    -(timeStepSize / 2),
                                                    (numberOfTimePoints - 0.5) * timeStepSize,
                                                    31,
                                                    -0.5,
                                                    30.5);
-        theEyeOpeningHistogram.fTheHistogram->GetXaxis()->SetTitle("time [ps]");
-        theEyeOpeningHistogram.fTheHistogram->GetYaxis()->SetTitle("voltage [DAC units]");
+        theEyeOpeningHistogram.fTheHistogram->GetXaxis()->SetTitle("Time [ps]");
+        theEyeOpeningHistogram.fTheHistogram->GetYaxis()->SetTitle("Voltage [DAC units]");
         theEyeOpeningHistogram.fTheHistogram->SetStats(false);
         RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fEyeOpeningHystogramContainerMap[thePower], theEyeOpeningHistogram);
     }

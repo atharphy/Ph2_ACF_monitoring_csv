@@ -211,14 +211,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
                 static_cast<lpGBT*>(pChip)->setPhaseRxAligned({static_cast<uint8_t>(std::stoi(cRegItem.first.substr(4, 1)))}, true);
             }
             else
-                try
-                {
-                    RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
-                }
-                catch(const std::exception& e)
-                {
-                    LOG(WARNING) << BOLDRED << "Warning: " << BOLDYELLOW << e.what() << RESET;
-                }
+                RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
         }
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
@@ -303,7 +296,7 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const 
         // ###################################
         if(static_cast<lpGBT*>(pChip)->getPhaseRxAligned(RxProperty.Group) == true)
         {
-            LOG(INFO) << BOLDBLUE << "\t--> The phase for this LpGBT Rx Group: " << BOLDYELLOW << +RxProperty.Group << BOLDBLUE << "  was already aligned (maybe from configuration file)" << RESET;
+            LOG(INFO) << BOLDBLUE << "\t--> The phase for this LpGBT Rx Group: " << BOLDYELLOW << +RxProperty.Group << BOLDBLUE << " was already aligned (maybe from configuration file)" << RESET;
             continue;
         }
 

@@ -84,6 +84,7 @@ void SSA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^Ring_oscillator_out_loc[TB][LCR]_T[12]_[HL]$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^bist_memory_sram_output_[HL]_[0-9A-F]$"), RegisterType::ReadOnly));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex(".*ync_SEUcnt_.*"), RegisterType::ReadOnly));
+    fListOfFreeRegisters.push_back(std::make_pair(std::regex("^ADC_control$"), RegisterType::Utility));
 
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^mask_strip$"), RegisterType::Utility));
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^mask_peri_[AD]$"), RegisterType::Utility));
@@ -95,14 +96,14 @@ void SSA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex("^DigCalibPattern_[LH]$"), RegisterType::Utility));
 }
 
-void SSA2::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg)
+void SSA2::setReg(const std::string& pReg, uint16_t psetValue, uint8_t pStatusReg)
 {
     if(std::find(fListOfGlobalRegisters.begin(), fListOfGlobalRegisters.end(), pReg) != fListOfGlobalRegisters.end())
     {
-        for(uint8_t strip = 0; strip < getNumberOfCols(); ++strip) Chip::setReg(getStripRegisterName(pReg, strip), psetValue, pPrmptCfg, pStatusReg);
+        for(uint8_t strip = 0; strip < getNumberOfCols(); ++strip) Chip::setReg(getStripRegisterName(pReg, strip), psetValue, pStatusReg);
     }
 
-    Chip::setReg(pReg, psetValue, pPrmptCfg, pStatusReg);
+    Chip::setReg(pReg, psetValue, pStatusReg);
     return;
 }
 

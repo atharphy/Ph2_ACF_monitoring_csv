@@ -1,12 +1,12 @@
 /*!
-        \file                DQMHistogramOTPatternCheckerTest.h
-        \brief               DQM class for OTPatternCheckerTest
+        \file                DQMHistogramOTPatternCheckerHelper.h
+        \brief               DQM class for OTPatternCheckerHelper
         \author              Fabio Ravera
         \date                24/01/25
 */
 
-#ifndef DQMHistogramOTPatternCheckerTest_h_
-#define DQMHistogramOTPatternCheckerTest_h_
+#ifndef DQMHistogramOTPatternCheckerHelper_h_
+#define DQMHistogramOTPatternCheckerHelper_h_
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -14,21 +14,21 @@
 class TFile;
 
 /*!
- * \class DQMHistogramOTPatternCheckerTest
- * \brief Class for OTPatternCheckerTest monitoring histograms
+ * \class DQMHistogramOTPatternCheckerHelper
+ * \brief Class for OTPatternCheckerHelper monitoring histograms
  */
-class DQMHistogramOTPatternCheckerTest : public DQMHistogramBase
+class DQMHistogramOTPatternCheckerHelper : public DQMHistogramBase
 {
   public:
     /*!
      * constructor
      */
-    DQMHistogramOTPatternCheckerTest();
+    DQMHistogramOTPatternCheckerHelper();
 
     /*!
      * destructor
      */
-    ~DQMHistogramOTPatternCheckerTest();
+    ~DQMHistogramOTPatternCheckerHelper();
 
     /*!
      * \brief Book histograms

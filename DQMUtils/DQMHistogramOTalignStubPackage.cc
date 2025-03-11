@@ -23,7 +23,7 @@ void DQMHistogramOTalignStubPackage::book(TFile* theOutputFile, DetectorContaine
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    HistContainer<TH2I> bestStubPackageDelayHistogram("BestStubPackageDelay", "Best Stub Package Delay", 8, -0.5, 7.5, 2, -0.5, 1.5);
+    HistContainer<TH2I> bestStubPackageDelayHistogram("Board_BestStubPackageDelay", "Board best stub package delay", 8, -0.5, 7.5, 2, -0.5, 1.5);
     bestStubPackageDelayHistogram.fTheHistogram->SetStats(false);
     bestStubPackageDelayHistogram.fTheHistogram->GetXaxis()->SetTitle("Stub package delay");
     bestStubPackageDelayHistogram.fTheHistogram->GetYaxis()->SetTitle("Hybrid");

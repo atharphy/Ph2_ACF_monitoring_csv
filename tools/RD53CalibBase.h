@@ -132,6 +132,9 @@ class CalibBase : public Tool
         }
     }
 
+    size_t nTRIGxEvent;
+    int    theCurrentRun;
+
   protected:
     // ######################################
     // # Parameters from configuration file #
@@ -142,11 +145,9 @@ class CalibBase : public Tool
     size_t      colStop;
     size_t      nEvents;
     size_t      nEvtsBurst;
-    size_t      nTRIGxEvent;
     bool        splitFile;
     std::string dataOutputDir;
 
-    int  theCurrentRun;
     bool showErrorReport;
 
   private:
