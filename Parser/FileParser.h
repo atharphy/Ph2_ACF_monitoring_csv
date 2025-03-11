@@ -27,6 +27,7 @@
 #include <map>
 #include <stdlib.h>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 /*!

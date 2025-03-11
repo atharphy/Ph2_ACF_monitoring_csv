@@ -94,18 +94,10 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     }
     if(doWriteClkDataDelay == true) RD53BInterface::WriteClockDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
 
-    // #############################################
-    // # Programmig global registers: pre-emphasis #
-    // #############################################
-    const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
-
-    for(auto& cRegItem: pRD53RegMap)
-        if((cRegItem.second.fPrmptCfg == true) && (registerPreEmphasisWhiteList.find(cRegItem.first) != registerPreEmphasisWhiteList.end()))
-            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, false);
-
     // ###############################
     // # Programmig global registers #
     // ###############################
+    const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
     const std::set<std::string> registerBlackList = {"RESISTORI2V",
                                                      "NTCBETA",
                                                      "RNTCAT25C",
@@ -189,6 +181,15 @@ void RD53BInterface::InitRD53Uplinks(Chip* pChip)
     // # bits 7-8: SER_INV_TAP[1:0]
     // # bits 5-6: SER_EN_TAP[1:0]
     // # bits 1-4: SER_EN_LANE[3:0] --> External output lanes
+
+    // ###############################################
+    // # Initialize driver strength and pre-emphasis #
+    // ###############################################
+    const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
+
+    for(auto& cRegItem: pChip->getRegMap())
+        if((cRegItem.second.fPrmptCfg == true) && (registerPreEmphasisWhiteList.find(cRegItem.first) != registerPreEmphasisWhiteList.end()))
+            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, false);
 
     // ##############
     // # Link speed #
