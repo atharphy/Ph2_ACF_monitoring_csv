@@ -25,7 +25,7 @@ void DQMHistogramOTverifyMPASSAdataWord::book(TFile* theOutputFile, DetectorCont
     // SoC utilities only - END
 
     HistContainer<TH2F> patternMatchingEfficiencyHistogram(
-        "PatternMatchingEfficiencyMPA_SSA", "Pattern Matching Efficiency MPA-SSA", NUMBER_OF_CIC_PORTS, 8 - 0.5, 8 + NUMBER_OF_CIC_PORTS - 0.5, 9, -0.5, 8.5);
+        "SSAtoMPA_PatternMatchingEfficiency", "SSA to MPA pattern matching efficiency", NUMBER_OF_CIC_PORTS, 8 - 0.5, 8 + NUMBER_OF_CIC_PORTS - 0.5, 9, -0.5, 8.5);
     patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle("MPA Id");
     patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");

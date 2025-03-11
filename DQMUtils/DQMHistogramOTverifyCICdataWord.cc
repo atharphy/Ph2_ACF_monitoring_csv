@@ -24,17 +24,25 @@ void DQMHistogramOTverifyCICdataWord::book(TFile* theOutputFile, DetectorContain
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    bool isPS = theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
-
+    bool        isPS       = theDetectorStructure.getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
+    std::string chipName   = "CBC";
     std::string xAxisTitle = "CBC Id";
     int         idOffset   = 0;
     if(isPS)
     {
         xAxisTitle = "MPA Id";
         idOffset   = 8;
+        chipName   = "MPA";
     }
 
-    HistContainer<TH2F> testedBitsHistogram("TestedBitsCIC", "Tested Bits CIC", NUMBER_OF_CIC_PORTS, idOffset - 0.5, idOffset + NUMBER_OF_CIC_PORTS - 0.5, 2, -0.5, 1.5);
+    HistContainer<TH2F> testedBitsHistogram((chipName + "toCIC_WordAlignmentTestedBitNumber").c_str(),
+                                            (chipName + " to CIC word alignment tested bit number").c_str(),
+                                            NUMBER_OF_CIC_PORTS, 
+                                            idOffset - 0.5, 
+                                            idOffset + NUMBER_OF_CIC_PORTS - 0.5,
+                                            2,
+                                            -0.5,
+                                            1.5);
     testedBitsHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
     testedBitsHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     testedBitsHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
@@ -42,7 +50,14 @@ void DQMHistogramOTverifyCICdataWord::book(TFile* theOutputFile, DetectorContain
     testedBitsHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fTestedBitsHistogramContainer, testedBitsHistogram);
 
-    HistContainer<TH2F> bitErrorRateHistogram("BitErrorRateCIC", "Bit Error Rate CIC", NUMBER_OF_CIC_PORTS, idOffset - 0.5, idOffset + NUMBER_OF_CIC_PORTS - 0.5, 2, -0.5, 1.5);
+    HistContainer<TH2F> bitErrorRateHistogram((chipName + "toCIC_WordAlignmentErrorRate").c_str(),
+                                              (chipName + " to CIC word alignment error rate").c_str(),
+                                              NUMBER_OF_CIC_PORTS, 
+                                              idOffset - 0.5, 
+                                              idOffset + NUMBER_OF_CIC_PORTS - 0.5,
+                                              2,
+                                              -0.5,
+                                              1.5);
     bitErrorRateHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
     bitErrorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     bitErrorRateHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");

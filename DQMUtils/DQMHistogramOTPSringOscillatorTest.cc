@@ -40,15 +40,15 @@ void DQMHistogramOTPSringOscillatorTest::book(TFile* theOutputFile, DetectorCont
 
         auto theYaxis = theHistogram->GetYaxis();
         theYaxis->SetTitle("Ring oscillator");
-        theYaxis->SetBinLabel(1, "periphery");
+        theYaxis->SetBinLabel(1, "Periphery");
         for(int row = 0; row < NMPAROWS; ++row) { theYaxis->SetBinLabel(row + 2, Form("Row%d", row)); }
     };
 
-    HistContainer<TH2I> theMPAringOscillatorInverterHistogram("MPAringOscillatorInverterCounts", "MPA Ring Oscillator Inverter Counts", 8, -7.5, 15.5, NMPAROWS + 1, -0.5, NMPAROWS + 1 - 0.5);
+    HistContainer<TH2I> theMPAringOscillatorInverterHistogram("MPA_RingOscillatorInverterCounts", "MPA ring oscillator inverter counts", 8, -7.5, 15.5, NMPAROWS + 1, -0.5, NMPAROWS + 1 - 0.5);
     formatMPAHistogram(theMPAringOscillatorInverterHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, *fDetectorContainer, fMPAringOscillatorInverterContainer, theMPAringOscillatorInverterHistogram);
 
-    HistContainer<TH2I> theMPAringOscillatorDelayHistogram("MPAringOscillatorDelayCounts", "MPA Ring Oscillator Delay Counts", 8, -7.5, 15.5, NMPAROWS + 1, -0.5, NMPAROWS + 1 - 0.5);
+    HistContainer<TH2I> theMPAringOscillatorDelayHistogram("MPA_RingOscillatorDelayCounts", "MPA ring oscillator delay counts", 8, -7.5, 15.5, NMPAROWS + 1, -0.5, NMPAROWS + 1 - 0.5);
     formatMPAHistogram(theMPAringOscillatorDelayHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, *fDetectorContainer, fMPAringOscillatorDelayContainer, theMPAringOscillatorDelayHistogram);
 
@@ -75,11 +75,11 @@ void DQMHistogramOTPSringOscillatorTest::book(TFile* theOutputFile, DetectorCont
         theYaxis->SetBinLabel(4, "TR");
     };
 
-    HistContainer<TH2I> theSSAringOscillatorInverterHistogram("SSAringOscillatorInverterCounts", "SSA Ring Oscillator Inverter Counts", 8, -7.5, 15.5, 4, -0.5, 3.5);
+    HistContainer<TH2I> theSSAringOscillatorInverterHistogram("SSA_RingOscillatorInverterCounts", "SSA ring oscillator inverter counts", 8, -7.5, 15.5, 4, -0.5, 3.5);
     formatSSAHistogram(theSSAringOscillatorInverterHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, *fDetectorContainer, fSSAringOscillatorInverterContainer, theSSAringOscillatorInverterHistogram);
 
-    HistContainer<TH2I> theSSAringOscillatorDelayHistogram("SSAringOscillatorDelayCounts", "SSA Ring Oscillator Delay Counts", 8, -7.5, 15.5, 4, -0.5, 3.5);
+    HistContainer<TH2I> theSSAringOscillatorDelayHistogram("SSA_RingOscillatorDelayCounts", "SSA ring oscillator delay counts", 8, -7.5, 15.5, 4, -0.5, 3.5);
     formatSSAHistogram(theSSAringOscillatorDelayHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, *fDetectorContainer, fSSAringOscillatorDelayContainer, theSSAringOscillatorDelayHistogram);
 

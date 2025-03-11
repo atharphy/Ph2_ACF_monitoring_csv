@@ -32,14 +32,14 @@ void DQMHistogramOTverifyBoardDataWord::book(TFile* theOutputFile, DetectorConta
         for(size_t stubLine = 0; stubLine < numberOfLines - 1; ++stubLine) theHistogram->GetXaxis()->SetBinLabel(stubLine + 2, Form("Stub%d", int(stubLine)));
     };
 
-    HistContainer<TH1F> errorRateHistogram("PatternMatchingErrorRate", "Pattern Matching Error Rate", numberOfLines, -0.5, numberOfLines - 0.5);
+    HistContainer<TH1F> errorRateHistogram("Board_WordAlignmentMatchingErrorRate", "Board word alignment matching error rate", numberOfLines, -0.5, numberOfLines - 0.5);
     errorRateHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     errorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Error rate");
     errorRateHistogram.fTheHistogram->SetStats(false);
     setBitLabel(errorRateHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fMatchingErrorRateHistogramContainer, errorRateHistogram);
 
-    HistContainer<TH1F> testedBitsHistogram("PatternMatchingTestedBits", "Pattern Matching Tested bits", numberOfLines, -0.5, numberOfLines - 0.5);
+    HistContainer<TH1F> testedBitsHistogram("Board_WordAlignmentTestedBits", "Board word alignment tested bits", numberOfLines, -0.5, numberOfLines - 0.5);
     testedBitsHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     testedBitsHistogram.fTheHistogram->GetYaxis()->SetTitle("Tested bits");
     testedBitsHistogram.fTheHistogram->SetStats(false);

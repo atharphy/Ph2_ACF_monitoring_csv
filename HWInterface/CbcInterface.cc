@@ -518,7 +518,8 @@ std::vector<std::pair<std::string, uint16_t>> CbcInterface::ReadChipMultReg(Ph2_
 {
     setBoard(pChip->getBeBoardId());
     auto                     cRegMap = pChip->getRegMap();
-    std::vector<ChipRegItem> cRegItems;
+    std::vector<ChipRegItem> cRegItemsPage0;
+    std::vector<ChipRegItem> cRegItemsPage1;
     for(auto cReq: theRegisterList)
     {
         auto cIterator = cRegMap.find(cReq);
@@ -529,13 +530,36 @@ std::vector<std::pair<std::string, uint16_t>> CbcInterface::ReadChipMultReg(Ph2_
         }
 
         ChipRegItem cItem = cIterator->second;
-        cRegItems.push_back(cItem);
+        if(cItem.fPage == 0)
+            cRegItemsPage0.push_back(cItem);
+        else
+            cRegItemsPage1.push_back(cItem);
     }
-
-    fBoardFW->MultiRegisterRead(pChip, cRegItems);
-
+    if(cRegItemsPage0.size() != 0)
+    {
+        ConfigurePage(pChip, 0);
+        fBoardFW->MultiRegisterRead(pChip, cRegItemsPage0);
+    }
+    if(cRegItemsPage1.size() != 0)
+    {
+        ConfigurePage(pChip, 1);
+        fBoardFW->MultiRegisterRead(pChip, cRegItemsPage1);
+    }
     std::vector<std::pair<std::string, uint16_t>> theRegisterValues;
-    for(size_t i = 0; i < theRegisterList.size(); ++i) theRegisterValues.push_back(std::make_pair(theRegisterList.at(i), cRegItems.at(i).fValue));
+    // Now re order the read values as the order of the input vector theRegisterList
+    for(auto cReq: theRegisterList)
+    {
+        auto        cIterator = cRegMap.find(cReq);
+        ChipRegItem cItem     = cIterator->second;
+        auto        matchItem = std::find(cRegItemsPage0.begin(), cRegItemsPage0.end(), cItem);
+        if(matchItem != cRegItemsPage0.end())
+            theRegisterValues.push_back(std::make_pair(cReq, matchItem->fValue));
+        else
+        {
+            matchItem = std::find(cRegItemsPage1.begin(), cRegItemsPage1.end(), cItem);
+            if(matchItem != cRegItemsPage1.end()) theRegisterValues.push_back(std::make_pair(cReq, matchItem->fValue));
+        }
+    }
     return theRegisterValues;
 }
 
