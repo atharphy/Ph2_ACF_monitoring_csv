@@ -208,15 +208,6 @@ class Chip : public FrontEndDescription
     uint32_t getRegWriteCount() { return fRegWrites; }
     uint32_t getRegReadCount() { return fRegReads; }
 
-    // Register maps
-    void        UpdateModifiedRegMap(ChipRegItem pRegItem);
-    void        UpdateModifiedRegMap(uint16_t pRegisterAddress, uint8_t pPage);
-    void        UpdateModifiedRegMap(const std::string& pReg);
-    void        ClearModifiedRegisterMap() { fModifiedRegs.clear(); }
-    ChipRegMap& GetModifiedRegisterMap() { return fModifiedRegs; }
-    void        setRegisterTracking(uint8_t pEnable) { fTrackRegisters = pEnable; }
-    uint8_t     getRegisterTracking() { return fTrackRegisters; }
-
     std::string getFileName(const std::string& fName2Add = "") const
     {
         std::string output = this->fConfigFileName;
@@ -248,7 +239,6 @@ class Chip : public FrontEndDescription
     uint16_t                                         fMaxRegValue;
     uint8_t                                          fMasterId;
     ChipRegMap                                       fRegMap;
-    ChipRegMap                                       fModifiedRegs;
     CommentMap                                       fCommentMap;
     std::vector<std::pair<std::regex, RegisterType>> fListOfFreeRegisters{};
 
@@ -258,7 +248,6 @@ class Chip : public FrontEndDescription
     uint32_t                                  fI2CReadMismatches = 0;
     uint32_t                                  fRegWrites         = 0;
     uint32_t                                  fRegReads          = 0;
-    uint8_t                                   fTrackRegisters    = 0;
     bool                                      fTrackModifiedRegistersEnabled{false};
     std::unordered_map<std::string, uint16_t> fModifiedRegisters{};
 };

@@ -452,7 +452,8 @@ void OTverifyCICdataWord::runStubInterationsSoftwareMatching(D19cFWInterface*   
                                                              BoardDataContainer& thePatternContainer,
                                                              BeBoard*            theBoard,
                                                              uint8_t             numberOfBytesInSinglePacket,
-                                                             uint8_t             chipId)
+                                                             uint8_t             chipId,
+                                                             size_t              stubPatternCounter)
 {
     fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);    
 
@@ -472,10 +473,7 @@ void OTverifyCICdataWord::runStubInterationsSoftwareMatching(D19cFWInterface*   
             }
             auto& thePatternMatcher = thePatternContainer.getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<PatternMatcher>();
 
-            auto& theStubEfficiency = fPatternMatchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
-                                          ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2, 2>>()
-                                          .at(chipId)
-                                          .at(1);
+            auto& theStubEfficiency = getStorageForStubErrorRate(theHybrid, chipId, 0, stubPatternCounter);
 
             fBeBoardInterface->WriteBoardReg(fDetectorContainer->getObject(theBoard->getId()), "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
 
@@ -511,7 +509,8 @@ void OTverifyCICdataWord::runStubInterationsFirmwareMatching(BoardDataContainer&
                                                              BeBoard*            theBoard,
                                                              uint8_t             chipId,
                                                              uint8_t             numberOfLines,
-                                                             bool                is10G)
+                                                             bool                is10G,
+                                                             size_t              stubPatternCounter)
 {
 
     std::map<uint8_t, BoardDataContainer> thePatternAndMaskContainerMap;
@@ -550,23 +549,26 @@ void OTverifyCICdataWord::runStubInterationsFirmwareMatching(BoardDataContainer&
         BoardDataContainer thePatternCounterCountainer;
         ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*theBoard, thePatternCounterCountainer);
         fPatternCheckerHelper->patternCheckerTest(&thePatternCounterCountainer, line + 1, thePatternAndMaskContainerMap[line], fNumberOfStubBits/numberOfLines, true);
-
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto& theStubEfficiency = fPatternMatchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
-                                        ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2, 2>>()
-                                        .at(chipId)
-                                        .at(1);
-
+                auto& theStubEfficiency = getStorageForStubErrorRate(theHybrid, chipId, line, stubPatternCounter);
+                
                 const auto& theRecorderdErroInfo = thePatternCounterCountainer.getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>();
-                theStubEfficiency.at(0) = theRecorderdErroInfo.at(0);
-                theStubEfficiency.at(1) = theRecorderdErroInfo.at(1);
+                theStubEfficiency.at(0) += theRecorderdErroInfo.at(0);
+                theStubEfficiency.at(1) += theRecorderdErroInfo.at(1);
             }
         }
     }
+}
 
+GenericDataArray<float, 2>& OTverifyCICdataWord::getStorageForStubErrorRate(Hybrid* theHybrid, uint8_t chipId, uint8_t line, size_t stubPatternCounter)
+{
+    return fPatternMatchingEfficiencyContainer.getHybrid(theHybrid->getBeBoardId(), theHybrid->getOpticalGroupId(), theHybrid->getId())
+                            ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2, 2>>()
+                            .at(chipId)
+                            .at(1);
 }
 
 float OTverifyCICdataWord::matchStubPattern(const std::vector<uint32_t>& theWordVector, const PatternMatcher& thePatternMatcher, uint8_t numberOfBytesInSinglePacket, size_t numberOfLines)
@@ -665,11 +667,11 @@ void OTverifyCICdataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterfac
         numberOfBytesInSinglePacket = is10G ? 2 : 1;
     }
     
-    size_t stubPatternCounter = 1;
+    size_t stubPatternCounter = 0;
     size_t numberOfPatterns = stubInformationList.size();
     for(auto theStubList: stubInformationList)
     {
-        LOG(INFO) << BOLDMAGENTA << "    Stub pattern " << stubPatternCounter++ << " out of " << numberOfPatterns << RESET;
+        LOG(INFO) << BOLDMAGENTA << "    Stub pattern " << stubPatternCounter + 1 << " out of " << numberOfPatterns << RESET;
         for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId)
         {
             LOG(INFO) << BOLDBLUE << "        Injecting stubs on " << (is2Smodule ? "CBC" : "MPA") << " " << chipId + (is2Smodule ? 0 : 8) << " for all hybrids" << RESET;
@@ -700,12 +702,13 @@ void OTverifyCICdataWord::runStubIntegrityTest(BeBoard* theBoard, D19cFWInterfac
 
             if(fDoMatchingInFirmware)
             {
-                runStubInterationsFirmwareMatching(thePatternMatcherContainer, theBoard, chipId, numberOfLines, is10G);
+                runStubInterationsFirmwareMatching(thePatternMatcherContainer, theBoard, chipId, numberOfLines, is10G, stubPatternCounter);
             }
             else
             {
-                runStubInterationsSoftwareMatching(theFWInterface, thePatternMatcherContainer, theBoard, numberOfBytesInSinglePacket, chipId);
+                runStubInterationsSoftwareMatching(theFWInterface, thePatternMatcherContainer, theBoard, numberOfBytesInSinglePacket, chipId, stubPatternCounter);
             }
         }
+        ++stubPatternCounter;
     }
 }

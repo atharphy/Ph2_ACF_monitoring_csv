@@ -60,54 +60,6 @@ void OTTool::Reset()
         fBeBoardInterface->WriteBoardMultReg(theBoard, cVecBeBoardRegs);
     } // for the board - reset registers
 
-    for(auto cBoard: *fDetectorContainer) // now reset Chip registers
-    {
-        auto& cChipRegsToPreserveThisBrd = fChipRegsToPerserve.getObject(cBoard->getId());
-        for(auto cOpticalGroup: *cBoard)
-        {
-            auto& cChipRegsToPreserveThisOG = cChipRegsToPreserveThisBrd->getObject(cOpticalGroup->getId());
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                LOG(INFO) << BOLDYELLOW << fMyName << ":Resetting all registers on readout chips connected to FEhybrid#" << +(cHybrid->getId()) << " back to their original values..." << RESET;
-                auto& cChipRegsToPreserveThisHybrd = cChipRegsToPreserveThisOG->getObject(cHybrid->getId());
-                for(auto cChip: *cHybrid)
-                {
-                    std::vector<std::string> cRegsToSkip{"mask_strip", "mask_peri_A", "mask_peri_D"};
-                    auto&                    cChipRegsToPreserveThisChip = cChipRegsToPreserveThisHybrd->getObject(cChip->getId());
-                    auto&                    cRegsToPerserve             = cChipRegsToPreserveThisChip->getSummary<std::vector<std::string>>();
-                    // reset registers
-                    auto cModMap = cChip->GetModifiedRegisterMap();
-                    LOG(INFO) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
-                    std::vector<std::pair<std::string, uint16_t>> cRegList;
-                    for(auto cMapItem: cModMap)
-                    {
-                        // skip registers that I should perserve for this Chip
-                        if(std::find(cRegsToPerserve.begin(), cRegsToPerserve.end(), cMapItem.first) != cRegsToPerserve.end())
-                        {
-                            LOG(DEBUG) << BOLDBLUE << "Skipping reconfiguration of " << cMapItem.first << RESET;
-                            continue;
-                        }
-                        if(cChip->getFrontEndType() == FrontEndType::SSA2)
-                        {
-                            if(std::find(cRegsToSkip.begin(), cRegsToSkip.end(), cMapItem.first) != cRegsToSkip.end()) continue;
-                        }
-                        auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        LOG(DEBUG) << BOLDYELLOW << fMyName << "::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to "
-                                   << cMapItem.second.fValue << RESET;
-
-                        cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
-                    }
-                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false); // false because _All regs
-
-                    // then clear modified register map
-                    // and also disable register tracking for this chip
-                    cChip->ClearModifiedRegisterMap();
-                    cChip->setRegisterTracking(0);
-                    LOG(DEBUG) << BOLDYELLOW << fMyName << "::Reset Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
-                }
-            }
-        }
-    } // Chip registers
     resetPointers();
 }
 
@@ -164,22 +116,6 @@ void OTTool::Prepare()
     fWithSSA   = 0;
     fWithMPA   = 0;
     fWithCBC   = 0;
-    // set-up register tracking
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    cChip->setRegisterTracking(1);
-                    cChip->ClearModifiedRegisterMap();
-                    LOG(DEBUG) << BOLDYELLOW << fMyName << "::Prepare Chip#" << +cChip->getId() << " register tracking set to " << +cChip->getRegisterTracking() << RESET;
-                } // chips
-            } // hybrids
-        } // optical groups
-    } // board
 
     // figure out what type of FEs are connected
     for(auto cBoard: *fDetectorContainer)

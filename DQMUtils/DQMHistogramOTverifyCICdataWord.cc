@@ -35,8 +35,8 @@ void DQMHistogramOTverifyCICdataWord::book(TFile* theOutputFile, DetectorContain
         chipName   = "MPA";
     }
 
-    HistContainer<TH2F> testedBitsHistogram((chipName + "toCIC_WordAlignmentTestedBitNumber").c_str(),
-                                            (chipName + " to CIC word alignment tested bit number").c_str(),
+    HistContainer<TH2F> testedBitsHistogram((chipName + "toCIC_WordAlignmentTestedBits").c_str(),
+                                            (chipName + " to CIC word alignment tested bits").c_str(),
                                             NUMBER_OF_CIC_PORTS, 
                                             idOffset - 0.5, 
                                             idOffset + NUMBER_OF_CIC_PORTS - 0.5,

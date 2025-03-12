@@ -238,7 +238,6 @@ bool D19cI2CInterface::MultiWrite(Chip* pChip, std::vector<ChipRegItem>& pRegist
     for(const auto& cItem: pRegisterItems)
     {
         // update list of modified registers
-        pChip->UpdateModifiedRegMap(cItem);
         EncodeReg(cItem, pChip, cVec, fConfiguration.fVerify, true);
     }
 

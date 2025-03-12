@@ -143,8 +143,8 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForStubs(uint8_t slvsCurrent)
                     }
                 }
             }
-            auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
-            runStubIntegrityTestPS(theBoard, theFWInterface);
+            // auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
+            // runStubIntegrityTestPS(theBoard, theFWInterface);
         }
 
 #ifdef __USE_ROOT__
@@ -245,15 +245,15 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForL1(uint8_t slvsCurrent)
     }
 }
 
-std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> OTSSAtoMPAecv::produceMatchingPixelClusterList(uint8_t colCoordinate)
+std::vector<Cluster> OTSSAtoMPAecv::produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed)
 {
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList;
-    thePixelClusterList.push_back({fStubRowCoordinate, colCoordinate, 1}); // matching strip cluster
-    uint8_t              centroidCode              = 2 * colCoordinate + 9;
+    std::vector<Cluster> thePixelClusterList;
+    thePixelClusterList.push_back(Cluster(stubRow, stubSeed/2, 1)); // matching strip cluster
+    uint8_t              centroidCode              = stubSeed + 9;
     uint8_t              centroidCodeNegativeShift = centroidCode >> 1;
     uint8_t              centroidCodePositiveShift = centroidCode << 1;
     std::vector<uint8_t> centroidList{centroidCodeNegativeShift, centroidCodePositiveShift};
-    for(auto centroid: centroidList) { thePixelClusterList.push_back({fStubRowCoordinate, (centroid - 9) >> 1, (centroid - 9) % 2 + 1}); }
+    for(auto centroid: centroidList) { thePixelClusterList.push_back(Cluster(fStubRowCoordinate, (centroid - 9) >> 1, (centroid - 9) % 2 + 1)); }
 
     return thePixelClusterList;
 }

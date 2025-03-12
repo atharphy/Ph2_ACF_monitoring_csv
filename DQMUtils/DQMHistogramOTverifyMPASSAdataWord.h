@@ -59,6 +59,7 @@ class DQMHistogramOTverifyMPASSAdataWord : public DQMHistogramBase
 
   private:
     DetectorContainer*    fDetectorContainer;
-    DetectorDataContainer fPatternMatchingEfficiencyHistogramContainer;
+    DetectorDataContainer fPatternMatchingErrorRateHistogramContainer;
+    DetectorDataContainer fPatternMatchingTestedBitsHistogramContainer;
 };
 #endif

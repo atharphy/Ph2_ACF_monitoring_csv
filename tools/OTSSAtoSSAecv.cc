@@ -116,8 +116,8 @@ void OTSSAtoSSAecv::runSSAtoSSAecvScan()
                             }
                         }
                     }
-                    auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
-                    runStubIntegrityTestPS(theBoard, theFWInterface);
+                    // auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
+                    // runStubIntegrityTestPS(theBoard, theFWInterface);
                 }
 
 #ifdef __USE_ROOT__
@@ -149,32 +149,32 @@ void OTSSAtoSSAecv::setStubLogicParameters(ReadoutChip* theMPA)
     fReadoutChipInterface->WriteChipReg(theMPA, "CodeP78", fBendingToCode.at(+7) << 3);
 }
 
-std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> OTSSAtoSSAecv::produceStripClusterList()
+std::vector<Cluster> OTSSAtoSSAecv::produceStripClusterList()
 {
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> listOfInjectedStrips;
+    std::vector<Cluster> listOfInjectedStrips;
 
-    listOfInjectedStrips.push_back({0, fCurrentStripInjected, 1});
+    listOfInjectedStrips.push_back(Cluster(0, fCurrentStripInjected, 1));
 
     return listOfInjectedStrips;
 }
 
-std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> OTSSAtoSSAecv::produceMatchingPixelClusterList(uint8_t colCoordinate)
+std::vector<Cluster> OTSSAtoSSAecv::produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed)
 {
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList;
-    thePixelClusterList.push_back({fStubRowCoordinate, colCoordinate == 1 ? 118 : 0, 2});
+    std::vector<Cluster> thePixelClusterList;
+    thePixelClusterList.push_back(Cluster(stubRow, stubSeed/2 == 1 ? 118 : 0, 2));
     return thePixelClusterList;
 }
 
-std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> OTSSAtoSSAecv::producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList)
+std::vector<std::vector<Stub>> OTSSAtoSSAecv::producePossibleStubVectorList(const std::vector<Cluster>& thePixelClusterList)
 {
     std::vector<int>                                            bendingList{3, 5, 7};
-    std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> possibleStubVectorList;
+    std::vector<std::vector<Stub>> possibleStubVectorList;
     for(const auto& thePixelCluster: thePixelClusterList)
     {
         for(auto bending: bendingList)
         {
-            int                                            multiplier = std::get<1>(thePixelCluster) == 0 ? -1 : +1;
-            std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector{{fStubRowCoordinate, std::get<1>(thePixelCluster) * 2 + std::get<2>(thePixelCluster) - 1, multiplier * bending}};
+            int                                            multiplier = thePixelCluster.fFirstCol == 0 ? -1 : +1;
+            std::vector<Stub> theStubVector{Stub(thePixelCluster.fFirstCol * 2 + thePixelCluster.fColWidth - 1, multiplier * bending, fStubRowCoordinate)};
             possibleStubVectorList.push_back(theStubVector);
         }
     }

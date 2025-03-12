@@ -139,8 +139,6 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
                                << +pRegisterItems.at(cBlockId * LpGBTSlowControlWorker::BLOCK_SIZE + cReplyIdx - 1).fAddress << std::dec << RESET;
                     cSuccess &= false;
                 }
-                else
-                    pChip->UpdateModifiedRegMap(pRegisterItems.at(cBlockId * LpGBTSlowControlWorker::BLOCK_SIZE + cReplyIdx - 1));
                 if(pVerify)
                 {
                     auto& writtenValue = pRegisterItems.at(cBlockId * LpGBTSlowControlWorker::BLOCK_SIZE + cReplyIdx - 1);
@@ -162,7 +160,6 @@ bool D19cOpticalInterface::Write(Chip* pChip, std::vector<ChipRegItem>& pRegiste
 
 bool D19cOpticalInterface::SingleWrite(Chip* pChip, ChipRegItem& pRegisterItem)
 {
-    pChip->UpdateModifiedRegMap(pRegisterItem);
     std::vector<ChipRegItem> pRegisterItemTemp = {pRegisterItem};
     bool                     cSuccess          = Write(pChip, pRegisterItemTemp, false);
     pRegisterItem.fValue                       = pRegisterItemTemp.at(0).fValue;

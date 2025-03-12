@@ -42,7 +42,6 @@ void SSA2Interface::DumpConfiguration(Chip* pSSA2, std::string filename)
 bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize)
 {
     bool cConfigLocalRegs = true;
-    pSSA2->setRegisterTracking(0);
     ChipRegMap        cSSA2RegMap = pSSA2->getRegMap();
     std::stringstream cOutput;
     setBoard(pSSA2->getBeBoardId());
@@ -172,7 +171,6 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
         cSuccess &= WriteChipMultReg(pSSA2, localSettings);
     }
 
-    pSSA2->setRegisterTracking(1);
     return cSuccess;
 }
 

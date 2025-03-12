@@ -31,11 +31,9 @@ CbcInterface::~CbcInterface() {}
 
 bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerify, uint32_t pBlockSize)
 {
-    pCbc->setRegisterTracking(0);
     std::stringstream cOutput;
     setBoard(pCbc->getBeBoardId());
     pCbc->printChipType(cOutput);
-    pCbc->setRegisterTracking(0);
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pCbc->getId() << "] oh Hybrid" << +pCbc->getHybridId() << RESET;
 
     // sort registers by page + address
@@ -85,8 +83,6 @@ bool CbcInterface::ConfigureChip(Chip* pCbc, bool pVerify, uint32_t pBlockSize)
     if(!fBoardFW->MultiRegisterWrite(pCbc, cRegItemsPg1, pVerify)) return false;
     LOG(INFO) << BOLDGREEN << "Configured all registers on page1 [" << cRegItemsPg1.size() << " regs]" RESET;
 
-    pCbc->setRegisterTracking(1);
-    pCbc->ClearModifiedRegisterMap();
     return true;
 }
 
@@ -576,8 +572,6 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerify)
     // address in map depends on board id, hybrid id, chip id
     uint32_t cAddress = (pCbc->getBeBoardId() << 16) | (pCbc->getHybridId() << 8) | pCbc->getId();
     auto     cIter    = fPageMap.find(cAddress);
-    auto     cTrack   = pCbc->getRegisterTracking();
-    pCbc->setRegisterTracking(0); // don't keep track of page register
     if(cIter == fPageMap.end())
     {
         // auto        cValue = pCbc->getReg("FeCtrl&TrgLat2");
@@ -594,7 +588,6 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerify)
     if(!cSuccess)
     {
         LOG(ERROR) << BOLDRED << "Could not configure page register on CBC#" << +pCbc->getId() << RESET;
-        pCbc->setRegisterTracking(cTrack);
         return cSuccess;
     } // failed to write page register
 
@@ -602,10 +595,6 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerify)
     uint8_t cPage = cIter->second;
     if(cPage == pPage)
     {
-        // don't need to change page
-        // LOG(DEBUG) << BOLDBLUE << "\t...No need to switch page on CBC#" << +pCbc->getId() << " on hybrid " << +pCbc->getHybridId() << " current page " << +cPage << " page to write to is " << +pPage
-        //            << RESET;
-        pCbc->setRegisterTracking(cTrack);
         return true;
     } // don't need to do anything
 
@@ -618,7 +607,6 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerify)
     cIter->second = pPage;
     // write to page register in the CBC
     cSuccess = fBoardFW->SingleRegisterWrite(pCbc, cPageReg, pVerify);
-    pCbc->setRegisterTracking(cTrack);
     return cSuccess;
 }
 bool CbcInterface::WriteChipSingleReg(Chip* pCbc, const std::string& pRegNode, uint16_t pValue, bool pVerify)

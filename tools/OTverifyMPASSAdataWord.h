@@ -44,24 +44,31 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
     uint8_t                fStubRowCoordinate{0x0A};
     std::map<int, uint8_t> fBendingToCode{{0, 5}};
 
-    virtual std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> produceMatchingPixelClusterList(uint8_t colCoordinate);
-    virtual std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> produceStripClusterList();
+    virtual std::vector<Cluster> produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed);
+    virtual std::vector<Cluster> produceStripClusterList();
     virtual void                                               matchAllPossibleStubPatterns(uint8_t                                        numberOfBytesInSinglePacket,
                                                                                             size_t                                         numberOfLines,
                                                                                             std::vector<std::pair<PatternMatcher, float>>& thePatternAndEfficiencyList,
                                                                                             const std::vector<uint32_t>&                   concatenatedStubPackage,
                                                                                             Ph2_HwDescription::ReadoutChip*                theMPA);
     virtual void                                               setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA);
+    virtual void                                               prepareForStubInjection(Ph2_HwDescription::BeBoard* theBoard) override;
     DetectorDataContainer                                      fPatternMatchingEfficiencyContainer;
-
+    std::vector<Cluster>         fListOfInjectedStrips;
+    GenericDataArray<float, 2>& getStorageForStubErrorRate(Ph2_HwDescription::Hybrid* theHybrid, uint8_t chipId, uint8_t line, size_t stubPatternCounter) override;
+                                     
   private:
     void           fillHistograms();
-    PatternMatcher injectStubsPSOld(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, uint8_t numberOfBytesInSinglePacket) override;
+    void               injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t numberOfBytesInSinglePacket, const std::vector<Stub>& listOfStubs) override;
+    PatternMatcher     producePatternMatcherPS(uint8_t chipIdForCIC, uint8_t numberOfBytesInSinglePacket, const std::vector<Stub>& listOfStubs) override;
+    std::vector<std::vector<Stub>> createPSstubList() override;
+
+    PatternMatcher injectStubsPSOld(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, uint8_t numberOfBytesInSinglePacket);
     void           injectL1PS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket) override;
-    virtual std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList);
-    PatternMatcher produceStubPatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, int>>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC);
-    PatternMatcher produceL1PatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList,
-                                           const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& theStripClusterList,
+    virtual std::vector<std::vector<Stub>> producePossibleStubVectorList(const std::vector<Cluster>& thePixelClusterList);
+    PatternMatcher produceStubPatternMatcher(const std::vector<Stub>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC);
+    PatternMatcher produceL1PatternMatcher(const std::vector<Cluster>& thePixelClusterList,
+                                           const std::vector<Cluster>& theStripClusterList,
                                            uint8_t                                                   numberOfBytesInSinglePacket,
                                            uint8_t                                                   chipIdForCIC);
 

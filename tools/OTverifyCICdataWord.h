@@ -74,13 +74,14 @@ class OTverifyCICdataWord : public Tool
     std::map<uint8_t, uint8_t> fBendingAndCode{{0, 0x9}, {2, 0xB}, {4, 0xF}};
     float                      fNumberOfStubBits{1e8};
     float                      fNumberOfL1Bits{1e6};
+    bool                       fDoMatchingInFirmware{true};
     uint8_t                    prepareCICforStubIntegrityTest(Ph2_HwDescription::Hybrid* theHybrid, uint8_t chipId);
     void                       setUpPatternMatching();
     void runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
+    virtual GenericDataArray<float, 2>& getStorageForStubErrorRate(Ph2_HwDescription::Hybrid* theHybrid, uint8_t chipId, uint8_t line, size_t stubPatternCounter);
 
   private:
     DetectorDataContainer fPatternMatchingEfficiencyContainer;
-    bool                  fDoMatchingInFirmware{true};
     void                  fillHistograms();
     bool                  fIsKickoff{false};
     GenericDataArray<float, 2>
@@ -89,12 +90,14 @@ class OTverifyCICdataWord : public Tool
                                             BoardDataContainer&               thePatternContainer,
                                             Ph2_HwDescription::BeBoard*       theBoard,
                                             uint8_t                           numberOfBytesInSinglePacket,
-                                            uint8_t                           chipId);
+                                            uint8_t                           chipId,
+                                            size_t                            stubPatternCounter);
     void runStubInterationsFirmwareMatching(BoardDataContainer&               thePatternContainer,
                                             Ph2_HwDescription::BeBoard*       theBoard,
                                             uint8_t                           chipId,
                                             uint8_t                           numberOfLines,
-                                            bool                              is10G);
+                                            bool                              is10G,
+                                            size_t                            stubPatternCounter);
     OTPatternCheckerHelper* fPatternCheckerHelper;
 
 #ifdef __USE_ROOT__

@@ -57,12 +57,10 @@ class FEConfigurationInterface
 
     void              setConfigurationType(ConfigurationType pType) { fType = pType; }
     ConfigurationType getConfigurationType() { return fType; }
-    void              setRegisterTracking(uint8_t pTrackRegisters) { fTrackRegisters = pTrackRegisters; }
 
   protected:
     RegManager*       fTheRegManager{nullptr};
     Configuration     fConfiguration;
-    uint8_t           fTrackRegisters{0};
     uint8_t           fNReadoutChip{0};
     ConfigurationType fType;
 };

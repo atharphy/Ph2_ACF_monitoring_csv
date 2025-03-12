@@ -28,15 +28,11 @@ Chip::Chip(uint8_t pBeBoardId, uint8_t pFMCId, uint8_t pOpticalGroupId, uint8_t 
 {
 }
 
-// Copy C'tor
-// Chip::Chip(const Chip& chipObj) : FrontEndDescription(chipObj), fChipId(chipObj.fChipId), fRegMap(chipObj.fRegMap), fModifiedRegs(chipObj.fModifiedRegs), fCommentMap(chipObj.fCommentMap) {}
-
 // D'Tor
 Chip::~Chip()
 {
     fRegMap.clear();
     fCommentMap.clear();
-    fModifiedRegs.clear();
     fListOfFreeRegisters.clear();
 }
 
@@ -100,72 +96,6 @@ void Chip::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, u
                 }
                 if(!isFreeRegister && oldRegister != i->second) fModifiedRegisters[i->first] = oldRegister.fValue;
             }
-        }
-    }
-}
-
-void Chip::UpdateModifiedRegMap(ChipRegItem pItem)
-{
-    if(fTrackRegisters == 0) return;
-
-    std::stringstream cOutput;
-    this->printChipType(cOutput);
-    auto cIterator = find_if(fRegMap.begin(), fRegMap.end(), [&pItem](const ChipRegPair& obj) { return obj.second.fAddress == pItem.fAddress && obj.second.fPage == pItem.fPage; });
-    if(cIterator != fRegMap.end()) // is register in the original map
-    {
-        auto cName    = cIterator->first;
-        auto cRegItem = cIterator->second;
-        // only add the first time
-        cIterator = fModifiedRegs.find(cName);
-        if(cIterator == fModifiedRegs.end())
-        {
-            // auto cSize              = fModifiedRegs.size();
-            fModifiedRegs[cName] = cRegItem;
-            // LOG (INFO) << BOLDYELLOW << "ModMap for " << cOutput.str() << " contained " << cSize << " items.... will add " << cName << "\t Original Value " << fModifiedRegs[cName].fValue << RESET;
-        }
-    }
-}
-void Chip::UpdateModifiedRegMap(const std::string& pRegName)
-{
-    if(fTrackRegisters == 0) return;
-
-    std::stringstream cOutput;
-    this->printChipType(cOutput);
-
-    auto cIterator = find_if(fRegMap.begin(), fRegMap.end(), [&pRegName](const ChipRegPair& obj) { return obj.first == pRegName; });
-    if(cIterator != fRegMap.end())
-    {
-        auto cName    = cIterator->first;
-        auto cRegItem = cIterator->second;
-        // only add the first time
-        cIterator = fModifiedRegs.find(cName);
-        if(cIterator == fModifiedRegs.end())
-        {
-            // auto cSize              = fModifiedRegs.size();
-            fModifiedRegs[cName] = cRegItem;
-            // LOG (INFO) << BOLDYELLOW << "ModMap for " << cOutput.str() << " contained " << cSize << " items.... will add " << cName << "\t Original Value " << fModifiedRegs[cName].fValue << RESET;
-        }
-    }
-}
-void Chip::UpdateModifiedRegMap(uint16_t pRegisterAddress, uint8_t pPage)
-{
-    if(fTrackRegisters == 0) return;
-
-    std::stringstream cOutput;
-    this->printChipType(cOutput);
-
-    auto cIterator = find_if(fRegMap.begin(), fRegMap.end(), [&pRegisterAddress, &pPage](const ChipRegPair& obj) { return obj.second.fAddress == pRegisterAddress && obj.second.fPage == pPage; });
-    if(cIterator != fRegMap.end())
-    {
-        auto cName    = cIterator->first;
-        auto cRegItem = cIterator->second;
-        // only add the first time
-        cIterator = fModifiedRegs.find(cName);
-        if(cIterator == fModifiedRegs.end())
-        {
-            // auto cSize              = fModifiedRegs.size();
-            fModifiedRegs[cName] = cRegItem;
-            // LOG (INFO) << BOLDYELLOW << "ModMap for " << cOutput.str() << " contained " << cSize << " items.... will add " << cName << "\t Original Value " << fModifiedRegs[cName].fValue << RESET;
         }
     }
 }

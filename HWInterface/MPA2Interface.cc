@@ -652,7 +652,6 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
     setBoard(pMPA2->getBeBoardId());
     pMPA2->printChipType(cOutput);
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pMPA2->getId() << "]" << RESET;
-    pMPA2->setRegisterTracking(0);
 
     std::vector<uint32_t> cVec;
     ChipRegMap            cRegMap = pMPA2->getRegMap();
@@ -771,7 +770,6 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
         cSuccess &= WriteChipMultReg(pMPA2, globalSettings, false);
         cSuccess &= WriteChipMultReg(pMPA2, localSettings);
     }
-    pMPA2->setRegisterTracking(1);
     return cSuccess;
 }
 
