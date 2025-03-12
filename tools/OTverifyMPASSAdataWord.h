@@ -46,11 +46,6 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
 
     virtual std::vector<Cluster> produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed);
     virtual std::vector<Cluster> produceStripClusterList();
-    virtual void                                               matchAllPossibleStubPatterns(uint8_t                                        numberOfBytesInSinglePacket,
-                                                                                            size_t                                         numberOfLines,
-                                                                                            std::vector<std::pair<PatternMatcher, float>>& thePatternAndEfficiencyList,
-                                                                                            const std::vector<uint32_t>&                   concatenatedStubPackage,
-                                                                                            Ph2_HwDescription::ReadoutChip*                theMPA);
     virtual void                                               setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA);
     virtual void                                               prepareForStubInjection(Ph2_HwDescription::BeBoard* theBoard) override;
     DetectorDataContainer                                      fPatternMatchingEfficiencyContainer;
@@ -63,9 +58,7 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
     PatternMatcher     producePatternMatcherPS(uint8_t chipIdForCIC, uint8_t numberOfBytesInSinglePacket, const std::vector<Stub>& listOfStubs) override;
     std::vector<std::vector<Stub>> createPSstubList() override;
 
-    PatternMatcher injectStubsPSOld(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, uint8_t numberOfBytesInSinglePacket);
     void           injectL1PS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket) override;
-    virtual std::vector<std::vector<Stub>> producePossibleStubVectorList(const std::vector<Cluster>& thePixelClusterList);
     PatternMatcher produceStubPatternMatcher(const std::vector<Stub>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC);
     PatternMatcher produceL1PatternMatcher(const std::vector<Cluster>& thePixelClusterList,
                                            const std::vector<Cluster>& theStripClusterList,
