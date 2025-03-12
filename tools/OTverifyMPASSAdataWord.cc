@@ -198,7 +198,7 @@ void OTverifyMPASSAdataWord::injectStubsPS(Ph2_HwDescription::ReadoutChip* theMP
         abort();
     }
 
-    LOG(INFO) << BOLDBLUE << "            injecting stubs on MPA " << +theMPA->getId() << " and SSA " << theMPA->getId() - 8 <<  " on OpticalGroup " << +theMPA->getOpticalGroupId() << " Hybdrid " << +theMPA->getHybridId() << << RESET;
+    LOG(INFO) << BOLDBLUE << "            injecting stubs on MPA " << +theMPA->getId() << " and SSA " << theMPA->getId() - 8 <<  " on OpticalGroup " << +theMPA->getOpticalGroupId() << " Hybdrid " << +theMPA->getHybridId() << RESET;
 
     uint8_t rowCoordinate = listOfStubs.at(0).fZ;
     uint8_t colCoordinate = listOfStubs.at(0).fSeed;
