@@ -623,7 +623,7 @@ int main(int argc, char** argv)
         }
 
         static_cast<RD53eudaqProducer*>(theEUDAQproducer.get())->MainLoop();
-        runNumber = static_cast<RD53eudaqProducer*>(theEUDAQproducer.get())->theRunNumber;
+        runNumber = static_cast<RD53eudaqProducer*>(theEUDAQproducer.get())->RD53sysCntrPhys.theCurrentRun;
 #else
         LOG(WARNING) << BOLDBLUE << "EUDAQ flag was OFF during compilation" << RESET;
         exit(EXIT_FAILURE);

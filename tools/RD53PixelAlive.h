@@ -42,7 +42,7 @@ class PixelAlive : public CalibBase
     void   localConfigure(const std::string& histoFileName, int currentRun) override;
     void   run() override;
     void   draw(bool saveData = true) override;
-    size_t getNumberIterations() override { return theChnGroupHandler->getNumberOfGroups() * nEvents / nEvtsBurst; }
+    size_t getNumberIterations() override { return theChnGroupHandler->getNumberOfGroups() * nEvents / nEvtsBurst * fDetectorContainer->size(); }
 
     std::shared_ptr<DetectorDataContainer> analyze();
 

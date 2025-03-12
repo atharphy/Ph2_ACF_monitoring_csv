@@ -106,7 +106,7 @@ class Chip : public FrontEndDescription
      * \param pReg
      * \param psetValue
      */
-    virtual void setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg = false, uint8_t pStatusReg = 0);
+    virtual void setReg(const std::string& pReg, uint16_t psetValue, uint8_t pStatusReg = 0);
 
     /*!
      * \brief Get any registeritem of the Map

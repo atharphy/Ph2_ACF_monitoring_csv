@@ -86,24 +86,24 @@ void MPA2::initializeFreeRegisters()
     fListOfFreeRegisters.push_back(std::make_pair(std::regex(".*_ALL"), RegisterType::Utility));
 }
 
-void MPA2::setReg(const std::string& pReg, uint16_t psetValue, bool pPrmptCfg, uint8_t pStatusReg)
+void MPA2::setReg(const std::string& pReg, uint16_t psetValue, uint8_t pStatusReg)
 {
     if(std::find(fListOfGlobalPixelRegisters.begin(), fListOfGlobalPixelRegisters.end(), pReg) != fListOfGlobalPixelRegisters.end())
     {
         std::string registerName = pReg.substr(0, pReg.length() - 4);
         for(uint8_t col = 0; col < getNumberOfCols(); ++col)
         {
-            for(uint8_t row = 0; row < getNumberOfRows(); ++row) { Chip::setReg(getPixelRegisterName(registerName, row, col), psetValue, pPrmptCfg, pStatusReg); }
+            for(uint8_t row = 0; row < getNumberOfRows(); ++row) { Chip::setReg(getPixelRegisterName(registerName, row, col), psetValue, pStatusReg); }
         }
     }
 
     if(std::find(fListOfGlobalRowRegisters.begin(), fListOfGlobalRowRegisters.end(), pReg) != fListOfGlobalRowRegisters.end())
     {
         std::string registerName = pReg.substr(0, pReg.length() - 4);
-        for(uint8_t row = 0; row < getNumberOfRows(); ++row) { Chip::setReg(getRowRegisterName(registerName, row), psetValue, pPrmptCfg, pStatusReg); }
+        for(uint8_t row = 0; row < getNumberOfRows(); ++row) { Chip::setReg(getRowRegisterName(registerName, row), psetValue, pStatusReg); }
     }
 
-    Chip::setReg(pReg, psetValue, pPrmptCfg, pStatusReg);
+    Chip::setReg(pReg, psetValue, pStatusReg);
     return;
 }
 

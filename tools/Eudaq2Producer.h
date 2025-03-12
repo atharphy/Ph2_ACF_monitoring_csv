@@ -13,6 +13,7 @@
 
 #include "Utils/CommonVisitors.h"
 #include "Utils/Visitor.h"
+#include "tools/LinkAlignmentOT.h"
 #include "tools/OTTool.h"
 
 #include <cmath>
