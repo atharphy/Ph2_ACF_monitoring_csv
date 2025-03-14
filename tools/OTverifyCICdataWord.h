@@ -80,6 +80,8 @@ class OTverifyCICdataWord : public Tool
     virtual GenericDataArray<float, 2>& getStorageForStubErrorRate(Ph2_HwDescription::Hybrid* theHybrid, uint8_t chipId, uint8_t line, size_t stubPatternCounter);
     virtual GenericDataArray<float, 2>& getStorageForL1ErrorRate(Ph2_HwDescription::Chip* theChip);
 
+    void realignBoardDataWords();
+
   private:
     DetectorDataContainer fPatternMatchingEfficiencyContainer;
     void                  fillHistograms();

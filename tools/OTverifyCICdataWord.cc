@@ -10,6 +10,7 @@
 #include "Utils/Utilities.h"
 #include "tools/OTPatternCheckerHelper.h"
 #include <bitset>
+#include "tools/OTalignBoardDataWord.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -86,7 +87,21 @@ void OTverifyCICdataWord::Pause() {}
 
 void OTverifyCICdataWord::Resume() {}
 
-void OTverifyCICdataWord::Reset() { fRegisterHelper->restoreSnapshot(); }
+void OTverifyCICdataWord::Reset()
+{
+    fRegisterHelper->restoreSnapshot();
+    realignBoardDataWords();
+}
+
+void OTverifyCICdataWord::realignBoardDataWords()
+{
+    OTalignBoardDataWord theAlignBoardDataWord;
+    theAlignBoardDataWord.Inherit(this);
+    theAlignBoardDataWord.setProducePlots(false);
+    theAlignBoardDataWord.Initialise();
+    theAlignBoardDataWord.wordAlignBEdata();
+    theAlignBoardDataWord.Reset();
+}
 
 void OTverifyCICdataWord::runIntegrityTest()
 {

@@ -31,10 +31,13 @@ void OTalignBoardDataWord::Initialise(void)
 
     initializeContainers();
 
+    if(fProducePlots)
+    {
 #ifdef __USE_ROOT__
-    // Calibration is not running on the SoC: plots are booked during initialization
-    fDQMHistogramOTalignBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
+        // Calibration is not running on the SoC: plots are booked during initialization
+        fDQMHistogramOTalignBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
+    }
 }
 
 void OTalignBoardDataWord::initializeContainers()
@@ -62,10 +65,14 @@ void OTalignBoardDataWord::Running()
 void OTalignBoardDataWord::Stop(void)
 {
     LOG(INFO) << "Stopping OTalignBoardDataWord measurement.";
+
+    if(fProducePlots)
+    {
 #ifdef __USE_ROOT__
-    // Calibration is not running on the SoC: processing the histograms
-    fDQMHistogramOTalignBoardDataWord.process();
+        // Calibration is not running on the SoC: processing the histograms
+        fDQMHistogramOTalignBoardDataWord.process();
 #endif
+    }
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTalignBoardDataWord stopped.";
@@ -83,19 +90,23 @@ void OTalignBoardDataWord::wordAlignBEdata()
 
     for(auto theBoard: *fDetectorContainer) { boardWordAlignment(theBoard); }
 
-#ifdef __USE_ROOT__
-    fDQMHistogramOTalignBoardDataWord.fillBitSlipValues(fBitSlipContainer);
-    fDQMHistogramOTalignBoardDataWord.fillAlignmentRetryNumber(fAlignmentRetryContainer);
-#else
-    if(fDQMStreamerEnabled)
-    {
-        ContainerSerialization theBitSlipContainerSerialization("OTalignBoardDataWordBitSlip");
-        theBitSlipContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fBitSlipContainer);
 
-        ContainerSerialization theAlignmentRetryContainerSerialization("OTalignBoardDataWordAlignmentRetry");
-        theAlignmentRetryContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fAlignmentRetryContainer);
-    }
+    if(fProducePlots)
+    {
+#ifdef __USE_ROOT__
+        fDQMHistogramOTalignBoardDataWord.fillBitSlipValues(fBitSlipContainer);
+        fDQMHistogramOTalignBoardDataWord.fillAlignmentRetryNumber(fAlignmentRetryContainer);
+#else
+        if(fDQMStreamerEnabled)
+        {
+            ContainerSerialization theBitSlipContainerSerialization("OTalignBoardDataWordBitSlip");
+            theBitSlipContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fBitSlipContainer);
+
+            ContainerSerialization theAlignmentRetryContainerSerialization("OTalignBoardDataWordAlignmentRetry");
+            theAlignmentRetryContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fAlignmentRetryContainer);
+        }
 #endif
+    }
 }
 
 void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
