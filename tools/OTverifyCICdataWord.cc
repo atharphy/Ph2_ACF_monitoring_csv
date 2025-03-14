@@ -9,8 +9,8 @@
 #include "Utils/PatternMatcher.h"
 #include "Utils/Utilities.h"
 #include "tools/OTPatternCheckerHelper.h"
-#include <bitset>
 #include "tools/OTalignBoardDataWord.h"
+#include <bitset>
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

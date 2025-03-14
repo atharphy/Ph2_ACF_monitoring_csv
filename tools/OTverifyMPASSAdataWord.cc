@@ -66,7 +66,7 @@ void OTverifyMPASSAdataWord::Resume() {}
 void OTverifyMPASSAdataWord::Reset()
 {
     fRegisterHelper->restoreSnapshot();
-    realignBoardDataWords();    
+    realignBoardDataWords();
 }
 
 void OTverifyMPASSAdataWord::fillHistograms()

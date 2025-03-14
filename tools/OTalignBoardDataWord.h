@@ -44,8 +44,8 @@ class OTalignBoardDataWord : public Tool
 
     static std::string fCalibrationDescription;
     bool               tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::Hybrid* theHybrid, uint8_t lineId);
-    void setProducePlots(bool doProducePlots) {fProducePlots = doProducePlots;}
-    void wordAlignBEdata();
+    void               setProducePlots(bool doProducePlots) { fProducePlots = doProducePlots; }
+    void               wordAlignBEdata();
 
   protected:
     void initializeContainers();
@@ -68,7 +68,7 @@ class OTalignBoardDataWord : public Tool
 
     void disableUnalignedHybrid(Ph2_HwDescription::Hybrid* theHybrid);
 
-    bool fProducePlots {true};
+    bool fProducePlots{true};
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTalignBoardDataWord fDQMHistogramOTalignBoardDataWord;

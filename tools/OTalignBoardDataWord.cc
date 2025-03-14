@@ -90,7 +90,6 @@ void OTalignBoardDataWord::wordAlignBEdata()
 
     for(auto theBoard: *fDetectorContainer) { boardWordAlignment(theBoard); }
 
-
     if(fProducePlots)
     {
 #ifdef __USE_ROOT__
