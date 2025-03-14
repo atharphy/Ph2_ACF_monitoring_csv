@@ -161,19 +161,19 @@ std::vector<Cluster> OTSSAtoSSAecv::produceStripClusterList()
 std::vector<Cluster> OTSSAtoSSAecv::produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed)
 {
     std::vector<Cluster> thePixelClusterList;
-    thePixelClusterList.push_back(Cluster(stubRow, stubSeed/2 == 1 ? 118 : 0, 2));
+    thePixelClusterList.push_back(Cluster(stubRow, stubSeed / 2 == 1 ? 118 : 0, 2));
     return thePixelClusterList;
 }
 
 std::vector<std::vector<Stub>> OTSSAtoSSAecv::producePossibleStubVectorList(const std::vector<Cluster>& thePixelClusterList)
 {
-    std::vector<int>                                            bendingList{3, 5, 7};
+    std::vector<int>               bendingList{3, 5, 7};
     std::vector<std::vector<Stub>> possibleStubVectorList;
     for(const auto& thePixelCluster: thePixelClusterList)
     {
         for(auto bending: bendingList)
         {
-            int                                            multiplier = thePixelCluster.fFirstCol == 0 ? -1 : +1;
+            int               multiplier = thePixelCluster.fFirstCol == 0 ? -1 : +1;
             std::vector<Stub> theStubVector{Stub(thePixelCluster.fFirstCol * 2 + thePixelCluster.fColWidth - 1, multiplier * bending, fStubRowCoordinate)};
             possibleStubVectorList.push_back(theStubVector);
         }

@@ -359,11 +359,11 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard*            theBoard,
                     {
                         if(theWord == 0) ++numberOfEmpyWords;
                     }
-                    if(numberOfEmpyWords > orderedLineOutputVector.size() / 10) continue; // greater than 10% means very likely the fifo did not save properly the data
+                    if(numberOfEmpyWords > 1) continue; // means very likely the fifo did not save properly the data
                     if(fPrintError) LOG(INFO) << BOLDRED << "Pattern did not match for iteration number " << +iteration << RESET;
 
                     LOG(DEBUG) << BOLDRED << "OTverifyBoardDataWord::runL1IntegrityTest - Error, expected L1 pattern not found for Board " << +theBoard->getId() << " OpticalGroup "
-                               << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId() << RESET;
+                               << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId() << " on iteration number " << +iteration << RESET;
                     LOG(DEBUG) << BOLDRED << "L1 data received    " << getPatternPrintout(orderedLineOutputVector, numberOfBytesInSinglePacket) << RESET;
                     LOG(DEBUG) << BOLDRED << "L1 pattern expected " << getPatternPrintout(thePatternMatcher.getPattern(), numberOfBytesInSinglePacket) << RESET;
                     LOG(DEBUG) << BOLDRED << "L1 pattern mask     " << getPatternPrintout(thePatternMatcher.getMask(), numberOfBytesInSinglePacket) << RESET;

@@ -499,8 +499,8 @@ std::vector<std::vector<uint32_t>> splitBits(const std::vector<uint32_t>& input,
 
     for(uint32_t bitNumber = 0; bitNumber < totalNumberOfBits; ++bitNumber)
     {
-        uint32_t bit = (input[bitNumber / numberOfBitsInWord] >> (numberOfBitsInWord - 1 - bitNumber % numberOfBitsInWord)) & 0x1;
-        auto& wordToModify = outputVector[bitNumber % numberOfSplits][bitNumber / (numberOfSplits * numberOfBitsInWord)];
+        uint32_t bit          = (input[bitNumber / numberOfBitsInWord] >> (numberOfBitsInWord - 1 - bitNumber % numberOfBitsInWord)) & 0x1;
+        auto&    wordToModify = outputVector[bitNumber % numberOfSplits][bitNumber / (numberOfSplits * numberOfBitsInWord)];
         wordToModify |= (bit << (numberOfBitsInWord - 1 - ((bitNumber / numberOfSplits) % numberOfBitsInWord)));
     }
 

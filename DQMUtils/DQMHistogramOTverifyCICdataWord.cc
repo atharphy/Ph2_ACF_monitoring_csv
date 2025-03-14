@@ -37,8 +37,8 @@ void DQMHistogramOTverifyCICdataWord::book(TFile* theOutputFile, DetectorContain
 
     HistContainer<TH2F> testedBitsHistogram((chipName + "toCIC_WordAlignmentTestedBits").c_str(),
                                             (chipName + " to CIC word alignment tested bits").c_str(),
-                                            NUMBER_OF_CIC_PORTS, 
-                                            idOffset - 0.5, 
+                                            NUMBER_OF_CIC_PORTS,
+                                            idOffset - 0.5,
                                             idOffset + NUMBER_OF_CIC_PORTS - 0.5,
                                             2,
                                             -0.5,
@@ -52,8 +52,8 @@ void DQMHistogramOTverifyCICdataWord::book(TFile* theOutputFile, DetectorContain
 
     HistContainer<TH2F> bitErrorRateHistogram((chipName + "toCIC_WordAlignmentErrorRate").c_str(),
                                               (chipName + " to CIC word alignment error rate").c_str(),
-                                              NUMBER_OF_CIC_PORTS, 
-                                              idOffset - 0.5, 
+                                              NUMBER_OF_CIC_PORTS,
+                                              idOffset - 0.5,
                                               idOffset + NUMBER_OF_CIC_PORTS - 0.5,
                                               2,
                                               -0.5,

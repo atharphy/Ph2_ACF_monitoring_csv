@@ -41,8 +41,8 @@ void SSA2Interface::DumpConfiguration(Chip* pSSA2, std::string filename)
 }
 bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize)
 {
-    bool cConfigLocalRegs = true;
-    ChipRegMap        cSSA2RegMap = pSSA2->getRegMap();
+    bool              cConfigLocalRegs = true;
+    ChipRegMap        cSSA2RegMap      = pSSA2->getRegMap();
     std::stringstream cOutput;
     setBoard(pSSA2->getBeBoardId());
     pSSA2->printChipType(cOutput);

@@ -730,7 +730,7 @@ std::vector<bool> D19cCic2Event::DataBitVector(uint8_t pHybridId, uint8_t pReado
 std::vector<EventStub> D19cCic2Event::StubVector(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    auto&             cStubWords = fEventStubList.at(getHybridIndex(pHybridId)).second;
+    auto&                  cStubWords = fEventStubList.at(getHybridIndex(pHybridId)).second;
     std::vector<EventStub> cStubVec;
     for(auto cStubWord: cStubWords)
     {

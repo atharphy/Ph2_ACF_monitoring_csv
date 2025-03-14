@@ -29,10 +29,10 @@
 
 struct Cluster
 {
-    Cluster(uint8_t theRow, uint8_t theFirstCol, uint8_t theColWidth)
-    : fRow(theRow)
-    , fFirstCol(theFirstCol)
-    , fColWidth(theColWidth) {}
+    Cluster(uint8_t theRow, uint8_t theFirstCol, uint8_t theColWidth) : fRow(theRow), fFirstCol(theFirstCol), fColWidth(theColWidth) {}
+
+    Cluster() : fRow(0), fFirstCol(0), fColWidth(0) {}
+
     uint8_t fRow;
     uint8_t fFirstCol;
     uint8_t fColWidth;
@@ -40,10 +40,10 @@ struct Cluster
 
 struct Stub
 {
-    Stub(uint8_t theSeed, uint8_t theBend, uint8_t theZ)
-    : fSeed(theSeed)
-    , fBend(theBend)
-    , fZ(theZ) {}
+    Stub(uint8_t theSeed, uint8_t theBend, uint8_t theZ) : fSeed(theSeed), fBend(theBend), fZ(theZ) {}
+
+    Stub() : fSeed(0), fBend(0), fZ(0) {}
+
     uint8_t fSeed;
     uint8_t fBend;
     uint8_t fZ;

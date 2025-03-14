@@ -248,7 +248,7 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForL1(uint8_t slvsCurrent)
 std::vector<Cluster> OTSSAtoMPAecv::produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed)
 {
     std::vector<Cluster> thePixelClusterList;
-    thePixelClusterList.push_back(Cluster(stubRow, stubSeed/2, 1)); // matching strip cluster
+    thePixelClusterList.push_back(Cluster(stubRow, stubSeed / 2, 1)); // matching strip cluster
     uint8_t              centroidCode              = stubSeed + 9;
     uint8_t              centroidCodeNegativeShift = centroidCode >> 1;
     uint8_t              centroidCodePositiveShift = centroidCode << 1;

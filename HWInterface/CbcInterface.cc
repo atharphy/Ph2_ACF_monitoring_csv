@@ -593,10 +593,7 @@ bool CbcInterface::ConfigurePage(Chip* pCbc, uint8_t pPage, bool pVerify)
 
     cIter         = fPageMap.find(cAddress);
     uint8_t cPage = cIter->second;
-    if(cPage == pPage)
-    {
-        return true;
-    } // don't need to do anything
+    if(cPage == pPage) { return true; } // don't need to do anything
 
     // switch page
     ChipRegItem cPageReg = pCbc->getRegItem("FeCtrl&TrgLat2");
