@@ -35,22 +35,37 @@ void DQMHistogramOTverifyCICdataWord::book(TFile* theOutputFile, DetectorContain
         chipName   = "MPA";
     }
 
-    HistContainer<TH2F> patternMatchingEfficiencyHistogram((chipName + "toCIC_WordAlignmentMatchingEfficiency").c_str(),
-                                                           (chipName + " to CIC word alignment matching efficiency").c_str(),
-                                                           NUMBER_OF_CIC_PORTS,
-                                                           idOffset - 0.5,
-                                                           idOffset + NUMBER_OF_CIC_PORTS - 0.5,
-                                                           2,
-                                                           -0.5,
-                                                           1.5);
-    patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
-    patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
-    patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
-    patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(2, "Stubs");
-    patternMatchingEfficiencyHistogram.fTheHistogram->SetMinimum(0);
-    patternMatchingEfficiencyHistogram.fTheHistogram->SetMaximum(1);
-    patternMatchingEfficiencyHistogram.fTheHistogram->SetStats(false);
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPatternMatchingEfficiencyHistogramContainer, patternMatchingEfficiencyHistogram);
+    HistContainer<TH2F> testedBitsHistogram((chipName + "toCIC_WordAlignmentTestedBits").c_str(),
+                                            (chipName + " to CIC word alignment tested bits").c_str(),
+                                            NUMBER_OF_CIC_PORTS,
+                                            idOffset - 0.5,
+                                            idOffset + NUMBER_OF_CIC_PORTS - 0.5,
+                                            2,
+                                            -0.5,
+                                            1.5);
+    testedBitsHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
+    testedBitsHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
+    testedBitsHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
+    testedBitsHistogram.fTheHistogram->GetYaxis()->SetBinLabel(2, "Stubs");
+    testedBitsHistogram.fTheHistogram->SetStats(false);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fTestedBitsHistogramContainer, testedBitsHistogram);
+
+    HistContainer<TH2F> bitErrorRateHistogram((chipName + "toCIC_WordAlignmentErrorRate").c_str(),
+                                              (chipName + " to CIC word alignment error rate").c_str(),
+                                              NUMBER_OF_CIC_PORTS,
+                                              idOffset - 0.5,
+                                              idOffset + NUMBER_OF_CIC_PORTS - 0.5,
+                                              2,
+                                              -0.5,
+                                              1.5);
+    bitErrorRateHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
+    bitErrorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
+    bitErrorRateHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
+    bitErrorRateHistogram.fTheHistogram->GetYaxis()->SetBinLabel(2, "Stubs");
+    bitErrorRateHistogram.fTheHistogram->SetMinimum(0);
+    bitErrorRateHistogram.fTheHistogram->SetMaximum(1);
+    bitErrorRateHistogram.fTheHistogram->SetStats(false);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBitErrorRateHistogramContainer, bitErrorRateHistogram);
 }
 
 //========================================================================================================================
@@ -64,19 +79,22 @@ void DQMHistogramOTverifyCICdataWord::fillPatternMatchingEfficiencyResults(Detec
             {
                 if(!hybrid->hasSummary()) continue;
 
-                auto thePatternMatchingEfficiencyVector = hybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>>();
+                auto thePatternMatchingEfficiencyVector = hybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2, 2>>();
 
-                TH2F* patternMatchingEfficiencyHistogram = fPatternMatchingEfficiencyHistogramContainer.getObject(board->getId())
-                                                               ->getObject(opticalGroup->getId())
-                                                               ->getObject(hybrid->getId())
-                                                               ->getSummary<HistContainer<TH2F>>()
-                                                               .fTheHistogram;
+                TH2F* bitErroRateHistogram =
+                    fBitErrorRateHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+
+                TH2F* testedBitsHistogram =
+                    fTestedBitsHistogramContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
                     for(size_t cLineId = 0; cLineId < 2; cLineId++)
                     {
-                        patternMatchingEfficiencyHistogram->SetBinContent(chipId + 1, cLineId + 1, thePatternMatchingEfficiencyVector.at(chipId).at(cLineId));
+                        float bitCount   = thePatternMatchingEfficiencyVector.at(chipId).at(cLineId).at(0);
+                        float errorCount = thePatternMatchingEfficiencyVector.at(chipId).at(cLineId).at(1);
+                        testedBitsHistogram->SetBinContent(chipId + 1, cLineId + 1, bitCount);
+                        bitErroRateHistogram->SetBinContent(chipId + 1, cLineId + 1, bitCount > 0 ? errorCount / bitCount : 1.);
                     }
                 }
             }
@@ -107,7 +125,7 @@ bool DQMHistogramOTverifyCICdataWord::fill(std::string& inputStream)
     {
         // std::cout << "Matched OTverifyCICdataWord PatternMatchingEfficiency!!!!\n";
         DetectorDataContainer theDetectorData =
-            thePatternMatchinEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2>, EmptyContainer>(
+            thePatternMatchinEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2, 2>, EmptyContainer>(
                 fDetectorContainer);
         fillPatternMatchingEfficiencyResults(theDetectorData);
         return true;

@@ -118,22 +118,6 @@ void PSPixelAlive::Initialise()
         cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
     }
 
-    // make sure register tracking is on
-    for(auto board: *fDetectorContainer)
-    {
-        for(auto opticalGroup: *board)
-        {
-            for(auto hybrid: *opticalGroup)
-            {
-                for(auto chip: *hybrid)
-                {
-                    chip->setRegisterTracking(1);
-                    chip->ClearModifiedRegisterMap();
-                }
-            }
-        }
-    }
-
     // for now.. force to use async mode here (does not track timing of hits), only used for testing
     bool cForcePSasync = true;
     // event types
@@ -186,24 +170,6 @@ void PSPixelAlive::Reset()
                 {
                     // Set this back to what it was
                     fReadoutChipInterface->WriteChipReg(cChip, "AnalogueAsync", 0);
-
-                    auto cModMap = cChip->GetModifiedRegisterMap();
-                    LOG(INFO) << BOLDYELLOW << "Chip#" << +cChip->getId() << " map of modified registers contains " << cModMap.size() << " items." << RESET;
-                    std::vector<std::pair<std::string, uint16_t>> cRegList;
-                    for(auto cMapItem: cModMap)
-                    {
-                        auto cValueInMemory = cChip->getReg(cMapItem.first);
-                        if(cMapItem.second.fValue == cValueInMemory) continue;
-                        // don't reconfigure the offsets .. whole point of this excercise
-                        if(cMapItem.first.find("ENFLAGS") != std::string::npos) { cMapItem.second.fValue = (cMapItem.second.fValue & 0xfe) + (cValueInMemory & 0x1); }; // This conserves pixel masking
-                        //                        LOG(INFO) << BOLDYELLOW << "PixelAlive::Resetting Register " << cMapItem.first << " on Chip#" << +cChip->getId() << " from " << cValueInMemory << " to
-                        //                        " << cMapItem.second.fValue << RESET;
-                        cRegList.push_back(std::make_pair(cMapItem.first, cMapItem.second.fValue));
-                    }
-                    fReadoutChipInterface->WriteChipMultReg(cChip, cRegList, false);
-                    // don't track registers + clear mod reg map
-                    cChip->setRegisterTracking(0);
-                    cChip->ClearModifiedRegisterMap();
                 }
             }
         }

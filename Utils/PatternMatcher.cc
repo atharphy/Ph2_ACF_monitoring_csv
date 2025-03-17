@@ -7,6 +7,21 @@ PatternMatcher::PatternMatcher() {}
 
 PatternMatcher::~PatternMatcher() {}
 
+PatternMatcher::PatternMatcher(const PatternMatcher& thePatternMatcher)
+    : fPatternNumberOfBits(thePatternMatcher.fPatternNumberOfBits)
+    , fPatternNumberOfMaskedBits(thePatternMatcher.fPatternNumberOfMaskedBits)
+    , fPatternAndMaskVector(thePatternMatcher.fPatternAndMaskVector)
+{
+}
+
+PatternMatcher& PatternMatcher::operator=(const PatternMatcher& thePatternMatcher)
+{
+    fPatternNumberOfBits       = thePatternMatcher.fPatternNumberOfBits;
+    fPatternNumberOfMaskedBits = thePatternMatcher.fPatternNumberOfMaskedBits;
+    fPatternAndMaskVector.assign(thePatternMatcher.fPatternAndMaskVector.begin(), thePatternMatcher.fPatternAndMaskVector.end());
+    return *this;
+}
+
 void PatternMatcher::addToPattern(uint32_t thePattern, uint32_t thePatternMask, uint8_t thePatternBitLenght)
 {
     fPatternNumberOfMaskedBits = 0;
@@ -38,6 +53,56 @@ void PatternMatcher::addToPattern(uint32_t thePattern, uint32_t thePatternMask, 
     // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Pattern  -> ";
     // for(const auto word : fPatternAndMaskVector) std::cout << std::hex << word.first << std::dec << " ";
     // std::cout << std::endl;
+}
+
+void PatternMatcher::updatePattern(uint32_t thePattern, uint32_t thePatternMask, uint8_t thePatternBitLenght, uint32_t firstBitPosition)
+{
+    if(firstBitPosition + firstBitPosition > fPatternNumberOfBits)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] firstBitPosition + firstBitPosition (" << (firstBitPosition + firstBitPosition)
+                  << ") cannot be greater then fPatternNumberOfMaskedBits (" << fPatternNumberOfMaskedBits << "). Aborting" << std::endl;
+        abort();
+    }
+
+    size_t positionOfFirstWord  = (firstBitPosition - 1) / 32;
+    size_t positionOfSecondWord = (firstBitPosition - 1 + thePatternBitLenght) / 32;
+    if((firstBitPosition + thePatternBitLenght) % 32 == 0) --positionOfSecondWord;
+
+    uint8_t  numberOfBitsToSkipFirstWord  = (firstBitPosition - 1) % 32;
+    uint32_t bitToSkipMaskFirstWord       = ((~0u) << numberOfBitsToSkipFirstWord) >> numberOfBitsToSkipFirstWord;
+    uint8_t  numberOfBitsToSkipSecondWord = 32 - (firstBitPosition - 1 + thePatternBitLenght) % 32;
+    uint32_t bitToSkipMaskSecondWord      = (~0u) << numberOfBitsToSkipSecondWord;
+
+    if(positionOfSecondWord > positionOfFirstWord)
+    {
+        uint32_t theFirstNewWord               = (thePattern)&bitToSkipMaskFirstWord;
+        uint32_t theFirstNewMask               = (thePatternMask)&bitToSkipMaskFirstWord;
+        auto&    theCurrentPatternAndMaskFirst = fPatternAndMaskVector.at(positionOfFirstWord);
+        theCurrentPatternAndMaskFirst.first &= bitToSkipMaskFirstWord;
+        theCurrentPatternAndMaskFirst.first |= theFirstNewWord;
+        theCurrentPatternAndMaskFirst.second &= bitToSkipMaskFirstWord;
+        theCurrentPatternAndMaskFirst.second |= theFirstNewMask;
+
+        uint32_t theSecondNewWord               = (thePattern << numberOfBitsToSkipSecondWord) & bitToSkipMaskSecondWord;
+        uint32_t theSecondNewMask               = (thePattern << numberOfBitsToSkipSecondWord) & bitToSkipMaskSecondWord;
+        auto&    theCurrentPatternAndMaskSecond = fPatternAndMaskVector.at(positionOfSecondWord);
+        theCurrentPatternAndMaskSecond.first &= bitToSkipMaskSecondWord;
+        theCurrentPatternAndMaskSecond.first |= theSecondNewWord;
+        theCurrentPatternAndMaskSecond.second &= bitToSkipMaskSecondWord;
+        theCurrentPatternAndMaskSecond.second |= theSecondNewMask;
+    }
+    else
+    {
+        uint32_t theNewWord               = (thePattern << numberOfBitsToSkipSecondWord) & bitToSkipMaskFirstWord & bitToSkipMaskSecondWord;
+        uint32_t theNewMask               = (thePatternMask << numberOfBitsToSkipSecondWord) & bitToSkipMaskFirstWord & bitToSkipMaskSecondWord;
+        auto&    theCurrentPatternAndMask = fPatternAndMaskVector.at(positionOfFirstWord);
+        theCurrentPatternAndMask.first &= bitToSkipMaskFirstWord;
+        theCurrentPatternAndMask.first &= bitToSkipMaskSecondWord;
+        theCurrentPatternAndMask.first |= theNewWord;
+        theCurrentPatternAndMask.second &= bitToSkipMaskFirstWord;
+        theCurrentPatternAndMask.second &= bitToSkipMaskSecondWord;
+        theCurrentPatternAndMask.second |= theNewMask;
+    }
 }
 
 bool PatternMatcher::isMatched(const std::vector<uint32_t>& theWordVector) const
@@ -175,4 +240,22 @@ bool PatternMatcher::isSubsetMatched(const std::vector<uint32_t>& theWordVector,
     // std::cout << "Stub pattern mask     " << getPatternPrintout(theSubsetPatternMatcher.getMask(), 2) << std::endl;
 
     return theSubsetPatternMatcher.isMatched(theSubsetWordVector);
+}
+
+void PatternMatcher::addTrailingZeros(size_t totalNumberOfBitNeeded)
+{
+    if(totalNumberOfBitNeeded < fPatternNumberOfBits)
+    {
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] totalNumberOfBitNeeded (" << totalNumberOfBitNeeded << ") is less then the number of bits already present in the pattern ("
+                  << fPatternNumberOfBits << "). Aborting" << std::endl;
+        abort();
+    }
+    size_t numberOfEmptyBits = totalNumberOfBitNeeded - fPatternNumberOfBits;
+
+    if(numberOfEmptyBits > 0)
+    {
+        size_t numberOfPaddingBits = numberOfEmptyBits % 32;
+        if(numberOfPaddingBits > 0) addToPattern(0x0, 0x0, numberOfPaddingBits);
+        for(size_t trailingEmptyWordNumber = 0; trailingEmptyWordNumber < numberOfEmptyBits / 32; ++trailingEmptyWordNumber) { addToPattern(0x0, 0x0, 32); }
+    }
 }

@@ -80,10 +80,13 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer*          the
     patternCheckerTest(theErrorBitContainer, line, thePatternAndMaskContainer, numberOfBits, runAlignment);
 }
 
-void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitContainer, uint8_t line, BoardDataContainer& thePatternAndMaskContainer, float numberOfBits, bool runAlignment)
+void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitContainer,
+                                                uint8_t             line,
+                                                BoardDataContainer& thePatternAndMaskContainer,
+                                                float               numberOfBits,
+                                                bool                runAlignment,
+                                                BoardDataContainer* theAlignmentPatternAndMaskContainer)
 {
-    LOG(INFO) << BOLDBLUE << "Running Pattern Checker on line " << +line << RESET;
-
     auto theBoard = fDetectorContainer->getObject(theErrorBitContainer->getId());
 
     bool is10Gmodule = flpGBTInterface->GetChipRate(theBoard->getFirstObject()->flpGBT) == 10;
@@ -96,9 +99,17 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitC
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                const auto& thePatternAndMask =
-                    thePatternAndMaskContainer.getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::pair<std::vector<uint32_t>, std::vector<uint32_t>>>();
-                theAlignerInterface->enableAlignmentOnCustomPattern(theHybrid->getId(), (thePatternAndMask.first.at(0) >> 16 & 0xffff), (thePatternAndMask.second.at(0) >> 16 & 0xffff));
+                if(theAlignmentPatternAndMaskContainer == nullptr)
+                {
+                    const auto& thePatternAndMask =
+                        thePatternAndMaskContainer.getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::pair<std::vector<uint32_t>, std::vector<uint32_t>>>();
+                    theAlignerInterface->enableAlignmentOnCustomPattern(theHybrid->getId(), (thePatternAndMask.first.at(0) >> 16 & 0xffff), (thePatternAndMask.second.at(0) >> 16 & 0xffff));
+                }
+                else
+                {
+                    const auto& thePatternAndMask = theAlignmentPatternAndMaskContainer->getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::pair<uint16_t, uint16_t>>();
+                    theAlignerInterface->enableAlignmentOnCustomPattern(theHybrid->getId(), thePatternAndMask.first, thePatternAndMask.second);
+                }
                 if(!tryLineAlignment(theAlignerInterface, theHybrid, line))
                 {
                     LOG(ERROR) << ERROR_FORMAT << "Failed to align OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +line << RESET;

@@ -155,22 +155,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
     }
 
-    // make sure register tracking is on
-    for(auto board: *fDetectorContainer)
-    {
-        for(auto opticalGroup: *board)
-        {
-            for(auto hybrid: *opticalGroup)
-            {
-                for(auto chip: *hybrid)
-                {
-                    chip->setRegisterTracking(1);
-                    chip->ClearModifiedRegisterMap();
-                }
-            }
-        }
-    }
-
     // for now.. force to use async mode here
     bool cForcePSasync = true;
     // event types

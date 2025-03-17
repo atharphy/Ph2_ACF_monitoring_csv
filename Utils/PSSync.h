@@ -24,7 +24,7 @@ class PSSync //: public streammable
   public:
     GenericDataArray<Ph2_HwInterface::SCluster, StripSize> fSClusters;
     GenericDataArray<Ph2_HwInterface::PCluster, PixelSize> fPClusters;
-    GenericDataArray<Ph2_HwInterface::Stub, StubSize>      fStubs;
+    GenericDataArray<Ph2_HwInterface::EventStub, StubSize> fStubs;
 };
 
 #endif

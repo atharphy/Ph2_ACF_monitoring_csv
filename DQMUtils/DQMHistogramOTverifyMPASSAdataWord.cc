@@ -24,16 +24,25 @@ void DQMHistogramOTverifyMPASSAdataWord::book(TFile* theOutputFile, DetectorCont
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
 
-    HistContainer<TH2F> patternMatchingEfficiencyHistogram(
-        "SSAtoMPA_PatternMatchingEfficiency", "SSA to MPA pattern matching efficiency", NUMBER_OF_CIC_PORTS, 8 - 0.5, 8 + NUMBER_OF_CIC_PORTS - 0.5, 9, -0.5, 8.5);
-    patternMatchingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle("MPA Id");
-    patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
-    patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
-    for(size_t clusterLine = 0; clusterLine < 8; ++clusterLine) patternMatchingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetBinLabel(clusterLine + 2, Form("Cluster%d", int(clusterLine)));
-    patternMatchingEfficiencyHistogram.fTheHistogram->SetMinimum(0);
-    patternMatchingEfficiencyHistogram.fTheHistogram->SetMaximum(1);
-    patternMatchingEfficiencyHistogram.fTheHistogram->SetStats(false);
-    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPatternMatchingEfficiencyHistogramContainer, patternMatchingEfficiencyHistogram);
+    HistContainer<TH2F> patternMatchingTestedBitsHistogram(
+        "SSAtoMPA_PatternMatchingTestedBits", "SSA to MPA pattern matching tested bits", NUMBER_OF_CIC_PORTS, 8 - 0.5, 8 + NUMBER_OF_CIC_PORTS - 0.5, 9, -0.5, 8.5);
+    patternMatchingTestedBitsHistogram.fTheHistogram->GetXaxis()->SetTitle("MPA Id");
+    patternMatchingTestedBitsHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
+    patternMatchingTestedBitsHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
+    for(size_t clusterLine = 0; clusterLine < 8; ++clusterLine) patternMatchingTestedBitsHistogram.fTheHistogram->GetYaxis()->SetBinLabel(clusterLine + 2, Form("Cluster%d", int(clusterLine)));
+    patternMatchingTestedBitsHistogram.fTheHistogram->SetStats(false);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPatternMatchingTestedBitsHistogramContainer, patternMatchingTestedBitsHistogram);
+
+    HistContainer<TH2F> patternMatchingErrorRateHistogram(
+        "SSAtoMPA_PatternMatchingErrorRate", "SSA to MPA pattern matching error rate", NUMBER_OF_CIC_PORTS, 8 - 0.5, 8 + NUMBER_OF_CIC_PORTS - 0.5, 9, -0.5, 8.5);
+    patternMatchingErrorRateHistogram.fTheHistogram->GetXaxis()->SetTitle("MPA Id");
+    patternMatchingErrorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
+    patternMatchingErrorRateHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
+    for(size_t clusterLine = 0; clusterLine < 8; ++clusterLine) patternMatchingErrorRateHistogram.fTheHistogram->GetYaxis()->SetBinLabel(clusterLine + 2, Form("Cluster%d", int(clusterLine)));
+    patternMatchingErrorRateHistogram.fTheHistogram->SetMinimum(0);
+    patternMatchingErrorRateHistogram.fTheHistogram->SetMaximum(1);
+    patternMatchingErrorRateHistogram.fTheHistogram->SetStats(false);
+    RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPatternMatchingErrorRateHistogramContainer, patternMatchingErrorRateHistogram);
 }
 
 //========================================================================================================================
@@ -47,19 +56,28 @@ void DQMHistogramOTverifyMPASSAdataWord::fillPatternMatchingEfficiencyResults(De
             {
                 if(!hybrid->hasSummary()) continue;
 
-                auto thePatternMatchingEfficiencyVector = hybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>();
+                auto thePatternMatchingEfficiencyVector = hybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>();
 
-                TH2F* patternMatchingEfficiencyHistogram = fPatternMatchingEfficiencyHistogramContainer.getObject(board->getId())
-                                                               ->getObject(opticalGroup->getId())
-                                                               ->getObject(hybrid->getId())
-                                                               ->getSummary<HistContainer<TH2F>>()
-                                                               .fTheHistogram;
+                TH2F* bitErroRateHistogram = fPatternMatchingErrorRateHistogramContainer.getObject(board->getId())
+                                                 ->getObject(opticalGroup->getId())
+                                                 ->getObject(hybrid->getId())
+                                                 ->getSummary<HistContainer<TH2F>>()
+                                                 .fTheHistogram;
+
+                TH2F* testedBitsHistogram = fPatternMatchingTestedBitsHistogramContainer.getObject(board->getId())
+                                                ->getObject(opticalGroup->getId())
+                                                ->getObject(hybrid->getId())
+                                                ->getSummary<HistContainer<TH2F>>()
+                                                .fTheHistogram;
 
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
                     for(size_t cLineId = 0; cLineId < 9; cLineId++)
                     {
-                        patternMatchingEfficiencyHistogram->SetBinContent(chipId + 1, cLineId + 1, thePatternMatchingEfficiencyVector.at(chipId).at(cLineId));
+                        float bitCount   = thePatternMatchingEfficiencyVector.at(chipId).at(cLineId).at(0);
+                        float errorCount = thePatternMatchingEfficiencyVector.at(chipId).at(cLineId).at(1);
+                        testedBitsHistogram->SetBinContent(chipId + 1, cLineId + 1, bitCount);
+                        bitErroRateHistogram->SetBinContent(chipId + 1, cLineId + 1, bitCount > 0 ? errorCount / bitCount : 1.);
                     }
                 }
             }

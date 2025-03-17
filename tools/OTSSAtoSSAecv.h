@@ -36,13 +36,13 @@ class OTSSAtoSSAecv : public OTSSAtoMPAecv
     static std::string fCalibrationDescription;
 
   private:
-    void                                                        runSSAtoSSAecvScan();
-    void                                                        setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA) override;
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>          produceStripClusterList() override;
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>          produceMatchingPixelClusterList(uint8_t colCoordinate) override;
-    std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList) override;
-    std::vector<float>                                          fListOfSSAslvsCurrents{1, 4, 7};
-    uint8_t                                                     fCurrentStripInjected;
+    void                           runSSAtoSSAecvScan();
+    void                           setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA) override;
+    std::vector<Cluster>           produceStripClusterList() override;
+    std::vector<Cluster>           produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed) override;
+    std::vector<std::vector<Stub>> producePossibleStubVectorList(const std::vector<Cluster>& thePixelClusterList);
+    std::vector<float>             fListOfSSAslvsCurrents{1, 4, 7};
+    uint8_t                        fCurrentStripInjected;
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

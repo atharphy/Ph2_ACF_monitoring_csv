@@ -31,10 +31,13 @@ void OTalignBoardDataWord::Initialise(void)
 
     initializeContainers();
 
+    if(fProducePlots)
+    {
 #ifdef __USE_ROOT__
-    // Calibration is not running on the SoC: plots are booked during initialization
-    fDQMHistogramOTalignBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
+        // Calibration is not running on the SoC: plots are booked during initialization
+        fDQMHistogramOTalignBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
+    }
 }
 
 void OTalignBoardDataWord::initializeContainers()
@@ -62,10 +65,14 @@ void OTalignBoardDataWord::Running()
 void OTalignBoardDataWord::Stop(void)
 {
     LOG(INFO) << "Stopping OTalignBoardDataWord measurement.";
+
+    if(fProducePlots)
+    {
 #ifdef __USE_ROOT__
-    // Calibration is not running on the SoC: processing the histograms
-    fDQMHistogramOTalignBoardDataWord.process();
+        // Calibration is not running on the SoC: processing the histograms
+        fDQMHistogramOTalignBoardDataWord.process();
 #endif
+    }
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTalignBoardDataWord stopped.";
@@ -83,19 +90,22 @@ void OTalignBoardDataWord::wordAlignBEdata()
 
     for(auto theBoard: *fDetectorContainer) { boardWordAlignment(theBoard); }
 
-#ifdef __USE_ROOT__
-    fDQMHistogramOTalignBoardDataWord.fillBitSlipValues(fBitSlipContainer);
-    fDQMHistogramOTalignBoardDataWord.fillAlignmentRetryNumber(fAlignmentRetryContainer);
-#else
-    if(fDQMStreamerEnabled)
+    if(fProducePlots)
     {
-        ContainerSerialization theBitSlipContainerSerialization("OTalignBoardDataWordBitSlip");
-        theBitSlipContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fBitSlipContainer);
+#ifdef __USE_ROOT__
+        fDQMHistogramOTalignBoardDataWord.fillBitSlipValues(fBitSlipContainer);
+        fDQMHistogramOTalignBoardDataWord.fillAlignmentRetryNumber(fAlignmentRetryContainer);
+#else
+        if(fDQMStreamerEnabled)
+        {
+            ContainerSerialization theBitSlipContainerSerialization("OTalignBoardDataWordBitSlip");
+            theBitSlipContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fBitSlipContainer);
 
-        ContainerSerialization theAlignmentRetryContainerSerialization("OTalignBoardDataWordAlignmentRetry");
-        theAlignmentRetryContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fAlignmentRetryContainer);
-    }
+            ContainerSerialization theAlignmentRetryContainerSerialization("OTalignBoardDataWordAlignmentRetry");
+            theAlignmentRetryContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, fAlignmentRetryContainer);
+        }
 #endif
+    }
 }
 
 void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
@@ -248,6 +258,7 @@ bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpti
                 std::string lineName = "L1";
                 if(lineId != 0) lineName = "Stub line# " + std::to_string(lineId - 1);
                 LOG(INFO) << BOLDMAGENTA << "Aligning " << lineName << " on Hybrid#" << +theHybrid->getId() << RESET;
+                theAlignerInterface->disableAlignmentOnCustomPattern(theHybrid->getId());
                 bool isLineAligned = tryLineAlignment(theAlignerInterface, theHybrid, lineId);
 
                 if(!isLineAligned)
@@ -263,7 +274,6 @@ bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpti
 
 bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* theAlignerInterface, Hybrid* theHybrid, uint8_t lineId)
 {
-    theAlignerInterface->disableAlignmentOnCustomPattern(theHybrid->getId());
     bool isLineAligned          = false;
     int  currentIterationNumber = 0;
 
