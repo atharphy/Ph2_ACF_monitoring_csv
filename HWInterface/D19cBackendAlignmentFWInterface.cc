@@ -307,7 +307,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
             thePhaseTuningReply.decodeReply(reply, thePhaseTuningControl);
             AlignmentResult theAlignmentResults(thePhaseTuningReply);
 
-            if(!fAlignOnCustomPattern.at(hybridId))
+            if(!fAlignOnCustomPattern.at(hybridId) && !fSuppressPrintout)
             {
                 LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << +lineId;
                 LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET
