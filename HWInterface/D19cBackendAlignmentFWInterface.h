@@ -180,6 +180,7 @@ class D19cBackendAlignmentFWInterface
 
     void setIsOptical(bool isOptical) { fIsOptical = isOptical; }
     void setSuppressPrintout(bool suppressPrintout) { fSuppressPrintout = suppressPrintout; }
+    void setSuppressErrorPrintout(bool suppressErrorPrintout) {fSuppressErrorPrintout = suppressErrorPrintout;}
 
   private:
     RegManager*                 fTheRegManager{nullptr};
@@ -195,6 +196,8 @@ class D19cBackendAlignmentFWInterface
     std::vector<AlignmentResult> retrieveAllLineAlignmentResult(uint8_t hybridId, uint8_t numberOfLines);
     void                         writeCommand(const PhaseTuningControl& thePhaseTunerControl);
     void                         runWordAlignment(uint8_t hybridId, uint8_t lineId);
+    bool fSuppressErrorPrintout{false};
+    
 };
 } // namespace Ph2_HwInterface
 #endif

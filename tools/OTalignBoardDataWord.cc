@@ -224,6 +224,7 @@ void OTalignBoardDataWord::runAlignment(BeBoard* theBoard)
 {
     auto                             cInterface          = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
     D19cBackendAlignmentFWInterface* theAlignerInterface = cInterface->getBackendAlignmentInterface();
+    theAlignerInterface->setSuppressErrorPrintout(fSuppressErrorPrintout);
     if(fBroadcastAlignSetting == 2)
         tryAllHybridAlignment(theAlignerInterface, theBoard);
     else
@@ -288,7 +289,7 @@ bool OTalignBoardDataWord::tryLineAlignment(D19cBackendAlignmentFWInterface* the
         isLineAligned                      = theAlignmentResult.fWordAlignmentSuccess;
         if(!isLineAligned)
         {
-            LOG(WARNING) << WARNING_FORMAT << "Alignment on line " << +lineId << " failed, retrying " << fMaxNumberOfIterations - currentIterationNumber << " more times before giving up" << RESET;
+            if(!fSuppressErrorPrintout) LOG(WARNING) << WARNING_FORMAT << "Alignment on line " << +lineId << " failed, retrying " << fMaxNumberOfIterations - currentIterationNumber << " more times before giving up" << RESET;
             theHybridAlignmentRetryVector.at(lineId)++;
             continue;
         }

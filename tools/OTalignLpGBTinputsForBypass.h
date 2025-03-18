@@ -18,6 +18,8 @@
 #endif
 #include "Utils/PatternMatcher.h"
 
+class OTPatternCheckerHelper;
+
 class OTalignLpGBTinputsForBypass : public Tool
 {
   public:
@@ -38,18 +40,25 @@ class OTalignLpGBTinputsForBypass : public Tool
 
   private:
     void    AlignLpGBTinputs();
-    void    prepareForLpGBTalignmentPS();
-    void    prepareForLpGBTalignment2Sstubs();
-    void    prepareForLpGBTalignment2SL1();
-    void    setCICBypass(uint8_t phyPort);
-    uint8_t getBestPhase(const GenericDataArray<float, 15>& thePhaseEfficiencyList, Ph2_HwDescription::Hybrid* theHybrid, uint8_t line);
-    float   getMatchingEfficiency2SL1(std::vector<uint32_t> inputDataVector);
+    void    AlignLpGBTinputsOld();
+    void    prepareForLpGBTalignmentPS(Ph2_HwDescription::BeBoard* theBoard);
+    void    prepareForLpGBTalignment2Sstubs(Ph2_HwDescription::BeBoard* theBoard);
+    void    prepareForLpGBTalignment2SL1(Ph2_HwDescription::BeBoard* theBoard);
+    void    setCICBypass(Ph2_HwDescription::BeBoard* theBoard, uint8_t phyPort);
+    uint8_t getBestPhase(const GenericDataArray<float, 15, 2>& thePhaseEfficiencyList, Ph2_HwDescription::Hybrid* theHybrid, uint8_t line);
+    GenericDataArray<float, 2> getMatchingEfficiency2SL1(std::vector<uint32_t> inputDataVector);
+    void    produceAllPatternAndMasks(Ph2_HwDescription::BeBoard* theBoard);
+    std::pair<std::vector<uint32_t>, std::vector<uint32_t>> getFullPatternAndMask(uint32_t thePattern, bool is10G);
 
-    uint32_t             fNumberOfIterations{1000};
+    float                fNumberOfTestedBits{1e6};
+    float                fNumberOfTestedBitsL12S{1e5};
     uint8_t              fShiftRegisterPatternMPA{0xAA};
-    std::vector<uint8_t> fStubPattern2S{0x33, 0x55, 0xAA, 0xAA, 0xAA}; // last two bytes cannot be changed here
+    std::vector<uint8_t> fStubPattern2S{0x25, 0x55, 0xAA, 0xAA, 0xAA}; // last two bytes cannot be changed here
 
     PatternMatcher fPattern2SL1;
+    OTPatternCheckerHelper* fPatternCheckerHelper;
+
+    std::map<uint8_t, BoardDataContainer> fPatternAndMaskContainerMap;
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

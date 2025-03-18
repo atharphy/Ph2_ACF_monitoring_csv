@@ -319,7 +319,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
         }
         catch(const std::exception& e)
         {
-            LOG(WARNING) << WARNING_FORMAT << "D19cBackendAlignmentFWInterface::retrieveAlignmentResult failed, retrying..." << RESET;
+            if(!fSuppressErrorPrintout) LOG(WARNING) << WARNING_FORMAT << "D19cBackendAlignmentFWInterface::retrieveAlignmentResult failed, retrying..." << RESET;
             ++retryCounter;
         }
     }
