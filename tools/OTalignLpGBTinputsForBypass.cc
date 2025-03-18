@@ -72,17 +72,15 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
     auto    firstModule   = fDetectorContainer->getFirstObject()->getFirstObject();
     bool    isPS          = firstModule->getFrontEndType() == FrontEndType::OuterTrackerPS;
     uint8_t numberOfLines = 4;
-    uint8_t numberOfPhases = 15;
+    uint8_t numberOfLpgbtPhases = 15;
 
     std::map<uint8_t, std::map<uint8_t, DetectorDataContainer>> matchingEfficiencyContainerMap;
-    std::map<uint8_t, DetectorDataContainer> bestPhaseContainerMap;
     for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
     {
-        for(uint8_t phase = 0; phase < numberOfPhases; ++phase)
+        for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfLpgbtPhases; ++lpgbtPhase)
         {
-            ContainerFactory::copyAndInitHybrid<GenericDataArray<float, 4, 2>>(*fDetectorContainer, matchingEfficiencyContainerMap[phyPort][phase]);
+            ContainerFactory::copyAndInitHybrid<GenericDataArray<float, 4, 2>>(*fDetectorContainer, matchingEfficiencyContainerMap[phyPort][lpgbtPhase]);
         }
-        ContainerFactory::copyAndInitHybrid<GenericDataArray<uint8_t, 4>>(*fDetectorContainer, bestPhaseContainerMap[phyPort]);
     }
 
     for(auto* theBoard: *fDetectorContainer)
@@ -106,7 +104,7 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                     prepareForLpGBTalignment2SL1(theBoard);
             }
 
-            for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfPhases; ++lpgbtPhase)
+            for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfLpgbtPhases; ++lpgbtPhase)
             {
                 for(auto theOpticalGroup: *theBoard)
                 {
@@ -216,8 +214,17 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                     }
                 }
             }
+        }
+    }
 
-            for(auto theOpticalGroup: *bestPhaseContainerMap[phyPort].getBoard(theBoard->getId()))
+    for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
+    {
+        DetectorDataContainer bestPhaseContainer;
+        ContainerFactory::copyAndInitHybrid<GenericDataArray<uint8_t, 4>>(*fDetectorContainer, bestPhaseContainer);
+
+        for(auto* theBoard: *fDetectorContainer)
+        {
+            for(auto theOpticalGroup: *bestPhaseContainer.getBoard(theBoard->getId()))
             {
                 for(auto theHybrid: *theOpticalGroup)
                 {
@@ -226,7 +233,7 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                     for(uint8_t line = 0; line < numberOfLines; ++line)
                     {
                         GenericDataArray<float, 15, 2> thePhaseEfficiencyList;
-                        for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfPhases; ++lpgbtPhase)
+                        for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfLpgbtPhases; ++lpgbtPhase)
                         {
                             auto phyPortEfficiencyScanList =
                                 matchingEfficiencyContainerMap[phyPort][lpgbtPhase].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 2>>();
@@ -239,11 +246,20 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                 }
             }
         }
+#ifdef __USE_ROOT__
+        fDQMHistogramOTalignLpGBTinputsForBypass.fillBestPhase(bestPhaseContainer, phyPort);
+#else
+        if(fDQMStreamer)
+        {
+            ContainerSerialization theBestPhaseSerialization("OTalignLpGBTinputsForBypassBestPhase");
+            theBestPhaseSerialization.streamByHybridContainer(fDQMStreamer, bestPhaseContainer, phyPort);
+        }
+#endif
     }
 
     for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
     {
-        for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfPhases; ++lpgbtPhase)
+        for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfLpgbtPhases; ++lpgbtPhase)
         {
 #ifdef __USE_ROOT__
             fDQMHistogramOTalignLpGBTinputsForBypass.fillMatchingEfficiency(matchingEfficiencyContainerMap[phyPort][lpgbtPhase], phyPort, lpgbtPhase);
@@ -255,15 +271,6 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
             }
 #endif
         }
-#ifdef __USE_ROOT__
-        fDQMHistogramOTalignLpGBTinputsForBypass.fillBestPhase(bestPhaseContainerMap[phyPort], phyPort);
-#else
-        if(fDQMStreamer)
-        {
-            ContainerSerialization theBestPhaseSerialization("OTalignLpGBTinputsForBypassBestPhase");
-            theBestPhaseSerialization.streamByHybridContainer(fDQMStreamer, bestPhaseContainerMap[phyPort], phyPort);
-        }
-#endif
     }
 }
 
