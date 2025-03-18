@@ -37,10 +37,9 @@ class OTalignLpGBTinputsForBypass : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
-  
+
   protected:
     void runPatternMatching(Ph2_HwDescription::BeBoard* theBoard, std::map<uint8_t, DetectorDataContainer>& matchingEfficiencyPerPhyPortMap, bool isPS, uint8_t phyPort);
-
 
   private:
     void                                                    AlignLpGBTinputs();

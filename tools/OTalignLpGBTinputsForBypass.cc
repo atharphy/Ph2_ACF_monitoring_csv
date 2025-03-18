@@ -69,8 +69,8 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
 {
     LOG(INFO) << BOLDYELLOW << "OTalignLpGBTinputsForBypass::AlignLpGBTinputs ... start LpGBT phase scan with CIC in bypass mode" << RESET;
 
-    auto    firstModule   = fDetectorContainer->getFirstObject()->getFirstObject();
-    bool    isPS          = firstModule->getFrontEndType() == FrontEndType::OuterTrackerPS;
+    auto    firstModule         = fDetectorContainer->getFirstObject()->getFirstObject();
+    bool    isPS                = firstModule->getFrontEndType() == FrontEndType::OuterTrackerPS;
     uint8_t numberOfLpgbtPhases = 15;
 
     std::map<uint8_t, std::map<uint8_t, DetectorDataContainer>> matchingEfficiencyContainerMap;
@@ -152,8 +152,9 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                         GenericDataArray<float, 15, 2> thePhaseEfficiencyList;
                         for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfLpgbtPhases; ++lpgbtPhase)
                         {
-                            auto phyPortEfficiencyScanList =
-                                matchingEfficiencyContainerMap[lpgbtPhase][phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 2>>();
+                            auto phyPortEfficiencyScanList = matchingEfficiencyContainerMap[lpgbtPhase][phyPort]
+                                                                 .getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
+                                                                 ->getSummary<GenericDataArray<float, 4, 2>>();
                             thePhaseEfficiencyList.at(lpgbtPhase) = phyPortEfficiencyScanList.at(line);
                         }
                         auto theBestPhase                                              = getBestPhase(thePhaseEfficiencyList, theOuterTrackerHybrid, line);
@@ -245,10 +246,8 @@ void OTalignLpGBTinputsForBypass::runPatternMatching(BeBoard* theBoard, std::map
                         }
                     }
 
-                    auto& matchingEfficiency = matchingEfficiencyPerPhyPortMap[phyPort]
-                                                    .getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
-                                                    ->getSummary<GenericDataArray<float, 4, 2>>()
-                                                    .at(line);
+                    auto& matchingEfficiency =
+                        matchingEfficiencyPerPhyPortMap[phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 2>>().at(line);
                     matchingEfficiency = getMatchingEfficiency2SL1(lineDataVector);
                 }
             }
