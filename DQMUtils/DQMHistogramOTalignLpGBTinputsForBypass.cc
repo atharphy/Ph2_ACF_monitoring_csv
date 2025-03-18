@@ -65,7 +65,7 @@ void DQMHistogramOTalignLpGBTinputsForBypass::book(TFile* theOutputFile, Detecto
 }
 
 //========================================================================================================================
-void DQMHistogramOTalignLpGBTinputsForBypass::fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort)
+void DQMHistogramOTalignLpGBTinputsForBypass::fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort, uint8_t lpgbtPhase)
 {
     for(auto theBoard: matchingEfficiencyContainer)
     {
@@ -78,17 +78,14 @@ void DQMHistogramOTalignLpGBTinputsForBypass::fillMatchingEfficiency(DetectorDat
                     fPhaseScanMatchingBitErrorRateContainer[phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 auto thePhaseScanTestedBitsHistogram =
                     fPhaseScanMatchingTestedBitsContainer[phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                auto theTestedBitsAndErrorRateArray = theHybrid->getSummary<GenericDataArray<float, 4, 15, 2>>();
-                for(uint8_t lpgbtPhase = 0; lpgbtPhase < 15; ++lpgbtPhase)
+                auto theTestedBitsAndErrorRateArray = theHybrid->getSummary<GenericDataArray<float, 4, 2>>();
+                for(size_t line = 0; line < 4; ++line)
                 {
-                    for(size_t line = 0; line < 4; ++line)
-                    {
-                        const auto& theTestedBitsAndErrorRate = theTestedBitsAndErrorRateArray.at(line).at(lpgbtPhase);
-                        float       bitCount                  = theTestedBitsAndErrorRate.at(0);
-                        float       errorCount                = theTestedBitsAndErrorRate.at(1);
-                        thePhaseScanTestedBitsHistogram->SetBinContent(lpgbtPhase + 1, line + 1, bitCount);
-                        thePhaseScanErrorRateHistogram->SetBinContent(lpgbtPhase + 1, line + 1, bitCount > 0 ? errorCount / bitCount : 1.);
-                    }
+                    const auto& theTestedBitsAndErrorRate = theTestedBitsAndErrorRateArray.at(line);
+                    float       bitCount                  = theTestedBitsAndErrorRate.at(0);
+                    float       errorCount                = theTestedBitsAndErrorRate.at(1);
+                    thePhaseScanTestedBitsHistogram->SetBinContent(lpgbtPhase + 1, line + 1, bitCount);
+                    thePhaseScanErrorRateHistogram->SetBinContent(lpgbtPhase + 1, line + 1, bitCount > 0 ? errorCount / bitCount : 1.);
                 }
             }
         }
@@ -137,9 +134,10 @@ bool DQMHistogramOTalignLpGBTinputsForBypass::fill(std::string& inputStream)
     if(thePhaseScanMatchingEfficiencySerialization.attachDeserializer(inputStream))
     {
         uint8_t               phyPort;
+        uint8_t               lpgbtPhase;
         DetectorDataContainer theDetectorData =
-            thePhaseScanMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 4, 15, 2>>(fDetectorContainer, phyPort);
-        fillMatchingEfficiency(theDetectorData, phyPort);
+            thePhaseScanMatchingEfficiencySerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 4, 2>>(fDetectorContainer, phyPort, lpgbtPhase);
+        fillMatchingEfficiency(theDetectorData, phyPort, lpgbtPhase);
         return true;
     }
     if(theBestPhaseSerialization.attachDeserializer(inputStream))

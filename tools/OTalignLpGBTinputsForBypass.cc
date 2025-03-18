@@ -72,12 +72,16 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
     auto    firstModule   = fDetectorContainer->getFirstObject()->getFirstObject();
     bool    isPS          = firstModule->getFrontEndType() == FrontEndType::OuterTrackerPS;
     uint8_t numberOfLines = 4;
+    uint8_t numberOfPhases = 15;
 
-    std::map<uint8_t, DetectorDataContainer> matchingEfficiencyContainerMap;
+    std::map<uint8_t, std::map<uint8_t, DetectorDataContainer>> matchingEfficiencyContainerMap;
     std::map<uint8_t, DetectorDataContainer> bestPhaseContainerMap;
     for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
     {
-        ContainerFactory::copyAndInitHybrid<GenericDataArray<float, 4, 15, 2>>(*fDetectorContainer, matchingEfficiencyContainerMap[phyPort]);
+        for(uint8_t phase = 0; phase < numberOfPhases; ++phase)
+        {
+            ContainerFactory::copyAndInitHybrid<GenericDataArray<float, 4, 2>>(*fDetectorContainer, matchingEfficiencyContainerMap[phyPort][phase]);
+        }
         ContainerFactory::copyAndInitHybrid<GenericDataArray<uint8_t, 4>>(*fDetectorContainer, bestPhaseContainerMap[phyPort]);
     }
 
@@ -102,7 +106,7 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                     prepareForLpGBTalignment2SL1(theBoard);
             }
 
-            for(uint8_t lpgbtPhase = 0; lpgbtPhase < 15; ++lpgbtPhase)
+            for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfPhases; ++lpgbtPhase)
             {
                 for(auto theOpticalGroup: *theBoard)
                 {
@@ -179,11 +183,10 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                                     }
                                 }
 
-                                auto& matchingEfficiency = matchingEfficiencyContainerMap[phyPort]
+                                auto& matchingEfficiency = matchingEfficiencyContainerMap[phyPort][lpgbtPhase]
                                                                .getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
-                                                               ->getSummary<GenericDataArray<float, 4, 15, 2>>()
-                                                               .at(line)
-                                                               .at(lpgbtPhase);
+                                                               ->getSummary<GenericDataArray<float, 4, 2>>()
+                                                               .at(line);
                                 matchingEfficiency = getMatchingEfficiency2SL1(lineDataVector);
                             }
                         }
@@ -199,11 +202,11 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                         if(!isPS) patternId = (phyPort * 4 + line) % 5;
                         fPatternCheckerHelper->patternCheckerTest(&thePatternCounterCountainer, line + 1, fPatternAndMaskContainerMap[patternId], fNumberOfTestedBits, true);
 
-                        for(auto theOpticalGroup: *matchingEfficiencyContainerMap[phyPort].getBoard(theBoard->getId()))
+                        for(auto theOpticalGroup: *matchingEfficiencyContainerMap[phyPort][lpgbtPhase].getBoard(theBoard->getId()))
                         {
                             for(auto theHybrid: *theOpticalGroup)
                             {
-                                auto&       theOutputErrorInfo   = theHybrid->getSummary<GenericDataArray<float, 4, 15, 2>>().at(line).at(lpgbtPhase);
+                                auto&       theOutputErrorInfo   = theHybrid->getSummary<GenericDataArray<float, 4, 2>>().at(line);
                                 const auto& theRecorderdErroInfo = thePatternCounterCountainer.getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>();
 
                                 theOutputErrorInfo.at(0) = theRecorderdErroInfo.at(0);
@@ -218,13 +221,18 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
             {
                 for(auto theHybrid: *theOpticalGroup)
                 {
-                    auto phyPortEfficiencyScanList =
-                        matchingEfficiencyContainerMap[phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 15, 2>>();
                     auto theOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(fDetectorContainer->getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId()));
                     auto theCic                = theOuterTrackerHybrid->fCic;
                     for(uint8_t line = 0; line < numberOfLines; ++line)
                     {
-                        auto theBestPhase                                              = getBestPhase(phyPortEfficiencyScanList.at(line), theOuterTrackerHybrid, line);
+                        GenericDataArray<float, 15, 2> thePhaseEfficiencyList;
+                        for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfPhases; ++lpgbtPhase)
+                        {
+                            auto phyPortEfficiencyScanList =
+                                matchingEfficiencyContainerMap[phyPort][lpgbtPhase].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 2>>();
+                            thePhaseEfficiencyList.at(lpgbtPhase) = phyPortEfficiencyScanList.at(line);
+                        }
+                        auto theBestPhase                                              = getBestPhase(thePhaseEfficiencyList, theOuterTrackerHybrid, line);
                         theHybrid->getSummary<GenericDataArray<uint8_t, 4>>().at(line) = theBestPhase;
                         theCic->setLpGBTphaseForCICbypass(phyPort, line, theBestPhase);
                     }
@@ -235,15 +243,23 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
 
     for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
     {
+        for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfPhases; ++lpgbtPhase)
+        {
 #ifdef __USE_ROOT__
-        fDQMHistogramOTalignLpGBTinputsForBypass.fillMatchingEfficiency(matchingEfficiencyContainerMap[phyPort], phyPort);
+            fDQMHistogramOTalignLpGBTinputsForBypass.fillMatchingEfficiency(matchingEfficiencyContainerMap[phyPort][lpgbtPhase], phyPort, lpgbtPhase);
+#else
+            if(fDQMStreamer)
+            {
+                ContainerSerialization theMatchingEfficiencySerialization("OTalignLpGBTinputsForBypassMatchingEfficiency");
+                theMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, matchingEfficiencyContainerMap[phyPort][lpgbtPhase], phyPort, lpgbtPhase);
+            }
+#endif
+        }
+#ifdef __USE_ROOT__
         fDQMHistogramOTalignLpGBTinputsForBypass.fillBestPhase(bestPhaseContainerMap[phyPort], phyPort);
 #else
         if(fDQMStreamer)
         {
-            ContainerSerialization theMatchingEfficiencySerialization("OTalignLpGBTinputsForBypassMatchingEfficiency");
-            theMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, matchingEfficiencyContainerMap[phyPort], phyPort);
-
             ContainerSerialization theBestPhaseSerialization("OTalignLpGBTinputsForBypassBestPhase");
             theBestPhaseSerialization.streamByHybridContainer(fDQMStreamer, bestPhaseContainerMap[phyPort], phyPort);
         }
@@ -453,11 +469,11 @@ uint8_t OTalignLpGBTinputsForBypass::getBestPhase(const GenericDataArray<float, 
     }
 
     // find longest minimum sequences
-    uint8_t longestSequenceRange = minimumPhaseRanges.at(0).second - minimumPhaseRanges.at(0).first;
+    uint8_t longestSequenceRange = minimumPhaseRanges.at(0).second - minimumPhaseRanges.at(0).first + 1;
     uint8_t longestSequenceIndex = 0;
     for(size_t index = 0; index < minimumPhaseRanges.size(); ++index)
     {
-        uint8_t sequenceRange = minimumPhaseRanges.at(index).second - minimumPhaseRanges.at(index).first;
+        uint8_t sequenceRange = minimumPhaseRanges.at(index).second - minimumPhaseRanges.at(index).first + 1;
         if(sequenceRange > longestSequenceRange)
         {
             longestSequenceRange = sequenceRange;
@@ -493,12 +509,6 @@ GenericDataArray<float, 2> OTalignLpGBTinputsForBypass::getMatchingEfficiency2SL
         std::vector<uint32_t> singleAcquisitionInputDataVector(inputDataVector.begin() + firstIndex, inputDataVector.begin() + lastIndex);
         auto                  reorderedSingleAcquisitionInputDataVector = reorderPattern(singleAcquisitionInputDataVector, 1);
         auto                  maximumEfficiency                         = fPattern2SL1.getNumberOfMatchingBitsForAllBitshifts<320>(reorderedSingleAcquisitionInputDataVector);
-        // if(maximumEfficiency < fPattern2SL1.getNumberOfMaskedBits())
-        // {
-        //     LOG(INFO) << BOLDRED << "Stub data received    " << getPatternPrintout(reorderedSingleAcquisitionInputDataVector, 1) << RESET;
-        //     LOG(INFO) << BOLDRED << "Stub pattern expected " << getPatternPrintout(fPattern2SL1.getPattern(), 1) << RESET;
-        //     LOG(INFO) << BOLDRED << "Stub pattern mask     " << getPatternPrintout(fPattern2SL1.getMask(), 1) << RESET;
-        // }
         theTestedBitAndError.at(1) += maximumEfficiency;
     }
 

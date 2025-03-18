@@ -55,7 +55,7 @@ class DQMHistogramOTalignLpGBTinputsForBypass : public DQMHistogramBase
      */
     void reset(void) override;
 
-    void fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort);
+    void fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort, uint8_t lpgbtPhase);
     void fillBestPhase(DetectorDataContainer& bestPhaseContainer, uint8_t phyPort);
 
   private:
