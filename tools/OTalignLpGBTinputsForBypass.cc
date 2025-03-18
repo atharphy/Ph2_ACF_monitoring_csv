@@ -71,7 +71,6 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
 
     auto    firstModule   = fDetectorContainer->getFirstObject()->getFirstObject();
     bool    isPS          = firstModule->getFrontEndType() == FrontEndType::OuterTrackerPS;
-    uint8_t numberOfLines = 4;
     uint8_t numberOfLpgbtPhases = 15;
 
     std::map<uint8_t, std::map<uint8_t, DetectorDataContainer>> matchingEfficiencyContainerMap;
@@ -79,13 +78,12 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
     {
         for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfLpgbtPhases; ++lpgbtPhase)
         {
-            ContainerFactory::copyAndInitHybrid<GenericDataArray<float, 4, 2>>(*fDetectorContainer, matchingEfficiencyContainerMap[phyPort][lpgbtPhase]);
+            ContainerFactory::copyAndInitHybrid<GenericDataArray<float, 4, 2>>(*fDetectorContainer, matchingEfficiencyContainerMap[lpgbtPhase][phyPort]);
         }
     }
 
     for(auto* theBoard: *fDetectorContainer)
     {
-        auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
         produceAllPatternAndMasks(theBoard);
 
         if(isPS) prepareForLpGBTalignmentPS(theBoard);
@@ -98,9 +96,9 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
 
             if(!isPS)
             {
-                if(phyPort < 10)
+                if(phyPort == 0)
                     prepareForLpGBTalignment2Sstubs(theBoard);
-                else
+                else if(phyPort == 10)
                     prepareForLpGBTalignment2SL1(theBoard);
             }
 
@@ -131,88 +129,7 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                     flpGBTInterface->WriteChipMultReg(thelpGBT, readRegister);
                 }
 
-                if(!isPS && phyPort >= 10) // L1 for 2S case
-                {
-                    for(auto theOpticalGroup: *theBoard)
-                    {
-                        for(auto theHybrid: *theOpticalGroup)
-                        {
-                            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
-                            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
-
-                            std::vector<std::vector<uint32_t>> phyPortDataVector(numberOfLines);
-                            std::vector<size_t>                phyPortIterationVector(numberOfLines, 0);
-
-                            size_t totalNumberOfRequiredIterations = fNumberOfTestedBitsL12S / fPattern2SL1.getNumberOfMaskedBits();
-                            size_t minimumNumberOfIterations       = *std::min_element(phyPortIterationVector.begin(), phyPortIterationVector.end());
-                            size_t totalIterationCounter           = 0;
-                            while(minimumNumberOfIterations <= totalNumberOfRequiredIterations && totalIterationCounter <= 2 * totalNumberOfRequiredIterations)
-                            {
-                                fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
-                                usleep(10);
-                                fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
-
-                                auto lineOutputVector = theFWinterface->StubDebug(true, numberOfLines, false);
-
-                                for(uint8_t line = 0; line < numberOfLines; ++line)
-                                {
-                                    auto& theLineVector     = lineOutputVector.at(line);
-                                    int   numberOfZeroWords = count(theLineVector.begin(), theLineVector.end(), 0x0);
-                                    if(numberOfZeroWords <= 1)
-                                    {
-                                        phyPortDataVector.at(line).insert(phyPortDataVector.at(line).end(), theLineVector.begin(), theLineVector.end());
-                                        phyPortIterationVector.at(line)++;
-                                    }
-                                }
-                                minimumNumberOfIterations = *std::min_element(phyPortIterationVector.begin(), phyPortIterationVector.end());
-                                ++totalIterationCounter;
-                            }
-                            for(uint8_t line = 0; line < numberOfLines; ++line)
-                            {
-                                auto& lineDataVector = phyPortDataVector.at(line);
-                                // making sure that problematic lines will be highlighted
-                                if(phyPortIterationVector.at(line) < totalNumberOfRequiredIterations)
-                                {
-                                    size_t                iterationSize = 10;
-                                    std::vector<uint32_t> emptyVector(iterationSize, 0x0);
-                                    for(size_t emptyPacketCounter = phyPortIterationVector.at(line); emptyPacketCounter < totalNumberOfRequiredIterations; ++emptyPacketCounter)
-                                    {
-                                        lineDataVector.insert(lineDataVector.end(), emptyVector.begin(), emptyVector.end());
-                                    }
-                                }
-
-                                auto& matchingEfficiency = matchingEfficiencyContainerMap[phyPort][lpgbtPhase]
-                                                               .getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
-                                                               ->getSummary<GenericDataArray<float, 4, 2>>()
-                                                               .at(line);
-                                matchingEfficiency = getMatchingEfficiency2SL1(lineDataVector);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    for(uint8_t line = 0; line < numberOfLines; ++line)
-                    {
-                        BoardDataContainer thePatternCounterCountainer;
-                        ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*theBoard, thePatternCounterCountainer);
-                        uint8_t patternId = 0;
-                        if(!isPS) patternId = (phyPort * 4 + line) % 5;
-                        fPatternCheckerHelper->patternCheckerTest(&thePatternCounterCountainer, line + 1, fPatternAndMaskContainerMap[patternId], fNumberOfTestedBits, true);
-
-                        for(auto theOpticalGroup: *matchingEfficiencyContainerMap[phyPort][lpgbtPhase].getBoard(theBoard->getId()))
-                        {
-                            for(auto theHybrid: *theOpticalGroup)
-                            {
-                                auto&       theOutputErrorInfo   = theHybrid->getSummary<GenericDataArray<float, 4, 2>>().at(line);
-                                const auto& theRecorderdErroInfo = thePatternCounterCountainer.getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>();
-
-                                theOutputErrorInfo.at(0) = theRecorderdErroInfo.at(0);
-                                theOutputErrorInfo.at(1) = theRecorderdErroInfo.at(1);
-                            }
-                        }
-                    }
-                }
+                runPatternMatching(theBoard, matchingEfficiencyContainerMap[lpgbtPhase], isPS, phyPort);
             }
         }
     }
@@ -230,13 +147,13 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                 {
                     auto theOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(fDetectorContainer->getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId()));
                     auto theCic                = theOuterTrackerHybrid->fCic;
-                    for(uint8_t line = 0; line < numberOfLines; ++line)
+                    for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PHY_PORTS; ++line)
                     {
                         GenericDataArray<float, 15, 2> thePhaseEfficiencyList;
                         for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfLpgbtPhases; ++lpgbtPhase)
                         {
                             auto phyPortEfficiencyScanList =
-                                matchingEfficiencyContainerMap[phyPort][lpgbtPhase].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 2>>();
+                                matchingEfficiencyContainerMap[lpgbtPhase][phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 2>>();
                             thePhaseEfficiencyList.at(lpgbtPhase) = phyPortEfficiencyScanList.at(line);
                         }
                         auto theBestPhase                                              = getBestPhase(thePhaseEfficiencyList, theOuterTrackerHybrid, line);
@@ -262,14 +179,102 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
         for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfLpgbtPhases; ++lpgbtPhase)
         {
 #ifdef __USE_ROOT__
-            fDQMHistogramOTalignLpGBTinputsForBypass.fillMatchingEfficiency(matchingEfficiencyContainerMap[phyPort][lpgbtPhase], phyPort, lpgbtPhase);
+            fDQMHistogramOTalignLpGBTinputsForBypass.fillMatchingEfficiency(matchingEfficiencyContainerMap[lpgbtPhase][phyPort], phyPort, lpgbtPhase);
 #else
             if(fDQMStreamer)
             {
                 ContainerSerialization theMatchingEfficiencySerialization("OTalignLpGBTinputsForBypassMatchingEfficiency");
-                theMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, matchingEfficiencyContainerMap[phyPort][lpgbtPhase], phyPort, lpgbtPhase);
+                theMatchingEfficiencySerialization.streamByHybridContainer(fDQMStreamer, matchingEfficiencyContainerMap[lpgbtPhase][phyPort], phyPort, lpgbtPhase);
             }
 #endif
+        }
+    }
+}
+
+void OTalignLpGBTinputsForBypass::runPatternMatching(BeBoard* theBoard, std::map<uint8_t, DetectorDataContainer>& matchingEfficiencyPerPhyPortMap, bool isPS, uint8_t phyPort)
+{
+    auto theFWinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
+
+    if(!isPS && phyPort >= 10) // L1 for 2S case
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.hybrid_select", theHybrid->getId());
+                fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.slvs_debug.chip_select", 0);
+
+                std::vector<std::vector<uint32_t>> phyPortDataVector(NUMBER_OF_LINES_PER_CIC_PHY_PORTS);
+                std::vector<size_t>                phyPortIterationVector(NUMBER_OF_LINES_PER_CIC_PHY_PORTS, 0);
+
+                size_t totalNumberOfRequiredIterations = fNumberOfTestedBitsL12S / fPattern2SL1.getNumberOfMaskedBits();
+                size_t minimumNumberOfIterations       = *std::min_element(phyPortIterationVector.begin(), phyPortIterationVector.end());
+                size_t totalIterationCounter           = 0;
+                while(minimumNumberOfIterations <= totalNumberOfRequiredIterations && totalIterationCounter <= 2 * totalNumberOfRequiredIterations)
+                {
+                    fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.stop_trigger", 0x1);
+                    usleep(10);
+                    fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+
+                    auto lineOutputVector = theFWinterface->StubDebug(true, NUMBER_OF_LINES_PER_CIC_PHY_PORTS, false);
+
+                    for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PHY_PORTS; ++line)
+                    {
+                        auto& theLineVector     = lineOutputVector.at(line);
+                        int   numberOfZeroWords = std::count(theLineVector.begin(), theLineVector.end(), 0x0);
+                        if(numberOfZeroWords <= 1)
+                        {
+                            phyPortDataVector.at(line).insert(phyPortDataVector.at(line).end(), theLineVector.begin(), theLineVector.end());
+                            phyPortIterationVector.at(line)++;
+                        }
+                    }
+                    minimumNumberOfIterations = *std::min_element(phyPortIterationVector.begin(), phyPortIterationVector.end());
+                    ++totalIterationCounter;
+                }
+                for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PHY_PORTS; ++line)
+                {
+                    auto& lineDataVector = phyPortDataVector.at(line);
+                    // making sure that problematic lines will be highlighted
+                    if(phyPortIterationVector.at(line) < totalNumberOfRequiredIterations)
+                    {
+                        size_t                iterationSize = 10;
+                        std::vector<uint32_t> emptyVector(iterationSize, 0x0);
+                        for(size_t emptyPacketCounter = phyPortIterationVector.at(line); emptyPacketCounter < totalNumberOfRequiredIterations; ++emptyPacketCounter)
+                        {
+                            lineDataVector.insert(lineDataVector.end(), emptyVector.begin(), emptyVector.end());
+                        }
+                    }
+
+                    auto& matchingEfficiency = matchingEfficiencyPerPhyPortMap[phyPort]
+                                                    .getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
+                                                    ->getSummary<GenericDataArray<float, 4, 2>>()
+                                                    .at(line);
+                    matchingEfficiency = getMatchingEfficiency2SL1(lineDataVector);
+                }
+            }
+        }
+    }
+    else
+    {
+        for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PHY_PORTS; ++line)
+        {
+            BoardDataContainer thePatternCounterCountainer;
+            ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*theBoard, thePatternCounterCountainer);
+            uint8_t patternId = 0;
+            if(!isPS) patternId = (phyPort * 4 + line) % 5;
+            fPatternCheckerHelper->patternCheckerTest(&thePatternCounterCountainer, line + 1, fPatternAndMaskContainerMap[patternId], fNumberOfTestedBits, true);
+
+            for(auto theOpticalGroup: *matchingEfficiencyPerPhyPortMap[phyPort].getBoard(theBoard->getId()))
+            {
+                for(auto theHybrid: *theOpticalGroup)
+                {
+                    auto&       theOutputErrorInfo   = theHybrid->getSummary<GenericDataArray<float, 4, 2>>().at(line);
+                    const auto& theRecorderdErroInfo = thePatternCounterCountainer.getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>();
+
+                    theOutputErrorInfo.at(0) = theRecorderdErroInfo.at(0);
+                    theOutputErrorInfo.at(1) = theRecorderdErroInfo.at(1);
+                }
+            }
         }
     }
 }
