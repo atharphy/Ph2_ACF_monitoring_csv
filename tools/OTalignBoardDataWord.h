@@ -46,7 +46,7 @@ class OTalignBoardDataWord : public Tool
     bool               tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::Hybrid* theHybrid, uint8_t lineId);
     void               setProducePlots(bool doProducePlots) { fProducePlots = doProducePlots; }
     void               wordAlignBEdata();
-    void setSuppressErrorPrintout(bool suppressErrorPrintout) {fSuppressErrorPrintout = suppressErrorPrintout;}
+    void               setSuppressErrorPrintout(bool suppressErrorPrintout) { fSuppressErrorPrintout = suppressErrorPrintout; }
 
   protected:
     void initializeContainers();

@@ -113,7 +113,8 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitC
                 }
                 if(!tryLineAlignment(theAlignerInterface, theHybrid, line))
                 {
-                    if(!fSuppressErrorPrintout) LOG(ERROR) << ERROR_FORMAT << "Failed to align OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +line << RESET;
+                    if(!fSuppressErrorPrintout)
+                        LOG(ERROR) << ERROR_FORMAT << "Failed to align OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +line << RESET;
                 }
                 theAlignerInterface->disableAlignmentOnCustomPattern(theHybrid->getId());
             }

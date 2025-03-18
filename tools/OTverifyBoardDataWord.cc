@@ -360,7 +360,7 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard*            theBoard,
                     {
                         if(theWord == 0) ++numberOfEmpyWords;
                     }
-                    if(numberOfIgnoredPatterns < numberOfIterations/10 && numberOfEmpyWords > 1)
+                    if(numberOfIgnoredPatterns < numberOfIterations / 10 && numberOfEmpyWords > 1)
                     {
                         ++numberOfIgnoredPatterns;
                         continue; // means very likely the fifo did not save properly the data

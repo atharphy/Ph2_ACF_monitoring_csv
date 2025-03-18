@@ -176,9 +176,9 @@ bool D19cTriggerInterface::SendNTriggers(uint32_t pNTriggers)
     // count triggers sent to the CIC
     uint32_t cTimeSingleTrigger_us = std::ceil(1.5 / fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"));
     uint32_t cTimeoutValue         = cTimeSingleTrigger_us * pNTriggers * 10;
-    bool   cAllTriggersSent = false;
-    size_t cAttempt         = 0;
-    size_t cMaxAttempts     = 10;
+    bool     cAllTriggersSent      = false;
+    size_t   cAttempt              = 0;
+    size_t   cMaxAttempts          = 10;
     this->ResetTriggerFSM();
     do {
         this->Start();
