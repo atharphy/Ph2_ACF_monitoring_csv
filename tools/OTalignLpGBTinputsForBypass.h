@@ -39,16 +39,16 @@ class OTalignLpGBTinputsForBypass : public Tool
     static std::string fCalibrationDescription;
 
   protected:
-    void runPatternMatching(Ph2_HwDescription::BeBoard* theBoard, std::map<uint8_t, DetectorDataContainer>& errorRatePerPhyPortMap, bool isPS, uint8_t phyPort);
-    float           fNumberOfTestedBits{1e6};
-    float           fNumberOfTestedBitsL12S{1e5};
-    uint8_t         fShiftRegisterPatternMPA{0xAA};
-    void                                                    produceAllPatternAndMasks(Ph2_HwDescription::BeBoard* theBoard);
-    void                                                    prepareMPAtoSendPatterns(Ph2_HwDescription::BeBoard* theBoard);
-    void                                                    prepare2StoSendStubPatterns(Ph2_HwDescription::BeBoard* theBoard);
-    void                                                    prepare2StoSendL1Patterns(Ph2_HwDescription::BeBoard* theBoard);
-    void                                                    setCICBypass(Ph2_HwDescription::BeBoard* theBoard, uint8_t phyPort);
-    void preparePatternChecker();
+    void    runPatternMatching(Ph2_HwDescription::BeBoard* theBoard, std::map<uint8_t, DetectorDataContainer>& errorRatePerPhyPortMap, bool isPS, uint8_t phyPort);
+    float   fNumberOfTestedBits{1e6};
+    float   fNumberOfTestedBitsL12S{1e5};
+    uint8_t fShiftRegisterPatternMPA{0xAA};
+    void    produceAllPatternAndMasks(Ph2_HwDescription::BeBoard* theBoard);
+    void    prepareMPAtoSendPatterns(Ph2_HwDescription::BeBoard* theBoard);
+    void    prepare2StoSendStubPatterns(Ph2_HwDescription::BeBoard* theBoard);
+    void    prepare2StoSendL1Patterns(Ph2_HwDescription::BeBoard* theBoard);
+    void    setCICBypass(Ph2_HwDescription::BeBoard* theBoard, uint8_t phyPort);
+    void    preparePatternChecker();
 
   private:
     void                                                    AlignLpGBTinputs();

@@ -33,9 +33,8 @@ void OTalignLpGBTinputsForBypass::Initialise(void)
     preparePatternChecker();
 }
 
-
 void OTalignLpGBTinputsForBypass::ConfigureCalibration() {}
-    
+
 void OTalignLpGBTinputsForBypass::preparePatternChecker()
 {
     fPatternCheckerHelper = new OTPatternCheckerHelper();
@@ -158,9 +157,8 @@ void OTalignLpGBTinputsForBypass::AlignLpGBTinputs()
                         GenericDataArray<float, 15, 2> thePhaseEfficiencyList;
                         for(uint8_t lpgbtPhase = 0; lpgbtPhase < numberOfLpgbtPhases; ++lpgbtPhase)
                         {
-                            auto phyPortEfficiencyScanList = errorRateContainerMap[lpgbtPhase][phyPort]
-                                                                 .getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
-                                                                 ->getSummary<GenericDataArray<float, 4, 2>>();
+                            auto phyPortEfficiencyScanList =
+                                errorRateContainerMap[lpgbtPhase][phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 2>>();
                             thePhaseEfficiencyList.at(lpgbtPhase) = phyPortEfficiencyScanList.at(line);
                         }
                         auto theBestPhase                                              = getBestPhase(thePhaseEfficiencyList, theOuterTrackerHybrid, line);
@@ -502,8 +500,10 @@ uint8_t OTalignLpGBTinputsForBypass::getBestPhase(const GenericDataArray<float, 
     if(longestSequenceRange > 8)
     {
         if(minimumPhaseRanges.at(longestSequenceIndex).first > 0) return minimumPhaseRanges.at(longestSequenceIndex).first + 4;
-        if(minimumPhaseRanges.at(longestSequenceIndex).second < 14) return minimumPhaseRanges.at(longestSequenceIndex).second -4;
-        else return 7;
+        if(minimumPhaseRanges.at(longestSequenceIndex).second < 14)
+            return minimumPhaseRanges.at(longestSequenceIndex).second - 4;
+        else
+            return 7;
     }
 
     uint8_t longestSequenceCenter = (minimumPhaseRanges.at(longestSequenceIndex).second + minimumPhaseRanges.at(longestSequenceIndex).first) / 2;

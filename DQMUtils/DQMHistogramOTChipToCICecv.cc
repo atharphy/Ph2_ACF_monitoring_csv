@@ -23,7 +23,7 @@ void DQMHistogramOTChipToCICecv::book(TFile* theOutputFile, DetectorContainer& t
     // make fDetectorContainer ready to receive the information fromm the stream
     fDetectorContainer = &theDetectorStructure;
     // SoC utilities only - END
-    
+
     uint8_t numberOfPhases = 15; // 0 to 14
 
     bool isPS = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
@@ -33,15 +33,15 @@ void DQMHistogramOTChipToCICecv::book(TFile* theOutputFile, DetectorContainer& t
     std::string chipName;
     if(isPS)
     {
-        nameOfListOfCurrentSetting = "OTChipToCICecv_ListOfMPAslvsCurrents";
+        nameOfListOfCurrentSetting  = "OTChipToCICecv_ListOfMPAslvsCurrents";
         defaultListOfCurrentSetting = "1, 4, 7";
-        chipName = "MPA";
+        chipName                    = "MPA";
     }
     else
     {
-        nameOfListOfCurrentSetting = "OTChipToCICecv_ListOfCBCslvsCurrents";
+        nameOfListOfCurrentSetting  = "OTChipToCICecv_ListOfCBCslvsCurrents";
         defaultListOfCurrentSetting = "0, 8, 14";
-        chipName = "CBC";
+        chipName                    = "CBC";
     }
 
     std::vector<float> listOfSlvsCurrents = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, nameOfListOfCurrentSetting, defaultListOfCurrentSetting));
@@ -63,13 +63,13 @@ void DQMHistogramOTChipToCICecv::book(TFile* theOutputFile, DetectorContainer& t
     for(auto slvsCurrent: listOfSlvsCurrents)
     {
         HistContainer<TH2F> phaseScanMatchingErrorRate(Form("%stoCIC_PhaseScanErrorRate_%sStrength%d", chipName.c_str(), chipName.c_str(), int(slvsCurrent)),
-                                                        Form("%s to CIC phase scan error rate %s Strength %d", chipName.c_str(), chipName.c_str(), int(slvsCurrent)),
-                                                        numberOfPhases,
-                                                        -0.5,
-                                                        numberOfPhases - 0.5,
-                                                        NUMBER_OF_CIC_PORTS * NUMBER_OF_LINES_PER_CIC_PORTS, // y-axis
-                                                        0,
-                                                        NUMBER_OF_CIC_PORTS * NUMBER_OF_LINES_PER_CIC_PORTS);
+                                                       Form("%s to CIC phase scan error rate %s Strength %d", chipName.c_str(), chipName.c_str(), int(slvsCurrent)),
+                                                       numberOfPhases,
+                                                       -0.5,
+                                                       numberOfPhases - 0.5,
+                                                       NUMBER_OF_CIC_PORTS * NUMBER_OF_LINES_PER_CIC_PORTS, // y-axis
+                                                       0,
+                                                       NUMBER_OF_CIC_PORTS * NUMBER_OF_LINES_PER_CIC_PORTS);
         phaseScanMatchingErrorRate.fTheHistogram->GetYaxis()->SetTitle("");
         phaseScanMatchingErrorRate.fTheHistogram->GetXaxis()->SetTitle("Phase");
         setYaxisLabel(phaseScanMatchingErrorRate.fTheHistogram->GetYaxis());
@@ -99,7 +99,6 @@ void DQMHistogramOTChipToCICecv::process()
 {
     // This step it is not necessary, unless you want to format / draw histograms,
     // otherwise they will be automatically saved
-    
 }
 
 //========================================================================================================================
@@ -117,16 +116,16 @@ void DQMHistogramOTChipToCICecv::fillPhaseScanMatchingEfficiency(DetectorDataCon
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto    theErrorRateHistogram =
+                auto theErrorRateHistogram =
                     fErrorRateContainerMap[slvsCurrent].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                auto    theTestedBitsHistogram =
+                auto theTestedBitsHistogram =
                     fTestedBitsContainerMap[slvsCurrent].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
                 for(auto theChip: *theHybrid)
                 {
                     if(!theChip->hasSummary()) continue;
                     auto theChipLineTestedBitsAndErrorRate = theChip->getSummary<GenericDataArray<float, 6, 2>>();
-                    for (uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
+                    for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PORTS; ++line)
                     {
                         auto testedBits = theChipLineTestedBitsAndErrorRate.at(line).at(0);
                         auto errorRate  = testedBits > 0 ? theChipLineTestedBitsAndErrorRate.at(line).at(1) / testedBits : 1.;

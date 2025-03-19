@@ -10,12 +10,12 @@
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/OTBitErrorRateTest.h"
-#include "tools/OTChipToCICecv.h"
 #include "tools/OTCICBX0Alignment.h"
 #include "tools/OTCICphaseAlignment.h"
 #include "tools/OTCICtoLpGBTecv.h"
 #include "tools/OTCICwordAlignment.h"
 #include "tools/OTCMNoise.h"
+#include "tools/OTChipToCICecv.h"
 #include "tools/OTCicBypassTest.h"
 #include "tools/OTLpGBTEyeOpeningTest.h"
 #include "tools/OTMeasureOccupancy.h"
@@ -319,13 +319,12 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTalignBoardDataWord, OTPSADCCalibration>("PS Module", "ADCBiasCalibration");
 
-
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoMPAecv>("PS Module", "SSAtoMPAecv");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoSSAecv>("PS Module", "SSAtoSSAecv");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTSSAtoMPAecv, OTSSAtoSSAecv, OTalignLpGBTinputsForBypass, OTChipToCICecv>("PS Module",
-                                                                                                                                                                                           "PSecv");
+                                                                                                                                                                                            "PSecv");
 
     Register<OTPSringOscillatorTest>("PS Module", "ringOscillatorTest");
 

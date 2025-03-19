@@ -19,7 +19,7 @@
 
 namespace Ph2_HwDescription
 {
-    class BeBoard;
+class BeBoard;
 }
 
 class OTChipToCICecv : public OTalignLpGBTinputsForBypass
@@ -39,16 +39,15 @@ class OTChipToCICecv : public OTalignLpGBTinputsForBypass
     void Reset();
 
     static std::string fCalibrationDescription;
-    
+
   private:
-    void runOTChiptoCICecv();
+    void               runOTChiptoCICecv();
     std::vector<float> fListOfCBCslvsCurrents{0, 8, 14};
     std::vector<float> fListOfMPAslvsCurrents{1, 4, 7};
 
     void setCICPhase(Ph2_HwDescription::BeBoard* theBoard, uint8_t phase, uint8_t phyPort);
     void setSlvsChipCurrent(Ph2_HwDescription::BeBoard* theBoard, uint8_t slvsCurrent);
-    
-    
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTChipToCICecv fDQMHistogramOTChipToCICecv;

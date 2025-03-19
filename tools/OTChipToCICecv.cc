@@ -18,13 +18,13 @@ void OTChipToCICecv::Initialise(void)
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
-    fNumberOfTestedBits     = findValueInSettings<double>("OTChipToCICecv_NumberOfTestedBits", 1e6);
-    fNumberOfTestedBitsL12S = findValueInSettings<double>("OTChipToCICecv_NumberOfTestedBitsL12S", 1e5);
-    fListOfCBCslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>("OTChipToCICecv_ListOfCBCslvsCurrents", "0, 8, 14"));
-    fShiftRegisterPatternMPA  = findValueInSettings<double>("OTChipToCICecv_MPAshiftRegisterPattern", 0xAA);
-    fListOfMPAslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>("OTChipToCICecv_ListOfMPAslvsCurrents", "1, 4, 7"));
+    fNumberOfTestedBits      = findValueInSettings<double>("OTChipToCICecv_NumberOfTestedBits", 1e6);
+    fNumberOfTestedBitsL12S  = findValueInSettings<double>("OTChipToCICecv_NumberOfTestedBitsL12S", 1e5);
+    fListOfCBCslvsCurrents   = convertStringToFloatList(findValueInSettings<std::string>("OTChipToCICecv_ListOfCBCslvsCurrents", "0, 8, 14"));
+    fShiftRegisterPatternMPA = findValueInSettings<double>("OTChipToCICecv_MPAshiftRegisterPattern", 0xAA);
+    fListOfMPAslvsCurrents   = convertStringToFloatList(findValueInSettings<std::string>("OTChipToCICecv_ListOfMPAslvsCurrents", "1, 4, 7"));
 
-#ifdef __USE_ROOT__ 
+#ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTChipToCICecv.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
@@ -32,10 +32,7 @@ void OTChipToCICecv::Initialise(void)
     preparePatternChecker();
 }
 
-void OTChipToCICecv::ConfigureCalibration()
-{
-
-}
+void OTChipToCICecv::ConfigureCalibration() {}
 
 void OTChipToCICecv::Running()
 {
@@ -49,40 +46,30 @@ void OTChipToCICecv::Running()
 void OTChipToCICecv::Stop(void)
 {
     LOG(INFO) << "Stopping OTChipToCICecv measurement.";
-    #ifdef __USE_ROOT__
-        // Calibration is not running on the SoC: processing the histograms
-        fDQMHistogramOTChipToCICecv.process();
-    #endif
+#ifdef __USE_ROOT__
+    // Calibration is not running on the SoC: processing the histograms
+    fDQMHistogramOTChipToCICecv.process();
+#endif
     SaveResults();
     closeFileHandler();
     LOG(INFO) << "OTChipToCICecv stopped.";
 }
 
-void OTChipToCICecv::Pause()
-{
+void OTChipToCICecv::Pause() {}
 
-}
+void OTChipToCICecv::Resume() {}
 
-
-void OTChipToCICecv::Resume()
-{
-
-}
-
-
-void OTChipToCICecv::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
-
+void OTChipToCICecv::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTChipToCICecv::runOTChiptoCICecv()
 {
-    bool isPS = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
-    uint8_t numberOfCICphases = 15;
+    bool                isPS              = fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS;
+    uint8_t             numberOfCICphases = 15;
     std::vector<float>* theListOfSlvsCurrents;
-    if(isPS) theListOfSlvsCurrents = &fListOfMPAslvsCurrents;
-    else theListOfSlvsCurrents = &fListOfCBCslvsCurrents;
+    if(isPS)
+        theListOfSlvsCurrents = &fListOfMPAslvsCurrents;
+    else
+        theListOfSlvsCurrents = &fListOfCBCslvsCurrents;
 
     std::map<uint8_t, std::map<uint8_t, std::map<uint8_t, DetectorDataContainer>>> errorRateContainerMap;
     for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
@@ -99,7 +86,6 @@ void OTChipToCICecv::runOTChiptoCICecv()
 
     for(auto* theBoard: *fDetectorContainer)
     {
-
         produceAllPatternAndMasks(theBoard);
 
         if(isPS) prepareMPAtoSendPatterns(theBoard);
@@ -133,7 +119,7 @@ void OTChipToCICecv::runOTChiptoCICecv()
             }
         }
     }
-    
+
     for(uint8_t cicPhase = 0; cicPhase < numberOfCICphases; ++cicPhase)
     {
         if(cicPhase == 2 || cicPhase == 3) continue;
@@ -151,11 +137,13 @@ void OTChipToCICecv::runOTChiptoCICecv()
                         auto& theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                         for(uint8_t phyPort = 0; phyPort < 12; ++phyPort)
                         {
-                            const auto& theLinePatternMatching = errorRateContainerMap[cicPhase][slvsCurrent][phyPort].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 4, 2>>();
-                            for (uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PHY_PORTS; ++line)
+                            const auto& theLinePatternMatching = errorRateContainerMap[cicPhase][slvsCurrent][phyPort]
+                                                                     .getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())
+                                                                     ->getSummary<GenericDataArray<float, 4, 2>>();
+                            for(uint8_t line = 0; line < NUMBER_OF_LINES_PER_CIC_PHY_PORTS; ++line)
                             {
-                                auto  chipIdAndLine = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
-                                
+                                auto chipIdAndLine = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
+
                                 matchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first + (isPS ? 8 : 0))
                                     ->getSummary<GenericDataArray<float, 6, 2>>()
                                     .at(chipIdAndLine.second) = theLinePatternMatching.at(line);
@@ -163,7 +151,7 @@ void OTChipToCICecv::runOTChiptoCICecv()
                         }
                     }
                 }
-                
+
 #ifdef __USE_ROOT__
                 fDQMHistogramOTChipToCICecv.fillPhaseScanMatchingEfficiency(matchingEfficiencyContainer, cicPhase, slvsCurrent);
 #else
@@ -197,7 +185,7 @@ void OTChipToCICecv::setCICPhase(BeBoard* theBoard, uint8_t phase, uint8_t phyPo
             for(uint8_t channel = 0; channel < 4; ++channel)
             {
                 std::stringstream cicPhaseRegisterName;
-                cicPhaseRegisterName << "scPhaseSelectB" << +channel << "i" << +(phyPort/2);
+                cicPhaseRegisterName << "scPhaseSelectB" << +channel << "i" << +(phyPort / 2);
                 cicPhaseRegisterVector.push_back({cicPhaseRegisterName.str(), phase | phase << 4});
             }
             fCicInterface->WriteChipMultReg(theCic, cicPhaseRegisterVector);
@@ -215,7 +203,7 @@ void OTChipToCICecv::setSlvsChipCurrent(BeBoard* theBoard, uint8_t slvsCurrent)
             {
                 if(theChip->getFrontEndType() == FrontEndType::CBC3)
                 {
-                    uint8_t defaultBetaMult = fReadoutChipInterface->ReadChipReg(theChip, "BetaMult&SLVS") & 0xF0;
+                    uint8_t defaultBetaMult     = fReadoutChipInterface->ReadChipReg(theChip, "BetaMult&SLVS") & 0xF0;
                     uint8_t BetaMultAndSLVSbyte = (defaultBetaMult | (uint8_t(slvsCurrent) & 0xF));
                     // setting CBC strength
                     fReadoutChipInterface->WriteChipReg(theChip, "BetaMult&SLVS", BetaMultAndSLVSbyte);

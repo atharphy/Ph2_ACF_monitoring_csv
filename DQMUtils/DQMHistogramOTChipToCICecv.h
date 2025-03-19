@@ -58,7 +58,7 @@ class DQMHistogramOTChipToCICecv : public DQMHistogramBase
     void fillPhaseScanMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t cicPhase, uint8_t slvsCurrent);
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer*                       fDetectorContainer;
     std::map<uint8_t, DetectorDataContainer> fErrorRateContainerMap;
     std::map<uint8_t, DetectorDataContainer> fTestedBitsContainerMap;
 };
