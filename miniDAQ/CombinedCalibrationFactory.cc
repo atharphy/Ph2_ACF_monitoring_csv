@@ -10,7 +10,7 @@
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
 #include "tools/OTBitErrorRateTest.h"
-#include "tools/OTCBCtoCICecv.h"
+#include "tools/OTChipToCICecv.h"
 #include "tools/OTCICBX0Alignment.h"
 #include "tools/OTCICphaseAlignment.h"
 #include "tools/OTCICtoLpGBTecv.h"
@@ -18,7 +18,6 @@
 #include "tools/OTCMNoise.h"
 #include "tools/OTCicBypassTest.h"
 #include "tools/OTLpGBTEyeOpeningTest.h"
-#include "tools/OTMPAtoCICecv.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
 #include "tools/OTPScommonNoise.h"
@@ -190,6 +189,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTLpGBTEyeOpeningTest>("Outer Tracker", "eyeOpening");
 
+    Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTChipToCICecv>("2S Module", "ChipToCICecv");
+
     // 2S specific calibrations
 
     Register<OTalignBoardDataWord, OTCMNoise>("2S Module", "commonNoise2S");
@@ -227,14 +228,12 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTCMNoise,
              OTCICtoLpGBTecv,
              OTalignLpGBTinputsForBypass,
-             OTCBCtoCICecv,
+             OTChipToCICecv,
              OTRegisterTester>("2S Module", "2SfullTest");
 
     Register<Physics2S>("2S Module", "physics2s");
 
-    Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTCBCtoCICecv>("2S Module", "CBCtoCICecv");
-
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTalignLpGBTinputsForBypass, OTCBCtoCICecv>("2S Module", "2Secv");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTalignLpGBTinputsForBypass, OTChipToCICecv>("2S Module", "2Secv");
 
     // PS specific calibrations
 
@@ -286,7 +285,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTSSAtoMPAecv,
              OTSSAtoSSAecv,
              OTalignLpGBTinputsForBypass,
-             OTMPAtoCICecv,
+             OTChipToCICecv,
              OTRegisterTester>("PS Module", "PSfullTest");
 
     Register<TuneLpGBTVref,
@@ -313,20 +312,19 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTSSAtoMPAecv,
              OTSSAtoSSAecv,
              OTalignLpGBTinputsForBypass,
-             OTMPAtoCICecv,
+             OTChipToCICecv,
              OTRegisterTester>("PS Module", "PSfullTestPart2");
 
     Register<PSPhysics>("PS Module", "psphysics");
 
     Register<OTalignBoardDataWord, OTPSADCCalibration>("PS Module", "ADCBiasCalibration");
 
-    Register<OTCICphaseAlignment, OTalignLpGBTinputsForBypass, OTMPAtoCICecv>("PS Module", "MPAtoCICecv");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoMPAecv>("PS Module", "SSAtoMPAecv");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoSSAecv>("PS Module", "SSAtoSSAecv");
 
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTSSAtoMPAecv, OTSSAtoSSAecv, OTalignLpGBTinputsForBypass, OTMPAtoCICecv>("PS Module",
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTSSAtoMPAecv, OTSSAtoSSAecv, OTalignLpGBTinputsForBypass, OTChipToCICecv>("PS Module",
                                                                                                                                                                                            "PSecv");
 
     Register<OTPSringOscillatorTest>("PS Module", "ringOscillatorTest");
