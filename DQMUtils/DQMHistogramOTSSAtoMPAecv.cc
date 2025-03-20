@@ -26,7 +26,7 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
 
     std::vector<float> listOfSSAslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTSSAtoMPAecv_ListOfSSAslvsCurrents", "1, 4, 7"));
 
-    uint8_t numberOfMPA             = 8;
+    uint8_t numberOfMPA         = 8;
     uint8_t numberOfLinesPerMPA = 9;
 
     auto setYaxisBinLabelForStubs = [numberOfMPA, numberOfLinesPerMPA](TH2F* theHistogram)
@@ -63,13 +63,13 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
     for(auto slvsCurrent: listOfSSAslvsCurrents)
     {
         HistContainer<TH2F> phaseScanErrorRate(Form("SSAtoMPA_SamplingEdgeErrorRate_SLVScurrent_%d", int(slvsCurrent)),
-                                                            Form("SSA to MPA sampling edge error rate - SLVScurrent = %d", int(slvsCurrent)),
-                                                            2,
-                                                            -0.5,
-                                                            1.5,
-                                                            numberOfMPA * numberOfLinesPerMPA,
-                                                            -0.5,
-                                                            numberOfMPA * numberOfLinesPerMPA - 0.5);
+                                               Form("SSA to MPA sampling edge error rate - SLVScurrent = %d", int(slvsCurrent)),
+                                               2,
+                                               -0.5,
+                                               1.5,
+                                               numberOfMPA * numberOfLinesPerMPA,
+                                               -0.5,
+                                               numberOfMPA * numberOfLinesPerMPA - 0.5);
         phaseScanErrorRate.fTheHistogram->GetXaxis()->SetTitle("Sampling egde");
         phaseScanErrorRate.fTheHistogram->GetXaxis()->SetBinLabel(1, "Falling");
         phaseScanErrorRate.fTheHistogram->GetXaxis()->SetBinLabel(2, "Rising");
@@ -80,13 +80,13 @@ void DQMHistogramOTSSAtoMPAecv::book(TFile* theOutputFile, DetectorContainer& th
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanErrorRate[slvsCurrent], phaseScanErrorRate);
 
         HistContainer<TH2F> phaseScanTestedBits(Form("SSAtoMPA_SamplingEdgeTestedBits_SLVScurrent_%d", int(slvsCurrent)),
-                                                            Form("SSA to MPA sampling edge tested bits - SLVScurrent = %d", int(slvsCurrent)),
-                                                            2,
-                                                            -0.5,
-                                                            1.5,
-                                                            numberOfMPA * numberOfLinesPerMPA,
-                                                            -0.5,
-                                                            numberOfMPA * numberOfLinesPerMPA - 0.5);
+                                                Form("SSA to MPA sampling edge tested bits - SLVScurrent = %d", int(slvsCurrent)),
+                                                2,
+                                                -0.5,
+                                                1.5,
+                                                numberOfMPA * numberOfLinesPerMPA,
+                                                -0.5,
+                                                numberOfMPA * numberOfLinesPerMPA - 0.5);
         phaseScanTestedBits.fTheHistogram->GetXaxis()->SetTitle("Sampling egde");
         phaseScanTestedBits.fTheHistogram->GetXaxis()->SetBinLabel(1, "Falling");
         phaseScanTestedBits.fTheHistogram->GetXaxis()->SetBinLabel(2, "Rising");
@@ -140,26 +140,18 @@ void DQMHistogramOTSSAtoMPAecv::fillPatternEfficiencyScan(DetectorDataContainer&
 
                 auto thePatternMatchingEfficiencyVector = theHybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>();
 
-                TH2F* errorRateHistogram = fPhaseScanErrorRate[slvsCurrent]
-                                                               .getObject(theBoard->getId())
-                                                               ->getObject(theOpticalGroup->getId())
-                                                               ->getObject(theHybrid->getId())
-                                                               ->getSummary<HistContainer<TH2F>>()
-                                                               .fTheHistogram;
-                TH2F* testedBitsHistogram = fPhaseScanTestedBits[slvsCurrent]
-                                                               .getObject(theBoard->getId())
-                                                               ->getObject(theOpticalGroup->getId())
-                                                               ->getObject(theHybrid->getId())
-                                                               ->getSummary<HistContainer<TH2F>>()
-                                                               .fTheHistogram;
+                TH2F* errorRateHistogram =
+                    fPhaseScanErrorRate[slvsCurrent].getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                TH2F* testedBitsHistogram =
+                    fPhaseScanTestedBits[slvsCurrent].getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId) // not using the chipID because I want always to read all phases
                 {
                     for(size_t line = 0; line < 9; line++)
                     {
                         auto testedBits = thePatternMatchingEfficiencyVector.at(chipId).at(line).at(0);
                         auto errorRate  = testedBits > 0 ? thePatternMatchingEfficiencyVector.at(chipId).at(line).at(1) / testedBits : 1.;
-                        errorRateHistogram->SetBinContent(clockEdge + 1, chipId * 9 + line +1, errorRate);
-                        testedBitsHistogram->SetBinContent(clockEdge + 1, chipId * 9 + line +1, testedBits);
+                        errorRateHistogram->SetBinContent(clockEdge + 1, chipId * 9 + line + 1, errorRate);
+                        testedBitsHistogram->SetBinContent(clockEdge + 1, chipId * 9 + line + 1, testedBits);
                     }
                 }
             }

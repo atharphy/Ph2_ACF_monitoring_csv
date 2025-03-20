@@ -86,13 +86,12 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScan()
                 {
                     auto& theOriginalL1PhasePair =
                         fOriginalL1PhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<uint8_t, uint8_t>>();
-                    auto& theOriginalStubPhasePair =
-                        fOriginalStubPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint8_t>();
-                    uint8_t phase320registerValue = fReadoutChipInterface->ReadChipReg(theChip, "LatencyRx320");
-                    uint8_t phase40registerValue  = fReadoutChipInterface->ReadChipReg(theChip, "LatencyRx40");
-                    theOriginalL1PhasePair.first    = (phase320registerValue & 0x7) | (phase40registerValue & 0x3) << 3; // Start phase
-                    theOriginalL1PhasePair.second   = (phase320registerValue & 0x7) | (phase40registerValue & 0xC) << 1; // Restart phase
-                    theOriginalStubPhasePair        = (phase320registerValue >> 3) & 0x7; // Stub phase
+                    auto&   theOriginalStubPhasePair = fOriginalStubPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint8_t>();
+                    uint8_t phase320registerValue    = fReadoutChipInterface->ReadChipReg(theChip, "LatencyRx320");
+                    uint8_t phase40registerValue     = fReadoutChipInterface->ReadChipReg(theChip, "LatencyRx40");
+                    theOriginalL1PhasePair.first     = (phase320registerValue & 0x7) | (phase40registerValue & 0x3) << 3; // Start phase
+                    theOriginalL1PhasePair.second    = (phase320registerValue & 0x7) | (phase40registerValue & 0xC) << 1; // Restart phase
+                    theOriginalStubPhasePair         = (phase320registerValue >> 3) & 0x7;                                // Stub phase
                 }
             }
         }
@@ -159,7 +158,7 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForStubs(uint8_t slvsCurrent)
                         }
                     }
                 }
-                
+
                 auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
                 runStubIntegrityTest(theBoard, theFWInterface);
             }
@@ -181,8 +180,10 @@ void OTSSAtoMPAecv::saveBestEfficiency(DetectorDataContainer& theBestPatternMatc
 {
     auto calculateErrorRate = [](GenericDataArray<float, 2> bitTestedAndError) -> float
     {
-        if(bitTestedAndError.at(0) == 0) return 1.;
-        else return bitTestedAndError.at(1) / bitTestedAndError.at(0);
+        if(bitTestedAndError.at(0) == 0)
+            return 1.;
+        else
+            return bitTestedAndError.at(1) / bitTestedAndError.at(0);
     };
 
     for(auto theBoard: theBestPatternMatchingEfficiencyContainer)
@@ -191,13 +192,14 @@ void OTSSAtoMPAecv::saveBestEfficiency(DetectorDataContainer& theBestPatternMatc
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto& theBestHybridMatchingEfficiency = theHybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>();
-                const auto& theHybridMatchingEfficiency = fPatternMatchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>();
+                auto&       theBestHybridMatchingEfficiency = theHybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>();
+                const auto& theHybridMatchingEfficiency =
+                    fPatternMatchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>();
                 for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId)
                 {
                     for(size_t lineId = 1; lineId < 9; ++lineId)
                     {
-                        float bestErrorRate = calculateErrorRate(theBestHybridMatchingEfficiency.at(chipId).at(lineId));
+                        float bestErrorRate    = calculateErrorRate(theBestHybridMatchingEfficiency.at(chipId).at(lineId));
                         float currentErrorRate = calculateErrorRate(theHybridMatchingEfficiency.at(chipId).at(lineId));
                         if(currentErrorRate < bestErrorRate) theBestHybridMatchingEfficiency.at(chipId).at(lineId) = theBestHybridMatchingEfficiency.at(chipId).at(lineId);
                     }
