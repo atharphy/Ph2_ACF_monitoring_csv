@@ -50,9 +50,12 @@ class OTSSAtoMPAecv : public OTverifyMPASSAdataWord
     void               runSSAtoMPAecvScanForL1(uint8_t slvsCurrent);
     std::vector<float> fListOfSSAslvsCurrents{1, 4, 7};
 
+    void saveBestEfficiency(DetectorDataContainer& theBestPatternMatchingEfficiencyContainer) const;
+
     int                   fMinimum320PhaseShift = -1;
     int                   fMaximum320PhaseShift = +1;
-    DetectorDataContainer fOriginalPhaseContainer;
+    DetectorDataContainer fOriginalL1PhaseContainer;
+    DetectorDataContainer fOriginalStubPhaseContainer;
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
