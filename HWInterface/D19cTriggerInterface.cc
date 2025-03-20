@@ -174,9 +174,11 @@ void D19cTriggerInterface::ReconfigureTriggerFSM(std::vector<std::pair<std::stri
 bool D19cTriggerInterface::SendNTriggers(uint32_t pNTriggers)
 {
     // count triggers sent to the CIC
-    bool   cAllTriggersSent = false;
-    size_t cAttempt         = 0;
-    size_t cMaxAttempts     = 10;
+    uint32_t cTimeSingleTrigger_us = std::ceil(1.5 / fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency"));
+    uint32_t cTimeoutValue         = cTimeSingleTrigger_us * pNTriggers * 10;
+    bool     cAllTriggersSent      = false;
+    size_t   cAttempt              = 0;
+    size_t   cMaxAttempts          = 10;
     this->ResetTriggerFSM();
     do {
         this->Start();
@@ -189,7 +191,7 @@ bool D19cTriggerInterface::SendNTriggers(uint32_t pNTriggers)
             cAllTriggersSent = (cNTriggersSent >= pNTriggers);
             cEndTime         = std::chrono::high_resolution_clock::now();
             cDuration        = std::chrono::duration_cast<std::chrono::microseconds>(cEndTime - cStartTime).count();
-        } while(!cAllTriggersSent && cDuration < fTimeout_us);
+        } while(!cAllTriggersSent && cDuration < cTimeoutValue);
         this->ResetTriggerFSM();
         cAttempt++;
         this->Stop();

@@ -294,11 +294,11 @@
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithoutInjection"> 1000000</Setting>
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithInjection"> 1000</Setting>
 
-    <Setting name="OTalignLpGBTinputsForBypass_NumberOfIterations"> 1000</Setting>
+    <Setting name="OTalignLpGBTinputsForBypass_NumberOfTestedBits"> 1e6</Setting>
 
-    <Setting name="OTMPAtoCICecv_NumberOfIterations">1000</Setting>
-    <Setting name="OTMPAtoCICecv_ShiftRegisterPattern">0xAA</Setting>
-    <Setting name="OTMPAtoCICecv_ListOfMPAslvsCurrents">1, 4, 7</Setting>
+    <Setting name="OTChipToCICecv_NumberOfTestedBits">1e6</Setting>
+    <Setting name="OTChipToCICecv_MPAshiftRegisterPattern">0xAA</Setting>
+    <Setting name="OTChipToCICecv_ListOfMPAslvsCurrents">1, 4, 7</Setting>
 
     <Setting name="OTSSAtoMPAecv_NumberOfIterations">1000</Setting>
     <Setting name="OTSSAtoMPAecv_ListOfSSAslvsCurrents">1, 4, 7</Setting>

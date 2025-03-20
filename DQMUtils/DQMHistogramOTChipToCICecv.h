@@ -1,12 +1,12 @@
 /*!
-        \file                DQMHistogramOTalignLpGBTinputsForBypass.h
-        \brief               DQM class for OTalignLpGBTinputsForBypass
+        \file                DQMHistogramOTChipToCICecv.h
+        \brief               DQM class for OTChipToCICecv
         \author              Fabio Ravera
-        \date                31/05/24
+        \date                19/03/25
 */
 
-#ifndef DQMHistogramOTalignLpGBTinputsForBypass_h_
-#define DQMHistogramOTalignLpGBTinputsForBypass_h_
+#ifndef DQMHistogramOTChipToCICecv_h_
+#define DQMHistogramOTChipToCICecv_h_
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -14,21 +14,21 @@
 class TFile;
 
 /*!
- * \class DQMHistogramOTalignLpGBTinputsForBypass
- * \brief Class for OTalignLpGBTinputsForBypass monitoring histograms
+ * \class DQMHistogramOTChipToCICecv
+ * \brief Class for OTChipToCICecv monitoring histograms
  */
-class DQMHistogramOTalignLpGBTinputsForBypass : public DQMHistogramBase
+class DQMHistogramOTChipToCICecv : public DQMHistogramBase
 {
   public:
     /*!
      * constructor
      */
-    DQMHistogramOTalignLpGBTinputsForBypass();
+    DQMHistogramOTChipToCICecv();
 
     /*!
      * destructor
      */
-    ~DQMHistogramOTalignLpGBTinputsForBypass();
+    ~DQMHistogramOTChipToCICecv();
 
     /*!
      * \brief Book histograms
@@ -55,13 +55,11 @@ class DQMHistogramOTalignLpGBTinputsForBypass : public DQMHistogramBase
      */
     void reset(void) override;
 
-    void fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort, uint8_t lpgbtPhase);
-    void fillBestPhase(DetectorDataContainer& bestPhaseContainer, uint8_t phyPort);
+    void fillPhaseScanMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t cicPhase, uint8_t slvsCurrent);
 
   private:
     DetectorContainer*                       fDetectorContainer;
-    std::map<uint8_t, DetectorDataContainer> fPhaseScanMatchingBitErrorRateContainer;
-    std::map<uint8_t, DetectorDataContainer> fPhaseScanMatchingTestedBitsContainer;
-    std::map<uint8_t, DetectorDataContainer> fBestPhase;
+    std::map<uint8_t, DetectorDataContainer> fErrorRateContainerMap;
+    std::map<uint8_t, DetectorDataContainer> fTestedBitsContainerMap;
 };
 #endif

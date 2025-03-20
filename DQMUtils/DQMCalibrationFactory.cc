@@ -5,15 +5,14 @@
 #include "DQMUtils/DQMHistogramKira.h"
 #include "DQMUtils/DQMHistogramLatencyScan.h"
 #include "DQMUtils/DQMHistogramOTBitErrorRateTest.h"
-#include "DQMUtils/DQMHistogramOTCBCtoCICecv.h"
 #include "DQMUtils/DQMHistogramOTCICBX0Alignment.h"
 #include "DQMUtils/DQMHistogramOTCICphaseAlignment.h"
 #include "DQMUtils/DQMHistogramOTCICtoLpGBTecv.h"
 #include "DQMUtils/DQMHistogramOTCICwordAlignment.h"
 #include "DQMUtils/DQMHistogramOTCMNoise.h"
+#include "DQMUtils/DQMHistogramOTChipToCICecv.h"
 #include "DQMUtils/DQMHistogramOTCicBypassTest.h"
 #include "DQMUtils/DQMHistogramOTLpGBTEyeOpeningTest.h"
-#include "DQMUtils/DQMHistogramOTMPAtoCICecv.h"
 #include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
 #include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
 #include "DQMUtils/DQMHistogramOTPScommonNoise.h"
@@ -221,6 +220,8 @@ DQMCalibrationFactory::DQMCalibrationFactory()
 
     Register<DQMMetadataOT, DQMHistogramOTLpGBTEyeOpeningTest>("eyeOpening");
 
+    Register<DQMMetadataOT, DQMHistogramOTCICphaseAlignment, DQMHistogramOTalignLpGBTinputsForBypass, DQMHistogramOTChipToCICecv>("ChipToCICecv");
+
     // 2S specific calibrations
 
     Register<DQMMetadataOT,
@@ -254,12 +255,10 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCMNoise,
              DQMHistogramOTCICtoLpGBTecv,
              DQMHistogramOTalignLpGBTinputsForBypass,
-             DQMHistogramOTCBCtoCICecv,
+             DQMHistogramOTChipToCICecv,
              DQMHistogramOTRegisterTester>("2SfullTest");
 
     Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
-
-    Register<DQMMetadataOT, DQMHistogramOTCICphaseAlignment, DQMHistogramOTalignLpGBTinputsForBypass, DQMHistogramOTCBCtoCICecv>("CBCtoCICecv");
 
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
@@ -268,7 +267,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCICwordAlignment,
              DQMHistogramOTCICtoLpGBTecv,
              DQMHistogramOTalignLpGBTinputsForBypass,
-             DQMHistogramOTCBCtoCICecv>("2Secv");
+             DQMHistogramOTChipToCICecv>("2Secv");
 
     // PS specific calibrations
 
@@ -320,7 +319,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTSSAtoMPAecv,
              DQMHistogramOTSSAtoSSAecv,
              DQMHistogramOTalignLpGBTinputsForBypass,
-             DQMHistogramOTMPAtoCICecv,
+             DQMHistogramOTChipToCICecv,
              DQMHistogramOTRegisterTester>("PSfullTest");
 
     Register<DQMMetadataOT,
@@ -348,14 +347,12 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTSSAtoMPAecv,
              DQMHistogramOTSSAtoSSAecv,
              DQMHistogramOTalignLpGBTinputsForBypass,
-             DQMHistogramOTMPAtoCICecv,
+             DQMHistogramOTChipToCICecv,
              DQMHistogramOTRegisterTester>("PSfullTestPart2");
 
     Register<DQMMetadataOT, PSPhysicsHistograms>("psphysics");
 
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTPSADCCalibration>("ADCBiasCalibration");
-
-    Register<DQMMetadataOT, DQMHistogramOTCICphaseAlignment, DQMHistogramOTalignLpGBTinputsForBypass, DQMHistogramOTMPAtoCICecv>("MPAtoCICecv");
 
     Register<DQMMetadataOT, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTCICphaseAlignment, DQMHistogramOTCICwordAlignment, DQMHistogramOTSSAtoMPAecv>(
         "SSAtoMPAecv");
@@ -372,7 +369,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTSSAtoMPAecv,
              DQMHistogramOTSSAtoSSAecv,
              DQMHistogramOTalignLpGBTinputsForBypass,
-             DQMHistogramOTMPAtoCICecv>("PSecv");
+             DQMHistogramOTChipToCICecv>("PSecv");
 
     Register<DQMHistogramOTPSringOscillatorTest>("ringOscillatorTest");
 

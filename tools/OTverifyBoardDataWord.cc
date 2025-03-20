@@ -345,6 +345,7 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard*            theBoard,
 
             prepareHybridForL1IntegrityTest(theHybrid);
 
+            size_t numberOfIgnoredPatterns = 0;
             for(size_t iteration = 0; iteration < numberOfIterations;)
             {
                 auto lineOutputVector        = theFWInterface->L1ADebug(1, false);
@@ -359,7 +360,11 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard*            theBoard,
                     {
                         if(theWord == 0) ++numberOfEmpyWords;
                     }
-                    if(numberOfEmpyWords > 1) continue; // means very likely the fifo did not save properly the data
+                    if(numberOfIgnoredPatterns < numberOfIterations / 10 && numberOfEmpyWords > 1)
+                    {
+                        ++numberOfIgnoredPatterns;
+                        continue; // means very likely the fifo did not save properly the data
+                    }
                     if(fPrintError) LOG(INFO) << BOLDRED << "Pattern did not match for iteration number " << +iteration << RESET;
 
                     LOG(DEBUG) << BOLDRED << "OTverifyBoardDataWord::runL1IntegrityTest - Error, expected L1 pattern not found for Board " << +theBoard->getId() << " OpticalGroup "

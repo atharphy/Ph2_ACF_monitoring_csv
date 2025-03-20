@@ -94,6 +94,7 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitC
     if(runAlignment)
     {
         D19cBackendAlignmentFWInterface* theAlignerInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBackendAlignmentInterface();
+        theAlignerInterface->setSuppressErrorPrintout(fSuppressErrorPrintout);
 
         for(auto theOpticalGroup: *theBoard)
         {
@@ -112,7 +113,8 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitC
                 }
                 if(!tryLineAlignment(theAlignerInterface, theHybrid, line))
                 {
-                    LOG(ERROR) << ERROR_FORMAT << "Failed to align OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +line << RESET;
+                    if(!fSuppressErrorPrintout)
+                        LOG(ERROR) << ERROR_FORMAT << "Failed to align OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +line << RESET;
                 }
                 theAlignerInterface->disableAlignmentOnCustomPattern(theHybrid->getId());
             }
