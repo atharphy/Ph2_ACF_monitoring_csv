@@ -37,14 +37,12 @@ void DQMHistogramOTPatternCheckerHelper::book(TFile* theOutputFile, DetectorCont
     };
 
     HistContainer<TH1F> errorRateHistogram("PatternErrorRate", "Pattern error rate", fNumberOfLines * 2, -0.5, fNumberOfLines * 2 - 0.5);
-    errorRateHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     errorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Error rate");
     errorRateHistogram.fTheHistogram->SetStats(false);
     setBitLabel(errorRateHistogram.fTheHistogram->GetXaxis());
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fPatternErrorRateHistogram, errorRateHistogram);
 
     HistContainer<TH1F> bitCounterHistogram("PatternTestedBitCounter", "Pattern tested bit counter", fNumberOfLines * 2, -0.5, fNumberOfLines * 2 - 0.5);
-    bitCounterHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     bitCounterHistogram.fTheHistogram->GetYaxis()->SetTitle("Tested bits");
     bitCounterHistogram.fTheHistogram->SetStats(false);
     setBitLabel(bitCounterHistogram.fTheHistogram->GetXaxis());

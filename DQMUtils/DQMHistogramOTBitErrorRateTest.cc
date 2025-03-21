@@ -47,42 +47,36 @@ void DQMHistogramOTBitErrorRateTest::book(TFile* theOutputFile, DetectorContaine
     };
 
     HistContainer<TH2F> errorRatePhaseScanHistogram("BERTerrorRatePhaseScan", "BERT error rate phase scan", fNumberOfLines * 2, -0.5, fNumberOfLines * 2 - 0.5, 64, -0.5, 63.5);
-    errorRatePhaseScanHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     errorRatePhaseScanHistogram.fTheHistogram->GetYaxis()->SetTitle("Clock phase");
     errorRatePhaseScanHistogram.fTheHistogram->SetStats(false);
     setBitLabel(errorRatePhaseScanHistogram.fTheHistogram->GetXaxis());
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBERTerrorRatePhaseScanHistogram, errorRatePhaseScanHistogram);
 
     HistContainer<TH2F> bitCounterPhaseScanHistogram("BERTtestedBitCounterPhaseScan", "BERT tested bit counter phase scan", fNumberOfLines * 2, -0.5, fNumberOfLines * 2 - 0.5, 64, -0.5, 63.5);
-    bitCounterPhaseScanHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     bitCounterPhaseScanHistogram.fTheHistogram->GetYaxis()->SetTitle("PRBS clock phase");
     bitCounterPhaseScanHistogram.fTheHistogram->SetStats(false);
     setBitLabel(bitCounterPhaseScanHistogram.fTheHistogram->GetXaxis());
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBERTbitCounterPhaseScanHistogram, bitCounterPhaseScanHistogram);
 
     HistContainer<TH1F> errorRateHistogram("BERTerrorRate", "BERT error rate", fNumberOfLines * 2, -0.5, fNumberOfLines * 2 - 0.5);
-    errorRateHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     errorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Error rate");
     errorRateHistogram.fTheHistogram->SetStats(false);
     setBitLabel(errorRateHistogram.fTheHistogram->GetXaxis());
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBERTerrorRateHistogram, errorRateHistogram);
 
     HistContainer<TH1F> bitCounterHistogram("BERTtestedBitCounter", "BERT tested bit counter", fNumberOfLines * 2, -0.5, fNumberOfLines * 2 - 0.5);
-    bitCounterHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     bitCounterHistogram.fTheHistogram->GetYaxis()->SetTitle("Tested bits");
     bitCounterHistogram.fTheHistogram->SetStats(false);
     setBitLabel(bitCounterHistogram.fTheHistogram->GetXaxis());
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBERTbitCounterHistogram, bitCounterHistogram);
 
     HistContainer<TH1I> bestPhaseHistogram("BERTbestPhase", "Bert best phase", fNumberOfLines, -0.5, fNumberOfLines - 0.5);
-    bestPhaseHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     bestPhaseHistogram.fTheHistogram->GetYaxis()->SetTitle("Best phase");
     bestPhaseHistogram.fTheHistogram->SetStats(false);
     setBitLabelOpticalGroup(bestPhaseHistogram.fTheHistogram->GetXaxis());
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBestPhaseHistogram, bestPhaseHistogram);
 
     HistContainer<TH1I> fecCounterHistogram("FECerrorCounter", "FEC error counter", fNumberOfLines, -0.5, fNumberOfLines - 0.5);
-    fecCounterHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     fecCounterHistogram.fTheHistogram->GetYaxis()->SetTitle("FEC counter");
     fecCounterHistogram.fTheHistogram->SetStats(false);
     setBitLabelOpticalGroup(fecCounterHistogram.fTheHistogram->GetXaxis());

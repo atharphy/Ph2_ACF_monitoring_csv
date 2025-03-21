@@ -72,7 +72,6 @@ void DQMHistogramOTCICphaseAlignment::book(TFile* theOutputFile, DetectorContain
                                        16,
                                        -0.5,
                                        16 - 0.5);
-    phaseHistogram.fTheHistogram->GetXaxis()->SetTitle("ChipId_line");
     setPhaseHistogramBinLabels(phaseHistogram.fTheHistogram->GetXaxis());
     phaseHistogram.fTheHistogram->GetYaxis()->SetTitle("Phase");
     phaseHistogram.fTheHistogram->SetMinimum(0);
@@ -89,7 +88,6 @@ void DQMHistogramOTCICphaseAlignment::book(TFile* theOutputFile, DetectorContain
                                            -0.5,
                                            NUMBER_OF_LINES_PER_CIC_PORTS - 0.5);
     bestPhaseHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
-    bestPhaseHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     setLineBinLabels(bestPhaseHistogram.fTheHistogram->GetYaxis());
     bestPhaseHistogram.fTheHistogram->SetMinimum(0);
     bestPhaseHistogram.fTheHistogram->SetMaximum(15);
@@ -105,7 +103,6 @@ void DQMHistogramOTCICphaseAlignment::book(TFile* theOutputFile, DetectorContain
                                                    -0.5,
                                                    NUMBER_OF_LINES_PER_CIC_PORTS - 0.5);
     lockingEfficiencyHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
-    lockingEfficiencyHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     setLineBinLabels(lockingEfficiencyHistogram.fTheHistogram->GetYaxis());
     lockingEfficiencyHistogram.fTheHistogram->SetMinimum(0);
     lockingEfficiencyHistogram.fTheHistogram->SetMaximum(1);

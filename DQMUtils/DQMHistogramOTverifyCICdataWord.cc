@@ -44,7 +44,6 @@ void DQMHistogramOTverifyCICdataWord::book(TFile* theOutputFile, DetectorContain
                                             -0.5,
                                             1.5);
     testedBitsHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
-    testedBitsHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     testedBitsHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
     testedBitsHistogram.fTheHistogram->GetYaxis()->SetBinLabel(2, "Stubs");
     testedBitsHistogram.fTheHistogram->SetStats(false);
@@ -59,7 +58,6 @@ void DQMHistogramOTverifyCICdataWord::book(TFile* theOutputFile, DetectorContain
                                               -0.5,
                                               1.5);
     bitErrorRateHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
-    bitErrorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     bitErrorRateHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
     bitErrorRateHistogram.fTheHistogram->GetYaxis()->SetBinLabel(2, "Stubs");
     bitErrorRateHistogram.fTheHistogram->SetMinimum(0);

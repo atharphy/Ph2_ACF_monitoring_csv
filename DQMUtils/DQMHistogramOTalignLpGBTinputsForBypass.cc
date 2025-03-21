@@ -57,7 +57,7 @@ void DQMHistogramOTalignLpGBTinputsForBypass::book(TFile* theOutputFile, Detecto
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanMatchingTestedBitsContainer[phyPort], phaseScanMatchingTestedBits);
 
         HistContainer<TH1I> bestPhase(Form("LpGBTforCICbypass_BestPhase_phyPort%d", phyPort), Form("LpGBT for CIC bypass best phase - phyPort %d", phyPort), numberOfLines, -0.5, numberOfLines - 0.5);
-        bestPhase.fTheHistogram->GetXaxis()->SetTitle("Line");
+        bestPhase.fTheHistogram->GetYaxis()->SetTitle("Phase");
         for(uint8_t line = 0; line < numberOfLines; ++line) bestPhase.fTheHistogram->GetXaxis()->SetBinLabel(line + 1, Form("Stub%d", line + 1));
         bestPhase.fTheHistogram->SetStats(false);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBestPhase[phyPort], bestPhase);
