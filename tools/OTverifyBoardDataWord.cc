@@ -47,6 +47,7 @@ void OTverifyBoardDataWord::setUpPatternMatching()
     fPatternCheckerHelper = new OTPatternCheckerHelper();
     fPatternCheckerHelper->Inherit(this);
     fPatternCheckerHelper->prepareCalibration();
+    fPatternCheckerHelper->setSuppressErrorPrintout(true);
 }
 
 void OTverifyBoardDataWord::ConfigureCalibration() {}

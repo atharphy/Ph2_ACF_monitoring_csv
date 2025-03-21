@@ -229,6 +229,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTCICtoLpGBTecv,
              OTalignLpGBTinputsForBypass,
              OTChipToCICecv,
+             OTBitErrorRateTest,
              OTRegisterTester>("2S Module", "2SfullTest");
 
     Register<Physics2S>("2S Module", "physics2s");
@@ -286,6 +287,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTSSAtoSSAecv,
              OTalignLpGBTinputsForBypass,
              OTChipToCICecv,
+             OTBitErrorRateTest,
              OTRegisterTester>("PS Module", "PSfullTest");
 
     Register<TuneLpGBTVref,
@@ -313,6 +315,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTSSAtoSSAecv,
              OTalignLpGBTinputsForBypass,
              OTChipToCICecv,
+             OTBitErrorRateTest,
              OTRegisterTester>("PS Module", "PSfullTestPart2");
 
     Register<PSPhysics>("PS Module", "psphysics");

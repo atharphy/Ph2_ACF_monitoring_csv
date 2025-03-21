@@ -256,6 +256,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCICtoLpGBTecv,
              DQMHistogramOTalignLpGBTinputsForBypass,
              DQMHistogramOTChipToCICecv,
+             DQMHistogramOTBitErrorRateTest,
              DQMHistogramOTRegisterTester>("2SfullTest");
 
     Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
@@ -320,6 +321,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTSSAtoSSAecv,
              DQMHistogramOTalignLpGBTinputsForBypass,
              DQMHistogramOTChipToCICecv,
+             DQMHistogramOTBitErrorRateTest,
              DQMHistogramOTRegisterTester>("PSfullTest");
 
     Register<DQMMetadataOT,
@@ -348,6 +350,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTSSAtoSSAecv,
              DQMHistogramOTalignLpGBTinputsForBypass,
              DQMHistogramOTChipToCICecv,
+             DQMHistogramOTBitErrorRateTest,
              DQMHistogramOTRegisterTester>("PSfullTestPart2");
 
     Register<DQMMetadataOT, PSPhysicsHistograms>("psphysics");

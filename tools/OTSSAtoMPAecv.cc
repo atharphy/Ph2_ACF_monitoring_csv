@@ -29,8 +29,9 @@ void OTSSAtoMPAecv::Initialise(void)
     fNumberOfL1Bits        = findValueInSettings<double>("OTverifyCICdataWord_NumberOfTestedL1Bits", 1e6);
     fListOfSSAslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>("OTSSAtoMPAecv_ListOfSSAslvsCurrents", "1, 4, 7"));
 
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);
 
+    setUpPatternMatching();
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTSSAtoMPAecv.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -71,7 +72,8 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScan()
     auto        selectMPAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
     std::string selectMPAfunctionName = "SelectMPAfunction";
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
-    ContainerFactory::copyAndInitChip<std::pair<uint8_t, uint8_t>>(*fDetectorContainer, fOriginalPhaseContainer);
+    ContainerFactory::copyAndInitChip<std::pair<uint8_t, uint8_t>>(*fDetectorContainer, fOriginalL1PhaseContainer);
+    ContainerFactory::copyAndInitChip<uint8_t>(*fDetectorContainer, fOriginalStubPhaseContainer);
 
     // Reading original phases
     for(auto theBoard: *fDetectorContainer)
@@ -82,12 +84,14 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScan()
             {
                 for(auto theChip: *theHybrid)
                 {
-                    auto& theOriginalPhasePair =
-                        fOriginalPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<uint8_t, uint8_t>>();
-                    uint8_t phase320registerValue = fReadoutChipInterface->ReadChipReg(theChip, "LatencyRx320") & 0x7;
-                    uint8_t phase40registerValue  = fReadoutChipInterface->ReadChipReg(theChip, "LatencyRx40");
-                    theOriginalPhasePair.first    = (phase320registerValue & 0x7) | (phase40registerValue & 0x3) << 3; // Start phase
-                    theOriginalPhasePair.second   = (phase320registerValue & 0x7) | (phase40registerValue & 0xC) << 1; // Restart phase
+                    auto& theOriginalL1PhasePair =
+                        fOriginalL1PhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<uint8_t, uint8_t>>();
+                    auto&   theOriginalStubPhasePair = fOriginalStubPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint8_t>();
+                    uint8_t phase320registerValue    = fReadoutChipInterface->ReadChipReg(theChip, "LatencyRx320");
+                    uint8_t phase40registerValue     = fReadoutChipInterface->ReadChipReg(theChip, "LatencyRx40");
+                    theOriginalL1PhasePair.first     = (phase320registerValue & 0x7) | (phase40registerValue & 0x3) << 3; // Start phase
+                    theOriginalL1PhasePair.second    = (phase320registerValue & 0x7) | (phase40registerValue & 0xC) << 1; // Restart phase
+                    theOriginalStubPhasePair         = (phase320registerValue >> 3) & 0x7;                                // Stub phase
                 }
             }
         }
@@ -108,7 +112,7 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScan()
         setSameDac("SLVS_pad_current_Stub_6_7", slvsCurrent | (slvsCurrent << 3));
         fDetectorContainer->removeReadoutChipQueryFunction(theSSAqueryFunctionString);
         runSSAtoMPAecvScanForStubs(slvsCurrent);
-        runSSAtoMPAecvScanForL1(slvsCurrent);
+        // runSSAtoMPAecvScanForL1(slvsCurrent);
     }
 }
 
@@ -117,45 +121,91 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForStubs(uint8_t slvsCurrent)
     LOG(INFO) << BOLDGREEN << "Scanning SSA to MPA stub phases" << RESET;
     for(uint8_t clockEdge = 0; clockEdge < 2; ++clockEdge)
     {
-        LOG(INFO) << BOLDGREEN << "MPA sampling clockEdge = " << +clockEdge << RESET;
-
-        resetPatternMatchingEfficiencyContainer();
-
-        // setting phases and driver strenghts
-        for(auto theBoard: *fDetectorContainer)
+        DetectorDataContainer theBestPatternMatchingEfficiencyContainer;
+        ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>(*fDetectorContainer, theBestPatternMatchingEfficiencyContainer);
+        for(int samplingPhaseOffset = fMinimum320PhaseShift; samplingPhaseOffset <= fMaximum320PhaseShift; ++samplingPhaseOffset)
         {
-            for(auto theOpticalGroup: *theBoard)
+            LOG(INFO) << BOLDGREEN << "MPA sampling clockEdge = " << +clockEdge << RESET;
+
+            resetPatternMatchingEfficiencyContainer();
+
+            // setting phases and driver strenghts
+            for(auto theBoard: *fDetectorContainer)
             {
-                for(auto theHybrid: *theOpticalGroup)
+                for(auto theOpticalGroup: *theBoard)
                 {
-                    for(auto theChip: *theHybrid)
+                    for(auto theHybrid: *theOpticalGroup)
                     {
-                        if(theChip->getFrontEndType() == FrontEndType::MPA2)
+                        for(auto theChip: *theHybrid)
                         {
-                            auto    theMPAInterface = static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface;
-                            uint8_t registerValue;
-                            if(clockEdge == 0)
-                                registerValue = 0x00;
-                            else
-                                registerValue = 0xFF;
-                            theMPAInterface->WriteChipReg(theChip, "EdgeSelTrig", registerValue);
+                            if(theChip->getFrontEndType() == FrontEndType::MPA2)
+                            {
+                                auto    theMPAInterface = static_cast<PSInterface*>(fReadoutChipInterface)->fTheMPA2Interface;
+                                uint8_t registerValue;
+                                if(clockEdge == 0)
+                                    registerValue = 0x00;
+                                else
+                                    registerValue = 0xFF;
+                                theMPAInterface->WriteChipReg(theChip, "EdgeSelTrig", registerValue);
+
+                                auto& theOriginalStubPhasePair =
+                                    fOriginalStubPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint8_t>();
+                                uint8_t theNewStubPhase = theOriginalStubPhasePair + samplingPhaseOffset;
+                                if(theNewStubPhase == 0xff) theNewStubPhase = 0x7;
+                                if(theNewStubPhase == 0x8) theNewStubPhase = 0x0;
+                                theMPAInterface->WriteChipRegBits(theChip, "LatencyRx320", theNewStubPhase << 3, "Mask", 0x38);
+                            }
                         }
                     }
                 }
+
+                auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
+                runStubIntegrityTest(theBoard, theFWInterface);
             }
-            // auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
-            // runStubIntegrityTestPS(theBoard, theFWInterface);
         }
 
 #ifdef __USE_ROOT__
-        fDQMHistogramOTSSAtoMPAecv.fillStubPatternEfficiencyScan(fPatternMatchingEfficiencyContainer, clockEdge, slvsCurrent);
+        fDQMHistogramOTSSAtoMPAecv.fillPatternEfficiencyScan(theBestPatternMatchingEfficiencyContainer, clockEdge, slvsCurrent);
 #else
         if(fDQMStreamerEnabled)
         {
             ContainerSerialization thePatternMatchingEfficiencyContainerSerialization("OTSSAtoMPAecvStubPatternMatchingEfficiency");
-            thePatternMatchingEfficiencyContainerSerialization.streamByHybridContainer(fDQMStreamer, fPatternMatchingEfficiencyContainer, clockEdge, slvsCurrent);
+            thePatternMatchingEfficiencyContainerSerialization.streamByHybridContainer(fDQMStreamer, theBestPatternMatchingEfficiencyContainer, clockEdge, slvsCurrent);
         }
 #endif
+    }
+}
+
+void OTSSAtoMPAecv::saveBestEfficiency(DetectorDataContainer& theBestPatternMatchingEfficiencyContainer) const
+{
+    auto calculateErrorRate = [](GenericDataArray<float, 2> bitTestedAndError) -> float
+    {
+        if(bitTestedAndError.at(0) == 0)
+            return 1.;
+        else
+            return bitTestedAndError.at(1) / bitTestedAndError.at(0);
+    };
+
+    for(auto theBoard: theBestPatternMatchingEfficiencyContainer)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                auto&       theBestHybridMatchingEfficiency = theHybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>();
+                const auto& theHybridMatchingEfficiency =
+                    fPatternMatchingEfficiencyContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>();
+                for(size_t chipId = 0; chipId < NUMBER_OF_CIC_PORTS; ++chipId)
+                {
+                    for(size_t lineId = 1; lineId < 9; ++lineId)
+                    {
+                        float bestErrorRate    = calculateErrorRate(theBestHybridMatchingEfficiency.at(chipId).at(lineId));
+                        float currentErrorRate = calculateErrorRate(theHybridMatchingEfficiency.at(chipId).at(lineId));
+                        if(currentErrorRate < bestErrorRate) theBestHybridMatchingEfficiency.at(chipId).at(lineId) = theBestHybridMatchingEfficiency.at(chipId).at(lineId);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -194,7 +244,7 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScanForL1(uint8_t slvsCurrent)
                                     registerValue = 0x1;
                                 theMPAInterface->WriteChipRegBits(theChip, "EdgeSelT1Raw", registerValue, "Mask", 0x01);
                                 auto theOriginalPhasePair =
-                                    fOriginalPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<uint8_t, uint8_t>>();
+                                    fOriginalL1PhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<uint8_t, uint8_t>>();
                                 uint8_t newOffsetStart   = theOriginalPhasePair.first + samplingPhaseOffset;
                                 uint8_t newOffsetRestart = theOriginalPhasePair.second + samplingPhaseOffset;
                                 if(newOffsetStart > 0x1F || newOffsetStart < (-samplingPhaseOffset) || newOffsetRestart > 0x1F || newOffsetRestart < (-samplingPhaseOffset))
@@ -290,7 +340,7 @@ void OTSSAtoMPAecv::resetPatternMatchingEfficiencyContainer()
     {
         for(auto theOpticalGroup: *theBoard)
         {
-            for(auto theHybrid: *theOpticalGroup) { theHybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>() = GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>(); }
+            for(auto theHybrid: *theOpticalGroup) { theHybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>() = GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>(); }
         }
     }
 }

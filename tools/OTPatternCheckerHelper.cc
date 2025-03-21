@@ -111,12 +111,13 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitC
                     const auto& thePatternAndMask = theAlignmentPatternAndMaskContainer->getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::pair<uint16_t, uint16_t>>();
                     theAlignerInterface->enableAlignmentOnCustomPattern(theHybrid->getId(), thePatternAndMask.first, thePatternAndMask.second);
                 }
-                if(!tryLineAlignment(theAlignerInterface, theHybrid, line))
+                bool success = tryLineAlignment(theAlignerInterface, theHybrid, line);
+                theAlignerInterface->disableAlignmentOnCustomPattern(theHybrid->getId());
+                if(!success)
                 {
                     if(!fSuppressErrorPrintout)
                         LOG(ERROR) << ERROR_FORMAT << "Failed to align OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +line << RESET;
                 }
-                theAlignerInterface->disableAlignmentOnCustomPattern(theHybrid->getId());
             }
         }
     }
