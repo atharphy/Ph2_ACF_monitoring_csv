@@ -556,15 +556,18 @@ bool D19cBERTinterface::isStartPatternFound(BoardContainer* theBoardContainer, u
             {
                 firstData = getFirstData(theHybrid->getId(), lineNumber);
 
-                if(fUsePRBS)
+                if(firstData != 0xfedececa)
                 {
-                    if((firstData >> 16) == BERT_ALIGNMENT_PATTERN) break;
-                }
-                else
-                {
-                    if(((firstData && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16) ==
-                       ((fCheckedPatternMap.at(theHybrid->getId()).at(0) && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16))
-                        break;
+                    if(fUsePRBS)
+                    {
+                        if((firstData >> 16) == BERT_ALIGNMENT_PATTERN) break;
+                    }
+                    else
+                    {
+                        if(((firstData && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16) ==
+                        ((fCheckedPatternMap.at(theHybrid->getId()).at(0) && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16))
+                            break;
+                    }
                 }
                 ++iteration;
             }
