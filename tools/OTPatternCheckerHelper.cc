@@ -141,7 +141,12 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitC
     {
         for(auto theHybrid: *theOpticalGroup)
         {
-            const auto& receivedBERTresultsVector                                                                                      = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
+            auto receivedBERTresultsVector = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
+            if(receivedBERTresultsVector.at(0) == 0) 
+            {
+                receivedBERTresultsVector.at(0) = numberOfBits;
+                receivedBERTresultsVector.at(1) = numberOfBits;
+            }
             theErrorBitContainer->getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>() = receivedBERTresultsVector;
         }
     }
