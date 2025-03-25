@@ -69,9 +69,9 @@ void PatternMatcher::updatePattern(uint32_t thePattern, uint32_t thePatternMask,
     if((firstBitPosition + thePatternBitLenght) % 32 == 0) --positionOfSecondWord;
 
     uint8_t  numberOfBitsToSkipFirstWord  = (firstBitPosition - 1) % 32;
-    uint32_t bitToSkipMaskFirstWord       = ((~0u) << numberOfBitsToSkipFirstWord) >> numberOfBitsToSkipFirstWord;
+    uint32_t bitToSkipMaskFirstWord       = ~0u << (32 - numberOfBitsToSkipFirstWord);
     uint8_t  numberOfBitsToSkipSecondWord = 32 - (firstBitPosition - 1 + thePatternBitLenght) % 32;
-    uint32_t bitToSkipMaskSecondWord      = (~0u) << numberOfBitsToSkipSecondWord;
+    uint32_t bitToSkipMaskSecondWord      = (~0u) >> (32 - numberOfBitsToSkipSecondWord);
 
     if(positionOfSecondWord > positionOfFirstWord)
     {
@@ -93,14 +93,13 @@ void PatternMatcher::updatePattern(uint32_t thePattern, uint32_t thePatternMask,
     }
     else
     {
-        uint32_t theNewWord               = (thePattern << numberOfBitsToSkipSecondWord) & bitToSkipMaskFirstWord & bitToSkipMaskSecondWord;
-        uint32_t theNewMask               = (thePatternMask << numberOfBitsToSkipSecondWord) & bitToSkipMaskFirstWord & bitToSkipMaskSecondWord;
+        uint32_t theNewWord               = thePattern << numberOfBitsToSkipSecondWord;
+        uint32_t theNewMask               = thePatternMask << numberOfBitsToSkipSecondWord;
+        uint32_t theFullMask = bitToSkipMaskFirstWord | bitToSkipMaskSecondWord;
         auto&    theCurrentPatternAndMask = fPatternAndMaskVector.at(positionOfFirstWord);
-        theCurrentPatternAndMask.first &= bitToSkipMaskFirstWord;
-        theCurrentPatternAndMask.first &= bitToSkipMaskSecondWord;
+        theCurrentPatternAndMask.first &= theFullMask;
         theCurrentPatternAndMask.first |= theNewWord;
-        theCurrentPatternAndMask.second &= bitToSkipMaskFirstWord;
-        theCurrentPatternAndMask.second &= bitToSkipMaskSecondWord;
+        theCurrentPatternAndMask.second &= theFullMask;
         theCurrentPatternAndMask.second |= theNewMask;
     }
 }
