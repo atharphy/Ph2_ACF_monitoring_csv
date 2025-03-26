@@ -407,7 +407,6 @@ bool CalibBase::splitHistoFile(TFile* theInputFile)
         }
     }
 
-    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
     return true;
 }
 

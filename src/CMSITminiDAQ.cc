@@ -679,8 +679,8 @@ int main(int argc, char** argv)
             std::string monitorFileNameSplit(monitorFileName);
             monitorFileNameSplit.insert(monitorFileNameSplit.find(".root"), "_Board_*");
             system(("find " + monitorFileNameSplit + " > input.txt").c_str());
-            system(("find " + monitorFileNameSplit + " | sed -E -e 's/MonitorDQM_(.*)_Board/MonitorDQM_Board/\' > output.txt").c_str());
-            system(("sed -E -i 's/(.*)MonitorDQM/" + std::string(RD53Shared::RESULTDIR) + "\\/Run" + RD53Shared::fromInt2Str(runNumber) + "_MonitorDQM/\' output.txt").c_str());
+            system(("find " + monitorFileNameSplit + " | sed -E -re 's/(MonitorDQM_)(.*)(Board)/\\1\\3/g\' > output.txt").c_str());
+            system(("sed -E -ri 's/(.*)(MonitorDQM)/" + std::string(RD53Shared::RESULTDIR) + "\\/Run" + RD53Shared::fromInt2Str(runNumber) + "_\\2/g\' output.txt").c_str());
 
             std::string   lineIn, lineOut;
             std::ifstream inFile("input.txt");
