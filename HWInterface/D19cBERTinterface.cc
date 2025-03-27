@@ -235,7 +235,7 @@ void D19cBERTinterface::writeCommand(BitErrorTestControl theBitErrorTestControl)
         std::this_thread::sleep_for(std::chrono::microseconds(50));
         uint32_t reply = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.bert_readback");
         if(theCommand == reply) break;
-        LOG(WARNING) << WARNING_FORMAT << "D19cBERTinterface::writeCommandWithCheck: Failed to write command 0x" << std::hex << theCommand << " read back 0x" << reply << std::dec << RESET;
+        LOG(DEBUG) << WARNING_FORMAT << "D19cBERTinterface::writeCommandWithCheck: Failed to write command 0x" << std::hex << theCommand << " read back 0x" << reply << std::dec << RESET;
         ++iterationNumber;
     }
     if(iterationNumber >= maxNumberOfIterations)

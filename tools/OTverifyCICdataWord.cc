@@ -91,7 +91,6 @@ void OTverifyCICdataWord::Resume() {}
 void OTverifyCICdataWord::Reset()
 {
     fRegisterHelper->restoreSnapshot();
-    realignBoardDataWords();
 }
 
 void OTverifyCICdataWord::realignBoardDataWords()
@@ -551,7 +550,7 @@ void OTverifyCICdataWord::runStubInterationsFirmwareMatching(BoardDataContainer&
         BoardDataContainer thePatternCounterCountainer;
         ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*theBoard, thePatternCounterCountainer);
         fPatternCheckerHelper->patternCheckerTest(
-            &thePatternCounterCountainer, line + 1, thePatternAndMaskContainerMap[line], fNumberOfStubBits / numberOfLines, true, &theAlignmentPatternAndMaskContainerMap[line]);
+            &thePatternCounterCountainer, line + 1, thePatternAndMaskContainerMap[line], fNumberOfStubBits / numberOfLines, false, &theAlignmentPatternAndMaskContainerMap[line]);
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
