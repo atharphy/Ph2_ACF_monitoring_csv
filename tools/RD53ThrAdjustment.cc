@@ -415,11 +415,9 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
     CalibBase::setChipEnDis(true);
     RD53Event::weakCheckDataStatus = false;
 
-    // ###########################
-    // # Download new DAC values #
-    // ###########################
-    LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames, false, true, 0);
+    // ########################
+    // # Reset starting point #
+    // ########################
     ThrAdjustment::establishStartingPoint(chargeContainer);
 
     // #################################

@@ -42,7 +42,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
             (theMap.find("RstAuroraV1") != theMap.end() ? theMap.find("RstAuroraV1")->second : 0) | (theMap.find("RstSerializerV1") != theMap.end() ? theMap.find("RstSerializerV1")->second : 0) |
                 (theMap.find("RstAuroraV2") != theMap.end() ? theMap.find("RstAuroraV2")->second : 0) | (theMap.find("RstSerializerV2") != theMap.end() ? theMap.find("RstSerializerV2")->second : 0),
             10);
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+        std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::AURORASLEEP));
     }
     // # bit 12:   EnCRC         --> Map in FormatOptions: enableCRC
     // # bit 11:   EnBCId        --> Map in FormatOptions: enableBCID
@@ -215,7 +215,7 @@ void RD53BInterface::InitRD53Uplinks(Chip* pChip)
         (theMap.find("RstAuroraV1") != theMap.end() ? theMap.find("RstAuroraV1")->second : 0) | (theMap.find("RstSerializerV1") != theMap.end() ? theMap.find("RstSerializerV1")->second : 0) |
             (theMap.find("RstAuroraV2") != theMap.end() ? theMap.find("RstAuroraV2")->second : 0) | (theMap.find("RstSerializerV2") != theMap.end() ? theMap.find("RstSerializerV2")->second : 0),
         10);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::AURORASLEEP));
 
     // ################
     // # Data merging #
@@ -454,6 +454,7 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
 // ##################################
 {
     this->setBoard(pRD53->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
 
     std::vector<uint16_t> commandList;
     const uint16_t        REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;

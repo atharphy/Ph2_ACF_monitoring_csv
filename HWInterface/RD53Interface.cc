@@ -18,6 +18,8 @@ RD53Interface::RD53Interface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterfa
 bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const uint16_t data, bool pVerify)
 {
     this->setBoard(pChip->getBeBoardId());
+    std::unique_lock<std::recursive_mutex> theGuard(fBoardFW->fMutex);
+
     auto pRD53 = static_cast<RD53*>(pChip);
 
     const auto            nameAndValue(SetSpecialRegister(regName, data, pChip->getRegMap()));
@@ -32,6 +34,8 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
 
     if((regName == "VCAL_HIGH") || (regName == "VCAL_MED"))
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
+
+    theGuard.unlock();
 
     bool    status      = true;
     int32_t actualValue = 0;
@@ -76,6 +80,7 @@ bool RD53Interface::WriteChipReg(Chip* pChip, const std::string& regName, const 
 void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std::string& regName, const uint16_t data)
 {
     this->setBoard(pBoard->getId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
 
     auto                  nameAndValue(SetSpecialRegister(regName, data, RD53Shared::firstChip->getRegMap()));
     std::vector<uint16_t> cmdStream;
@@ -89,6 +94,8 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
 int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
 {
     this->setBoard(pChip->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
+
     auto pRD53 = static_cast<RD53*>(pChip);
 
     for(auto attempt = 0; attempt < RD53Shared::MAXATTEMPTS; attempt++)
@@ -192,9 +199,10 @@ void RD53Interface::EnDisChip(Chip* pChip, std::vector<uint16_t>& chipCommandLis
 
 void RD53Interface::ChipErrorReport(Chip* pChip)
 {
-    const uint16_t baseAddrFakeCNT = 0x200; // @CONST@
-
     this->setBoard(pChip->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
+
+    const uint16_t baseAddrFakeCNT = 0x200; // @CONST@
 
     if(pChip->getRegItem("BCID_CNT").fAddress < baseAddrFakeCNT)
         LOG(INFO) << BOLDBLUE << "BCID_CNT            = " << BOLDYELLOW << std::setw(6) << std::fixed << RD53Interface::ReadChipReg(pChip, "BCID_CNT") << RESET;
@@ -273,6 +281,7 @@ void RD53Interface::ReadChipAllLocalReg(ReadoutChip* pChip, const std::string& r
 void RD53Interface::SendChipCommands(const BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId)
 {
     this->setBoard(pBoard->getId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(chipCommandList, hybridId);
 }
 
@@ -284,6 +293,7 @@ void RD53Interface::PackHybridCommands(const BeBoard* pBoard, const std::vector<
 void RD53Interface::SendHybridCommands(const BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList)
 {
     this->setBoard(pBoard->getId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
     static_cast<RD53FWInterface*>(fBoardFW)->SendChipCommands(hybridCommandList);
 }
 
@@ -294,6 +304,7 @@ void RD53Interface::SendHybridCommands(const BeBoard* pBoard, const std::vector<
 float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& observableName, bool silentRunning)
 {
     this->setBoard(pChip->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
 
     const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%]
     float       value;
@@ -314,6 +325,8 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
             LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << observableName << BOLDBLUE << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE
                       << (isCurrentNotVoltage == true ? " uA" : " V") << std::setprecision(-1) << RESET;
     }
+
+    // std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::SUPERDEEPSLEEP)); // @TMP@
 
     return value;
 }
@@ -361,12 +374,14 @@ float RD53Interface::measureVoltageCurrent(ReadoutChip* pChip, uint32_t data, bo
 float RD53Interface::ReadHybridTemperature(ReadoutChip* pChip, bool silentRunning)
 {
     this->setBoard(pChip->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
     return static_cast<RD53FWInterface*>(fBoardFW)->ReadHybridTemperature(pChip->getHybridId(), silentRunning);
 }
 
 float RD53Interface::ReadHybridVoltage(ReadoutChip* pChip, bool silentRunning)
 {
     this->setBoard(pChip->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
     return static_cast<RD53FWInterface*>(fBoardFW)->ReadHybridVoltage(pChip->getHybridId(), silentRunning);
 }
 

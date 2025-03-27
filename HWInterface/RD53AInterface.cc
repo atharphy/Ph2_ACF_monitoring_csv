@@ -236,6 +236,7 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
 // ##################################
 {
     this->setBoard(pRD53->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
 
     std::vector<uint16_t> commandList;
     const uint16_t        REGION_COL_ADDR    = pRD53->getRegItem("REGION_COL").fAddress;
