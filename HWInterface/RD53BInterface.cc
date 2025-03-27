@@ -351,7 +351,6 @@ void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* 
 std::vector<std::pair<uint16_t, uint16_t>> RD53BInterface::ReadRD53Reg(ReadoutChip* pChip, const std::string& regName)
 {
     this->setBoard(pChip->getBeBoardId());
-
     std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
 
     auto nameAndValue(SetSpecialRegister(regName, 0, pChip->getRegMap()));

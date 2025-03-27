@@ -142,6 +142,7 @@ void RD53AInterface::InitRD53Uplinks(Chip* pChip)
 std::vector<std::pair<uint16_t, uint16_t>> RD53AInterface::ReadRD53Reg(ReadoutChip* pChip, const std::string& regName)
 {
     this->setBoard(pChip->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
 
     auto nameAndValue(SetSpecialRegister(regName, 0, pChip->getRegMap()));
     RD53Interface::SendCommand(pChip, RD53ACmd::RdReg{pChip->getId(), pChip->getRegItem(nameAndValue.first).fAddress});
