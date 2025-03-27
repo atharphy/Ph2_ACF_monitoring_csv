@@ -555,15 +555,15 @@ void OTverifyCICdataWord::runStubInterationsFirmwareMatching(BoardDataContainer&
                 auto& theStubEfficiency = getStorageForStubErrorRate(theHybrid, chipId, line, stubPatternCounter);
 
                 const auto& theRecorderdErroInfo = thePatternCounterCountainer.getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>();
-                if(theRecorderdErroInfo.at(1) > 0)
-                {
-                    const auto& thePatternAndMask =
-                        thePatternAndMaskContainerMap[line].getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::pair<std::vector<uint32_t>, std::vector<uint32_t>>>();
-                    LOG(WARNING) << WARNING_FORMAT << "theHybrid = " << +theHybrid->getId() << " chipId = " << +chipId << " line = " << +line << " stubPatternCounter = " << +stubPatternCounter
-                                 << " ratio = " << float(theRecorderdErroInfo.at(1)) / float(theRecorderdErroInfo.at(0)) << RESET;
-                    LOG(WARNING) << WARNING_FORMAT << "Pattern = " << getPatternPrintout(thePatternAndMask.first, 1) << RESET;
-                    LOG(WARNING) << WARNING_FORMAT << "Mask    = " << getPatternPrintout(thePatternAndMask.second, 1) << RESET;
-                }
+                // if(theRecorderdErroInfo.at(1) > 0)
+                // {
+                //     const auto& thePatternAndMask =
+                //         thePatternAndMaskContainerMap[line].getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::pair<std::vector<uint32_t>, std::vector<uint32_t>>>();
+                //     LOG(WARNING) << WARNING_FORMAT << "theHybrid = " << +theHybrid->getId() << " chipId = " << +chipId << " line = " << +line << " stubPatternCounter = " << +stubPatternCounter
+                //                  << " ratio = " << float(theRecorderdErroInfo.at(1)) / float(theRecorderdErroInfo.at(0)) << RESET;
+                //     LOG(WARNING) << WARNING_FORMAT << "Pattern = " << getPatternPrintout(thePatternAndMask.first, 1) << RESET;
+                //     LOG(WARNING) << WARNING_FORMAT << "Mask    = " << getPatternPrintout(thePatternAndMask.second, 1) << RESET;
+                // }
                 theStubEfficiency.at(0) += theRecorderdErroInfo.at(0);
                 theStubEfficiency.at(1) += theRecorderdErroInfo.at(1);
             }

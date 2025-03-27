@@ -125,6 +125,8 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitC
     D19cBERTinterface* theBERTinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
 
     theBERTinterface->setUsePRBS(false);
+    theBERTinterface->setSuppressErrorPrintout(fSuppressErrorPrintout);
+
     for(auto theOpticalGroup: *theBoard)
     {
         for(auto theHybrid: *theOpticalGroup)
