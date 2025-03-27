@@ -174,23 +174,23 @@ class D19cBERTinterface
     void setSuppressErrorPrintout(bool suppressErrorPrintout) { fSuppressErrorPrintout = suppressErrorPrintout; }
 
   private:
-    RegManager* fTheRegManager{nullptr};
-    uint32_t    getBitErrorCounters(uint8_t hybridId, uint8_t lineId);
-    uint64_t    getFrameCounters(uint8_t hybridId, uint8_t lineId, bool isMSB);
-    uint32_t    getFirstData(uint8_t hybridId, uint8_t lineId);
-    void        injectError(uint8_t hybridId, uint8_t lineId);
-    void        selectFrameCounters(bool isMSB);
-    void        waitForNeededBits(bool is10Gmodule, float numberOfMatchedBits);
+    RegManager*           fTheRegManager{nullptr};
+    uint32_t              getBitErrorCounters(uint8_t hybridId, uint8_t lineId);
+    uint64_t              getFrameCounters(uint8_t hybridId, uint8_t lineId, bool isMSB);
+    uint32_t              getFirstData(uint8_t hybridId, uint8_t lineId);
+    void                  injectError(uint8_t hybridId, uint8_t lineId);
+    void                  selectFrameCounters(bool isMSB);
+    void                  waitForNeededBits(bool is10Gmodule, float numberOfMatchedBits);
     std::pair<bool, bool> isStartPatternFound(BoardContainer* theBoardContainer, uint8_t lineNumber);
-    bool        retrieveBitTestedCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber, bool is10Gmodule, float numberOfMatchedBits);
-    void        retrieveErrorCounter(OpticalGroupDataContainer* theOpticalGroupContainer, uint8_t numberOfLines);
-    void        retrieveErrorCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber);
-    uint64_t    readNumberOfTestedBit(uint16_t hybridId, uint8_t lineId, bool is10Gmodule);
-    void        loadSampleData(uint16_t hybridId, uint8_t lineId);
-    void        readSampleData(uint16_t hybridId, uint8_t lineId);
-    bool        isStateMachineStarted(BoardContainer* theBoardContainer, uint8_t lineNumber);
-    uint8_t     getCheckerFSMstatus(uint8_t hybridId, uint8_t lineId);
-    void        loadCheckedPattern(uint8_t hybridId, uint8_t lineId);
+    bool                  retrieveBitTestedCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber, bool is10Gmodule, float numberOfMatchedBits);
+    void                  retrieveErrorCounter(OpticalGroupDataContainer* theOpticalGroupContainer, uint8_t numberOfLines);
+    void                  retrieveErrorCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber);
+    uint64_t              readNumberOfTestedBit(uint16_t hybridId, uint8_t lineId, bool is10Gmodule);
+    void                  loadSampleData(uint16_t hybridId, uint8_t lineId);
+    void                  readSampleData(uint16_t hybridId, uint8_t lineId);
+    bool                  isStateMachineStarted(BoardContainer* theBoardContainer, uint8_t lineNumber);
+    uint8_t               getCheckerFSMstatus(uint8_t hybridId, uint8_t lineId);
+    void                  loadCheckedPattern(uint8_t hybridId, uint8_t lineId);
 
     void              writeCommand(BitErrorTestControl theBitErrorTestControl);
     BitErrorTestReply readReplay(const BitErrorTestControl& theBitErrorTestControl);
@@ -204,7 +204,7 @@ class D19cBERTinterface
     std::map<uint8_t, std::vector<uint32_t>> fCheckedPatternMaskMap;
     std::map<uint8_t, float>                 fNumberOfCheckedBitsMap;
     bool                                     fUsePRBS = true;
-    bool fSuppressErrorPrintout{false};
+    bool                                     fSuppressErrorPrintout{false};
 };
 
 } // namespace Ph2_HwInterface
