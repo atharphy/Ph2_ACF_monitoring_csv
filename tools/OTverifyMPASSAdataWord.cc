@@ -63,10 +63,7 @@ void OTverifyMPASSAdataWord::Pause() {}
 
 void OTverifyMPASSAdataWord::Resume() {}
 
-void OTverifyMPASSAdataWord::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTverifyMPASSAdataWord::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTverifyMPASSAdataWord::fillHistograms()
 {

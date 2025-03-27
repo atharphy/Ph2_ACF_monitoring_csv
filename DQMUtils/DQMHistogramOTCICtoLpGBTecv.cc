@@ -68,7 +68,7 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
                     Form("CIC to LpGBT tested bits CIC Signal Strength %.0f - LpGBT Clock Polarity %.0f Clock Strength %.0f", CICStrength, polarity, hybridClockStrength),
                     numberOfXaxisBins,
                     -0.5,
-                    numberOfXaxisBins -0.5,
+                    numberOfXaxisBins - 0.5,
                     numberOfYaxisBins,
                     0,
                     numberOfYaxisBins);

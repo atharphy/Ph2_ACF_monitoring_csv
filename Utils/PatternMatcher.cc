@@ -95,7 +95,7 @@ void PatternMatcher::updatePattern(uint32_t thePattern, uint32_t thePatternMask,
     {
         uint32_t theNewWord               = thePattern << numberOfBitsToSkipSecondWord;
         uint32_t theNewMask               = thePatternMask << numberOfBitsToSkipSecondWord;
-        uint32_t theFullMask = bitToSkipMaskFirstWord | bitToSkipMaskSecondWord;
+        uint32_t theFullMask              = bitToSkipMaskFirstWord | bitToSkipMaskSecondWord;
         auto&    theCurrentPatternAndMask = fPatternAndMaskVector.at(positionOfFirstWord);
         theCurrentPatternAndMask.first &= theFullMask;
         theCurrentPatternAndMask.first |= theNewWord;

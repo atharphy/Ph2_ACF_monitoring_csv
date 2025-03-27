@@ -565,7 +565,7 @@ bool D19cBERTinterface::isStartPatternFound(BoardContainer* theBoardContainer, u
                     else
                     {
                         if(((firstData && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16) ==
-                        ((fCheckedPatternMap.at(theHybrid->getId()).at(0) && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16))
+                           ((fCheckedPatternMap.at(theHybrid->getId()).at(0) && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16))
                             break;
                     }
                 }

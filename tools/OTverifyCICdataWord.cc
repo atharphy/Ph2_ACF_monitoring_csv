@@ -88,10 +88,7 @@ void OTverifyCICdataWord::Pause() {}
 
 void OTverifyCICdataWord::Resume() {}
 
-void OTverifyCICdataWord::Reset()
-{
-    fRegisterHelper->restoreSnapshot();
-}
+void OTverifyCICdataWord::Reset() { fRegisterHelper->restoreSnapshot(); }
 
 void OTverifyCICdataWord::realignBoardDataWords()
 {
