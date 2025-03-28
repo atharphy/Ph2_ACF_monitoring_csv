@@ -42,7 +42,7 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
     uint8_t                fFirstStrip{15};
     uint8_t                fStripGap{10};
     uint8_t                fStubRowCoordinate{0x0A};
-    std::map<int, uint8_t> fBendingToCode{{0, 5}};
+    std::map<int, uint8_t> fBendingToCode{{0, 7}};
 
     virtual std::vector<Cluster> produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed);
     virtual std::vector<Cluster> produceStripClusterList();

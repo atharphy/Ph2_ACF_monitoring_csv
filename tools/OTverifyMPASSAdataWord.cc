@@ -125,7 +125,7 @@ std::vector<std::vector<Stub>> OTverifyMPASSAdataWord::createPSstubList()
 
     for(const auto& theStripCluster: fListOfInjectedStrips)
     {
-        std::vector<Stub> theSubList{Stub(theStripCluster.fFirstCol * 2 + theStripCluster.fColWidth / 2, fBendingToCode.at(0), 5)};
+        std::vector<Stub> theSubList{Stub(theStripCluster.fFirstCol * 2 + theStripCluster.fColWidth / 2, fBendingToCode.at(0), 0xf)};
         theListOfStubInjections.push_back(theSubList);
     }
 
