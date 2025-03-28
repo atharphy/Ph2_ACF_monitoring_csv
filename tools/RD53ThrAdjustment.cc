@@ -293,7 +293,7 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                                 downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                     midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
 
-                                RD53RunProgress::total() -= ThrAdjustment::removeIterations(cHybrid, startValue, stopValue, i);
+                                RD53RunProgress::total() -= ThrAdjustment::removeIterations(startValue, stopValue, i);
                                 i = numberOfBits + 1u;
                             }
                             // ########################
