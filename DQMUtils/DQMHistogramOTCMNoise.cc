@@ -122,8 +122,8 @@ void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDet
                                                  NCHANNELS / 2 + 1 + 0.5);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, f2DChipSensorCorrelation, h2DChipSensorCorrelation);
 
-    HistContainer<TH2F> h2DHybridCorrelation(("CommonNoiseCrossHybridCorrelation" + suffix).c_str(),
-                                             ("Common noise cross hybrid correlation" + suffix).c_str(),
+    HistContainer<TH2F> h2DHybridCorrelation(("CommonNoiseHybridCorrelation" + suffix).c_str(),
+                                             ("Common noise hybrid correlation" + suffix).c_str(),
                                              NCHANNELS * NCHIPS_OT + 2,
                                              -0.5,
                                              NCHANNELS * NCHIPS_OT + 1 + 0.5,
@@ -529,9 +529,9 @@ void DQMHistogramOTCMNoise::fillChipHitPlots(DetectorDataContainer& theHitData, 
                                                 ->getObject(chip->getId())
                                                 ->getSummary<HistContainer<TH1F>>()
                                                 .fTheHistogram;
-                    theHistogramBottom->GetXaxis()->SetTitle("Number of hits in bottom strips");
+                    theHistogramBottom->GetXaxis()->SetTitle("Number of hits");
                     theHistogramBottom->GetYaxis()->SetTitle("Number of events");
-                    theHistogramTop->GetXaxis()->SetTitle("Number of hits in top strips");
+                    theHistogramTop->GetXaxis()->SetTitle("Number of hits");
                     theHistogramTop->GetYaxis()->SetTitle("Number of events");
                     theHistogramSum->GetXaxis()->SetTitle("Number of hits ");
                     theHistogramSum->GetYaxis()->SetTitle("Number of events");
@@ -583,9 +583,9 @@ void DQMHistogramOTCMNoise::fillHybridHitPlots(DetectorDataContainer& theHitData
                 TH1F* theHistogramTop =
                     fHybridHitHistogramsTop.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 TH1F* theHistogramSum = fHybridHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                theHistogramBottom->GetXaxis()->SetTitle("Number of hits in bottom strips");
+                theHistogramBottom->GetXaxis()->SetTitle("Number of hits");
                 theHistogramBottom->GetYaxis()->SetTitle("Number of events");
-                theHistogramTop->GetXaxis()->SetTitle("Number of hits in top strips");
+                theHistogramTop->GetXaxis()->SetTitle("Number of hits");
                 theHistogramTop->GetYaxis()->SetTitle("Number of events");
                 theHistogramSum->GetXaxis()->SetTitle("Number of hits ");
                 theHistogramSum->GetYaxis()->SetTitle("Number of events");
@@ -617,9 +617,9 @@ void DQMHistogramOTCMNoise::fillModuleHitPlots(DetectorDataContainer& theHitData
             TH1F* theHistogramBottom = fModuleHitHistogramsBottom.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
             TH1F* theHistogramTop    = fModuleHitHistogramsTop.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
             TH1F* theHistogramSum    = fModuleHitHistograms.getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
-            theHistogramBottom->GetXaxis()->SetTitle("Number of hits in bottom strips");
+            theHistogramBottom->GetXaxis()->SetTitle("Number of hits");
             theHistogramBottom->GetYaxis()->SetTitle("Number of events");
-            theHistogramTop->GetXaxis()->SetTitle("Number of hits in top strips");
+            theHistogramTop->GetXaxis()->SetTitle("Number of hits");
             theHistogramTop->GetYaxis()->SetTitle("Number of events");
             theHistogramSum->GetXaxis()->SetTitle("Number of hits ");
             theHistogramSum->GetYaxis()->SetTitle("Number of events");

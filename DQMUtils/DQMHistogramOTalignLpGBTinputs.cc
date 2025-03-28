@@ -49,19 +49,19 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
         }
     };
 
-    HistContainer<TH1F> alignmentSuccessHistogram("LpGBT_InputAlignmentEfficiency", "LpGBT input alignment efficiency", numberOfBins, -0.5, numberOfBins - 0.5);
+    HistContainer<TH1F> alignmentSuccessHistogram("CICtoLpGBT_AlignmentEfficiency", "CIC to LpGBT alignment efficiency", numberOfBins, -0.5, numberOfBins - 0.5);
     alignmentSuccessHistogram.fTheHistogram->GetXaxis()->SetTitle("");
     setBinLabels(alignmentSuccessHistogram.fTheHistogram->GetXaxis());
     alignmentSuccessHistogram.fTheHistogram->GetYaxis()->SetTitle("Alignment efficiency");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fAlignmentSuccessHistogramContainer, alignmentSuccessHistogram);
 
-    HistContainer<TH1I> bestPhaseHistogram("LpGBT_InputBestPhase", "LpGBT input best phase", numberOfBins, -0.5, numberOfBins - 0.5);
+    HistContainer<TH1I> bestPhaseHistogram("CICtoLpGBT_BestPhase", "CIC to LpGBT best phase", numberOfBins, -0.5, numberOfBins - 0.5);
     bestPhaseHistogram.fTheHistogram->GetXaxis()->SetTitle("");
     setBinLabels(bestPhaseHistogram.fTheHistogram->GetXaxis());
     bestPhaseHistogram.fTheHistogram->GetYaxis()->SetTitle("Best phase value");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fBestPhaseHistogramContainer, bestPhaseHistogram);
 
-    HistContainer<TH2F> foundPhasesDistributionHistogram("LpGBT_InputFoundPhaseDistribution", "LpGBT input found phase distribution", numberOfBins, -0.5, numberOfBins - 0.5, 16, -0.5, 15.5);
+    HistContainer<TH2F> foundPhasesDistributionHistogram("CICtoLpGBT_FoundPhaseDistribution", "CIC to LpGBT found phase distribution", numberOfBins, -0.5, numberOfBins - 0.5, 16, -0.5, 15.5);
     foundPhasesDistributionHistogram.fTheHistogram->GetXaxis()->SetTitle("");
     setBinLabels(foundPhasesDistributionHistogram.fTheHistogram->GetXaxis());
     foundPhasesDistributionHistogram.fTheHistogram->GetYaxis()->SetTitle("Phase");

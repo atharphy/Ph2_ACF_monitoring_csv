@@ -32,23 +32,13 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
 
     auto prepareHistogram = [&listOfLpGBTPhase](TH2F* theHistogram)
     {
-        theHistogram->GetYaxis()->SetTitle("Line");
         theHistogram->GetXaxis()->SetTitle("LpGBT Phase");
         theHistogram->SetStats(false);
         theHistogram->GetXaxis()->SetLabelSize(0.04);
         theHistogram->GetYaxis()->SetLabelSize(0.04);
 
-        // Label the x axis with the lpGBT phase
-        int binNumber = 1;
-        for(auto phase: listOfLpGBTPhase)
-        {
-            std::string s = convertToString(phase);
-            theHistogram->GetXaxis()->SetBinLabel(binNumber, s.c_str());
-            binNumber++;
-        }
-
         // Label the y axis with the line and clock strength
-        binNumber = 1;
+        int binNumber = 1;
         for(int channel = 1; channel <= theHistogram->GetYaxis()->GetNbins(); channel++)
         {
             std::string s = channel == 1 ? "L1" : "Stub" + convertToString(channel - 1);
@@ -77,8 +67,8 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
                     Form("CICtoLpGBT_TestedBits_CIC_Signal_Strength_%.0f_LpGBT_Clock_Polarity_%.0f_Clock_Strength_%.0f", CICStrength, polarity, hybridClockStrength),
                     Form("CIC to LpGBT tested bits CIC Signal Strength %.0f - LpGBT Clock Polarity %.0f Clock Strength %.0f", CICStrength, polarity, hybridClockStrength),
                     numberOfXaxisBins,
-                    0,
-                    numberOfXaxisBins,
+                    -0.5,
+                    numberOfXaxisBins - 0.5,
                     numberOfYaxisBins,
                     0,
                     numberOfYaxisBins);
@@ -89,8 +79,8 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
                     Form("CICtoLpGBT_ErrorRate_CIC_Signal_Strength_%.0f_LpGBT_Clock_Polarity_%.0f_Clock_Strength_%.0f", CICStrength, polarity, hybridClockStrength),
                     Form("CIC to LpGBT error rate CIC Signal Strength %.0f - LpGBT Clock Polarity %.0f Clock Strength %.0f", CICStrength, polarity, hybridClockStrength),
                     numberOfXaxisBins,
-                    0,
-                    numberOfXaxisBins,
+                    -0.5,
+                    numberOfXaxisBins - 0.5,
                     numberOfYaxisBins,
                     0,
                     numberOfYaxisBins);

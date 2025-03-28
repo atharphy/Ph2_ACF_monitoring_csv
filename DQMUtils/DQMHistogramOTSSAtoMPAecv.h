@@ -55,9 +55,7 @@ class DQMHistogramOTSSAtoMPAecv : public DQMHistogramBase
      */
     void reset(void) override;
 
-    void fillPatternEfficiencyScan(DetectorDataContainer& thePatternMatchingEfficiency, uint8_t clockEdge, uint8_t slvsCurrent);
-
-    void fillL1PatternEfficiencyScan(DetectorDataContainer& thePatternMatchingEfficiency, uint8_t clockEdge, uint8_t slvsCurrent, int samplingPhaseOffset);
+    void fillPatternEfficiencyScan(DetectorDataContainer& thePatternMatchingEfficiency, uint8_t clockEdge, uint8_t slvsCurrent, int samplingPhaseOffset);
 
   private:
     DetectorContainer*                       fDetectorContainer;

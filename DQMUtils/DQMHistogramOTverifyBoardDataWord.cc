@@ -33,14 +33,12 @@ void DQMHistogramOTverifyBoardDataWord::book(TFile* theOutputFile, DetectorConta
     };
 
     HistContainer<TH1F> errorRateHistogram("CICtoLpGBT_ErrorRate", "CIC to LpGBT error rate", numberOfLines, -0.5, numberOfLines - 0.5);
-    errorRateHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     errorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Error rate");
     errorRateHistogram.fTheHistogram->SetStats(false);
     setBitLabel(errorRateHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fMatchingErrorRateHistogramContainer, errorRateHistogram);
 
     HistContainer<TH1F> testedBitsHistogram("CICtoLpGBT_TestedBits", "CIC to LpGBT tested bits", numberOfLines, -0.5, numberOfLines - 0.5);
-    testedBitsHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     testedBitsHistogram.fTheHistogram->GetYaxis()->SetTitle("Tested bits");
     testedBitsHistogram.fTheHistogram->SetStats(false);
     setBitLabel(testedBitsHistogram.fTheHistogram);

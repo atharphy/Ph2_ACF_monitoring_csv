@@ -32,13 +32,11 @@ void DQMHistogramOTalignBoardDataWord::book(TFile* theOutputFile, DetectorContai
     };
 
     HistContainer<TH1I> bitSlipHistogram("Board_WordAlignmentBitSlipValues", "Board word alignment bit slip values", numberOfLines, -0.5, numberOfLines - 0.5);
-    bitSlipHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     bitSlipHistogram.fTheHistogram->GetYaxis()->SetTitle("Bitslip value");
     setBitLabel(bitSlipHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBitSlipHistogramContainer, bitSlipHistogram);
 
     HistContainer<TH1I> alignmentRetryHistogram("Board_WordAlignmentRetryNumbers", "Board word alignment retry numbers", numberOfLines, -0.5, numberOfLines - 0.5);
-    alignmentRetryHistogram.fTheHistogram->GetXaxis()->SetTitle("Line number");
     alignmentRetryHistogram.fTheHistogram->GetYaxis()->SetTitle("Retry number");
     setBitLabel(alignmentRetryHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fAlignmentRetryHistogramContainer, alignmentRetryHistogram);

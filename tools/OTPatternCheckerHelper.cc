@@ -125,6 +125,8 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitC
     D19cBERTinterface* theBERTinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
 
     theBERTinterface->setUsePRBS(false);
+    theBERTinterface->setSuppressErrorPrintout(fSuppressErrorPrintout);
+
     for(auto theOpticalGroup: *theBoard)
     {
         for(auto theHybrid: *theOpticalGroup)
@@ -141,7 +143,12 @@ void OTPatternCheckerHelper::patternCheckerTest(BoardDataContainer* theErrorBitC
     {
         for(auto theHybrid: *theOpticalGroup)
         {
-            const auto& receivedBERTresultsVector                                                                                      = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
+            auto receivedBERTresultsVector = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
+            if(receivedBERTresultsVector.at(0) == 0)
+            {
+                receivedBERTresultsVector.at(0) = numberOfBits;
+                receivedBERTresultsVector.at(1) = numberOfBits;
+            }
             theErrorBitContainer->getHybrid(theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>() = receivedBERTresultsVector;
         }
     }

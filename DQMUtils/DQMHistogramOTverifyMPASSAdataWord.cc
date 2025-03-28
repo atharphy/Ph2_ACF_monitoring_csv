@@ -27,7 +27,6 @@ void DQMHistogramOTverifyMPASSAdataWord::book(TFile* theOutputFile, DetectorCont
     HistContainer<TH2F> patternMatchingTestedBitsHistogram(
         "SSAtoMPA_PatternMatchingTestedBits", "SSA to MPA pattern matching tested bits", NUMBER_OF_CIC_PORTS, 8 - 0.5, 8 + NUMBER_OF_CIC_PORTS - 0.5, 9, -0.5, 8.5);
     patternMatchingTestedBitsHistogram.fTheHistogram->GetXaxis()->SetTitle("MPA Id");
-    patternMatchingTestedBitsHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     patternMatchingTestedBitsHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
     for(size_t clusterLine = 0; clusterLine < 8; ++clusterLine) patternMatchingTestedBitsHistogram.fTheHistogram->GetYaxis()->SetBinLabel(clusterLine + 2, Form("Cluster%d", int(clusterLine)));
     patternMatchingTestedBitsHistogram.fTheHistogram->SetStats(false);
@@ -36,7 +35,6 @@ void DQMHistogramOTverifyMPASSAdataWord::book(TFile* theOutputFile, DetectorCont
     HistContainer<TH2F> patternMatchingErrorRateHistogram(
         "SSAtoMPA_PatternMatchingErrorRate", "SSA to MPA pattern matching error rate", NUMBER_OF_CIC_PORTS, 8 - 0.5, 8 + NUMBER_OF_CIC_PORTS - 0.5, 9, -0.5, 8.5);
     patternMatchingErrorRateHistogram.fTheHistogram->GetXaxis()->SetTitle("MPA Id");
-    patternMatchingErrorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     patternMatchingErrorRateHistogram.fTheHistogram->GetYaxis()->SetBinLabel(1, "L1");
     for(size_t clusterLine = 0; clusterLine < 8; ++clusterLine) patternMatchingErrorRateHistogram.fTheHistogram->GetYaxis()->SetBinLabel(clusterLine + 2, Form("Cluster%d", int(clusterLine)));
     patternMatchingErrorRateHistogram.fTheHistogram->SetMinimum(0);
