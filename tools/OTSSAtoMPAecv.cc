@@ -111,12 +111,12 @@ void OTSSAtoMPAecv::runSSAtoMPAecvScan()
         setSameDac("SLVS_pad_current_Stub_4_5", slvsCurrent | (slvsCurrent << 3));
         setSameDac("SLVS_pad_current_Stub_6_7", slvsCurrent | (slvsCurrent << 3));
         fDetectorContainer->removeReadoutChipQueryFunction(theSSAqueryFunctionString);
-        runSSAtoMPAecvScanForStubs(slvsCurrent);
+        runSSAtoMPAecvScan(slvsCurrent);
         // runSSAtoMPAecvScanForL1(slvsCurrent);
     }
 }
 
-void OTSSAtoMPAecv::runSSAtoMPAecvScanForStubs(uint8_t slvsCurrent)
+void OTSSAtoMPAecv::runSSAtoMPAecvScan(uint8_t slvsCurrent)
 {
     LOG(INFO) << BOLDGREEN << "Scanning SSA to MPA stub phases" << RESET;
     for(uint8_t clockEdge = 0; clockEdge < 2; ++clockEdge)

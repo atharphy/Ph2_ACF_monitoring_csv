@@ -61,7 +61,6 @@ class DQMHistogramOTSSAtoMPAecv : public DQMHistogramBase
     DetectorContainer*                       fDetectorContainer;
     std::map<uint8_t, DetectorDataContainer> fPhaseScanTestedBits;
     std::map<uint8_t, DetectorDataContainer> fPhaseScanErrorRate;
-    std::map<uint8_t, DetectorDataContainer> fL1PhaseScanMatchingEfficiencies;
 
     int fMinimum320PhaseShift = -1;
     int fMaximum320PhaseShift = +1;

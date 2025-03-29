@@ -411,7 +411,7 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pHybridId, uint8_t
 
         auto cChipIdMapped = this->getChipIdMapped(pHybridId, pReadoutChipId);
         // LOG(INFO) << BOLDBLUE << "Retreiving strip cluster information for Hybrid#" << +pHybridId << " Chip#" << +cChipId << " this is chip Id #" << +cChipIdMapped << " in CIC land" << RESET;
-        if(cChipId == cChipIdMapped)
+        if(cChipId == cChipIdMapped && cAdd != 0) // need to skip empty clusters
         {
             // LOG (INFO) << BOLDGREEN << "SCLUS ..... " << std::bitset<14>(*cIterator)  << RESET;
             SCluster cSCluster;

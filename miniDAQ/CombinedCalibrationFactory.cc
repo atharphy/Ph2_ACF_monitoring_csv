@@ -282,9 +282,9 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTinjectionDelayOptimization,
              OTinjectionOccupancyScan,
              OTPScommonNoise,
-             OTCICtoLpGBTecv,
              OTSSAtoMPAecv,
              OTSSAtoSSAecv,
+             OTCICtoLpGBTecv,
              OTalignLpGBTinputsForBypass,
              OTChipToCICecv,
              OTBitErrorRateTest,
@@ -310,9 +310,9 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTinjectionDelayOptimization,
              OTinjectionOccupancyScan,
              OTPScommonNoise,
-             OTCICtoLpGBTecv,
              OTSSAtoMPAecv,
              OTSSAtoSSAecv,
+             OTCICtoLpGBTecv,
              OTalignLpGBTinputsForBypass,
              OTChipToCICecv,
              OTBitErrorRateTest,
@@ -326,7 +326,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoSSAecv>("PS Module", "SSAtoSSAecv");
 
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTSSAtoMPAecv, OTSSAtoSSAecv, OTalignLpGBTinputsForBypass, OTChipToCICecv>("PS Module",
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoMPAecv, OTSSAtoSSAecv, OTCICtoLpGBTecv, OTalignLpGBTinputsForBypass, OTChipToCICecv>("PS Module",
                                                                                                                                                                                             "PSecv");
 
     Register<OTPSringOscillatorTest>("PS Module", "ringOscillatorTest");

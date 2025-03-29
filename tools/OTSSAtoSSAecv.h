@@ -37,12 +37,23 @@ class OTSSAtoSSAecv : public OTSSAtoMPAecv
 
   private:
     void                           runSSAtoSSAecvScan();
-    void                           setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA) override;
     std::vector<Cluster>           produceStripClusterList() override;
-    std::vector<Cluster>           produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed) override;
-    std::vector<std::vector<Stub>> producePossibleStubVectorList(const std::vector<Cluster>& thePixelClusterList);
+    std::vector<std::vector<Stub>> createPSstubList() override;
+    void                           setStripOffsetParameters(Ph2_HwDescription::ReadoutChip* theSSA) override;
     std::vector<float>             fListOfSSAslvsCurrents{1, 4, 7};
-    uint8_t                        fCurrentStripInjected;
+    GenericDataArray<float, 2>&    getStorageForStubErrorRate(Ph2_HwDescription::Hybrid* theHybrid, uint8_t chipId, uint8_t line, size_t stubPatternCounter) override;
+    void                           setSampleClockEdgeAndPhase(Ph2_HwDescription::BeBoard* theBoard, uint8_t clockEdge, int samplingPhaseOffset);
+    void                           resetPatternMatchingEfficiencyContainer() override;
+
+    uint8_t fStripClusterColRightToLeft = 1;
+    uint8_t fStripClusterColLeftToRight = 118;
+
+    uint8_t fPixelClusterColRightToLeft = 117;
+    uint8_t fPixelClusterColLeftToRight = 2;
+
+    int                   fMinimum320PhaseShift = -1;
+    int                   fMaximum320PhaseShift = +1;
+    DetectorDataContainer fOriginalPhaseContainer;
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
