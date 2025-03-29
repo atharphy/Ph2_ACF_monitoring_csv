@@ -134,14 +134,9 @@ std::vector<std::vector<Stub>> OTverifyMPASSAdataWord::createPSstubList()
 
 void OTverifyMPASSAdataWord::setStripOffsetParameters(Ph2_HwDescription::ReadoutChip* theSSA)
 {
-    std::vector<std::pair<std::string, uint16_t>> stripOffsetRegisters {
-        {"StripOffset_byte0", 0},
-        {"StripOffset_byte1", 0},
-        {"StripOffset_byte2", 0},
-        {"StripOffset_byte3", 0}
-    };
+    std::vector<std::pair<std::string, uint16_t>> stripOffsetRegisters{{"StripOffset_byte0", 0}, {"StripOffset_byte1", 0}, {"StripOffset_byte2", 0}, {"StripOffset_byte3", 0}};
 
-    fReadoutChipInterface->WriteChipMultReg(theSSA, stripOffsetRegisters);        
+    fReadoutChipInterface->WriteChipMultReg(theSSA, stripOffsetRegisters);
 }
 
 void OTverifyMPASSAdataWord::prepareForStubInjection(Ph2_HwDescription::BeBoard* theBoard)

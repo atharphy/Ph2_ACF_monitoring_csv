@@ -78,9 +78,8 @@ void OTSSAtoSSAecv::runSSAtoSSAecvScan()
             {
                 for(auto theChip: *theHybrid)
                 {
-                    auto& theOriginalPhase =
-                        fOriginalPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint8_t>();
-                    theOriginalPhase = fReadoutChipInterface->ReadChipReg(theChip, "LateralRX_sampling");
+                    auto& theOriginalPhase = fOriginalPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint8_t>();
+                    theOriginalPhase       = fReadoutChipInterface->ReadChipReg(theChip, "LateralRX_sampling");
                 }
             }
         }
@@ -143,7 +142,7 @@ void OTSSAtoSSAecv::setSampleClockEdgeAndPhase(Ph2_HwDescription::BeBoard* theBo
     auto calculateNewPhase = [clockEdge, samplingPhaseOffset](uint8_t originalClockEdgeAndPhase) -> uint8_t
     {
         uint8_t originalPhase = originalClockEdgeAndPhase & 0x7;
-        uint8_t newPhase = originalClockEdgeAndPhase + samplingPhaseOffset;
+        uint8_t newPhase      = originalClockEdgeAndPhase + samplingPhaseOffset;
         if(originalPhase == 0 && samplingPhaseOffset < 0) newPhase = 0x8 - samplingPhaseOffset;
         if(originalPhase == 0x7 && samplingPhaseOffset > 0) newPhase = 0x0 + samplingPhaseOffset - 1;
 
@@ -158,10 +157,9 @@ void OTSSAtoSSAecv::setSampleClockEdgeAndPhase(Ph2_HwDescription::BeBoard* theBo
             {
                 if(theChip->getFrontEndType() == FrontEndType::SSA2)
                 {
-                    auto theOriginalPhase =
-                        fOriginalPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint8_t>();
-                    
-                    auto theNewPhaseLeft = calculateNewPhase(theOriginalPhase & 0xf);
+                    auto theOriginalPhase = fOriginalPhaseContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<uint8_t>();
+
+                    auto theNewPhaseLeft  = calculateNewPhase(theOriginalPhase & 0xf);
                     auto theNewPhaseRight = calculateNewPhase((theOriginalPhase >> 4) & 0xf);
 
                     fReadoutChipInterface->WriteChipReg(theChip, "LateralRX_sampling", (theNewPhaseRight << 4) | theNewPhaseLeft);
@@ -198,15 +196,11 @@ void OTSSAtoSSAecv::setStripOffsetParameters(Ph2_HwDescription::ReadoutChip* the
 {
     uint8_t stripOffsetLeftToRight = (NSSACHANNELS + fPixelClusterColLeftToRight - fStripClusterColLeftToRight) * 2;
     uint8_t stripOffsetRightToLeft = stripOffsetLeftToRight | 0x10;
-    
-    std::vector<std::pair<std::string, uint16_t>> stripOffsetRegisters {
-        {"StripOffset_byte0", stripOffsetLeftToRight << 3},
-        {"StripOffset_byte1", 0},
-        {"StripOffset_byte2", 0},
-        {"StripOffset_byte3", stripOffsetRightToLeft << 2}
-    };
 
-    fReadoutChipInterface->WriteChipMultReg(theSSA, stripOffsetRegisters);        
+    std::vector<std::pair<std::string, uint16_t>> stripOffsetRegisters{
+        {"StripOffset_byte0", stripOffsetLeftToRight << 3}, {"StripOffset_byte1", 0}, {"StripOffset_byte2", 0}, {"StripOffset_byte3", stripOffsetRightToLeft << 2}};
+
+    fReadoutChipInterface->WriteChipMultReg(theSSA, stripOffsetRegisters);
 }
 
 GenericDataArray<float, 2>& OTSSAtoSSAecv::getStorageForStubErrorRate(Hybrid* theHybrid, uint8_t chipId, uint8_t line, size_t stubPatternCounter)
@@ -216,7 +210,6 @@ GenericDataArray<float, 2>& OTSSAtoSSAecv::getStorageForStubErrorRate(Hybrid* th
         .at(chipId)
         .at(stubPatternCounter);
 }
-
 
 void OTSSAtoSSAecv::resetPatternMatchingEfficiencyContainer()
 {

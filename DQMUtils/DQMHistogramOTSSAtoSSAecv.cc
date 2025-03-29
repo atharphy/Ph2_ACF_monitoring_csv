@@ -31,7 +31,7 @@ void DQMHistogramOTSSAtoSSAecv::book(TFile* theOutputFile, DetectorContainer& th
         auto theAxis = theHistogram->GetYaxis();
         for(int direction = 0; direction < numberOfDirections; ++direction)
         {
-            std::pair<int, int> mpaRange      = getMPArange(direction);
+            std::pair<int, int> mpaRange = getMPArange(direction);
             for(int mpaId = mpaRange.first; mpaId < mpaRange.second; ++mpaId)
             {
                 int ssaId = mpaId + (direction == 0 ? +1 : -1);
@@ -106,18 +106,10 @@ void DQMHistogramOTSSAtoSSAecv::fillStubPatternEfficiencyScan(DetectorDataContai
 
                 auto thePatternMatchingEfficiencyVector = theHybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2, 2>>();
 
-                TH2F* errorRateHistogram = fPhaseScanErrorRate[slvsCurrent]
-                                                               .getObject(theBoard->getId())
-                                                               ->getObject(theOpticalGroup->getId())
-                                                               ->getObject(theHybrid->getId())
-                                                               ->getSummary<HistContainer<TH2F>>()
-                                                               .fTheHistogram;
-                TH2F* testedBitsHistogram = fPhaseScanTestedBits[slvsCurrent]
-                                                               .getObject(theBoard->getId())
-                                                               ->getObject(theOpticalGroup->getId())
-                                                               ->getObject(theHybrid->getId())
-                                                               ->getSummary<HistContainer<TH2F>>()
-                                                               .fTheHistogram;
+                TH2F* errorRateHistogram =
+                    fPhaseScanErrorRate[slvsCurrent].getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                TH2F* testedBitsHistogram =
+                    fPhaseScanTestedBits[slvsCurrent].getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
 
                 int binCounter = 1;
                 for(size_t stubPatternCounter = 0; stubPatternCounter < 2; ++stubPatternCounter)
@@ -130,10 +122,8 @@ void DQMHistogramOTSSAtoSSAecv::fillStubPatternEfficiencyScan(DetectorDataContai
                         auto testedBits = thePatternMatchingEfficiencyVector.at(mpaId).at(stubPatternCounter).at(0);
                         auto errorRate  = testedBits > 0 ? thePatternMatchingEfficiencyVector.at(mpaId).at(stubPatternCounter).at(1) / testedBits : 1.;
 
-                        testedBitsHistogram->SetBinContent(
-                            clockEdge * totalNumberOfShifts + samplingPhaseOffset - fMinimum320PhaseShift + 1, binCounter, testedBits);
-                        errorRateHistogram->SetBinContent(
-                            clockEdge * totalNumberOfShifts + samplingPhaseOffset - fMinimum320PhaseShift + 1, binCounter, errorRate);
+                        testedBitsHistogram->SetBinContent(clockEdge * totalNumberOfShifts + samplingPhaseOffset - fMinimum320PhaseShift + 1, binCounter, testedBits);
+                        errorRateHistogram->SetBinContent(clockEdge * totalNumberOfShifts + samplingPhaseOffset - fMinimum320PhaseShift + 1, binCounter, errorRate);
 
                         ++binCounter;
                     }

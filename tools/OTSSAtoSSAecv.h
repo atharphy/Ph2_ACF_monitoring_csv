@@ -39,11 +39,11 @@ class OTSSAtoSSAecv : public OTSSAtoMPAecv
     void                           runSSAtoSSAecvScan();
     std::vector<Cluster>           produceStripClusterList() override;
     std::vector<std::vector<Stub>> createPSstubList() override;
-    void setStripOffsetParameters(Ph2_HwDescription::ReadoutChip* theSSA) override;
+    void                           setStripOffsetParameters(Ph2_HwDescription::ReadoutChip* theSSA) override;
     std::vector<float>             fListOfSSAslvsCurrents{1, 4, 7};
-    GenericDataArray<float, 2>&  getStorageForStubErrorRate(Ph2_HwDescription::Hybrid* theHybrid, uint8_t chipId, uint8_t line, size_t stubPatternCounter) override;
-    void               setSampleClockEdgeAndPhase(Ph2_HwDescription::BeBoard* theBoard, uint8_t clockEdge, int samplingPhaseOffset);
-    void resetPatternMatchingEfficiencyContainer() override;
+    GenericDataArray<float, 2>&    getStorageForStubErrorRate(Ph2_HwDescription::Hybrid* theHybrid, uint8_t chipId, uint8_t line, size_t stubPatternCounter) override;
+    void                           setSampleClockEdgeAndPhase(Ph2_HwDescription::BeBoard* theBoard, uint8_t clockEdge, int samplingPhaseOffset);
+    void                           resetPatternMatchingEfficiencyContainer() override;
 
     uint8_t fStripClusterColRightToLeft = 1;
     uint8_t fStripClusterColLeftToRight = 118;

@@ -43,20 +43,20 @@ class OTverifyMPASSAdataWord : public OTverifyCICdataWord
     uint8_t                fStripGap{10};
     std::map<int, uint8_t> fBendingToCode{{0, 7}};
 
-    std::vector<Cluster> produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed);
-    virtual std::vector<Cluster> produceStripClusterList();
-    virtual void                 setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA);
-    virtual void                 setStripOffsetParameters(Ph2_HwDescription::ReadoutChip* theSSA);
-    virtual void                 prepareForStubInjection(Ph2_HwDescription::BeBoard* theBoard) override;
-    DetectorDataContainer        fPatternMatchingEfficiencyContainer;
-    std::vector<Cluster>         fListOfInjectedStrips;
-    virtual GenericDataArray<float, 2>&  getStorageForStubErrorRate(Ph2_HwDescription::Hybrid* theHybrid, uint8_t chipId, uint8_t line, size_t stubPatternCounter) override;
-    GenericDataArray<float, 2>&  getStorageForL1ErrorRate(Ph2_HwDescription::Chip* theChip) override;
+    std::vector<Cluster>                produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed);
+    virtual std::vector<Cluster>        produceStripClusterList();
+    virtual void                        setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA);
+    virtual void                        setStripOffsetParameters(Ph2_HwDescription::ReadoutChip* theSSA);
+    virtual void                        prepareForStubInjection(Ph2_HwDescription::BeBoard* theBoard) override;
+    DetectorDataContainer               fPatternMatchingEfficiencyContainer;
+    std::vector<Cluster>                fListOfInjectedStrips;
+    virtual GenericDataArray<float, 2>& getStorageForStubErrorRate(Ph2_HwDescription::Hybrid* theHybrid, uint8_t chipId, uint8_t line, size_t stubPatternCounter) override;
+    GenericDataArray<float, 2>&         getStorageForL1ErrorRate(Ph2_HwDescription::Chip* theChip) override;
 
   private:
-    void                           fillHistograms();
-    void                           injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t numberOfBytesInSinglePacket, const std::vector<Stub>& listOfStubs) override;
-    PatternMatcher                 producePatternMatcherPS(uint8_t chipIdForCIC, uint8_t numberOfBytesInSinglePacket, const std::vector<Stub>& listOfStubs) override;
+    void                                   fillHistograms();
+    void                                   injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t numberOfBytesInSinglePacket, const std::vector<Stub>& listOfStubs) override;
+    PatternMatcher                         producePatternMatcherPS(uint8_t chipIdForCIC, uint8_t numberOfBytesInSinglePacket, const std::vector<Stub>& listOfStubs) override;
     virtual std::vector<std::vector<Stub>> createPSstubList() override;
 
     PatternMatcher injectL1PS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t chipIdForCIC, Ph2_HwInterface::D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket) override;
