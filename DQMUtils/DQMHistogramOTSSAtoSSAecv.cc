@@ -26,17 +26,31 @@ void DQMHistogramOTSSAtoSSAecv::book(TFile* theOutputFile, DetectorContainer& th
     int numberOfSSA        = 8;
     int numberOfDirections = 2;
 
-    auto setYaxisBinLabelForStubs = [this, numberOfSSA, numberOfDirections](TH2F* theHistogram)
+    auto setYaxisBinLabel = [this, numberOfSSA, numberOfDirections](TH2F* theHistogram)
     {
         auto theAxis = theHistogram->GetYaxis();
         for(int direction = 0; direction < numberOfDirections; ++direction)
         {
-            bool                isLeftToRight = direction == 0;
-            std::pair<int, int> mpaRange      = getMPArange(isLeftToRight);
+            std::pair<int, int> mpaRange      = getMPArange(direction);
             for(int mpaId = mpaRange.first; mpaId < mpaRange.second; ++mpaId)
             {
-                int ssaId = mpaId + (isLeftToRight ? +1 : -1);
+                int ssaId = mpaId + (direction == 0 ? +1 : -1);
                 theAxis->SetBinLabel(direction * (mpaRange.second - mpaRange.first) + (mpaId - mpaRange.first) + 1, Form("SSA%d#rightarrowSSA%d", ssaId, mpaId));
+            }
+        }
+    };
+
+    int totalNumberOfShifts = fMaximum320PhaseShift - fMinimum320PhaseShift + 1;
+
+    auto setXaxisBinLabel = [numberOfSSA, totalNumberOfShifts, this](TH2F* theHistogram)
+    {
+        std::vector<std::string> edgeLabel = {"Falling", "Rising"};
+        auto                     theAxis   = theHistogram->GetXaxis();
+        for(size_t labelIndex = 0; labelIndex < edgeLabel.size(); ++labelIndex)
+        {
+            for(int shift = fMinimum320PhaseShift; shift <= fMaximum320PhaseShift; ++shift)
+            {
+                theAxis->SetBinLabel(shift + totalNumberOfShifts * labelIndex - fMinimum320PhaseShift + 1, Form("%s : %s%d", edgeLabel[labelIndex].c_str(), (shift > 0 ? "+" : ""), shift));
             }
         }
     };
@@ -45,28 +59,43 @@ void DQMHistogramOTSSAtoSSAecv::book(TFile* theOutputFile, DetectorContainer& th
 
     for(auto slvsCurrent: listOfSSAslvsCurrents)
     {
-        HistContainer<TH2F> phaseScanStubMatchingEfficiency(Form("SSAtoSSA_StubSamplingEdgeEfficiency_SLVScurrent_%d", int(slvsCurrent)),
-                                                            Form("SSA to SSA stub sampling edge efficiency - SLVScurrent = %d", int(slvsCurrent)),
-                                                            2,
-                                                            -0.5,
-                                                            1.5,
-                                                            (numberOfSSA - 1) * numberOfDirections,
-                                                            -0.5,
-                                                            (numberOfSSA - 1) * numberOfDirections - 0.5);
-        phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetTitle("Sampling egde");
-        phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(1, "Falling");
-        phaseScanStubMatchingEfficiency.fTheHistogram->GetXaxis()->SetBinLabel(2, "Rising");
-        setYaxisBinLabelForStubs(phaseScanStubMatchingEfficiency.fTheHistogram);
-        phaseScanStubMatchingEfficiency.fTheHistogram->SetMinimum(0);
-        phaseScanStubMatchingEfficiency.fTheHistogram->SetMaximum(1);
-        phaseScanStubMatchingEfficiency.fTheHistogram->SetStats(false);
-        RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStubPhaseScanMatchingEfficiencies[slvsCurrent], phaseScanStubMatchingEfficiency);
+        HistContainer<TH2F> phaseScanErrorRate(Form("SSAtoSSA_SamplingEdgeErrorRate_SLVScurrent_%d", int(slvsCurrent)),
+                                               Form("SSA to SSA sampling edge error rate - SLVScurrent = %d", int(slvsCurrent)),
+                                               2 * totalNumberOfShifts,
+                                               -0.5,
+                                               2 * totalNumberOfShifts - 0.5,
+                                               (numberOfSSA - 1) * numberOfDirections,
+                                               -0.5,
+                                               (numberOfSSA - 1) * numberOfDirections - 0.5);
+        phaseScanErrorRate.fTheHistogram->GetXaxis()->SetTitle("Sampling egde : 320MHz clock shift");
+        setXaxisBinLabel(phaseScanErrorRate.fTheHistogram);
+        setYaxisBinLabel(phaseScanErrorRate.fTheHistogram);
+        phaseScanErrorRate.fTheHistogram->SetMinimum(0);
+        phaseScanErrorRate.fTheHistogram->SetMaximum(1);
+        phaseScanErrorRate.fTheHistogram->SetStats(false);
+        RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanErrorRate[slvsCurrent], phaseScanErrorRate);
+
+        HistContainer<TH2F> phaseScanTestedBits(Form("SSAtoSSA_SamplingEdgeTestedBits_SLVScurrent_%d", int(slvsCurrent)),
+                                                Form("SSA to SSA sampling edge tested bits - SLVScurrent = %d", int(slvsCurrent)),
+                                                2 * totalNumberOfShifts,
+                                                -0.5,
+                                                2 * totalNumberOfShifts - 0.5,
+                                                (numberOfSSA - 1) * numberOfDirections,
+                                                -0.5,
+                                                (numberOfSSA - 1) * numberOfDirections - 0.5);
+        phaseScanTestedBits.fTheHistogram->GetXaxis()->SetTitle("Sampling egde : 320MHz clock shift");
+        setXaxisBinLabel(phaseScanTestedBits.fTheHistogram);
+        setYaxisBinLabel(phaseScanTestedBits.fTheHistogram);
+        phaseScanTestedBits.fTheHistogram->SetStats(false);
+        RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanTestedBits[slvsCurrent], phaseScanTestedBits);
     }
 }
 
 //========================================================================================================================
-void DQMHistogramOTSSAtoSSAecv::fillStubPatternEfficiencyScan(DetectorDataContainer& thePatternMatchingEfficiency, uint8_t injectedStrip, uint8_t clockEdge, uint8_t slvsCurrent)
+void DQMHistogramOTSSAtoSSAecv::fillStubPatternEfficiencyScan(DetectorDataContainer& thePatternMatchingEfficiency, uint8_t clockEdge, uint8_t slvsCurrent, int samplingPhaseOffset)
 {
+    int totalNumberOfShifts = fMaximum320PhaseShift - fMinimum320PhaseShift + 1;
+
     for(auto theBoard: thePatternMatchingEfficiency)
     {
         for(auto theOpticalGroup: *theBoard)
@@ -75,22 +104,39 @@ void DQMHistogramOTSSAtoSSAecv::fillStubPatternEfficiencyScan(DetectorDataContai
             {
                 if(!theHybrid->hasSummary()) continue;
 
-                auto thePatternMatchingEfficiencyVector = theHybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>();
+                auto thePatternMatchingEfficiencyVector = theHybrid->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2, 2>>();
 
-                TH2F* patternMatchingEfficiencyHistogram = fStubPhaseScanMatchingEfficiencies[slvsCurrent]
+                TH2F* errorRateHistogram = fPhaseScanErrorRate[slvsCurrent]
                                                                .getObject(theBoard->getId())
                                                                ->getObject(theOpticalGroup->getId())
                                                                ->getObject(theHybrid->getId())
                                                                ->getSummary<HistContainer<TH2F>>()
                                                                .fTheHistogram;
-                bool                isLeftToRight = injectedStrip == 1;
-                int                 direction     = isLeftToRight ? 0 : 1;
-                std::pair<int, int> mpaRange      = getMPArange(isLeftToRight);
+                TH2F* testedBitsHistogram = fPhaseScanTestedBits[slvsCurrent]
+                                                               .getObject(theBoard->getId())
+                                                               ->getObject(theOpticalGroup->getId())
+                                                               ->getObject(theHybrid->getId())
+                                                               ->getSummary<HistContainer<TH2F>>()
+                                                               .fTheHistogram;
 
-                for(int mpaId = mpaRange.first; mpaId < mpaRange.second; ++mpaId)
+                int binCounter = 1;
+                for(size_t stubPatternCounter = 0; stubPatternCounter < 2; ++stubPatternCounter)
                 {
-                    patternMatchingEfficiencyHistogram->SetBinContent(
-                        clockEdge + 1, direction * (mpaRange.second - mpaRange.first) + (mpaId - mpaRange.first) + 1, thePatternMatchingEfficiencyVector.at(mpaId).at(1));
+                    for(uint8_t mpaId = 0; mpaId < NUMBER_OF_CIC_PORTS; ++mpaId)
+                    {
+                        if(stubPatternCounter == 0 && mpaId == NUMBER_OF_CIC_PORTS - 1) continue;
+                        if(stubPatternCounter == 1 && mpaId == 0) continue;
+
+                        auto testedBits = thePatternMatchingEfficiencyVector.at(mpaId).at(stubPatternCounter).at(0);
+                        auto errorRate  = testedBits > 0 ? thePatternMatchingEfficiencyVector.at(mpaId).at(stubPatternCounter).at(1) / testedBits : 1.;
+
+                        testedBitsHistogram->SetBinContent(
+                            clockEdge * totalNumberOfShifts + samplingPhaseOffset - fMinimum320PhaseShift + 1, binCounter, testedBits);
+                        errorRateHistogram->SetBinContent(
+                            clockEdge * totalNumberOfShifts + samplingPhaseOffset - fMinimum320PhaseShift + 1, binCounter, errorRate);
+
+                        ++binCounter;
+                    }
                 }
             }
         }
@@ -122,11 +168,12 @@ bool DQMHistogramOTSSAtoSSAecv::fill(std::string& inputStream)
     if(theStubPatternMatchinEfficiencyContainerSerialization.attachDeserializer(inputStream))
     {
         // std::cout << "Matched OTSSAtoSSAecv StubPatternMatchingEfficiency!!!!\n";
-        uint8_t               injectedStrip, clockEdge, slvsCurrent;
+        uint8_t               clockEdge, slvsCurrent;
+        int                   samplingPhaseOffset;
         DetectorDataContainer theDetectorData =
-            theStubPatternMatchinEfficiencyContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>(
-                fDetectorContainer, injectedStrip, clockEdge, slvsCurrent);
-        fillStubPatternEfficiencyScan(theDetectorData, injectedStrip, clockEdge, slvsCurrent);
+            theStubPatternMatchinEfficiencyContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, NUMBER_OF_CIC_PORTS, 2, 2>>(
+                fDetectorContainer, clockEdge, slvsCurrent, samplingPhaseOffset);
+        fillStubPatternEfficiencyScan(theDetectorData, clockEdge, slvsCurrent, samplingPhaseOffset);
         return true;
     }
 
@@ -135,10 +182,10 @@ bool DQMHistogramOTSSAtoSSAecv::fill(std::string& inputStream)
 }
 
 //========================================================================================================================
-std::pair<int, int> DQMHistogramOTSSAtoSSAecv::getMPArange(bool isLeftToRight) const
+std::pair<int, int> DQMHistogramOTSSAtoSSAecv::getMPArange(uint8_t stubPattern) const
 {
     std::pair<int, int> mpaRange;
-    if(isLeftToRight)
+    if(stubPattern == 0)
     {
         mpaRange.first  = 0;
         mpaRange.second = 7;

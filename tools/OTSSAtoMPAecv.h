@@ -41,11 +41,11 @@ class OTSSAtoMPAecv : public OTverifyMPASSAdataWord
     static std::string fCalibrationDescription;
 
   protected:
-    void resetPatternMatchingEfficiencyContainer();
+    virtual void resetPatternMatchingEfficiencyContainer();
 
   private:
     void               runSSAtoMPAecvScan();
-    void               runSSAtoMPAecvScanForStubs(uint8_t slvsCurrent);
+    void               runSSAtoMPAecvScan(uint8_t slvsCurrent);
     void               setSampleClockEdgeAndPhase(Ph2_HwDescription::BeBoard* theBoard, uint8_t clockEdge, int samplingPhaseOffset);
     std::vector<float> fListOfSSAslvsCurrents{1, 4, 7};
 
