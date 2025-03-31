@@ -165,7 +165,6 @@ void OTBitErrorRateTest::bitErrorRateTest(uint8_t line)
 
         for(auto theBoard: *fDetectorContainer)
         {
-            BoardDataContainer thePhaseScanContainerLocal;
             bitErrorRateTestPerLine(theBoard, thePhaseScanContainer[phase].getBoard(theBoard->getId()), nullptr, thePhaseCountainer.getBoard(theBoard->getId()), 1e6, line);
 
             for(auto theOpticalGroup: *theBoard)
@@ -175,7 +174,7 @@ void OTBitErrorRateTest::bitErrorRateTest(uint8_t line)
                 theMapElement.at(1) = 0;
                 for(auto theHybrid: *theOpticalGroup)
                 {
-                    const auto& theHybridElement = thePhaseScanContainer[phase].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 2>>();
+                    const auto& theHybridElement = thePhaseScanContainer[phase].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>();
                     theMapElement.at(0) += theHybridElement.at(0);
                     theMapElement.at(1) += theHybridElement.at(1);
                 }

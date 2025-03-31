@@ -132,7 +132,6 @@ void DQMHistogramOTBitErrorRateTest::fillFECcounter(DetectorDataContainer& theFE
         {
             auto theFECCounterHistogram = fFECcounterHistogram.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
             theFECCounterHistogram->SetBinContent(1 + line, theOpticalGroup->getSummary<uint32_t>());
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theOpticalGroup->getSummary<uint32_t>() = " << theOpticalGroup->getSummary<uint32_t>() << std::endl;
         }
     }
 }
@@ -146,7 +145,6 @@ void DQMHistogramOTBitErrorRateTest::fillBERTbestPhase(DetectorDataContainer& Be
         {
             auto theBestPhaseHistogram = fBestPhaseHistogram.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
             theBestPhaseHistogram->SetBinContent(1 + line, theOpticalGroup->getSummary<uint16_t>());
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theOpticalGroup->getSummary<uint16_t>() = " << theOpticalGroup->getSummary<uint16_t>() << std::endl;
         }
     }
 }
