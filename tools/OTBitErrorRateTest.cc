@@ -131,7 +131,6 @@ void OTBitErrorRateTest::bitErrorRateTestPerLine(Ph2_HwDescription::BeBoard* the
             fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_sel_offset", theOpticalGroup->getId());
             auto theFECcounter                      = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.lpgbt_fec_counter");
             theOpticalGroup->getSummary<uint32_t>() = theFECcounter;
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] FECcounter = 0x" << std::hex << +theFECcounter << std::dec << std::endl;
         }
     }
 }
@@ -246,8 +245,6 @@ void OTBitErrorRateTest::bitErrorRateTest(uint8_t line)
             }
 
             theBestPhaseCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint16_t>() = minimumPhaseRanges.at(longestSequenceIndex).first + longestSequenceRange / 2;
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theBestPhaseCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint16_t>() = "
-                      << theBestPhaseCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint16_t>() << std::endl;
         }
     }
 

@@ -131,22 +131,18 @@ void DQMHistogramPedestalEqualization::process()
 
                 for(auto chip: *hybrid)
                 {
+                    bool is2Dplot = chip->getId() >= 8;
                     offsetCanvas->cd(chip->getId() + 1);
-                    TH1I* offsetHistogram = chip->getSummary<HistContainer<TH1I>>().fTheHistogram;
-                    offsetHistogram->GetXaxis()->SetTitle("Channel");
-                    offsetHistogram->GetYaxis()->SetTitle("Offset");
-                    offsetHistogram->DrawCopy();
+                    if(is2Dplot) processOccupancy<TH2I>(chip);
+                    else processOccupancy<TH1I>(chip);
 
                     occupancyCanvas->cd(chip->getId() + 1);
-                    TH1F* occupancyHistogram = fDetectorOccupancyHistograms.getObject(board->getId())
+                    auto occupancyChip = fDetectorOccupancyHistograms.getObject(board->getId())
                                                    ->getObject(opticalGroup->getId())
                                                    ->getObject(hybrid->getId())
-                                                   ->getObject(chip->getId())
-                                                   ->getSummary<HistContainer<TH1F>>()
-                                                   .fTheHistogram;
-                    occupancyHistogram->GetXaxis()->SetTitle("Channel");
-                    occupancyHistogram->GetYaxis()->SetTitle("Occupancy");
-                    occupancyHistogram->DrawCopy();
+                                                   ->getObject(chip->getId());
+                    if(is2Dplot) processOccupancy<TH2F>(occupancyChip);
+                    else processOccupancy<TH1F>(occupancyChip);
                 }
             }
         }

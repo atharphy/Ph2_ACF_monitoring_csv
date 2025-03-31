@@ -34,6 +34,7 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
     {
         theHistogram->GetXaxis()->SetTitle("LpGBT Phase");
         theHistogram->SetStats(false);
+        theHistogram->GetXaxis()->SetLabelSize(0.04);
         theHistogram->GetYaxis()->SetLabelSize(0.04);
 
         // Label the y axis with the line and clock strength
@@ -46,7 +47,6 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
         }
 
         // Book the histograms
-        theHistogram->LabelsOption("v", "X");
         theHistogram->DrawCopy("text");
     };
 

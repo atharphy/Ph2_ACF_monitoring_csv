@@ -552,13 +552,13 @@ void DQMHistogramOTCMNoise::fillChipHitPlots(DetectorDataContainer& theHitData, 
                         // do fitting
                         TF1* cChipFit = new TF1("chipFit", hitProbabilityFunction, 0, cNChannels + 1, 4);
                         fitCMNoise(theHistogramBottom, cChipFit, cNChannels / 2);
-                        LOG(INFO) << BOLDRED << "FE " << hybrid->getId() << " CBC " << chip->getId() << " bottom strip common mode is " << fabs(cChipFit->GetParameter(1)) << "+/-"
+                        LOG(INFO) << BOLDBLUE << "FE " << hybrid->getId() << " CBC " << chip->getId() << " bottom strip common mode is " << fabs(cChipFit->GetParameter(1)) << "+/-"
                                   << fabs(cChipFit->GetParError(1)) << "%" << RESET;
                         fitCMNoise(theHistogramTop, cChipFit, cNChannels / 2);
-                        LOG(INFO) << BOLDRED << "FE " << hybrid->getId() << " CBC " << chip->getId() << " top strip common mode is " << fabs(cChipFit->GetParameter(1)) << "+/-"
+                        LOG(INFO) << BOLDBLUE << "FE " << hybrid->getId() << " CBC " << chip->getId() << " top strip common mode is " << fabs(cChipFit->GetParameter(1)) << "+/-"
                                   << fabs(cChipFit->GetParError(1)) << "%" << RESET;
                         fitCMNoise(theHistogramSum, cChipFit, cNChannels);
-                        LOG(INFO) << BOLDRED << "FE " << hybrid->getId() << " CBC " << chip->getId() << " common mode is " << fabs(cChipFit->GetParameter(1)) << "+/-" << fabs(cChipFit->GetParError(1))
+                        LOG(INFO) << BOLDBLUE << "FE " << hybrid->getId() << " CBC " << chip->getId() << " common mode is " << fabs(cChipFit->GetParameter(1)) << "+/-" << fabs(cChipFit->GetParError(1))
                                   << "%" << RESET;
                     }
                 }
@@ -795,8 +795,8 @@ void DQMHistogramOTCMNoise::fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint32_t 
 
     // retrieve the threshold from the maximum of the actual nhit distribution
     double threshold = inverse_hitProbability(prob);
-    std::cout << "Prob is:" << prob << std::endl;
-    std::cout << "Threshold is:" << threshold << std::endl;
+    // std::cout << "Prob is:" << prob << std::endl;
+    // std::cout << "Threshold is:" << threshold << std::endl;
 
     // initialize cmnFraction to 0 anc later extract from fit
     double cmnFraction = 0.5;
