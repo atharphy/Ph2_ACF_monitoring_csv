@@ -94,6 +94,7 @@ void DQMHistogramOTBitErrorRateTest::fillErrorCounterPhaseScan(DetectorDataConta
             auto theBitCounterHistogram   = fBERTbitCounterPhaseScanHistogram.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
             for(auto theHybrid: *theOpticalGroup)
             {
+                if(!theHybrid->hasSummary()) continue;
                 auto theErrorCounterVector = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
                 int  binNumber             = 1 + line + (theHybrid->getId() % 2) * fNumberOfLines;
                 theBitCounterHistogram->SetBinContent(binNumber, phaseDelay + 1, theErrorCounterVector.at(0));
@@ -114,6 +115,7 @@ void DQMHistogramOTBitErrorRateTest::fillErrorCounter(DetectorDataContainer& the
             auto theBitCounterHistogram   = fBERTbitCounterHistogram.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
             for(auto theHybrid: *theOpticalGroup)
             {
+                if(!theHybrid->hasSummary()) continue;
                 auto theErrorCounter = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
                 int  binNumber       = 1 + line + (theHybrid->getId() % 2) * fNumberOfLines;
                 theBitCounterHistogram->SetBinContent(binNumber, theErrorCounter.at(0));
@@ -130,6 +132,7 @@ void DQMHistogramOTBitErrorRateTest::fillFECcounter(DetectorDataContainer& theFE
     {
         for(auto theOpticalGroup: *theBoard)
         {
+            if(!theOpticalGroup->hasSummary()) continue;
             auto theFECCounterHistogram = fFECcounterHistogram.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
             theFECCounterHistogram->SetBinContent(1 + line, theOpticalGroup->getSummary<uint32_t>());
         }
@@ -143,6 +146,7 @@ void DQMHistogramOTBitErrorRateTest::fillBERTbestPhase(DetectorDataContainer& Be
     {
         for(auto theOpticalGroup: *theBoard)
         {
+            if(!theOpticalGroup->hasSummary()) continue;
             auto theBestPhaseHistogram = fBestPhaseHistogram.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<HistContainer<TH1I>>().fTheHistogram;
             theBestPhaseHistogram->SetBinContent(1 + line, theOpticalGroup->getSummary<uint16_t>());
         }
@@ -166,14 +170,14 @@ void DQMHistogramOTBitErrorRateTest::reset(void)
 bool DQMHistogramOTBitErrorRateTest::fill(std::string& inputStream)
 {
     // SoC utilities only - BEGIN
-    ContainerSerialization theErrorCounterSerialization("OTBitErrorRateTestErrorCounterPhaseScan");
+    ContainerSerialization theErrorCounterSerialization("OTBitErrorRateTestErrorCounter");
     ContainerSerialization theBestPhaseSerialization("OTBitErrorRateTestBestPhase");
-    ContainerSerialization theErrorCounterPhaseScanSerialization("OTBitErrorRateTestErrorCounter");
+    ContainerSerialization theErrorCounterPhaseScanSerialization("OTBitErrorRateTestErrorCounterPhaseScan");
     ContainerSerialization theFECcounterSerialization("OTBitErrorRateTestFECcounter");
 
     if(theErrorCounterPhaseScanSerialization.attachDeserializer(inputStream))
     {
-        // std::cout << "Matched OTBitErrorRateTest ErrorCounter!!!!\n";
+        // std::cout << "Matched OTBitErrorRateTest ErrorCounterPhaseScan!!!!\n";
         uint16_t              phase;
         uint8_t               line;
         DetectorDataContainer theDetectorData =
@@ -183,7 +187,7 @@ bool DQMHistogramOTBitErrorRateTest::fill(std::string& inputStream)
     }
     if(theBestPhaseSerialization.attachDeserializer(inputStream))
     {
-        // std::cout << "Matched OTBitErrorRateTest FECcounter!!!!\n";
+        // std::cout << "Matched OTBitErrorRateTest BestPhase!!!!\n";
         uint8_t               line;
         DetectorDataContainer theDetectorData = theBestPhaseSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, uint16_t>(fDetectorContainer, line);
         fillBERTbestPhase(theDetectorData, line);
@@ -202,7 +206,7 @@ bool DQMHistogramOTBitErrorRateTest::fill(std::string& inputStream)
     {
         // std::cout << "Matched OTBitErrorRateTest FECcounter!!!!\n";
         uint8_t               line;
-        DetectorDataContainer theDetectorData = theFECcounterSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, uint32_t, EmptyContainer>(fDetectorContainer, line);
+        DetectorDataContainer theDetectorData = theFECcounterSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, uint32_t>(fDetectorContainer, line);
         fillFECcounter(theDetectorData, line);
         return true;
     }

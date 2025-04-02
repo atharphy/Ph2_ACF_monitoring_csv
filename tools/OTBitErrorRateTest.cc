@@ -268,8 +268,8 @@ void OTBitErrorRateTest::bitErrorRateTest(uint8_t line)
     {
         for(uint16_t phase = 0; phase < maximumPhase; ++phase)
         {
-            ContainerSerialization theErrorCounterSerialization("OTBitErrorRateTestErrorCounterPhaseScan");
-            theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePhaseScanContainer[phase], phase, line);
+            ContainerSerialization theErrorCounterSerializationPhaseScan("OTBitErrorRateTestErrorCounterPhaseScan");
+            theErrorCounterSerializationPhaseScan.streamByOpticalGroupContainer(fDQMStreamer, thePhaseScanContainer[phase], phase, line);
         }
 
         ContainerSerialization theBestPhaseSerialization("OTBitErrorRateTestBestPhase");

@@ -216,7 +216,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
 
     Register<DQMMetadataOT, DQMHistogramOTCICphaseAlignment, DQMHistogramOTalignLpGBTinputsForBypass>("alignLpGBTinputsForBypass");
 
-    Register<DQMMetadata, DQMHistogramOTBitErrorRateTest>("bert");
+    Register<DQMMetadataOT, DQMHistogramOTBitErrorRateTest>("bert");
 
     Register<DQMMetadataOT, DQMHistogramOTLpGBTEyeOpeningTest>("eyeOpening");
 
