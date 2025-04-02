@@ -75,6 +75,7 @@ void OTCMNoise::TakeData()
     DetectorDataContainer theModuleHitContainer;
 
     DetectorDataContainer the2DHitContainer;
+    DetectorDataContainer the2DChipHitContainer;
 
     // channel, chip, hybrid, optical group, board, detector
     // can have 0 or 255 hits, need NCHANNELS+1 (inclusive)
@@ -92,6 +93,11 @@ void OTCMNoise::TakeData()
         ContainerFactory::
             copyAndInitStructure<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, NCHANNELS * NCHIPS_OT * 2, NCHANNELS * NCHIPS_OT * 2>, EmptyContainer, EmptyContainer>(
                 *fDetectorContainer, the2DHitContainer);
+
+    // 2D arrays for chip-level correlation
+    if(f2DHistogramsLight)
+        ContainerFactory::copyAndInitStructure<EmptyContainer, GenericDataArray<uint32_t, NCHANNELS, NCHANNELS>, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer>(*fDetectorContainer,
+                                                                                                                                                                                 the2DChipHitContainer);
 
     // Creating the correlation plots... Maybe a lot of RAM being used?
     DetectorDataContainer the2DSensorModuleCorrelationContainer;
@@ -199,8 +205,22 @@ void OTCMNoise::TakeData()
                             {
                                 for(auto hit: hit_vec) { hit_channels.push_back(hit.second + chipOffset_module); }
                             }
-                        }
 
+                            // for 2d correlation only at the individual chip level, we can fill directly the Container
+                            if(f2DHistogramsLight)
+                            {
+                                for(auto hit: hit_vec)
+                                {
+                                    for(auto hit2: hit_vec)
+                                    {
+                                        the2DChipHitContainer.getChip(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId())
+                                            ->getSummary<GenericDataArray<uint32_t, NCHANNELS, NCHANNELS>>()
+                                            .at(hit.second)
+                                            .at(hit2.second) += 1;
+                                    }
+                                }
+                            }
+                        }
                         // save per hybrid
                         cModuleHits += cHybridHits;
                         cModuleHitsEven += cHybridHitsEven;
@@ -281,6 +301,7 @@ void OTCMNoise::TakeData()
     fDQMHistogramOTCMNoise.fillSensorHybridCorrelationPlots(the2DSensorHybridCorrelationContainer);
     fDQMHistogramOTCMNoise.fillSensorModuleCorrelationPlots(the2DSensorModuleCorrelationContainer);
     if(f2DHistograms) fDQMHistogramOTCMNoise.fill2DHitPlots(the2DHitContainer);
+    if(f2DHistogramsLight) fDQMHistogramOTCMNoise.fill2DHitLightPlots(the2DChipHitContainer);
 
 #else
     if(fDQMStreamerEnabled)
@@ -304,9 +325,16 @@ void OTCMNoise::TakeData()
 
         if(f2DHistograms)
         {
-            LOG(DEBUG) << "Streaming OTCMNoise2DHitStream" << RESET;
+            LOG(INFO) << "Streaming OTCMNoise2DHitStream" << RESET;
             ContainerSerialization the2DHitSerialization("OTCMNoise2DHitStream");
             the2DHitSerialization.streamByOpticalGroupContainer(fDQMStreamer, the2DHitContainer);
+        }
+
+        if(f2DHistogramsLight)
+        {
+            LOG(INFO) << "Streaming OTCMNoise2DHitLightStream" << RESET;
+            ContainerSerialization the2DLightHitSerialization("OTCMNoise2DHitLightStream");
+            the2DLightHitSerialization.streamByChipContainer(fDQMStreamer, the2DChipHitContainer);
         }
     }
 #endif
@@ -315,13 +343,15 @@ void OTCMNoise::TakeData()
 void OTCMNoise::parseSettings()
 {
     // now read the settings from the map
-    fNevents      = findValueInSettings<double>("CMNoise_Nevents", 100);
-    f2DHistograms = findValueInSettings<double>("CMNoise_2DHistograms", 0);
-    fManualVcth   = findValueInSettings<double>("CMNoise_manualVcth", 0);
+    fNevents           = findValueInSettings<double>("CMNoise_Nevents", 100);
+    f2DHistograms      = findValueInSettings<double>("CMNoise_2DHistograms", 0);
+    f2DHistogramsLight = findValueInSettings<double>("CMNoise_2DHistogramsLight", 0);
+    fManualVcth        = findValueInSettings<double>("CMNoise_manualVcth", 0);
 
     LOG(INFO) << "Parsed the following settings:";
     LOG(INFO) << "	Running " << fNevents;
     LOG(INFO) << "	2D Histograms? " << f2DHistograms;
+    LOG(INFO) << "	2D Histograms Light? " << f2DHistogramsLight;
     LOG(INFO) << "	Manual Vcth " << fManualVcth;
 }
 
