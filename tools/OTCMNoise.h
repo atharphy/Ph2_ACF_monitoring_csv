@@ -59,6 +59,7 @@ class OTCMNoise : public Tool
     uint32_t fNevents;
     uint32_t fVcth;
     bool     f2DHistograms;
+    bool     f2DHistogramsLight;
     uint32_t fManualVcth;
 
 #ifdef __USE_ROOT__
