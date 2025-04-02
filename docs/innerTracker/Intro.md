@@ -23,7 +23,12 @@
 
 - Text-based User Interface (TUI) - aka Dirigent: <https://gitlab.cern.ch/cms_tk_ph2/dirigent/>
 - Graphical-based User Interface (GUI) - aka Ohio-GUI: <https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF_GUI/>
-- Grading Software - aka Panthera: <https://panthera.fit.edu/>
+- Grading Software - aka Panthera: you can use Panthera purely via the web, or by using GUI or TUI.
+If you want to use it purely by the web, just go to: <https://panthera.fit.edu/> and go to “Add Modules”
+to add modules and then “Upload Electrical” to upload Sequences by hand, or “Upload Mechanical” to upload mechanical
+information by hand. There are “?” icons that give you helpful hints. However, if you want to use Panthera using GUI
+or TUI, you should get the requisite packages when you install GUI or TUI itself.
+There’s nothing you need to install separately.
 - Submodule providing common (TUI/GUI) calibration settings: <https://gitlab.cern.ch/cms_tk_ph2/inner-tracker-tests/>
 
 ### Miscellanea
