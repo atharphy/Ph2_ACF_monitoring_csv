@@ -496,8 +496,8 @@ void DQMHistogramOTCMNoise::fillChipHitPlots(DetectorDataContainer& theHitData, 
                         LOG(INFO) << BOLDBLUE << "FE " << hybrid->getId() << " CBC " << chip->getId() << " top strip common mode is " << fabs(cChipFit->GetParameter(1)) << "+/-"
                                   << fabs(cChipFit->GetParError(1)) << "%" << RESET;
                         fitCMNoise(theHistogramSum, cChipFit, cNChannels);
-                        LOG(INFO) << BOLDBLUE << "FE " << hybrid->getId() << " CBC " << chip->getId() << " common mode is " << fabs(cChipFit->GetParameter(1)) << "+/-" << fabs(cChipFit->GetParError(1))
-                                  << "%" << RESET;
+                        LOG(INFO) << BOLDBLUE << "FE " << hybrid->getId() << " CBC " << chip->getId() << " common mode is " << fabs(cChipFit->GetParameter(1)) << "+/-"
+                                  << fabs(cChipFit->GetParError(1)) << "%" << RESET;
                     }
                 }
             }

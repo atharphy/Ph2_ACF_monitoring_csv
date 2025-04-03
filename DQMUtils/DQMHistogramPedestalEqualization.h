@@ -67,8 +67,7 @@ class DQMHistogramPedestalEqualization : public DQMHistogramBase
 
     DetectorDataContainer fDetectorPedestalHistograms;
 
-
-    template<typename T>
+    template <typename T>
     void processOccupancy(ChipDataContainer* theChipDataContainer)
     {
         T* offsetHistogram = theChipDataContainer->getSummary<HistContainer<T>>().fTheHistogram;
