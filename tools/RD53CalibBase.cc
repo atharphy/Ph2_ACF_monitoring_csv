@@ -34,7 +34,15 @@ void CalibBase::Stop()
     Tool::Stop();
 
 #ifdef __USE_ROOT__
-    if((splitFile == true) && (this->fResultFile != nullptr) && (this->fResultFile->IsOpen())) splitHistoFile(this->fResultFile);
+    if(splitFile == true)
+    {
+        if((this->fResultFile != nullptr) && (this->fResultFile->IsOpen())) splitHistoFile(this->fResultFile);
+        if((this->fDetectorMonitor != nullptr) && (this->fDetectorMonitor->getMonitorFile() != nullptr) && (this->fDetectorMonitor->getMonitorFile()->IsOpen()))
+        {
+            this->fDetectorMonitor->getMonitorFile()->Write();
+            splitHistoFile(this->fDetectorMonitor->getMonitorFile());
+        }
+    }
 #endif
     this->CloseResultFile();
 
@@ -355,7 +363,7 @@ void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)
 #ifdef __USE_ROOT__
 bool CalibBase::splitHistoFile(TFile* theInputFile)
 {
-    LOG(INFO) << GREEN << "Splitting ROOT file by Board & Hybrid" << RESET;
+    LOG(INFO) << GREEN << "Splitting ROOT file " << BOLDYELLOW << theInputFile->GetName() << RESET << GREEN << " by Board & Hybrid" << RESET;
 
     const std::string detectorFolder = "Detector";
     if(CalibBase::openRootFileFolder(theInputFile, detectorFolder) == false) return false;
@@ -399,7 +407,6 @@ bool CalibBase::splitHistoFile(TFile* theInputFile)
         }
     }
 
-    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
     return true;
 }
 

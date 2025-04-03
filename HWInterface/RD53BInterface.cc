@@ -42,7 +42,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
             (theMap.find("RstAuroraV1") != theMap.end() ? theMap.find("RstAuroraV1")->second : 0) | (theMap.find("RstSerializerV1") != theMap.end() ? theMap.find("RstSerializerV1")->second : 0) |
                 (theMap.find("RstAuroraV2") != theMap.end() ? theMap.find("RstAuroraV2")->second : 0) | (theMap.find("RstSerializerV2") != theMap.end() ? theMap.find("RstSerializerV2")->second : 0),
             10);
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+        std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::AURORASLEEP));
     }
     // # bit 12:   EnCRC         --> Map in FormatOptions: enableCRC
     // # bit 11:   EnBCId        --> Map in FormatOptions: enableBCID
@@ -207,6 +207,15 @@ void RD53BInterface::InitRD53Uplinks(Chip* pChip)
     // # bits 3-8:  CCWait[5:0]
     // # bits 1-2:  CCSend[1:0]
 
+    // #####################################
+    // # Aurora Channel Bond configuration #
+    // #####################################
+    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0961, false);
+    // # bits 5-16: CBWait[11:0]
+    // # bits 1-4:  CBSend[3:0]
+    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
+    // # bits 1-8: CBWait[19:12]
+
     // #######################
     // # Reset communication #
     // #######################
@@ -215,7 +224,7 @@ void RD53BInterface::InitRD53Uplinks(Chip* pChip)
         (theMap.find("RstAuroraV1") != theMap.end() ? theMap.find("RstAuroraV1")->second : 0) | (theMap.find("RstSerializerV1") != theMap.end() ? theMap.find("RstSerializerV1")->second : 0) |
             (theMap.find("RstAuroraV2") != theMap.end() ? theMap.find("RstAuroraV2")->second : 0) | (theMap.find("RstSerializerV2") != theMap.end() ? theMap.find("RstSerializerV2")->second : 0),
         10);
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+    std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::AURORASLEEP));
 
     // ################
     // # Data merging #
@@ -250,15 +259,6 @@ void RD53BInterface::InitRD53Uplinks(Chip* pChip)
     RD53Interface::WriteChipReg(pChip, "ServiceDataConf", 0x100 | 50, false); // How many Data frames to skip before sending a Monitor Frame
     // # bit 9:    EnServiceData
     // # bits 1-8: ServiceFrameSkip [7:0]
-
-    // #####################################
-    // # Aurora Channel Bond configuration #
-    // #####################################
-    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG0", 0x0961, false);
-    // # bits 5-16: CBWait[11:0]
-    // # bits 1-4:  CBSend[3:0]
-    RD53Interface::WriteChipReg(pChip, "AURORA_CB_CONFIG1", 0x00, false);
-    // # bits 1-8: CBWait[19:12]
 
     // ######################
     // # Reset Data merging #
@@ -351,7 +351,6 @@ void RD53BInterface::TAP0slaveOptimization(const BeBoard* pBoard, const Hybrid* 
 std::vector<std::pair<uint16_t, uint16_t>> RD53BInterface::ReadRD53Reg(ReadoutChip* pChip, const std::string& regName)
 {
     this->setBoard(pChip->getBeBoardId());
-
     std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
 
     auto nameAndValue(SetSpecialRegister(regName, 0, pChip->getRegMap()));
@@ -455,6 +454,7 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
 // ##################################
 {
     this->setBoard(pRD53->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
 
     std::vector<uint16_t> commandList;
     const uint16_t        REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;

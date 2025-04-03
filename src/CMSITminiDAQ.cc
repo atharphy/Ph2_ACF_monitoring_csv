@@ -644,6 +644,7 @@ int main(int argc, char** argv)
     // # Disable all channels and destroy System Controller #
     // ######################################################
     std::string monitorFileName(mySysCntr.fDetectorMonitor != nullptr ? mySysCntr.fDetectorMonitor->getMonitorFileName() : "");
+    bool        splitFile = mySysCntr.findValueInSettings<double>("DoSplitByBoardHybrid", false);
     if(binaryFile == "") mySysCntr.disableAllChannels();
     mySysCntr.Destroy();
 
@@ -669,6 +670,30 @@ int main(int argc, char** argv)
         std::string monitorFileNameNew(monitorFileName);
         monitorFileNameNew.erase(monitorFileNameNew.find("_"), monitorFileNameNew.find(".root") - monitorFileNameNew.find("_"));
         copyFile(monitorFileName, monitorFileNameNew);
+
+        // ##########################################
+        // # Rename and move split monitoring files #
+        // ##########################################
+        if(splitFile == true)
+        {
+            std::string monitorFileNameSplit(monitorFileName);
+            monitorFileNameSplit.insert(monitorFileNameSplit.find(".root"), "_Board_*");
+            system(("find " + monitorFileNameSplit + " > input.txt").c_str());
+            system(("find " + monitorFileNameSplit + " | sed -E -re 's/(MonitorDQM_)(.*)(Board)/\\1\\3/g\' > output.txt").c_str());
+            system(("sed -E -ri 's/(.*)(MonitorDQM)/" + std::string(RD53Shared::RESULTDIR) + "\\/Run" + RD53Shared::fromInt2Str(runNumber) + "_\\2/g\' output.txt").c_str());
+
+            std::string   lineIn, lineOut;
+            std::ifstream inFile("input.txt");
+            std::ifstream outFile("output.txt");
+            if(inFile.is_open() && outFile.is_open())
+            {
+                while(getline(inFile, lineIn) && getline(outFile, lineOut)) system(("cp " + lineIn + " " + lineOut).c_str());
+                inFile.close();
+                outFile.close();
+            }
+
+            system("rm input.txt output.txt");
+        }
     }
 
     // #####################

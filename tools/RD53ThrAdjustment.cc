@@ -115,11 +115,11 @@ void ThrAdjustment::localConfigure(const std::string& histoFileName, int current
 void ThrAdjustment::run()
 {
     LOG(INFO) << RESET;
-    LOG(INFO) << BOLDMAGENTA << ">>> Searching for a threshold maximizing the efficiency <<<" << RESET;
+    LOG(INFO) << BOLDMAGENTA << ">>> Searching for threshold maximizing the efficiency <<<" << RESET;
     ThrAdjustment::bitWiseScanGlobal_Maximum(frontEnd->thresholdRegs, targetThreshold, startValue, stopValue);
 
     LOG(INFO) << RESET;
-    LOG(INFO) << BOLDMAGENTA << ">>> Searching for a threshold corresponding to " << std::setprecision(1) << BOLDYELLOW << TARGETEFF * 100 << BOLDMAGENTA << "% efficiency <<<" << RESET;
+    LOG(INFO) << BOLDMAGENTA << ">>> Searching for threshold corresponding to " << std::setprecision(1) << BOLDYELLOW << TARGETEFF * 100 << BOLDMAGENTA << "% efficiency <<<" << RESET;
     ThrAdjustment::bitWiseScanGlobal_Zero(frontEnd->thresholdRegs, targetThreshold, startValue, stopValue);
 
     // ############################
@@ -283,6 +283,22 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                                 downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                     midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                             }
+                            // #####################################################################
+                            // # Found threshold over TARGETEFF to the right of maximum efficiency #
+                            // # We are going to use it as lower bound for Global Zero scan        #
+                            // # We can move to the next chip                                      #
+                            // #####################################################################
+                            else if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == 'h')
+                            {
+                                downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                    midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+
+                                RD53RunProgress::total() -= ThrAdjustment::removeIterations(startValue, stopValue, i);
+                                i = numberOfBits + 1u;
+                            }
+                            // ########################
+                            // # Bootstrap conditions #
+                            // ########################
                             else
                             {
                                 midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
@@ -320,10 +336,13 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
             // ##################
             // # Reset sequence #
             // ##################
-            LOG(INFO) << BOLDMAGENTA << ">>> Resetting the system in case it got stuck due to high noise <<<" << RESET;
             CalibBase::copyMaskFromDefault("en in");
-            CalibBase::setChipEnDis(true);
-            CalibBase::ResetBoards();
+            // ##############
+            // # Full reset # // @TMP@
+            // ##############
+            // LOG(INFO) << BOLDMAGENTA << ">>> Resetting the system in case it got stuck due to high noise <<<" << RESET;
+            // CalibBase::setChipEnDis(true);
+            // CalibBase::ResetBoards();
             CalibBase::setChipEnDis(false);
             CalibBase::shiftEnable(indx);
 
@@ -378,14 +397,21 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                             }
                             else
                             {
-                                maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                    midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                                if(valueMidH > TARGETEFF)
+                                    directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() = 'h';
+                                else
+                                {
+                                    maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                        midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
 
-                                directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() = 'L';
+                                    directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() = 'L';
+                                }
                             }
                         }
         }
     }
+
+    LOG(INFO) << BOLDMAGENTA << ">>> Maximization process completed <<<" << RESET;
 
     // ########################################################################
     // # Restore query, enable all chips, and reset weak check of data status #
@@ -394,11 +420,9 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
     CalibBase::setChipEnDis(true);
     RD53Event::weakCheckDataStatus = false;
 
-    // ###########################
-    // # Download new DAC values #
-    // ###########################
-    LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames, false, true, 0);
+    // ########################
+    // # Reset starting point #
+    // ########################
     ThrAdjustment::establishStartingPoint(chargeContainer);
 
     // #################################
