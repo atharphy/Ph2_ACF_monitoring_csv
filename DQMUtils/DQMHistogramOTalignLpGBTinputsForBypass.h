@@ -55,12 +55,13 @@ class DQMHistogramOTalignLpGBTinputsForBypass : public DQMHistogramBase
      */
     void reset(void) override;
 
-    void fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort);
+    void fillMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t phyPort, uint8_t lpgbtPhase);
     void fillBestPhase(DetectorDataContainer& bestPhaseContainer, uint8_t phyPort);
 
   private:
     DetectorContainer*                       fDetectorContainer;
-    std::map<uint8_t, DetectorDataContainer> fPhaseScanMatchingEfficiencies;
+    std::map<uint8_t, DetectorDataContainer> fPhaseScanMatchingBitErrorRateContainer;
+    std::map<uint8_t, DetectorDataContainer> fPhaseScanMatchingTestedBitsContainer;
     std::map<uint8_t, DetectorDataContainer> fBestPhase;
 };
 #endif

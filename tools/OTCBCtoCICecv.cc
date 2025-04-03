@@ -59,35 +59,6 @@ void OTCBCtoCICecv::Resume() {}
 
 void OTCBCtoCICecv::Reset() { fRegisterHelper->restoreSnapshot(); }
 
-std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> OTCBCtoCICecv::phyPortAndlineToCbcIdAndStub()
-{
-    uint8_t numberOfLines    = 4;
-    uint8_t numberOfPhyPorts = 12;
-
-    std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndLineToCbcIdAndStubMap;
-
-    for(auto theBoard: *fDetectorContainer)
-        for(auto theOpticalGroup: *theBoard)
-            for(auto theHybrid: *theOpticalGroup)
-            {
-                auto& theCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                for(uint8_t phyPort = 0; phyPort < numberOfPhyPorts; ++phyPort)
-                    for(uint8_t line = 0; line < numberOfLines; ++line)
-                    {
-                        std::pair<uint8_t, uint8_t> phyPortAndLine(phyPort, line);
-                        auto                        chipIdAndLine = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
-                        chipIdAndLine.first += 1; // first contain cbcId from 1 to 8
-                        // second contain Stub value from 1 to 5
-                        // second value == 0 means L1
-                        // this would be helpful when booking histograms
-                        phyPortAndLineToCbcIdAndStubMap[phyPortAndLine] = chipIdAndLine;
-                    }
-                return phyPortAndLineToCbcIdAndStubMap;
-            }
-
-    return phyPortAndLineToCbcIdAndStubMap; // this return is not used, just for the compiler to remove warning
-}
-
 void OTCBCtoCICecv::runOTCBCtoCICecv()
 {
     uint8_t cicPhaseStart = 0, cicPhaseEnd = 14;
@@ -112,8 +83,6 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
                 }
                 break;
             }
-
-    auto phyPortAndLineToCbcIdAndStubMap = phyPortAndlineToCbcIdAndStub();
 
     for(uint8_t cicPhase = cicPhaseStart; cicPhase <= cicPhaseEnd; cicPhase++) // phase 0 to 14
     {
@@ -167,9 +136,9 @@ void OTCBCtoCICecv::runOTCBCtoCICecv()
             for(uint8_t phyPort = 0; phyPort < numberOfPhyPorts; ++phyPort)
             {
                 if(phyPort < 10)
-                    prepareForLpGBTalignment2Sstubs();
+                    prepare2StoSendStubPatterns();
                 else
-                    prepareForLpGBTalignment2SL1();
+                    prepare2StoSendL1Patterns();
                 setCICBypass(phyPort);
                 for(auto theBoard: *fDetectorContainer)
                 {
@@ -268,7 +237,7 @@ void OTCBCtoCICecv::setCICBypass(uint8_t phyPort)
     }
 }
 
-void OTCBCtoCICecv::prepareForLpGBTalignment2Sstubs()
+void OTCBCtoCICecv::prepare2StoSendStubPatterns()
 {
     auto theCbcInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
     for(auto theBoard: *fDetectorContainer)
@@ -302,7 +271,7 @@ void OTCBCtoCICecv::prepareForLpGBTalignment2Sstubs()
     }
 }
 
-void OTCBCtoCICecv::prepareForLpGBTalignment2SL1()
+void OTCBCtoCICecv::prepare2StoSendL1Patterns()
 {
     uint32_t triggerFrequency        = 1000; // do not change or it will not match padding 0s
     uint8_t  fakeHeaderChannelNumber = 24;

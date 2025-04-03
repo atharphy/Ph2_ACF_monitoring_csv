@@ -13,7 +13,7 @@ using namespace Ph2_HwDescription;
 
 namespace Ph2_HwInterface
 {
-float Cluster::getBaricentre() { return fFirstStrip + float(fClusterWidth) / 2. - 0.5; }
+float EventCluster::getBaricentre() { return fFirstStrip + float(fClusterWidth) / 2. - 0.5; }
 
 bool Event::operator==(const Event& pEvent) const { return fEventDataMap == pEvent.fEventDataMap; }
 

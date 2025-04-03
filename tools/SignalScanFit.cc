@@ -252,7 +252,7 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                                 cEventHits++;
                             } // end for cId
                             // Fill the cluster histos, use the middleware clustering
-                            std::vector<Cluster> cClusters = cEvent->getClusters(cHybrid->getId(), cCbc->getId());
+                            std::vector<EventCluster> cClusters = cEvent->getClusters(cHybrid->getId(), cCbc->getId());
                             cEventClusters += cClusters.size();
                             // Now fill the ClusterWidth per VCth plots:
                             for(auto& cCluster: cClusters)

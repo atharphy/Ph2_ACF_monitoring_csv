@@ -50,13 +50,12 @@ class OTCBCtoCICecv : public OTCicBypassTest
   private:
     void runOTCBCtoCICecv();
 
-    uint8_t                                                            fShiftRegisterPattern{0xAA};
-    uint32_t                                                           fNumberOfIterations{100};
-    std::vector<float>                                                 fListOfCBCslvsCurrents{0, 8, 14};
-    std::map<std::pair<uint8_t, uint8_t>, std::pair<uint8_t, uint8_t>> phyPortAndlineToCbcIdAndStub();
+    uint8_t            fShiftRegisterPattern{0xAA};
+    uint32_t           fNumberOfIterations{100};
+    std::vector<float> fListOfCBCslvsCurrents{0, 8, 14};
 
-    void  prepareForLpGBTalignment2Sstubs();
-    void  prepareForLpGBTalignment2SL1();
+    void  prepare2StoSendStubPatterns();
+    void  prepare2StoSendL1Patterns();
     float getMatchingEfficiency2SL1(std::vector<uint32_t> inputDataVector);
     void  setCICBypass(uint8_t phyPort);
 

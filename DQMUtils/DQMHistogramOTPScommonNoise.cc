@@ -38,18 +38,18 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
     fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
 
     HistContainer<TH1F> hSSAHits("CommonNoiseHits", "Common noise hits", MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
-    hSSAHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits ");
+    hSSAHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits");
     hSSAHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
     hSSAHits.fTheHistogram->GetXaxis()->SetRangeUser(0, 120);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fStripHitHistograms, hSSAHits);
 
     HistContainer<TH1F> hStripHybridHits("CommonNoiseHitsStrip", "Common noise hits strip", MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
-    hStripHybridHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits ");
+    hStripHybridHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits");
     hStripHybridHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStripHybridHitHistograms, hStripHybridHits);
 
     HistContainer<TH1F> hStripModuleHits("CommonNoiseHitsStrip", "Common noise hits strip", MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
-    hStripModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits ");
+    hStripModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits");
     hStripModuleHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fStripModuleHitHistograms, hStripModuleHits);
 
@@ -58,18 +58,18 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
 
     HistContainer<TH1F> hMPAHits("CommonNoiseHits", "Common noise hits", MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
-    hMPAHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits ");
+    hMPAHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits");
     hMPAHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
     hMPAHits.fTheHistogram->GetXaxis()->SetRangeUser(0, 120);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fPixelHitHistograms, hMPAHits);
 
     HistContainer<TH1F> hPixelHybridHits("CommonNoiseHitsPixel", "Common noise hits pixel", MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
-    hPixelHybridHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits ");
+    hPixelHybridHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits");
     hPixelHybridHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPixelHybridHitHistograms, hPixelHybridHits);
 
     HistContainer<TH1F> hPixelModuleHits("CommonNoiseHitsPixel", "Common noise hits pixel", MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
-    hPixelModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits ");
+    hPixelModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits");
     hPixelModuleHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fPixelModuleHitHistograms, hPixelModuleHits);
 

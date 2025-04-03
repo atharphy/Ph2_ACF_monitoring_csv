@@ -4,6 +4,7 @@
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
 #include "Utils/PatternMatcher.h"
+#include "Utils/Utilities.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -19,10 +20,13 @@ void OTverifyMPASSAdataWord::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
-    fNumberOfIterations = findValueInSettings<double>("OTverifyMPASSAdataWord_NumberOfIterations", 1000);
+    fNumberOfStubBits     = findValueInSettings<double>("OTverifyMPASSAdataWord_NumberOfTestedStubBits", 1e8);
+    fNumberOfL1Bits       = findValueInSettings<double>("OTverifyMPASSAdataWord_NumberOfTestedL1Bits", 1e6);
+    fDoMatchingInFirmware = findValueInSettings<double>("OTverifyMPASSAdataWord_DoMatchingInFirmware", 1) > 0;
 
-    ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);
+    ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);
 
+    setUpPatternMatching();
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyMPASSAdataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -74,7 +78,7 @@ void OTverifyMPASSAdataWord::fillHistograms()
 #endif
 }
 
-void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCIC, D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket)
+PatternMatcher OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCIC, D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket)
 {
     ReadoutChip* theSSA = nullptr;
     try
@@ -84,48 +88,20 @@ void OTverifyMPASSAdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chipIdForCI
     catch(const std::exception& e)
     {
         LOG(INFO) << YELLOW << "            skipping MPA Id " << +theMPA->getId() << " since corresponding SSA is not enabled" << RESET;
-        return;
+        return PatternMatcher();
     }
 
-    LOG(INFO) << BOLDBLUE << "            injecting clusters on MPA Id " << +theMPA->getId() << " and SSA " << +theSSA->getId() << RESET;
+    LOG(INFO) << BOLDBLUE << "            injecting clusters on SSA " << +theSSA->getId() << RESET;
 
-    auto& theL1Efficiency = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
-                                ->getObject(theMPA->getOpticalGroupId())
-                                ->getObject(theMPA->getHybridId())
-                                ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()
-                                .at(theMPA->getId() % 8)
-                                .at(0);
-
-    // std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList{};
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 2)};
-    static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, thePixelClusterList);
-
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theStripClusterList{std::make_tuple<uint8_t, uint8_t>(0x0, 0x25, 2)};
+    std::vector<Cluster> theStripClusterList;
+    for(uint16_t clusterNumber = 0; clusterNumber < 24; ++clusterNumber) { theStripClusterList.push_back(Cluster(0x0, clusterNumber * 3, 2)); }
     static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theSSA, theStripClusterList);
 
+    std::vector<Cluster> thePixelClusterList;
+    static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, thePixelClusterList);
     PatternMatcher thePatternMatcher = produceL1PatternMatcher(thePixelClusterList, theStripClusterList, numberOfBytesInSinglePacket, chipIdForCIC);
 
-    for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
-    {
-        auto lineOutputVector        = theFWInterface->L1ADebug(1, false);
-        auto orderedLineOutputVector = reorderPattern(lineOutputVector, numberOfBytesInSinglePacket);
-        // std::cout << "L1 Line -> " << getPatternPrintout(orderedLineOutputVector, numberOfBytesInSinglePacket) << std::endl;
-        if(matchL1Pattern(orderedLineOutputVector, thePatternMatcher, numberOfBytesInSinglePacket))
-        {
-            ++theL1Efficiency;
-            // LOG(INFO) << GREEN << "L1 pattern received " << getPatternPrintout(orderedLineOutputVector, numberOfBytesInSinglePacket) << RESET;
-        }
-        else
-        {
-            LOG(DEBUG) << BOLDRED << "OTverifyMPASSAdataWord::injectL1PS - Error, expected L1 pattern not found for Board " << +theMPA->getBeBoardId() << " OpticalGroup "
-                       << +theMPA->getOpticalGroupId() << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
-            LOG(DEBUG) << BOLDRED << "L1 data received    " << getPatternPrintout(orderedLineOutputVector, numberOfBytesInSinglePacket) << RESET;
-            LOG(DEBUG) << BOLDRED << "L1 pattern expected " << getPatternPrintout(thePatternMatcher.getPattern(), numberOfBytesInSinglePacket) << RESET;
-            LOG(DEBUG) << BOLDRED << "L1 pattern mask     " << getPatternPrintout(thePatternMatcher.getMask(), numberOfBytesInSinglePacket) << RESET;
-        }
-    }
-
-    theL1Efficiency /= fNumberOfIterations;
+    return thePatternMatcher;
 }
 
 void OTverifyMPASSAdataWord::setStubLogicParameters(ReadoutChip* theMPA)
@@ -143,105 +119,117 @@ void OTverifyMPASSAdataWord::setStubLogicParameters(ReadoutChip* theMPA)
     fReadoutChipInterface->WriteChipReg(theMPA, "CodeP78", 0);
 }
 
-void OTverifyMPASSAdataWord::injectStubsPS(ReadoutChip* theMPA, uint8_t chipIdForCIC, D19cFWInterface* theFWInterface, uint8_t numberOfBytesInSinglePacket)
+std::vector<std::vector<Stub>> OTverifyMPASSAdataWord::createPSstubList()
 {
-    ReadoutChip* theSSA = nullptr;
-    try
+    std::vector<std::vector<Stub>> theListOfStubInjections;
+
+    for(const auto& theStripCluster: fListOfInjectedStrips)
     {
-        theSSA = fDetectorContainer->getObject(theMPA->getBeBoardId())->getObject(theMPA->getOpticalGroupId())->getObject(theMPA->getHybridId())->getObject(theMPA->getId() % 8);
-    }
-    catch(const std::exception& e)
-    {
-        LOG(INFO) << YELLOW << "            skipping MPA Id " << +theMPA->getId() << " since corresponding SSA is not enabled" << RESET;
-        return;
+        std::vector<Stub> theSubList{Stub(theStripCluster.fFirstCol * 2 + theStripCluster.fColWidth / 2, fBendingToCode.at(0), 0xf)};
+        theListOfStubInjections.push_back(theSubList);
     }
 
-    LOG(INFO) << BOLDBLUE << "            injecting stubs on MPA Id " << +theMPA->getId() << " and SSA " << +theSSA->getId() << RESET;
+    return theListOfStubInjections;
+}
 
-    size_t numberOfLines = 6;
+void OTverifyMPASSAdataWord::setStripOffsetParameters(Ph2_HwDescription::ReadoutChip* theSSA)
+{
+    std::vector<std::pair<std::string, uint16_t>> stripOffsetRegisters{{"StripOffset_byte0", 0}, {"StripOffset_byte1", 0}, {"StripOffset_byte2", 0}, {"StripOffset_byte3", 0}};
 
-    auto& theLineEfficiencyArray = fPatternMatchingEfficiencyContainer.getObject(theMPA->getBeBoardId())
-                                       ->getObject(theMPA->getOpticalGroupId())
-                                       ->getObject(theMPA->getHybridId())
-                                       ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9>>()
-                                       .at(theMPA->getId() % 8);
+    fReadoutChipInterface->WriteChipMultReg(theSSA, stripOffsetRegisters);
+}
 
-    fReadoutChipInterface->WriteChipReg(theMPA, "StubMode", 0); // Use normal stub mode
+void OTverifyMPASSAdataWord::prepareForStubInjection(Ph2_HwDescription::BeBoard* theBoard)
+{
+    fListOfInjectedStrips = produceStripClusterList();
 
-    fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte0", 0);
-    fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte1", 0);
-    fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte2", 0);
-    fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte3", 0);
-    setStubLogicParameters(theMPA);
-
-    auto theStripClusterList = produceStripClusterList();
-    static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theSSA, theStripClusterList);
-
-    size_t stripClusterLine = 0;
-    for(auto stripCluster: theStripClusterList)
+    for(auto theOpticalGroup: *theBoard)
     {
-        auto& theStubEfficiency = theLineEfficiencyArray.at(stripClusterLine + 1);
-        LOG(INFO) << BOLDBLUE << "                injecting stub for strip cluster line #" << stripClusterLine << RESET;
-        uint8_t colCoordinate = std::get<1>(stripCluster);
-
-        std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList = produceMatchingPixelClusterList(colCoordinate);
-        static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, thePixelClusterList);
-
-        // stubs need to be ordered by bending code (remember that the CIC orders them based on the Code[MP]XX values)
-        std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> possibleStubVectorList = producePossibleStubVectorList(thePixelClusterList);
-
-        std::vector<std::pair<PatternMatcher, float>> thePatternAndEfficiencyList;
-        for(auto& theStubVector: possibleStubVectorList)
-            thePatternAndEfficiencyList.emplace_back(std::make_pair(produceStubPatternMatcher(theStubVector, numberOfBytesInSinglePacket, chipIdForCIC), 0.));
-
-        for(size_t iteration = 0; iteration < fNumberOfIterations; iteration++)
+        for(auto theHybrid: *theOpticalGroup)
         {
-            auto                  lineOutputVector        = theFWInterface->StubDebug(true, numberOfLines, false);
-            std::vector<uint32_t> concatenatedStubPackage = mergeCICStubOuput(lineOutputVector, numberOfBytesInSinglePacket);
-            matchAllPossibleStubPatterns(numberOfBytesInSinglePacket, numberOfLines, thePatternAndEfficiencyList, concatenatedStubPackage, theMPA);
+            for(auto theChip: *theHybrid)
+            {
+                if(theChip->getFrontEndType() == FrontEndType::SSA2)
+                {
+                    setStripOffsetParameters(theChip);
+                    static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theChip, fListOfInjectedStrips);
+                }
+                else if(theChip->getFrontEndType() == FrontEndType::MPA2)
+                {
+                    fReadoutChipInterface->WriteChipReg(theChip, "StubMode", 0); // Use normal stub mode
+                    setStubLogicParameters(theChip);
+                }
+            }
         }
-        ++stripClusterLine;
-        float maximumEfficiency = 0;
-        for(auto& thePatternAndEfficiency: thePatternAndEfficiencyList)
-        {
-            if(thePatternAndEfficiency.second > maximumEfficiency) maximumEfficiency = thePatternAndEfficiency.second;
-        }
-        theStubEfficiency = maximumEfficiency / fNumberOfIterations;
     }
 }
 
-std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> OTverifyMPASSAdataWord::produceStripClusterList()
+void OTverifyMPASSAdataWord::injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t numberOfBytesInSinglePacket, const std::vector<Stub>& listOfStubs)
 {
-    size_t                                             numberOfSSAstubClusterLines = 8;
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theStripClusterList;
+    if(listOfStubs.size() != 1)
+    {
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] listOfStubs must be exactly one to test SSA to MPA cluster lines! Aborting..." << std::endl;
+        abort();
+    }
+
+    uint8_t rowCoordinate = listOfStubs.at(0).fZ;
+    uint8_t colCoordinate = listOfStubs.at(0).fSeed;
+
+    std::vector<Cluster> thePixelClusterList = produceMatchingPixelClusterList(rowCoordinate, colCoordinate);
+    static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, thePixelClusterList);
+}
+
+PatternMatcher OTverifyMPASSAdataWord::producePatternMatcherPS(uint8_t chipIdForCIC, uint8_t numberOfBytesInSinglePacket, const std::vector<Stub>& listOfStubs)
+{
+    if(listOfStubs.size() != 1)
+    {
+        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] listOfStubs must be exactly one to test SSA to MPA cluster lines! Aborting..." << std::endl;
+        abort();
+    }
+    size_t numberOfStubs = 8 * listOfStubs.size();
+
+    PatternMatcher thePattern;
+    thePattern.addToPattern(0x1, 0x1, 1);      // is PS flag
+    thePattern.addToPattern(0x0, 0x1FF, 9);    // status bits
+    thePattern.addToPattern(0x000, 0x000, 12); // Bx ID
+    thePattern.addToPattern(numberOfStubs, 0x3F, 6);
+
+    for(uint8_t bxOffset = 0; bxOffset < 8; ++bxOffset)
+    {
+        for(auto theStub: listOfStubs)
+        {
+            thePattern.addToPattern(0x0, 0x0, 3);                // BX offset
+            thePattern.addToPattern(chipIdForCIC, 0x7, 3);       // Chip ID
+            thePattern.addToPattern(theStub.fSeed + 2, 0xFF, 8); // seed
+            thePattern.addToPattern(theStub.fBend, 0x7, 3);      // bending
+            thePattern.addToPattern(theStub.fZ, 0xF, 4);         // z
+        }
+    }
+
+    thePattern.addTrailingZeros(numberOfBytesInSinglePacket * 64 * 6);
+    return thePattern;
+}
+
+std::vector<Cluster> OTverifyMPASSAdataWord::produceStripClusterList()
+{
+    size_t               numberOfSSAstubClusterLines = 8;
+    std::vector<Cluster> theStripClusterList;
     for(size_t stripIt = 0; stripIt < numberOfSSAstubClusterLines; ++stripIt) // injecting 8 clusters of size 1 15 strips spaced
     {
-        theStripClusterList.push_back({0, fFirstStrip + fStripGap * stripIt, 1});
+        theStripClusterList.push_back(Cluster(0, fFirstStrip + fStripGap * stripIt, 1));
     }
 
     return theStripClusterList;
 }
 
-std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> OTverifyMPASSAdataWord::produceMatchingPixelClusterList(uint8_t colCoordinate)
+std::vector<Cluster> OTverifyMPASSAdataWord::produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed)
 {
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> thePixelClusterList;
-    thePixelClusterList.push_back({fStubRowCoordinate, colCoordinate, 1});
+    std::vector<Cluster> thePixelClusterList;
+    thePixelClusterList.push_back(Cluster(stubRow, stubSeed / 2, 1 + stubSeed % 2));
     return thePixelClusterList;
 }
 
-std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> OTverifyMPASSAdataWord::producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList)
-{
-    std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> possibleStubVectorList;
-    for(const auto& thePixelCluster: thePixelClusterList)
-    {
-        std::vector<std::tuple<uint8_t, uint8_t, int>> theStubVector{{fStubRowCoordinate, std::get<1>(thePixelCluster) * 2 + std::get<2>(thePixelCluster) - 1, 0}};
-        possibleStubVectorList.push_back(theStubVector);
-    }
-
-    return possibleStubVectorList;
-}
-
-PatternMatcher OTverifyMPASSAdataWord::produceStubPatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, int>>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC)
+PatternMatcher OTverifyMPASSAdataWord::produceStubPatternMatcher(const std::vector<Stub>& theStubVector, uint8_t numberOfBytesInSinglePacket, uint8_t chipIdForCIC)
 {
     size_t numberOfStubs     = 8 * theStubVector.size();
     size_t maximumStubNumber = (numberOfBytesInSinglePacket == 1) ? 16 : 35; // 16 if a 5G, 35 if a 10G
@@ -262,11 +250,11 @@ PatternMatcher OTverifyMPASSAdataWord::produceStubPatternMatcher(const std::vect
     {
         for(auto theStub: theStubVector)
         {
-            thePattern.addToPattern(0x0, 0x0, 3);                                     // BX offset
-            thePattern.addToPattern(chipIdForCIC, 0x7, 3);                            // Chip ID
-            thePattern.addToPattern(std::get<1>(theStub) + 2, 0xFF, 8);               // seed
-            thePattern.addToPattern(fBendingToCode.at(std::get<2>(theStub)), 0x7, 3); // bending
-            thePattern.addToPattern(std::get<0>(theStub), 0xF, 4);                    // z
+            thePattern.addToPattern(0x0, 0x0, 3);                              // BX offset
+            thePattern.addToPattern(chipIdForCIC, 0x7, 3);                     // Chip ID
+            thePattern.addToPattern(theStub.fSeed + 2, 0xFF, 8);               // seed
+            thePattern.addToPattern(fBendingToCode.at(theStub.fBend), 0x7, 3); // bending
+            thePattern.addToPattern(theStub.fZ, 0xF, 4);                       // z
         }
     }
 
@@ -282,32 +270,12 @@ PatternMatcher OTverifyMPASSAdataWord::produceStubPatternMatcher(const std::vect
         thePattern.addToPattern(0x0, 0x1F, 5); // 10G case
 
     return thePattern;
-};
-
-void OTverifyMPASSAdataWord::matchAllPossibleStubPatterns(uint8_t                                        numberOfBytesInSinglePacket,
-                                                          size_t                                         numberOfLines,
-                                                          std::vector<std::pair<PatternMatcher, float>>& thePatternAndEfficiencyList,
-                                                          const std::vector<uint32_t>&                   concatenatedStubPackage,
-                                                          ReadoutChip*                                   theMPA)
-{
-    for(auto& thePatternAndEfficiency: thePatternAndEfficiencyList)
-    {
-        if(matchStubPattern(concatenatedStubPackage, thePatternAndEfficiency.first, numberOfBytesInSinglePacket, numberOfLines)) { thePatternAndEfficiency.second++; }
-        else if(thePatternAndEfficiencyList.size() == 1)
-        {
-            LOG(DEBUG) << BOLDRED << "OTverifyMPASSAdataWord::injectStubsPS - Error, expected stub pattern not found for Board " << +theMPA->getBeBoardId() << " OpticalGroup "
-                       << +theMPA->getOpticalGroupId() << " Hybrid " << +theMPA->getHybridId() << " MPA " << +theMPA->getId() << RESET;
-            LOG(DEBUG) << BOLDRED << "Stub data received    " << getPatternPrintout(concatenatedStubPackage, numberOfBytesInSinglePacket) << RESET;
-            LOG(DEBUG) << BOLDRED << "Stub pattern expected " << getPatternPrintout(thePatternAndEfficiency.first.getPattern(), numberOfBytesInSinglePacket) << RESET;
-            LOG(DEBUG) << BOLDRED << "Stub pattern mask     " << getPatternPrintout(thePatternAndEfficiency.first.getMask(), numberOfBytesInSinglePacket) << RESET;
-        }
-    }
 }
 
-PatternMatcher OTverifyMPASSAdataWord::produceL1PatternMatcher(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList,
-                                                               const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& theStripClusterList,
-                                                               uint8_t                                                   numberOfBytesInSinglePacket,
-                                                               uint8_t                                                   chipIdForCIC)
+PatternMatcher OTverifyMPASSAdataWord::produceL1PatternMatcher(const std::vector<Cluster>& thePixelClusterList,
+                                                               const std::vector<Cluster>& theStripClusterList,
+                                                               uint8_t                     numberOfBytesInSinglePacket,
+                                                               uint8_t                     chipIdForCIC)
 {
     uint8_t numberOfPixelClusters = thePixelClusterList.size();
     uint8_t numberOfStripClusters = theStripClusterList.size();
@@ -322,19 +290,27 @@ PatternMatcher OTverifyMPASSAdataWord::produceL1PatternMatcher(const std::vector
     thePatternMatcher.addToPattern(numberOfPixelClusters, 0x7F, 7);
 
     std::map<uint8_t, std::pair<uint8_t, uint8_t>> orderedStripClusterList;
-    for(const auto& theCluster: theStripClusterList) { orderedStripClusterList[std::get<1>(theCluster)] = {std::get<0>(theCluster), std::get<2>(theCluster)}; }
-
-    // CIC ouputs cluster with loower address first
+    for(const auto& theCluster: theStripClusterList) { orderedStripClusterList[theCluster.fFirstCol] = {theCluster.fRow, theCluster.fColWidth}; }
+    // wierd MPA packing of SSA clusters
+    std::vector<Cluster> packerOrderedStripClusterList(numberOfStripClusters);
+    size_t               orderedClusterCount = 0;
     for(const auto& theCluster: orderedStripClusterList)
     {
+        size_t vectorPosition = (orderedClusterCount <= size_t(numberOfStripClusters - 1) / 2) ? (2 * orderedClusterCount) : (numberOfStripClusters * 2 - 1 - 2 * orderedClusterCount);
+        packerOrderedStripClusterList.at(vectorPosition) = Cluster(theCluster.second.first, theCluster.first, theCluster.second.second);
+        ++orderedClusterCount;
+    }
+
+    for(const auto& theCluster: packerOrderedStripClusterList)
+    {
         thePatternMatcher.addToPattern(chipIdForCIC, 0x7, 3);
-        thePatternMatcher.addToPattern(theCluster.first + 1, 0x7F, 7); // pixel column address starts from 1
-        thePatternMatcher.addToPattern(theCluster.second.second - 1, 0x7, 3);
+        thePatternMatcher.addToPattern(theCluster.fFirstCol + 1, 0x7F, 7); // pixel column address starts from 1
+        thePatternMatcher.addToPattern(theCluster.fColWidth - 1, 0x7, 3);
         thePatternMatcher.addToPattern(0x0, 0x0, 1);
     }
 
     std::map<uint8_t, std::pair<uint8_t, uint8_t>> orderedPixelClusterList;
-    for(const auto& theCluster: thePixelClusterList) { orderedPixelClusterList[std::get<1>(theCluster)] = {std::get<0>(theCluster), std::get<2>(theCluster)}; }
+    for(const auto& theCluster: thePixelClusterList) { orderedPixelClusterList[theCluster.fFirstCol] = {theCluster.fRow, theCluster.fColWidth}; }
 
     // CIC ouputs cluster with lower address first
     for(const auto& theCluster: orderedPixelClusterList)
@@ -345,16 +321,21 @@ PatternMatcher OTverifyMPASSAdataWord::produceL1PatternMatcher(const std::vector
         thePatternMatcher.addToPattern(theCluster.second.first, 0xF, 4);
     }
 
-    // add extra zeros for padding
-    size_t numberOfPatternBits  = thePatternMatcher.getNumberOfPatternBits();
-    size_t numberOfPaddingZeros = numberOfPatternBits % 4;
-    if(numberOfPaddingZeros > 0) thePatternMatcher.addToPattern(0x0, ~(~0u << numberOfPaddingZeros), numberOfPaddingZeros);
-
-    // add CIC trailing 0 and idle pattern
-    if(numberOfStripClusters == 1)
-        thePatternMatcher.addToPattern(0x00aaaaaa, 0x00ffffff, 32);
-    else
-        thePatternMatcher.addToPattern(0x00a, 0x00f, 12); // 10G debug output is very often cut
-
     return thePatternMatcher;
+}
+
+GenericDataArray<float, 2>& OTverifyMPASSAdataWord::getStorageForStubErrorRate(Hybrid* theHybrid, uint8_t chipId, uint8_t line, size_t stubPatternCounter)
+{
+    return fPatternMatchingEfficiencyContainer.getHybrid(theHybrid->getBeBoardId(), theHybrid->getOpticalGroupId(), theHybrid->getId())
+        ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>()
+        .at(chipId)
+        .at(1 + stubPatternCounter);
+}
+
+GenericDataArray<float, 2>& OTverifyMPASSAdataWord::getStorageForL1ErrorRate(Chip* theChip)
+{
+    return fPatternMatchingEfficiencyContainer.getHybrid(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId())
+        ->getSummary<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>()
+        .at(theChip->getId() % 8)
+        .at(0);
 }

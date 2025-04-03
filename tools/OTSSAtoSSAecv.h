@@ -36,13 +36,24 @@ class OTSSAtoSSAecv : public OTSSAtoMPAecv
     static std::string fCalibrationDescription;
 
   private:
-    void                                                        runSSAtoSSAecvScan();
-    void                                                        setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA) override;
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>          produceStripClusterList() override;
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>          produceMatchingPixelClusterList(uint8_t colCoordinate) override;
-    std::vector<std::vector<std::tuple<uint8_t, uint8_t, int>>> producePossibleStubVectorList(const std::vector<std::tuple<uint8_t, uint8_t, uint8_t>>& thePixelClusterList) override;
-    std::vector<float>                                          fListOfSSAslvsCurrents{1, 4, 7};
-    uint8_t                                                     fCurrentStripInjected;
+    void                           runSSAtoSSAecvScan();
+    std::vector<Cluster>           produceStripClusterList() override;
+    std::vector<std::vector<Stub>> createPSstubList() override;
+    void                           setStripOffsetParameters(Ph2_HwDescription::ReadoutChip* theSSA) override;
+    std::vector<float>             fListOfSSAslvsCurrents{1, 4, 7};
+    GenericDataArray<float, 2>&    getStorageForStubErrorRate(Ph2_HwDescription::Hybrid* theHybrid, uint8_t chipId, uint8_t line, size_t stubPatternCounter) override;
+    void                           setSampleClockEdgeAndPhase(Ph2_HwDescription::BeBoard* theBoard, uint8_t clockEdge, int samplingPhaseOffset);
+    void                           resetPatternMatchingEfficiencyContainer() override;
+
+    uint8_t fStripClusterColRightToLeft = 1;
+    uint8_t fStripClusterColLeftToRight = 118;
+
+    uint8_t fPixelClusterColRightToLeft = 117;
+    uint8_t fPixelClusterColLeftToRight = 2;
+
+    int                   fMinimum320PhaseShift = -1;
+    int                   fMaximum320PhaseShift = +1;
+    DetectorDataContainer fOriginalPhaseContainer;
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

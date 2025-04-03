@@ -1,12 +1,12 @@
 /*!
-        \file                DQMHistogramOTSSAtoMPAecv.h
-        \brief               DQM class for OTSSAtoMPAecv
+        \file                DQMHistogramOTChipToCICecv.h
+        \brief               DQM class for OTChipToCICecv
         \author              Fabio Ravera
-        \date                11/06/24
+        \date                19/03/25
 */
 
-#ifndef DQMHistogramOTSSAtoMPAecv_h_
-#define DQMHistogramOTSSAtoMPAecv_h_
+#ifndef DQMHistogramOTChipToCICecv_h_
+#define DQMHistogramOTChipToCICecv_h_
 #include "DQMUtils/DQMHistogramBase.h"
 #include "Utils/Container.h"
 #include "Utils/DataContainer.h"
@@ -14,21 +14,21 @@
 class TFile;
 
 /*!
- * \class DQMHistogramOTSSAtoMPAecv
- * \brief Class for OTSSAtoMPAecv monitoring histograms
+ * \class DQMHistogramOTChipToCICecv
+ * \brief Class for OTChipToCICecv monitoring histograms
  */
-class DQMHistogramOTSSAtoMPAecv : public DQMHistogramBase
+class DQMHistogramOTChipToCICecv : public DQMHistogramBase
 {
   public:
     /*!
      * constructor
      */
-    DQMHistogramOTSSAtoMPAecv();
+    DQMHistogramOTChipToCICecv();
 
     /*!
      * destructor
      */
-    ~DQMHistogramOTSSAtoMPAecv();
+    ~DQMHistogramOTChipToCICecv();
 
     /*!
      * \brief Book histograms
@@ -55,14 +55,11 @@ class DQMHistogramOTSSAtoMPAecv : public DQMHistogramBase
      */
     void reset(void) override;
 
-    void fillPatternEfficiencyScan(DetectorDataContainer& thePatternMatchingEfficiency, uint8_t clockEdge, uint8_t slvsCurrent, int samplingPhaseOffset);
+    void fillPhaseScanMatchingEfficiency(DetectorDataContainer& matchingEfficiencyContainer, uint8_t cicPhase, uint8_t slvsCurrent);
 
   private:
     DetectorContainer*                       fDetectorContainer;
-    std::map<uint8_t, DetectorDataContainer> fPhaseScanTestedBits;
-    std::map<uint8_t, DetectorDataContainer> fPhaseScanErrorRate;
-
-    int fMinimum320PhaseShift = -1;
-    int fMaximum320PhaseShift = +1;
+    std::map<uint8_t, DetectorDataContainer> fErrorRateContainerMap;
+    std::map<uint8_t, DetectorDataContainer> fTestedBitsContainerMap;
 };
 #endif

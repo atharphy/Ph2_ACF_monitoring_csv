@@ -486,3 +486,23 @@ std::vector<uint32_t> getPossiblePatterns(uint8_t injectedPattern, bool is10Gmod
 
     return possiblePatternList;
 }
+
+std::vector<std::vector<uint32_t>> splitBits(const std::vector<uint32_t>& input, uint32_t numberOfSplits)
+{
+    size_t size = input.size() / numberOfSplits;
+    if(input.size() % numberOfSplits > 0) ++size;
+    std::vector<std::vector<uint32_t>> outputVector(numberOfSplits, std::vector<uint32_t>(size, 0));
+
+    uint32_t numberOfBitsInWord = 32;
+
+    uint32_t totalNumberOfBits = input.size() * numberOfBitsInWord;
+
+    for(uint32_t bitNumber = 0; bitNumber < totalNumberOfBits; ++bitNumber)
+    {
+        uint32_t bit          = (input[bitNumber / numberOfBitsInWord] >> (numberOfBitsInWord - 1 - bitNumber % numberOfBitsInWord)) & 0x1;
+        auto&    wordToModify = outputVector[bitNumber % numberOfSplits][bitNumber / (numberOfSplits * numberOfBitsInWord)];
+        wordToModify |= (bit << (numberOfBitsInWord - 1 - ((bitNumber / numberOfSplits) % numberOfBitsInWord)));
+    }
+
+    return outputVector;
+}

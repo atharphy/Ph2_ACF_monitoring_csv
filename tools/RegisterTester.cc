@@ -19,22 +19,6 @@ void RegisterTester::Initialise()
     fStartTime            = std::chrono::duration_cast<std::chrono::seconds>(cTimeStart.time_since_epoch()).count();
     LOG(INFO) << BOLDMAGENTA << "RegisterTester::Initialise at " << fStartTime << " s from epoch." << RESET;
 
-    // clear map of modified registers
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    cChip->ClearModifiedRegisterMap();
-                    cChip->setRegisterTracking(1);
-                }
-            }
-        }
-    }
-
     ContainerFactory::copyAndInitChip<Registers>(*fDetectorContainer, fRegList);
     for(auto cBoard: *fDetectorContainer)
     {

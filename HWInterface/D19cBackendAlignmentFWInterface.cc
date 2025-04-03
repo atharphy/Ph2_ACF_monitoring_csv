@@ -97,7 +97,6 @@ void PhaseTuningReply::decodeReply(uint32_t reply, const PhaseTuningControl& the
     if(expectedLineId != receivedLineId)
     {
         std::string errorMessage = std::string(__PRETTY_FUNCTION__) + " requesting info for line " + std::to_string(expectedLineId) + " but received line " + std::to_string(receivedLineId);
-        std::cerr << errorMessage << std::endl;
         throw std::runtime_error(errorMessage);
     }
 
@@ -308,7 +307,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
             thePhaseTuningReply.decodeReply(reply, thePhaseTuningControl);
             AlignmentResult theAlignmentResults(thePhaseTuningReply);
 
-            if(!fAlignOnCustomPattern.at(hybridId))
+            if(!fAlignOnCustomPattern.at(hybridId) && !fSuppressPrintout)
             {
                 LOG(INFO) << "\tHybrid:" << +hybridId << " Line: " << +lineId;
                 LOG(INFO) << "\t\t Done: " << std::boolalpha << +theAlignmentResults.fDone << ", PA FSM: " << BOLDGREEN << theAlignmentResults.fPhaseAlignmentFSMstate << RESET
@@ -320,7 +319,7 @@ AlignmentResult D19cBackendAlignmentFWInterface::retrieveAlignmentResult(uint8_t
         }
         catch(const std::exception& e)
         {
-            LOG(WARNING) << WARNING_FORMAT << "D19cBackendAlignmentFWInterface::retrieveAlignmentResult failed, retrying..." << RESET;
+            if(!fSuppressErrorPrintout) LOG(WARNING) << WARNING_FORMAT << "D19cBackendAlignmentFWInterface::retrieveAlignmentResult failed, retrying..." << RESET;
             ++retryCounter;
         }
     }

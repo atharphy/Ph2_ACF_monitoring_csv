@@ -50,7 +50,6 @@ void DQMHistogramOTCICwordAlignment::book(TFile* theOutputFile, DetectorContaine
                                                     -0.5,
                                                     NUMBER_OF_LINES_PER_CIC_PORTS - 1 - 0.5);
     wordAlignmentDelayHistogram.fTheHistogram->GetXaxis()->SetTitle(xAxisTitle.c_str());
-    wordAlignmentDelayHistogram.fTheHistogram->GetYaxis()->SetTitle("Line");
     setLineBinLabels(wordAlignmentDelayHistogram.fTheHistogram->GetYaxis());
     wordAlignmentDelayHistogram.fTheHistogram->SetMinimum(-1);
     wordAlignmentDelayHistogram.fTheHistogram->SetMaximum(15);

@@ -143,22 +143,6 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
         }
     }
 
-    // make sure register tracking is on
-    for(auto board: *fDetectorContainer)
-    {
-        for(auto opticalGroup: *board)
-        {
-            for(auto hybrid: *opticalGroup)
-            {
-                for(auto chip: *hybrid)
-                {
-                    chip->setRegisterTracking(1);
-                    chip->ClearModifiedRegisterMap();
-                }
-            }
-        }
-    }
-
     if(fDisableStubLogic)
     {
         // ContainerFactory::copyAndInitChip<uint8_t>(*fDetectorContainer, fStubLogicCointainer);

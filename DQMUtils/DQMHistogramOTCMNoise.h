@@ -84,6 +84,28 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
         return false;
     }
 
+    template <typename T1, typename T2, typename T3, typename T4>
+    bool processInputStreamChip(std::string streamName, std::string& inputStream, void (DQMHistogramOTCMNoise::*function)(DetectorDataContainer&))
+    {
+        ContainerSerialization theSerializer(streamName);
+        try
+        {
+            if(theSerializer.attachDeserializer(inputStream))
+            {
+                LOG(INFO) << "Matched stream " << streamName << "!" << RESET;
+
+                DetectorDataContainer fDetectorData = theSerializer.deserializeChipContainer<T1, T2>(fDetectorContainer);
+                (this->*function)(fDetectorData);
+                return true;
+            }
+        }
+        catch(const std::exception& e)
+        {
+            LOG(INFO) << BOLDRED << " Unable to read chip-level stream " << streamName << ": " << e.what() << RESET;
+        }
+        return false;
+    }
+
     /*!
      * \brief process : do something with the histogram like colors, fit, drawing canvases, etc
      */

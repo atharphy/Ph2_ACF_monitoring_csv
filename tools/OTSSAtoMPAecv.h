@@ -17,6 +17,11 @@
 #include "DQMUtils/DQMHistogramOTSSAtoMPAecv.h"
 #endif
 
+namespace Ph2_HwDescription
+{
+class BeBoard;
+class ReadoutChip;
+} // namespace Ph2_HwDescription
 class OTSSAtoMPAecv : public OTverifyMPASSAdataWord
 {
   public:
@@ -36,23 +41,18 @@ class OTSSAtoMPAecv : public OTverifyMPASSAdataWord
     static std::string fCalibrationDescription;
 
   protected:
-    std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> produceMatchingPixelClusterList(uint8_t colCoordinate) override;
-    void                                               matchAllPossibleStubPatterns(uint8_t                                        numberOfBytesInSinglePacket,
-                                                                                    size_t                                         numberOfLines,
-                                                                                    std::vector<std::pair<PatternMatcher, float>>& thePatternAndEfficiencyList,
-                                                                                    const std::vector<uint32_t>&                   concatenatedStubPackage,
-                                                                                    Ph2_HwDescription::ReadoutChip*                theMPA) override;
-    void                                               resetPatternMatchingEfficiencyContainer();
+    virtual void resetPatternMatchingEfficiencyContainer();
 
   private:
     void               runSSAtoMPAecvScan();
-    void               runSSAtoMPAecvScanForStubs(uint8_t slvsCurrent);
-    void               runSSAtoMPAecvScanForL1(uint8_t slvsCurrent);
+    void               runSSAtoMPAecvScan(uint8_t slvsCurrent);
+    void               setSampleClockEdgeAndPhase(Ph2_HwDescription::BeBoard* theBoard, uint8_t clockEdge, int samplingPhaseOffset);
     std::vector<float> fListOfSSAslvsCurrents{1, 4, 7};
 
     int                   fMinimum320PhaseShift = -1;
     int                   fMaximum320PhaseShift = +1;
-    DetectorDataContainer fOriginalPhaseContainer;
+    DetectorDataContainer fOriginalL1PhaseContainer;
+    DetectorDataContainer fOriginalStubPhaseContainer;
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

@@ -60,7 +60,7 @@ void OTPScommonNoise::SetThresholds()
                     float theSigma = (cChip->getFrontEndType() == FrontEndType::SSA2) ? theStripSigma : thePixelSigma;
                     LOG(INFO) << BOLDYELLOW << " chip " << +cChip->getId() << " cChip->getAveragePedestal(): " << cChip->getAveragePedestal() << " cChip->getAverageNoise: " << cChip->getAverageNoise()
                               << RESET;
-                    float theThreshold = cChip->getAveragePedestal() + cChip->getAverageNoise() + theSigma;
+                    float theThreshold = cChip->getAveragePedestal() + cChip->getAverageNoise() * theSigma;
                     LOG(INFO) << BOLDYELLOW << " chip " << +cChip->getId() << " theThreshold: " << theThreshold << " rounded " << std::round(theThreshold) << RESET;
                     fReadoutChipInterface->WriteChipReg(cChip, "Threshold", std::round(theThreshold));
                 }

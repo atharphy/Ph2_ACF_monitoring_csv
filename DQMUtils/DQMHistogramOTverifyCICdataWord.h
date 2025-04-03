@@ -59,6 +59,7 @@ class DQMHistogramOTverifyCICdataWord : public DQMHistogramBase
 
   private:
     DetectorContainer*    fDetectorContainer;
-    DetectorDataContainer fPatternMatchingEfficiencyHistogramContainer;
+    DetectorDataContainer fBitErrorRateHistogramContainer;
+    DetectorDataContainer fTestedBitsHistogramContainer;
 };
 #endif

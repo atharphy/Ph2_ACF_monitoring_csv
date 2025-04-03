@@ -153,6 +153,7 @@ enum class EventType
 
 #define NUMBER_OF_CIC_PORTS 8
 #define NUMBER_OF_LINES_PER_CIC_PORTS 6
+#define NUMBER_OF_LINES_PER_CIC_PHY_PORTS 4
 
 #define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 

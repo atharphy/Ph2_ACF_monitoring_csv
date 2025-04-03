@@ -411,7 +411,7 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pHybridId, uint8_t
 
         auto cChipIdMapped = this->getChipIdMapped(pHybridId, pReadoutChipId);
         // LOG(INFO) << BOLDBLUE << "Retreiving strip cluster information for Hybrid#" << +pHybridId << " Chip#" << +cChipId << " this is chip Id #" << +cChipIdMapped << " in CIC land" << RESET;
-        if(cChipId == cChipIdMapped)
+        if(cChipId == cChipIdMapped && cAdd != 0) // need to skip empty clusters
         {
             // LOG (INFO) << BOLDGREEN << "SCLUS ..... " << std::bitset<14>(*cIterator)  << RESET;
             SCluster cSCluster;
@@ -727,11 +727,11 @@ std::vector<bool> D19cCic2Event::DataBitVector(uint8_t pHybridId, uint8_t pReado
     return blist;
 }
 
-std::vector<Stub> D19cCic2Event::StubVector(uint8_t pHybridId, uint8_t pReadoutChipId) const
+std::vector<EventStub> D19cCic2Event::StubVector(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    auto&             cStubWords = fEventStubList.at(getHybridIndex(pHybridId)).second;
-    std::vector<Stub> cStubVec;
+    auto&                  cStubWords = fEventStubList.at(getHybridIndex(pHybridId)).second;
+    std::vector<EventStub> cStubVec;
     for(auto cStubWord: cStubWords)
     {
         uint8_t cIdOffset      = (fIs2S) ? (8 + 4) : (8 + 4 + 3);
@@ -758,7 +758,7 @@ std::string D19cCic2Event::StubBitString(uint8_t pHybridId, uint8_t pCbcId) cons
 {
     std::ostringstream os;
 
-    std::vector<Stub> cStubVector = this->StubVector(pHybridId, pCbcId);
+    std::vector<EventStub> cStubVector = this->StubVector(pHybridId, pCbcId);
 
     for(auto cStub: cStubVector) os << std::bitset<8>(cStub.getPosition()) << " " << std::bitset<4>(cStub.getBend()) << " ";
 
@@ -769,7 +769,7 @@ std::string D19cCic2Event::StubBitString(uint8_t pHybridId, uint8_t pCbcId) cons
 bool D19cCic2Event::StubBit(uint8_t pHybridId, uint8_t pCbcId) const
 {
     // here just OR the stub positions
-    std::vector<Stub> cStubVector = this->StubVector(pHybridId, pCbcId);
+    std::vector<EventStub> cStubVector = this->StubVector(pHybridId, pCbcId);
     return (cStubVector.size() > 0);
 }
 
@@ -929,9 +929,9 @@ void D19cCic2Event::print(std::ostream& os) const
     os << std::endl;
 }
 
-std::vector<Cluster> D19cCic2Event::getClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const
+std::vector<EventCluster> D19cCic2Event::getClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
-    std::vector<Cluster> cClusters(0);
+    std::vector<EventCluster> cClusters(0);
     // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
     auto&                  cClusterWords = fEventHitList.at(getHybridIndex(pHybridId)).second;
     std::bitset<NCHANNELS> cBitSet(0);
@@ -951,7 +951,7 @@ std::vector<Cluster> D19cCic2Event::getClusters(uint8_t pHybridId, uint8_t pRead
         // LOG(DEBUG) << BOLDBLUE << "Cluster " << +cClusterId << " : " << std::bitset<CLUSTER_WORD_SIZE>(cClusterWord) << "... " << +cWidth << " strip cluster in strip " << +cStrip << " in layer "
         //            << +cLayerId << " so first hit is in channel " << +cFirstChannel << " of chip " << +cChipId << " [ real hybrid  " << +cChipIdMapped << " ]" << RESET;
 
-        Cluster cCluster;
+        EventCluster cCluster;
         cCluster.fSensor       = cLayerId;
         cCluster.fFirstStrip   = pReadoutChipId * 127 + cStrip;
         cCluster.fClusterWidth = cWidth;

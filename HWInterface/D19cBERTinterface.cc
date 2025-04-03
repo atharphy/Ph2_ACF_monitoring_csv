@@ -235,7 +235,7 @@ void D19cBERTinterface::writeCommand(BitErrorTestControl theBitErrorTestControl)
         std::this_thread::sleep_for(std::chrono::microseconds(50));
         uint32_t reply = fTheRegManager->ReadReg("fc7_daq_stat.physical_interface_block.bert_readback");
         if(theCommand == reply) break;
-        LOG(WARNING) << WARNING_FORMAT << "D19cBERTinterface::writeCommandWithCheck: Failed to write command 0x" << std::hex << theCommand << " read back 0x" << reply << std::dec << RESET;
+        LOG(DEBUG) << WARNING_FORMAT << "D19cBERTinterface::writeCommandWithCheck: Failed to write command 0x" << std::hex << theCommand << " read back 0x" << reply << std::dec << RESET;
         ++iterationNumber;
     }
     if(iterationNumber >= maxNumberOfIterations)
@@ -511,11 +511,17 @@ void D19cBERTinterface::waitForNeededBits(bool is10Gmodule, float numberOfMatche
     if(!fUsePRBS)
     {
         float theMinimumNumber = 1e10;
+        bool  minimumFound     = false;
         for(const auto& theNumberOfCheckedBits: fNumberOfCheckedBitsMap)
         {
-            if(theNumberOfCheckedBits.second < theMinimumNumber) theMinimumNumber = theNumberOfCheckedBits.second;
+            if(theNumberOfCheckedBits.second == 0) continue;
+            if(theNumberOfCheckedBits.second < theMinimumNumber)
+            {
+                theMinimumNumber = theNumberOfCheckedBits.second;
+                minimumFound     = true;
+            }
         }
-        if(theMinimumNumber == 0)
+        if(!minimumFound)
         {
             std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theMinimumNumber = 0, impossible to measure meaninless pattern error bits, aborting" << std::endl;
             abort();
@@ -536,40 +542,54 @@ void D19cBERTinterface::waitForNeededBits(bool is10Gmodule, float numberOfMatche
     if(waitInMilliSeconds > 0) { std::this_thread::sleep_for(std::chrono::milliseconds(waitInMilliSeconds)); }
 }
 
-bool D19cBERTinterface::isStartPatternFound(BoardContainer* theBoardContainer, uint8_t lineNumber)
+std::pair<bool, bool> D19cBERTinterface::isStartPatternFound(BoardContainer* theBoardContainer, uint8_t lineNumber)
 {
-    bool allLineStarted = true;
+    bool allLineStarted        = true;
+    bool atLeastOneLineStarted = false;
     for(auto theOpticalGroup: *theBoardContainer)
     {
         for(auto theHybrid: *theOpticalGroup)
         {
             uint16_t iteration     = 0;
-            uint16_t maxIterations = 10;
+            uint16_t maxIterations = 3;
             uint32_t firstData;
             while(iteration < maxIterations)
             {
                 firstData = getFirstData(theHybrid->getId(), lineNumber);
 
-                if(fUsePRBS)
+                if(firstData != 0xfedececa)
                 {
-                    if((firstData >> 16) == BERT_ALIGNMENT_PATTERN) break;
-                }
-                else
-                {
-                    if((firstData >> 16) == ((fCheckedPatternMap.at(theHybrid->getId()).at(0) & fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16)) break;
+                    if(fUsePRBS)
+                    {
+                        if((firstData >> 16) == BERT_ALIGNMENT_PATTERN)
+                        {
+                            atLeastOneLineStarted = true;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if(((firstData && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16) ==
+                           ((fCheckedPatternMap.at(theHybrid->getId()).at(0) && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16))
+                        {
+                            atLeastOneLineStarted = true;
+                            break;
+                        }
+                    }
                 }
                 ++iteration;
             }
             if(iteration >= maxIterations)
             {
-                LOG(WARNING) << WARNING_FORMAT << "Failed to find BERT start pattern on OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +lineNumber
-                             << " after " << maxIterations << " iterations. Last word read = 0x" << std::hex << firstData << std::dec << RESET;
+                if(!fSuppressErrorPrintout)
+                    LOG(WARNING) << WARNING_FORMAT << "Failed to find BERT start pattern on OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +lineNumber
+                                 << " after " << maxIterations << " iterations. Last word read = 0x" << std::hex << firstData << std::dec << RESET;
                 allLineStarted = false;
             }
         }
     }
 
-    return allLineStarted;
+    return std::make_pair(allLineStarted, atLeastOneLineStarted);
 }
 
 bool D19cBERTinterface::isStateMachineStarted(BoardContainer* theBoardContainer, uint8_t lineNumber)
@@ -580,7 +600,7 @@ bool D19cBERTinterface::isStateMachineStarted(BoardContainer* theBoardContainer,
         for(auto theHybrid: *theOpticalGroup)
         {
             uint16_t iteration     = 0;
-            uint16_t maxIterations = 10;
+            uint16_t maxIterations = 1;
             uint8_t  checkerFSMstatus;
             while(iteration < maxIterations)
             {
@@ -591,8 +611,9 @@ bool D19cBERTinterface::isStateMachineStarted(BoardContainer* theBoardContainer,
             }
             if(iteration >= maxIterations)
             {
-                LOG(WARNING) << WARNING_FORMAT << "Failed to start BERT checker on OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +lineNumber
-                             << " after " << maxIterations << " iterations. FSM status = 0x" << std::hex << +checkerFSMstatus << std::dec << RESET;
+                if(!fSuppressErrorPrintout)
+                    LOG(WARNING) << WARNING_FORMAT << "Failed to start BERT checker on OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +lineNumber
+                                 << " after " << maxIterations << " iterations. FSM status = 0x" << std::hex << +checkerFSMstatus << std::dec << RESET;
                 allLineStarted = false;
             }
         }
@@ -627,14 +648,16 @@ bool D19cBERTinterface::retrieveBitTestedCounterLine(BoardDataContainer* theBoar
             if(theBitCounterCounter < numberOfMatchedBits)
             {
                 correctFrameFound = false;
-                LOG(ERROR) << ERROR_FORMAT << "Number of checked bits 0x" << std::hex << theBitCounterCounter << std::dec << " is less then the expected number " << numberOfMatchedBits
-                           << " for OpticalGroup " << theHybrid->getId() / 2 << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << RESET;
+                if(!fSuppressErrorPrintout)
+                    LOG(ERROR) << ERROR_FORMAT << "Number of checked bits 0x" << std::hex << theBitCounterCounter << std::dec << " is less then the expected number " << numberOfMatchedBits
+                               << " for OpticalGroup " << theHybrid->getId() / 2 << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << RESET;
             }
             if(theBitCounterCounter > numberOfMatchedBits * 100 && numberOfMatchedBits > 9e5)
             {
                 correctFrameFound = false;
-                LOG(ERROR) << ERROR_FORMAT << "Number of checked bits 0x" << std::hex << theBitCounterCounter << std::dec << " is too large than the expected number " << numberOfMatchedBits
-                           << " for OpticalGroup " << theHybrid->getId() / 2 << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << RESET;
+                if(!fSuppressErrorPrintout)
+                    LOG(ERROR) << ERROR_FORMAT << "Number of checked bits 0x" << std::hex << theBitCounterCounter << std::dec << " is too large than the expected number " << numberOfMatchedBits
+                               << " for OpticalGroup " << theHybrid->getId() / 2 << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << RESET;
             }
         }
     }
@@ -673,15 +696,17 @@ BoardDataContainer D19cBERTinterface::runBERTonSingleLine(BoardContainer* theBoa
     BoardDataContainer theBoardBERTcounterResult;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*theBoardContainer, theBoardBERTcounterResult);
 
-    size_t maxNumberOfIteration = 10;
-    size_t iterationNumber      = 0;
+    std::pair<bool, bool> isStartFound;
+    size_t                maxNumberOfIteration = 1;
+    size_t                iterationNumber      = 0;
     while(iterationNumber < maxNumberOfIteration)
     {
         loadAllCheckedPatternsInBoard(theBoardContainer);
 
         startPatternSyncronization(hybridId, lineId);
 
-        if(isStartPatternFound(theBoardContainer, lineNumber))
+        isStartFound = isStartPatternFound(theBoardContainer, lineNumber);
+        if(isStartFound.first)
         {
             startBitErrorRateTest(hybridId, lineId);
             if(isStateMachineStarted(theBoardContainer, lineNumber)) { break; }
@@ -692,16 +717,22 @@ BoardDataContainer D19cBERTinterface::runBERTonSingleLine(BoardContainer* theBoa
         haltBitErrorRateTest(hybridId, lineId);
     }
 
-    if(iterationNumber >= maxNumberOfIteration) { LOG(ERROR) << ERROR_FORMAT << "Failed to properly start BERT on line " << lineNumber << " after " << maxNumberOfIteration << " trials" << RESET; }
+    if(iterationNumber >= maxNumberOfIteration && !fSuppressErrorPrintout)
+    {
+        LOG(ERROR) << ERROR_FORMAT << "Failed to properly start BERT on line " << lineNumber << " after " << maxNumberOfIteration << " trials" << RESET;
+    }
 
-    waitForNeededBits(is10Gmodule, numberOfMatchedBits);
+    if(isStartFound.second)
+    {
+        waitForNeededBits(is10Gmodule, numberOfMatchedBits);
 
-    stopBitErrorRateTest(hybridId, lineId);
+        stopBitErrorRateTest(hybridId, lineId);
 
-    retrieveErrorCounterLine(&theBoardBERTcounterResult, lineNumber);
-    retrieveBitTestedCounterLine(&theBoardBERTcounterResult, lineNumber, is10Gmodule, numberOfMatchedBits);
+        retrieveErrorCounterLine(&theBoardBERTcounterResult, lineNumber);
+        retrieveBitTestedCounterLine(&theBoardBERTcounterResult, lineNumber, is10Gmodule, numberOfMatchedBits);
 
-    haltBitErrorRateTest(hybridId, lineId);
+        haltBitErrorRateTest(hybridId, lineId);
+    }
 
     return theBoardBERTcounterResult;
 }

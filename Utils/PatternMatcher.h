@@ -22,6 +22,10 @@ class PatternMatcher
      */
     ~PatternMatcher();
 
+    PatternMatcher(const PatternMatcher& thePatternMatcher);
+
+    PatternMatcher& operator=(const PatternMatcher& thePatternMatcher);
+
     /*!
      * \brief Add more information in the pattern
      * \param thePattern: the new piece of pattern
@@ -83,6 +87,15 @@ class PatternMatcher
     bool isSubsetMatched(const std::vector<uint32_t>& theWordVector, uint32_t firstBitPosition, uint32_t numberOfBitsToMatch) const;
 
     /*!
+     * @brief change bits in the original pattern
+     * \param thePattern: the new piece of pattern
+     * \param thePatternMask: the mask for the new piece of pattern
+     * \param thePatternBitLenght: the number of bits composing the new piece of pattern
+     * @param firstBitPosition: the first bit to edit
+     */
+    void updatePattern(uint32_t thePattern, uint32_t thePatternMask, uint8_t thePatternBitLenght, uint32_t firstBitPosition);
+
+    /*!
      * @brief clear all data members
      */
     void clear();
@@ -119,6 +132,8 @@ class PatternMatcher
         }
         return maximumEfficiency;
     }
+
+    void addTrailingZeros(size_t totalNumberOfBitNeeded);
 
   private:
     size_t                                     fPatternNumberOfBits{0};
