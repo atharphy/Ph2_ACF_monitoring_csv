@@ -275,6 +275,25 @@ void OTinjectionDelayOptimization::prepareInjectionDelayScan2S()
 
     setSameDac("HitOr", 1);                                                                 // using logical OR
     setSameDac("TestPulsePotNodeSel", Cbc::convertMIPtoInjectedCharge(fCBCtestPulseValue)); // injected charge
+
+    // Disable stub logic, as done in PedeNoise
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    if(cChip->getFrontEndType() == FrontEndType::CBC3)
+                    {
+                        LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET;
+                        static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression(cChip, false, true, 0);
+                    }
+                }
+            }
+        }
+    }
 }
 
 void OTinjectionDelayOptimization::setLatencyAndDelay2S(uint16_t totalInjectionDelay)

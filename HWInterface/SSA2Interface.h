@@ -58,7 +58,7 @@ class SSA2Interface : public ReadoutChipInterface
     float    calculateADCLSB(Ph2_HwDescription::ReadoutChip* pSSA2, float theVrefValue = SSA2_VREF_EXPECTED) override;
     bool     disableTestPadsOutput(Ph2_HwDescription::ReadoutChip* pSSA2);
     // bool     selectTestPadsOutput(Ph2_HwDescription::ReadoutChip* pMPA2, std::string theRegisterName);
-    bool injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pSSA2, std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList);
+    bool injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pSSA2, std::vector<Cluster> theClusterList);
 
     const std::map<std::string, std::pair<uint8_t, float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pSSA2);
 

@@ -27,6 +27,28 @@
 #include <string>
 #include <vector>
 
+struct Cluster
+{
+    Cluster(uint8_t theRow, uint8_t theFirstCol, uint8_t theColWidth) : fRow(theRow), fFirstCol(theFirstCol), fColWidth(theColWidth) {}
+
+    Cluster() : fRow(0), fFirstCol(0), fColWidth(0) {}
+
+    uint8_t fRow;
+    uint8_t fFirstCol;
+    uint8_t fColWidth;
+};
+
+struct Stub
+{
+    Stub(uint8_t theSeed, uint8_t theBend, uint8_t theZ) : fSeed(theSeed), fBend(theBend), fZ(theZ) {}
+
+    Stub() : fSeed(0), fBend(0), fZ(0) {}
+
+    uint8_t fSeed;
+    uint8_t fBend;
+    uint8_t fZ;
+};
+
 template <typename... Args>
 std::string string_format(const std::string& format, Args... args)
 {
@@ -224,5 +246,7 @@ uint16_t linearizeRowAndCols(uint16_t row, uint16_t col, uint16_t numberOfCols);
 
 float                 countMatchingBits(const std::vector<uint32_t>& incomingData, const std::vector<uint32_t>& possiblePatternList);
 std::vector<uint32_t> getPossiblePatterns(uint8_t injectedPattern, bool is10Gmodule);
+
+std::vector<std::vector<uint32_t>> splitBits(const std::vector<uint32_t>& input, uint32_t numberOfSplits);
 
 #endif

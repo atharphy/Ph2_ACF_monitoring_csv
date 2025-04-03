@@ -160,7 +160,7 @@ class D19cCic2Event : public Event
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      */
-    std::vector<Stub> StubVector(uint8_t pHybridId, uint8_t pCbcId) const override;
+    std::vector<EventStub> StubVector(uint8_t pHybridId, uint8_t pCbcId) const override;
     /*!
      * \brief Function to count the Hits in this event
      * \param pHybridId : Hybrid Id
@@ -175,7 +175,7 @@ class D19cCic2Event : public Event
      * \return vector with hit channels (row, col)
      */
     std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId) const override;
-    std::vector<Cluster>                       getClusters(uint8_t pHybridId, uint8_t pCbcId) const override;
+    std::vector<EventCluster>                  getClusters(uint8_t pHybridId, uint8_t pCbcId) const override;
     uint8_t                                    GetNStripClusters(uint8_t pHybridId) const;
     uint8_t                                    GetNPixelClusters(uint8_t pHybridId) const;
     std::vector<SCluster>                      GetStripClusters(uint8_t pHybridId, uint8_t pMPAId) const;
@@ -250,9 +250,9 @@ class D19cCic2Event : public Event
         return cHybridMapping[pReadoutChipId]; // std::distance(cHybridMapping.begin(), std::find(cHybridMapping.begin(), cHybridMapping.end(), pReadoutChipId));
     }
 
-    std::vector<Cluster> formClusters(std::vector<uint32_t> pHits, int pSensorId) const
+    std::vector<EventCluster> formClusters(std::vector<uint32_t> pHits, int pSensorId) const
     {
-        std::vector<Cluster> cClusters;
+        std::vector<EventCluster> cClusters;
         if(pHits.size() != 0)
         {
             auto cFirstHit = pHits[0];
@@ -263,7 +263,7 @@ class D19cCic2Event : public Event
             auto cStart = cDifference.begin();
             do {
                 cIter = std::find_if(cIter, cDifference.end(), [](int i) { return (i > 1); });
-                Cluster cCluster;
+                EventCluster cCluster;
                 cCluster.fSensor       = pSensorId;
                 cCluster.fFirstStrip   = pHits[std::distance(cDifference.begin(), cStart)];
                 cCluster.fClusterWidth = pHits[std::distance(cDifference.begin(), cIter - 1)] - cCluster.fFirstStrip + 1;

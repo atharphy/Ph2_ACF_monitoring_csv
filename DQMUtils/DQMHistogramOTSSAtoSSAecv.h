@@ -55,11 +55,15 @@ class DQMHistogramOTSSAtoSSAecv : public DQMHistogramBase
      */
     void reset(void) override;
 
-    void fillStubPatternEfficiencyScan(DetectorDataContainer& thePatternMatchingEfficiency, uint8_t injectedStrip, uint8_t clockEdge, uint8_t slvsCurrent);
+    void fillStubPatternEfficiencyScan(DetectorDataContainer& thePatternMatchingEfficiency, uint8_t clockEdge, uint8_t slvsCurrent, int samplingPhaseOffset);
 
   private:
-    std::pair<int, int>                      getMPArange(bool isLeftToRight) const;
+    std::pair<int, int>                      getMPArange(uint8_t stubPattern) const;
     DetectorContainer*                       fDetectorContainer;
-    std::map<uint8_t, DetectorDataContainer> fStubPhaseScanMatchingEfficiencies;
+    std::map<uint8_t, DetectorDataContainer> fPhaseScanTestedBits;
+    std::map<uint8_t, DetectorDataContainer> fPhaseScanErrorRate;
+
+    int fMinimum320PhaseShift = -1;
+    int fMaximum320PhaseShift = +1;
 };
 #endif

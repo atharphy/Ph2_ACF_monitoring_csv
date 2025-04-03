@@ -138,7 +138,6 @@ void OTCicBypassTest::injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA)
     // fReadoutChipInterface->WriteChipReg(theMPA, "CodeM10", 0x0); // bending = 0 will ouput 0
 
     // // col, row, cluster size
-    // std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{std::make_tuple<uint8_t, uint8_t, uint8_t>(0xA, 0x55, 1)};
-    // // std::vector<std::tuple<uint8_t, uint8_t, uint8_t>> theClusterList{};
+    // std::vector<Cluster> theClusterList{Cluster(0xA, 0x55, 1)};
     // static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, theClusterList);
 }

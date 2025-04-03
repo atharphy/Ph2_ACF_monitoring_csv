@@ -44,18 +44,21 @@ class OTalignBoardDataWord : public Tool
 
     static std::string fCalibrationDescription;
     bool               tryLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::Hybrid* theHybrid, uint8_t lineId);
+    void               setProducePlots(bool doProducePlots) { fProducePlots = doProducePlots; }
+    void               wordAlignBEdata();
+    void               setSuppressErrorPrintout(bool suppressErrorPrintout) { fSuppressErrorPrintout = suppressErrorPrintout; }
 
   protected:
     void initializeContainers();
     void runAlignment(Ph2_HwDescription::BeBoard* theBoard);
     int  fBroadcastAlignSetting{0}; // 0 = one line at a time - 1 = one hybrid at a time - 2 = all hybrids in parallel
     bool opticalGroupWordAlignment(const Ph2_HwDescription::OpticalGroup* theOpticalGroup, Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface);
+    bool fSuppressErrorPrintout{false};
 
   private:
     DetectorDataContainer fBitSlipContainer;
     DetectorDataContainer fAlignmentRetryContainer;
 
-    void wordAlignBEdata();
     void boardWordAlignment(Ph2_HwDescription::BeBoard* theBoard);
     bool tryAllLineAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::Hybrid* theHybrid);
     bool tryAllHybridAlignment(Ph2_HwInterface::D19cBackendAlignmentFWInterface* theAlignerInterface, Ph2_HwDescription::BeBoard* theBoard);
@@ -67,6 +70,7 @@ class OTalignBoardDataWord : public Tool
 
     void disableUnalignedHybrid(Ph2_HwDescription::Hybrid* theHybrid);
 
+    bool fProducePlots{true};
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTalignBoardDataWord fDQMHistogramOTalignBoardDataWord;

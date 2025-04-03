@@ -1,5 +1,6 @@
 #include "tools/OTCICtoLpGBTecv.h"
 #include "HWDescription/BeBoard.h"
+#include "HWInterface/D19cBackendAlignmentFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
@@ -24,12 +25,13 @@ void OTCICtoLpGBTecv::Initialise(void)
     fPrintError = false;
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
-    fNumberOfL1Bits      = findValueInSettings<double>("OTCICtoLpGBTecv_NumberOfL1Bits", 1e5);
-    fNumberOfStubBits    = findValueInSettings<double>("OTCICtoLpGBTecv_NumberOfStubBits", 1e6);
-    fListOfLpGBTPhase    = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_LpGBTPhase", "0-14"));
-    fListOfCICStrength   = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_CICStrength", "1, 3, 5"));
-    fListOfClockPolarity = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_ClockPolarity", "0-1"));
-    fListOfClockStrength = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_ClockStrength", "1, 4, 7"));
+    fNumberOfL1Bits       = findValueInSettings<double>("OTCICtoLpGBTecv_NumberOfL1Bits", 1e5);
+    fNumberOfStubBits     = findValueInSettings<double>("OTCICtoLpGBTecv_NumberOfStubBits", 1e6);
+    fDoMatchingInFirmware = true;
+    fListOfLpGBTPhase     = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_LpGBTPhase", "0-14"));
+    fListOfCICStrength    = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_CICStrength", "1, 3, 5"));
+    fListOfClockPolarity  = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_ClockPolarity", "0-1"));
+    fListOfClockStrength  = convertStringToFloatList(findValueInSettings<std::string>("OTCICtoLpGBTecv_ClockStrength", "1, 4, 7"));
 
     // Error handle for incorrect LpGBTPhase input
     std::unordered_set<float> allowedLpGBTPhases{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
@@ -201,7 +203,13 @@ void OTCICtoLpGBTecv::runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, 
     }
 
     // run stub integrity test
-    for(auto theBoard: *fDetectorContainer) { runStubIntegrityTestFirmwareMatch(theBoard, true); }
+    for(auto theBoard: *fDetectorContainer)
+    {
+        D19cBackendAlignmentFWInterface* theAlignerInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBackendAlignmentInterface();
+        theAlignerInterface->setSuppressPrintout(true);
+        runStubIntegrityTestFirmwareMatch(theBoard, true);
+        theAlignerInterface->setSuppressPrintout(false);
+    }
 
     DetectorDataContainer alignmentResultContainer;
     ContainerFactory::copyAndInitHybrid<bool>(*fDetectorContainer, alignmentResultContainer);
@@ -210,6 +218,7 @@ void OTCICtoLpGBTecv::runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, 
     for(auto theBoard: *fDetectorContainer)
     {
         D19cBackendAlignmentFWInterface* theAlignerInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBackendAlignmentInterface();
+        theAlignerInterface->setSuppressPrintout(true);
         // fBeBoardInterface->ChipReSync(theBoard);
         fBeBoardInterface->Start(theBoard);
         for(auto theOpticalGroup: *theBoard)
@@ -220,6 +229,7 @@ void OTCICtoLpGBTecv::runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, 
                     fPatternCheckerHelper->tryLineAlignment(theAlignerInterface, theHybrid, 0);
             }
         }
+        theAlignerInterface->setSuppressPrintout(false);
         // fBeBoardInterface->Stop(theBoard);
     }
 

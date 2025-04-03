@@ -219,6 +219,8 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
 
     // Hybrid Noise
     HistContainer<TH1F> theTH1FHybridNoiseContainer("NoiseDistribution", "Noise distribution", 200, 0., 20.);
+    theTH1FHybridNoiseContainer.fTheHistogram->GetXaxis()->SetTitle("Noise [VcTh]");
+    theTH1FHybridNoiseContainer.fTheHistogram->GetYaxis()->SetTitle("Entries");
     RootContainerFactory::bookHybridHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorHybridNoiseHistograms, theTH1FHybridNoiseContainer);
 }
 
