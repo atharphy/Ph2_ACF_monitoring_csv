@@ -54,9 +54,6 @@ DetectorMonitor::~DetectorMonitor()
 #ifdef __USE_ROOT__
     fOutputFile->Write();
     LOG(INFO) << GREEN << "Closing monitor result file: " << BOLDYELLOW << fMonitorFileName << RESET;
-    // fOutputFile->Close();
-    // delete fOutputFile;
-    // fOutputFile = nullptr;
     delete fMonitorPlotDQM;
 #endif
 }
@@ -97,6 +94,15 @@ std::string DetectorMonitor::getMonitorFileName()
     return fMonitorFileName;
 #else
     return "";
+#endif
+}
+
+TFile* DetectorMonitor::getMonitorFile()
+{
+#ifdef __USE_ROOT__
+    return fOutputFile;
+#else
+    return nullptr;
 #endif
 }
 

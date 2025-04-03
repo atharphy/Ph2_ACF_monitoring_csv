@@ -12,6 +12,7 @@
 
 #include "HWDescription/RD53.h"
 #include "MetadataHandlerIT.h"
+#include "MonitorUtils/DetectorMonitor.h"
 #include "Tool.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"

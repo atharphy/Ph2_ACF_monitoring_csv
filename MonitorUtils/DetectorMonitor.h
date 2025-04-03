@@ -26,10 +26,9 @@ class DetectorMonitor
     void        stopRunning() { fKeepRunning = false; }
     void        waitForMonitorToStop();
     std::string getMonitorFileName();
+    TFile*      getMonitorFile();
 #if defined(__TCUSB__)
-    void setTestCardPointer(TC_2SSEH* cTC_2SSEH) { pTC_2SSEH = cTC_2SSEH; };
-#endif
-#if defined(__TCUSB__)
+    void      setTestCardPointer(TC_2SSEH* cTC_2SSEH) { pTC_2SSEH = cTC_2SSEH; };
     TC_2SSEH* pTC_2SSEH{nullptr};
 #endif
 
@@ -37,12 +36,12 @@ class DetectorMonitor
     virtual void                        runMonitor() = 0;
     const Ph2_System::SystemController* fTheSystemController{nullptr};
     DetectorMonitorConfig               fDetectorMonitorConfig;
+    std::string                         getMonitorName();
 #ifdef __USE_ROOT__
     TFile*              fOutputFile{nullptr};
     MonitorDQMPlotBase* fMonitorPlotDQM{nullptr};
     std::string         fMonitorFileName = "";
 #endif
-    std::string getMonitorName();
 
   private:
     std::atomic<bool> fKeepRunning;
