@@ -97,15 +97,6 @@ std::string DetectorMonitor::getMonitorFileName()
 #endif
 }
 
-TFile* DetectorMonitor::getMonitorFile()
-{
-#ifdef __USE_ROOT__
-    return fOutputFile;
-#else
-    return nullptr;
-#endif
-}
-
 void DetectorMonitor::waitForMonitorToStop()
 {
     int cCounter = 0;
