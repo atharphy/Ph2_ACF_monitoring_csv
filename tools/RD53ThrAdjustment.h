@@ -53,6 +53,11 @@ class ThrAdjustment : public PixelAlive
         const uint16_t nIterationsThrZero = floor(log2(stopValue - startValue + 1) + 3);
         return PixelAlive::getNumberIterations() * (nIterationsThrMax * nIterationsChip + nIterationsThrZero);
     }
+    size_t removeIterations(size_t startValue, size_t stopValue, size_t i)
+    {
+        const uint16_t nIterationsThrMax = floor(log2(stopValue - startValue + 1) + 2);
+        return PixelAlive::getNumberIterations() * (nIterationsThrMax - i);
+    }
 
     void analyze();
 

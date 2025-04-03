@@ -354,8 +354,6 @@ bool RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
     if(commandList.size() == 0) return true;
     bool returnValue = true;
 
-    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
-
     // ############################
     // # Check write-command FIFO #
     // ############################
@@ -434,7 +432,6 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
 bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 {
     LOG(INFO) << GREEN << "Checking status communication RD53 --> FW" << RESET;
-
     isChipCommunicationOK = false;
 
     // ########################################
