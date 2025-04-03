@@ -209,7 +209,7 @@ void SystemController::readFile(std::vector<uint32_t>& pVec, uint32_t pNWords32)
 
 void SystemController::InitializeHw(const std::string& pFilename, std::ostream& os)
 {
-    if(fCommunicationSettingConfig != nullptr) { throw std::runtime_error("Error: SystemController::InitializeHw was already called once, this should never happen"); }
+    if(fCommunicationSettingConfig != nullptr) throw std::runtime_error("Error: SystemController::InitializeHw was already called once, this should never happen");
     fCommunicationSettingConfig = new CommunicationSettingConfig();
     this->fParser.parseCommunicationSettings(pFilename, *fCommunicationSettingConfig, os);
 
@@ -286,7 +286,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 }
 
                 LOG(INFO) << BOLDBLUE << "Found " << +cFirstOpticalGroup->size() << " hybrids in this group..." << RESET;
-                if(cFirstOpticalGroup->size() > 0) // # of hybrids connected to OpticalGroup0
+                if(cFirstOpticalGroup->size() > 0) // # Of hybrids connected to OpticalGroup0
                 {
                     LOG(INFO) << BOLDBLUE << "\t\t...Initializing HwInterfaces for FrontEnd Hybrids.." << +cFirstOpticalGroup->size() << " hybrid(s) found ..." << RESET;
                     auto cFirstHybrid = cFirstOpticalGroup->getFirstObject();
