@@ -47,7 +47,6 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
         }
 
         // Book the histograms
-        theHistogram->LabelsOption("v", "X");
         theHistogram->DrawCopy("text");
     };
 

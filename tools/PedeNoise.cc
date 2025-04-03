@@ -249,16 +249,8 @@ void PedeNoise::sweepSCurves()
                     {
                         auto cType = cChip->getFrontEndType();
 
-                        if(cType == FrontEndType::MPA2)
-                        {
-                            std::cout << __LINE__ << " ------------- MPA fPulseAmplitudePix " << +fPulseAmplitudePix << std::endl;
-                            fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fPulseAmplitudePix);
-                        }
-                        else
-                        {
-                            std::cout << __LINE__ << " ------------- SSA fPulseAmplitude " << +fPulseAmplitude << std::endl;
-                            fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fPulseAmplitude);
-                        }
+                        if(cType == FrontEndType::MPA2) { fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fPulseAmplitudePix); }
+                        else { fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fPulseAmplitude); }
                     }
                 }
             }
