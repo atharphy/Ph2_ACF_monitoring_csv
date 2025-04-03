@@ -26,7 +26,9 @@ class DetectorMonitor
     void        stopRunning() { fKeepRunning = false; }
     void        waitForMonitorToStop();
     std::string getMonitorFileName();
-    TFile*      getMonitorFile();
+#ifdef __USE_ROOT__
+    TFile* getMonitorFile() { return fOutputFile; }
+#endif
 #if defined(__TCUSB__)
     void      setTestCardPointer(TC_2SSEH* cTC_2SSEH) { pTC_2SSEH = cTC_2SSEH; };
     TC_2SSEH* pTC_2SSEH{nullptr};
