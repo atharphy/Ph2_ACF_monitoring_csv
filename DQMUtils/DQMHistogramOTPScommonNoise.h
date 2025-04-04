@@ -57,12 +57,12 @@ class DQMHistogramOTPScommonNoise : public DQMHistogramBase
      * \brief Reset histogram
      */
     void reset(void) override;
-    void fillChipHitPlots(DetectorDataContainer& theHitData);
-    void fillHybridHitPlots(DetectorDataContainer& theHitData, bool isStrip);
-    void fillModuleHitPlots(DetectorDataContainer& theHitData, bool isStrip);
-    void fillSSAtoMPACorrelationPlots(DetectorDataContainer& theHitData);
-    void fillStripPixelHybridCorrelationPlots(DetectorDataContainer& theHitData);
-    void fillStripPixelModuleCorrelationPlots(DetectorDataContainer& theHitData);
+    void fillChipHitPlots(DetectorDataContainer& theHitData, float numberOfSigma);
+    void fillHybridHitPlots(DetectorDataContainer& theHitData, bool isStrip, float numberOfSigma);
+    void fillModuleHitPlots(DetectorDataContainer& theHitData, bool isStrip, float numberOfSigma);
+    void fillSSAtoMPACorrelationPlots(DetectorDataContainer& theHitData, float numberOfSigma);
+    void fillStripPixelHybridCorrelationPlots(DetectorDataContainer& theHitData, float numberOfSigma);
+    void fillStripPixelModuleCorrelationPlots(DetectorDataContainer& theHitData, float numberOfSigma);
 
     template <size_t T2>
     void fillEventsVsHitsHist(const BaseDataContainer* ChipContainer, TH1F& theHistogram)
@@ -84,15 +84,15 @@ class DQMHistogramOTPScommonNoise : public DQMHistogramBase
     }
 
   private:
-    DetectorContainer*                       fDetectorContainer;
-    DetectorDataContainer                    fStripHitHistograms;
-    DetectorDataContainer                    fPixelHitHistograms;
-    DetectorDataContainer                    fStripHybridHitHistograms;
-    DetectorDataContainer                    fPixelHybridHitHistograms;
-    DetectorDataContainer                    fStripModuleHitHistograms;
-    DetectorDataContainer                    fPixelModuleHitHistograms;
-    std::map<uint8_t, DetectorDataContainer> fSSAtoMPAcorrelation;
-    DetectorDataContainer                    fStripPixelModuleHistograms;
-    DetectorDataContainer                    fStripPixelHybridHistograms;
+    DetectorContainer*                                        fDetectorContainer;
+    std::map<float, DetectorDataContainer>                    fStripHitHistograms;
+    std::map<float, DetectorDataContainer>                    fPixelHitHistograms;
+    std::map<float, DetectorDataContainer>                    fStripHybridHitHistograms;
+    std::map<float, DetectorDataContainer>                    fPixelHybridHitHistograms;
+    std::map<float, DetectorDataContainer>                    fStripModuleHitHistograms;
+    std::map<float, DetectorDataContainer>                    fPixelModuleHitHistograms;
+    std::map<float, std::map<uint8_t, DetectorDataContainer>> fSSAtoMPAcorrelation;
+    std::map<float, DetectorDataContainer>                    fStripPixelModuleHistograms;
+    std::map<float, DetectorDataContainer>                    fStripPixelHybridHistograms;
 };
 #endif
