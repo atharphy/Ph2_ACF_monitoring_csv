@@ -159,14 +159,13 @@
 
     <!--Full search settings (pedestal) MPA
     <Setting name="PedestalEqualization_FullScanStart">170</Setting>
-    <Setting name="Nevents">500</Setting>
     <Setting name="PedestalEqualization_Occupancy">3.</Setting>
     <Setting name="PedestalEqualization_PulseAmplitude">1</Setting>
     <Setting name="PedeNoise_PulseAmplitude">1</Setting>-->
 
 
     <!--Full search settings (lowcal) MPA-->
-    <Setting name="Nevents">100</Setting>
+    <Setting name="Nevents">1000</Setting>
     <Setting name="PedestalEqualization_FullScanStart">220</Setting>
     <Setting name="PedestalEqualization_Occupancy">0.5</Setting>
     <!-- <Setting name="PedestalEqualization_PulseAmplitude">1</Setting>
