@@ -422,8 +422,8 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
     // # Download new DAC values #
     // ###########################
     LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames, false, true, 0, true);
     ThrAdjustment::establishStartingPoint(chargeContainer);
+    CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames, false, true, 0, true);
     LOG(INFO) << BOLDMAGENTA << ">>> Maximization process completed <<<" << RESET;
 
     // #################################
