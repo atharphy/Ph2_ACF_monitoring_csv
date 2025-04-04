@@ -102,7 +102,7 @@ void CalibBase::saveChipRegisters(bool doUpdateChip)
         }
 }
 
-void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const std::vector<const char*>& regNames, bool silentDownload, bool checkAgainst, int value)
+void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const std::vector<const char*>& regNames, bool silentDownload, bool checkAgainst, int value, bool doNotDownload)
 {
     const auto            chipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
     std::vector<uint16_t> chipCommandList;
@@ -150,7 +150,7 @@ void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const 
                 chipInterface->PackHybridCommands(cBoard, chipCommandList, cHybrid->getId(), hybridCommandList);
             }
 
-            chipInterface->SendHybridCommands(cBoard, hybridCommandList);
+            if(doNotDownload == false) chipInterface->SendHybridCommands(cBoard, hybridCommandList);
         }
 }
 
