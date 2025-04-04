@@ -90,13 +90,13 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
         for(uint8_t chip = NCHIPS_OT; chip < 2 * NCHIPS_OT; chip++)
         {
             HistContainer<TH2F> hSSAtoMPAcorrelation(getName(Form("SSA(%d)toMPA(%d)_CommonNoiseCorrelation", chip - NCHIPS_OT, chip)),
-                                                    getTitle(Form("SSA(%d) to MPA(%d) common noise correlation", chip - NCHIPS_OT, chip)),
-                                                    MAXCICCHANNELS + 2,
-                                                    -0.5,
-                                                    MAXCICCHANNELS + 1 + 0.5,
-                                                    MAXCICCHANNELS + 2,
-                                                    -0.5,
-                                                    MAXCICCHANNELS + 1 + 0.5);
+                                                     getTitle(Form("SSA(%d) to MPA(%d) common noise correlation", chip - NCHIPS_OT, chip)),
+                                                     MAXCICCHANNELS + 2,
+                                                     -0.5,
+                                                     MAXCICCHANNELS + 1 + 0.5,
+                                                     MAXCICCHANNELS + 2,
+                                                     -0.5,
+                                                     MAXCICCHANNELS + 1 + 0.5);
             hSSAtoMPAcorrelation.fTheHistogram->GetYaxis()->SetTitle("Number of hits MPA");
             hSSAtoMPAcorrelation.fTheHistogram->GetXaxis()->SetTitle("Number of hits SSA");
             hSSAtoMPAcorrelation.fTheHistogram->GetXaxis()->SetRangeUser(0, 120);
@@ -106,14 +106,26 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
 
         fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
 
-        HistContainer<TH2F> hStripPixelHybridHits(
-            getName("CommonNoiseStripPixelCorrelation"), getTitle("Common noise strip pixel correlation"), MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5, MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
+        HistContainer<TH2F> hStripPixelHybridHits(getName("CommonNoiseStripPixelCorrelation"),
+                                                  getTitle("Common noise strip pixel correlation"),
+                                                  MAXCICCHANNELS + 2,
+                                                  -0.5,
+                                                  MAXCICCHANNELS + 1 + 0.5,
+                                                  MAXCICCHANNELS + 2,
+                                                  -0.5,
+                                                  MAXCICCHANNELS + 1 + 0.5);
         hStripPixelHybridHits.fTheHistogram->GetYaxis()->SetTitle("Number of hits pixels");
         hStripPixelHybridHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits strips");
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fStripPixelHybridHistograms[numberOfSigma], hStripPixelHybridHits);
 
-        HistContainer<TH2F> hStripPixelModuleHits(
-            getName("CommonNoiseStripPixelCorrelation"), getTitle("Common noise strip pixel correlation"), MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5, MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
+        HistContainer<TH2F> hStripPixelModuleHits(getName("CommonNoiseStripPixelCorrelation"),
+                                                  getTitle("Common noise strip pixel correlation"),
+                                                  MAXCICCHANNELS + 2,
+                                                  -0.5,
+                                                  MAXCICCHANNELS + 1 + 0.5,
+                                                  MAXCICCHANNELS + 2,
+                                                  -0.5,
+                                                  MAXCICCHANNELS + 1 + 0.5);
         hStripPixelModuleHits.fTheHistogram->GetYaxis()->SetTitle("Number of hits pixels");
         hStripPixelModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits strips");
         RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fStripPixelModuleHistograms[numberOfSigma], hStripPixelModuleHits);
@@ -144,7 +156,8 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
     if(theStripChipHitContainerSerialization.attachDeserializer(inputStream))
     {
         // std::cout << "Matched OTPScommonNoiseStripChipHit!!!!!\n";
-        DetectorDataContainer theDetectorData = theStripChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(fDetectorContainer, numberOfSigma);
+        DetectorDataContainer theDetectorData =
+            theStripChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(fDetectorContainer, numberOfSigma);
         // Filling the histograms
         fillChipHitPlots(theDetectorData, numberOfSigma);
         return true;
@@ -154,7 +167,8 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
     if(thePixelChipHitContainerSerialization.attachDeserializer(inputStream))
     {
         // std::cout << "Matched OTPScommonNoisePixelChipHit!!!!!\n";
-        DetectorDataContainer theDetectorData = thePixelChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(fDetectorContainer, numberOfSigma);
+        DetectorDataContainer theDetectorData =
+            thePixelChipHitContainerSerialization.deserializeChipContainer<EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(fDetectorContainer, numberOfSigma);
         // Filling the histograms
         fillChipHitPlots(theDetectorData, numberOfSigma);
         return true;
@@ -165,8 +179,8 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
     {
         // std::cout << "Matched OTPScommonNoiseStripHybridHit!!!!!\n";
         bool                  isSSA;
-        DetectorDataContainer theDetectorData =
-            theStripHybridHitContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(fDetectorContainer, isSSA, numberOfSigma);
+        DetectorDataContainer theDetectorData = theStripHybridHitContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(
+            fDetectorContainer, isSSA, numberOfSigma);
         // Filling the histograms
         fillHybridHitPlots(theDetectorData, isSSA, numberOfSigma);
         return true;
@@ -177,8 +191,8 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
     {
         // std::cout << "Matched OTPScommonNoisePixelHybridHit!!!!!\n";
         bool                  isSSA;
-        DetectorDataContainer theDetectorData =
-            thePixelHybridHitContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(fDetectorContainer, isSSA, numberOfSigma);
+        DetectorDataContainer theDetectorData = thePixelHybridHitContainerSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS + 1)>>(
+            fDetectorContainer, isSSA, numberOfSigma);
         // Filling the histograms
         fillHybridHitPlots(theDetectorData, isSSA, numberOfSigma);
         return true;
@@ -240,7 +254,8 @@ bool DQMHistogramOTPScommonNoise::fill(std::string& inputStream)
         // std::cout << "Matched OTPScommonNoiseStripPixelModuleCorrelation!!!!!\n";
         DetectorDataContainer theDetectorData =
             theStripPixelModuleContainerSerialization
-                .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS * 2 + 1), (MAXCICCHANNELS * 2 + 1)>>(fDetectorContainer, numberOfSigma);
+                .deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, GenericDataArray<uint32_t, (MAXCICCHANNELS * 2 + 1), (MAXCICCHANNELS * 2 + 1)>>(fDetectorContainer,
+                                                                                                                                                                                  numberOfSigma);
         // Filling the histograms
         fillStripPixelModuleCorrelationPlots(theDetectorData, numberOfSigma);
         return true;
@@ -266,7 +281,8 @@ void DQMHistogramOTPScommonNoise::fillChipHitPlots(DetectorDataContainer& theHit
                     ReadoutChip* theReadoutChip = fDetectorContainer->getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
                     if(theReadoutChip->getFrontEndType() == FrontEndType::SSA2)
                     {
-                        TH1F* theHistogram = fStripHitHistograms.at(numberOfSigma).getObject(board->getId())
+                        TH1F* theHistogram = fStripHitHistograms.at(numberOfSigma)
+                                                 .getObject(board->getId())
                                                  ->getObject(opticalGroup->getId())
                                                  ->getObject(hybrid->getId())
                                                  ->getObject(chip->getId())
@@ -277,7 +293,8 @@ void DQMHistogramOTPScommonNoise::fillChipHitPlots(DetectorDataContainer& theHit
                     }
                     else if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
                     {
-                        TH1F* theHistogram = fPixelHitHistograms.at(numberOfSigma).getObject(board->getId())
+                        TH1F* theHistogram = fPixelHitHistograms.at(numberOfSigma)
+                                                 .getObject(board->getId())
                                                  ->getObject(opticalGroup->getId())
                                                  ->getObject(hybrid->getId())
                                                  ->getObject(chip->getId())
@@ -303,14 +320,22 @@ void DQMHistogramOTPScommonNoise::fillHybridHitPlots(DetectorDataContainer& theH
                 if(!hybrid->hasSummary()) continue;
                 if(isStrip)
                 {
-                    TH1F* theHistogram =
-                        fStripHybridHitHistograms.at(numberOfSigma).getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* theHistogram = fStripHybridHitHistograms.at(numberOfSigma)
+                                             .getObject(board->getId())
+                                             ->getObject(opticalGroup->getId())
+                                             ->getObject(hybrid->getId())
+                                             ->getSummary<HistContainer<TH1F>>()
+                                             .fTheHistogram;
                     fillEventsVsHitsHist<MAXCICCHANNELS + 1>(hybrid, *theHistogram);
                 }
                 else
                 {
-                    TH1F* theHistogram =
-                        fPixelHybridHitHistograms.at(numberOfSigma).getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                    TH1F* theHistogram = fPixelHybridHitHistograms.at(numberOfSigma)
+                                             .getObject(board->getId())
+                                             ->getObject(opticalGroup->getId())
+                                             ->getObject(hybrid->getId())
+                                             ->getSummary<HistContainer<TH1F>>()
+                                             .fTheHistogram;
                     fillEventsVsHitsHist<MAXCICCHANNELS + 1>(hybrid, *theHistogram);
                 }
             }
@@ -376,8 +401,12 @@ void DQMHistogramOTPScommonNoise::fillStripPixelHybridCorrelationPlots(DetectorD
             for(auto hybrid: *opticalGroup)
             {
                 if(!hybrid->hasSummary()) continue;
-                TH2F* h2DHybridCorrelation =
-                    fStripPixelHybridHistograms.at(numberOfSigma).getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                TH2F* h2DHybridCorrelation = fStripPixelHybridHistograms.at(numberOfSigma)
+                                                 .getObject(board->getId())
+                                                 ->getObject(opticalGroup->getId())
+                                                 ->getObject(hybrid->getId())
+                                                 ->getSummary<HistContainer<TH2F>>()
+                                                 .fTheHistogram;
                 fillCorrelationHist<MAXCICCHANNELS + 1, MAXCICCHANNELS + 1>(hybrid, h2DHybridCorrelation);
             }
         }

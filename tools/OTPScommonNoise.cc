@@ -20,7 +20,7 @@ OTPScommonNoise::~OTPScommonNoise() {}
 void OTPScommonNoise::Initialise(void)
 {
     fNumberOfEvents = findValueInSettings<double>("OTPScommonNoise_NumberOfEvents", 100);
-    fListOfSigma = convertStringToFloatList(findValueInSettings<std::string>("OTPScommonNoise_ListOfSigma", "0, 3"));
+    fListOfSigma    = convertStringToFloatList(findValueInSettings<std::string>("OTPScommonNoise_ListOfSigma", "0, 3"));
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
