@@ -1446,6 +1446,7 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
                                                   "RegNameDAC2",
                                                   "DataOutputDir",
                                                   "KIRA_ID",
+                                                  "CMNoise_nSigmas",
                                                   "OTCICtoLpGBTecv_CICStrength",
                                                   "OTCICtoLpGBTecv_ClockPolarity",
                                                   "OTCICtoLpGBTecv_ClockStrength",
