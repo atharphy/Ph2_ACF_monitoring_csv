@@ -32,13 +32,13 @@ void DQMHistogramOTverifyBoardDataWord::book(TFile* theOutputFile, DetectorConta
         for(size_t stubLine = 0; stubLine < numberOfLines - 1; ++stubLine) theHistogram->GetXaxis()->SetBinLabel(stubLine + 2, Form("Stub%d", int(stubLine)));
     };
 
-    HistContainer<TH1F> errorRateHistogram("CICtoLpGBT_ErrorRate", "CIC to LpGBT error rate", numberOfLines, -0.5, numberOfLines - 0.5);
+    HistContainer<TH1F> errorRateHistogram("CICtoLpGBT_PatternMatchingErrorRate", "CIC to LpGBT pattern matching error rate", numberOfLines, -0.5, numberOfLines - 0.5);
     errorRateHistogram.fTheHistogram->GetYaxis()->SetTitle("Error rate");
     errorRateHistogram.fTheHistogram->SetStats(false);
     setBitLabel(errorRateHistogram.fTheHistogram);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fMatchingErrorRateHistogramContainer, errorRateHistogram);
 
-    HistContainer<TH1F> testedBitsHistogram("CICtoLpGBT_TestedBits", "CIC to LpGBT tested bits", numberOfLines, -0.5, numberOfLines - 0.5);
+    HistContainer<TH1F> testedBitsHistogram("CICtoLpGBT_PatternMatchingTestedBits", "CIC to LpGBT pattern matching tested bits", numberOfLines, -0.5, numberOfLines - 0.5);
     testedBitsHistogram.fTheHistogram->GetYaxis()->SetTitle("Tested bits");
     testedBitsHistogram.fTheHistogram->SetStats(false);
     setBitLabel(testedBitsHistogram.fTheHistogram);

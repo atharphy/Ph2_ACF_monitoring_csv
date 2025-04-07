@@ -116,6 +116,6 @@ For any support/suggestions, send an email to fabio.raveraSPAMNOT@cern.ch, mauro
 ##
 ### Outer Tracker Suggested Tags
 
-Firmware tag: v3-01
+Firmware tag: v3-02
 
-Ph2_ACF tag: v6-02
+Ph2_ACF tag: v6-07
