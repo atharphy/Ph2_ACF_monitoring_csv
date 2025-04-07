@@ -28,6 +28,13 @@ void OTVTRxLightYieldScan::Initialise(void)
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTVTRxLightYieldScan.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
+    std::string fJsonOutputPath = findValueInSettings<std::string>("JsonOutfile", "");
+    if (fJsonOutputPath != "")
+    {
+            LOG(INFO) << BOLDYELLOW << "Writing json output to : " << fJsonOutputPath << RESET;
+            std::ofstream* outStream = new std::ofstream(fJsonOutputPath);
+            setOfStream(outStream);
+    }
 }
 
 void OTVTRxLightYieldScan::ConfigureCalibration() {}
@@ -89,7 +96,8 @@ void OTVTRxLightYieldScan::scanVTRxLightYield()
                     theOpticalPowerContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<float>() = VTRxLightYieldRX;
                     if(fOfStream != nullptr)
                     {
-                        j["data"][std::to_string(theBoard->getId())][std::to_string(theOpticalGroup->getId())][std::to_string(biasValue)][std::to_string(modulationValue)] = VTRxLightYieldRX;
+                        j["data"]["VTRxLightYield"][std::to_string(theBoard->getId())][std::to_string(theOpticalGroup->getId())][std::to_string(biasValue)][std::to_string(modulationValue)] =
+                            VTRxLightYieldRX;
                     }
                 }
             }

@@ -34,6 +34,13 @@ void OTverifyBoardDataWord::Initialise(void)
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
+    std::string fJsonOutputPath = findValueInSettings<std::string>("JsonOutfile", "");
+    if (fJsonOutputPath != "")
+    {
+            LOG(INFO) << BOLDYELLOW << "Writing json output to : " << fJsonOutputPath << RESET;
+            std::ofstream* outStream = new std::ofstream(fJsonOutputPath);
+            setOfStream(outStream);
+    }
 }
 
 void OTverifyBoardDataWord::ConfigureCalibration() {}
@@ -99,7 +106,8 @@ void OTverifyBoardDataWord::runIntegrityTest()
             {
                 for(auto theHybrid: *theOpticalGroup)
                 {
-                    j["data"][std::to_string(theBoard->getId())][std::to_string(theOpticalGroup->getId())][std::to_string(theHybrid->getId())] = theHybrid->getSummary<std::vector<float>>();
+                    j["data"]["BoardDataWord"][std::to_string(theBoard->getId())][std::to_string(theOpticalGroup->getId())][std::to_string(theHybrid->getId())] =
+                        theHybrid->getSummary<std::vector<float>>();
                 }
             }
         }
