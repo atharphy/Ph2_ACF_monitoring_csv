@@ -40,8 +40,8 @@ class OTCMNoise : public Tool
     OTCMNoise();
     ~OTCMNoise();
     void Initialize();
-    void SetThresholds();
-    void TakeData();
+    void SetThresholds(int manualVcth = 0, float nSigma = 0);
+    void TakeData(float nSigma = 0);
 
     void writeObjects();
     void Running() override;
@@ -56,11 +56,12 @@ class OTCMNoise : public Tool
   private:
     void parseSettings();
 
-    uint32_t fNevents;
-    uint32_t fVcth;
-    bool     f2DHistograms;
-    bool     f2DHistogramsLight;
-    uint32_t fManualVcth;
+    uint32_t           fNevents;
+    uint32_t           fVcth;
+    bool               f2DHistograms;
+    bool               f2DHistogramsLight;
+    uint32_t           fManualVcth;
+    std::vector<float> fListOfThresholds{0};
 
 #ifdef __USE_ROOT__
     DQMHistogramOTCMNoise fDQMHistogramOTCMNoise;
