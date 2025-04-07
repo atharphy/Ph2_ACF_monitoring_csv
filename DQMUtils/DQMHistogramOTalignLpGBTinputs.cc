@@ -49,7 +49,7 @@ void DQMHistogramOTalignLpGBTinputs::book(TFile* theOutputFile, DetectorContaine
         }
     };
 
-    HistContainer<TH1F> alignmentSuccessHistogram("CICtoLpGBT_AlignmentEfficiency", "CIC to LpGBT alignment efficiency", numberOfBins, -0.5, numberOfBins - 0.5);
+    HistContainer<TH1F> alignmentSuccessHistogram("CICtoLpGBT_PhaseAlignmentEfficiency", "CIC to LpGBT phase alignment efficiency", numberOfBins, -0.5, numberOfBins - 0.5);
     alignmentSuccessHistogram.fTheHistogram->GetXaxis()->SetTitle("");
     setBinLabels(alignmentSuccessHistogram.fTheHistogram->GetXaxis());
     alignmentSuccessHistogram.fTheHistogram->GetYaxis()->SetTitle("Alignment efficiency");
