@@ -92,8 +92,8 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     if(fFullScan)
     {
-        fTestPulseAmplitude    = findValueInSettings<double>("PedestalEqualization_PulseAmplitudeFullScan", 20);
-        fTestPulseAmplitudePix = findValueInSettings<double>("PedestalEqualization_PulseAmplitudePixFullScan", 30);
+        fTestPulseAmplitude    = findValueInSettings<double>("PedestalEqualization_PulseAmplitudeFullScan", 0);
+        fTestPulseAmplitudePix = findValueInSettings<double>("PedestalEqualization_PulseAmplitudePixFullScan", 0);
     }
 
     fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
@@ -232,7 +232,7 @@ void PedestalEqualization::FindVplus()
         LOG(INFO) << BLUE << "Enabled test pulse. " << RESET;
     }
     else
-        this->enableTestPulse(false);
+        this->enableTestPulse(fWithSSA or fWithMPA);
 
     LOG(INFO) << BOLDBLUE << "Setting threshold trim registers to mid-range value...0x" << std::hex << +fTargetOffset << std::dec << RESET;
     if(fWithCBC)

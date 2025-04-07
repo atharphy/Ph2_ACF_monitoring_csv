@@ -34,11 +34,12 @@ class OTPScommonNoise : public Tool
     void Reset();
 
     static std::string fCalibrationDescription;
+    std::vector<float> fListOfSigma{0, 3};
 
   protected:
     uint32_t fNumberOfEvents{10000};
-    void     SetThresholds();
-    void     TakeData();
+    void     SetThresholds(float numberOfSigma);
+    void     TakeData(float numberOfSigma);
 
   private:
 #ifdef __USE_ROOT__

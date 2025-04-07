@@ -20,6 +20,7 @@ OTPScommonNoise::~OTPScommonNoise() {}
 void OTPScommonNoise::Initialise(void)
 {
     fNumberOfEvents = findValueInSettings<double>("OTPScommonNoise_NumberOfEvents", 100);
+    fListOfSigma    = convertStringToFloatList(findValueInSettings<std::string>("OTPScommonNoise_ListOfSigma", "0, 3"));
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
 
@@ -31,20 +32,30 @@ void OTPScommonNoise::Initialise(void)
 
 void OTPScommonNoise::ConfigureCalibration() {}
 
-void OTPScommonNoise::SetThresholds()
+void OTPScommonNoise::SetThresholds(float numberOfSigma)
 {
-    // For PS modules the CIC is in sparsified mode. Therefore we cannot have more 128 clusters per hybrid on the strips and pixels sensor.
-    // Therefore we must set a threshold that allows around 64 clusters per pixels and strips.
-    uint16_t theMaximumChannelNumber  = MAXCICCLUSTERS / 2;
-    float    theStripAllowedOccupancy = float(theMaximumChannelNumber) / (NSSACHANNELS * NCHIPS_OT);
-    float    thePixelAllowedOccupancy = float(theMaximumChannelNumber) / (NSSACHANNELS * NMPAROWS * NCHIPS_OT);
+    float theStripSigma;
+    float thePixelSigma;
+    if(numberOfSigma == 0)
+    {
+        // For PS modules the CIC is in sparsified mode. Therefore we cannot have more 128 clusters per hybrid on the strips and pixels sensor.
+        // Therefore we must set a threshold that allows around 64 clusters per pixels and strips.
+        uint16_t theMaximumChannelNumber  = MAXCICCLUSTERS / 2;
+        float    theStripAllowedOccupancy = float(theMaximumChannelNumber) / (NSSACHANNELS * NCHIPS_OT);
+        float    thePixelAllowedOccupancy = float(theMaximumChannelNumber) / (NSSACHANNELS * NMPAROWS * NCHIPS_OT);
 
-    LOG(INFO) << BOLDYELLOW << "theStripAllowedOccupancy: " << theStripAllowedOccupancy << " thePixelAllowedOccupancy: " << thePixelAllowedOccupancy << RESET;
+        LOG(INFO) << BOLDYELLOW << "theStripAllowedOccupancy: " << theStripAllowedOccupancy << " thePixelAllowedOccupancy: " << thePixelAllowedOccupancy << RESET;
 
-    // Now we calculate how many sigmas away from the pedestal we should be to have that occupancy
-    boost::math::normal gaus(0, 1); // we consider a standard gaussian
-    float               theStripSigma = quantile(complement(gaus, theStripAllowedOccupancy));
-    float               thePixelSigma = quantile(complement(gaus, thePixelAllowedOccupancy));
+        // Now we calculate how many sigmas away from the pedestal we should be to have that occupancy
+        boost::math::normal gaus(0, 1); // we consider a standard gaussian
+        theStripSigma = quantile(complement(gaus, theStripAllowedOccupancy));
+        thePixelSigma = quantile(complement(gaus, thePixelAllowedOccupancy));
+    }
+    else
+    {
+        theStripSigma = numberOfSigma;
+        thePixelSigma = numberOfSigma;
+    }
 
     LOG(INFO) << BOLDYELLOW << "theStripSigma: " << theStripSigma << " thePixelSigma: " << thePixelSigma << RESET;
 
@@ -68,7 +79,7 @@ void OTPScommonNoise::SetThresholds()
         }
     }
 }
-void OTPScommonNoise::TakeData()
+void OTPScommonNoise::TakeData(float numberOfSigma)
 {
     for(auto theBoard: *fDetectorContainer) { fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.en_fast_reset", 1); }
 
@@ -236,41 +247,41 @@ void OTPScommonNoise::TakeData()
     }
 
 #ifdef __USE_ROOT__
-    fDQMHistogramOTPScommonNoise.fillChipHitPlots(theStripHitContainer);
-    fDQMHistogramOTPScommonNoise.fillChipHitPlots(thePixelHitContainer);
-    fDQMHistogramOTPScommonNoise.fillHybridHitPlots(theStripHybridHitContainer, true);
-    fDQMHistogramOTPScommonNoise.fillHybridHitPlots(thePixelHybridHitContainer, false);
-    fDQMHistogramOTPScommonNoise.fillModuleHitPlots(theStripModuleHitContainer, true);
-    fDQMHistogramOTPScommonNoise.fillModuleHitPlots(thePixelModuleHitContainer, false);
-    fDQMHistogramOTPScommonNoise.fillSSAtoMPACorrelationPlots(the2DSSAMPACorrelationContainer);
-    fDQMHistogramOTPScommonNoise.fillStripPixelHybridCorrelationPlots(the2DStripPixelHybridCorrelationContainer);
-    fDQMHistogramOTPScommonNoise.fillStripPixelModuleCorrelationPlots(the2DStripPixelModuleCorrelationContainer);
+    fDQMHistogramOTPScommonNoise.fillChipHitPlots(theStripHitContainer, numberOfSigma);
+    fDQMHistogramOTPScommonNoise.fillChipHitPlots(thePixelHitContainer, numberOfSigma);
+    fDQMHistogramOTPScommonNoise.fillHybridHitPlots(theStripHybridHitContainer, true, numberOfSigma);
+    fDQMHistogramOTPScommonNoise.fillHybridHitPlots(thePixelHybridHitContainer, false, numberOfSigma);
+    fDQMHistogramOTPScommonNoise.fillModuleHitPlots(theStripModuleHitContainer, true, numberOfSigma);
+    fDQMHistogramOTPScommonNoise.fillModuleHitPlots(thePixelModuleHitContainer, false, numberOfSigma);
+    fDQMHistogramOTPScommonNoise.fillSSAtoMPACorrelationPlots(the2DSSAMPACorrelationContainer, numberOfSigma);
+    fDQMHistogramOTPScommonNoise.fillStripPixelHybridCorrelationPlots(the2DStripPixelHybridCorrelationContainer, numberOfSigma);
+    fDQMHistogramOTPScommonNoise.fillStripPixelModuleCorrelationPlots(the2DStripPixelModuleCorrelationContainer, numberOfSigma);
 #else
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theStripChipHitContainerSerialization("OTPScommonNoiseStripChipHit");
-        theStripChipHitContainerSerialization.streamByChipContainer(fDQMStreamer, theStripHitContainer);
+        theStripChipHitContainerSerialization.streamByChipContainer(fDQMStreamer, theStripHitContainer, numberOfSigma);
         ContainerSerialization thePixelChipHitContainerSerialization("OTPScommonNoisePixelChipHit");
-        thePixelChipHitContainerSerialization.streamByChipContainer(fDQMStreamer, thePixelHitContainer);
+        thePixelChipHitContainerSerialization.streamByChipContainer(fDQMStreamer, thePixelHitContainer, numberOfSigma);
 
         bool                   isSSA = true;
         ContainerSerialization theStripHybridHitContainerSerialization("OTPScommonNoiseStripHybridHit");
-        theStripHybridHitContainerSerialization.streamByHybridContainer(fDQMStreamer, theStripHybridHitContainer, isSSA);
+        theStripHybridHitContainerSerialization.streamByHybridContainer(fDQMStreamer, theStripHybridHitContainer, isSSA, numberOfSigma);
         ContainerSerialization theStripModuleHitContainerSerialization("OTPScommonNoiseStripModuleHit");
-        theStripModuleHitContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theStripModuleHitContainer, isSSA);
+        theStripModuleHitContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theStripModuleHitContainer, isSSA, numberOfSigma);
 
         isSSA = false;
         ContainerSerialization thePixelHybridHitContainerSerialization("OTPScommonNoisePixelHybridHit");
-        thePixelHybridHitContainerSerialization.streamByHybridContainer(fDQMStreamer, thePixelHybridHitContainer, isSSA);
+        thePixelHybridHitContainerSerialization.streamByHybridContainer(fDQMStreamer, thePixelHybridHitContainer, isSSA, numberOfSigma);
         ContainerSerialization thePixelModuleHitContainerSerialization("OTPScommonNoisePixelModuleHit");
-        thePixelModuleHitContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePixelModuleHitContainer, isSSA);
+        thePixelModuleHitContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePixelModuleHitContainer, isSSA, numberOfSigma);
 
         ContainerSerialization theSSAMPACorrelationContainerSerialization("OTPScommonNoiseSSAMPACorrelation");
-        theSSAMPACorrelationContainerSerialization.streamByHybridContainer(fDQMStreamer, the2DSSAMPACorrelationContainer);
+        theSSAMPACorrelationContainerSerialization.streamByHybridContainer(fDQMStreamer, the2DSSAMPACorrelationContainer, numberOfSigma);
         ContainerSerialization theStripPixelHybridContainerSerialization("OTPScommonNoiseStripPixelHybridCorrelation");
-        theStripPixelHybridContainerSerialization.streamByHybridContainer(fDQMStreamer, the2DStripPixelHybridCorrelationContainer);
+        theStripPixelHybridContainerSerialization.streamByHybridContainer(fDQMStreamer, the2DStripPixelHybridCorrelationContainer, numberOfSigma);
         ContainerSerialization theStripPixelModuleContainerSerialization("OTPScommonNoiseStripPixelModuleCorrelation");
-        theStripPixelModuleContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, the2DStripPixelModuleCorrelationContainer);
+        theStripPixelModuleContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, the2DStripPixelModuleCorrelationContainer, numberOfSigma);
     }
 #endif
 }
@@ -284,8 +295,11 @@ void OTPScommonNoise::Running()
     }
     LOG(INFO) << BOLDMAGENTA << "Starting OTPScommonNoise measurement." << RESET;
     Initialise();
-    SetThresholds();
-    TakeData();
+    for(auto numberOfSigma: fListOfSigma)
+    {
+        SetThresholds(numberOfSigma);
+        TakeData(numberOfSigma);
+    }
     LOG(INFO) << BOLDMAGENTA << "Done with OTPScommonNoise." << RESET;
     Reset();
 }

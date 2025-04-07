@@ -327,7 +327,7 @@ void FileDumper::dumpMonitorSettings(pugi::xml_node theMotherNode, DetectorMonit
     pugi::xml_node theMonitoringNode                                          = theMonitorSettingsNode.append_child(MONITORING_NODE_NAME);
     theMonitoringNode.append_attribute(MONITORING_NODE_TYPE_ATTRIBUTE_NAME)   = theDetectorMonitorConfig->fMonitoringType.c_str();
     theMonitoringNode.append_attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME) = theDetectorMonitorConfig->fEnable ? "1" : "0";
-    pugi::xml_node theMonitoringSleepTimeNode                                 = theMonitorSettingsNode.append_child(MONITORINGSLEEPTIME_NODE_NAME);
+    pugi::xml_node theMonitoringSleepTimeNode                                 = theMonitoringNode.append_child(MONITORINGSLEEPTIME_NODE_NAME);
     theMonitoringSleepTimeNode.append_child(pugi::node_pcdata).set_value(std::to_string(theDetectorMonitorConfig->fSleepTimeMs).c_str());
 
     const auto& theMonitorDeviceList = theDetectorMonitorConfig->fMonitorElementList;
@@ -336,7 +336,7 @@ void FileDumper::dumpMonitorSettings(pugi::xml_node theMotherNode, DetectorMonit
     {
         for(const auto& theElementList: theMonitorElementList.second)
         {
-            pugi::xml_node theMonitorElementNode                                              = theMonitorSettingsNode.append_child(MONITORINGELEMENT_NODE_NAME);
+            pugi::xml_node theMonitorElementNode                                              = theMonitoringNode.append_child(MONITORINGELEMENT_NODE_NAME);
             theMonitorElementNode.append_attribute(MONITORINGELEMENT_DEVICE_ATTRIBUTE_NAME)   = theMonitorElementList.first.c_str();
             theMonitorElementNode.append_attribute(MONITORINGELEMENT_REGISTER_ATTRIBUTE_NAME) = theElementList.first.c_str();
             theMonitorElementNode.append_attribute(MONITORING_NODE_ENABLE_ATTRIBUTE_NAME)     = theElementList.second ? "1" : "0";
