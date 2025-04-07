@@ -131,7 +131,6 @@ void OTBitErrorRateTest::bitErrorRateTestPerLine(Ph2_HwDescription::BeBoard* the
             fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_sel_offset", theOpticalGroup->getId());
             auto theFECcounter                      = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_stat.physical_interface_block.lpgbt_fec_counter");
             theOpticalGroup->getSummary<uint32_t>() = theFECcounter;
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] FECcounter = 0x" << std::hex << +theFECcounter << std::dec << std::endl;
         }
     }
 }
@@ -165,7 +164,6 @@ void OTBitErrorRateTest::bitErrorRateTest(uint8_t line)
 
         for(auto theBoard: *fDetectorContainer)
         {
-            BoardDataContainer thePhaseScanContainerLocal;
             bitErrorRateTestPerLine(theBoard, thePhaseScanContainer[phase].getBoard(theBoard->getId()), nullptr, thePhaseCountainer.getBoard(theBoard->getId()), 1e6, line);
 
             for(auto theOpticalGroup: *theBoard)
@@ -175,7 +173,7 @@ void OTBitErrorRateTest::bitErrorRateTest(uint8_t line)
                 theMapElement.at(1) = 0;
                 for(auto theHybrid: *theOpticalGroup)
                 {
-                    const auto& theHybridElement = thePhaseScanContainer[phase].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<float, 2>>();
+                    const auto& theHybridElement = thePhaseScanContainer[phase].getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<GenericDataArray<uint64_t, 2>>();
                     theMapElement.at(0) += theHybridElement.at(0);
                     theMapElement.at(1) += theHybridElement.at(1);
                 }
@@ -247,8 +245,6 @@ void OTBitErrorRateTest::bitErrorRateTest(uint8_t line)
             }
 
             theBestPhaseCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint16_t>() = minimumPhaseRanges.at(longestSequenceIndex).first + longestSequenceRange / 2;
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theBestPhaseCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint16_t>() = "
-                      << theBestPhaseCountainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<uint16_t>() << std::endl;
         }
     }
 
@@ -272,8 +268,8 @@ void OTBitErrorRateTest::bitErrorRateTest(uint8_t line)
     {
         for(uint16_t phase = 0; phase < maximumPhase; ++phase)
         {
-            ContainerSerialization theErrorCounterSerialization("OTBitErrorRateTestErrorCounterPhaseScan");
-            theErrorCounterSerialization.streamByOpticalGroupContainer(fDQMStreamer, thePhaseScanContainer[phase], phase, line);
+            ContainerSerialization theErrorCounterSerializationPhaseScan("OTBitErrorRateTestErrorCounterPhaseScan");
+            theErrorCounterSerializationPhaseScan.streamByOpticalGroupContainer(fDQMStreamer, thePhaseScanContainer[phase], phase, line);
         }
 
         ContainerSerialization theBestPhaseSerialization("OTBitErrorRateTestBestPhase");

@@ -293,7 +293,7 @@ std::pair<std::vector<uint32_t>, std::vector<uint32_t>> OTalignLpGBTinputsForByp
             uint16_t singleBit = (thePattern >> bit) & 0x1;
             doubleDigitPattern |= ((singleBit << (2 * bit)) | singleBit << (2 * bit + 1));
         }
-        for(size_t wordNumber = 0; wordNumber < 4; ++wordNumber) { theWord |= ((doubleDigitPattern & 0xffff) << wordNumber * 16); }
+        for(size_t wordNumber = 0; wordNumber < 2; ++wordNumber) { theWord |= ((doubleDigitPattern & 0xffff) << wordNumber * 16); }
     }
     else
     {

@@ -1452,6 +1452,7 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
                                                   "OTCICtoLpGBTecv_LpGBTPhase",
                                                   "OTLpGBTEyeOpeningTest_PowerList",
                                                   "OTinjectionOccupancyScan_ListOfInjectedPulses",
+                                                  "OTPScommonNoise_ListOfSigma",
                                                   "OTMPAtoCICecv_ListOfMPAslvsCurrents",
                                                   "OTSSAtoMPAecv_ListOfSSAslvsCurrents",
                                                   "OTSSAtoSSAecv_ListOfSSAslvsCurrents",

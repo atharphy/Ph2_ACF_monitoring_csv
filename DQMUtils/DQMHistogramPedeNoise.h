@@ -79,7 +79,9 @@ class DQMHistogramPedeNoise : public DQMHistogramBase
     uint32_t              fNPixelChannels = 0, fNStripChannels = 0;
     DetectorDataContainer fThresholdAndNoiseContainer;
 
-    DetectorDataContainer fDetectorHybridNoiseHistograms;
+    DetectorDataContainer fDetectorHybridNoiseDistributionHistograms;
+    DetectorDataContainer fDetectorHybridStripNoiseDistributionHistograms;
+    DetectorDataContainer fDetectorHybridPixelNoiseDistributionHistograms;
     DetectorDataContainer fDetectorHybridStripNoiseHistograms;
     DetectorDataContainer fDetectorHybridPixelNoiseHistograms;
     DetectorDataContainer fDetectorHybridStripNoiseBottomHistograms; // only for CBC
