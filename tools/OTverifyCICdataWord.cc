@@ -268,8 +268,8 @@ void OTverifyCICdataWord::runL1Interations(Ph2_HwInterface::D19cFWInterface* the
     float testedBitNumber = thePatternMatcher.getNumberOfMaskedBits();
     if(testedBitNumber == 0) return;
 
-    auto&  theL1Efficiency    = getStorageForL1ErrorRate(theChip);
-    size_t numberOfIterations = std::ceil(fNumberOfL1Bits / testedBitNumber);
+    auto&  theL1Efficiency         = getStorageForL1ErrorRate(theChip);
+    size_t numberOfIterations      = std::ceil(fNumberOfL1Bits / testedBitNumber);
     size_t numberOfIgnoredPatterns = 0;
     for(size_t iteration = 0; iteration < numberOfIterations;)
     {
@@ -285,7 +285,7 @@ void OTverifyCICdataWord::runL1Interations(Ph2_HwInterface::D19cFWInterface* the
             {
                 if(theWord == 0) ++numberOfEmpyWords;
             }
-            if(numberOfIgnoredPatterns < numberOfIterations / 10 && numberOfEmpyWords > 1) 
+            if(numberOfIgnoredPatterns < numberOfIterations / 10 && numberOfEmpyWords > 1)
             {
                 ++numberOfIgnoredPatterns;
                 continue; // means very likely the fifo did not save properly the data
