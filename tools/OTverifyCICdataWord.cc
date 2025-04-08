@@ -270,6 +270,7 @@ void OTverifyCICdataWord::runL1Interations(Ph2_HwInterface::D19cFWInterface* the
 
     auto&  theL1Efficiency    = getStorageForL1ErrorRate(theChip);
     size_t numberOfIterations = std::ceil(fNumberOfL1Bits / testedBitNumber);
+    size_t numberOfIgnoredPatterns = 0;
     for(size_t iteration = 0; iteration < numberOfIterations;)
     {
         auto lineOutputVector        = theFWInterface->L1ADebug(1, false);
@@ -284,7 +285,11 @@ void OTverifyCICdataWord::runL1Interations(Ph2_HwInterface::D19cFWInterface* the
             {
                 if(theWord == 0) ++numberOfEmpyWords;
             }
-            if(numberOfEmpyWords > 1) continue; // means very likely the fifo did not save properly the data
+            if(numberOfIgnoredPatterns < numberOfIterations / 10 && numberOfEmpyWords > 1) 
+            {
+                ++numberOfIgnoredPatterns;
+                continue; // means very likely the fifo did not save properly the data
+            }
             LOG(DEBUG) << BOLDRED << "runL1Interations - Error, expected L1 pattern not found for Board " << +theChip->getBeBoardId() << " OpticalGroup " << +theChip->getOpticalGroupId() << " Hybrid "
                        << +theChip->getHybridId() << " " << FrontEndDescription::getFrontEndName(theChip->getFrontEndType()) << " " << +theChip->getId() << " on iteration number " << +iteration
                        << RESET;
