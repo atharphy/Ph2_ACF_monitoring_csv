@@ -92,9 +92,15 @@ float OTMonitor::readLpGBTmonitorValue(Ph2_HwDescription::OpticalGroup* theOptic
     auto readTemperature = [theLpGBRInterface, theOpticalGroup, theLpGBT](const std::string& theNTCtype, float pExpectedROhm)
     {
         std::string sensorTemperatureADC = theOpticalGroup->getNTCMap().at(theNTCtype);
+        std::cout << "SensADC " << sensorTemperatureADC << std::endl;
         theLpGBRInterface->CdacSetCurrent(theLpGBT, sensorTemperatureADC, theLpGBRInterface->_CdacCodeToCurrent(theLpGBT, sensorTemperatureADC, 0xaa));
-        float resistance = theLpGBRInterface->MeasureResistance(theLpGBT, sensorTemperatureADC, pExpectedROhm, false);
+        float exp = theLpGBRInterface->GetLastNTCResistance(theLpGBT);
+        float resistance = theLpGBRInterface->MeasureResistance(theLpGBT, sensorTemperatureADC, exp, true);
+        theLpGBRInterface->SetLastNTCResistance(theLpGBT, resistance);
+        std::cout << resistance << "\t";
+        std::cout << NTChandler::getInstance().getTemperature(theNTCtype, resistance) << std::endl;
         return NTChandler::getInstance().getTemperature(theNTCtype, resistance);
+
     };
 
     float monitorValue = -999.;

@@ -106,6 +106,8 @@ class lpGBT : public Chip
     // ################################################################################
     void  setTemperature(float cTemperature) { fTemperature = cTemperature; }
     float getTemperature() { return fTemperature; }
+    float getNTCResistance(){return fNTCResistance; }
+    void setNTCResistance(float res ){ fNTCResistance = res; }
 
     std::string getConfigFilePath() const { return fConfigFilePath; }
 
@@ -135,6 +137,7 @@ class lpGBT : public Chip
 
     bool  fIsCalibrationDataLoaded{false};
     float fTemperature = 0.0;
+    float fNTCResistance = 1000; //in Ohms
     // Default values, will be overwritten once the calibration is loaded
     std::map<std::string, float> fADCcalibrationData = {
         {"VREF_SLOPE", -3.3638e-01},

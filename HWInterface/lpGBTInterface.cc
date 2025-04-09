@@ -1630,7 +1630,7 @@ float lpGBTInterface::AdcGetVin(lpGBT* pChip, const std::string& pADCInputP, con
     float cCalRes = ((pChip->getADCCalibrationData()[cAdcStr + "_SLOPE"] + pChip->getTemperature() * pChip->getADCCalibrationData()[cAdcStr + "_SLOPE_TEMP"]) * cResult +
                      pChip->getADCCalibrationData()[cAdcStr + "_OFFSET"] + pChip->getTemperature() * pChip->getADCCalibrationData()[cAdcStr + "_OFFSET_TEMP"]);
 
-    LOG(DEBUG) << GREEN << "Measured calibrated Vin for " << BOLDYELLOW << pADCInputP << RESET << GREEN << " and " << BOLDYELLOW << pADCInputN << RESET << GREEN << " is " << BOLDYELLOW << cCalRes
+    LOG(INFO) << GREEN << "Measured calibrated Vin for " << BOLDYELLOW << pADCInputP << RESET << GREEN << " and " << BOLDYELLOW << pADCInputN << RESET << GREEN << " is " << BOLDYELLOW << cCalRes
                << RESET << GREEN << " V" << RESET;
     return cCalRes;
 }
@@ -1816,8 +1816,9 @@ float lpGBTInterface::MeasureResistance(lpGBT* pChip, const std::string& pChanne
     """ */
 
     float   cCurrentA = 0.5 / pExpectedROhm;
+    std::cout << "ohm exp " << pExpectedROhm << std::endl;
     uint8_t cCdacCode = _CdacGetOptimumCodeForCurrent(pChip, pChannel, cCurrentA);
-    LOG(DEBUG) << BOLDBLUE << "Optimum cdac code: " << +cCdacCode << RESET;
+    LOG(INFO) << BOLDBLUE << "Optimum cdac code: " << +cCdacCode << RESET;
 
     std::vector<uint8_t> cCdacCodesVec;
     std::vector<float>   cRloadsVec;
@@ -1829,19 +1830,20 @@ float lpGBTInterface::MeasureResistance(lpGBT* pChip, const std::string& pChanne
 
     for(auto cdac_code: cCdacCodesVec)
     {
+        std::cout << +cdac_code  << std::endl;
         ConfigureCurrentDAC(pChip, std::vector<std::string>{pChannel}, {cdac_code});
 
         float iout = _CdacCodeToCurrent(pChip, pChannel, cdac_code);
         float rout = _CdacCodeToRout(pChip, pChannel, cdac_code);
-
+        //WriteChipReg(pChip, "ADCMon", (0 == 1) ? 0x1F : 0x00);
         float vadc = AdcGetVin(pChip, pChannel, "VREF/2", 0, 1);
 
         float rmeas = vadc / iout;
-        LOG(DEBUG) << BOLDBLUE << "VADC: " << vadc << " V" << RESET;
+        LOG(INFO) << BOLDBLUE << "VADC: " << vadc << " V" << RESET;
         if(vadc < 0.25) { LOG(INFO) << BOLDBLUE << "Warning: Initial estimate of the resistance was too high" << RESET; }
         if(vadc > 0.75) { LOG(INFO) << BOLDBLUE << "Warning: Initial estimate of the resistance was too low" << RESET; }
         float rload = rmeas / (1 - rmeas / rout);
-        LOG(DEBUG) << BOLDBLUE << "CODE: " << +cdac_code << " IOUT: " << 1e3 * iout << " [mA] ROUT: " << rout * 1e-3 << " [kOhm] VADC: " << vadc << " [V] LOAD: " << rload << " [Ohm]" << RESET;
+        LOG(INFO) << BOLDBLUE << "CODE: " << +cdac_code << " IOUT: " << 1e3 * iout << " [mA] ROUT: " << rout * 1e-3 << " [kOhm] VADC: " << vadc << " [V] LOAD: " << rload << " [Ohm]" << RESET;
 
         cRloadsVec.push_back(rload);
     }
@@ -1896,7 +1898,7 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(lpGBT* pChip, const std::string&
     /* """Measure power supply voltage
 
         Prerequisites:
-            VREF should be tuned to 1V
+            VREF should be tuned to 1V·
 
         Side effects:
             ADC settings
@@ -1946,7 +1948,7 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
     float     value;
 
     auto cChip = pOpticalGroup->flpGBT;
-
+    std::cout << registerName << std::endl;
     if(registerName.find("TEMP") != std::string::npos)
     {
         value = lpGBTInterface::MeasureTemperature(cChip);
@@ -1980,9 +1982,9 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
         try
         {
             value = NTChandler::getInstance().getTemperature(sensorType, resistance);
-            if(silentRunning == false)
-                LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement from register " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value
-                          << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
+            if(true)//silentRunning == false)
+                std::cout << BOLDBLUE << "\t--> LpGBT temperature measurement from register " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value
+                          << BOLDBLUE << " C" << std::setprecision(-1) << std::endl;
         }
         catch(const std::runtime_error& error)
         {
