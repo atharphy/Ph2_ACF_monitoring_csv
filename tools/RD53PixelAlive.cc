@@ -190,8 +190,6 @@ void PixelAlive::run()
                                         break;
                                     }
 
-                                if(i == 0 && regName == coreColRegs[0]) statusGood = false; // @TMP@
-
                                 size_t badPixelsCounterCoreCol = 0;
                                 size_t testedPixels            = 0;
                                 if(((doDataIntegrity == 2) || (doDataIntegrity == 3)) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0)))
