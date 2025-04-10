@@ -1630,7 +1630,7 @@ float lpGBTInterface::AdcGetVin(lpGBT* pChip, const std::string& pADCInputP, con
     float cCalRes = ((pChip->getADCCalibrationData()[cAdcStr + "_SLOPE"] + pChip->getTemperature() * pChip->getADCCalibrationData()[cAdcStr + "_SLOPE_TEMP"]) * cResult +
                      pChip->getADCCalibrationData()[cAdcStr + "_OFFSET"] + pChip->getTemperature() * pChip->getADCCalibrationData()[cAdcStr + "_OFFSET_TEMP"]);
 
-    LOG(INFO) << GREEN << "Measured calibrated Vin for " << BOLDYELLOW << pADCInputP << RESET << GREEN << " and " << BOLDYELLOW << pADCInputN << RESET << GREEN << " is " << BOLDYELLOW << cCalRes
+    LOG(DEBUG) << GREEN << "Measured calibrated Vin for " << BOLDYELLOW << pADCInputP << RESET << GREEN << " and " << BOLDYELLOW << pADCInputN << RESET << GREEN << " is " << BOLDYELLOW << cCalRes
                << RESET << GREEN << " V" << RESET;
     return cCalRes;
 }
@@ -1816,9 +1816,8 @@ float lpGBTInterface::MeasureResistance(lpGBT* pChip, const std::string& pChanne
     """ */
 
     float   cCurrentA = 0.5 / pExpectedROhm;
-    std::cout << "ohm exp " << pExpectedROhm << std::endl;
     uint8_t cCdacCode = _CdacGetOptimumCodeForCurrent(pChip, pChannel, cCurrentA);
-    LOG(INFO) << BOLDBLUE << "Optimum cdac code: " << +cCdacCode << RESET;
+    LOG(DEBUG) << BOLDBLUE << "Optimum cdac code: " << +cCdacCode << RESET;
 
     std::vector<uint8_t> cCdacCodesVec;
     std::vector<float>   cRloadsVec;
@@ -1830,20 +1829,19 @@ float lpGBTInterface::MeasureResistance(lpGBT* pChip, const std::string& pChanne
 
     for(auto cdac_code: cCdacCodesVec)
     {
-        std::cout << +cdac_code  << std::endl;
         ConfigureCurrentDAC(pChip, std::vector<std::string>{pChannel}, {cdac_code});
 
         float iout = _CdacCodeToCurrent(pChip, pChannel, cdac_code);
         float rout = _CdacCodeToRout(pChip, pChannel, cdac_code);
-        //WriteChipReg(pChip, "ADCMon", (0 == 1) ? 0x1F : 0x00);
+
         float vadc = AdcGetVin(pChip, pChannel, "VREF/2", 0, 1);
 
         float rmeas = vadc / iout;
-        LOG(INFO) << BOLDBLUE << "VADC: " << vadc << " V" << RESET;
+        LOG(DEBUG) << BOLDBLUE << "VADC: " << vadc << " V" << RESET;
         if(vadc < 0.25) { LOG(INFO) << BOLDBLUE << "Warning: Initial estimate of the resistance was too high" << RESET; }
         if(vadc > 0.75) { LOG(INFO) << BOLDBLUE << "Warning: Initial estimate of the resistance was too low" << RESET; }
         float rload = rmeas / (1 - rmeas / rout);
-        LOG(INFO) << BOLDBLUE << "CODE: " << +cdac_code << " IOUT: " << 1e3 * iout << " [mA] ROUT: " << rout * 1e-3 << " [kOhm] VADC: " << vadc << " [V] LOAD: " << rload << " [Ohm]" << RESET;
+        LOG(DEBUG) << BOLDBLUE << "CODE: " << +cdac_code << " IOUT: " << 1e3 * iout << " [mA] ROUT: " << rout * 1e-3 << " [kOhm] VADC: " << vadc << " [V] LOAD: " << rload << " [Ohm]" << RESET;
 
         cRloadsVec.push_back(rload);
     }
@@ -1997,6 +1995,24 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
         value = lpGBTInterface::ReadADC(cChip, registerName, "VREF/2", 0, silentRunning);
 
     return value;
+}
+
+float lpGBTInterface::GetLastNTCResistance(lpGBT* pChip, const std::string& theNTCtype)
+{
+    if (theNTCtype == "Sensor")
+        return pChip->getNTCResistance();
+    else if (theNTCtype == "VTRx+")
+        return pChip->getVtrxNTCResistance();
+    else
+        return -999;
+}
+void lpGBTInterface::SetLastNTCResistance(lpGBT* pChip, const std::string& theNTCtype, float resistance)
+
+{
+    if (theNTCtype == "Sensor")
+        pChip->setNTCResistance(resistance);
+    else if (theNTCtype == "VTRx+")
+        pChip->setVtrxNTCResistance(resistance);
 }
 
 void lpGBTInterface::hardReset(Ph2_HwDescription::Chip* pChip)

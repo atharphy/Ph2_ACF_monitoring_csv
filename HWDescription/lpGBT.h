@@ -106,8 +106,16 @@ class lpGBT : public Chip
     // ################################################################################
     void  setTemperature(float cTemperature) { fTemperature = cTemperature; }
     float getTemperature() { return fTemperature; }
+
+    // ################################################################################
+    // # Store the last value of the NTC measurement connected to the lpGBT           #
+    // # - Value serves as estimation of next measurement, its 1000 if not set        #
+    // ################################################################################
     float getNTCResistance(){return fNTCResistance; }
-    void setNTCResistance(float res ){ fNTCResistance = res; }
+    void  setNTCResistance(float cNTCResistance ){ fNTCResistance = cNTCResistance; }
+
+    float getVtrxNTCResistance(){return fVtrxNTCResistance; }
+    void  setVtrxNTCResistance(float cVtrxNTCResistance ){ fVtrxNTCResistance = cVtrxNTCResistance; }
 
     std::string getConfigFilePath() const { return fConfigFilePath; }
 
@@ -137,7 +145,9 @@ class lpGBT : public Chip
 
     bool  fIsCalibrationDataLoaded{false};
     float fTemperature = 0.0;
-    float fNTCResistance = 1000; //in Ohms
+    float fNTCResistance = 1000;        //in Ohms, default value at 20°C
+    float fVtrxNTCResistance = 10000;   //in Ohms, default value at 20°C
+
     // Default values, will be overwritten once the calibration is loaded
     std::map<std::string, float> fADCcalibrationData = {
         {"VREF_SLOPE", -3.3638e-01},
