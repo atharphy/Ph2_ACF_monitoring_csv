@@ -590,7 +590,7 @@ void lpGBTInterface::ResetRxDll(Chip* pChip, const std::vector<uint8_t>& pGroups
 
 bool lpGBTInterface::IsPUSMDone(Chip* pChip) { return lpGBTInterface::GetPUSMStatus(pChip) == revertedPUSMStatusMap["READY"]; }
 
-void lpGBTInterface::PrintChipMode(Chip* pChip)
+uint8_t lpGBTInterface::PrintChipMode(Chip* pChip)
 {
     uint8_t cChipMode = (ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4;
     switch(cChipMode)
@@ -660,6 +660,8 @@ void lpGBTInterface::PrintChipMode(Chip* pChip)
                   << "; LpGBT Mode = " << BOLDYELLOW << "Transceiver" << RESET;
         break;
     }
+
+    return cChipMode;
 }
 
 uint8_t lpGBTInterface::GetPUSMStatus(Chip* pChip) { return ReadChipReg(pChip, "PUSMStatus"); }
