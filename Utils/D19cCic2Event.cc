@@ -309,7 +309,7 @@ void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
     {
         if(cHit.first >= chipContainer->getNumberOfRows() || cHit.second >= chipContainer->getNumberOfCols())
         {
-            LOG(WARNING) << WARNING_FORMAT << "Error decoding hit vector for OpticalGroup " << +hybridId/2 << " Hybrid " << +hybridId << " Chip " << chipContainer->getId() << RESET;
+            LOG(WARNING) << WARNING_FORMAT << "Error decoding hit vector for OpticalGroup " << +hybridId / 2 << " Hybrid " << +hybridId << " Chip " << chipContainer->getId() << RESET;
             LOG(WARNING) << WARNING_FORMAT << "Received hit with row " << cHit.first << " col " << cHit.second << RESET;
             continue;
         }

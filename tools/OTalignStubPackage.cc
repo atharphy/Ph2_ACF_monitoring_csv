@@ -35,18 +35,18 @@ void OTalignStubPackage::Running()
 {
     LOG(INFO) << "Starting OTalignStubPackage measurement.";
     Initialise();
-    size_t numberOtIterations = 0;
+    size_t numberOtIterations    = 0;
     size_t maxNumberOfIterations = 10;
     while(numberOtIterations < maxNumberOfIterations)
     {
         if(AlignStubPackage()) break;
-       ++numberOtIterations;
-       LOG(WARNING) << WARNING_FORMAT << "Not all stub packages are correclty aligned" << RESET;
+        ++numberOtIterations;
+        LOG(WARNING) << WARNING_FORMAT << "Not all stub packages are correclty aligned" << RESET;
     }
     if(numberOtIterations >= maxNumberOfIterations)
     {
-       LOG(ERROR) << ERROR_FORMAT << "Failed to align all stub packages" << RESET;
-       throw std::runtime_error("stub packages");
+        LOG(ERROR) << ERROR_FORMAT << "Failed to align all stub packages" << RESET;
+        throw std::runtime_error("stub packages");
     }
     LOG(INFO) << "Done with OTalignStubPackage.";
     Reset();

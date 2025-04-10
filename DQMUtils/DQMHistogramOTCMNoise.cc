@@ -81,7 +81,7 @@ void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         {
             if(thr == 0)
             {
-                suffixName = "_OccupancyDriven";
+                suffixName  = "_OccupancyDriven";
                 suffixTitle = " - Occupancy Driven";
             }
             else
