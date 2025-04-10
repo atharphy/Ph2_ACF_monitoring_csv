@@ -84,11 +84,7 @@ class D19cCic2Event : public Event
     uint32_t getBeBoardId() const { return fBeId; }
     uint32_t GetNCbc() const { return fNCbc; }
     uint32_t GetEventDataSize() const { return fEventDataSize; }
-    /*!
-     * \brief Convert Data to Hex string
-     * \return Data string in hex
-     */
-    std::string HexString() const override;
+
     /*!
      * \brief Function to get bit string in hexadecimal format for CBC data
      * \param pHybridId : Hybrid Id
@@ -189,8 +185,6 @@ class D19cCic2Event : public Event
     uint32_t BxId(uint8_t pHybridId) const override;
     uint16_t Status(uint8_t pHybridId) const;
 
-    std::bitset<NMPAROWS * NSSACHANNELS> decodePClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
-    std::bitset<NSSACHANNELS>            decodeSClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
     std::bitset<NCHANNELS>               decodeClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const;
     std::bitset<RAW_L1_CBC>              getRawL1Word(uint8_t pHybridId, uint8_t pReadoutChipId) const;
     size_t                               getHybridIndex(const uint8_t pHybridId) const
@@ -239,82 +233,7 @@ class D19cCic2Event : public Event
         if(!fIs2S) cHybridMapping = (pHybridId % 2 == 0) ? fFeMappingPSR : fFeMappingPSL;
         if(fIs8CBC3 && fIs2S) cHybridMapping = fFeMapping8BC3;
 
-        // if( fIs2S && cHybridIds.size() == 0 ) return 0;
-        // else if( fIs2S ) return (cHybridIds.size() - 1) - std::distance(cHybridIds.begin(), std::find(cHybridIds.begin(), cHybridIds.end(), pReadoutChipId));
-        // else  return std::distance(cHybridIds.begin(), std::find(cHybridIds.begin(), cHybridIds.end(), pReadoutChipId));
-        // if(fIs2S)
-        // {
-        //     return (7 - std::distance(cHybridMapping.begin(), std::find(cHybridMapping.begin(), cHybridMapping.end(), pReadoutChipId)));
-        // }
-        // else
-        return cHybridMapping[pReadoutChipId]; // std::distance(cHybridMapping.begin(), std::find(cHybridMapping.begin(), cHybridMapping.end(), pReadoutChipId));
-    }
-
-    std::vector<EventCluster> formClusters(std::vector<uint32_t> pHits, int pSensorId) const
-    {
-        std::vector<EventCluster> cClusters;
-        if(pHits.size() != 0)
-        {
-            auto cFirstHit = pHits[0];
-            std::transform(pHits.begin(), pHits.end(), pHits.begin(), [cFirstHit](int c) { return c -= cFirstHit; });
-            std::vector<int> cDifference(pHits.size());
-            std::adjacent_difference(pHits.begin(), pHits.end(), cDifference.begin()); // difference between consecutive elements
-            auto cIter  = cDifference.begin();
-            auto cStart = cDifference.begin();
-            do {
-                cIter = std::find_if(cIter, cDifference.end(), [](int i) { return (i > 1); });
-                EventCluster cCluster;
-                cCluster.fSensor       = pSensorId;
-                cCluster.fFirstStrip   = pHits[std::distance(cDifference.begin(), cStart)];
-                cCluster.fClusterWidth = pHits[std::distance(cDifference.begin(), cIter - 1)] - cCluster.fFirstStrip + 1;
-                cCluster.fFirstStrip += cFirstHit;
-                cClusters.push_back(cCluster);
-                cStart = cIter;
-                cIter += 1;
-            } while(cStart < cDifference.end());
-        }
-        return cClusters;
-    }
-    std::bitset<NCHANNELS> hitsFromClusters(uint8_t pHybridId, uint8_t pReadoutChipId);
-
-    // templated decoding function
-    // split stream of data
-    template <std::size_t N>
-    std::bitset<N> decodeCicClusters(uint8_t pHybridId, uint8_t pReadoutChipId)
-    {
-        auto&          cClusterWords = fEventHitList[getHybridIndex(pHybridId)].second;
-        std::bitset<N> cBitSet(0);
-        // size_t                 cClusterId = 0;
-        // for( auto cCluster : cClusterWords )
-        // {
-        // uint8_t cChipId = (cCluster & ((0x7) << (0+4+3+7))) >> (0+4+3+7);
-        // auto  cChipIdMapped = this->getChipIdMapped(pHybridId, pReadoutChipId);
-        // if(cChipId == cChipIdMapped)
-        // {
-        //     //figure out if it is an S or a P cluster
-        //     uint8_t cFlag = ( cCluster & (0x1 << 31) ) >> 31 ;
-        //     if( cFlag == 0 ) // s cluster
-        //     {
-        //         SCluster cSCluster;
-        //         cSCluster.fAddress = (cCluster & ((0x7F) << (0+1+3))) >> (0+1+3);
-        //         cSCluster.fWidth = (cCluster & ((0x7) << (0+1))) >> (0+1);
-        //         cSCluster.fMip = (cCluster & ((0x1) << 0)) >> 0;
-        //         //cSClusters.push_back(cSCluster);
-        //         LOG(DEBUG) << BOLDRED << "S-cluster, address : " << unsigned(cSCluster.fAddress)<<","<<unsigned(cSCluster.fWidth)<<","<< unsigned(cSCluster.fMip)<< RESET;
-        //     }
-        //     else
-        //     {
-        //         PCluster aPCluster;
-        //         aPCluster.fAddress = (cCluster & ((0x7F) << (0+4+3))) >> (0+4+3);
-        //         aPCluster.fWidth = (cCluster & ((0x7) << (0+4))) >> (0+4);
-        //         aPCluster.fZpos = (cCluster & ((0xF) << 0)) >> 0;
-        //         //cPClusters.push_back(aPCluster);
-        //         LOG(DEBUG) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress)<<","<<unsigned(aPCluster.fWidth)<<","<< unsigned(aPCluster.fZpos)<< RESET;
-        //     }
-        //     cClusterId++;
-        // }
-        // }
-        return cBitSet;
+        return cHybridMapping[pReadoutChipId];
     }
 
     // L1 Id from chip

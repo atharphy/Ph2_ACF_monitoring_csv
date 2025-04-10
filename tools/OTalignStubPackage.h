@@ -40,7 +40,7 @@ class OTalignStubPackage : public Tool
 
     static std::string fCalibrationDescription;
 
-    void AlignStubPackage();
+    bool AlignStubPackage();
 
   private:
 #ifdef __USE_ROOT__

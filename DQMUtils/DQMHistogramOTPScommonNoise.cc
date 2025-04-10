@@ -27,7 +27,7 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
     // make fDetectorContainer ready to receive the information fromm the stream
     fDetectorContainer = &theDetectorStructure;
 
-    auto listOfSigma = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTPScommonNoise_ListOfSigma", "-1, 3"));
+    auto listOfSigma = convertStringToFloatList(findValueInSettings<std::string>(pSettingsMap, "OTPScommonNoise_ListOfSigma", "0, 3"));
 
     auto        selectSSAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
     std::string selectSSAfunctionName = "SelectSSAfunction";
@@ -40,13 +40,13 @@ void DQMHistogramOTPScommonNoise::book(TFile* theOutputFile, DetectorContainer& 
         auto getName = [numberOfSigma](std::string name)
         {
             if(numberOfSigma == 0) return Form("%s_OccupancyDriven", name.c_str());
-            return Form("%s_SigmaNoise_%.3f", name.c_str(), numberOfSigma);
+            return Form("%s_SigmaNoise_%.2f", name.c_str(), numberOfSigma);
         };
 
         auto getTitle = [numberOfSigma](std::string title)
         {
             if(numberOfSigma == 0) return Form("%s - Occupancy Driven", title.c_str());
-            return Form("%s - Sigma Noise = %.3f", title.c_str(), numberOfSigma);
+            return Form("%s - Sigma Noise = %.2f", title.c_str(), numberOfSigma);
         };
 
         fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
