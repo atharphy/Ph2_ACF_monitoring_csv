@@ -307,6 +307,12 @@ void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
 
     for(auto cHit: cHits)
     {
+        if(cHit.first >= chipContainer->getNumberOfRows() || cHit.second >= chipContainer->getNumberOfCols())
+        {
+            LOG(WARNING) << WARNING_FORMAT << "Error decoding hit vector for OpticalGroup " << +hybridId/2 << " Hybrid " << +hybridId << " Chip " << chipContainer->getId() << RESET;
+            LOG(WARNING) << WARNING_FORMAT << "Received hit with row " << cHit.first << " col " << cHit.second << RESET;
+            continue;
+        }
         if(testChannelGroup->isChannelEnabled(cHit.first, cHit.second)) { chipContainer->getChannel<Occupancy>(cHit.first, cHit.second).fOccupancy += 1.; }
         // else std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] impossible! hit on chip ID " << chipContainer->getId() << " -> " << cHit.first << " - " << cHit.second << std::endl;
     }
