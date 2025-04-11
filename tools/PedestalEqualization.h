@@ -43,7 +43,6 @@ class PedestalEqualization : public Tool
 
     static std::string fCalibrationDescription;
 
-  private:
     DetectorDataContainer fEventTypes;
     // Settings
     bool     fTestPulse{false};
@@ -72,6 +71,36 @@ class PedestalEqualization : public Tool
     bool                  fWithCBC = true;
     bool                  fWithSSA = false;
     bool                  fWithMPA = false;
+
+  private:
+    // DetectorDataContainer fEventTypes;
+    // // Settings
+    // bool     fTestPulse{false};
+    // uint8_t  fTestPulseAmplitude{0};
+    // uint8_t  fTestPulseAmplitudePix{0};
+    // bool     fFullScan{false};
+    // uint32_t fEventsPerPoint{10};
+    // uint16_t fStripTargetVcth{0x0};
+    // uint16_t fPixelTargetVcth{0x0};
+    // uint8_t  fTargetOffset{0x80};
+    // bool     fCheckLoop{true};
+    // bool     fAllChan{true};
+    // bool     fDisableStubLogic{true};
+    // bool     fPedestalEqualizationMaskUntrimmed{false};
+    // uint32_t fMaxNevents{65535};
+    // int      fNEventsPerBurst{-1};
+    // float    fOccupancyAtPedestal{0.56};
+    // uint8_t  fUseMean{1};
+    // uint32_t fPedestalEqualizationFullScanStart{110};
+    // float    fPedestalEqualizationFullScanCAP{1.0};
+
+    // // to hold the original register values
+    // // DetectorDataContainer fStubLogicCointainer;
+    // // DetectorDataContainer fHIPCountCointainer;
+    // DetectorDataContainer fBoardRegContainer;
+    // bool                  fWithCBC = true;
+    // bool                  fWithSSA = false;
+    // bool                  fWithMPA = false;
 
 #ifdef __USE_ROOT__
     DQMHistogramPedestalEqualization fDQMHistogramPedestalEqualization;
