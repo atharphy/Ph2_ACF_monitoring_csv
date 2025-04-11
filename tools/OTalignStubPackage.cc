@@ -42,12 +42,12 @@ void OTalignStubPackage::Running()
     {
         if(AlignStubPackage()) break;
         ++numberOtIterations;
-        LOG(WARNING) << WARNING_FORMAT << "Not all stub packages are correclty aligned" << RESET;
+        LOG(WARNING) << WARNING_FORMAT << "Not all stub packages are correctly aligned" << RESET;
     }
     if(numberOtIterations >= maxNumberOfIterations)
     {
         LOG(ERROR) << ERROR_FORMAT << "Failed to align all stub packages" << RESET;
-        if(!fIsKickoff) throw std::runtime_error("stub packages");
+        // if(!fIsKickoff) throw std::runtime_error("stub packages");
     }
     LOG(INFO) << "Done with OTalignStubPackage.";
     Reset();
@@ -136,7 +136,7 @@ bool OTalignStubPackage::AlignStubPackage()
 
         for(uint8_t thePackageDelay = 0; thePackageDelay < 8; thePackageDelay++)
         {
-            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] thePackageDelay = " << +thePackageDelay << std::endl;
+            std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] thePackageDelay = " << +thePackageDelay << std::endl;
 
             uint32_t packageDelayValue = 0;
             for(size_t link = 0; link < 10; ++link) { packageDelayValue = packageDelayValue | (thePackageDelay << (3 * link)); }

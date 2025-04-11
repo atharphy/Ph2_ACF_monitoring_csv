@@ -43,8 +43,7 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     }
     if(numberOtIterations >= maxNumberOfIterations)
     {
-        LOG(ERROR) << ERROR_FORMAT << "Failed to read LpGBT chip mode on Board " << +pChip->getBeBoardId() << " Optical group " << +pChip->getOpticalGroupId() << ", retry register read one more time"
-                   << RESET;
+        LOG(ERROR) << ERROR_FORMAT << "Failed to read LpGBT chip mode on Board " << +pChip->getBeBoardId() << " Optical group " << +pChip->getOpticalGroupId() << RESET;
         throw std::runtime_error("Failed to read LpGBT chip mode");
     }
 

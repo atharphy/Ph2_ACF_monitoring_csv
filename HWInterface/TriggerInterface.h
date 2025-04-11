@@ -26,7 +26,7 @@ class TriggerInterface
     virtual void ResetTriggerFSM();
     virtual void ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig);
 
-    virtual bool     Start();
+    virtual bool     Start(bool checkIfStarted = false);
     virtual bool     Stop();
     virtual void     Pause();
     virtual void     Resume();

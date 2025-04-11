@@ -5,6 +5,7 @@
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
 #include "HWInterface/D19cDebugFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19cTriggerInterface.h"
 #include "HWInterface/ExceptionHandler.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerFactory.h"
@@ -138,7 +139,7 @@ void OTalignBoardDataWord::boardWordAlignment(BeBoard* theBoard)
     cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
     fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
     fBeBoardInterface->ChipReSync(theBoard);
-    fBeBoardInterface->Start(theBoard);
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getTriggerInterface()->Start(true);
 
     runAlignment(theBoard);
 
