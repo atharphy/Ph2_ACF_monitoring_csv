@@ -1898,7 +1898,7 @@ float lpGBTInterface::MeasurePowerSupplyVoltage(lpGBT* pChip, const std::string&
     /* """Measure power supply voltage
 
         Prerequisites:
-            VREF should be tuned to 1V·
+            VREF should be tuned to 1V
 
         Side effects:
             ADC settings
@@ -1948,7 +1948,6 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
     float     value;
 
     auto cChip = pOpticalGroup->flpGBT;
-    std::cout << registerName << std::endl;
     if(registerName.find("TEMP") != std::string::npos)
     {
         value = lpGBTInterface::MeasureTemperature(cChip);
@@ -1982,7 +1981,7 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
         try
         {
             value = NTChandler::getInstance().getTemperature(sensorType, resistance);
-            if(true) // silentRunning == false)
+            if(silentRunning == false)
                 std::cout << BOLDBLUE << "\t--> LpGBT temperature measurement from register " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value
                           << BOLDBLUE << " C" << std::setprecision(-1) << std::endl;
         }
