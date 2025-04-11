@@ -43,6 +43,7 @@
 #include "tools/PedeNoise.h"
 #include "tools/PedeNoisePSLowInjection.h"
 #include "tools/PedestalEqualization.h"
+#include "tools/PedestalEqualizationPSAtPedestal.h"
 #include "tools/PedestalEqualizationPSFullScan.h"
 #include "tools/Physics2S.h"
 #include "tools/RD53ClockDelay.h"
@@ -146,6 +147,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PedeNoise>("Outer Tracker", "pedenoise");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PedestalEqualization, PedeNoise>("Outer Tracker", "calibrationandpedenoise");
+
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PedestalEqualizationPSAtPedestal, PedeNoise>("Outer Tracker", "pedestalcalibrationandpedenoise");
 
     Register<TuneLpGBTVref,
              OTPSADCCalibration,
