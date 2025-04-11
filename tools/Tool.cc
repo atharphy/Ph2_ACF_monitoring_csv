@@ -835,11 +835,8 @@ void Tool::HttpServerProcess()
 }
 #endif
 
-void Tool::dumpConfigFiles()
+void Tool::readAllReadOnlyRegisters()
 {
-    if(fDetectorContainer->getFirstObject()->getBoardType() == BoardType::RD53) return; // IT does not dump the files
-
-    LOG(INFO) << BOLDBLUE << "Reading all the read-only registers to update output files" << RESET;
 
     for(auto theBoard: *fDetectorContainer)
     {
@@ -901,6 +898,15 @@ void Tool::dumpConfigFiles()
             }
         }
     }
+}
+
+void Tool::dumpConfigFiles(bool checkReadOnlyRegisters)
+{
+    if(fDetectorContainer->getFirstObject()->getBoardType() == BoardType::RD53) return; // IT does not dump the files
+
+    LOG(INFO) << BOLDBLUE << "Reading all the read-only registers to update output files" << RESET;
+
+    if(checkReadOnlyRegisters) readAllReadOnlyRegisters();
 
     if(!fDirectoryName.empty())
     {

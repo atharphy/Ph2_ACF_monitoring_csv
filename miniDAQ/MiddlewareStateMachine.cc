@@ -74,6 +74,8 @@ void MiddlewareStateMachine::resume()
 
 void MiddlewareStateMachine::abort()
 {
+    fTheTool->dumpConfigFiles(false);
+    fTheTool->WriteRootFile();
     fTheTool->Destroy();
     LOG(INFO) << "Aborted" << RESET;
 }
