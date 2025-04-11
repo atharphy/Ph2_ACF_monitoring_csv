@@ -35,7 +35,19 @@ void OTalignStubPackage::Running()
 {
     LOG(INFO) << "Starting OTalignStubPackage measurement.";
     Initialise();
-    AlignStubPackage();
+    size_t numberOtIterations    = 0;
+    size_t maxNumberOfIterations = 10;
+    while(numberOtIterations < maxNumberOfIterations)
+    {
+        if(AlignStubPackage()) break;
+        ++numberOtIterations;
+        LOG(WARNING) << WARNING_FORMAT << "Not all stub packages are correclty aligned" << RESET;
+    }
+    if(numberOtIterations >= maxNumberOfIterations)
+    {
+        LOG(ERROR) << ERROR_FORMAT << "Failed to align all stub packages" << RESET;
+        throw std::runtime_error("stub packages");
+    }
     LOG(INFO) << "Done with OTalignStubPackage.";
     Reset();
 }
@@ -58,8 +70,10 @@ void OTalignStubPackage::Resume() {}
 
 void OTalignStubPackage::Reset() { fRegisterHelper->restoreSnapshot(); }
 
-void OTalignStubPackage::AlignStubPackage()
+bool OTalignStubPackage::AlignStubPackage()
 {
+    bool allHybridsAligned = true;
+
     uint16_t numberOfEvents                                   = 10;
     uint16_t triggerFrequency                                 = 400;   // kHz
     uint16_t clockFrequency                                   = 40000; // kHz
@@ -199,6 +213,7 @@ void OTalignStubPackage::AlignStubPackage()
                 {
                     LOG(ERROR) << ERROR_FORMAT << "ERROR for Board " << +theBoard->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId()
                                << ": number of best package delay = " << numberOfBestPackageDelays << ", expected to be 1" << RESET;
+                    allHybridsAligned = false;
                     continue;
                 }
                 hybridBestPackageDelay.push_back(std::find_if(theBestPackageDelayVector.begin(), theBestPackageDelayVector.end(), [](bool value) { return value; }) -
@@ -238,4 +253,6 @@ void OTalignStubPackage::AlignStubPackage()
         theBestStubPackageDelayContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBestPackageDelayContainer);
     }
 #endif
+
+    return allHybridsAligned;
 }

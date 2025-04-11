@@ -121,7 +121,7 @@ class lpGBTInterface : public ChipInterface
     // # LpGBT block status functions #
     // ################################
     bool    IsPUSMDone(Ph2_HwDescription::Chip* pChip);
-    void    PrintChipMode(Ph2_HwDescription::Chip* pChip);
+    uint8_t PrintChipMode(Ph2_HwDescription::Chip* pChip);
     uint8_t GetPUSMStatus(Ph2_HwDescription::Chip* pChip);
     uint8_t GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
     bool    IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);

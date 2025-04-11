@@ -79,8 +79,16 @@ void DQMHistogramOTCMNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         }
         else
         {
-            suffixName  = Form("_SigmaNoise_%.3f", thr);
-            suffixTitle = Form(" - Sigma Noise = %.3f", thr);
+            if(thr == 0)
+            {
+                suffixName  = "_OccupancyDriven";
+                suffixTitle = " - Occupancy Driven";
+            }
+            else
+            {
+                suffixName  = Form("_SigmaNoise_%.2f", thr);
+                suffixTitle = Form(" - Sigma Noise = %.2f", thr);
+            }
         }
 
         HistContainer<TH1F> hChipHits(("CommonNoiseHits" + suffixName).c_str(), ("Common noise hits" + suffixTitle).c_str(), NCHANNELS + 2, -0.5, NCHANNELS + 1 + 0.5);
