@@ -1982,7 +1982,7 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
         {
             value = NTChandler::getInstance().getTemperature(sensorType, resistance);
             if(silentRunning == false)
-            LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement from register " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value
+                LOG(INFO) << BOLDBLUE << "\t--> LpGBT temperature measurement from register " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value
                           << BOLDBLUE << " C" << std::setprecision(-1) << RESET;
         }
         catch(const std::runtime_error& error)
