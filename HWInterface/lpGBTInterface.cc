@@ -1948,7 +1948,6 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
     float     value;
 
     auto cChip = pOpticalGroup->flpGBT;
-
     if(registerName.find("TEMP") != std::string::npos)
     {
         value = lpGBTInterface::MeasureTemperature(cChip);
@@ -1997,6 +1996,24 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
         value = lpGBTInterface::ReadADC(cChip, registerName, "VREF/2", 0, silentRunning);
 
     return value;
+}
+
+float lpGBTInterface::GetLastNTCResistance(lpGBT* pChip, const std::string& theNTCtype)
+{
+    if(theNTCtype == "Sensor")
+        return pChip->getNTCResistance();
+    else if(theNTCtype == "VTRx+")
+        return pChip->getVtrxNTCResistance();
+    else
+        return -999;
+}
+void lpGBTInterface::SetLastNTCResistance(lpGBT* pChip, const std::string& theNTCtype, float resistance)
+
+{
+    if(theNTCtype == "Sensor")
+        pChip->setNTCResistance(resistance);
+    else if(theNTCtype == "VTRx+")
+        pChip->setVtrxNTCResistance(resistance);
 }
 
 void lpGBTInterface::hardReset(Ph2_HwDescription::Chip* pChip)
