@@ -78,7 +78,22 @@ void MiddlewareStateMachine::abort()
     LOG(INFO) << "Aborted" << RESET;
 }
 
-MiddlewareStateMachine::Status MiddlewareStateMachine::status() { return fTheTool->GetRunningStatus() ? Status::DONE : Status::RUNNING; }
+MiddlewareStateMachine::Status MiddlewareStateMachine::status()
+{
+    try
+    {
+        return fTheTool->GetRunningStatus() ? Status::DONE : Status::RUNNING; 
+    }
+    catch(const std::exception& e)
+    {
+#ifdef __USE_ROOT__
+        LOG(ERROR) << ERROR_FORMAT << "Caught exception " << e.what() << ". Trying to save result directory before crashing" << RESET;
+        fTheTool->Stop(); 
+#endif
+        throw e;
+    }
+    
+}
 
 FC7FpgaConfig MiddlewareStateMachine::getFpgaConfig(const std::string& configurationFile, uint16_t boardId)
 {
