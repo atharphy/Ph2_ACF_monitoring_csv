@@ -1982,7 +1982,7 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
         try
         {
             value = NTChandler::getInstance().getTemperature(sensorType, resistance);
-            if(true)//silentRunning == false)
+            if(true) // silentRunning == false)
                 std::cout << BOLDBLUE << "\t--> LpGBT temperature measurement from register " << BOLDYELLOW << registerName << BOLDBLUE << " is " << BOLDYELLOW << std::setprecision(3) << value
                           << BOLDBLUE << " C" << std::setprecision(-1) << std::endl;
         }
@@ -2001,9 +2001,9 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
 
 float lpGBTInterface::GetLastNTCResistance(lpGBT* pChip, const std::string& theNTCtype)
 {
-    if (theNTCtype == "Sensor")
+    if(theNTCtype == "Sensor")
         return pChip->getNTCResistance();
-    else if (theNTCtype == "VTRx+")
+    else if(theNTCtype == "VTRx+")
         return pChip->getVtrxNTCResistance();
     else
         return -999;
@@ -2011,9 +2011,9 @@ float lpGBTInterface::GetLastNTCResistance(lpGBT* pChip, const std::string& theN
 void lpGBTInterface::SetLastNTCResistance(lpGBT* pChip, const std::string& theNTCtype, float resistance)
 
 {
-    if (theNTCtype == "Sensor")
+    if(theNTCtype == "Sensor")
         pChip->setNTCResistance(resistance);
-    else if (theNTCtype == "VTRx+")
+    else if(theNTCtype == "VTRx+")
         pChip->setVtrxNTCResistance(resistance);
 }
 

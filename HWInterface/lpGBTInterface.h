@@ -236,7 +236,6 @@ class lpGBTInterface : public ChipInterface
     uint8_t                        fChosenPhase;
     std::map<std::string, uint8_t> GetPhaseTapMap();
 
-
   protected:
     // ##############
     // # LpGBT maps #
