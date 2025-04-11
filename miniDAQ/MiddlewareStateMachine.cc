@@ -90,7 +90,7 @@ MiddlewareStateMachine::Status MiddlewareStateMachine::status()
     {
 #ifdef __USE_ROOT__
         LOG(ERROR) << ERROR_FORMAT << "Caught exception " << e.what() << ". Trying to save result directory before crashing" << RESET;
-        fTheTool->Stop(); 
+        this->abort(); 
 #endif
         throw e;
     }
