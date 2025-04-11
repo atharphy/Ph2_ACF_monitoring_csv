@@ -22,6 +22,7 @@ void OTalignStubPackage::Initialise(void)
     fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
     fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9");
     fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11");
+    fIsKickoff = findValueInSettings<double>("isKickoff", 0) > 0;
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -46,7 +47,7 @@ void OTalignStubPackage::Running()
     if(numberOtIterations >= maxNumberOfIterations)
     {
         LOG(ERROR) << ERROR_FORMAT << "Failed to align all stub packages" << RESET;
-        throw std::runtime_error("stub packages");
+        if(!fIsKickoff) throw std::runtime_error("stub packages");
     }
     LOG(INFO) << "Done with OTalignStubPackage.";
     Reset();

@@ -43,6 +43,7 @@ class OTalignStubPackage : public Tool
     bool AlignStubPackage();
 
   private:
+    bool fIsKickoff{false};
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTalignStubPackage fDQMHistogramOTalignStubPackage;
