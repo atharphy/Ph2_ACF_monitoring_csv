@@ -144,9 +144,17 @@ void OTChipToCICecv::runOTChiptoCICecv()
                             {
                                 auto chipIdAndLine = fCicInterface->fromPhyPortAndChanneltoChipIdAndLine(theCic, phyPort, line);
 
-                                matchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first + (isPS ? 8 : 0))
-                                    ->getSummary<GenericDataArray<float, 6, 2>>()
-                                    .at(chipIdAndLine.second) = theLinePatternMatching.at(line);
+                                try
+                                {
+                                    matchingEfficiencyContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), chipIdAndLine.first + (isPS ? 8 : 0))
+                                        ->getSummary<GenericDataArray<float, 6, 2>>()
+                                        .at(chipIdAndLine.second) = theLinePatternMatching.at(line);
+                                }
+                                catch(const std::exception& e)
+                                {
+                                    //do nothing, the chip was not enabled
+                                }
+                                
                             }
                         }
                     }
