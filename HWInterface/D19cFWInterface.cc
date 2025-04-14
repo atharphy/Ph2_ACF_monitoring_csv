@@ -1026,7 +1026,7 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     // LOG(DEBUG) << BOLDYELLOW << "D19cFWInterface::ReadNEvent L1ReadoutInterface " << fL1ReadoutInterface << RESET;
     if(fL1ReadoutInterface == nullptr) LOG(INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
 
-    size_t iterationNumber = 0;
+    size_t iterationNumber       = 0;
     size_t maxNumberOfIterations = 10;
     while(iterationNumber < maxNumberOfIterations)
     {

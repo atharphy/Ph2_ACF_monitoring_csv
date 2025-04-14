@@ -367,7 +367,7 @@ BoardDataContainer D19cBackendAlignmentFWInterface::alignWordAllHybrids(BoardCon
 
 void D19cBackendAlignmentFWInterface::setManualBitSlip(uint8_t hybridId, uint8_t lineId, uint8_t bitSlip)
 {
-        auto getRegisterName = [](const std::string& type, size_t linkNumber, size_t hybridId)
+    auto getRegisterName = [](const std::string& type, size_t linkNumber, size_t hybridId)
     {
         std::stringstream registerNameStream;
         registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.link" << std::uppercase << linkNumber << "_hybrid" << hybridId << "_" << type << "_bitslip" << std::dec;
@@ -394,14 +394,14 @@ void D19cBackendAlignmentFWInterface::setManualBitSlip(uint8_t hybridId, uint8_t
     setManualBitSlipCommand.setCommand(PhaseTuningControl::Command::Configure);
     setManualBitSlipCommand.setMode(PhaseTuningControl::Mode::Manual);
     setManualBitSlipCommand.setBitSlip(bitSlip);
-    
+
     PhaseTuningControl makeManualBitSlipEffectiveCommand(fIsOptical);
     makeManualBitSlipEffectiveCommand.setHybridId(hybridId);
     makeManualBitSlipEffectiveCommand.setChipId(lineId == 0xF ? 0x7 : 0x0);
     makeManualBitSlipEffectiveCommand.setLineId(lineId);
     makeManualBitSlipEffectiveCommand.setCommand(PhaseTuningControl::Command::Align);
     makeManualBitSlipEffectiveCommand.setDoWordAlignment(true);
-    
+
     int retryCounter       = 0;
     int maximumRetryNumber = 10;
     while(retryCounter < maximumRetryNumber)
@@ -415,8 +415,8 @@ void D19cBackendAlignmentFWInterface::setManualBitSlip(uint8_t hybridId, uint8_t
         thePhaseTuningControl.setLineId(lineId);
         thePhaseTuningControl.setCommand(PhaseTuningControl::Command::ReturnResult);
         writeCommand(thePhaseTuningControl);
-        
-        uint32_t         reply = fTheRegManager->ReadReg(fPhaseTuningResultRegisterName);
+
+        uint32_t reply = fTheRegManager->ReadReg(fPhaseTuningResultRegisterName);
         try
         {
             PhaseTuningReply thePhaseTuningReply;
@@ -435,8 +435,6 @@ void D19cBackendAlignmentFWInterface::setManualBitSlip(uint8_t hybridId, uint8_t
             ++retryCounter;
         }
     }
-
 }
-
 
 } // namespace Ph2_HwInterface

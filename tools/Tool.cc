@@ -837,7 +837,6 @@ void Tool::HttpServerProcess()
 
 void Tool::readAllReadOnlyRegisters()
 {
-
     for(auto theBoard: *fDetectorContainer)
     {
         LOG(INFO) << BOLDYELLOW << "Reading all readable registers for BeBoard " << +theBoard->getId() << RESET;

@@ -145,7 +145,7 @@ bool D19cTriggerInterface::Start(bool checkIfStarted)
     fTheRegManager->WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x0);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
-    size_t iterationNumber = 0;
+    size_t iterationNumber            = 0;
     size_t maximumnNumberOfIterations = 10;
     while(iterationNumber < maximumnNumberOfIterations)
     {
