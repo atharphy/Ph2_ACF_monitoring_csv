@@ -47,7 +47,6 @@ void OTalignStubPackage::Running()
     if(numberOtIterations >= maxNumberOfIterations)
     {
         LOG(ERROR) << ERROR_FORMAT << "Failed to align all stub packages" << RESET;
-        // if(!fIsKickoff) throw std::runtime_error("stub packages");
     }
     LOG(INFO) << "Done with OTalignStubPackage.";
     Reset();

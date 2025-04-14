@@ -333,7 +333,7 @@ void D19cBackendAlignmentFWInterface::writeCommand(const PhaseTuningControl& the
 {
     uint32_t phaseTunerCommand = thePhaseTunerControl.encodeCommand();
     fTheRegManager->WriteReg(fPhaseTuningControlRegisterName, phaseTunerCommand);
-    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.bert_control = 0x"  << std::hex << phaseTunerCommand << std::dec << std::endl;
+    // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fc7_daq_ctrl.physical_interface_block.phase_tuning_ctrl = 0x"  << std::hex << phaseTunerCommand << std::dec << std::endl;
 
     std::this_thread::sleep_for(std::chrono::microseconds(10));
 }
@@ -364,5 +364,79 @@ BoardDataContainer D19cBackendAlignmentFWInterface::alignWordAllHybrids(BoardCon
 
     return theAlignmentResultContainer;
 }
+
+void D19cBackendAlignmentFWInterface::setManualBitSlip(uint8_t hybridId, uint8_t lineId, uint8_t bitSlip)
+{
+        auto getRegisterName = [](const std::string& type, size_t linkNumber, size_t hybridId)
+    {
+        std::stringstream registerNameStream;
+        registerNameStream << std::hex << "fc7_daq_ctrl.physical_interface_block.link" << std::uppercase << linkNumber << "_hybrid" << hybridId << "_" << type << "_bitslip" << std::dec;
+        return registerNameStream.str();
+    };
+
+    std::vector<std::pair<std::string, uint32_t>> alignedBitslipRegisters;
+    for(size_t linkNumber = 0; linkNumber < 12; ++linkNumber)
+    {
+        for(size_t hybridId = 0; hybridId < 2; ++hybridId)
+        {
+            alignedBitslipRegisters.push_back({getRegisterName("stub", linkNumber, hybridId), 0x0});
+            alignedBitslipRegisters.push_back({getRegisterName("L1A", linkNumber, hybridId), 0x0});
+        }
+    }
+
+    // Reading all bitslip registers
+    fTheRegManager->WriteStackReg(alignedBitslipRegisters);
+
+    PhaseTuningControl setManualBitSlipCommand(fIsOptical);
+    setManualBitSlipCommand.setHybridId(hybridId);
+    setManualBitSlipCommand.setChipId(lineId == 0xF ? 0x7 : 0x0);
+    setManualBitSlipCommand.setLineId(lineId);
+    setManualBitSlipCommand.setCommand(PhaseTuningControl::Command::Configure);
+    setManualBitSlipCommand.setMode(PhaseTuningControl::Mode::Manual);
+    setManualBitSlipCommand.setBitSlip(bitSlip);
+    
+    PhaseTuningControl makeManualBitSlipEffectiveCommand(fIsOptical);
+    makeManualBitSlipEffectiveCommand.setHybridId(hybridId);
+    makeManualBitSlipEffectiveCommand.setChipId(lineId == 0xF ? 0x7 : 0x0);
+    makeManualBitSlipEffectiveCommand.setLineId(lineId);
+    makeManualBitSlipEffectiveCommand.setCommand(PhaseTuningControl::Command::Align);
+    makeManualBitSlipEffectiveCommand.setDoWordAlignment(true);
+    
+    int retryCounter       = 0;
+    int maximumRetryNumber = 10;
+    while(retryCounter < maximumRetryNumber)
+    {
+        writeCommand(setManualBitSlipCommand);
+
+        writeCommand(makeManualBitSlipEffectiveCommand);
+
+        PhaseTuningControl thePhaseTuningControl(fIsOptical);
+        thePhaseTuningControl.setHybridId(hybridId);
+        thePhaseTuningControl.setLineId(lineId);
+        thePhaseTuningControl.setCommand(PhaseTuningControl::Command::ReturnResult);
+        writeCommand(thePhaseTuningControl);
+        
+        uint32_t         reply = fTheRegManager->ReadReg(fPhaseTuningResultRegisterName);
+        try
+        {
+            PhaseTuningReply thePhaseTuningReply;
+            thePhaseTuningReply.decodeReply(reply, thePhaseTuningControl);
+
+            if(thePhaseTuningReply.getBitSlip() != bitSlip)
+            {
+                if(!fSuppressErrorPrintout) LOG(WARNING) << WARNING_FORMAT << "Bit slip not correctly saved, retrying" << RESET;
+                throw std::runtime_error("Bit slip not correctly saved");
+            }
+            return;
+        }
+        catch(const std::exception& e)
+        {
+            if(!fSuppressErrorPrintout) LOG(WARNING) << WARNING_FORMAT << "D19cBackendAlignmentFWInterface::setManualBitSlip failed, retrying..." << RESET;
+            ++retryCounter;
+        }
+    }
+
+}
+
 
 } // namespace Ph2_HwInterface

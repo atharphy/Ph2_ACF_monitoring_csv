@@ -177,6 +177,7 @@ class D19cBackendAlignmentFWInterface
     std::vector<AlignmentResult> alignWordAllLines(uint8_t hybridId, uint8_t numberOfLines);
     BoardDataContainer           alignWordAllHybrids(BoardContainer* theBoardContainer, uint8_t numberOfLines);
     AlignmentResult              tunePhase(uint8_t hybridId, uint8_t lineId);
+    void                         setManualBitSlip(uint8_t hybridId, uint8_t lineId, uint8_t bitSlip);
 
     void setIsOptical(bool isOptical) { fIsOptical = isOptical; }
     void setSuppressPrintout(bool suppressPrintout) { fSuppressPrintout = suppressPrintout; }

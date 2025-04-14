@@ -242,6 +242,20 @@ void OTalignBoardDataWord::runAlignment(BeBoard* theBoard)
             }
         } // optical groups connected to this  board
     }
+  
+    for(auto theOpticalGroup: *fBitSlipContainer.getObject(theBoard->getId()))
+    {
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                const auto& theBitslipVector = theHybrid->getSummary<std::vector<uint8_t>>();
+                for(size_t line = 0; line < theBitslipVector.size(); ++line)
+                {
+                    theAlignerInterface->setManualBitSlip(theHybrid->getId(), line, theBitslipVector.at(line));
+                }
+            }
+        }
+    }
 }
 
 bool OTalignBoardDataWord::opticalGroupWordAlignment(const OpticalGroup* theOpticalGroup, D19cBackendAlignmentFWInterface* theAlignerInterface)
