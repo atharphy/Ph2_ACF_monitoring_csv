@@ -112,10 +112,10 @@ class lpGBT : public Chip
     // # - Value serves as estimation of next measurement, its 1000 if not set        #
     // ################################################################################
     float getNTCResistance() { return fNTCResistance; }
-    void  setNTCResistance(float cNTCResistance) { fNTCResistance = cNTCResistance; }
+    void  setNTCResistance(float cNTCResistance);
 
     float getVtrxNTCResistance() { return fVtrxNTCResistance; }
-    void  setVtrxNTCResistance(float cVtrxNTCResistance) { fVtrxNTCResistance = cVtrxNTCResistance; }
+    void  setVtrxNTCResistance(float cVtrxNTCResistance);
 
     std::string getConfigFilePath() const { return fConfigFilePath; }
 
@@ -144,9 +144,13 @@ class lpGBT : public Chip
     std::pair<float, float> fTemperatureCoefficients{std::make_pair(0.0021, 0.475)}; // In V per Celsius and Volt coming from the lpGBTv0 manual
 
     bool  fIsCalibrationDataLoaded{false};
-    float fTemperature       = 0.0;
-    float fNTCResistance     = 1000;  // in Ohms, default value at 20°C
-    float fVtrxNTCResistance = 10000; // in Ohms, default value at 20°C
+    float fTemperature          = 0.0;
+    float fNTCResistance        = 1000;  // in Ohms, default value at 25°C
+    float fMaxNTCResistance     = 40000;  
+    float fMinNTCResistance     = 50;  
+    float fVtrxNTCResistance    = 1000; // in Ohms, default value at 25°C
+    float fMaxVtrxNTCResistance = 30000;  
+    float fMinVtrxNTCResistance = 80;  
 
     // Default values, will be overwritten once the calibration is loaded
     std::map<std::string, float> fADCcalibrationData = {

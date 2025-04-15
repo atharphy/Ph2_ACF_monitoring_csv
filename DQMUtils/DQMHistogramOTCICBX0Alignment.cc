@@ -124,7 +124,7 @@ bool DQMHistogramOTCICBX0Alignment::fill(std::string& inputStream)
     if(theBX0AlignmentDelayContainerSerialization.attachDeserializer(inputStream))
     {
         // It matched! Decoding data
-        std::cout << "Matched OTCICBX0Alignment  BX0AlignmentDelay!!!!!\n";
+        // std::cout << "Matched OTCICBX0Alignment  BX0AlignmentDelay!!!!!\n";
         DetectorDataContainer theDetectorData =
             theBX0AlignmentDelayContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, uint8_t, EmptyContainer>(fDetectorContainer);
         // Filling the histograms
@@ -135,7 +135,7 @@ bool DQMHistogramOTCICBX0Alignment::fill(std::string& inputStream)
     if(theBX0AlignmentDelayVsRetimePixContainerSerialization.attachDeserializer(inputStream))
     {
         // It matched! Decoding data
-        std::cout << "Matched OTCICBX0Alignment  BX0AlignmentDelay VsRetimePix!!!!!\n";
+        // std::cout << "Matched OTCICBX0Alignment  BX0AlignmentDelay VsRetimePix!!!!!\n";
         DetectorDataContainer theDetectorData =
             theBX0AlignmentDelayVsRetimePixContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, uint8_t, EmptyContainer>(fDetectorContainer);
         // Filling the histograms

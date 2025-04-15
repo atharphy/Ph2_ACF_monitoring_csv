@@ -57,7 +57,7 @@ D19cFWInterface::D19cFWInterface(const std::string& pId, const std::string& pUri
     : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), fFileHandler(nullptr), fBroadcastCbcId(0), fNCic(0), fFMCId(1)
 {
     LOG(INFO) << BOLDYELLOW << "D19cFWInterface Constructor" << RESET;
-    std::cout << pId << "\t" << pUri << "\t" << pAddressTable << "\n";
+    // std::cout << pId << "\t" << pUri << "\t" << pAddressTable << "\n";
     createAuxiliaryInterfaces();
 }
 

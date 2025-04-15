@@ -165,7 +165,6 @@ void Tool::Start(const StartInfo& theStartInfo)
     {
         std::string resultDirectory = getResultDirectoryName(theStartInfo);
         CreateResultDirectory(resultDirectory, false, false);
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fDirectoryName = " << fDirectoryName << std::endl;
     }
 
     InitResultFile("Results");
@@ -220,7 +219,7 @@ void Tool::readBitslipRegs()
 
     for(const auto& registerNameAndValue: alignedBitslipRegisters)
     {
-        std::cout << "Reading  " << registerNameAndValue.first << " = 0x" << std::hex << registerNameAndValue.second << std::dec << std::endl;
+        LOG(INFO) << BOLDYELLOW << "Reading  " << registerNameAndValue.first << " = 0x" << std::hex << registerNameAndValue.second << std::dec << RESET;
     }
 }
 
