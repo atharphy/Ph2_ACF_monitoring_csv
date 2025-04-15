@@ -2004,7 +2004,7 @@ float lpGBTInterface::GetLastNTCResistance(lpGBT* pChip, const std::string& theN
         return pChip->getNTCResistance();
     else if(theNTCtype == "VTRx+")
         return pChip->getVtrxNTCResistance();
-    throw std::runtime_error("GetLastNTCResistance - No NTC type found");      
+    throw std::runtime_error("GetLastNTCResistance - No NTC type found");
 }
 void lpGBTInterface::SetLastNTCResistance(lpGBT* pChip, const std::string& theNTCtype, float resistance)
 
@@ -2013,7 +2013,8 @@ void lpGBTInterface::SetLastNTCResistance(lpGBT* pChip, const std::string& theNT
         pChip->setNTCResistance(resistance);
     else if(theNTCtype == "VTRx+")
         pChip->setVtrxNTCResistance(resistance);
-    else throw std::runtime_error("SetLastNTCResistance - No NTC type found");      
+    else
+        throw std::runtime_error("SetLastNTCResistance - No NTC type found");
 }
 
 void lpGBTInterface::hardReset(Ph2_HwDescription::Chip* pChip)

@@ -152,9 +152,8 @@ void OTChipToCICecv::runOTChiptoCICecv()
                                 }
                                 catch(const std::exception& e)
                                 {
-                                    //do nothing, the chip was not enabled
+                                    // do nothing, the chip was not enabled
                                 }
-                                
                             }
                         }
                     }

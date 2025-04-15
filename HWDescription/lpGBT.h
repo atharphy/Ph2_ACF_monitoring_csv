@@ -145,12 +145,12 @@ class lpGBT : public Chip
 
     bool  fIsCalibrationDataLoaded{false};
     float fTemperature          = 0.0;
-    float fNTCResistance        = 1000;  // in Ohms, default value at 25°C
-    float fMaxNTCResistance     = 40000;  
-    float fMinNTCResistance     = 50;  
+    float fNTCResistance        = 1000; // in Ohms, default value at 25°C
+    float fMaxNTCResistance     = 40000;
+    float fMinNTCResistance     = 50;
     float fVtrxNTCResistance    = 1000; // in Ohms, default value at 25°C
-    float fMaxVtrxNTCResistance = 30000;  
-    float fMinVtrxNTCResistance = 80;  
+    float fMaxVtrxNTCResistance = 30000;
+    float fMinVtrxNTCResistance = 80;
 
     // Default values, will be overwritten once the calibration is loaded
     std::map<std::string, float> fADCcalibrationData = {

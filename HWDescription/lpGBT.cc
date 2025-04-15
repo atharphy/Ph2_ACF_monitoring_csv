@@ -190,17 +190,19 @@ void lpGBT::setNTCResistance(float cNTCResistance)
 {
     if(cNTCResistance < fMinNTCResistance || cNTCResistance > fMaxNTCResistance)
     {
-        LOG(WARNING) << WARNING_FORMAT << " New measurement of Sensor NTC resistance (" << cNTCResistance << " Ohm) is outside acceptable range (" << fMinNTCResistance << " Ohm <-> " << fMaxNTCResistance << " Ohm). Probably a wrong reading of the ADC, not updating current value" << RESET;
+        LOG(WARNING) << WARNING_FORMAT << " New measurement of Sensor NTC resistance (" << cNTCResistance << " Ohm) is outside acceptable range (" << fMinNTCResistance << " Ohm <-> "
+                     << fMaxNTCResistance << " Ohm). Probably a wrong reading of the ADC, not updating current value" << RESET;
         return;
     }
     fNTCResistance = cNTCResistance;
 }
 
-void lpGBT::setVtrxNTCResistance(float cVtrxNTCResistance) 
+void lpGBT::setVtrxNTCResistance(float cVtrxNTCResistance)
 {
     if(cVtrxNTCResistance < fMinVtrxNTCResistance || cVtrxNTCResistance > fMaxVtrxNTCResistance)
     {
-        LOG(WARNING) << WARNING_FORMAT << " New measurement of VTRx NTC resistance (" << cVtrxNTCResistance << " Ohm) is outside acceptable range (" << fMinVtrxNTCResistance << " Ohm <-> " << fMaxVtrxNTCResistance << " Ohm). Probably a wrong reading of the ADC, not updating current value" << RESET;
+        LOG(WARNING) << WARNING_FORMAT << " New measurement of VTRx NTC resistance (" << cVtrxNTCResistance << " Ohm) is outside acceptable range (" << fMinVtrxNTCResistance << " Ohm <-> "
+                     << fMaxVtrxNTCResistance << " Ohm). Probably a wrong reading of the ADC, not updating current value" << RESET;
         return;
     }
     fVtrxNTCResistance = cVtrxNTCResistance;

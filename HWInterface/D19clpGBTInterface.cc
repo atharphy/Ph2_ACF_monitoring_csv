@@ -352,8 +352,8 @@ void D19clpGBTInterface::configureClockSettings(Ph2_HwDescription::Chip* pChip, 
 
     std::string cClkHReg = "EPCLK" + std::to_string(pClk) + "ChnCntrH";
     std::string cClkLReg = "EPCLK" + std::to_string(pClk) + "ChnCntrL";
-    LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkHReg << " to 0x" << std::hex << (fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq)
-              << std::dec << RESET;
+    LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkHReg << " to 0x" << std::hex
+              << (fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq) << std::dec << RESET;
     LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkLReg << " to 0x" << std::hex
               << (fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth) << std::dec << RESET;
     WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
