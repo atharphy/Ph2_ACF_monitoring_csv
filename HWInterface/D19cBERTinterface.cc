@@ -719,7 +719,7 @@ BoardDataContainer D19cBERTinterface::runBERTonSingleLine(BoardContainer* theBoa
 
     if(iterationNumber >= maxNumberOfIteration && !fSuppressErrorPrintout)
     {
-        LOG(ERROR) << ERROR_FORMAT << "Failed to properly start BERT on line " << lineNumber << " after " << maxNumberOfIteration << " trials" << RESET;
+        LOG(ERROR) << ERROR_FORMAT << "Failed to properly start BERT on line " << +lineNumber << " after " << maxNumberOfIteration << " trials" << RESET;
     }
 
     if(isStartFound.second)
