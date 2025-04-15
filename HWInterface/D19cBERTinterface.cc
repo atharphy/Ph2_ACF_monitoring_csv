@@ -523,7 +523,7 @@ void D19cBERTinterface::waitForNeededBits(bool is10Gmodule, float numberOfMatche
         }
         if(!minimumFound)
         {
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theMinimumNumber = 0, impossible to measure meaninless pattern error bits, aborting" << std::endl;
+            std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theMinimumNumber = 0, impossible to measure meaninless pattern error bits, aborting" << std::endl;
             abort();
         }
         dataRate *= theMinimumNumber / (32. * 4);
@@ -719,7 +719,7 @@ BoardDataContainer D19cBERTinterface::runBERTonSingleLine(BoardContainer* theBoa
 
     if(iterationNumber >= maxNumberOfIteration && !fSuppressErrorPrintout)
     {
-        LOG(ERROR) << ERROR_FORMAT << "Failed to properly start BERT on line " << lineNumber << " after " << maxNumberOfIteration << " trials" << RESET;
+        LOG(ERROR) << ERROR_FORMAT << "Failed to properly start BERT on line " << +lineNumber << " after " << maxNumberOfIteration << " trials" << RESET;
     }
 
     if(isStartFound.second)
@@ -741,7 +741,7 @@ void D19cBERTinterface::setCheckedPattern(uint8_t hybridId, const std::vector<ui
 {
     if(theCheckedPattern.size() != 4)
     {
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of Pattern " << theCheckedPattern.size() << " does not match expected size 4. Aborting..." << std::endl;
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of Pattern " << theCheckedPattern.size() << " does not match expected size 4. Aborting..." << std::endl;
         abort();
     }
     fCheckedPatternMap[hybridId] = theCheckedPattern;
@@ -751,7 +751,7 @@ void D19cBERTinterface::setCheckedPatternMask(uint8_t hybridId, const std::vecto
 {
     if(theCheckedPatternMask.size() != 4)
     {
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of Pattern Mask " << theCheckedPatternMask.size() << " does not match expected size 4. Aborting..." << std::endl;
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] size of Pattern Mask " << theCheckedPatternMask.size() << " does not match expected size 4. Aborting..." << std::endl;
         abort();
     }
     fNumberOfCheckedBitsMap[hybridId] = 0;

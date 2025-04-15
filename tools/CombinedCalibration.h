@@ -55,7 +55,6 @@ struct CombinedCalibration : public Tool
     template <class T>
     void start_single(T& tool)
     {
-        std::cout << __PRETTY_FUNCTION__ << " Starting calibration" << std::endl;
         fMetadataHandler->fillSubCalibrationNameAndTimeContainer(tool.getCalibrationName());
         tool.Inherit(current_tool);
         tool.ConfigureCalibration();
@@ -63,7 +62,6 @@ struct CombinedCalibration : public Tool
         tool.Stop();
         tool.resetPointers();
         current_tool = &tool;
-        std::cout << __PRETTY_FUNCTION__ << " Calibration done" << std::endl;
     }
 
     Tool*                current_tool;

@@ -81,11 +81,11 @@ class ReadoutChip
             {
                 cRow = cChnl % fChipOriginalMask->getNumberOfRows();
                 cCol = cChnl / fChipOriginalMask->getNumberOfRows();
-                std::cout << cRow << " , " << cCol << "\n";
+                // std::cout << cRow << " , " << cCol << "\n";
             }
             fChipOriginalMask->disableChannel(cRow, cCol);
         }
-        std::cout << "Channel mask has " << fChipOriginalMask->getNumberOfEnabledChannels() << " enabled channels\n";
+        // std::cout << "Channel mask has " << fChipOriginalMask->getNumberOfEnabledChannels() << " enabled channels\n";
     }
 
     // Functions to convert from local to gloabal coordinates

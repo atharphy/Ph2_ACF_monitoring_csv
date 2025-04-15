@@ -310,8 +310,6 @@ bool DQMHistogramOTCMNoise::fill(std::string& inputStream)
 //========================================================================================================================
 void DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData, float threshold)
 {
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-
     // make a vector of the channel boundaries of each chip
     // checking later I will start with 1, so we can check that a channel is between two bins, add an extra for the last bin and an extra for 0
     std::vector<uint32_t> chipChannelBoundaries;
@@ -449,8 +447,6 @@ void DQMHistogramOTCMNoise::fill2DHitPlots(DetectorDataContainer& the2DHitData, 
 //========================================================================================================================
 void DQMHistogramOTCMNoise::fill2DHitLightPlots(DetectorDataContainer& the2DHitData, float threshold)
 {
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
-
     for(auto board: the2DHitData)
     {
         for(auto opticalGroup: *board)

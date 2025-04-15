@@ -64,7 +64,6 @@ void D19cI2CInterface::ConfigureI2CMap(const BeBoard* pBoard)
                 auto    cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
                 auto&   cCic                = cOuterTrackerHybrid->fCic;
                 uint8_t cNBytes;
-                std::cout << cCic << std::endl;
                 if(cCic != NULL)
                 {
                     for(auto cChip: *cHybrid)

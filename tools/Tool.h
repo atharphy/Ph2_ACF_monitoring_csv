@@ -129,7 +129,8 @@ class Tool : public Ph2_System::SystemController
     void HttpServerProcess();
 #endif
 
-    void dumpConfigFiles();
+    void readAllReadOnlyRegisters();
+    void dumpConfigFiles(bool checkReadOnlyRegisters = true);
     // General stuff that can be useful
     void setSystemTestPulse(uint8_t pTPAmplitude, uint8_t pTestGroup, bool pTPState = false, bool pHoleMode = false);
     // Enable test pulse
