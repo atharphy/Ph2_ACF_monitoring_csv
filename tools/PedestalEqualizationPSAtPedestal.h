@@ -13,11 +13,12 @@
 #include "tools/Tool.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/PedestalEqualizationPSFullScan.h"
+#include "Utils/ContainerRecycleBin.h"
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
 #include "DQMUtils/DQMHistogramPedestalEqualizationPSAtPedestal.h"
 #endif
-
+class Occupancy;
 class PedestalEqualizationPSAtPedestal : public PedestalEqualization
 {
   public:
@@ -32,16 +33,42 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     void Pause() override;
     void Resume() override;
     void Reset();
+    void ScanThreshold();
 
     static std::string fCalibrationDescription;
-    std::function<bool(const ChipContainer*)>        selectSSAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
-    std::string selectSSAfunctionName = "SelectSSAfunction";
+    bool                  fWithSSA = false;
+    bool                  fWithMPA = false;
+    DetectorDataContainer fEventTypes;
+    // Settings
+    bool     fTestPulse{false};
+    uint8_t  fTestPulseAmplitude{0};
+    uint8_t  fTestPulseAmplitudePix{0};
+    bool     fFullScan{false};    
+    uint32_t fEventsPerPoint{10};
+    uint16_t fStripTargetVcth{0x0};
+    uint16_t fPixelTargetVcth{0x0};
+    uint8_t  fTargetOffset{0x80};
+    bool     fCheckLoop{true};
+    bool     fAllChan{true};
+    bool     fDisableStubLogic{true};
+    bool     fPedestalEqualizationMaskUntrimmed{false};
+    uint32_t fMaxNevents{65535};
+    int      fNEventsPerBurst{-1};
+    // float    fOccupancyAtPedestal{0.56};
+    uint8_t  fUseMean{1};
+    uint32_t fPedestalEqualizationFullScanStart{110};
+    float    fPedestalEqualizationFullScanCAP{1.0};
 
-    std::function<bool(const ChipContainer*)>        selectMPAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
-    std::string selectMPAfunctionName = "SelectMPAfunction";
-
+    std::vector<uint16_t>                  dacList;
+    ContainerRecycleBin<Occupancy>    theRecyclingBin;
+    std::vector<DetectorDataContainer*>    detectorContainerVector;
+    uint16_t fStopValue;
+    uint16_t fStartValue;
   private:
-    bool fOriginalIsFullScan;
+    bool fOriginalIsFullScan;    
+    // bool     fOriginalUseFixRange;
+    // uint16_t fOriginalMinThreshold;
+    // uint16_t fOriginalMaxThreshold;
     
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
