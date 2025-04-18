@@ -110,7 +110,7 @@ void PedestalEqualizationPSAtPedestal::Initialise(bool pAllChan, bool pDisableSt
         fTestPulse = 1;
 
 
-    fStopValue = 30;
+    fStopValue = 150;
     fStartValue = 0;
     const size_t nSteps = fStopValue - fStartValue + 1;
     std::cout << " nSteps " << nSteps << std::endl;
@@ -221,7 +221,7 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
                     if(cType == FrontEndType::MPA2)
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitudePix);
-                        fReadoutChipInterface->WriteChipReg(cChip, "TrimDAC_ALL", 0x0);
+                        fReadoutChipInterface->WriteChipReg(cChip, "TrimDAC_ALL", 0xFF);
 
                         // Vtrim
                         fReadoutChipInterface->WriteChipReg(cChip, "C0", 0x0);
@@ -245,21 +245,6 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
     
     
     std::cout << __PRETTY_FUNCTION__ << " dacList.size() " << dacList.size() << std::endl;
-    // std::vector<DetectorDataContainer> detectorContainerVector(dacList.size());
-    // for(auto& container: detectorContainerVector)
-    // {
-    //     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, container);
-    // }
-
-
-    // std::vector<DetectorDataContainer> containerStorage(dacList.size());
-    // std::vector<DetectorDataContainer*> detectorContainerVector;
-
-    // for (auto& container : containerStorage)
-    // {
-    //     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, container);
-    //     detectorContainerVector.push_back(&container);
-    // }
 
     std::vector<DetectorDataContainer> detectorContainerVector(dacList.size());
     std::vector<DetectorDataContainer*> detectorContainerVectorPointers;
@@ -274,7 +259,9 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
     }
     LOG(INFO) << BOLDBLUE << "scanDac " << RESET;
     this->scanDac("Threshold", dacList, fEventsPerPoint,detectorContainerVectorPointers, fNEventsPerBurst);
-
+    DetectorDataContainer dacOccupancyContainers;
+    
+    ContainerFactory::copyAndInitChannel<std::map<uint16_t, float>>(*fDetectorContainer, dacOccupancyContainers);
 
     for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
     {
@@ -296,13 +283,28 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
 
                         auto theChipContainer = detectorContainerVector.at(dacIt).getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                         if(theChipContainer->hasChannelContainer() == false) continue;
-                        
+                        // auto* targetChip = dacOccupancyContainers
+                        // .getObject(cBoard->getId())
+                        // ->getObject(cOpticalGroup->getId())
+                        // ->getObject(cHybrid->getId())
+                        // ->getObject(cChip->getId());
 
                         for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
                             for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                             {
                                 if(row == 3 && col == 10) std::cout << " Occupancy " << theChipContainer->getChannel<Occupancy>(row, col).fOccupancy << std::endl;
+
+
+                                auto targetMap = &(dacOccupancyContainers
+                                    .getObject(cBoard->getId())
+                                    ->getObject(cOpticalGroup->getId())
+                                    ->getObject(cHybrid->getId())
+                                    ->getObject(cChip->getId())
+                                    ->getChannel<std::map<uint16_t, float>>(row, col));
+                                
+                                (*targetMap)[dacIt] = theChipContainer->getChannel<Occupancy>(row, col).fOccupancy;
+                                // targetChip->getChannel(row,col)->getSummary<std::map<uint16_t, float>>.at(dacIt) = theChipContainer->getChannel<Occupancy>(row, col).fOccupancy;
                             }
                         }
                     }
@@ -312,16 +314,17 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
     }
 
 
-// #ifdef __USE_ROOT__
-//     fDQMHistogramPedestalEqualizationPSAtPedestal.fillSCurvePlots(detectorContainerVector, dacList);
-// #else
-//     // if(fDQMStreamerEnabled)
-//     // {
-//     //         ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancy");
-//     //         theContainerSerialization.streamByHybridContainer(fDQMStreamer, detectorContainerVector, dacList);
-//     // }
+#ifdef __USE_ROOT__
+    fDQMHistogramPedestalEqualizationPSAtPedestal.fillSCurvePlots(detectorContainerVector, dacList);
+    fDQMHistogramPedestalEqualizationPSAtPedestal.fillMaxPlots(dacOccupancyContainers);
+#else
+    // if(fDQMStreamerEnabled)
+    // {
+    //         ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancy");
+    //         theContainerSerialization.streamByHybridContainer(fDQMStreamer, detectorContainerVector, dacList);
+    // }
     
-// #endif
+#endif
 
 }
 
