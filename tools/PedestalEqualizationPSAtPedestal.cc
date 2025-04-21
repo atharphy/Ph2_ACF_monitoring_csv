@@ -110,42 +110,13 @@ void PedestalEqualizationPSAtPedestal::Initialise(bool pAllChan, bool pDisableSt
         fTestPulse = 1;
 
 
-    fStopValue = 150;
+    fStopValue = 255;
     fStartValue = 0;
     const size_t nSteps = fStopValue - fStartValue + 1;
-    std::cout << " nSteps " << nSteps << std::endl;
     for(auto i = 0u; i < nSteps; i++)
     {
         dacList.push_back(fStartValue + i);
     }
-    std::cout << __PRETTY_FUNCTION__ << " dacList.size() " << dacList.size() << std::endl;
-    // relevant registers, should not be here
-    // if(cType == FrontEndType::MPA2)
-    // { 
-    //     fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fPulseAmplitudePix);
-    //     fReadoutChipInterface->WriteChipReg(cChip, "TrimDAC_ALL", 0xFF);
-
-    //     // Vtrim
-    //     fReadoutChipInterface->WriteChipReg(cChip, "C0", 0x0);
-    //     fReadoutChipInterface->WriteChipReg(cChip, "C1", 0x0);
-    //     fReadoutChipInterface->WriteChipReg(cChip, "C2", 0x0);
-    //     fReadoutChipInterface->WriteChipReg(cChip, "C3", 0x0);
-    //     fReadoutChipInterface->WriteChipReg(cChip, "C4", 0x0);
-    //     fReadoutChipInterface->WriteChipReg(cChip, "C5", 0x0);
-    //     fReadoutChipInterface->WriteChipReg(cChip, "C6", 0x0);
-
-    // }
-    // else 
-    // { 
-    //     fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fPulseAmplitude); 
-    //     fReadoutChipInterface->WriteChipReg(cChip, "THTRIMMING", 0x0);
-        
-    //     // Vtrim
-    //     fReadoutChipInterface->WriteChipReg(cChip, "Bias_D5TDR", 0xFF); 
-
-    //     // Bias_D5DAC8
-    //     fReadoutChipInterface->WriteChipReg(cChip, "Bias_D5DAC8", 0xFF); 
-    // }
 
 #ifdef __USE_ROOT__ 
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -187,24 +158,21 @@ void PedestalEqualizationPSAtPedestal::Running()
     // std::function<bool(const ChipContainer*)>        selectMPAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
     // std::string selectMPAfunctionName = "SelectMPAfunctionPS";
 
-    LOG(INFO) << "Starting PedestalEqualizationPSAtPedestal measurement. - MPA ";
+    LOG(INFO) << BOLDMAGENTA <<  "Starting PedestalEqualizationPSAtPedestal measurement." << RESET;
     Initialise();
     ScanThreshold();
-    LOG(INFO) << "Done with PedestalEqualizationPSAtPedestal. - MPA ";
+    LOG(INFO) << BOLDMAGENTA <<  "Done with PedestalEqualizationPSAtPedestal." << RESET;
 
 
 }
+
 void PedestalEqualizationPSAtPedestal::ScanThreshold()
 {
 
     // figure  out if you should normalize or not
     uint cNormalize = 1;
-    LOG(INFO) << BOLDBLUE << "normalization will be set to " << +cNormalize << RESET;
     setNormalization(cNormalize);
-    LOG(INFO) << BOLDBLUE << "DONE normalization set to " << +cNormalize << RESET;
-    std::cout << " ------ fTestPulse " << fTestPulse << std::endl;
 
-    LOG(INFO) << BOLDBLUE << "fTestPulse " << fTestPulse << RESET;
     this->enableTestPulse(true);
     for(auto cBoard: *fDetectorContainer)
     {
@@ -221,16 +189,16 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
                     if(cType == FrontEndType::MPA2)
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitudePix);
-                        fReadoutChipInterface->WriteChipReg(cChip, "TrimDAC_ALL", 0xFF);
+                        fReadoutChipInterface->WriteChipReg(cChip, "TrimDAC_ALL", 0x1);
 
                         // Vtrim
-                        fReadoutChipInterface->WriteChipReg(cChip, "C0", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C1", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C2", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C3", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C4", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C5", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C6", 0x0);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C0", 0xF);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C1", 0xF);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C2", 0xF);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C3", 0xF);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C4", 0xF);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C5", 0xF);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C6", 0xF);
 
                     }
                     else //SSA
@@ -243,59 +211,34 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
     LOG(INFO) << BLUE << "Enabled test pulse. " << RESET;
     this->setTestAllChannels(true);
     
-    
-    std::cout << __PRETTY_FUNCTION__ << " dacList.size() " << dacList.size() << std::endl;
-
     std::vector<DetectorDataContainer> detectorContainerVector(dacList.size());
     std::vector<DetectorDataContainer*> detectorContainerVectorPointers;
-    LOG(INFO) << BOLDBLUE << "fDetectorContainer " << fDetectorContainer->size() << RESET;
-    LOG(INFO) << BOLDBLUE << "before loop " << RESET;
     for(auto& container: detectorContainerVector)
     {
-        // LOG(INFO) << BOLDBLUE << "before copy " << RESET;
         ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, container);
         detectorContainerVectorPointers.push_back(&container);
-        // LOG(INFO) << BOLDBLUE << "after copy " << RESET;
     }
-    LOG(INFO) << BOLDBLUE << "scanDac " << RESET;
     this->scanDac("Threshold", dacList, fEventsPerPoint,detectorContainerVectorPointers, fNEventsPerBurst);
     DetectorDataContainer dacOccupancyContainers;
-    
     ContainerFactory::copyAndInitChannel<std::map<uint16_t, float>>(*fDetectorContainer, dacOccupancyContainers);
 
     for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
     {
-        std::cout << " dacIt " << dacIt << std::endl;
-    
         for(auto cBoard: detectorContainerVector.at(dacIt))
         {
-            std::cout << " board " << cBoard->getId() << std::endl;
             for(auto cOpticalGroup: *cBoard)
             {
-                std::cout << " cOpticalGroup " << cOpticalGroup->getId() << std::endl;
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    std::cout << " cHybrid " << cHybrid->getId() << std::endl;
-
                     for(auto cChip: *cHybrid)
                     {
-                        std::cout << " cChip " << cChip->getId() << std::endl;
-
                         auto theChipContainer = detectorContainerVector.at(dacIt).getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                         if(theChipContainer->hasChannelContainer() == false) continue;
-                        // auto* targetChip = dacOccupancyContainers
-                        // .getObject(cBoard->getId())
-                        // ->getObject(cOpticalGroup->getId())
-                        // ->getObject(cHybrid->getId())
-                        // ->getObject(cChip->getId());
 
                         for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
                             for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                             {
-                                if(row == 3 && col == 10) std::cout << " Occupancy " << theChipContainer->getChannel<Occupancy>(row, col).fOccupancy << std::endl;
-
-
                                 auto targetMap = &(dacOccupancyContainers
                                     .getObject(cBoard->getId())
                                     ->getObject(cOpticalGroup->getId())
@@ -304,8 +247,61 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
                                     ->getChannel<std::map<uint16_t, float>>(row, col));
                                 
                                 (*targetMap)[dacIt] = theChipContainer->getChannel<Occupancy>(row, col).fOccupancy;
-                                // targetChip->getChannel(row,col)->getSummary<std::map<uint16_t, float>>.at(dacIt) = theChipContainer->getChannel<Occupancy>(row, col).fOccupancy;
-                            }
+                            } //col
+                        } //row
+                    } // chip
+                } // hybrid
+            } //optical group
+        } // board
+    } // dac 
+
+    GetMaximumDAC(dacOccupancyContainers);
+
+
+#ifdef __USE_ROOT__
+    fDQMHistogramPedestalEqualizationPSAtPedestal.fillSCurvePlots(detectorContainerVector, dacList);
+#else
+    // if(fDQMStreamerEnabled)
+    // {
+    //         ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancy");
+    //         theContainerSerialization.streamByHybridContainer(fDQMStreamer, detectorContainerVector, dacList);
+    // }
+    
+#endif
+
+}
+
+
+void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer& dacOccupancyContainers)
+{
+    DetectorDataContainer theMaxOccupancyDACContainers;
+    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theMaxOccupancyDACContainers);
+
+    for(auto cBoard: dacOccupancyContainers)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    auto theChipContainer = theMaxOccupancyDACContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        {
+                            const auto& occupancyMap = cChip->getChannel<std::map<uint16_t, float>>(row, col);
+                            if (occupancyMap.empty()) continue;
+
+                            auto maxIter = std::max_element(
+                            occupancyMap.begin(),
+                            occupancyMap.end(),
+                            [](const auto& a, const auto& b) {
+                                return a.second < b.second;
+                            });
+
+                            theChipContainer->getChannel<uint16_t>(row, col) = maxIter->first;
                         }
                     }
                 }
@@ -315,8 +311,7 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
 
 
 #ifdef __USE_ROOT__
-    fDQMHistogramPedestalEqualizationPSAtPedestal.fillSCurvePlots(detectorContainerVector, dacList);
-    fDQMHistogramPedestalEqualizationPSAtPedestal.fillMaxPlots(dacOccupancyContainers);
+    fDQMHistogramPedestalEqualizationPSAtPedestal.fillMaxPlots(theMaxOccupancyDACContainers);
 #else
     // if(fDQMStreamerEnabled)
     // {

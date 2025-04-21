@@ -34,6 +34,7 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     void Resume() override;
     void Reset();
     void ScanThreshold();
+    void GetMaximumDAC(const DetectorDataContainer& dacOccupancyContainers);
 
     static std::string fCalibrationDescription;
     bool                  fWithSSA = false;
