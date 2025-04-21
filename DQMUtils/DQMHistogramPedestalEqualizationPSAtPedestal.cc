@@ -106,9 +106,6 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
 
 void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlots(const std::vector<DetectorDataContainer>& detectorContainerVector, const std::vector<uint16_t>&         dacList)
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
-
-
     if(dacList.size() != detectorContainerVector.size())
     {
         LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
@@ -117,54 +114,39 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlots(const std::ve
 
     for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
     {
-        std::cout << " dacIt " << dacIt << std::endl;
         for(auto cBoard: detectorContainerVector.at(dacIt))
         {
-            std::cout << " board " << cBoard->getId() << std::endl;
             for(auto cOpticalGroup: *cBoard)
             {
-                std::cout << " cOpticalGroup " << cOpticalGroup->getId() << std::endl;
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    std::cout << " cHybrid " << cHybrid->getId() << std::endl;
-
                     for(auto cChip: *cHybrid)
                     {
-                        std::cout << " cChip " << cChip->getId() << std::endl;
                         ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-
                         auto     cType = theReadoutChip->getFrontEndType();
 
                         TH2F* cChipSCurve = nullptr;
                         if(cType == FrontEndType::SSA2)
                         {
-                            std::cout << " get cChipSCurve SSA" << std::endl;
                             cChipSCurve = fDetectorChipStripSCurveHistograms.getObject(cBoard->getId())
                                           ->getObject(cOpticalGroup->getId())
                                           ->getObject(cHybrid->getId())
                                           ->getObject(cChip->getId())
                                           ->getSummary<HistContainer<TH2F>>()
                                           .fTheHistogram;
-
-                            std::cout << " done SSA" << std::endl;
                         }
                         else if(cType == FrontEndType::MPA2)
                         {
-                            std::cout << " get cChipSCurve MPA" << std::endl;
                             cChipSCurve = fDetectorChipPixelSCurveHistograms.getObject(cBoard->getId())
                                               ->getObject(cOpticalGroup->getId())
                                               ->getObject(cHybrid->getId())
                                               ->getObject(cChip->getId())
                                               ->getSummary<HistContainer<TH2F>>()
                                               .fTheHistogram;
-
-                        std::cout << " done MPA" << std::endl;
                         }
 
-                        std::cout << " done getting hists" << std::endl;
                         auto theChipContainer = detectorContainerVector.at(dacIt).getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                         if(theChipContainer->hasChannelContainer() == false) continue;
-                        std::cout << " done theChipContainer" << std::endl;
                         for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
                             for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
@@ -182,95 +164,48 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlots(const std::ve
             }
         }
     }
-
-
-
-    //fillMaxPlots();
 }
 
 void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDataContainer& dacOccupancyContainers)
 {
     for(auto cBoard: dacOccupancyContainers)
     {
-        std::cout << " board " << cBoard->getId() << std::endl;
         for(auto cOpticalGroup: *cBoard)
         {
-            std::cout << " cOpticalGroup " << cOpticalGroup->getId() << std::endl;
             for(auto cHybrid: *cOpticalGroup)
             {
-                std::cout << " cHybrid " << cHybrid->getId() << std::endl;
-
                 for(auto cChip: *cHybrid)
                 {
-                    std::cout << " cChip " << cChip->getId() << std::endl;
                     ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-
                     auto     cType = theReadoutChip->getFrontEndType();
 
                     TH1F* cChipMax    = nullptr;
                     if(cType == FrontEndType::SSA2)
                     {
-
-                        std::cout << " get cChipMax SSA" << std::endl;
                         cChipMax = fDetectorChipStripMaxHistograms.getObject(cBoard->getId())
                                       ->getObject(cOpticalGroup->getId())
                                       ->getObject(cHybrid->getId())
                                       ->getObject(cChip->getId())
                                       ->getSummary<HistContainer<TH1F>>()
                                       .fTheHistogram;
-                        std::cout << " done SSA" << std::endl;
                     }
                     else if(cType == FrontEndType::MPA2)
                     {
-
-                        std::cout << " get cChipMax MPA" << std::endl;
                         cChipMax = fDetectorChipPixelMaxHistograms.getObject(cBoard->getId())
                                           ->getObject(cOpticalGroup->getId())
                                           ->getObject(cHybrid->getId())
                                           ->getObject(cChip->getId())
                                           ->getSummary<HistContainer<TH1F>>()
                                           .fTheHistogram;
-                        std::cout << " done MPA" << std::endl;
                     }
 
-                    std::cout << " done getting hists" << std::endl;
-                    // auto theChipContainer = detectorContainerVector.at(dacIt).getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                    // if(theChipContainer->hasChannelContainer() == false) continue;
-                    // std::cout << " done theChipContainer" << std::endl;
-                    
-
-                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
-                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
-                            {
-                                auto bin = linearizeRowAndCols(row, col, cChip->getNumberOfCols());  
-                                // float maxOccupancy = -1;
-                                // uint16_t maxDac = -1;
-                                std::cout << " bin " << bin <<  std::endl;
-                                const auto& occupancyMap = cChip->getChannel<std::map<uint16_t, float>>(row, col);
-                                std::cout << " occupancyMap " <<  std::endl;
-                        if (occupancyMap.empty()) continue;
-
-                        auto maxIter = std::max_element(
-                            occupancyMap.begin(),
-                            occupancyMap.end(),
-                            [](const auto& a, const auto& b) {
-                                return a.second < b.second;
-                            });
-                            std::cout << " max " <<  std::endl;
-                        uint16_t maxDac = maxIter->first;
-                                // for (uint16_t dac = 1; dac <=    cChipSCurve->GetNbinsY(); dac++)
-                                // {                  
-                                // float tmpOccupancy = cChipSCurve->GetBinContent(bin + 1, dac);
-
-                                // if (tmpOccupancy > maxOccupancy) 
-                                // {
-                                //     maxOccupancy = tmpOccupancy;
-                                //     maxDac = dac;
-                                // }
-
-                                cChipMax->SetBinContent(bin +1, maxDac);
-
+                            auto bin = linearizeRowAndCols(row, col, cChip->getNumberOfCols());  
+                            uint16_t maxDac = cChip->getChannel<uint16_t>(row, col);
+                            cChipMax->SetBinContent(bin +1, maxDac);
                             
                         }
                     }
