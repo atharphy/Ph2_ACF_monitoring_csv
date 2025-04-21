@@ -115,13 +115,6 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fDQMHistogramPedestalEqualization.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
-    ContainerFactory::copyAndInitBoard<BeBoardRegMap>(*fDetectorContainer, fBoardRegContainer);
-    for(auto cBoard: *fDetectorContainer)
-    {
-        auto&                cBoardRegNap = fBoardRegContainer.getObject(cBoard->getId())->getSummary<BeBoardRegMap>();
-        const BeBoardRegMap& cOrigRegMap  = static_cast<const BeBoard*>(cBoard)->getBeBoardRegMap();
-        cBoardRegNap.insert(cOrigRegMap.begin(), cOrigRegMap.end());
-    }
 
     // event types
     ContainerFactory::copyAndInitBoard<EventType>(*fDetectorContainer, fEventTypes);
