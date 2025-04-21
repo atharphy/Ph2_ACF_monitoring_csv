@@ -160,14 +160,16 @@ void PedestalEqualizationPSAtPedestal::Running()
 
     LOG(INFO) << BOLDMAGENTA <<  "Starting PedestalEqualizationPSAtPedestal measurement." << RESET;
     Initialise();
+    PrepareForInjection();
     ScanThreshold();
+    TuneTrimBits();
     LOG(INFO) << BOLDMAGENTA <<  "Done with PedestalEqualizationPSAtPedestal." << RESET;
 
 
 }
-
-void PedestalEqualizationPSAtPedestal::ScanThreshold()
+void PedestalEqualizationPSAtPedestal::PrepareForInjection()
 {
+
 
     // figure  out if you should normalize or not
     uint cNormalize = 1;
@@ -176,9 +178,6 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
     this->enableTestPulse(true);
     for(auto cBoard: *fDetectorContainer)
     {
-        // Allow for different SSA and MPA injection amplitudes
-        // setSameDacBeBoard(static_cast<BeBoard*>(cBoard), "InjectedCharge", fTestPulseAmplitude);
-        
         for(auto cOpticalGroup: *cBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -189,20 +188,25 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
                     if(cType == FrontEndType::MPA2)
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitudePix);
-                        fReadoutChipInterface->WriteChipReg(cChip, "TrimDAC_ALL", 0x1);
+                        fReadoutChipInterface->WriteChipReg(cChip, "TrimDAC_ALL", 0x1F);
 
                         // Vtrim
-                        fReadoutChipInterface->WriteChipReg(cChip, "C0", 0xF);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C1", 0xF);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C2", 0xF);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C3", 0xF);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C4", 0xF);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C5", 0xF);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C6", 0xF);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C0", 0x0);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C1", 0x0);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C2", 0x0);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C3", 0x0);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C4", 0x0);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C5", 0x0);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C6", 0x0);
 
                     }
                     else //SSA
+                    {
                         fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitude);
+                        fReadoutChipInterface->WriteChipReg(cChip, "THTRIMMING", 0x1F);
+                        fReadoutChipInterface->WriteChipReg(cChip, "Bias_D5DAC8", 0x00);
+        
+                    }
                 }
             }
         }
@@ -210,7 +214,11 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
     }
     LOG(INFO) << BLUE << "Enabled test pulse. " << RESET;
     this->setTestAllChannels(true);
-    
+
+}
+
+void PedestalEqualizationPSAtPedestal::ScanThreshold()
+{
     std::vector<DetectorDataContainer> detectorContainerVector(dacList.size());
     std::vector<DetectorDataContainer*> detectorContainerVectorPointers;
     for(auto& container: detectorContainerVector)
@@ -274,8 +282,10 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
 
 void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer& dacOccupancyContainers)
 {
-    DetectorDataContainer theMaxOccupancyDACContainers;
-    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theMaxOccupancyDACContainers);
+
+    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, fTheMaxOccupancyDACContainers);
+    ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, fTheSmallestThresholdAtMaxOccupancyContainer);
+    LOG(INFO) << BOLDBLUE << " containers " << RESET;
 
     for(auto cBoard: dacOccupancyContainers)
     {
@@ -285,12 +295,17 @@ void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer
             {
                 for(auto cChip: *cHybrid)
                 {
-                    auto theChipContainer = theMaxOccupancyDACContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
 
+                    auto theChipContainer = fTheMaxOccupancyDACContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    uint16_t smallestThresholdAtMaxOccupancy = 255;
+                    uint16_t rowAtsmallestThresholdAtMaxOccupancy = -1, colAtsmallestThresholdAtMaxOccupancy = -1;
+                    uint16_t binAtsmallestThresholdAtMaxOccupancy = -1;
+                    LOG(INFO) << BOLDBLUE << "Looking for DACmaxOccupancy for chip "<< cChip->getId() << RESET;
                     for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
+                            uint16_t bin = linearizeRowAndCols(row, col, cChip->getNumberOfCols());
                             const auto& occupancyMap = cChip->getChannel<std::map<uint16_t, float>>(row, col);
                             if (occupancyMap.empty()) continue;
 
@@ -300,18 +315,29 @@ void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer
                             [](const auto& a, const auto& b) {
                                 return a.second < b.second;
                             });
-
-                            theChipContainer->getChannel<uint16_t>(row, col) = maxIter->first;
-                        }
-                    }
-                }
+                            uint16_t DACmaxOccupancy = maxIter->first;
+                            theChipContainer->getChannel<uint16_t>(row, col) = DACmaxOccupancy;
+                            
+                            if (DACmaxOccupancy < smallestThresholdAtMaxOccupancy && DACmaxOccupancy > 0)
+                            {
+                                smallestThresholdAtMaxOccupancy = DACmaxOccupancy;
+                                rowAtsmallestThresholdAtMaxOccupancy = row;
+                                colAtsmallestThresholdAtMaxOccupancy = col;
+                                binAtsmallestThresholdAtMaxOccupancy = bin;
+                            }   
+                        }// col   
+                    } // row
+                    auto theChipSmallestThresholdContainer = fTheSmallestThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    theChipSmallestThresholdContainer->getSummary<uint16_t>() = smallestThresholdAtMaxOccupancy;
+                    LOG(INFO) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtsmallestThresholdAtMaxOccupancy << " col " << colAtsmallestThresholdAtMaxOccupancy << " (bin "<< binAtsmallestThresholdAtMaxOccupancy << ") has the lowest DAC giving the maximum occupancy at " << smallestThresholdAtMaxOccupancy << RESET;
+                } //chip
             }
         }
     }
 
 
 #ifdef __USE_ROOT__
-    fDQMHistogramPedestalEqualizationPSAtPedestal.fillMaxPlots(theMaxOccupancyDACContainers);
+    fDQMHistogramPedestalEqualizationPSAtPedestal.fillMaxPlots(fTheMaxOccupancyDACContainers);
 #else
     // if(fDQMStreamerEnabled)
     // {
@@ -323,6 +349,71 @@ void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer
 
 }
 
+void PedestalEqualizationPSAtPedestal::TuneTrimBits()
+{
+    int iteration = 31;
+    while (iteration > 0)
+    {
+        for(auto cBoard: fTheSmallestThresholdAtMaxOccupancyContainer)
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        auto theChipContainer = fTheMaxOccupancyDACContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                        uint16_t smallestThresholdAtMaxOccupancy = cChip->getSummary<uint16_t>();
+                        std::cout << " the smallestThresholdAtMaxOccupancy " << smallestThresholdAtMaxOccupancy << std::endl;
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                        {
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                            { 
+                                if (theChipContainer->getChannel<uint16_t>(row, col) >  smallestThresholdAtMaxOccupancy)
+                                {
+                                    std::cout<< " while loop " << std::endl;
+                                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                                    std::cout<< " theReadoutChip " << std::endl;
+                                    auto     cType = theReadoutChip->getFrontEndType();
+                                    std::cout<< " type " << std::endl;
+                                    if(cType == FrontEndType::MPA2)
+                                    {
+                                        std::cout<< " MPA " << std::endl;
+                                        std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
+                                        auto currentTrim = fReadoutChipInterface->ReadChipReg(theReadoutChip,cRegName);
+                                        auto newTrim = currentTrim -1;
+                                        std::cout << " trim " << cRegName << " 0x"<< std::hex << currentTrim << " -1 0x"<<  newTrim << std::dec << std::endl;
+                                    
+                                        fReadoutChipInterface->WriteChipReg(theReadoutChip, cRegName, newTrim );
+                                    }
+                                    else //SSA
+                                    {
+                                        std::cout<< " SSA " << std::endl;
+                                        std::string cRegName = "THTRIMMING_S" + std::to_string(col+1);
+                                        std::cout << " trim " << cRegName << std::endl;
+                                        auto currentTrim = fReadoutChipInterface->ReadChipReg(theReadoutChip,cRegName);
+                                        std::cout << " read done " <<std::endl;
+                                        auto newTrim = currentTrim -1;
+                                        std::cout << " trim " << cRegName << " 0x"<< std::hex << currentTrim << " -1 0x"<<  newTrim << std::dec << std::endl;
+                                    
+                                        fReadoutChipInterface->WriteChipReg(theReadoutChip, cRegName, newTrim );
+                                    }
+
+                                }
+
+                            }// col
+                        } // row
+                    } //chip
+                }
+            }
+        }
+        std::cout<< " run scan threshold for iteration "<< iteration << std::endl;
+        ScanThreshold();
+        iteration--;
+        std::cout<< " done " << std::endl;
+    }// iteration
+    std::cout << " close all loops" << std::endl;
+}
 void PedestalEqualizationPSAtPedestal::Stop(void)
 {
     LOG(INFO) << "Stopping PedestalEqualizationPSAtPedestal measurement.";

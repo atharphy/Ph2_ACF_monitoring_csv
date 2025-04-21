@@ -33,8 +33,10 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     void Pause() override;
     void Resume() override;
     void Reset();
+    void PrepareForInjection();
     void ScanThreshold();
     void GetMaximumDAC(const DetectorDataContainer& dacOccupancyContainers);
+    void TuneTrimBits();
 
     static std::string fCalibrationDescription;
     bool                  fWithSSA = false;
@@ -61,8 +63,9 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     float    fPedestalEqualizationFullScanCAP{1.0};
 
     std::vector<uint16_t>                  dacList;
-    ContainerRecycleBin<Occupancy>    theRecyclingBin;
-    std::vector<DetectorDataContainer*>    detectorContainerVector;
+
+    DetectorDataContainer fTheMaxOccupancyDACContainers;
+    DetectorDataContainer fTheSmallestThresholdAtMaxOccupancyContainer;
     uint16_t fStopValue;
     uint16_t fStartValue;
   private:
