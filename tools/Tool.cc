@@ -2229,29 +2229,23 @@ void Tool::scanBeBoardDac(uint16_t                             boardId,
                           std::vector<DetectorDataContainer*>& detectorContainerVector,
                           int32_t                              numberOfEventsPerBurst)
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
-    std::cout << " dacList.size() " << dacList.size() << " detectorContainerVector.size() " << detectorContainerVector.size() << std::endl;
     if(dacList.size() != detectorContainerVector.size())
     {
         LOG(ERROR) << __PRETTY_FUNCTION__ << " dacList and detector container vector have different sizes, aborting";
         abort();
     }
     
-    std::cout << "checking front end type" << std::endl;
     if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS || fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S)
     {
         // #######################
         // # Loop over goups ... #
         // # Loop over DAC ...   #
         // #######################
-        std::cout << " OT IMPLEMENTATION " << std::endl;
         ScanBeBoardDacPerGroup theScan(this);
         theScan.setDataContainerVector(&detectorContainerVector);
         theScan.setDacName(dacName);
         theScan.setDacList(&dacList);
-        std::cout << " doing doScanOnAllGroupsBeBoard " << std::endl;
         doScanOnAllGroupsBeBoard(boardId, numberOfEvents, numberOfEventsPerBurst, &theScan);
-        std::cout << " done " << std::endl;
         if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
         {
             numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
@@ -2263,7 +2257,6 @@ void Tool::scanBeBoardDac(uint16_t                             boardId,
         // IT PEOPLE NEED TO FIX THIS
         if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A)
         {
-            std::cout << " why here? " <<std::endl;
             // #######################
             // # Loop over DAC ...   #
             // # Loop over goups ... #
@@ -2275,9 +2268,8 @@ void Tool::scanBeBoardDac(uint16_t                             boardId,
                 setDacAndMeasureBeBoardData(boardId, dacName, dacList.at(dacIt), numberOfEvents, numberOfEventsPerBurst);
                 this->sendData();
             }
+        }
     }
-
-}
     
 }
 
