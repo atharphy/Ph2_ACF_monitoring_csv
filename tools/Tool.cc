@@ -1211,10 +1211,7 @@ void Tool::scanDac(const std::string&                  dacName,
                    uint32_t                            numberOfEvents,
                    std::vector<DetectorDataContainer*> detectorContainerVector,
                    int32_t                             numberOfEventsPerBurst)
-{
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
-    for(auto board: *fDetectorContainer) { scanBeBoardDac(board->getId(), dacName, dacList, numberOfEvents, detectorContainerVector, numberOfEventsPerBurst); }
-}
+{    for(auto board: *fDetectorContainer) { scanBeBoardDac(board->getId(), dacName, dacList, numberOfEvents, detectorContainerVector, numberOfEventsPerBurst); }}
 
 // bit wise scan
 void Tool::bitWiseScan(const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst)
@@ -2035,18 +2032,14 @@ class ScanBase
 
 void Tool::doScanOnAllGroupsBeBoard(uint16_t boardId, uint32_t numberOfEvents, int32_t numberOfEventsPerBurst, ScanBase* groupScan)
 {
-    std::cout << "doScanOnAllGroupsBeBoard " << std::endl;
     groupScan->setBoardId(boardId);
     groupScan->setNumberOfEvents(numberOfEvents);
     groupScan->setDetectorContainer(fDetectorContainer);
     groupScan->setNumberOfEventsPerBurst(numberOfEventsPerBurst);
-    std::cout << "setNumberOfEventsPerBurst " << std::endl;
     groupScan->setGroupHandlerContainer(getChannelGroupHandlerContainer(), fSameChannelGroupForAllChannels);
-    std::cout << "setGroupHandlerContainer " << std::endl;
 
     if(!fAllChan)
     {
-        std::cout << " !fAllChan " << std::endl;
         uint16_t maxNumberOfGroups = getMaxNumberOfGroups();
         for(uint16_t groupNumber = 0; groupNumber < maxNumberOfGroups; ++groupNumber)
         {
@@ -2059,7 +2052,6 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardId, uint32_t numberOfEvents, i
                         for(auto cChip: *cHybrid)
                         {
                             auto channelGroup = getChannelGroup(groupNumber, boardId, cOpticalGroup->getId(), cHybrid->getId(), cChip->getId());
-                            std::cout << " channelGroup "<< channelGroup << std::endl;
                             if(!channelGroup) continue;
 
                             fReadoutChipInterface->maskChannelsAndSetInjectionSchema(cChip, channelGroup, fMaskChannelsFromOtherGroups, fTestPulse);
@@ -2073,7 +2065,6 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardId, uint32_t numberOfEvents, i
 
         if(fMaskChannelsFromOtherGroups) // Re-enable all the channels and evaluate
         {
-            std::cout << " fMaskChannelsFromOtherGroups" << std::endl;
             for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
             {
                 for(auto cHybrid: *cOpticalGroup)
@@ -2085,11 +2076,8 @@ void Tool::doScanOnAllGroupsBeBoard(uint16_t boardId, uint32_t numberOfEvents, i
     }
     else
     {
-        std::cout << " group Scan -1 " << std::endl;
         groupScan->setGroup(-1);
-        std::cout << " group Scan set -1 " << std::endl;
         (*groupScan)();
-        std::cout << "done group Scan" << std::endl;
     }
 }
 
