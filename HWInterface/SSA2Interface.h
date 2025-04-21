@@ -89,8 +89,9 @@ class SSA2Interface : public ReadoutChipInterface
                                                                                   {"Bias_D5PREAMP", std::make_pair(0x0F, 0.082)},
                                                                                   {"Bias_D5TDR", std::make_pair(0x0F, 0.115)},
                                                                                   {"Bias_D5ALLV", std::make_pair(0x0F, 0.082)},
-                                                                                  {"Bias_D5ALLI", std::make_pair(0x0F, 0.082)},
-                                                                                  {"Bias_D5DAC8", std::make_pair(0x0F, 0.086)}};
+                                                                                  {"Bias_D5ALLI", std::make_pair(0x0F, 0.082)}//,
+                                                                                  //{"Bias_D5DAC8", std::make_pair(0x0F, 0.086)}
+                                                                                };
 
     // std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0}, // FIXMEEEE this map is wrong!! the one in ReadADC is correct                                                  // FIXME
     //                                            {"PreampBias", 1},
