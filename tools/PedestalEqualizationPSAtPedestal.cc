@@ -267,14 +267,16 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
 
 
 #ifdef __USE_ROOT__
-    fDQMHistogramPedestalEqualizationPSAtPedestal.fillSCurvePlots(detectorContainerVector, dacList);
+    fDQMHistogramPedestalEqualizationPSAtPedestal.fillSCurvePlotsVector(detectorContainerVector, dacList);
 #else
-    // if(fDQMStreamerEnabled)
-    // {
-    //         ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancy");
-    //         theContainerSerialization.streamByHybridContainer(fDQMStreamer, detectorContainerVector, dacList);
-    // }
-    
+    if(fDQMStreamerEnabled)
+    {
+        for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
+        {
+            ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancy");
+            theContainerSerialization.streamByChipContainer(fDQMStreamer, *detectorContainerVector.at(dacIt), dacIt);        
+        }
+    }    
 #endif
 
 }
@@ -339,11 +341,11 @@ void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualizationPSAtPedestal.fillMaxPlots(fTheMaxOccupancyDACContainers);
 #else
-    // if(fDQMStreamerEnabled)
-    // {
-    //         ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancy");
-    //         theContainerSerialization.streamByHybridContainer(fDQMStreamer, detectorContainerVector, dacList);
-    // }
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalMax");
+        theContainerSerialization.streamByChipContainer(fDQMStreamer, fTheMaxOccupancyDACContainers);
+    }
     
 #endif
 

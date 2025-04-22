@@ -84,27 +84,90 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
     // IF YOU DO NOT WANT TO GO INTO THE SOC WITH YOUR CALIBRATION YOU DO NOT NEED THE FOLLOWING COMMENTED LINES
 
     // As example, I'm expecting to receive a data stream from an uint32_t contained from calibration "PedestalEqualizationPSAtPedestal"
-    // ContainerSerialization myStreamer("PedestalEqualizationPSAtPedestalOccupancy");
-    
-    // if(myStreamer.attachDeserializer(inputStream))
-    // {
-    // //     // It matched! Decoding data
-    //     std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
-    // //     // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
-    //     std::vector<uint16_t> dacList;
-    //     std::vector<DetectorDataContainer> theDetectorData = myStreamer.deserializeChipContainer<Occupancy, Occupancy>(fDetectorContainer, dacList);
-    // //     // Filling the histograms
-    //     fillSCurvePlots(theDetectorData, dacList); // FIXME!
-    //     return true;
-    // }
+    ContainerSerialization theOccupancyStreamer("PedestalEqualizationPSAtPedestalOccupancy");
+    ContainerSerialization theMaxStreamer("PedestalEqualizationPSAtPedestalMax");
+
+    if(theOccupancyStreamer.attachDeserializer(inputStream))
+    {
+        // It matched! Decoding data
+        std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
+        uint16_t dacIt;
+        // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
+        DetectorDataContainer  theDetectorData = theOccupancyStreamer.deserializeChipContainer<Occupancy, uint16_t>(fDetectorContainer, dacIt);
+        // Filling the histograms
+        fillSCurvePlots(theDetectorData, dacIt); 
+        return true;
+    }
+
+    if(theMaxStreamer.attachDeserializer(inputStream))
+    {
+        // It matched! Decoding data
+        std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
+        // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
+        DetectorDataContainer theDetectorData = theMaxStreamer.deserializeChipContainer<uint16_t, EmptyContainer>(fDetectorContainer);
+        // Filling the histograms
+        fillMaxPlots(theDetectorData); // FIXME!
+        return true;
+    }
     //the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
     // for this stream)
     return false;
     // SoC utilities only - END
 }
+void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlots(const DetectorDataContainer& detectorContainer, const uint16_t dacIt)
+{
+    for(auto cBoard: detectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    auto     cType = theReadoutChip->getFrontEndType();
 
+                    TH2F* cChipSCurve = nullptr;
+                    if(cType == FrontEndType::SSA2)
+                    {
+                        cChipSCurve = fDetectorChipStripSCurveHistograms.getObject(cBoard->getId())
+                                      ->getObject(cOpticalGroup->getId())
+                                      ->getObject(cHybrid->getId())
+                                      ->getObject(cChip->getId())
+                                      ->getSummary<HistContainer<TH2F>>()
+                                      .fTheHistogram;
+                    }
+                    else if(cType == FrontEndType::MPA2)
+                    {
+                        cChipSCurve = fDetectorChipPixelSCurveHistograms.getObject(cBoard->getId())
+                                          ->getObject(cOpticalGroup->getId())
+                                          ->getObject(cHybrid->getId())
+                                          ->getObject(cChip->getId())
+                                          ->getSummary<HistContainer<TH2F>>()
+                                          .fTheHistogram;
+                    }
 
-void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlots(const std::vector<DetectorDataContainer>& detectorContainerVector, const std::vector<uint16_t>&         dacList)
+                    auto theChipContainer = detectorContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    if(theChipContainer->hasChannelContainer() == false) continue;
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        {
+                
+                            float tmpOccupancy      = theChipContainer->getChannel<Occupancy>(row, col).fOccupancy;
+                            float tmpOccupancyError = theChipContainer->getChannel<Occupancy>(row, col).fOccupancyError;
+                            auto bin = linearizeRowAndCols(row, col, cChip->getNumberOfCols());
+                            cChipSCurve->SetBinContent(bin + 1, dacIt + 1, tmpOccupancy);
+                            cChipSCurve->SetBinError(bin + 1, dacIt + 1, tmpOccupancyError);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlotsVector(const std::vector<DetectorDataContainer>& detectorContainerVector, const std::vector<uint16_t>&         dacList)
 {
     if(dacList.size() != detectorContainerVector.size())
     {
@@ -114,55 +177,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlots(const std::ve
 
     for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
     {
-        for(auto cBoard: detectorContainerVector.at(dacIt))
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    for(auto cChip: *cHybrid)
-                    {
-                        ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                        auto     cType = theReadoutChip->getFrontEndType();
-
-                        TH2F* cChipSCurve = nullptr;
-                        if(cType == FrontEndType::SSA2)
-                        {
-                            cChipSCurve = fDetectorChipStripSCurveHistograms.getObject(cBoard->getId())
-                                          ->getObject(cOpticalGroup->getId())
-                                          ->getObject(cHybrid->getId())
-                                          ->getObject(cChip->getId())
-                                          ->getSummary<HistContainer<TH2F>>()
-                                          .fTheHistogram;
-                        }
-                        else if(cType == FrontEndType::MPA2)
-                        {
-                            cChipSCurve = fDetectorChipPixelSCurveHistograms.getObject(cBoard->getId())
-                                              ->getObject(cOpticalGroup->getId())
-                                              ->getObject(cHybrid->getId())
-                                              ->getObject(cChip->getId())
-                                              ->getSummary<HistContainer<TH2F>>()
-                                              .fTheHistogram;
-                        }
-
-                        auto theChipContainer = detectorContainerVector.at(dacIt).getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                        if(theChipContainer->hasChannelContainer() == false) continue;
-                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
-                        {
-                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
-                            {
-                    
-                                float tmpOccupancy      = theChipContainer->getChannel<Occupancy>(row, col).fOccupancy;
-                                float tmpOccupancyError = theChipContainer->getChannel<Occupancy>(row, col).fOccupancyError;
-                                auto bin = linearizeRowAndCols(row, col, cChip->getNumberOfCols());
-                                cChipSCurve->SetBinContent(bin + 1, dacIt + 1, tmpOccupancy);
-                                cChipSCurve->SetBinError(bin + 1, dacIt + 1, tmpOccupancyError);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        fillSCurvePlots(detectorContainerVector.at(dacIt), dacIt);
     }
 }
 
