@@ -39,7 +39,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
     theTH2FChipStripSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
     theTH2FChipStripSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipStripSCurveHistograms, theTH2FChipStripSCurve);
-    HistContainer<TH1F> theTH1FChipStripMax("Max", "Max", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
+    HistContainer<TH1F> theTH1FChipStripMax("MinimumThresholdForMaximumOccupancy", "Minimum threshold for maximum occupancy", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
     theTH1FChipStripMax.fTheHistogram->GetXaxis()->SetTitle("Channel");
     theTH1FChipStripMax.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripMaxHistograms, theTH1FChipStripMax);
