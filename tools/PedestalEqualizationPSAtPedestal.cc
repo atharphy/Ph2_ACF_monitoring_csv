@@ -287,7 +287,6 @@ void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer
 
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, fTheMaxOccupancyDACContainers);
     ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, fTheSmallestThresholdAtMaxOccupancyContainer);
-    LOG(INFO) << BOLDBLUE << " containers " << RESET;
 
     for(auto cBoard: dacOccupancyContainers)
     {
@@ -297,7 +296,6 @@ void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer
             {
                 for(auto cChip: *cHybrid)
                 {
-
                     auto theChipContainer = fTheMaxOccupancyDACContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                     uint16_t smallestThresholdAtMaxOccupancy = 255;
                     uint16_t rowAtsmallestThresholdAtMaxOccupancy = -1, colAtsmallestThresholdAtMaxOccupancy = -1;
@@ -337,7 +335,6 @@ void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer
         }
     }
 
-
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualizationPSAtPedestal.fillMaxPlots(fTheMaxOccupancyDACContainers);
 #else
@@ -353,7 +350,11 @@ void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer
 
 void PedestalEqualizationPSAtPedestal::TuneTrimBits()
 {
-    int iteration = 31;
+    DetectorDataContainer theFirstSmallestThresholdAtMaxOccupancyContainer;
+    ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, theFirstSmallestThresholdAtMaxOccupancyContainer);
+
+    int totalIterations = 31;
+    int iteration = totalIterations;
     while (iteration > 0)
     {
         for(auto cBoard: fTheSmallestThresholdAtMaxOccupancyContainer)
@@ -365,38 +366,32 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
                     for(auto cChip: *cHybrid)
                     {
                         auto theChipContainer = fTheMaxOccupancyDACContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                        uint16_t smallestThresholdAtMaxOccupancy = cChip->getSummary<uint16_t>();
-                        std::cout << " the smallestThresholdAtMaxOccupancy " << smallestThresholdAtMaxOccupancy << std::endl;
+                        if(iteration == totalIterations ) theFirstSmallestThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = cChip->getSummary<uint16_t>();
+                        uint16_t smallestThresholdAtMaxOccupancy = theFirstSmallestThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                        LOG(INFO) << BOLDGREEN << "For iteration " << iteration << " at chip " <<cChip->getId() << " the smallestThresholdAtMaxOccupancy " << smallestThresholdAtMaxOccupancy << RESET;
                         for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
                             for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                             { 
                                 if (theChipContainer->getChannel<uint16_t>(row, col) >  smallestThresholdAtMaxOccupancy)
                                 {
-                                    std::cout<< " while loop " << std::endl;
                                     ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                                    std::cout<< " theReadoutChip " << std::endl;
                                     auto     cType = theReadoutChip->getFrontEndType();
-                                    std::cout<< " type " << std::endl;
                                     if(cType == FrontEndType::MPA2)
                                     {
-                                        std::cout<< " MPA " << std::endl;
                                         std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
                                         auto currentTrim = fReadoutChipInterface->ReadChipReg(theReadoutChip,cRegName);
                                         auto newTrim = currentTrim -1;
-                                        std::cout << " trim " << cRegName << " 0x"<< std::hex << currentTrim << " -1 0x"<<  newTrim << std::dec << std::endl;
+                                        if(col == 5 && row == 2)std::cout << "MPA trim " << cRegName << " 0x"<< std::hex << currentTrim << " -1 0x"<<  newTrim << std::dec << std::endl;
                                     
                                         fReadoutChipInterface->WriteChipReg(theReadoutChip, cRegName, newTrim );
                                     }
                                     else //SSA
                                     {
-                                        std::cout<< " SSA " << std::endl;
                                         std::string cRegName = "THTRIMMING_S" + std::to_string(col+1);
-                                        std::cout << " trim " << cRegName << std::endl;
                                         auto currentTrim = fReadoutChipInterface->ReadChipReg(theReadoutChip,cRegName);
-                                        std::cout << " read done " <<std::endl;
                                         auto newTrim = currentTrim -1;
-                                        std::cout << " trim " << cRegName << " 0x"<< std::hex << currentTrim << " -1 0x"<<  newTrim << std::dec << std::endl;
+                                        if(col +1 == 5) std::cout << "SSA trim " << cRegName << " 0x"<< std::hex << currentTrim << " -1 0x"<<  newTrim << std::dec << std::endl;
                                     
                                         fReadoutChipInterface->WriteChipReg(theReadoutChip, cRegName, newTrim );
                                     }
