@@ -38,6 +38,101 @@ using RawHybridData = std::pair<std::pair<uint16_t, uint16_t>, std::vector<std::
 
 using EventList    = std::vector<HybridData>;
 using RawEventList = std::vector<RawHybridData>;
+
+
+/*!
+ * \class Cluster2S
+ * \brief Cluster2S object for the Event
+ */
+struct Cluster2S
+{
+    Cluster2S(){};
+    void parseData(uint32_t data);
+    uint8_t  fSensor;
+    uint16_t fFirstStrip;
+    uint8_t  fClusterWidth;
+    float    getBaricentre();
+};
+
+struct PixelClusterPS
+{
+    PixelClusterPS(){};
+    void parseData(uint32_t data);
+    uint8_t fAddress {0xFF};
+    uint8_t fWidth {0xFF};
+    uint8_t fZpos {0xFF};
+    float   getBaricentre(); // Barycenter?
+};
+
+struct StripClusterPS
+{
+    StripClusterPS(){};
+    void parseData(uint32_t data);
+    uint8_t fAddress {0xFF};
+    uint8_t fMip {0xFF};
+    uint8_t fWidth {0xFF};
+    float   getBaricentre();
+};
+
+struct EventStub
+{
+    EventStub(uint8_t pPosition, uint8_t pBend, uint8_t pRow = 0) : fPosition(pPosition), fBend(pBend), fRow(pRow)
+    {
+        // with Strips starting at 0
+        fCenter = static_cast<float>((pPosition / 2.)); // for PS
+        // fCenter = static_cast<float>((pPosition / 2.) - 1); // is this correct for 2S?
+    }
+    EventStub() : fPosition(255u), fBend(255u), fRow(255u), fCenter(-999.) {};
+    uint8_t getPosition() { return fPosition; }
+    uint8_t getBend() { return fBend; }
+    uint8_t getRow() { return fRow; }
+    float   getCenter() { return fCenter; }
+
+    uint8_t fPosition {0xFF};
+    uint8_t fBend {0xFF};
+    uint8_t fRow {0xFF};
+    float   fCenter;
+};
+/*!
+ * \class Event
+ * \brief Event container to manipulate event flux from the Cbc
+ */
+
+struct HybridL1EventInfo
+{
+    HybridL1EventInfo(){}
+    void parseData(std::vector<uint32_t>::const_iterator dataStart);
+    uint8_t fErrorCode{0};
+    uint8_t fHybridId{0};
+    uint8_t fChipId{0};
+    uint8_t fChipType{0};
+    uint16_t fFrameDelay{0};
+    uint16_t fStatusBits{0};
+    uint16_t fL1counter{0};
+    uint8_t fNumberOfStripClusters{0};
+    uint8_t fNumberOfPixelClusters{0};
+};
+
+struct ChipL1EventInfo
+{
+    ChipL1EventInfo(){}
+    void parseData(std::vector<uint32_t>::const_iterator dataStart, size_t bitStart);
+    uint8_t fError{0};
+    uint16_t fPipelineAddress{0};
+    uint16_t fL1id{0};
+    std::vector<uint32_t> fRawData{0, 0, 0, 0};
+};
+
+struct HybridStubEventInfo
+{
+    HybridStubEventInfo(){}
+    void parseData(std::vector<uint32_t>::const_iterator dataStart);
+    uint16_t fStubDataDelay;
+    uint16_t fStatusBits{0};
+    uint8_t  fNumberOfStubs{0};
+    uint16_t fBunchCrossingId{0};
+};
+
 /*!
  * \class CicEvent
  * \brief Event container to manipulate event flux from the Cbc2
@@ -73,6 +168,8 @@ class D19cCic2Event : public Event
      * \return Aknowledgement of the Event setting (1/0)
      */
     void Set(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list) override;
+
+    void SetOld(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list);
 
     /*!
      * \brief Get the Cbc Event counter
@@ -156,7 +253,7 @@ class D19cCic2Event : public Event
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      */
-    std::vector<EventStub> StubVector(uint8_t pHybridId, uint8_t pCbcId) const override;
+    std::vector<EventStub> StubVector(uint8_t pHybridId, uint8_t pCbcId) const;
     /*!
      * \brief Function to count the Hits in this event
      * \param pHybridId : Hybrid Id
@@ -171,11 +268,11 @@ class D19cCic2Event : public Event
      * \return vector with hit channels (row, col)
      */
     std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId) const override;
-    std::vector<EventCluster>                  getClusters(uint8_t pHybridId, uint8_t pCbcId) const override;
+    std::vector<Cluster2S>                  getClusters(uint8_t pHybridId, uint8_t pCbcId) const;
     uint8_t                                    GetNStripClusters(uint8_t pHybridId) const;
     uint8_t                                    GetNPixelClusters(uint8_t pHybridId) const;
-    std::vector<SCluster>                      GetStripClusters(uint8_t pHybridId, uint8_t pMPAId) const;
-    std::vector<PCluster>                      GetPixelClusters(uint8_t pHybridId, uint8_t pMPAId) const;
+    std::vector<StripClusterPS>                      GetStripClusters(uint8_t pHybridId, uint8_t pMPAId) const;
+    std::vector<PixelClusterPS>                      GetPixelClusters(uint8_t pHybridId, uint8_t pMPAId) const;
 
     void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) override;
 
@@ -214,6 +311,8 @@ class D19cCic2Event : public Event
     std::vector<std::vector<uint8_t>> fChipIds;
     std::vector<uint8_t>              fNStripClusters;
     std::vector<uint8_t>              fNPxlClusters;
+    BoardDataContainer                fDecodedL1Event;
+    BoardDataContainer                fDecodedStubEvent;
 
     uint8_t      fTLUenabled   = 0;
     bool         fIs2S         = true;
@@ -239,6 +338,10 @@ class D19cCic2Event : public Event
     // L1 Id from chip
     void       printL1Header(std::ostream& os, uint8_t pHybridId, uint8_t pCbcId) const;
     SLinkEvent GetSLinkEvent(Ph2_HwDescription::BeBoard* pBoard) const override;
+
+    uint16_t decodeHybridL1Event(HybridDataContainer* theHybridL1EventContainer, std::vector<uint32_t>::const_iterator dataStartIterator);
+    uint16_t decodeHybridStubEvent(HybridDataContainer* theHybridStubEventContainer, std::vector<uint32_t>::const_iterator dataStartIterator);
+
 };
 } // namespace Ph2_HwInterface
 #endif

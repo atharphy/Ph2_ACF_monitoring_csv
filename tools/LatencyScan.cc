@@ -314,8 +314,8 @@ void LatencyScan::ScanLatency()
                                 }
                                 else
                                 {
-                                    std::vector<PCluster> cPclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                                    std::vector<SCluster> cSclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetStripClusters(cHybrid->getId(), cChip->getId());
+                                    std::vector<PixelClusterPS> cPclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                                    std::vector<StripClusterPS> cSclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetStripClusters(cHybrid->getId(), cChip->getId());
 
                                     cTotalHitsS0 += cPclstrs.size();
                                     cTotalHitsS1 += cSclstrs.size();
@@ -550,7 +550,7 @@ void LatencyScan::StubLatencyScan()
                                     for(auto cHit: cHits) { LOG(DEBUG) << BOLDGREEN << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() << " hit in channel " << +cHit.second << RESET; }
                                     auto                 cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                                     std::vector<uint8_t> cBendLUT              = cReadoutChipInterface->readLUT(cChip);
-                                    auto                 cStubs                = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
+                                    auto                 cStubs                = static_cast<D19cCic2Event*>((*cEventIter))->StubVector(cHybrid->getId(), cChip->getId());
                                     cAnyStubs += cStubs.size();
                                     cAnyHits += cHits.size();
                                     if(cHits.size() == 0) continue;
@@ -599,12 +599,12 @@ void LatencyScan::StubLatencyScan()
                                 }
                                 else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
-                                    auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
+                                    auto cStubs = static_cast<D19cCic2Event*>((*cEventIter))->StubVector(cHybrid->getId(), cChip->getId());
                                     cNStubs     = cStubs.size();
                                 }
                                 else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                                 {
-                                    auto cStubs = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
+                                    auto cStubs = static_cast<D19cCic2Event*>((*cEventIter))->StubVector(cHybrid->getId(), cChip->getId());
                                     auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
                                     cNStubs     = cStubs.size();
                                     LOG(DEBUG) << BOLDGREEN << "cNStubs" << cNStubs << "," << cHits.size() << " hits in this event... " << RESET;
@@ -689,7 +689,7 @@ void LatencyScan::ScanLatency2D()
                                 for(auto cCbc: *cHybrid)
                                 {
                                     int                    cHitCounter  = cEvent->GetNHits(cHybrid->getId(), cCbc->getId());
-                                    std::vector<EventStub> cStubs       = cEvent->StubVector(cHybrid->getId(), cCbc->getId());
+                                    std::vector<EventStub> cStubs       = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cCbc->getId());
                                     int                    cStubCounter = cStubs.size();
 
                                     if(cHitCounter == 0) {}
@@ -914,7 +914,7 @@ int LatencyScan::countStubs(Hybrid* pFe, const Event* pEvent, std::string pHistN
 
     for(auto cCbc: *pFe)
     {
-        if(pEvent->StubBit(pFe->getId(), cCbc->getId())) cStubCounter += pEvent->StubVector(pFe->getId(), cCbc->getId()).size();
+        if(pEvent->StubBit(pFe->getId(), cCbc->getId())) cStubCounter += static_cast<const D19cCic2Event*>(pEvent)->StubVector(pFe->getId(), cCbc->getId()).size();
     }
     int   cBin        = cTmpHist->FindBin(pParameter);
     float cBinContent = cTmpHist->GetBinContent(cBin);

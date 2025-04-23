@@ -101,8 +101,8 @@ void PhaseScan::ScanPhase()
                             {
                                 for(auto cChip: *cHybrid)
                                 {
-                                    std::vector<PCluster> cPclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                                    std::vector<SCluster> cSclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetStripClusters(cHybrid->getId(), cChip->getId());
+                                    std::vector<PixelClusterPS> cPclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                                    std::vector<StripClusterPS> cSclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetStripClusters(cHybrid->getId(), cChip->getId());
 
                                     // cTotalHitsS0 += cPclstrs.size();
                                     // cTotalHitsS1 += cSclstrs.size();

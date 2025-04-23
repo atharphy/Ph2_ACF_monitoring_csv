@@ -144,7 +144,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                                 // cHistName = Form("Fe%dCbc%d_ClusterOccupancy" , +cHybrid->getId() , +cCbc->getId() );
                                 // TH2F* cClustersHisto = ( TH2F* ) ( gROOT->FindObject ( cHistName ) );
 
-                                const std::vector<EventCluster>& cClusters = cEvent->getClusters(cHybrid->getId(), cCbc->getId());
+                                const std::vector<Cluster2S>& cClusters = static_cast<D19cCic2Event*>(cEvent)->getClusters(cHybrid->getId(), cCbc->getId());
                                 cClustersHisto->Fill(cVcth, cClusters.size());
                                 for(auto& cCluster: cClusters)
                                 {
@@ -293,7 +293,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //                             cDataString += cEvent->DataHexString (cCbc->getHybridId(), cCbc->getId() );
 //                             cDataString += "-";
 
-//                             std::vector<Cluster> cClusters = cEvent->getClusters (cCbc->getHybridId(), cCbc->getId()
+//                             std::vector<Cluster> cClusters = static_cast<D19cCic2Event*>(cEvent)->getClusters (cCbc->getHybridId(), cCbc->getId()
 //                             ); cEventClusters += cClusters.size();
 
 //                             cClusterDataString += "-";

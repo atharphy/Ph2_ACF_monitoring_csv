@@ -412,7 +412,7 @@ void BeamTestCheck::UpdateClusterContainers(BeBoard* pBoard, const std::vector<E
                             cClusterOccupancyCS1->getSummary<GenericDataArray<float, VECSIZE>>().at(pIndx) = 0;
                         }
 
-                        auto   cClusters    = (*cEventIter)->getClusters(cHybrid->getId(), cChip->getId());
+                        auto   cClusters    = static_cast<D19cCic2Event*>((*cEventIter))->getClusters(cHybrid->getId(), cChip->getId());
                         size_t cNClustersS0 = 0;
                         size_t cNClustersS1 = 0;
                         for(auto cCluster: cClusters)
@@ -1133,7 +1133,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                     {
                         if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
-                        auto  cStubs   = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
+                        auto  cStubs   = static_cast<D19cCic2Event*>((*cEventIter))->StubVector(cHybrid->getId(), cChip->getId());
                         auto& cLyrSwap = cLyrSwp.getObject(cBrdIndx)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint8_t>();
                         // if its a CBC .. look for events with exactly 2 clusters
                         if(cChip->getFrontEndType() == FrontEndType::MPA2)

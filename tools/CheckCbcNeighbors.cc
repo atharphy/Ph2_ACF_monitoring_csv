@@ -123,7 +123,7 @@ bool CheckCbcNeighbors::CheckStubs(uint8_t hybridId, uint8_t chipId)
         LOG(DEBUG) << "Got " << cEvents.size() << " events.";
         for(auto& cEvent: cEvents)
         {
-            auto cStubs = cEvent->StubVector(hybridId, chipId);
+            auto cStubs = static_cast<D19cCic2Event*>(cEvent)->StubVector(hybridId, chipId);
             if(cStubs.size() > 0) eventsWStubs++;
 
             for(auto cReadoutStub: cStubs)

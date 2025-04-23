@@ -29,74 +29,6 @@ namespace Ph2_HwInterface
 {
 using EventDataMap = std::map<uint16_t, std::vector<uint32_t>>;
 
-/*!
- * \class EventCluster
- * \brief EventCluster object for the Event
- */
-class EventCluster
-{
-  public:
-    uint8_t  fSensor;
-    uint16_t fFirstStrip;
-    uint8_t  fClusterWidth;
-    float    getBaricentre();
-};
-
-class PSCluster
-{
-  public:
-    uint32_t fPixelId;
-    uint8_t  fWidth;
-    uint8_t  fMip;
-    uint8_t  fHybridId;
-};
-
-class PCluster
-{
-  public:
-    PCluster() : fAddress(255u), fWidth(255u), fZpos(255u) {};
-    uint8_t fAddress;
-    uint8_t fWidth;
-    uint8_t fZpos;
-    float   getBaricentre(); // Barycenter?
-};
-
-class SCluster
-{
-  public:
-    SCluster() : fAddress(255u), fMip(255u), fWidth(255u) {};
-    uint8_t fAddress;
-    uint8_t fMip;
-    uint8_t fWidth;
-    float   getBaricentre();
-};
-
-class EventStub
-{
-  public:
-    EventStub(uint8_t pPosition, uint8_t pBend, uint8_t pRow = 0) : fPosition(pPosition), fBend(pBend), fRow(pRow)
-    {
-        // with Strips starting at 0
-        fCenter = static_cast<float>((pPosition / 2.)); // for PS
-        // fCenter = static_cast<float>((pPosition / 2.) - 1); // is this correct for 2S?
-    }
-    EventStub() : fPosition(255u), fBend(255u), fRow(255u), fCenter(-999.) {};
-    uint8_t getPosition() { return fPosition; }
-    uint8_t getBend() { return fBend; }
-    uint8_t getRow() { return fRow; }
-    float   getCenter() { return fCenter; }
-
-  public:
-    uint8_t fPosition;
-    uint8_t fBend;
-    uint8_t fRow;
-    float   fCenter;
-};
-/*!
- * \class Event
- * \brief Event container to manipulate event flux from the Cbc
- */
-
 class Event
 {
     /*
@@ -350,12 +282,6 @@ class Event
      * \return stub bit?
      */
     virtual bool StubBit(uint8_t pHybridId, uint8_t pCbcId) const { return true; }
-    /*!
-     * \brief Get a vector of Stubs - will be empty for Cbc2
-     * \param pHybridId : Hybrid Id
-     * \param pCbcId : Cbc Id
-     */
-    virtual std::vector<EventStub> StubVector(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
 
     /*!
      * \brief Function to count the Hits in this event
@@ -394,7 +320,6 @@ class Event
         return out;
     }
 
-    virtual std::vector<EventCluster> getClusters(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
     virtual void                      fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup);
     virtual void                      fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) = 0;
 

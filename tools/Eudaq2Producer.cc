@@ -615,7 +615,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                     // skip if not MPA. MPA holds cluster information for both pixel and strip
                     if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                     // Get pixel clusters
-                    std::vector<PCluster> cPClusters = static_cast<const D19cCic2Event*>(pPh2Event)->GetPixelClusters(cHybridId, cChipId);
+                    std::vector<PixelClusterPS> cPClusters = static_cast<const D19cCic2Event*>(pPh2Event)->GetPixelClusters(cHybridId, cChipId);
                     // Extract pixel hit information
                     // #FIXME not using GetHits for a more readable code
                     for(auto cCluster: cPClusters)
@@ -652,10 +652,10 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                                           LOG(INFO) << BOLDYELLOW << "  ----- " << RESET;
                             */
                         } // enf of hit loop
-                    } // end of PCluster loop
+                    } // end of PixelClusterPS loop
 
                     // Get strip clusters
-                    std::vector<SCluster> cSClusters = static_cast<const D19cCic2Event*>(pPh2Event)->GetStripClusters(cHybridId, cChipId);
+                    std::vector<StripClusterPS> cSClusters = static_cast<const D19cCic2Event*>(pPh2Event)->GetStripClusters(cHybridId, cChipId);
                     // Extract strip hit information
                     for(auto cCluster: cSClusters)
                     {
@@ -690,7 +690,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                             */
 
                         } // end of hit loop
-                    } // end of SCluster loop
+                    } // end of StripClusterPS loop
                 } // end of chip loop
             } // end of hybrid loop
             // Fill final pixel data container
@@ -862,11 +862,11 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 pEudaqSubEvent->SetTag(cTagName, (uint32_t)pPh2Event->Error(cHybridId, cChipId));
                 // Extract Stubs
                 uint32_t cStubId = 0;
-                if(pPh2Event->StubVector(cHybridId, cChipId).size() > 0)
+                if(static_cast<D19cCic2Event*>(pPh2Event)->StubVector(cHybridId, cChipId).size() > 0)
                 {
-                    LOG(INFO) << BOLDMAGENTA << "\tFound  " << +pPh2Event->StubVector(cHybridId, cChipId).size() << " stubs in Hybrid " << +cHybridId << ", Chip " << +cChipId << RESET;
+                    LOG(INFO) << BOLDMAGENTA << "\tFound  " << +static_cast<D19cCic2Event*>(pPh2Event)->StubVector(cHybridId, cChipId).size() << " stubs in Hybrid " << +cHybridId << ", Chip " << +cChipId << RESET;
                 }
-                for(auto cStub: pPh2Event->StubVector(cHybridId, cChipId))
+                for(auto cStub: static_cast<D19cCic2Event*>(pPh2Event)->StubVector(cHybridId, cChipId))
                 {
                     // LOG(INFO) << BLUE << "\t\tPosition " << +cStub.getPosition() << " , Row " << +cStub.getRow() << ", Bend " << +cStub.getBend() << RESET;
                     std::sprintf(cTagName, "stub_pos_%02d_%02d_%02d", cHybridId, cChipId, cStubId);
