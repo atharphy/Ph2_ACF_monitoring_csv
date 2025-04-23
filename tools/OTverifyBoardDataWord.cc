@@ -355,7 +355,7 @@ void OTverifyBoardDataWord::runL1IntegrityTest(BeBoard*            theBoard,
                 float numberOrErrorBits = numberOfMatchedBits - thePatternMatcher.countMatchingBits(orderedLineOutputVector);
                 if(numberOrErrorBits > 0)
                 {
-                    if(std::all_of(orderedLineOutputVector.begin(), orderedLineOutputVector.end(), [](int i) { return i == 0; })) 
+                    if(std::all_of(orderedLineOutputVector.begin(), orderedLineOutputVector.end(), [](int i) { return i == 0; }))
                     {
                         ++numberOfIgnoredPatterns;
                         continue;
