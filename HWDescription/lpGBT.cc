@@ -186,4 +186,26 @@ void lpGBT::setADCCalibrationData(const std::map<std::string, float>& theInputMa
     for(const auto& theInput: theInputMap) fADCcalibrationData[theInput.first] = theInput.second;
 }
 
+void lpGBT::setNTCResistance(float cNTCResistance)
+{
+    if(cNTCResistance < fMinNTCResistance || cNTCResistance > fMaxNTCResistance)
+    {
+        LOG(WARNING) << WARNING_FORMAT << " New measurement of Sensor NTC resistance (" << cNTCResistance << " Ohm) is outside acceptable range (" << fMinNTCResistance << " Ohm <-> "
+                     << fMaxNTCResistance << " Ohm). Probably a wrong reading of the ADC, not updating current value" << RESET;
+        return;
+    }
+    fNTCResistance = cNTCResistance;
+}
+
+void lpGBT::setVtrxNTCResistance(float cVtrxNTCResistance)
+{
+    if(cVtrxNTCResistance < fMinVtrxNTCResistance || cVtrxNTCResistance > fMaxVtrxNTCResistance)
+    {
+        LOG(WARNING) << WARNING_FORMAT << " New measurement of VTRx NTC resistance (" << cVtrxNTCResistance << " Ohm) is outside acceptable range (" << fMinVtrxNTCResistance << " Ohm <-> "
+                     << fMaxVtrxNTCResistance << " Ohm). Probably a wrong reading of the ADC, not updating current value" << RESET;
+        return;
+    }
+    fVtrxNTCResistance = cVtrxNTCResistance;
+}
+
 } // namespace Ph2_HwDescription

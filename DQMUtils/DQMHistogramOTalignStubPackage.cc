@@ -77,7 +77,7 @@ bool DQMHistogramOTalignStubPackage::fill(std::string& inputStream)
 
     if(theBestStubPackageDelayContainerSerialization.attachDeserializer(inputStream))
     {
-        std::cout << "Matched OTalignStubPackage BestStubPackageDelay!!!!\n";
+        // std::cout << "Matched OTalignStubPackage BestStubPackageDelay!!!!\n";
         DetectorDataContainer theDetectorData =
             theBestStubPackageDelayContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, std::vector<bool>, EmptyContainer>(fDetectorContainer);
         fillBestStubPackageDelay(theDetectorData);

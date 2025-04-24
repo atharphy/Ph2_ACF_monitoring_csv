@@ -19,7 +19,7 @@ class D19cTriggerInterface : public TriggerInterface
     bool     SetNTriggersToAccept(uint32_t pNTriggersToAccept) override;
     void     ResetTriggerFSM() override;
     void     ReconfigureTriggerFSM(std::vector<std::pair<std::string, uint32_t>> pTriggerConfig) override;
-    bool     Start() override;
+    bool     Start(bool checkIfStarted = false) override;
     void     Pause() override;
     void     Resume() override;
     bool     Stop() override;

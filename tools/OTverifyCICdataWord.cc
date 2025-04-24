@@ -230,8 +230,15 @@ PatternMatcher OTverifyCICdataWord::injectL1PS(ReadoutChip* theMPA, uint8_t chip
     for(uint16_t clusterNumber = 0; clusterNumber < 31; ++clusterNumber) { theClusterList.push_back(Cluster(clusterNumber / 2, clusterNumber * 3, 2)); }
 
     static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, theClusterList);
-    ReadoutChip* theSSA = fDetectorContainer->getObject(theMPA->getBeBoardId())->getObject(theMPA->getOpticalGroupId())->getObject(theMPA->getHybridId())->getObject(theMPA->getId() - 8);
-    fReadoutChipInterface->MaskAllChannels(theSSA, true);
+    try
+    {
+        ReadoutChip* theSSA = fDetectorContainer->getObject(theMPA->getBeBoardId())->getObject(theMPA->getOpticalGroupId())->getObject(theMPA->getHybridId())->getObject(theMPA->getId() - 8);
+        fReadoutChipInterface->MaskAllChannels(theSSA, true);
+    }
+    catch(const std::exception& e)
+    {
+        // do nothing, matching SSA is disabled
+    }
 
     uint8_t numberOfPixelClusters = theClusterList.size();
     uint8_t numberOfStripClusters = 0;
@@ -279,7 +286,11 @@ void OTverifyCICdataWord::runL1Interations(Ph2_HwInterface::D19cFWInterface* the
         float errorBitNumber = testedBitNumber - thePatternMatcher.countMatchingBits(orderedLineOutputVector);
         if(errorBitNumber > 0)
         {
-            if(std::all_of(orderedLineOutputVector.begin(), orderedLineOutputVector.end(), [](int i) { return i == 0; })) continue;
+            if(std::all_of(orderedLineOutputVector.begin(), orderedLineOutputVector.end(), [](int i) { return i == 0; }))
+            {
+                ++numberOfIgnoredPatterns;
+                continue;
+            }
             size_t numberOfEmpyWords = 0;
             for(auto theWord: orderedLineOutputVector)
             {

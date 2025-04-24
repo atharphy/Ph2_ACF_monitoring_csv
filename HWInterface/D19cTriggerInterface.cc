@@ -37,7 +37,7 @@ void D19cTriggerInterface::PrintStatus()
     else
         LOG(WARNING) << " Trigger Source: " << BOLDRED << "Unknown" << RESET;
 
-    int state_id = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
+    int state_id = GetTriggerState();
 
     if(state_id == 0)
         LOG(INFO) << "Trigger State: " << BOLDGREEN << "Idle" << RESET;
@@ -131,7 +131,7 @@ void D19cTriggerInterface::Resume()
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 }
 
-bool D19cTriggerInterface::Start()
+bool D19cTriggerInterface::Start(bool checkIfStarted)
 {
     // LOG(DEBUG) << BOLDYELLOW << "................................Starting triggers  ... " << RESET;
     // auto cTriggerState = GetTriggerState();
@@ -145,7 +145,23 @@ bool D19cTriggerInterface::Start()
     fTheRegManager->WriteReg("fc7_daq_ctrl.stub_counter_block.general.shutter_open", 0x0);
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
 
-    fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+    size_t iterationNumber            = 0;
+    size_t maximumnNumberOfIterations = 10;
+    while(iterationNumber < maximumnNumberOfIterations)
+    {
+        fTheRegManager->WriteReg("fc7_daq_ctrl.fast_command_block.control.start_trigger", 0x1);
+        std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
+        if(!checkIfStarted) break;
+        if(GetTriggerState() == 1) break;
+        ++iterationNumber;
+    }
+
+    if(iterationNumber >= maximumnNumberOfIterations)
+    {
+        LOG(ERROR) << ERROR_FORMAT << "Failed to start triggers" << RESET;
+        return false;
+    }
+
     std::this_thread::sleep_for(std::chrono::microseconds(fWait_us));
     return true;
 }
@@ -220,7 +236,7 @@ bool D19cTriggerInterface::WaitForNTriggers(uint32_t pNTriggers)
     cFailed = !(cNtriggers >= pNTriggers);
     if(cFailed)
     {
-        auto cState = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state");
+        auto cState = GetTriggerState();
         LOG(INFO) << BOLDRED << "Trigger FSM failed to receive all triggers .. expected " << +pNTriggers << " and received " << +cNtriggers << " FSM state is " << +cState << " .. re-trying" << RESET;
     }
     return !cFailed;
@@ -253,7 +269,7 @@ bool D19cTriggerInterface::RunTriggerFSM()
     uint32_t    cRegValue          = (cNTriggersToAccept == 0) ? 0 : cNTriggersToAccept;
     float       cMaxTime           = (cNTriggersToAccept == 0) ? 30. : 0.;
     fTheRegManager->pollRegister(cRegName, cRegValue, cMaxTime);
-    bool cFailed    = (fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.general.fsm_state"));
+    bool cFailed    = GetTriggerState();
     auto cNtriggers = fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
     if(cFailed) LOG(WARNING) << BOLDRED << "D19cTriggerInterface::RunTriggerFSM " << cNtriggers << " triggers received. FAILED set to " << cFailed << RESET;
     this->Stop();

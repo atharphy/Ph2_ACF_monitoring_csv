@@ -165,7 +165,6 @@ void Tool::Start(const StartInfo& theStartInfo)
     {
         std::string resultDirectory = getResultDirectoryName(theStartInfo);
         CreateResultDirectory(resultDirectory, false, false);
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] fDirectoryName = " << fDirectoryName << std::endl;
     }
 
     InitResultFile("Results");
@@ -220,7 +219,7 @@ void Tool::readBitslipRegs()
 
     for(const auto& registerNameAndValue: alignedBitslipRegisters)
     {
-        std::cout << "Reading  " << registerNameAndValue.first << " = 0x" << std::hex << registerNameAndValue.second << std::dec << std::endl;
+        LOG(INFO) << BOLDYELLOW << "Reading  " << registerNameAndValue.first << " = 0x" << std::hex << registerNameAndValue.second << std::dec << RESET;
     }
 }
 
@@ -835,12 +834,8 @@ void Tool::HttpServerProcess()
 }
 #endif
 
-void Tool::dumpConfigFiles()
+void Tool::readAllReadOnlyRegisters()
 {
-    if(fDetectorContainer->getFirstObject()->getBoardType() == BoardType::RD53) return; // IT does not dump the files
-
-    LOG(INFO) << BOLDBLUE << "Reading all the read-only registers to update output files" << RESET;
-
     for(auto theBoard: *fDetectorContainer)
     {
         LOG(INFO) << BOLDYELLOW << "Reading all readable registers for BeBoard " << +theBoard->getId() << RESET;
@@ -901,6 +896,15 @@ void Tool::dumpConfigFiles()
             }
         }
     }
+}
+
+void Tool::dumpConfigFiles(bool checkReadOnlyRegisters)
+{
+    if(fDetectorContainer->getFirstObject()->getBoardType() == BoardType::RD53) return; // IT does not dump the files
+
+    LOG(INFO) << BOLDBLUE << "Reading all the read-only registers to update output files" << RESET;
+
+    if(checkReadOnlyRegisters) readAllReadOnlyRegisters();
 
     if(!fDirectoryName.empty())
     {

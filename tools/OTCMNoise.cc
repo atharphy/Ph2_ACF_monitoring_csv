@@ -1,4 +1,6 @@
 #include "OTCMNoise.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19cTriggerInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
@@ -136,7 +138,7 @@ void OTCMNoise::TakeData(float fThreshold)
         // BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->getObject(cBoard->getId()));
 
-        fBeBoardInterface->Start(theBoard);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getTriggerInterface()->Start(true);
         uint32_t cN = fNevents;
         while(cN != 0)
         {

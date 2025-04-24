@@ -313,7 +313,7 @@ class ChipContainer : public BaseContainer
 
     const BaseContainer* getElement(uint16_t index) const override
     {
-        std::cout << __PRETTY_FUNCTION__ << " This function should never be called!!! Aborting...";
+        std::cerr << __PRETTY_FUNCTION__ << " This function should never be called!!! Aborting...";
         abort();
         return nullptr;
     }

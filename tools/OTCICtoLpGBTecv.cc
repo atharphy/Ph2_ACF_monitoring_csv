@@ -2,6 +2,7 @@
 #include "HWDescription/BeBoard.h"
 #include "HWInterface/D19cBackendAlignmentFWInterface.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19cTriggerInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
@@ -140,7 +141,7 @@ void OTCICtoLpGBTecv::runECV()
     for(auto theBoard: *fDetectorContainer)
     {
         prepareFWForL1IntegrityTest(theBoard);
-        fBeBoardInterface->Start(theBoard);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getTriggerInterface()->Start(true);
 
         for(auto theOpticalGroup: *theBoard)
         {
@@ -220,7 +221,7 @@ void OTCICtoLpGBTecv::runECVPoint(uint8_t clockPolarity, uint8_t clockStrength, 
         D19cBackendAlignmentFWInterface* theAlignerInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBackendAlignmentInterface();
         theAlignerInterface->setSuppressPrintout(true);
         // fBeBoardInterface->ChipReSync(theBoard);
-        fBeBoardInterface->Start(theBoard);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getTriggerInterface()->Start(true);
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
