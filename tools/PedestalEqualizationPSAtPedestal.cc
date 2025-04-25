@@ -88,12 +88,9 @@ void PedestalEqualizationPSAtPedestal::Initialise(bool pAllChan, bool pDisableSt
     fTestPulseAmplitude    = findValueInSettings<double>("PedestalEqualization_PulseAmplitude", 0);
     fTestPulseAmplitudePix = findValueInSettings<double>("PedestalEqualization_PulseAmplitudePix", fTestPulseAmplitude);
 
-    if(fFullScan)
-    {
-        std::cout << " FULL SCAN AMPLITUDE!" << std::endl;
-        fTestPulseAmplitude    = 1; //findValueInSettings<double>("PedestalEqualization_PulseAmplitudeFullScan", 0);
-        fTestPulseAmplitudePix = 1; //findValueInSettings<double>("PedestalEqualization_PulseAmplitudePixFullScan", 0);
-    }
+    std::cout << " FULL SCAN AMPLITUDE!" << std::endl;
+    fTestPulseAmplitude    = 1; //findValueInSettings<double>("PedestalEqualization_PulseAmplitudeFullScan", 0);
+    fTestPulseAmplitudePix = 1; //findValueInSettings<double>("PedestalEqualization_PulseAmplitudePixFullScan", 0);
 
     fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
     fNEventsPerBurst         = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
@@ -162,7 +159,7 @@ void PedestalEqualizationPSAtPedestal::Running()
     Initialise();
     PrepareForInjection();
     ScanThreshold();
-    TuneTrimBits();
+    //TuneTrimBits();
     LOG(INFO) << BOLDMAGENTA <<  "Done with PedestalEqualizationPSAtPedestal." << RESET;
 
 
@@ -204,7 +201,7 @@ void PedestalEqualizationPSAtPedestal::PrepareForInjection()
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitude);
                         fReadoutChipInterface->WriteChipReg(cChip, "THTRIMMING", 0x1F);
-                        fReadoutChipInterface->WriteChipReg(cChip, "Bias_D5DAC8", 0x00);
+                        fReadoutChipInterface->WriteChipReg(cChip, "Bias_D5DAC8", 0x0);
         
                     }
                 }
@@ -298,8 +295,10 @@ void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer
                 {
                     auto theChipContainer = fTheMaxOccupancyDACContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                     uint16_t smallestThresholdAtMaxOccupancy = 255;
-                    uint16_t rowAtsmallestThresholdAtMaxOccupancy = -1, colAtsmallestThresholdAtMaxOccupancy = -1;
-                    uint16_t binAtsmallestThresholdAtMaxOccupancy = -1;
+                    uint16_t largestThresholdAtMaxOccupancy = 0;
+                    uint16_t rowAtSmallestThresholdAtMaxOccupancy = -1, colAtSmallestThresholdAtMaxOccupancy = -1, binAtSmallestThresholdAtMaxOccupancy = -1;
+                    uint16_t rowAtLargestThresholdAtMaxOccupancy = -1, colAtLargestThresholdAtMaxOccupancy = -1, binAtLargestThresholdAtMaxOccupancy = -1;
+
                     LOG(INFO) << BOLDBLUE << "Looking for DACmaxOccupancy for chip "<< cChip->getId() << RESET;
                     for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
@@ -317,19 +316,38 @@ void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer
                             });
                             uint16_t DACmaxOccupancy = maxIter->first;
                             theChipContainer->getChannel<uint16_t>(row, col) = DACmaxOccupancy;
-                            
+
                             if (DACmaxOccupancy < smallestThresholdAtMaxOccupancy && DACmaxOccupancy > 0)
                             {
                                 smallestThresholdAtMaxOccupancy = DACmaxOccupancy;
-                                rowAtsmallestThresholdAtMaxOccupancy = row;
-                                colAtsmallestThresholdAtMaxOccupancy = col;
-                                binAtsmallestThresholdAtMaxOccupancy = bin;
+                                rowAtSmallestThresholdAtMaxOccupancy = row;
+                                colAtSmallestThresholdAtMaxOccupancy = col;
+                                binAtSmallestThresholdAtMaxOccupancy = bin;
+                            }
+   
+                            auto minIter = std::min_element(
+                                occupancyMap.begin(),
+                                occupancyMap.end(),
+                                [](const auto& a, const auto& b) {
+                                    return a.second > b.second;
+                                });
+                            uint16_t DACminOccupancy = minIter->first;
+                            // theChipContainer->getChannel<uint16_t>(row, col) = DACminOccupancy;
+                            
+                            if (DACminOccupancy > largestThresholdAtMaxOccupancy && DACminOccupancy < 255)
+                            {
+                                largestThresholdAtMaxOccupancy = DACminOccupancy;
+                                rowAtLargestThresholdAtMaxOccupancy = row;
+                                colAtLargestThresholdAtMaxOccupancy = col;
+                                binAtLargestThresholdAtMaxOccupancy = bin;
                             }   
                         }// col   
                     } // row
                     auto theChipSmallestThresholdContainer = fTheSmallestThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                     theChipSmallestThresholdContainer->getSummary<uint16_t>() = smallestThresholdAtMaxOccupancy;
-                    LOG(INFO) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtsmallestThresholdAtMaxOccupancy << " col " << colAtsmallestThresholdAtMaxOccupancy << " (bin "<< binAtsmallestThresholdAtMaxOccupancy << ") has the lowest DAC giving the maximum occupancy at " << smallestThresholdAtMaxOccupancy << RESET;
+                    LOG(INFO) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtSmallestThresholdAtMaxOccupancy << " col " << colAtSmallestThresholdAtMaxOccupancy << " (bin "<< binAtSmallestThresholdAtMaxOccupancy << ") has the lowest DAC giving the maximum occupancy at " << smallestThresholdAtMaxOccupancy << RESET;
+                    LOG(INFO) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtLargestThresholdAtMaxOccupancy << " col " << colAtLargestThresholdAtMaxOccupancy << " (bin "<< binAtLargestThresholdAtMaxOccupancy << ") has the highest DAC giving the maximum occupancy at " << largestThresholdAtMaxOccupancy << RESET;
+
                 } //chip
             }
         }
