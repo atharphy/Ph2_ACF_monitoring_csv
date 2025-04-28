@@ -59,6 +59,7 @@ class DQMHistogramPedestalEqualizationPSAtPedestal : public DQMHistogramBase
     DetectorDataContainer fDetectorChipPixelSCurveHistograms;
     DetectorDataContainer fDetectorChipStripMaxHistograms;
     DetectorDataContainer fDetectorChipPixelMaxHistograms;
+    DetectorDataContainer fDetectorChipMaxHistograms;
     void fillSCurvePlotsVector(const std::vector<DetectorDataContainer>& detectorContainerVector, const std::vector<uint16_t>&         dacList);
     void fillSCurvePlots(const DetectorDataContainer& detectorContainer, uint16_t  dacIt);
   

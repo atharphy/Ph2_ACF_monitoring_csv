@@ -39,7 +39,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
     theTH2FChipStripSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
     theTH2FChipStripSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipStripSCurveHistograms, theTH2FChipStripSCurve);
-    HistContainer<TH1F> theTH1FChipStripMax("MinimumThresholdForMaximumOccupancy", "Minimum threshold for maximum occupancy", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
+    HistContainer<TH1F> theTH1FChipStripMax("ChannelThresholdForMaximumOccupancy", "Channel threshold for maximum occupancy", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
     theTH1FChipStripMax.fTheHistogram->GetXaxis()->SetTitle("Channel");
     theTH1FChipStripMax.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripMaxHistograms, theTH1FChipStripMax);
@@ -52,12 +52,17 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
     theTH2FChipPixelSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelSCurveHistograms, theTH2FChipPixelSCurve);
 
-    HistContainer<TH1F> theTH1FChipPixelMax("Max", "Max", NMPAROWS*NSSACHANNELS, -0.5, NMPAROWS*NSSACHANNELS - 0.5);
+    HistContainer<TH1F> theTH1FChipPixelMax("ChannelThresholdForMaximumOccupancy", "Channel threshold for maximum occupancy", NMPAROWS*NSSACHANNELS, -0.5, NMPAROWS*NSSACHANNELS - 0.5);
     theTH1FChipPixelMax.fTheHistogram->GetXaxis()->SetTitle("Channel");
     theTH1FChipPixelMax.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelMaxHistograms, theTH1FChipPixelMax);
  
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
+
+    HistContainer<TH1F> theTH1FChipMax("ThresholdForMaximumOccupancyDistribution", "Threshold for maximum occupancy distribution", 256, -0.5, 256 - 0.5);
+    theTH1FChipMax.fTheHistogram->GetXaxis()->SetTitle("Threshold [VcTh]");
+    theTH1FChipMax.fTheHistogram->GetYaxis()->SetTitle("Entris");
+    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipMaxHistograms, theTH1FChipMax);
 
        
 }
@@ -195,6 +200,12 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDa
                     auto     cType = theReadoutChip->getFrontEndType();
 
                     TH1F* cChipMax    = nullptr;
+                    TH1F* cChipMaxDistribution = fDetectorChipMaxHistograms.getObject(cBoard->getId())
+                    ->getObject(cOpticalGroup->getId())
+                    ->getObject(cHybrid->getId())
+                    ->getObject(cChip->getId())
+                    ->getSummary<HistContainer<TH1F>>()
+                    .fTheHistogram;
                     if(cType == FrontEndType::SSA2)
                     {
                         cChipMax = fDetectorChipStripMaxHistograms.getObject(cBoard->getId())
@@ -221,9 +232,11 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDa
                             auto bin = linearizeRowAndCols(row, col, cChip->getNumberOfCols());  
                             uint16_t maxDac = cChip->getChannel<uint16_t>(row, col);
                             cChipMax->SetBinContent(bin +1, maxDac);
+                            cChipMaxDistribution->Fill(maxDac);
                             
                         }
                     }
+                    
                 }
             }
         }

@@ -35,7 +35,8 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     void Reset();
     void PrepareForInjection();
     void ScanThreshold();
-    void GetMaximumDAC(const DetectorDataContainer& dacOccupancyContainers);
+    void GetMaximumOccupancyThreshold(const DetectorDataContainer& dacOccupancyContainers);
+    void GetLowestAndHighestMaxOccupancyThreshold();
     void TuneTrimBits();
 
     static std::string fCalibrationDescription;
@@ -63,8 +64,9 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
 
     std::vector<uint16_t>                  dacList;
 
-    DetectorDataContainer fTheMaxOccupancyDACContainers;
+    DetectorDataContainer fTheMaxOccupancyThresholdContainers;
     DetectorDataContainer fTheSmallestThresholdAtMaxOccupancyContainer;
+    DetectorDataContainer fTheLargestThresholdAtMaxOccupancyContainer;
     uint16_t fStopValue;
     uint16_t fStartValue;
   private:

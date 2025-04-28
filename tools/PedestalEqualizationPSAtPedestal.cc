@@ -260,7 +260,7 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
         } // board
     } // dac 
 
-    GetMaximumDAC(dacOccupancyContainers);
+    GetMaximumOccupancyThreshold(dacOccupancyContainers);
 
 
 #ifdef __USE_ROOT__
@@ -279,11 +279,10 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
 }
 
 
-void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer& dacOccupancyContainers)
+void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyThreshold(const DetectorDataContainer& dacOccupancyContainers)
 {
 
-    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, fTheMaxOccupancyDACContainers);
-    ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, fTheSmallestThresholdAtMaxOccupancyContainer);
+    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, fTheMaxOccupancyThresholdContainers);
 
     for(auto cBoard: dacOccupancyContainers)
     {
@@ -293,18 +292,12 @@ void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer
             {
                 for(auto cChip: *cHybrid)
                 {
-                    auto theChipContainer = fTheMaxOccupancyDACContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                    uint16_t smallestThresholdAtMaxOccupancy = 255;
-                    uint16_t largestThresholdAtMaxOccupancy = 0;
-                    uint16_t rowAtSmallestThresholdAtMaxOccupancy = -1, colAtSmallestThresholdAtMaxOccupancy = -1, binAtSmallestThresholdAtMaxOccupancy = -1;
-                    uint16_t rowAtLargestThresholdAtMaxOccupancy = -1, colAtLargestThresholdAtMaxOccupancy = -1, binAtLargestThresholdAtMaxOccupancy = -1;
-
+                    auto theChipContainer = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                     LOG(INFO) << BOLDBLUE << "Looking for DACmaxOccupancy for chip "<< cChip->getId() << RESET;
                     for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
-                            uint16_t bin = linearizeRowAndCols(row, col, cChip->getNumberOfCols());
                             const auto& occupancyMap = cChip->getChannel<std::map<uint16_t, float>>(row, col);
                             if (occupancyMap.empty()) continue;
 
@@ -316,56 +309,126 @@ void PedestalEqualizationPSAtPedestal::GetMaximumDAC(const DetectorDataContainer
                             });
                             uint16_t DACmaxOccupancy = maxIter->first;
                             theChipContainer->getChannel<uint16_t>(row, col) = DACmaxOccupancy;
-
-                            if (DACmaxOccupancy < smallestThresholdAtMaxOccupancy && DACmaxOccupancy > 0)
-                            {
-                                smallestThresholdAtMaxOccupancy = DACmaxOccupancy;
-                                rowAtSmallestThresholdAtMaxOccupancy = row;
-                                colAtSmallestThresholdAtMaxOccupancy = col;
-                                binAtSmallestThresholdAtMaxOccupancy = bin;
-                            }
-   
-                            auto minIter = std::min_element(
-                                occupancyMap.begin(),
-                                occupancyMap.end(),
-                                [](const auto& a, const auto& b) {
-                                    return a.second > b.second;
-                                });
-                            uint16_t DACminOccupancy = minIter->first;
-                            // theChipContainer->getChannel<uint16_t>(row, col) = DACminOccupancy;
-                            
-                            if (DACminOccupancy > largestThresholdAtMaxOccupancy && DACminOccupancy < 255)
-                            {
-                                largestThresholdAtMaxOccupancy = DACminOccupancy;
-                                rowAtLargestThresholdAtMaxOccupancy = row;
-                                colAtLargestThresholdAtMaxOccupancy = col;
-                                binAtLargestThresholdAtMaxOccupancy = bin;
-                            }   
                         }// col   
                     } // row
-                    auto theChipSmallestThresholdContainer = fTheSmallestThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                    theChipSmallestThresholdContainer->getSummary<uint16_t>() = smallestThresholdAtMaxOccupancy;
-                    LOG(INFO) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtSmallestThresholdAtMaxOccupancy << " col " << colAtSmallestThresholdAtMaxOccupancy << " (bin "<< binAtSmallestThresholdAtMaxOccupancy << ") has the lowest DAC giving the maximum occupancy at " << smallestThresholdAtMaxOccupancy << RESET;
-                    LOG(INFO) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtLargestThresholdAtMaxOccupancy << " col " << colAtLargestThresholdAtMaxOccupancy << " (bin "<< binAtLargestThresholdAtMaxOccupancy << ") has the highest DAC giving the maximum occupancy at " << largestThresholdAtMaxOccupancy << RESET;
-
                 } //chip
             }
         }
     }
 
 #ifdef __USE_ROOT__
-    fDQMHistogramPedestalEqualizationPSAtPedestal.fillMaxPlots(fTheMaxOccupancyDACContainers);
+    fDQMHistogramPedestalEqualizationPSAtPedestal.fillMaxPlots(fTheMaxOccupancyThresholdContainers);
 #else
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalMax");
-        theContainerSerialization.streamByChipContainer(fDQMStreamer, fTheMaxOccupancyDACContainers);
+        theContainerSerialization.streamByChipContainer(fDQMStreamer, fTheMaxOccupancyThresholdContainers);
     }
     
 #endif
 
-}
+    GetLowestAndHighestMaxOccupancyThreshold();
 
+}
+// uint16_t PedestalEqualizationPSAtPedestal::GetMean(ChipDataContainer theChip)
+// {
+
+// }
+
+
+void PedestalEqualizationPSAtPedestal::GetLowestAndHighestMaxOccupancyThreshold()
+{
+    //((row, col), threshold)
+    ContainerFactory::copyAndInitStructure<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>(*fDetectorContainer, fTheSmallestThresholdAtMaxOccupancyContainer);
+    ContainerFactory::copyAndInitStructure<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>(*fDetectorContainer, fTheLargestThresholdAtMaxOccupancyContainer);
+
+    for(auto cBoard: fTheMaxOccupancyThresholdContainers)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    std::cout << "the chip " << cChip->getId() << std::endl;
+                    uint16_t smallestThresholdAtMaxOccupancy = 255;
+                    uint16_t largestThresholdAtMaxOccupancy = 0;
+                    uint16_t rowAtSmallestThresholdAtMaxOccupancy = -1, colAtSmallestThresholdAtMaxOccupancy = -1, binAtSmallestThresholdAtMaxOccupancy = -1;
+                    uint16_t rowAtLargestThresholdAtMaxOccupancy = -1, colAtLargestThresholdAtMaxOccupancy = -1, binAtLargestThresholdAtMaxOccupancy = -1;
+
+                    // Get Mean
+                    float theMean = 0.0;
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        {
+                            uint16_t theMaxOccupancyThreshold = cChip->getChannel<uint16_t>(row, col);
+                            theMean += theMaxOccupancyThreshold;
+                        }
+                    }
+                    theMean /= (cChip->getNumberOfRows() * cChip->getNumberOfCols());
+                    std::cout << "Mean Threshold for max occupancy: " << theMean << std::endl;
+
+                    // Get std
+                    float stddev = 0.0;
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        {
+                            uint16_t theMaxOccupancyThreshold = cChip->getChannel<uint16_t>(row, col);
+                            stddev += (theMaxOccupancyThreshold - theMean) * (theMaxOccupancyThreshold - theMean);
+                        }
+                    }                    
+                    stddev = std::sqrt(stddev / (cChip->getNumberOfRows() * cChip->getNumberOfCols()));
+                    std::cout << "Standard deviation: " << stddev << std::endl;
+
+                    // Define 2σ range
+                    float lowerBound = theMean - 2 * stddev;
+                    float upperBound = theMean + 2 * stddev;
+                
+                    std::cout << "2σ range: [" << lowerBound << ", " << upperBound << "]" << std::endl;
+
+                    // Get max and min channel
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        {
+                            uint16_t bin = linearizeRowAndCols(row, col, cChip->getNumberOfCols());
+                            uint16_t theMaxOccupancyThreshold = cChip->getChannel<uint16_t>(row, col);
+                            
+                            if (theMaxOccupancyThreshold < smallestThresholdAtMaxOccupancy && theMaxOccupancyThreshold > lowerBound && theMaxOccupancyThreshold < upperBound)
+                            {
+                                smallestThresholdAtMaxOccupancy = theMaxOccupancyThreshold;
+                                rowAtSmallestThresholdAtMaxOccupancy = row;
+                                colAtSmallestThresholdAtMaxOccupancy = col;
+                                binAtSmallestThresholdAtMaxOccupancy = bin;
+                            }
+
+
+                            if (theMaxOccupancyThreshold > largestThresholdAtMaxOccupancy && theMaxOccupancyThreshold < upperBound && theMaxOccupancyThreshold > lowerBound)
+                            {
+                                largestThresholdAtMaxOccupancy = theMaxOccupancyThreshold;
+                                rowAtLargestThresholdAtMaxOccupancy = row;
+                                colAtLargestThresholdAtMaxOccupancy = col;
+                                binAtLargestThresholdAtMaxOccupancy = bin;
+                            }
+                        } // col
+                    } // row
+
+                    LOG(INFO) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtSmallestThresholdAtMaxOccupancy << " col " << colAtSmallestThresholdAtMaxOccupancy << " (bin "<< binAtSmallestThresholdAtMaxOccupancy << ") has the lowest DAC giving the maximum occupancy at " << smallestThresholdAtMaxOccupancy << RESET;
+                    LOG(INFO) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtLargestThresholdAtMaxOccupancy << " col " << colAtLargestThresholdAtMaxOccupancy << " (bin "<< binAtLargestThresholdAtMaxOccupancy << ") has the highest DAC giving the maximum occupancy at " << largestThresholdAtMaxOccupancy << RESET;
+                    auto theLowestThreshold = std::make_pair(std::make_pair(rowAtSmallestThresholdAtMaxOccupancy, colAtSmallestThresholdAtMaxOccupancy), smallestThresholdAtMaxOccupancy);
+                    auto theChipSmallestThresholdContainer = fTheSmallestThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    theChipSmallestThresholdContainer->getSummary<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>() = theLowestThreshold;
+                    auto theHighestThreshold = std::make_pair(std::make_pair(rowAtLargestThresholdAtMaxOccupancy, colAtLargestThresholdAtMaxOccupancy), binAtLargestThresholdAtMaxOccupancy);
+                    auto theChipLargestThresholdContainer = fTheLargestThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    theChipLargestThresholdContainer->getSummary<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>() = theHighestThreshold;
+    
+                } //chip
+            } // hybrid
+        } // OG
+    } // board
+}
 void PedestalEqualizationPSAtPedestal::TuneTrimBits()
 {
     DetectorDataContainer theFirstSmallestThresholdAtMaxOccupancyContainer;
@@ -383,7 +446,7 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        auto theChipContainer = fTheMaxOccupancyDACContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                        auto theChipContainer = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                         if(iteration == totalIterations ) theFirstSmallestThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = cChip->getSummary<uint16_t>();
                         uint16_t smallestThresholdAtMaxOccupancy = theFirstSmallestThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                         LOG(INFO) << BOLDGREEN << "For iteration " << iteration << " at chip " <<cChip->getId() << " the smallestThresholdAtMaxOccupancy " << smallestThresholdAtMaxOccupancy << RESET;
