@@ -995,7 +995,7 @@ void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
                 {
                     LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be TLU" << RESET;
                     config->enable             = true;
-                    config->ch_out_en          = config->ch_out_en | 0x05;
+                    config->ch_out_en          = config->ch_out_en | 0x0D;
                     config->tlu_en             = true;
                     config->tlu_handshake_mode = 0x02;
                 }
