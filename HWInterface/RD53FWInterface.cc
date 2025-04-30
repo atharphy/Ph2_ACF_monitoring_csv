@@ -1011,11 +1011,14 @@ void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
             else if(it.first.find("dio5_ch5_thr") != std::string::npos)
                 config->ch5_thr = it.second.fValue;
         }
+
+    // Enable 50ohms termination on all inputs
+    config->fiftyohm_en = 0x1f ^ config->ch_out_en;
+
 }
 
 void RD53FWInterface::SendDIO5Cfg(const DIO5Config* config)
 {
-    const uint8_t fiftyOhmEnable = 0x12; // @CONST@
 
     if(RegManager::ReadReg("user.stat_regs.global_reg.dio5_not_ready") == true) LOG(ERROR) << BOLDRED << "DIO5 not ready" << RESET;
 
@@ -1023,7 +1026,7 @@ void RD53FWInterface::SendDIO5Cfg(const DIO5Config* config)
 
     RegManager::WriteStackReg({{"user.ctrl_regs.ext_tlu_reg1.dio5_en", (uint32_t)config->enable},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en", (uint32_t)config->ch_out_en},
-                               {"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)fiftyOhmEnable},
+                               {"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)config->fiftyohm_en},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr", (uint32_t)config->ch1_thr},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr", (uint32_t)config->ch2_thr},
                                {"user.ctrl_regs.ext_tlu_reg2.dio5_ch3_thr", (uint32_t)config->ch3_thr},
