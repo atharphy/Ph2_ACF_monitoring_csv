@@ -17,12 +17,7 @@ void RD53eudaqProducer::DoReset()
     RD53eudaqProducer::DoTerminate();
 }
 
-void RD53eudaqProducer::DoInitialise()
-{
-    std::stringstream outp;
-    RD53sysCntrPhys.InitializeHw(configFile, outp);
-    RD53sysCntrPhys.InitializeSettings(configFile, outp);
-}
+void RD53eudaqProducer::DoInitialise() {}
 
 void RD53eudaqProducer::DoConfigure() { RD53sysCntrPhys.localConfigure("", -1); }
 
