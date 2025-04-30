@@ -130,12 +130,11 @@ void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
     }
 }
 
-const void RD53eudaqProducer::AddBoreInfoToEvent(eudaq::Event &ev)
+const void RD53eudaqProducer::AddBoreInfoToEvent(eudaq::Event& ev)
 {
     // ###############################################################
     // # Add Ph2ACF configuration and extra information to the event #
     // ###############################################################
-
 
     ev.SetBORE();
 
@@ -158,8 +157,6 @@ const void RD53eudaqProducer::AddBoreInfoToEvent(eudaq::Event &ev)
                 }
     }
 }
-
-
 
 void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList)
 {
