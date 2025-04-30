@@ -971,6 +971,8 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
 
 void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
 {
+    std::map<std::string,uint32_t> register_overrides {};
+
     for(const auto& it: pBoard->getBeBoardRegMap())
         if((it.second.fPrmptCfg == true) &&
            ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos) || (it.first.find("dio5_ch1_thr") != std::string::npos) ||
@@ -1010,10 +1012,40 @@ void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
                 config->ch4_thr = it.second.fValue;
             else if(it.first.find("dio5_ch5_thr") != std::string::npos)
                 config->ch5_thr = it.second.fValue;
+            else if(it.first.find("dio5_en") != std::string::npos)
+                register_overrides["dio5_en"] = it.second.fValue;
+            else if(it.first.find("dio5_ch_out_en") != std::string::npos)
+                register_overrides["dio5_ch_out_en"] = it.second.fValue;
+            else if(it.first.find("dio5_term_50ohm_en") != std::string::npos)
+                register_overrides["dio5_term_50ohm_en"] = it.second.fValue;
         }
 
     // Enable 50ohms termination on all inputs
     config->fiftyohm_en = 0x1f ^ config->ch_out_en;
+
+    // Apply override values from XML file on automatically set registers
+    auto override_warn = [](std::string regname, uint32_t val){    
+        LOG(WARNING) << BOLDBLUE << "\t--> Overriding register " << BOLDYELLOW 
+            << regname << BOLDBLUE << " with user set value " << BOLDYELLOW 
+            << "0x" << std::hex << val << RESET;
+        };
+
+    auto oreg = register_overrides.end();
+    if ((oreg = register_overrides.find("dio5_en")) != register_overrides.end())
+    {
+        config->enable = oreg->second;
+        override_warn(oreg->first, oreg->second);
+    }
+    if ((oreg = register_overrides.find("dio5_ch_out_en")) != register_overrides.end())
+    {
+        config->ch_out_en = oreg->second;
+        override_warn(oreg->first, oreg->second);
+    }
+    if ((oreg = register_overrides.find("dio5_term_50ohm_en")) != register_overrides.end())
+    {
+        config->fiftyohm_en = oreg->second;
+        override_warn(oreg->first, oreg->second);
+    }
 
 }
 
