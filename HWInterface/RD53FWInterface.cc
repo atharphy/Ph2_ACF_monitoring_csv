@@ -972,12 +972,13 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
 void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
 {
     std::map<std::string,uint32_t> register_overrides {};
+    std::set<std::string> valid_registers {"ext_clk_en", "trigger_source", "dio5_ch1_thr", "dio5_ch2_thr",
+        "dio5_ch3_thr", "dio5_ch4_thr", "dio5_ch5_thr", "dio5_en", "dio5_term_50ohm_en", "dio5_ch_out_en"};
 
     for(const auto& it: pBoard->getBeBoardRegMap())
-        if((it.second.fPrmptCfg == true) &&
-           ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos) || (it.first.find("dio5_ch1_thr") != std::string::npos) ||
-            (it.first.find("dio5_ch2_thr") != std::string::npos) || (it.first.find("dio5_ch3_thr") != std::string::npos) || (it.first.find("dio5_ch4_thr") != std::string::npos) ||
-            (it.first.find("dio5_ch5_thr") != std::string::npos)))
+        if(it.second.fPrmptCfg == true &&
+            std::any_of(valid_registers.begin(), valid_registers.end(),
+                [&](auto reg) {return it.first.find(reg) != std::string::npos;}))
         {
             if(it.first.find("ext_clk_en") != std::string::npos)
             {
