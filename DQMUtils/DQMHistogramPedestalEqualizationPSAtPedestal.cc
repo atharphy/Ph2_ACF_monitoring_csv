@@ -61,7 +61,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
 
     HistContainer<TH1F> theTH1FChipMax("ThresholdForMaximumOccupancyDistribution", "Threshold for maximum occupancy distribution", 256, -0.5, 256 - 0.5);
     theTH1FChipMax.fTheHistogram->GetXaxis()->SetTitle("Threshold [VcTh]");
-    theTH1FChipMax.fTheHistogram->GetYaxis()->SetTitle("Entris");
+    theTH1FChipMax.fTheHistogram->GetYaxis()->SetTitle("Entries");
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipMaxHistograms, theTH1FChipMax);
 
        
@@ -206,6 +206,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDa
                     ->getObject(cChip->getId())
                     ->getSummary<HistContainer<TH1F>>()
                     .fTheHistogram;
+                    cChipMaxDistribution->Reset();
                     if(cType == FrontEndType::SSA2)
                     {
                         cChipMax = fDetectorChipStripMaxHistograms.getObject(cBoard->getId())
@@ -236,7 +237,12 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDa
                             
                         }
                     }
-                    
+                    fDetectorChipMaxHistograms.getObject(cBoard->getId())
+                    ->getObject(cOpticalGroup->getId())
+                    ->getObject(cHybrid->getId())
+                    ->getObject(cChip->getId())
+                    ->getSummary<HistContainer<TH1F>>()
+                    .fTheHistogram = cChipMaxDistribution;
                 }
             }
         }
