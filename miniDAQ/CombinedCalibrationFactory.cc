@@ -162,12 +162,9 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
-             OTverifyBoardDataWord,
              OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
-             OTverifyCICdataWord,
-             OTverifyMPASSAdataWord,
              CalibrationExample>("Outer Tracker", "calibrationexample");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PSCounterTest>("Outer Tracker", "pscountertest");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, LatencyScan>(

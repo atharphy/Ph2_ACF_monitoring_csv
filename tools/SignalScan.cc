@@ -158,7 +158,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 
                                 for(int cChan = 0; cChan < NCHANNELS; cChan++)
                                 {
-                                    int cHits = cEvent->DataBit(cHybrid->getId(), cCbc->getId(), cChan);
+                                    int cHits = cEvent->DataBit(cHybrid->getId(), cCbc->getId(), 0, cChan);
                                     cSignalScan->Fill(cChan, cVcth, cHits);
                                     cHitCounter += cHits;
                                     cTotalHitCounter += cHits;
@@ -302,7 +302,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 //                             {
 //                                 cClusterDataString += std::to_string (cClusters[i].fFirstStrip) + "."
 //                                                       + std::to_string (cClusters[i].fClusterWidth) + "^"
-//                                                       + std::to_string (cClusters[i].fSensor) + "-";
+//                                                       + std::to_string (cClusters[i].getSensor()) + "-";
 //                             }
 
 //                         }

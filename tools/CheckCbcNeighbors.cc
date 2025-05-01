@@ -133,7 +133,6 @@ bool CheckCbcNeighbors::CheckStubs(uint8_t hybridId, uint8_t chipId)
                 {
                     LOG(DEBUG) << "Stub position " << +cReadoutStub.getPosition() << " bend " << +cReadoutStub.getBend() << " row " << +cReadoutStub.getRow() << " center " << +cReadoutStub.getCenter()
                                << " on hybrid " << +hybridId << " and chip " << +chipId << RESET;
-                    LOG(DEBUG) << CYAN << "\t Databit string " << cEvent->DataBitString(hybridId, chipId) << RESET;
                 }
                 // good stub
                 else

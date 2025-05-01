@@ -256,7 +256,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_
                 uint32_t cbcEventCounter = 0;
                 for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
                 {
-                    if ( pEvent->DataBit( cCbc->getHybridId(), cCbc->getId(), cId ) )
+                    if ( pEvent->DataBit( cCbc->getHybridId(), cCbc->getId(), 0, cId ) )
                     {
                         sCurveHist->Fill( pValue );
                         cHitCounter++;
@@ -272,7 +272,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_
                 {
                     // for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
                     //{
-                    // if ( pEvent->DataBit ( cCbc->getHybridId(), cCbc->getId(), cId ) )
+                    // if ( pEvent->DataBit ( cCbc->getHybridId(), cCbc->getId(), 0, cId ) )
                     //{
                     // cScurve->second->Fill ( pValue );
                     // cHitCounter++;
