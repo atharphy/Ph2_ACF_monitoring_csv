@@ -1,4 +1,5 @@
 #include "tools/PedestalEqualizationPSAtPedestal.h"
+#include "tools/Tool.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/MPAChannelGroupHandler.h"
@@ -10,6 +11,7 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
+
 
 std::string PedestalEqualizationPSAtPedestal::fCalibrationDescription = "Equalize the pedestal/threshold for all channels with higher precision near the pedestal";
 // This class should do the same as the PedestalEqualization with PS FullScan but do the MPA in a different way!!!!
@@ -160,17 +162,18 @@ void PedestalEqualizationPSAtPedestal::Running()
     // std::string selectMPAfunctionName = "SelectMPAfunctionPS";
 
     LOG(INFO) << BOLDMAGENTA <<  "Starting PedestalEqualizationPSAtPedestal measurement." << RESET;
-    Initialise();
+    Initialise(false);
     PrepareForInjection();
     ScanThreshold();
     GetLowestAndHighestMaxOccupancyThreshold();
     FindTargetThreshold();
     TuneVtrim();
-    TuneTrimBits();
+    // TuneTrimBits();
     LOG(INFO) << BOLDMAGENTA <<  "Done with PedestalEqualizationPSAtPedestal." << RESET;
 
 
 }
+
 void PedestalEqualizationPSAtPedestal::PrepareForInjection()
 {
 
@@ -208,7 +211,7 @@ void PedestalEqualizationPSAtPedestal::PrepareForInjection()
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitude);
                         fReadoutChipInterface->WriteChipReg(cChip, "THTRIMMING", 0x1F);
-                        fReadoutChipInterface->WriteChipReg(cChip, "Bias_D5DAC8", 0x0);
+                        fReadoutChipInterface->WriteChipReg(cChip, "Bias_D5DAC8", 0x1F);
         
                     }
                 }
@@ -230,6 +233,7 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
         ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, container);
         detectorContainerVectorPointers.push_back(&container);
     }
+
     this->scanDac("Threshold", dacList, fEventsPerPoint,detectorContainerVectorPointers, fNEventsPerBurst);
     DetectorDataContainer dacOccupancyContainers;
     ContainerFactory::copyAndInitChannel<std::map<uint16_t, float>>(*fDetectorContainer, dacOccupancyContainers);
@@ -244,8 +248,8 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        auto theChipContainer = detectorContainerVector.at(dacIt).getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                        if(theChipContainer->hasChannelContainer() == false) continue;
+                        //auto theChipContainer = detectorContainerVector.at(dacIt).getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                        if(cChip->hasChannelContainer() == false) continue;
 
                         for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
@@ -258,7 +262,7 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
                                     ->getObject(cChip->getId())
                                     ->getChannel<std::map<uint16_t, float>>(row, col));
                                 
-                                (*targetMap)[dacIt] = theChipContainer->getChannel<Occupancy>(row, col).fOccupancy;
+                                (*targetMap)[dacIt] = cChip->getChannel<Occupancy>(row, col).fOccupancy;
                             } //col
                         } //row
                     } // chip
@@ -283,6 +287,92 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
     }    
 #endif
 
+}
+
+
+void PedestalEqualizationPSAtPedestal::FillMaxOccupancyMap(std::vector<DetectorDataContainer> detectorContainerVector, DetectorDataContainer& dacOccupancyContainers, uint16_t boardId,uint16_t OGId, uint16_t hybridId,uint16_t ChipId)
+{
+    for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
+    {
+        auto theChipContainer = detectorContainerVector.at(dacIt).getObject(boardId)->getObject(OGId)->getObject(OGId)->getObject(ChipId);
+        if(theChipContainer->hasChannelContainer() == false) continue;
+
+        for(uint16_t row = 0; row < theChipContainer->getNumberOfRows(); ++row)
+        {
+            for(uint16_t col = 0; col < theChipContainer->getNumberOfCols(); ++col)
+            {
+                auto targetMap = &(dacOccupancyContainers
+                    .getObject(boardId)
+                    ->getObject(OGId)
+                    ->getObject(OGId)
+                    ->getObject(ChipId)
+                    ->getChannel<std::map<uint16_t, float>>(row, col));
+                
+                (*targetMap)[dacIt] = theChipContainer->getChannel<Occupancy>(row, col).fOccupancy;
+            } //col
+        } //row
+    }
+}
+
+void PedestalEqualizationPSAtPedestal::ScanThresholdChip(uint16_t boardId,uint16_t OGId, uint16_t hybridId,uint16_t ChipId)
+{
+    std::cout << __PRETTY_FUNCTION__ << std::endl;
+    std::vector<DetectorDataContainer> detectorContainerVector(dacList.size());
+    std::vector<DetectorDataContainer*> detectorContainerVectorPointers;
+    for(auto& container: detectorContainerVector)
+    {
+        ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, container);
+        detectorContainerVectorPointers.push_back(&container);
+    }
+
+    std::cout << " doing scanDacChip " << std::endl;
+    this->scanDacChip("Threshold", dacList, fEventsPerPoint,detectorContainerVectorPointers, fNEventsPerBurst, boardId,OGId,hybridId,ChipId);
+    DetectorDataContainer dacOccupancyContainers;
+    std::cout << " done scanDacChip " << std::endl;
+    ContainerFactory::copyAndInitChannel<std::map<uint16_t, float>>(*fDetectorContainer, dacOccupancyContainers);
+    std::cout << " about to fill occupancy map" << std::endl;
+    for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
+    {
+        auto theChipContainer = detectorContainerVector.at(dacIt).getObject(boardId)->getObject(OGId)->getObject(hybridId)->getObject(ChipId);
+        //if(theChipContainer->hasChannelContainer() == false) continue;
+        for(uint16_t row = 0; row < theChipContainer->getNumberOfRows(); ++row)
+        {
+            for(uint16_t col = 0; col < theChipContainer->getNumberOfCols(); ++col)
+            {
+                
+                auto targetMap = &(dacOccupancyContainers
+                    .getObject(boardId)
+                    ->getObject(OGId)
+                    ->getObject(hybridId)
+                    ->getObject(ChipId)
+                    ->getChannel<std::map<uint16_t, float>>(row, col));
+                
+                (*targetMap)[dacIt] = theChipContainer->getChannel<Occupancy>(row, col).fOccupancy;
+            } //col
+        } //row
+    }
+    std::cout << " occupancy map filled" << std::endl;
+    auto theChipContainer = fTheMaxOccupancyThresholdContainers.getObject(boardId)->getObject(OGId)->getObject(hybridId)->getObject(ChipId);
+
+    //if(theChipContainer->hasChannelContainer() == false) continue;
+    std::cout << " now find max " << std::endl;
+    for(uint16_t row = 0; row < theChipContainer->getNumberOfRows(); ++row)
+    {
+        for(uint16_t col = 0; col < theChipContainer->getNumberOfCols(); ++col)
+        {
+            const auto& occupancyMap = dacOccupancyContainers.getObject(boardId)->getObject(OGId)->getObject(hybridId)->getObject(ChipId)->getChannel<std::map<uint16_t, float>>(row, col);
+            if (occupancyMap.empty()) continue;
+
+            auto maxIter = std::max_element(
+            occupancyMap.begin(),
+            occupancyMap.end(),
+            [](const auto& a, const auto& b) {
+                return a.second < b.second;
+            });
+            uint16_t DACmaxOccupancy = maxIter->first;
+            theChipContainer->getChannel<uint16_t>(row, col) = DACmaxOccupancy;
+        } //col
+    } //row
 }
 
 
@@ -487,6 +577,27 @@ void PedestalEqualizationPSAtPedestal::FindTargetThreshold()
     }
 }
 
+void PedestalEqualizationPSAtPedestal::SetVtrim(ReadoutChip* theReadoutChip, uint16_t Vtrim)
+{
+    auto     cType = theReadoutChip->getFrontEndType();
+    
+    if(cType == FrontEndType::MPA2)
+    {
+        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C0", Vtrim);
+        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C1", Vtrim);
+        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C2", Vtrim);
+        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C3", Vtrim);
+        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C4", Vtrim);
+        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C5", Vtrim);
+        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C6", Vtrim);
+    }
+    else //SSA
+    {
+        fReadoutChipInterface->WriteChipReg(theReadoutChip, "Bias_D5DAC8", Vtrim);
+    }
+
+}
+
 void PedestalEqualizationPSAtPedestal::TuneVtrim()
 {
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
@@ -511,209 +622,109 @@ void PedestalEqualizationPSAtPedestal::TuneVtrim()
             }
         }
     }
-    ScanThreshold();
+    //ScanThreshold();
     LOG(INFO) << BOLDMAGENTA << " Scan Vtrim " << RESET;
 
-    
-    for(uint16_t vtrim = 0; vtrim <=31; vtrim++)
+    for(auto cBoard: *fDetectorContainer)
     {
-        for(auto cBoard: fTheMaxOccupancyThresholdContainers)
+        for(auto cOpticalGroup: *cBoard)
         {
-            for(auto cOpticalGroup: *cBoard)
+            for(auto cHybrid: *cOpticalGroup)
             {
-                for(auto cHybrid: *cOpticalGroup)
+                for(auto cChip: *cHybrid)
                 {
-                    for(auto cChip: *cHybrid)
+                    auto theChipSmallestThresholdContainer = fTheSmallestThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    auto theSmallestThreshold = theChipSmallestThresholdContainer->getSummary<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>();
+                    auto theTargetThreshold = fTheTargetThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                    auto row = theSmallestThreshold.first.first;
+                    auto col = theSmallestThreshold.first.second;
+                    auto theMinimumThreshold = theSmallestThreshold.second;
+                    LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " minimum threshold at minimum Vtrim " << theMinimumThreshold << RESET;
+                    //now find maximum threshold
+                    uint16_t theMaxVtrim = 31;
+                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    std::cout << " have readoutchip" << std::endl;
+                    SetVtrim(theReadoutChip,theMaxVtrim);
+                    std::cout << " set vtrim to max" << std::endl;
+                    ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+                    std::cout << " DONE ScanThresholdChip" << std::endl;
+                    auto theMaximumThreshold =  fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+                    LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " maximum threshold at maximum Vtrim " << theMaximumThreshold << RESET;
+
+                    // Assume linear relationship for change in Vtrim and change in the threshold giving max occupancy
+                    float theVtrimStepSize = (float(theMaximumThreshold) - float(theMinimumThreshold))/float(theMaxVtrim);
+                    LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " Vtrim step " << theVtrimStepSize << RESET;
+                    uint16_t VtrimAttempt = (theTargetThreshold - theMinimumThreshold)/theVtrimStepSize;
+                    LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " first Vtrim to set  " << VtrimAttempt << RESET;
+
+                    SetVtrim(theReadoutChip,VtrimAttempt);
+                    ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+                    auto theCurrentMaxThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+                    LOG(INFO) << BOLDGREEN <<  " Chip " <<cChip->getId() << " the first guessed threshold is " << theCurrentMaxThreshold  << " and target is " << theTargetThreshold << RESET;
+                    
+                    // Now checking if we can go even closer to the expected value
+                    bool     isSearching         = true;
+                    uint32_t theCurrentIteration = 0;
+                    while(isSearching)
                     {
-                        auto theChipSmallestThresholdContainer = fTheSmallestThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                        auto theSmallestThreshold = theChipSmallestThresholdContainer->getSummary<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>();
-                        auto theTargetThreshold = fTheTargetThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-                        auto row = theSmallestThreshold.first.first;
-                        auto col = theSmallestThreshold.first.second;
-
-                        auto threshold = theSmallestThreshold.second;
-                        auto currentThreshold = cChip->getChannel<uint16_t>(row,col);
-                        //if(vtrim == 0 ) theThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = threshold;
-                        LOG(INFO) << BOLDGREEN << "For iteration " << vtrim << " at chip " <<cChip->getId() << " the initial threshold is " << threshold << " current "<< currentThreshold << " and target is " << theTargetThreshold << RESET;
+                        LOG(INFO) << YELLOW << "Checking if we can go closer to the expected value. Iteration " << theCurrentIteration << RESET;
+                        LOG(INFO) << MAGENTA << " Vtrim - 1 " << +VtrimAttempt - 1 << RESET;
+                        uint8_t theDACDownValue = std::max(uint8_t(0), uint8_t(VtrimAttempt - 1));
+                        SetVtrim(theReadoutChip,theDACDownValue);
+                        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+                        ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+                        auto MaxThresholdDown = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+                    
+                        uint8_t theDACUpValue = std::min(uint8_t(theMaxVtrim), uint8_t(VtrimAttempt + 1));
+                        LOG(DEBUG) << MAGENTA << "Vtrim + 1 " << +VtrimAttempt + 1<< RESET;
+                        SetVtrim(theReadoutChip,theDACUpValue);
+                        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+                        ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+                        auto MaxThresholdUp = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
                         
-                        
-                        ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                        auto     cType = theReadoutChip->getFrontEndType();
-                        if(currentThreshold < theTargetThreshold) //FIXME - need to improve precision here!
+                        float theExpectedDifference     = std::fabs(theTargetThreshold - theCurrentMaxThreshold);
+                        float theExpectedDifferenceDown = std::fabs(theTargetThreshold - MaxThresholdDown);
+                        float theExpectedDifferenceUp   = std::fabs(theTargetThreshold - MaxThresholdUp);
+                    
+                        if((theExpectedDifferenceDown < theExpectedDifference) || (theExpectedDifferenceUp < theExpectedDifference))
                         {
-                            if(cType == FrontEndType::MPA2)
+                            LOG(DEBUG) << BOLDRED << "Not precise extrapolation in OTPSADCCalibration: theExpectedDifferenceDown:" << theExpectedDifferenceDown
+                                       << ", theExpectedDifferenceUp:" << theExpectedDifferenceUp << ", theExpectedDifference:" << theExpectedDifference << RESET;
+                            if((theExpectedDifferenceDown < theExpectedDifference))
                             {
-
-                                // Vtrim
-                                fReadoutChipInterface->WriteChipReg(theReadoutChip, "C0", vtrim);
-                                fReadoutChipInterface->WriteChipReg(theReadoutChip, "C1", vtrim);
-                                fReadoutChipInterface->WriteChipReg(theReadoutChip, "C2", vtrim);
-                                fReadoutChipInterface->WriteChipReg(theReadoutChip, "C3", vtrim);
-                                fReadoutChipInterface->WriteChipReg(theReadoutChip, "C4", vtrim);
-                                fReadoutChipInterface->WriteChipReg(theReadoutChip, "C5", vtrim);
-                                fReadoutChipInterface->WriteChipReg(theReadoutChip, "C6", vtrim);
+                                VtrimAttempt    = theDACDownValue;
                             }
-                            else //SSA
+                            if((theExpectedDifferenceUp < theExpectedDifference))
                             {
-                                fReadoutChipInterface->WriteChipReg(theReadoutChip, "Bias_D5DAC8", vtrim);
+                                VtrimAttempt    = theDACUpValue;
                             }
                         }
-                    } //chip
-                }
+                        else
+                        {
+                            LOG(DEBUG) << BOLDGREEN << "Good extrapolation of Vtrim " << VtrimAttempt << RESET;
+                            SetVtrim(theReadoutChip,VtrimAttempt); 
+                            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+                            ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+                            auto theThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+                            LOG(INFO) << BOLDGREEN << " get threshold " << theThreshold << " with target " << theTargetThreshold << RESET;
+                            isSearching = false;
+                        }
+                        LOG(INFO) << BOLDMAGENTA << "Writing DAC val " << +VtrimAttempt << RESET;
+                        SetVtrim(theReadoutChip,VtrimAttempt);   std::this_thread::sleep_for(std::chrono::milliseconds(2));
+                        ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+                        theCurrentMaxThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+                        LOG(INFO) << BOLDMAGENTA << "Get Threshold " << theCurrentMaxThreshold << RESET;
+                        theCurrentIteration += 1;
+                    }
+                
+                    LOG(INFO) << BOLDGREEN << "Vtrim gives -> New max occupancy threshold value: " << theCurrentMaxThreshold << " Expected value: " << theTargetThreshold << RESET;
+                } //chip
             }
         }
-        std::cout<< " run scan threshold for iteration "<< vtrim << std::endl;
-        ScanThreshold();
-        std::cout<< " done " << std::endl;
-    
-    } // iteration
-    
-
-        
+    }        
     std::cout << " close all loops" << std::endl;
+    ScanThreshold();
 }
-
-
-// uint8_t PedestalEqualizationPSAtPedestal::GenericTune(ReadoutChip* theChip, float theExpectedValue, std::string theDACtoTuneName, uint8_t theDACValue, bool isPerChannel)
-// {
-//     LOG(INFO) << CYAN << "Register being tuned: " << theDACtoTuneName << RESET;
-
-//     // write DAC (ie one of the registers) with value 0 (minimum)
-//     uint8_t theDACMinValue = 0x00;
-//     fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACMinValue);
-//     ScanThreshold();
-//     uint32_t theOffsetValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
-//     LOG(DEBUG) << MAGENTA << "The register for " << theDACtoTuneName << " at " << +theDACMinValue << "  gives theOffsetValue " << theOffsetValue << " [ADC]" << RESET;
-
-//     // now set the DAC value to its max value
-//     uint8_t theDACMaxValue = 0x1F;
-//     if(isVref)
-//         this->setVref(theChip, theDACMaxValue);
-//     else
-//         this->WriteChipReg(theChip, theDACtoTuneName, theDACMaxValue);
-//     std::this_thread::sleep_for(std::chrono::milliseconds(2));
-//     uint32_t theMaxValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
-//     LOG(DEBUG) << MAGENTA << "The register for " << theDACtoTuneName << " at " << +theDACMaxValue << " gives theMaxValue " << theMaxValue << " [ADC]" << RESET;
-
-//     float theLSB = abs(float(theMaxValue) - float(theOffsetValue)) / float(theDACMaxValue);
-//     LOG(DEBUG) << BOLDMAGENTA << " abs(float(theMaxValue) - float(theOffsetValue)) " << abs(float(theMaxValue) - float(theOffsetValue)) << " float(theDACMaxValue) " << float(theDACMaxValue) << RESET;
-//     LOG(DEBUG) << BLUE << theDACtoTuneName << " LSB " << theLSB << RESET;
-
-//     float theADCDExpectedValue = 0.0;
-//     theADCDExpectedValue       = theExpectedValue / theSlope + theGroundADCValue; // converted from volts to ADC
-//     LOG(DEBUG) << MAGENTA << "The register for " << theDACtoTuneName << " expected value in ADC " << theADCDExpectedValue << " [ADC]" << RESET;
-
-//     // now set the DAC value to its default value and get the value at the default value
-//     if(isVref)
-//         this->setVref(theChip, theDACValue);
-//     else
-//         this->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
-//     std::this_thread::sleep_for(std::chrono::milliseconds(2));
-//     uint32_t theCurrentValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
-//     LOG(INFO) << MAGENTA << "The register to tune at nominal value " << +theDACValue << " gives theCurrentValue " << theCurrentValue << " [ADC]" << RESET;
-
-//     int theStepSign = 0;
-//     if(theADCDExpectedValue < theCurrentValue)
-//         theStepSign = (isVref) ? 1 : -1;
-//     else
-//         theStepSign = (isVref) ? -1 : 1;
-
-//     uint8_t theSteps       = uint8_t(std::round(abs(float(theADCDExpectedValue) - float(theCurrentValue)) / float(theLSB)));
-//     uint8_t theDACNewValue = 0;
-//     if(float(theDACValue + theStepSign * theSteps) > theDACMaxValue)
-//         theDACNewValue = theDACMaxValue;
-//     else if((float(theDACValue + theStepSign * theSteps) < theDACMinValue))
-//         theDACNewValue = theDACMinValue;
-//     else
-//         theDACNewValue = theDACValue + theStepSign * theSteps;
-
-//     theDACValue = theDACNewValue;
-
-//     LOG(DEBUG) << MAGENTA << "Predicted number of register steps to get the expected value " << +theSteps << " giving the new register value of " << +theDACNewValue << RESET;
-
-//     // now writing the DAC to the new value estimated above
-//     if(isVref)
-//         this->setVref(theChip, theDACNewValue);
-//     else
-//         this->WriteChipReg(theChip, theDACtoTuneName, theDACNewValue);
-//     std::this_thread::sleep_for(std::chrono::milliseconds(2));
-
-//     uint32_t theNewValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
-//     LOG(DEBUG) << MAGENTA << "After changing value for DAC " << theDACtoTuneName << " to " << +theDACValue << " the ADC value is " << theNewValue << " [ADC]" << RESET;
-
-//     // Now checking if we can go even closer to the expected value
-//     bool     isSearching         = true;
-//     uint32_t theCurrentIteration = 0;
-//     while(isSearching)
-//     {
-//         LOG(DEBUG) << YELLOW << "Checking if we can go closer to the expected value. Iteration " << theCurrentIteration << RESET;
-//         LOG(DEBUG) << MAGENTA << " theDACNewValue - 1 " << +theDACNewValue - 1 << RESET;
-//         uint8_t theDACDownValue = std::max(theDACMinValue, uint8_t(theDACNewValue - 1));
-//         if(isVref)
-//             this->setVref(theChip, theDACDownValue);
-//         else
-//             this->WriteChipReg(theChip, theDACtoTuneName, theDACDownValue);
-//         std::this_thread::sleep_for(std::chrono::milliseconds(2));
-//         uint32_t theNewValueDown = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
-
-//         uint8_t theDACUpValue = std::min(uint8_t(theDACMaxValue), uint8_t(theDACNewValue + 1));
-//         LOG(DEBUG) << MAGENTA << "theDACUpValue " << +theDACUpValue << RESET;
-//         if(isVref)
-//             this->setVref(theChip, theDACUpValue);
-//         else
-//             this->WriteChipReg(theChip, theDACtoTuneName, theDACUpValue);
-//         std::this_thread::sleep_for(std::chrono::milliseconds(2));
-//         uint32_t theNewValueUp = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
-
-//         float theExpectedDifference     = std::fabs(theADCDExpectedValue - theNewValue);
-//         float theExpectedDifferenceDown = std::fabs(theADCDExpectedValue - theNewValueDown);
-//         float theExpectedDifferenceUp   = std::fabs(theADCDExpectedValue - theNewValueUp);
-
-//         if((theExpectedDifferenceDown < theExpectedDifference) || (theExpectedDifferenceUp < theExpectedDifference))
-//         {
-//             LOG(DEBUG) << BOLDRED << "Not precise extrapolation in OTPSADCCalibration: theExpectedDifferenceDown:" << theExpectedDifferenceDown
-//                        << ", theExpectedDifferenceUp:" << theExpectedDifferenceUp << ", theExpectedDifference:" << theExpectedDifference << RESET;
-//             if((theExpectedDifferenceDown < theExpectedDifference))
-//             {
-//                 theDACValue    = theDACDownValue;
-//                 theDACNewValue = theDACNewValue - 1;
-//             }
-//             if((theExpectedDifferenceUp < theExpectedDifference))
-//             {
-//                 theDACValue    = theDACUpValue;
-//                 theDACNewValue = std::min(uint8_t(theDACMaxValue), uint8_t(theDACNewValue + 1));
-//             }
-//         }
-//         else
-//         {
-//             LOG(DEBUG) << BOLDGREEN << "Good extrapolation in OTPSADCCalibration for register value " << +theDACValue << RESET;
-//             if(isVref)
-//                 this->setVref(theChip, theDACValue);
-//             else
-//                 this->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
-//             std::this_thread::sleep_for(std::chrono::milliseconds(2));
-
-//             uint32_t theCheckValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
-//             LOG(DEBUG) << BOLDGREEN << "Register " << theDACtoTuneName << " gives ADC " << theCheckValue << RESET;
-//             isSearching = false;
-//         }
-//         LOG(DEBUG) << BOLDMAGENTA << "Writing DAC val " << +theDACValue << RESET;
-//         if(isVref)
-//             this->setVref(theChip, theDACValue);
-//         else
-//             this->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
-//         std::this_thread::sleep_for(std::chrono::milliseconds(2));
-
-//         theNewValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
-
-//         theCurrentIteration += 1;
-//     }
-
-//     LOG(INFO) << BOLDGREEN << "Register: " << theDACtoTuneName << " -> New tuned value: " << theNewValue << " Expected value: " << theADCDExpectedValue << "+/-" << theLSB << RESET;
-
-//     return theDACValue;
-// }
-
 
 void PedestalEqualizationPSAtPedestal::TuneTrimBits()
 {
