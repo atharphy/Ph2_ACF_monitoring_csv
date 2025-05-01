@@ -2213,6 +2213,73 @@ class ScanBeBoardDacPerGroup : public MeasureBeBoardDataPerGroup
     std::string                          fDacName;
 };
 
+void Tool::scanDacChip(const std::string&                  dacName,
+    const std::vector<uint16_t>&        dacList,
+    uint32_t                            numberOfEvents,
+    std::vector<DetectorDataContainer*> detectorContainerVector,
+    int32_t                             numberOfEventsPerBurst,
+    uint16_t boardId,uint16_t OGId, uint16_t hybridId,uint16_t ChipId)
+{    
+    
+    ScanBeBoardDacPerGroup theScan(this);
+    theScan.setDataContainerVector(&detectorContainerVector);
+    theScan.setDacName(dacName);
+    theScan.setDacList(&dacList);
+    theScan.setBoardId(boardId);
+    theScan.setNumberOfEvents(numberOfEvents);
+    theScan.setDetectorContainer(fDetectorContainer);
+    theScan.setNumberOfEventsPerBurst(numberOfEventsPerBurst);
+    theScan.setGroupHandlerContainer(getChannelGroupHandlerContainer(), fSameChannelGroupForAllChannels);
+    uint16_t maxNumberOfGroups = getMaxNumberOfGroups();
+    for(uint16_t groupNumber = 0; groupNumber < maxNumberOfGroups; ++groupNumber)
+    {
+        if(fMaskChannelsFromOtherGroups || fTestPulse)
+        {
+            // for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
+            // {
+            //     for(auto cHybrid: *cOpticalGroup)
+            //     {
+            //         for(auto cChip: *cHybrid)
+            //         {
+                        auto theChip = fDetectorContainer->getObject(boardId)->getObject(OGId)->getObject(hybridId)->getObject(ChipId);
+                        auto channelGroup = getChannelGroup(groupNumber, boardId, OGId, hybridId, ChipId);
+                        if(!channelGroup) continue;
+
+                        fReadoutChipInterface->maskChannelsAndSetInjectionSchema(theChip, channelGroup, fMaskChannelsFromOtherGroups, fTestPulse);
+            //         }
+            //     }
+            // }
+        }
+        theScan.setGroup(groupNumber);
+        (theScan)();
+    }
+
+    if(fMaskChannelsFromOtherGroups) // Re-enable all the channels and evaluate
+    {
+        // for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
+        // {
+        //     for(auto cHybrid: *cOpticalGroup)
+        //     {
+                // for(auto cChip: *cHybrid) { 
+                auto theChip = fDetectorContainer->getObject(boardId)->getObject(OGId)->getObject(hybridId)->getObject(ChipId);
+    
+                fReadoutChipInterface->ConfigureChipOriginalMask(theChip); //}
+        //     }
+        // }
+    }
+
+    
+    if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
+    {
+        std::cout << " BoardType::D19C " << std::endl;
+        numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
+    }
+    for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), numberOfEvents);
+
+    //for(auto board: *fDetectorContainer) { scanBeBoardDac(board->getId(), dacName, dacList, numberOfEvents, detectorContainerVector, numberOfEventsPerBurst); }
+
+}
+
 // One dimensional dac scan per BeBoard
 void Tool::scanBeBoardDac(uint16_t                             boardId,
                           const std::string&                   dacName,
