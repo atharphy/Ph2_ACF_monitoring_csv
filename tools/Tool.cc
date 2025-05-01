@@ -2235,20 +2235,10 @@ void Tool::scanDacChip(const std::string&                  dacName,
     {
         if(fMaskChannelsFromOtherGroups || fTestPulse)
         {
-            // for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
-            // {
-            //     for(auto cHybrid: *cOpticalGroup)
-            //     {
-            //         for(auto cChip: *cHybrid)
-            //         {
-                        auto theChip = fDetectorContainer->getObject(boardId)->getObject(OGId)->getObject(hybridId)->getObject(ChipId);
-                        auto channelGroup = getChannelGroup(groupNumber, boardId, OGId, hybridId, ChipId);
-                        if(!channelGroup) continue;
-
-                        fReadoutChipInterface->maskChannelsAndSetInjectionSchema(theChip, channelGroup, fMaskChannelsFromOtherGroups, fTestPulse);
-            //         }
-            //     }
-            // }
+            auto theChip = fDetectorContainer->getObject(boardId)->getObject(OGId)->getObject(hybridId)->getObject(ChipId);
+            auto channelGroup = getChannelGroup(groupNumber, boardId, OGId, hybridId, ChipId);
+            if(!channelGroup) continue;
+            fReadoutChipInterface->maskChannelsAndSetInjectionSchema(theChip, channelGroup, fMaskChannelsFromOtherGroups, fTestPulse);
         }
         theScan.setGroup(groupNumber);
         (theScan)();
@@ -2256,28 +2246,16 @@ void Tool::scanDacChip(const std::string&                  dacName,
 
     if(fMaskChannelsFromOtherGroups) // Re-enable all the channels and evaluate
     {
-        // for(auto cOpticalGroup: *(fDetectorContainer->getObject(boardId)))
-        // {
-        //     for(auto cHybrid: *cOpticalGroup)
-        //     {
-                // for(auto cChip: *cHybrid) { 
-                auto theChip = fDetectorContainer->getObject(boardId)->getObject(OGId)->getObject(hybridId)->getObject(ChipId);
-    
-                fReadoutChipInterface->ConfigureChipOriginalMask(theChip); //}
-        //     }
-        // }
+        auto theChip = fDetectorContainer->getObject(boardId)->getObject(OGId)->getObject(hybridId)->getObject(ChipId);
+        fReadoutChipInterface->ConfigureChipOriginalMask(theChip);
     }
 
     
     if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
     {
-        std::cout << " BoardType::D19C " << std::endl;
         numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
     }
     for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), numberOfEvents);
-
-    //for(auto board: *fDetectorContainer) { scanBeBoardDac(board->getId(), dacName, dacList, numberOfEvents, detectorContainerVector, numberOfEventsPerBurst); }
-
 }
 
 // One dimensional dac scan per BeBoard
