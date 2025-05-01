@@ -24,7 +24,11 @@ void PedestalEqualizationPSAtPedestal::Initialise(bool pAllChan, bool pDisableSt
     
     fRegisterHelper->takeSnapshot();
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^TrimDAC_C\\d+_R\\d+$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^C[0-6]$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC\\d$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^THTRIMMING_S\\d+$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_D5DAC8$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_THDAC$");
 
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
@@ -510,9 +514,7 @@ void PedestalEqualizationPSAtPedestal::TuneVtrim()
     ScanThreshold();
     LOG(INFO) << BOLDMAGENTA << " Scan Vtrim " << RESET;
 
-    // DetectorDataContainer thePreviousThresholdAtMaxOccupancyContainer;
-    // ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, theFirstSmallestThresholdAtMaxOccupancyContainer);
-
+    
     for(uint16_t vtrim = 0; vtrim <=31; vtrim++)
     {
         for(auto cBoard: fTheMaxOccupancyThresholdContainers)
@@ -556,7 +558,6 @@ void PedestalEqualizationPSAtPedestal::TuneVtrim()
                                 fReadoutChipInterface->WriteChipReg(theReadoutChip, "Bias_D5DAC8", vtrim);
                             }
                         }
-
                     } //chip
                 }
             }
@@ -571,6 +572,148 @@ void PedestalEqualizationPSAtPedestal::TuneVtrim()
         
     std::cout << " close all loops" << std::endl;
 }
+
+
+// uint8_t PedestalEqualizationPSAtPedestal::GenericTune(ReadoutChip* theChip, float theExpectedValue, std::string theDACtoTuneName, uint8_t theDACValue, bool isPerChannel)
+// {
+//     LOG(INFO) << CYAN << "Register being tuned: " << theDACtoTuneName << RESET;
+
+//     // write DAC (ie one of the registers) with value 0 (minimum)
+//     uint8_t theDACMinValue = 0x00;
+//     fReadoutChipInterface->WriteChipReg(theChip, theDACtoTuneName, theDACMinValue);
+//     ScanThreshold();
+//     uint32_t theOffsetValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
+//     LOG(DEBUG) << MAGENTA << "The register for " << theDACtoTuneName << " at " << +theDACMinValue << "  gives theOffsetValue " << theOffsetValue << " [ADC]" << RESET;
+
+//     // now set the DAC value to its max value
+//     uint8_t theDACMaxValue = 0x1F;
+//     if(isVref)
+//         this->setVref(theChip, theDACMaxValue);
+//     else
+//         this->WriteChipReg(theChip, theDACtoTuneName, theDACMaxValue);
+//     std::this_thread::sleep_for(std::chrono::milliseconds(2));
+//     uint32_t theMaxValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
+//     LOG(DEBUG) << MAGENTA << "The register for " << theDACtoTuneName << " at " << +theDACMaxValue << " gives theMaxValue " << theMaxValue << " [ADC]" << RESET;
+
+//     float theLSB = abs(float(theMaxValue) - float(theOffsetValue)) / float(theDACMaxValue);
+//     LOG(DEBUG) << BOLDMAGENTA << " abs(float(theMaxValue) - float(theOffsetValue)) " << abs(float(theMaxValue) - float(theOffsetValue)) << " float(theDACMaxValue) " << float(theDACMaxValue) << RESET;
+//     LOG(DEBUG) << BLUE << theDACtoTuneName << " LSB " << theLSB << RESET;
+
+//     float theADCDExpectedValue = 0.0;
+//     theADCDExpectedValue       = theExpectedValue / theSlope + theGroundADCValue; // converted from volts to ADC
+//     LOG(DEBUG) << MAGENTA << "The register for " << theDACtoTuneName << " expected value in ADC " << theADCDExpectedValue << " [ADC]" << RESET;
+
+//     // now set the DAC value to its default value and get the value at the default value
+//     if(isVref)
+//         this->setVref(theChip, theDACValue);
+//     else
+//         this->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
+//     std::this_thread::sleep_for(std::chrono::milliseconds(2));
+//     uint32_t theCurrentValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
+//     LOG(INFO) << MAGENTA << "The register to tune at nominal value " << +theDACValue << " gives theCurrentValue " << theCurrentValue << " [ADC]" << RESET;
+
+//     int theStepSign = 0;
+//     if(theADCDExpectedValue < theCurrentValue)
+//         theStepSign = (isVref) ? 1 : -1;
+//     else
+//         theStepSign = (isVref) ? -1 : 1;
+
+//     uint8_t theSteps       = uint8_t(std::round(abs(float(theADCDExpectedValue) - float(theCurrentValue)) / float(theLSB)));
+//     uint8_t theDACNewValue = 0;
+//     if(float(theDACValue + theStepSign * theSteps) > theDACMaxValue)
+//         theDACNewValue = theDACMaxValue;
+//     else if((float(theDACValue + theStepSign * theSteps) < theDACMinValue))
+//         theDACNewValue = theDACMinValue;
+//     else
+//         theDACNewValue = theDACValue + theStepSign * theSteps;
+
+//     theDACValue = theDACNewValue;
+
+//     LOG(DEBUG) << MAGENTA << "Predicted number of register steps to get the expected value " << +theSteps << " giving the new register value of " << +theDACNewValue << RESET;
+
+//     // now writing the DAC to the new value estimated above
+//     if(isVref)
+//         this->setVref(theChip, theDACNewValue);
+//     else
+//         this->WriteChipReg(theChip, theDACtoTuneName, theDACNewValue);
+//     std::this_thread::sleep_for(std::chrono::milliseconds(2));
+
+//     uint32_t theNewValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
+//     LOG(DEBUG) << MAGENTA << "After changing value for DAC " << theDACtoTuneName << " to " << +theDACValue << " the ADC value is " << theNewValue << " [ADC]" << RESET;
+
+//     // Now checking if we can go even closer to the expected value
+//     bool     isSearching         = true;
+//     uint32_t theCurrentIteration = 0;
+//     while(isSearching)
+//     {
+//         LOG(DEBUG) << YELLOW << "Checking if we can go closer to the expected value. Iteration " << theCurrentIteration << RESET;
+//         LOG(DEBUG) << MAGENTA << " theDACNewValue - 1 " << +theDACNewValue - 1 << RESET;
+//         uint8_t theDACDownValue = std::max(theDACMinValue, uint8_t(theDACNewValue - 1));
+//         if(isVref)
+//             this->setVref(theChip, theDACDownValue);
+//         else
+//             this->WriteChipReg(theChip, theDACtoTuneName, theDACDownValue);
+//         std::this_thread::sleep_for(std::chrono::milliseconds(2));
+//         uint32_t theNewValueDown = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
+
+//         uint8_t theDACUpValue = std::min(uint8_t(theDACMaxValue), uint8_t(theDACNewValue + 1));
+//         LOG(DEBUG) << MAGENTA << "theDACUpValue " << +theDACUpValue << RESET;
+//         if(isVref)
+//             this->setVref(theChip, theDACUpValue);
+//         else
+//             this->WriteChipReg(theChip, theDACtoTuneName, theDACUpValue);
+//         std::this_thread::sleep_for(std::chrono::milliseconds(2));
+//         uint32_t theNewValueUp = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
+
+//         float theExpectedDifference     = std::fabs(theADCDExpectedValue - theNewValue);
+//         float theExpectedDifferenceDown = std::fabs(theADCDExpectedValue - theNewValueDown);
+//         float theExpectedDifferenceUp   = std::fabs(theADCDExpectedValue - theNewValueUp);
+
+//         if((theExpectedDifferenceDown < theExpectedDifference) || (theExpectedDifferenceUp < theExpectedDifference))
+//         {
+//             LOG(DEBUG) << BOLDRED << "Not precise extrapolation in OTPSADCCalibration: theExpectedDifferenceDown:" << theExpectedDifferenceDown
+//                        << ", theExpectedDifferenceUp:" << theExpectedDifferenceUp << ", theExpectedDifference:" << theExpectedDifference << RESET;
+//             if((theExpectedDifferenceDown < theExpectedDifference))
+//             {
+//                 theDACValue    = theDACDownValue;
+//                 theDACNewValue = theDACNewValue - 1;
+//             }
+//             if((theExpectedDifferenceUp < theExpectedDifference))
+//             {
+//                 theDACValue    = theDACUpValue;
+//                 theDACNewValue = std::min(uint8_t(theDACMaxValue), uint8_t(theDACNewValue + 1));
+//             }
+//         }
+//         else
+//         {
+//             LOG(DEBUG) << BOLDGREEN << "Good extrapolation in OTPSADCCalibration for register value " << +theDACValue << RESET;
+//             if(isVref)
+//                 this->setVref(theChip, theDACValue);
+//             else
+//                 this->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
+//             std::this_thread::sleep_for(std::chrono::milliseconds(2));
+
+//             uint32_t theCheckValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
+//             LOG(DEBUG) << BOLDGREEN << "Register " << theDACtoTuneName << " gives ADC " << theCheckValue << RESET;
+//             isSearching = false;
+//         }
+//         LOG(DEBUG) << BOLDMAGENTA << "Writing DAC val " << +theDACValue << RESET;
+//         if(isVref)
+//             this->setVref(theChip, theDACValue);
+//         else
+//             this->WriteChipReg(theChip, theDACtoTuneName, theDACValue);
+//         std::this_thread::sleep_for(std::chrono::milliseconds(2));
+
+//         theNewValue = isVref == 0 ? this->readADC(theChip, theDACtoTuneName, 1) : this->readADCBandGap(theChip);
+
+//         theCurrentIteration += 1;
+//     }
+
+//     LOG(INFO) << BOLDGREEN << "Register: " << theDACtoTuneName << " -> New tuned value: " << theNewValue << " Expected value: " << theADCDExpectedValue << "+/-" << theLSB << RESET;
+
+//     return theDACValue;
+// }
+
 
 void PedestalEqualizationPSAtPedestal::TuneTrimBits()
 {
