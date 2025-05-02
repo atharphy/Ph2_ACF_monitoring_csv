@@ -43,6 +43,9 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     void TuneVtrim();
     void TuneTrimBits();
     void SetVtrim(ReadoutChip* theReadoutChip, uint16_t Vtrim);
+    void SetTrimBitsChannel(ReadoutChip* theReadoutChip, uint16_t trimBits, uint16_t row, uint16_t col);
+    void SetTrimBitsAll(ReadoutChip* theReadoutChip, uint16_t trimBits);
+    uint16_t ReadTrimBitsChannel(ReadoutChip* theReadoutChip, uint16_t row, uint16_t col);
     void DoScan(
                             uint16_t                             boardId,
                             const std::string&                   dacName,

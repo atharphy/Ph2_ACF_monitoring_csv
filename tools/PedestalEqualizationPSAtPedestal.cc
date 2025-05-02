@@ -325,12 +325,12 @@ void PedestalEqualizationPSAtPedestal::ScanThresholdChip(uint16_t boardId,uint16
         detectorContainerVectorPointers.push_back(&container);
     }
 
-    std::cout << " doing scanDacChip " << std::endl;
     this->scanDacChip("Threshold", dacList, fEventsPerPoint,detectorContainerVectorPointers, fNEventsPerBurst, boardId,OGId,hybridId,ChipId);
     DetectorDataContainer dacOccupancyContainers;
-    std::cout << " done scanDacChip " << std::endl;
     ContainerFactory::copyAndInitChannel<std::map<uint16_t, float>>(*fDetectorContainer, dacOccupancyContainers);
-    std::cout << " about to fill occupancy map" << std::endl;
+
+    // FillMaxOccupancyMap(detectorContainerVector, dacOccupancyContainers, boardId, OGId, hybridId, ChipId);
+
     for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
     {
         auto theChipContainer = detectorContainerVector.at(dacIt).getObject(boardId)->getObject(OGId)->getObject(hybridId)->getObject(ChipId);
@@ -597,6 +597,54 @@ void PedestalEqualizationPSAtPedestal::SetVtrim(ReadoutChip* theReadoutChip, uin
     }
 
 }
+void PedestalEqualizationPSAtPedestal::SetTrimBitsAll(ReadoutChip* theReadoutChip, uint16_t trimBits)
+{
+    auto     cType = theReadoutChip->getFrontEndType();
+    
+    if(cType == FrontEndType::MPA2)
+    {
+        fReadoutChipInterface->WriteChipReg(theReadoutChip, "TrimDAC_ALL", trimBits);
+    }
+    else //SSA
+    {
+        fReadoutChipInterface->WriteChipReg(theReadoutChip, "THTRIMMING", trimBits);        
+    }
+
+}
+void PedestalEqualizationPSAtPedestal::SetTrimBitsChannel(ReadoutChip* theReadoutChip, uint16_t trimBits, uint16_t row, uint16_t col)
+{
+    auto     cType = theReadoutChip->getFrontEndType();
+
+    if(cType == FrontEndType::MPA2)
+    {
+        std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
+        if(col == 5 && row == 2)std::cout << "MPA trim " << cRegName << " 0x"<< std::hex <<  trimBits << std::dec << std::endl;
+        fReadoutChipInterface->WriteChipReg(theReadoutChip, cRegName, trimBits );
+    }
+    else //SSA
+    {
+        std::string cRegName = "THTRIMMING_S" + std::to_string(col+1);
+        if(col +1 == 5) std::cout << "SSA trim " << cRegName << " 0x"<< std::hex << trimBits << std::dec << std::endl;
+        fReadoutChipInterface->WriteChipReg(theReadoutChip, cRegName, trimBits );
+    }
+}
+uint16_t PedestalEqualizationPSAtPedestal::ReadTrimBitsChannel(ReadoutChip* theReadoutChip, uint16_t row, uint16_t col)
+{
+    auto     cType = theReadoutChip->getFrontEndType();
+
+    uint16_t currentTrim;
+    if(cType == FrontEndType::MPA2)
+    {
+        std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
+        currentTrim = fReadoutChipInterface->ReadChipReg(theReadoutChip,cRegName);
+    }
+    else //SSA
+    {
+        std::string cRegName = "THTRIMMING_S" + std::to_string(col+1);
+        currentTrim = fReadoutChipInterface->ReadChipReg(theReadoutChip,cRegName);
+    }
+    return currentTrim;
+}
 
 void PedestalEqualizationPSAtPedestal::TuneVtrim()
 {
@@ -723,7 +771,7 @@ void PedestalEqualizationPSAtPedestal::TuneVtrim()
         }
     }        
     std::cout << " close all loops" << std::endl;
-    ScanThreshold();
+    //ScanThreshold();
 }
 
 void PedestalEqualizationPSAtPedestal::TuneTrimBits()
@@ -737,15 +785,7 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    auto cType = cChip->getFrontEndType();
-                    if(cType == FrontEndType::MPA2)
-                    {
-                        fReadoutChipInterface->WriteChipReg(cChip, "TrimDAC_ALL", 0x1F);
-                    }
-                    else //SSA
-                    {
-                        fReadoutChipInterface->WriteChipReg(cChip, "THTRIMMING", 0x1F);        
-                    }
+                    SetTrimBitsAll(cChip, 0x1F);
                 }
             }
         }
@@ -756,6 +796,109 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
 
 
     LOG(INFO) << BOLDMAGENTA << " Scan Trim Bit " << RESET;
+
+
+    // for(auto cBoard: *fDetectorContainer)
+    // {
+    //     for(auto cOpticalGroup: *cBoard)
+    //     {
+    //         for(auto cHybrid: *cOpticalGroup)
+    //         {
+    //             for(auto cChip: *cHybrid)
+    //             {
+    //                 auto theTargetThreshold = fTheTargetThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+    //                 auto row = theSmallestThreshold.first.first;
+    //                 auto col = theSmallestThreshold.first.second;
+                    
+    //                 LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " minimum threshold at minimum trim bit " << theMinimumThreshold << RESET;
+    //                 //now find maximum threshold
+    //                 uint16_t theMaxVtrim = 31;
+    //                 ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+    //                 std::cout << " have readoutchip" << std::endl;
+    //                 SetVtrim(theReadoutChip,theMaxVtrim);
+    //                 std::cout << " set vtrim to max" << std::endl;
+    //                 ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+    //                 std::cout << " DONE ScanThresholdChip" << std::endl;
+    //                 auto theMaximumThreshold =  fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+    //                 LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " maximum threshold at maximum Vtrim " << theMaximumThreshold << RESET;
+
+    //                 // Assume linear relationship for change in Vtrim and change in the threshold giving max occupancy
+    //                 float theVtrimStepSize = (float(theMaximumThreshold) - float(theMinimumThreshold))/float(theMaxVtrim);
+    //                 LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " Vtrim step " << theVtrimStepSize << RESET;
+    //                 uint16_t VtrimAttempt = (theTargetThreshold - theMinimumThreshold)/theVtrimStepSize;
+    //                 LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " first Vtrim to set  " << VtrimAttempt << RESET;
+
+    //                 SetVtrim(theReadoutChip,VtrimAttempt);
+    //                 ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+    //                 auto theCurrentMaxThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+    //                 LOG(INFO) << BOLDGREEN <<  " Chip " <<cChip->getId() << " the first guessed threshold is " << theCurrentMaxThreshold  << " and target is " << theTargetThreshold << RESET;
+                    
+    //                 // Now checking if we can go even closer to the expected value
+    //                 bool     isSearching         = true;
+    //                 uint32_t theCurrentIteration = 0;
+    //                 while(isSearching)
+    //                 {
+    //                     LOG(INFO) << YELLOW << "Checking if we can go closer to the expected value. Iteration " << theCurrentIteration << RESET;
+    //                     LOG(INFO) << MAGENTA << " Vtrim - 1 " << +VtrimAttempt - 1 << RESET;
+    //                     uint8_t theDACDownValue = std::max(uint8_t(0), uint8_t(VtrimAttempt - 1));
+    //                     SetVtrim(theReadoutChip,theDACDownValue);
+    //                     std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    //                     ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+    //                     auto MaxThresholdDown = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+                    
+    //                     uint8_t theDACUpValue = std::min(uint8_t(theMaxVtrim), uint8_t(VtrimAttempt + 1));
+    //                     LOG(DEBUG) << MAGENTA << "Vtrim + 1 " << +VtrimAttempt + 1<< RESET;
+    //                     SetVtrim(theReadoutChip,theDACUpValue);
+    //                     std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    //                     ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+    //                     auto MaxThresholdUp = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+                        
+    //                     float theExpectedDifference     = std::fabs(theTargetThreshold - theCurrentMaxThreshold);
+    //                     float theExpectedDifferenceDown = std::fabs(theTargetThreshold - MaxThresholdDown);
+    //                     float theExpectedDifferenceUp   = std::fabs(theTargetThreshold - MaxThresholdUp);
+                    
+    //                     if((theExpectedDifferenceDown < theExpectedDifference) || (theExpectedDifferenceUp < theExpectedDifference))
+    //                     {
+    //                         LOG(DEBUG) << BOLDRED << "Not precise extrapolation in OTPSADCCalibration: theExpectedDifferenceDown:" << theExpectedDifferenceDown
+    //                                    << ", theExpectedDifferenceUp:" << theExpectedDifferenceUp << ", theExpectedDifference:" << theExpectedDifference << RESET;
+    //                         if((theExpectedDifferenceDown < theExpectedDifference))
+    //                         {
+    //                             VtrimAttempt    = theDACDownValue;
+    //                         }
+    //                         if((theExpectedDifferenceUp < theExpectedDifference))
+    //                         {
+    //                             VtrimAttempt    = theDACUpValue;
+    //                         }
+    //                     }
+    //                     else
+    //                     {
+    //                         LOG(DEBUG) << BOLDGREEN << "Good extrapolation of Vtrim " << VtrimAttempt << RESET;
+    //                         SetVtrim(theReadoutChip,VtrimAttempt); 
+    //                         std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    //                         ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+    //                         auto theThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+    //                         LOG(INFO) << BOLDGREEN << " get threshold " << theThreshold << " with target " << theTargetThreshold << RESET;
+    //                         isSearching = false;
+    //                     }
+    //                     LOG(INFO) << BOLDMAGENTA << "Writing DAC val " << +VtrimAttempt << RESET;
+    //                     SetVtrim(theReadoutChip,VtrimAttempt);   std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    //                     ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+    //                     theCurrentMaxThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+    //                     LOG(INFO) << BOLDMAGENTA << "Get Threshold " << theCurrentMaxThreshold << RESET;
+    //                     theCurrentIteration += 1;
+    //                 }
+                
+    //                 LOG(INFO) << BOLDGREEN << "Vtrim gives -> New max occupancy threshold value: " << theCurrentMaxThreshold << " Expected value: " << theTargetThreshold << RESET;
+    //             } //chip
+    //         }
+    //     }
+    // }        
+    // std::cout << " close all loops" << std::endl;
+    // ScanThreshold();
+
+
+
+
     int totalIterations = 31;
     int iteration = totalIterations;
     while (iteration > 0)
@@ -774,7 +917,7 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
                     {
                         std::cout << " cChip " << cChip->getId() << std::endl;
                         auto theTargetThreshold = fTheTargetThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-
+                        ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
  //                       auto theChipContainer = fTheTargetThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                         std::cout << " target threshold got "<< theTargetThreshold << std::endl;
                         for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
@@ -790,26 +933,31 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
     
                                 if (theTargetThreshold >  cChip->getChannel<uint16_t>(row, col))
                                 {
-                                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                                    auto     cType = theReadoutChip->getFrontEndType();
-                                    if(cType == FrontEndType::MPA2)
-                                    {
-                                        std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
-                                        auto currentTrim = fReadoutChipInterface->ReadChipReg(theReadoutChip,cRegName);
-                                        auto newTrim = currentTrim -1;
-                                        if(col == 5 && row == 2)std::cout << "MPA trim " << cRegName << " 0x"<< std::hex << currentTrim << " -1 0x"<<  newTrim << std::dec << std::endl;
+
+
+                                    auto currentTrim = ReadTrimBitsChannel(theReadoutChip, row, col);
+                                    auto newTrim = currentTrim -1;
+                                    SetTrimBitsChannel(theReadoutChip, newTrim, row, col);
+                                    // ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                                    // auto     cType = theReadoutChip->getFrontEndType();
+                                    // if(cType == FrontEndType::MPA2)
+                                    // {
+                                    //     std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
+                                    //     auto currentTrim = fReadoutChipInterface->ReadChipReg(theReadoutChip,cRegName);
+                                    //     auto newTrim = currentTrim -1;
+                                    //     if(col == 5 && row == 2)std::cout << "MPA trim " << cRegName << " 0x"<< std::hex << currentTrim << " -1 0x"<<  newTrim << std::dec << std::endl;
                                     
-                                        fReadoutChipInterface->WriteChipReg(theReadoutChip, cRegName, newTrim );
-                                    }
-                                    else //SSA
-                                    {
-                                        std::string cRegName = "THTRIMMING_S" + std::to_string(col+1);
-                                        auto currentTrim = fReadoutChipInterface->ReadChipReg(theReadoutChip,cRegName);
-                                        auto newTrim = currentTrim -1;
-                                        if(col +1 == 5) std::cout << "SSA trim " << cRegName << " 0x"<< std::hex << currentTrim << " -1 0x"<<  newTrim << std::dec << std::endl;
+                                    //     fReadoutChipInterface->WriteChipReg(theReadoutChip, cRegName, newTrim );
+                                    // }
+                                    // else //SSA
+                                    // {
+                                    //     std::string cRegName = "THTRIMMING_S" + std::to_string(col+1);
+                                    //     auto currentTrim = fReadoutChipInterface->ReadChipReg(theReadoutChip,cRegName);
+                                    //     auto newTrim = currentTrim -1;
+                                    //     if(col +1 == 5) std::cout << "SSA trim " << cRegName << " 0x"<< std::hex << currentTrim << " -1 0x"<<  newTrim << std::dec << std::endl;
                                     
-                                        fReadoutChipInterface->WriteChipReg(theReadoutChip, cRegName, newTrim );
-                                    }
+                                    //     fReadoutChipInterface->WriteChipReg(theReadoutChip, cRegName, newTrim );
+                                    // }
 
                                 }
 
