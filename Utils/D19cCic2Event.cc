@@ -28,20 +28,14 @@ namespace Ph2_HwInterface
 
 bool Cluster2S::parseData(uint32_t data)
 {
-    fFirstStrip = ((data >> 3) & 0xFF) - 1;
+    fFirstStrip   = ((data >> 3) & 0xFF) - 1;
     fClusterWidth = (data & 0x7) + 1;
     return fFirstStrip < NCHANNELS;
 }
 
-bool Cluster2S::isChannelHit(uint8_t channel) const
-{
-    return channel >= fFirstStrip && channel < (fFirstStrip + fClusterWidth);
-}
+bool Cluster2S::isChannelHit(uint8_t channel) const { return channel >= fFirstStrip && channel < (fFirstStrip + fClusterWidth); }
 
-void Cluster2S::print() const
-{
-    std::cout << "First strip = " << +fFirstStrip << " cluster width = " <<  +fClusterWidth << std::endl;
-}
+void Cluster2S::print() const { std::cout << "First strip = " << +fFirstStrip << " cluster width = " << +fClusterWidth << std::endl; }
 
 bool PixelClusterPS::parseData(uint32_t data)
 {
@@ -51,15 +45,9 @@ bool PixelClusterPS::parseData(uint32_t data)
     return fAddress < NSSACHANNELS;
 }
 
-bool PixelClusterPS::isChannelHit(uint8_t row, uint8_t col) const
-{
-    return col >= fAddress && col < (fAddress + fWidth) && row == fZpos;
-}
+bool PixelClusterPS::isChannelHit(uint8_t row, uint8_t col) const { return col >= fAddress && col < (fAddress + fWidth) && row == fZpos; }
 
-void PixelClusterPS::print() const
-{
-    std::cout << "First pixel row = " << +fZpos << " col = " <<  +fAddress << " cluster width = " <<  +fWidth << std::endl;
-}
+void PixelClusterPS::print() const { std::cout << "First pixel row = " << +fZpos << " col = " << +fAddress << " cluster width = " << +fWidth << std::endl; }
 
 bool StripClusterPS::parseData(uint32_t data)
 {
@@ -69,66 +57,54 @@ bool StripClusterPS::parseData(uint32_t data)
     return fAddress < NSSACHANNELS;
 }
 
-bool StripClusterPS::isChannelHit(uint8_t col) const
-{
-    return col >= fAddress && col < (fAddress + fWidth);
-}
+bool StripClusterPS::isChannelHit(uint8_t col) const { return col >= fAddress && col < (fAddress + fWidth); }
 
-void StripClusterPS::print() const
-{
-    std::cout << "First strip = " <<  +fAddress << " cluster width = " <<  +fWidth << std::endl;
-}
+void StripClusterPS::print() const { std::cout << "First strip = " << +fAddress << " cluster width = " << +fWidth << std::endl; }
 
 void HybridL1EventInfo::parseData(std::vector<uint32_t>::const_iterator dataStart)
 {
-    fErrorCode = (*(dataStart) >> 24) & 0xF ;
-    fHybridId = (*(dataStart) >> 16) & 0xFF ;
-    fChipId = (*(dataStart) >> 12) & 0xF;
-    fChipType = (*(dataStart + 1) >> 12) & 0xF;
-    fFrameDelay = *(dataStart + 1) & 0xFFF ;
-    fStatusBits = *(dataStart + 2) >> 23;
-    fL1counter = (*(dataStart + 2) >> 14) & 0x1FF;
+    fErrorCode             = (*(dataStart) >> 24) & 0xF;
+    fHybridId              = (*(dataStart) >> 16) & 0xFF;
+    fChipId                = (*(dataStart) >> 12) & 0xF;
+    fChipType              = (*(dataStart + 1) >> 12) & 0xF;
+    fFrameDelay            = *(dataStart + 1) & 0xFFF;
+    fStatusBits            = *(dataStart + 2) >> 23;
+    fL1counter             = (*(dataStart + 2) >> 14) & 0x1FF;
     fNumberOfStripClusters = (*(dataStart + 2) >> 7) & 0x7F;
     fNumberOfPixelClusters = *(dataStart + 2) & 0x7F;
 }
 
 void HybridL1EventInfo::print() const
 {
-    std::cout << "ErrorCode             = " << +fErrorCode             << std::endl;
-    std::cout << "HybridId              = " << +fHybridId              << std::endl;
-    std::cout << "ChipId                = " << +fChipId                << std::endl;
-    std::cout << "ChipType              = " << +fChipType              << std::endl;
-    std::cout << "FrameDelay            = " << +fFrameDelay            << std::endl;
-    std::cout << "StatusBits            = " << +fStatusBits            << std::endl;
-    std::cout << "L1counter             = " << +fL1counter             << std::endl;
+    std::cout << "ErrorCode             = " << +fErrorCode << std::endl;
+    std::cout << "HybridId              = " << +fHybridId << std::endl;
+    std::cout << "ChipId                = " << +fChipId << std::endl;
+    std::cout << "ChipType              = " << +fChipType << std::endl;
+    std::cout << "FrameDelay            = " << +fFrameDelay << std::endl;
+    std::cout << "StatusBits            = " << +fStatusBits << std::endl;
+    std::cout << "L1counter             = " << +fL1counter << std::endl;
     std::cout << "NumberOfStripClusters = " << +fNumberOfStripClusters << std::endl;
     std::cout << "NumberOfPixelClusters = " << +fNumberOfPixelClusters << std::endl;
 }
 
 void ChipL1EventInfo::parseData(std::vector<uint32_t>::const_iterator dataStart, size_t bitStart)
 {
-    fErrorCode = getWord<2, 0x3>(dataStart, bitStart);
+    fErrorCode       = getWord<2, 0x3>(dataStart, bitStart);
     fPipelineAddress = getWord<9, 0x1FF>(dataStart, bitStart + 2);
-    fL1id = getWord<9, 0x1FF>(dataStart, bitStart + 11);
-    fRawData[7] = getWord<30, 0x3FFFFFFF>(dataStart, bitStart + 20);
-    for(size_t wordIndex = 0; wordIndex < 7; ++wordIndex)
-    {
-        fRawData[wordIndex] = getWord<32, 0xFFFFFFFF>(dataStart, bitStart + 242 - (32 * wordIndex));
-    }
+    fL1id            = getWord<9, 0x1FF>(dataStart, bitStart + 11);
+    fRawData[7]      = getWord<30, 0x3FFFFFFF>(dataStart, bitStart + 20);
+    for(size_t wordIndex = 0; wordIndex < 7; ++wordIndex) { fRawData[wordIndex] = getWord<32, 0xFFFFFFFF>(dataStart, bitStart + 242 - (32 * wordIndex)); }
 }
 
-bool ChipL1EventInfo::isChannelHit(uint8_t channel) const
-{
-    return (fRawData.at(channel / 32) >> (channel % 32) ) & 0x1;
-}
+bool ChipL1EventInfo::isChannelHit(uint8_t channel) const { return (fRawData.at(channel / 32) >> (channel % 32)) & 0x1; }
 
 void ChipL1EventInfo::print() const
 {
     auto reversedRawData = fRawData;
     std::reverse(reversedRawData.begin(), reversedRawData.end());
-    std::cout << "ErrorCode             = " << +fErrorCode                            << std::endl;
-    std::cout << "PipelineAddress       = " << +fPipelineAddress                      << std::endl;
-    std::cout << "L1id                  = " << +fL1id                                 << std::endl;
+    std::cout << "ErrorCode             = " << +fErrorCode << std::endl;
+    std::cout << "PipelineAddress       = " << +fPipelineAddress << std::endl;
+    std::cout << "L1id                  = " << +fL1id << std::endl;
     std::cout << "RawData               = " << getPatternPrintout(reversedRawData, 1) << std::endl;
 }
 
@@ -151,20 +127,19 @@ uint8_t ChipL1EventInfo::countNumberOfHits() const
     return numberOfHits;
 }
 
-
 void HybridStubEventInfo::parseData(std::vector<uint32_t>::const_iterator dataStart)
 {
-    fStubDataDelay = (*(dataStart) >> 12) & 0xFFF ;
-    fStatusBits = (*(dataStart + 1) >> 22) & 0x1FF ;
-    fNumberOfStubs = (*(dataStart + 1) >> 16) & 0x3F ;
-    fBunchCrossingId = *(dataStart + 1) & 0xFFF ;
+    fStubDataDelay   = (*(dataStart) >> 12) & 0xFFF;
+    fStatusBits      = (*(dataStart + 1) >> 22) & 0x1FF;
+    fNumberOfStubs   = (*(dataStart + 1) >> 16) & 0x3F;
+    fBunchCrossingId = *(dataStart + 1) & 0xFFF;
 }
 
 void HybridStubEventInfo::print() const
 {
-    std::cout << "StubDataDelay   = " << +fStubDataDelay   << std::endl;
-    std::cout << "StatusBits      = " << +fStatusBits      << std::endl;
-    std::cout << "NumberOfStubs   = " << +fNumberOfStubs   << std::endl;
+    std::cout << "StubDataDelay   = " << +fStubDataDelay << std::endl;
+    std::cout << "StatusBits      = " << +fStatusBits << std::endl;
+    std::cout << "NumberOfStubs   = " << +fNumberOfStubs << std::endl;
     std::cout << "BunchCrossingId = " << +fBunchCrossingId << std::endl;
 }
 
@@ -172,13 +147,13 @@ bool EventStub::parseData(uint32_t data, bool is2S)
 {
     if(is2S)
     {
-        fPosition = ((data >>  4) & 0xFF);
+        fPosition = ((data >> 4) & 0xFF);
         fBend     = (data & 0xF);
     }
     else
     {
-        fPosition = ((data >>  7) & 0xFF);
-        fBend     = ((data >>  4) & 0x7);
+        fPosition = ((data >> 7) & 0xFF);
+        fBend     = ((data >> 4) & 0x7);
         fRow      = (data & 0xF);
     }
     return true;
@@ -191,7 +166,6 @@ void EventStub::print() const
     std::cout << " Bend = " << +fBend << std::endl;
 }
 
-
 // Event implementation
 D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>& list, bool pWith8CBC3, bool pWithTLU)
 {
@@ -200,31 +174,25 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
     if(pBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S)
     {
         fIs2S = true;
-        if(fIsSparsified)
-        {
-            ContainerFactory::copyAndInitStructure<EmptyContainer, std::vector<Cluster2S>, HybridL1EventInfo, EmptyContainer, EmptyContainer>(*pBoard, fDecodedL1Event);
-        }
-        else
-        {
-            ContainerFactory::copyAndInitStructure<EmptyContainer, ChipL1EventInfo, HybridL1EventInfo, EmptyContainer, EmptyContainer>(*pBoard, fDecodedL1Event);
-        }
+        if(fIsSparsified) { ContainerFactory::copyAndInitStructure<EmptyContainer, std::vector<Cluster2S>, HybridL1EventInfo, EmptyContainer, EmptyContainer>(*pBoard, fDecodedL1Event); }
+        else { ContainerFactory::copyAndInitStructure<EmptyContainer, ChipL1EventInfo, HybridL1EventInfo, EmptyContainer, EmptyContainer>(*pBoard, fDecodedL1Event); }
     }
     else
     {
         fIs2S = false;
         fDecodedL1Event.setId(pBoard->getId());
         fDecodedL1Event.initialize<EmptyContainer, EmptyContainer>();
-    
+
         for(auto theOpticalGroup: *pBoard)
         {
             auto decodedEventOpticalGroup = fDecodedL1Event.addOpticalGroupDataContainer(theOpticalGroup->getId());
-            decodedEventOpticalGroup->initialize<EmptyContainer,HybridL1EventInfo>();
+            decodedEventOpticalGroup->initialize<EmptyContainer, HybridL1EventInfo>();
 
             for(auto theHybrid: *theOpticalGroup)
             {
                 auto decodedEventHybrid = decodedEventOpticalGroup->addHybridDataContainer(theHybrid->getId());
                 decodedEventHybrid->initialize<HybridL1EventInfo, std::vector<StripClusterPS>>();
-                
+
                 for(auto theChip: *theHybrid)
                 {
                     auto decodedEventChip = decodedEventHybrid->addChipDataContainer(theChip->getId(), theChip->getNumberOfRows(), theChip->getNumberOfCols());
@@ -234,7 +202,6 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
                     else
                         ContainerFactory::copyAndInitChip<std::vector<PixelClusterPS>>(*static_cast<ChipContainer*>(theChip), *decodedEventChip);
                 }
-
             }
         }
     }
@@ -249,7 +216,6 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, const std::vector<uint32_t>&
 
 void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
 {
-    
     // decode Header
     if(pData.size() < 4)
     {
@@ -272,49 +238,40 @@ void D19cCic2Event::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     }
 
     fExternalTriggerID = pData[1] >> 16;
-    fTDC = ((pData[2] >> 24) - 1) & 0x7;
-    fEventCount = pData[2] & 0xFFFFFF;
-    fBunch = pData[3];
+    fTDC               = ((pData[2] >> 24) - 1) & 0x7;
+    fEventCount        = pData[2] & 0xFFFFFF;
+    fBunch             = pData[3];
 
     std::vector<uint32_t>::const_iterator theCurrentHybridDataPointer = pData.begin() + 4;
     for(auto theOpticalGroup: *pBoard)
     {
         for(auto theHybrid: *theOpticalGroup)
         {
-            auto& theHybridL1EventContainer = fDecodedL1Event.getHybrid(theOpticalGroup->getId(), theHybrid->getId());
-            uint16_t theL1EventDataSize = decodeHybridL1Event(theHybridL1EventContainer, theCurrentHybridDataPointer);
-            
+            auto&    theHybridL1EventContainer = fDecodedL1Event.getHybrid(theOpticalGroup->getId(), theHybrid->getId());
+            uint16_t theL1EventDataSize        = decodeHybridL1Event(theHybridL1EventContainer, theCurrentHybridDataPointer);
+
             theCurrentHybridDataPointer += theL1EventDataSize;
 
-            auto& theHybridStubEventContainer = fDecodedStubEvent.getHybrid(theOpticalGroup->getId(), theHybrid->getId());
-            uint16_t theStubEventDataSize = decodeHybridStubEvent(theHybridStubEventContainer, theCurrentHybridDataPointer);
+            auto&    theHybridStubEventContainer = fDecodedStubEvent.getHybrid(theOpticalGroup->getId(), theHybrid->getId());
+            uint16_t theStubEventDataSize        = decodeHybridStubEvent(theHybridStubEventContainer, theCurrentHybridDataPointer);
 
             theCurrentHybridDataPointer += theStubEventDataSize;
         }
-    }  
+    }
 }
 
 uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventContainer, std::vector<uint32_t>::const_iterator dataStartIterator)
 {
     auto theCicToChipMapping = getCicToChipMapping(theHybridEventContainer->getId());
 
-    HybridL1EventInfo *theHybridL1EventInfoPointer;
-    
+    HybridL1EventInfo* theHybridL1EventInfoPointer;
+
     if(fIs2S)
     {
-        if(fIsSparsified)
-        {
-            theHybridL1EventInfoPointer = &theHybridEventContainer->getSummary<HybridL1EventInfo, std::vector<Cluster2S>>();
-        }
-        else
-        {
-            theHybridL1EventInfoPointer =  &theHybridEventContainer->getSummary<HybridL1EventInfo, ChipL1EventInfo>();
-        }
+        if(fIsSparsified) { theHybridL1EventInfoPointer = &theHybridEventContainer->getSummary<HybridL1EventInfo, std::vector<Cluster2S>>(); }
+        else { theHybridL1EventInfoPointer = &theHybridEventContainer->getSummary<HybridL1EventInfo, ChipL1EventInfo>(); }
     }
-    else
-    {
-        theHybridL1EventInfoPointer = &theHybridEventContainer->getSummary<HybridL1EventInfo, std::vector<StripClusterPS>>();
-    }
+    else { theHybridL1EventInfoPointer = &theHybridEventContainer->getSummary<HybridL1EventInfo, std::vector<StripClusterPS>>(); }
 
     theHybridL1EventInfoPointer->parseData(dataStartIterator);
 
@@ -325,7 +282,7 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
         {
             for(size_t clusterNumber = 0; clusterNumber < theHybridL1EventInfoPointer->fNumberOfStripClusters; ++clusterNumber)
             {
-                uint32_t theClusterWord = getWord<CLUSTER_2S_DATA_SIZE, CLUSTER_2S_DATA_MASK>(dataStartIterator +  currentBitCount / 32, currentBitCount % 32);
+                uint32_t  theClusterWord = getWord<CLUSTER_2S_DATA_SIZE, CLUSTER_2S_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
                 Cluster2S theCluster2S;
                 if(theCluster2S.parseData(theClusterWord))
                 {
@@ -346,8 +303,8 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
                 {
                     uint32_t currentWordOffsetQuotient  = currentCBCwordOffset / 32;
                     uint32_t currentWordOffsetRemainder = currentCBCwordOffset % 32;
-                    uint32_t theWord = getWord<L1_UNSPARSFIED_BLOCK_SIZE_2S, 0x7FF>(dataStartIterator, currentBitCount);
-                    
+                    uint32_t theWord                    = getWord<L1_UNSPARSFIED_BLOCK_SIZE_2S, 0x7FF>(dataStartIterator, currentBitCount);
+
                     currentBitCount += L1_UNSPARSFIED_BLOCK_SIZE_2S;
 
                     if(32 - L1_UNSPARSFIED_BLOCK_SIZE_2S >= currentWordOffsetRemainder)
@@ -367,14 +324,13 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
             {
                 theChipEventContainer->getSummary<ChipL1EventInfo>().parseData(theChipDataVector[getIdForCic(theHybridEventContainer->getId(), theChipEventContainer->getId())].begin());
             }
-
         }
     }
     else
     {
         for(size_t stripClusterNumber = 0; stripClusterNumber < theHybridL1EventInfoPointer->fNumberOfStripClusters; ++stripClusterNumber)
         {
-            uint32_t theClusterWord = getWord<STRIP_CLUSTER_PS_DATA_SIZE, STRIP_CLUSTER_PS_DATA_MASK>(dataStartIterator +  currentBitCount / 32, currentBitCount % 32);
+            uint32_t       theClusterWord = getWord<STRIP_CLUSTER_PS_DATA_SIZE, STRIP_CLUSTER_PS_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
             StripClusterPS theStripClusterPS;
             if(theStripClusterPS.parseData(theClusterWord))
             {
@@ -384,11 +340,13 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
         }
         for(size_t pixelClusterNumber = 0; pixelClusterNumber < theHybridL1EventInfoPointer->fNumberOfPixelClusters; ++pixelClusterNumber)
         {
-            uint32_t theClusterWord = getWord<PIXEL_CLUSTER_PS_DATA_SIZE, PIXEL_CLUSTER_PS_DATA_MASK>(dataStartIterator +  currentBitCount / 32, currentBitCount % 32);
+            uint32_t       theClusterWord = getWord<PIXEL_CLUSTER_PS_DATA_SIZE, PIXEL_CLUSTER_PS_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
             PixelClusterPS thePixelClusterPS;
             if(thePixelClusterPS.parseData(theClusterWord))
             {
-                theHybridEventContainer->getObject((*theCicToChipMapping)[theClusterWord >> (PIXEL_CLUSTER_PS_DATA_SIZE - 3)] + 8)->getSummary<std::vector<PixelClusterPS>>().push_back(thePixelClusterPS);
+                theHybridEventContainer->getObject((*theCicToChipMapping)[theClusterWord >> (PIXEL_CLUSTER_PS_DATA_SIZE - 3)] + 8)
+                    ->getSummary<std::vector<PixelClusterPS>>()
+                    .push_back(thePixelClusterPS);
             }
             currentBitCount += PIXEL_CLUSTER_PS_DATA_SIZE;
         }
@@ -410,7 +368,7 @@ uint16_t D19cCic2Event::decodeHybridStubEvent(HybridDataContainer* theHybridStub
     {
         if(fIs2S)
         {
-            uint32_t theClusterWord = getWord<STUB_2S_DATA_SIZE, STUB_2S_DATA_MASK>(dataStartIterator +  currentBitCount / 32, currentBitCount % 32);
+            uint32_t  theClusterWord = getWord<STUB_2S_DATA_SIZE, STUB_2S_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
             EventStub theEventStub;
             if(theEventStub.parseData(theClusterWord, true))
             {
@@ -420,7 +378,7 @@ uint16_t D19cCic2Event::decodeHybridStubEvent(HybridDataContainer* theHybridStub
         }
         else
         {
-            uint32_t theClusterWord = getWord<STUB_PS_DATA_SIZE, STUB_PS_DATA_MASK>(dataStartIterator +  currentBitCount / 32, currentBitCount % 32);
+            uint32_t  theClusterWord = getWord<STUB_PS_DATA_SIZE, STUB_PS_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
             EventStub theEventStub;
             if(theEventStub.parseData(theClusterWord, false))
             {
@@ -437,16 +395,20 @@ uint16_t D19cCic2Event::decodeHybridStubEvent(HybridDataContainer* theHybridStub
 const std::vector<uint8_t>* D19cCic2Event::getChipToCicMapping(uint16_t theHybridId) const
 {
     const std::vector<uint8_t>* theChipToCicMapping;
-    if(fIs2S) theChipToCicMapping = &fChipToCicMapping2S;
-    else theChipToCicMapping = theHybridId % 2 == 0 ? &fChipToCicMappingPSR : &fChipToCicMappingPSL;
+    if(fIs2S)
+        theChipToCicMapping = &fChipToCicMapping2S;
+    else
+        theChipToCicMapping = theHybridId % 2 == 0 ? &fChipToCicMappingPSR : &fChipToCicMappingPSL;
     return theChipToCicMapping;
 }
 
 const std::vector<uint8_t>* D19cCic2Event::getCicToChipMapping(uint16_t theHybridId) const
 {
     const std::vector<uint8_t>* theCicToChipMapping;
-    if(fIs2S) theCicToChipMapping = &fCicToChipMapping2S;
-    else theCicToChipMapping = theHybridId % 2 == 0 ? &fCicToChipMappingPSR : &fCicToChipMappingPSL;
+    if(fIs2S)
+        theCicToChipMapping = &fCicToChipMapping2S;
+    else
+        theCicToChipMapping = theHybridId % 2 == 0 ? &fCicToChipMappingPSR : &fCicToChipMappingPSL;
     return theCicToChipMapping;
 }
 
@@ -498,17 +460,16 @@ std::vector<StripClusterPS> D19cCic2Event::GetStripClusters(uint8_t pHybridId, u
 
 uint16_t D19cCic2Event::L1Status(uint8_t pHybridId) const
 {
-    auto theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
-    const HybridL1EventInfo *theHybridL1EventInfoPointer;
+    auto                     theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
+    const HybridL1EventInfo* theHybridL1EventInfoPointer;
     if(fIsSparsified)
     {
-        if(fIs2S) theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, std::vector<Cluster2S>>();
-        else theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, std::vector<StripClusterPS>>();
+        if(fIs2S)
+            theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, std::vector<Cluster2S>>();
+        else
+            theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, std::vector<StripClusterPS>>();
     }
-    else
-    {
-        theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, ChipL1EventInfo>();
-    }
+    else { theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, ChipL1EventInfo>(); }
     return theHybridL1EventInfoPointer->fStatusBits;
 }
 
@@ -516,43 +477,35 @@ uint32_t D19cCic2Event::Error(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
     if(fIsSparsified)
     {
-        auto theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
-        const HybridL1EventInfo *theHybridL1EventInfoPointer;
-        if(fIs2S) theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, std::vector<Cluster2S>>();
-        else theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, std::vector<StripClusterPS>>();
+        auto                     theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
+        const HybridL1EventInfo* theHybridL1EventInfoPointer;
+        if(fIs2S)
+            theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, std::vector<Cluster2S>>();
+        else
+            theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, std::vector<StripClusterPS>>();
         auto theCicStatusBits = theHybridL1EventInfoPointer->fStatusBits;
         return theCicStatusBits >> (getIdForCic(pHybridId, pReadoutChipId) + 1);
     }
-    else
-    {
-        return fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId)->getSummary<ChipL1EventInfo>().fErrorCode;
-    }
+    else { return fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId)->getSummary<ChipL1EventInfo>().fErrorCode; }
 }
 
-uint32_t D19cCic2Event::BxId(uint8_t pHybridId) const
-{
-    return fDecodedStubEvent.getHybrid(pHybridId / 2, pHybridId)->getSummary<HybridStubEventInfo, std::vector<EventStub>>().fBunchCrossingId;
-}
+uint32_t D19cCic2Event::BxId(uint8_t pHybridId) const { return fDecodedStubEvent.getHybrid(pHybridId / 2, pHybridId)->getSummary<HybridStubEventInfo, std::vector<EventStub>>().fBunchCrossingId; }
 
-uint16_t D19cCic2Event::StubStatus(uint8_t pHybridId) const
-{
-    return fDecodedStubEvent.getHybrid(pHybridId / 2, pHybridId)->getSummary<HybridStubEventInfo, std::vector<EventStub>>().fStatusBits;
-}
+uint16_t D19cCic2Event::StubStatus(uint8_t pHybridId) const { return fDecodedStubEvent.getHybrid(pHybridId / 2, pHybridId)->getSummary<HybridStubEventInfo, std::vector<EventStub>>().fStatusBits; }
 
 uint32_t D19cCic2Event::L1Id(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
     if(fIsSparsified)
     {
-        auto theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
-        const HybridL1EventInfo *theHybridL1EventInfoPointer;
-        if(fIs2S) theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, std::vector<Cluster2S>>();
-        else theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, std::vector<StripClusterPS>>();
+        auto                     theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
+        const HybridL1EventInfo* theHybridL1EventInfoPointer;
+        if(fIs2S)
+            theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, std::vector<Cluster2S>>();
+        else
+            theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, std::vector<StripClusterPS>>();
         return theHybridL1EventInfoPointer->fL1counter;
     }
-    else
-    {
-        return fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId)->getSummary<ChipL1EventInfo>().fL1id;
-    }
+    else { return fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId)->getSummary<ChipL1EventInfo>().fL1id; }
 }
 
 // does not apply for sparsified event
@@ -563,7 +516,8 @@ uint32_t D19cCic2Event::PipelineAddress(uint8_t pHybridId, uint8_t pReadoutChipI
         std::cerr << "D19cCic2Event::PipelineAddress can be called only for 2S read in unsparsified mode, aborting" << std::endl;
         abort();
     }
-    else return fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId)->getSummary<ChipL1EventInfo>().fPipelineAddress;
+    else
+        return fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId)->getSummary<ChipL1EventInfo>().fPipelineAddress;
 }
 
 bool D19cCic2Event::DataBit(uint8_t pHybridId, uint8_t pReadoutChipId, uint8_t row, uint8_t col) const
@@ -584,23 +538,20 @@ bool D19cCic2Event::DataBit(uint8_t pHybridId, uint8_t pReadoutChipId, uint8_t r
             {
                 for(auto theCluster: theChipL1Container->getSummary<std::vector<StripClusterPS>>())
                 {
-                    if(theCluster.isChannelHit(col))  return true;
+                    if(theCluster.isChannelHit(col)) return true;
                 }
             }
             else
             {
                 for(auto theCluster: theChipL1Container->getSummary<std::vector<PixelClusterPS>>())
                 {
-                    if(theCluster.isChannelHit(row, col))  return true;
+                    if(theCluster.isChannelHit(row, col)) return true;
                 }
             }
         }
         return false;
     }
-    else
-    {
-        return theChipL1Container->getSummary<ChipL1EventInfo>().isChannelHit(col);
-    }
+    else { return theChipL1Container->getSummary<ChipL1EventInfo>().isChannelHit(col); }
 }
 
 std::vector<bool> D19cCic2Event::DataBitVector(uint8_t pHybridId, uint8_t pReadoutChipId) const
@@ -613,10 +564,7 @@ std::vector<bool> D19cCic2Event::DataBitVector(uint8_t pHybridId, uint8_t pReado
             std::vector<bool> bitList(NCHANNELS, false);
             for(auto theCluster: theChipL1Container->getSummary<std::vector<Cluster2S>>())
             {
-                for(size_t channel = theCluster.fFirstStrip; channel < theCluster.fFirstStrip + theCluster.fClusterWidth; ++channel)
-                {
-                    bitList[channel] = true;
-                }
+                for(size_t channel = theCluster.fFirstStrip; channel < theCluster.fFirstStrip + theCluster.fClusterWidth; ++channel) { bitList[channel] = true; }
             }
             return bitList;
         }
@@ -627,10 +575,7 @@ std::vector<bool> D19cCic2Event::DataBitVector(uint8_t pHybridId, uint8_t pReado
                 std::vector<bool> bitList(NSSACHANNELS, false);
                 for(auto theCluster: theChipL1Container->getSummary<std::vector<StripClusterPS>>())
                 {
-                    for(size_t channel = theCluster.fAddress; channel < theCluster.fAddress + theCluster.fWidth; ++channel)
-                    {
-                        bitList[channel] = true;
-                    }
+                    for(size_t channel = theCluster.fAddress; channel < theCluster.fAddress + theCluster.fWidth; ++channel) { bitList[channel] = true; }
                 }
                 return bitList;
             }
@@ -639,10 +584,7 @@ std::vector<bool> D19cCic2Event::DataBitVector(uint8_t pHybridId, uint8_t pReado
                 std::vector<bool> bitList(NSSACHANNELS * NMPAROWS, false);
                 for(auto theCluster: theChipL1Container->getSummary<std::vector<PixelClusterPS>>())
                 {
-                    for(size_t channel = theCluster.fAddress; channel < theCluster.fAddress + theCluster.fWidth; ++channel)
-                    {
-                        bitList[channel + NSSACHANNELS * theCluster.fZpos] = true;
-                    }
+                    for(size_t channel = theCluster.fAddress; channel < theCluster.fAddress + theCluster.fWidth; ++channel) { bitList[channel + NSSACHANNELS * theCluster.fZpos] = true; }
                 }
                 return bitList;
             }
@@ -651,10 +593,7 @@ std::vector<bool> D19cCic2Event::DataBitVector(uint8_t pHybridId, uint8_t pReado
     else
     {
         std::vector<bool> bitList(NCHANNELS, false);
-        for(auto theHitChannel: theChipL1Container->getSummary<ChipL1EventInfo>().getChannelHitList())
-        {
-            bitList[theHitChannel] = true;
-        }
+        for(auto theHitChannel: theChipL1Container->getSummary<ChipL1EventInfo>().getChannelHitList()) { bitList[theHitChannel] = true; }
         return bitList;
     }
 }
@@ -664,46 +603,31 @@ std::vector<EventStub> D19cCic2Event::StubVector(uint8_t pHybridId, uint8_t pRea
     return fDecodedStubEvent.getChip(pHybridId / 2, pHybridId, pReadoutChipId)->getSummary<std::vector<EventStub>>();
 }
 
-bool D19cCic2Event::StubBit(uint8_t pHybridId, uint8_t pCbcId) const
-{
-    return (fDecodedStubEvent.getChip(pHybridId / 2, pHybridId, pCbcId)->getSummary<std::vector<EventStub>>().size() > 0);
-}
+bool D19cCic2Event::StubBit(uint8_t pHybridId, uint8_t pCbcId) const { return (fDecodedStubEvent.getChip(pHybridId / 2, pHybridId, pCbcId)->getSummary<std::vector<EventStub>>().size() > 0); }
 
 uint32_t D19cCic2Event::GetNHits(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
-    auto theChipL1Container = fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId);
-    uint32_t numberOfHits = 0;
+    auto     theChipL1Container = fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId);
+    uint32_t numberOfHits       = 0;
     if(fIsSparsified)
     {
         if(fIs2S)
         {
-            for(auto theCluster: theChipL1Container->getSummary<std::vector<Cluster2S>>())
-            {
-                numberOfHits += theCluster.fClusterWidth;
-            }
+            for(auto theCluster: theChipL1Container->getSummary<std::vector<Cluster2S>>()) { numberOfHits += theCluster.fClusterWidth; }
         }
         else
         {
             if(pReadoutChipId < 8)
             {
-                for(auto theCluster: theChipL1Container->getSummary<std::vector<StripClusterPS>>())
-                {
-                    numberOfHits += theCluster.fWidth;
-                }
+                for(auto theCluster: theChipL1Container->getSummary<std::vector<StripClusterPS>>()) { numberOfHits += theCluster.fWidth; }
             }
             else
             {
-                for(auto theCluster: theChipL1Container->getSummary<std::vector<PixelClusterPS>>())
-                {
-                    numberOfHits += theCluster.fWidth;
-                }
+                for(auto theCluster: theChipL1Container->getSummary<std::vector<PixelClusterPS>>()) { numberOfHits += theCluster.fWidth; }
             }
         }
     }
-    else
-    {
-        numberOfHits = theChipL1Container->getSummary<ChipL1EventInfo>().countNumberOfHits();
-    }
+    else { numberOfHits = theChipL1Container->getSummary<ChipL1EventInfo>().countNumberOfHits(); }
 
     return numberOfHits;
 }
@@ -711,7 +635,7 @@ uint32_t D19cCic2Event::GetNHits(uint8_t pHybridId, uint8_t pReadoutChipId) cons
 std::vector<std::pair<uint16_t, uint16_t>> D19cCic2Event::GetHits(uint8_t pHybridId, uint8_t pReadoutChipId) const
 {
     std::vector<std::pair<uint16_t, uint16_t>> theHitList;
-    auto theChipL1Container = fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId);
+    auto                                       theChipL1Container = fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId);
     if(fIsSparsified)
     {
         theHitList.reserve(MAXCICCHANNELS);
@@ -719,10 +643,7 @@ std::vector<std::pair<uint16_t, uint16_t>> D19cCic2Event::GetHits(uint8_t pHybri
         {
             for(auto theCluster: theChipL1Container->getSummary<std::vector<Cluster2S>>())
             {
-                for(size_t channel = theCluster.fFirstStrip; channel < theCluster.fFirstStrip + theCluster.fClusterWidth; ++channel)
-                {
-                    theHitList.emplace_back(0, channel);
-                }
+                for(size_t channel = theCluster.fFirstStrip; channel < theCluster.fFirstStrip + theCluster.fClusterWidth; ++channel) { theHitList.emplace_back(0, channel); }
             }
         }
         else
@@ -731,20 +652,14 @@ std::vector<std::pair<uint16_t, uint16_t>> D19cCic2Event::GetHits(uint8_t pHybri
             {
                 for(auto theCluster: theChipL1Container->getSummary<std::vector<StripClusterPS>>())
                 {
-                    for(size_t channel = theCluster.fAddress; channel < theCluster.fAddress + theCluster.fWidth; ++channel)
-                    {
-                        theHitList.emplace_back(0, channel);
-                    }
+                    for(size_t channel = theCluster.fAddress; channel < theCluster.fAddress + theCluster.fWidth; ++channel) { theHitList.emplace_back(0, channel); }
                 }
             }
             else
             {
                 for(auto theCluster: theChipL1Container->getSummary<std::vector<PixelClusterPS>>())
                 {
-                    for(size_t channel = theCluster.fAddress; channel < theCluster.fAddress + theCluster.fWidth; ++channel)
-                    {
-                        theHitList.emplace_back(theCluster.fZpos, channel);
-                    }
+                    for(size_t channel = theCluster.fAddress; channel < theCluster.fAddress + theCluster.fWidth; ++channel) { theHitList.emplace_back(theCluster.fZpos, channel); }
                 }
             }
         }
@@ -752,10 +667,7 @@ std::vector<std::pair<uint16_t, uint16_t>> D19cCic2Event::GetHits(uint8_t pHybri
     else
     {
         theHitList.reserve(NCHANNELS);
-        for(auto theHitChannel: theChipL1Container->getSummary<ChipL1EventInfo>().getChannelHitList())
-        {
-            theHitList.emplace_back(0, theHitChannel);
-        }
+        for(auto theHitChannel: theChipL1Container->getSummary<ChipL1EventInfo>().getChannelHitList()) { theHitList.emplace_back(0, theHitChannel); }
     }
 
     return theHitList;
@@ -776,9 +688,9 @@ void D19cCic2Event::print() const
     std::cout << "D19cCic2Event event printout" << std::endl;
 
     std::cout << "ExternalTriggerID = " << fExternalTriggerID << std::endl;
-    std::cout << "TDC               = " << fTDC               << std::endl;
-    std::cout << "EventCount        = " << fEventCount        << std::endl;
-    std::cout << "BxId              = " << fBunch             << std::endl;
+    std::cout << "TDC               = " << fTDC << std::endl;
+    std::cout << "EventCount        = " << fEventCount << std::endl;
+    std::cout << "BxId              = " << fBunch << std::endl;
 
     for(auto theOpticalGroup: fDecodedL1Event)
     {
@@ -787,68 +699,51 @@ void D19cCic2Event::print() const
         {
             std::cout << "Hybrid id = " << theHybrid->getId() << std::endl;
 
-            const HybridL1EventInfo *theHybridL1EventInfoPointer;
+            const HybridL1EventInfo* theHybridL1EventInfoPointer;
             if(fIsSparsified)
             {
-                if(fIs2S) theHybridL1EventInfoPointer = &theHybrid->getSummary<HybridL1EventInfo, std::vector<Cluster2S>>();
-                else theHybridL1EventInfoPointer = &theHybrid->getSummary<HybridL1EventInfo, std::vector<StripClusterPS>>();
+                if(fIs2S)
+                    theHybridL1EventInfoPointer = &theHybrid->getSummary<HybridL1EventInfo, std::vector<Cluster2S>>();
+                else
+                    theHybridL1EventInfoPointer = &theHybrid->getSummary<HybridL1EventInfo, std::vector<StripClusterPS>>();
             }
-            else
-            {
-                theHybridL1EventInfoPointer = &theHybrid->getSummary<HybridL1EventInfo, ChipL1EventInfo>();
-            }
+            else { theHybridL1EventInfoPointer = &theHybrid->getSummary<HybridL1EventInfo, ChipL1EventInfo>(); }
             std::cout << "L1 header" << std::endl;
             theHybridL1EventInfoPointer->print();
-            for(auto theChip : *theHybrid)
+            for(auto theChip: *theHybrid)
             {
                 std::cout << "Chip id = " << theChip->getId() << std::endl;
                 if(fIsSparsified)
                 {
                     if(fIs2S)
                     {
-                        for(auto theCluster: theChip->getSummary<std::vector<Cluster2S>>())
-                        {
-                            theCluster.print();
-                        }
+                        for(auto theCluster: theChip->getSummary<std::vector<Cluster2S>>()) { theCluster.print(); }
                     }
                     else
                     {
                         if(theChip->getId() < 8)
                         {
-                            for(auto theCluster: theChip->getSummary<std::vector<StripClusterPS>>())
-                            {
-                                theCluster.print();
-                            }
+                            for(auto theCluster: theChip->getSummary<std::vector<StripClusterPS>>()) { theCluster.print(); }
                         }
                         else
                         {
-                            for(auto theCluster: theChip->getSummary<std::vector<PixelClusterPS>>())
-                            {
-                                theCluster.print();
-                            }
+                            for(auto theCluster: theChip->getSummary<std::vector<PixelClusterPS>>()) { theCluster.print(); }
                         }
                     }
                 }
-                else
-                {
-                    theChip->getSummary<ChipL1EventInfo>().print();
-                }
+                else { theChip->getSummary<ChipL1EventInfo>().print(); }
             }
 
             auto theStubHybrid = fDecodedStubEvent.getHybrid(theOpticalGroup->getId(), theHybrid->getId());
             std::cout << "Stub header" << std::endl;
             theStubHybrid->getSummary<HybridStubEventInfo, std::vector<EventStub>>().print();
-            for(auto theChip : *theStubHybrid)
+            for(auto theChip: *theStubHybrid)
             {
                 std::cout << "Chip id = " << theChip->getId() << std::endl;
-                for(auto theStub: theChip->getSummary<std::vector<EventStub>>())
-                {
-                    theStub.print();
-                }
+                for(auto theStub: theChip->getSummary<std::vector<EventStub>>()) { theStub.print(); }
             }
         }
     }
 }
-
 
 } // namespace Ph2_HwInterface

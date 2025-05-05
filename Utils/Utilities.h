@@ -249,21 +249,18 @@ std::vector<uint32_t> getPossiblePatterns(uint8_t injectedPattern, bool is10Gmod
 
 std::vector<std::vector<uint32_t>> splitBits(const std::vector<uint32_t>& input, uint32_t numberOfSplits);
 
-template<size_t Nbits, size_t Mask>
+template <size_t Nbits, size_t Mask>
 inline uint32_t getWord(std::vector<uint32_t>::const_iterator dataStart, size_t bitStart)
 {
     std::vector<uint32_t>::const_iterator firstWordPointer = dataStart + bitStart / 32;
-    size_t firstWordMSB = 31 - bitStart % 32;
-    size_t secondWordLSB = 32 - (Nbits + bitStart) % 32;
-    if(firstWordMSB >= Nbits - 1)
-    {
-        return (*firstWordPointer >> secondWordLSB) & Mask;
-    }
+    size_t                                firstWordMSB     = 31 - bitStart % 32;
+    size_t                                secondWordLSB    = 32 - (Nbits + bitStart) % 32;
+    if(firstWordMSB >= Nbits - 1) { return (*firstWordPointer >> secondWordLSB) & Mask; }
     else
     {
         std::vector<uint32_t>::const_iterator secondWordPointer = dataStart + (bitStart + Nbits) / 32;
-        uint64_t longerWord = *firstWordPointer;
-        longerWord = longerWord << 32;
+        uint64_t                              longerWord        = *firstWordPointer;
+        longerWord                                              = longerWord << 32;
         longerWord |= *secondWordPointer;
         return (longerWord >> secondWordLSB) & Mask;
     }

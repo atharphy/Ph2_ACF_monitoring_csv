@@ -552,13 +552,13 @@ std::tuple<bool, bool, std::map<uint16_t, bool>> D19cBERTinterface::isStartPatte
         for(auto theHybrid: *theOpticalGroup)
         {
             std::get<2>(startPatternFoundResults)[theHybrid->getId()] = false;
-            uint16_t iteration     = 0;
-            uint16_t maxIterations = 3;
+            uint16_t iteration                                        = 0;
+            uint16_t maxIterations                                    = 3;
             uint32_t firstData;
             while(iteration < maxIterations)
             {
                 firstData = getFirstData(theHybrid->getId(), lineNumber);
-                std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line = " << +lineNumber << " firstData = " << std::hex << firstData << std::dec << std::endl;
+                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line = " << +lineNumber << " firstData = " << std::hex << firstData << std::dec << std::endl;
 
                 if(firstData != 0xfedececa)
                 {
@@ -567,7 +567,7 @@ std::tuple<bool, bool, std::map<uint16_t, bool>> D19cBERTinterface::isStartPatte
                         if((firstData >> 16) == BERT_ALIGNMENT_PATTERN)
                         {
                             std::get<2>(startPatternFoundResults)[theHybrid->getId()] = true;
-                            std::get<1>(startPatternFoundResults) = true;
+                            std::get<1>(startPatternFoundResults)                     = true;
                             break;
                         }
                     }
@@ -577,7 +577,7 @@ std::tuple<bool, bool, std::map<uint16_t, bool>> D19cBERTinterface::isStartPatte
                            ((fCheckedPatternMap.at(theHybrid->getId()).at(0) && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16))
                         {
                             std::get<2>(startPatternFoundResults)[theHybrid->getId()] = true;
-                            std::get<1>(startPatternFoundResults) = true;
+                            std::get<1>(startPatternFoundResults)                     = true;
                             break;
                         }
                     }
@@ -640,7 +640,11 @@ uint64_t D19cBERTinterface::readNumberOfTestedBit(uint16_t hybridId, uint8_t lin
     return theBitCounterCounter;
 }
 
-bool D19cBERTinterface::retrieveBitTestedCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber, bool is10Gmodule, float numberOfMatchedBits, std::map<uint16_t, bool> startPatternFoundHybridMap)
+bool D19cBERTinterface::retrieveBitTestedCounterLine(BoardDataContainer*      theBoardContainer,
+                                                     uint8_t                  lineNumber,
+                                                     bool                     is10Gmodule,
+                                                     float                    numberOfMatchedBits,
+                                                     std::map<uint16_t, bool> startPatternFoundHybridMap)
 {
     bool correctFrameFound = true;
     for(auto theOpticalGroup: *theBoardContainer)
@@ -649,8 +653,10 @@ bool D19cBERTinterface::retrieveBitTestedCounterLine(BoardDataContainer* theBoar
         {
             auto& theCounterVector     = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
             auto& theBitCounterCounter = theCounterVector.at(0);
-            if(!startPatternFoundHybridMap.at(theHybrid->getId())) theBitCounterCounter = 0;
-            else theBitCounterCounter = readNumberOfTestedBit(theHybrid->getId(), lineNumber, is10Gmodule);
+            if(!startPatternFoundHybridMap.at(theHybrid->getId()))
+                theBitCounterCounter = 0;
+            else
+                theBitCounterCounter = readNumberOfTestedBit(theHybrid->getId(), lineNumber, is10Gmodule);
             if(theBitCounterCounter < numberOfMatchedBits)
             {
                 correctFrameFound = false;
@@ -703,8 +709,8 @@ BoardDataContainer D19cBERTinterface::runBERTonSingleLine(BoardContainer* theBoa
     ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*theBoardContainer, theBoardBERTcounterResult);
 
     std::tuple<bool, bool, std::map<uint16_t, bool>> isStartFound;
-    size_t                maxNumberOfIteration = 1;
-    size_t                iterationNumber      = 0;
+    size_t                                           maxNumberOfIteration = 1;
+    size_t                                           iterationNumber      = 0;
     while(iterationNumber < maxNumberOfIteration)
     {
         ++iterationNumber;

@@ -207,7 +207,6 @@ void StubSweep::SweepStubs(uint32_t pNEvents)
                                 unsigned int j = 0;
 
                                 do {
-
                                     cNhits                        = cEvents[j]->GetNHits(cHybridId, cCbcId);
                                     std::vector<EventStub> cStubs = static_cast<D19cCic2Event*>(cEvents[j])->StubVector(cHybridId, cCbcId);
                                     cStubPosition                 = cStubs[0].getPosition();
@@ -299,7 +298,7 @@ uint8_t StubSweep::getStubPosition(std::vector<Event*> pEvents, uint32_t pHybrid
 
     for(auto& cEvent: pEvents)
     {
-        uint32_t    cNhits       = cEvent->GetNHits(pHybridId, pCbcId);
+        uint32_t cNhits = cEvent->GetNHits(pHybridId, pCbcId);
         // std::string cHitsString = cEvent->HitsBitString( pHybridId, pCbcId );
         auto cHits = cEvent->GetHits(pHybridId, pCbcId);
 

@@ -23,7 +23,7 @@ class Data2S //: public streammable
 {
   public:
     GenericDataArray<Ph2_HwInterface::Cluster2S, ClusterSize> fClusters;
-    GenericDataArray<Ph2_HwInterface::EventStub, StubSize>       fStubs;
+    GenericDataArray<Ph2_HwInterface::EventStub, StubSize>    fStubs;
 };
 
 #endif

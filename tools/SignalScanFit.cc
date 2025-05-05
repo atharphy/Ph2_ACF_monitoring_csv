@@ -260,7 +260,8 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                                 double cClusterSize = cCluster.fClusterWidth;
                                 cVcthClusters->Fill(cClusterSize, cCluster.fClusterWidth); // Cluster size counter
                                 uint32_t cStrip = cCluster.getBaricentre() * 2 + cCbc->getId() * 127 * 2;
-                                LOG(DEBUG) << BOLDBLUE << "\t " << cClusterSize << " strip cluster found with center in strip " << cStrip << " [half-strips] of sensor " << +cCluster.getSensor() << RESET;
+                                LOG(DEBUG) << BOLDBLUE << "\t " << cClusterSize << " strip cluster found with center in strip " << cStrip << " [half-strips] of sensor " << +cCluster.getSensor()
+                                           << RESET;
                                 if(cCluster.getSensor() == 0)
                                 {
                                     if(cCluster.fClusterWidth == 1) cClustersS0->Fill(cStrip, cVCth);

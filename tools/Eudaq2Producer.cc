@@ -864,7 +864,8 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                 uint32_t cStubId = 0;
                 if(static_cast<D19cCic2Event*>(pPh2Event)->StubVector(cHybridId, cChipId).size() > 0)
                 {
-                    LOG(INFO) << BOLDMAGENTA << "\tFound  " << +static_cast<D19cCic2Event*>(pPh2Event)->StubVector(cHybridId, cChipId).size() << " stubs in Hybrid " << +cHybridId << ", Chip " << +cChipId << RESET;
+                    LOG(INFO) << BOLDMAGENTA << "\tFound  " << +static_cast<D19cCic2Event*>(pPh2Event)->StubVector(cHybridId, cChipId).size() << " stubs in Hybrid " << +cHybridId << ", Chip "
+                              << +cChipId << RESET;
                 }
                 for(auto cStub: static_cast<D19cCic2Event*>(pPh2Event)->StubVector(cHybridId, cChipId))
                 {

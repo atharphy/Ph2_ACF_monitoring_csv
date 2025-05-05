@@ -160,12 +160,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              PedestalEqualization,
              PedeNoise>("Outer Tracker", "adccalibrationandpedenoise");
 
-    Register<OTalignLpGBTinputs,
-             OTalignBoardDataWord,
-             OTalignStubPackage,
-             OTCICphaseAlignment,
-             OTCICwordAlignment,
-             CalibrationExample>("Outer Tracker", "calibrationexample");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, CalibrationExample>("Outer Tracker", "calibrationexample");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PSCounterTest>("Outer Tracker", "pscountertest");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, LatencyScan>(
         "Outer Tracker", "otlatency");
