@@ -279,7 +279,7 @@ class ReadoutChipInterface : public ChipInterface
     /// @param theChip: pointer to Chip object
     /// @param Vtrim: Value for Vtrim to be set
     /// @return
-    bool SetVtrim(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t Vtrim)
+    virtual bool SetVtrim(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t Vtrim)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;
@@ -290,7 +290,7 @@ class ReadoutChipInterface : public ChipInterface
     /// @param theChip: pointer to Chip object
     /// @param trimBits: value to be set
     /// @return
-    bool SetTrimBitsAll(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t trimBits)
+    virtual bool SetTrimBitsAll(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t trimBits)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;
@@ -302,7 +302,7 @@ class ReadoutChipInterface : public ChipInterface
     /// @param row: channel coordinate
     /// @param col: channel coordinate  
     /// @return
-    bool SetTrimBitsChannel(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t trimBits, uint16_t row, uint16_t col)
+    virtual bool SetTrimBitsChannel(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t trimBits, uint16_t row, uint16_t col)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;
@@ -313,7 +313,7 @@ class ReadoutChipInterface : public ChipInterface
     /// @param row: channel coordinate
     /// @param col: channel coordinate  
     /// @return
-    uint16_t ReadTrimBitsChannel(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t row, uint16_t col)
+    virtual uint16_t ReadTrimBitsChannel(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t row, uint16_t col)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;
