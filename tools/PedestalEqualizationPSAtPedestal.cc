@@ -169,6 +169,7 @@ void PedestalEqualizationPSAtPedestal::Running()
     FindTargetThreshold();
     TuneVtrim();
     // TuneTrimBits();
+    SetTargetThreshold();
     LOG(INFO) << BOLDMAGENTA <<  "Done with PedestalEqualizationPSAtPedestal." << RESET;
 
 
@@ -198,14 +199,21 @@ void PedestalEqualizationPSAtPedestal::PrepareForInjection()
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitudePix);
                         VtrimForMaxRange = 0x0;
+                        fReadoutChipInterface->WriteChipReg(cChip, "C0", VtrimForMaxRange);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C1", VtrimForMaxRange);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C2", VtrimForMaxRange);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C3", VtrimForMaxRange);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C4", VtrimForMaxRange);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C5", VtrimForMaxRange);
+                        fReadoutChipInterface->WriteChipReg(cChip, "C6", VtrimForMaxRange);
                     }
                     else //SSA
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitude);
                         VtrimForMaxRange = 0x1F;
+                        fReadoutChipInterface->WriteChipReg(cChip,"Bias_D5DAC8",VtrimForMaxRange);
                     }
                     fReadoutChipInterface->SetTrimBitsAll(cChip,0x1F);
-                    fReadoutChipInterface->SetVtrim(cChip,VtrimForMaxRange);
                 }
             }
         }
@@ -470,8 +478,8 @@ void PedestalEqualizationPSAtPedestal::GetLowestAndHighestMaxOccupancyThreshold(
                     std::cout << "Standard deviation: " << stddev << std::endl;
 
                     // Define 2σ range
-                    float lowerBound = theMean - 2 * stddev;
-                    float upperBound = theMean + 2 * stddev;
+                    float lowerBound = std::max(float(1), float(theMean - 2 * stddev));
+                    float upperBound = std::min(float(255), float(theMean + 2 * stddev));
                 
                     std::cout << "2σ range: [" << lowerBound << ", " << upperBound << "]" << std::endl;
 
@@ -517,6 +525,25 @@ void PedestalEqualizationPSAtPedestal::GetLowestAndHighestMaxOccupancyThreshold(
     } // board
 }
 
+void PedestalEqualizationPSAtPedestal::SetTargetThreshold()
+{
+    LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
+
+    for(auto cBoard: fTheTargetThresholdContainers)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    fReadoutChipInterface->WriteChipReg(theReadoutChip, "Threshold", cChip->getSummary<uint16_t>());
+                }
+            }
+        }
+    }
+}
 void PedestalEqualizationPSAtPedestal::FindTargetThreshold()
 {
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
