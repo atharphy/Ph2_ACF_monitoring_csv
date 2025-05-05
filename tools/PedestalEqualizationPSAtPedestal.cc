@@ -191,29 +191,21 @@ void PedestalEqualizationPSAtPedestal::PrepareForInjection()
             {
                 for(auto cChip: *cHybrid)
                 {
+                    
+                    uint16_t VtrimForMaxRange;
                     auto cType = cChip->getFrontEndType();
                     if(cType == FrontEndType::MPA2)
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitudePix);
-                        fReadoutChipInterface->WriteChipReg(cChip, "TrimDAC_ALL", 0x1F);
-
-                        // Vtrim
-                        fReadoutChipInterface->WriteChipReg(cChip, "C0", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C1", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C2", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C3", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C4", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C5", 0x0);
-                        fReadoutChipInterface->WriteChipReg(cChip, "C6", 0x0);
-
+                        VtrimForMaxRange = 0x0;
                     }
                     else //SSA
                     {
                         fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitude);
-                        fReadoutChipInterface->WriteChipReg(cChip, "THTRIMMING", 0x1F);
-                        fReadoutChipInterface->WriteChipReg(cChip, "Bias_D5DAC8", 0x1F);
-        
+                        VtrimForMaxRange = 0x1F;
                     }
+                    fReadoutChipInterface->SetTrimBitsAll(cChip,0x1F);
+                    fReadoutChipInterface->SetVtrim(cChip,VtrimForMaxRange);
                 }
             }
         }
@@ -538,15 +530,7 @@ void PedestalEqualizationPSAtPedestal::FindTargetThreshold()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    auto cType = cChip->getFrontEndType();
-                    if(cType == FrontEndType::MPA2)
-                    {
-                        fReadoutChipInterface->WriteChipReg(cChip, "TrimDAC_ALL", 0x0);
-                    }
-                    else //SSA
-                    {
-                        fReadoutChipInterface->WriteChipReg(cChip, "THTRIMMING", 0x0);        
-                    }
+                    fReadoutChipInterface->SetTrimBitsAll(cChip, 0x0);
                 }
             }
         }
@@ -577,75 +561,6 @@ void PedestalEqualizationPSAtPedestal::FindTargetThreshold()
     }
 }
 
-void PedestalEqualizationPSAtPedestal::SetVtrim(ReadoutChip* theReadoutChip, uint16_t Vtrim)
-{
-    auto     cType = theReadoutChip->getFrontEndType();
-    
-    if(cType == FrontEndType::MPA2)
-    {
-        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C0", Vtrim);
-        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C1", Vtrim);
-        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C2", Vtrim);
-        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C3", Vtrim);
-        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C4", Vtrim);
-        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C5", Vtrim);
-        fReadoutChipInterface->WriteChipReg(theReadoutChip, "C6", Vtrim);
-    }
-    else //SSA
-    {
-        fReadoutChipInterface->WriteChipReg(theReadoutChip, "Bias_D5DAC8", Vtrim);
-    }
-
-}
-void PedestalEqualizationPSAtPedestal::SetTrimBitsAll(ReadoutChip* theReadoutChip, uint16_t trimBits)
-{
-    auto     cType = theReadoutChip->getFrontEndType();
-    
-    if(cType == FrontEndType::MPA2)
-    {
-        fReadoutChipInterface->WriteChipReg(theReadoutChip, "TrimDAC_ALL", trimBits);
-    }
-    else //SSA
-    {
-        fReadoutChipInterface->WriteChipReg(theReadoutChip, "THTRIMMING", trimBits);        
-    }
-
-}
-void PedestalEqualizationPSAtPedestal::SetTrimBitsChannel(ReadoutChip* theReadoutChip, uint16_t trimBits, uint16_t row, uint16_t col)
-{
-    auto     cType = theReadoutChip->getFrontEndType();
-
-    if(cType == FrontEndType::MPA2)
-    {
-        std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
-        if(col == 5 && row == 2)std::cout << "MPA trim " << cRegName << " 0x"<< std::hex <<  trimBits << std::dec << std::endl;
-        fReadoutChipInterface->WriteChipReg(theReadoutChip, cRegName, trimBits );
-    }
-    else //SSA
-    {
-        std::string cRegName = "THTRIMMING_S" + std::to_string(col+1);
-        if(col +1 == 5) std::cout << "SSA trim " << cRegName << " 0x"<< std::hex << trimBits << std::dec << std::endl;
-        fReadoutChipInterface->WriteChipReg(theReadoutChip, cRegName, trimBits );
-    }
-}
-uint16_t PedestalEqualizationPSAtPedestal::ReadTrimBitsChannel(ReadoutChip* theReadoutChip, uint16_t row, uint16_t col)
-{
-    auto     cType = theReadoutChip->getFrontEndType();
-
-    uint16_t currentTrim;
-    if(cType == FrontEndType::MPA2)
-    {
-        std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
-        currentTrim = fReadoutChipInterface->ReadChipReg(theReadoutChip,cRegName);
-    }
-    else //SSA
-    {
-        std::string cRegName = "THTRIMMING_S" + std::to_string(col+1);
-        currentTrim = fReadoutChipInterface->ReadChipReg(theReadoutChip,cRegName);
-    }
-    return currentTrim;
-}
-
 void PedestalEqualizationPSAtPedestal::TuneVtrim()
 {
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
@@ -657,15 +572,7 @@ void PedestalEqualizationPSAtPedestal::TuneVtrim()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    auto cType = cChip->getFrontEndType();
-                    if(cType == FrontEndType::MPA2)
-                    {
-                        fReadoutChipInterface->WriteChipReg(cChip, "TrimDAC_ALL", 0x1F);
-                    }
-                    else //SSA
-                    {
-                        fReadoutChipInterface->WriteChipReg(cChip, "THTRIMMING", 0x1F);        
-                    }
+                    fReadoutChipInterface->SetTrimBitsAll(cChip,0x1F);
                 }
             }
         }
@@ -692,7 +599,7 @@ void PedestalEqualizationPSAtPedestal::TuneVtrim()
                     uint16_t theMaxVtrim = 31;
                     ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                     std::cout << " have readoutchip" << std::endl;
-                    SetVtrim(theReadoutChip,theMaxVtrim);
+                    fReadoutChipInterface->SetVtrim(theReadoutChip,theMaxVtrim);
                     std::cout << " set vtrim to max" << std::endl;
                     ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
                     std::cout << " DONE ScanThresholdChip" << std::endl;
@@ -705,7 +612,7 @@ void PedestalEqualizationPSAtPedestal::TuneVtrim()
                     uint16_t VtrimAttempt = (theTargetThreshold - theMinimumThreshold)/theVtrimStepSize;
                     LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " first Vtrim to set  " << VtrimAttempt << RESET;
 
-                    SetVtrim(theReadoutChip,VtrimAttempt);
+                    fReadoutChipInterface->SetVtrim(theReadoutChip,VtrimAttempt);
                     ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
                     auto theCurrentMaxThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
                     LOG(INFO) << BOLDGREEN <<  " Chip " <<cChip->getId() << " the first guessed threshold is " << theCurrentMaxThreshold  << " and target is " << theTargetThreshold << RESET;
@@ -718,14 +625,14 @@ void PedestalEqualizationPSAtPedestal::TuneVtrim()
                         LOG(INFO) << YELLOW << "Checking if we can go closer to the expected value. Iteration " << theCurrentIteration << RESET;
                         LOG(INFO) << MAGENTA << " Vtrim - 1 " << +VtrimAttempt - 1 << RESET;
                         uint8_t theDACDownValue = std::max(uint8_t(0), uint8_t(VtrimAttempt - 1));
-                        SetVtrim(theReadoutChip,theDACDownValue);
+                        fReadoutChipInterface->SetVtrim(theReadoutChip,theDACDownValue);
                         std::this_thread::sleep_for(std::chrono::milliseconds(2));
                         ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
                         auto MaxThresholdDown = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
                     
                         uint8_t theDACUpValue = std::min(uint8_t(theMaxVtrim), uint8_t(VtrimAttempt + 1));
                         LOG(DEBUG) << MAGENTA << "Vtrim + 1 " << +VtrimAttempt + 1<< RESET;
-                        SetVtrim(theReadoutChip,theDACUpValue);
+                        fReadoutChipInterface->SetVtrim(theReadoutChip,theDACUpValue);
                         std::this_thread::sleep_for(std::chrono::milliseconds(2));
                         ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
                         auto MaxThresholdUp = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
@@ -750,7 +657,7 @@ void PedestalEqualizationPSAtPedestal::TuneVtrim()
                         else
                         {
                             LOG(DEBUG) << BOLDGREEN << "Good extrapolation of Vtrim " << VtrimAttempt << RESET;
-                            SetVtrim(theReadoutChip,VtrimAttempt); 
+                            fReadoutChipInterface->SetVtrim(theReadoutChip,VtrimAttempt); 
                             std::this_thread::sleep_for(std::chrono::milliseconds(2));
                             ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
                             auto theThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
@@ -758,7 +665,7 @@ void PedestalEqualizationPSAtPedestal::TuneVtrim()
                             isSearching = false;
                         }
                         LOG(INFO) << BOLDMAGENTA << "Writing DAC val " << +VtrimAttempt << RESET;
-                        SetVtrim(theReadoutChip,VtrimAttempt);   std::this_thread::sleep_for(std::chrono::milliseconds(2));
+                        fReadoutChipInterface->SetVtrim(theReadoutChip,VtrimAttempt);   std::this_thread::sleep_for(std::chrono::milliseconds(2));
                         ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
                         theCurrentMaxThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
                         LOG(INFO) << BOLDMAGENTA << "Get Threshold " << theCurrentMaxThreshold << RESET;
@@ -785,7 +692,7 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    SetTrimBitsAll(cChip, 0x1F);
+                    fReadoutChipInterface->SetTrimBitsAll(cChip, 0x1F);
                 }
             }
         }
@@ -815,7 +722,7 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
     //                 uint16_t theMaxVtrim = 31;
     //                 ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
     //                 std::cout << " have readoutchip" << std::endl;
-    //                 SetVtrim(theReadoutChip,theMaxVtrim);
+    //                 fReadoutChipInterface->SetVtrim(theReadoutChip,theMaxVtrim);
     //                 std::cout << " set vtrim to max" << std::endl;
     //                 ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
     //                 std::cout << " DONE ScanThresholdChip" << std::endl;
@@ -828,7 +735,7 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
     //                 uint16_t VtrimAttempt = (theTargetThreshold - theMinimumThreshold)/theVtrimStepSize;
     //                 LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " first Vtrim to set  " << VtrimAttempt << RESET;
 
-    //                 SetVtrim(theReadoutChip,VtrimAttempt);
+    //                 fReadoutChipInterface->SetVtrim(theReadoutChip,VtrimAttempt);
     //                 ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
     //                 auto theCurrentMaxThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
     //                 LOG(INFO) << BOLDGREEN <<  " Chip " <<cChip->getId() << " the first guessed threshold is " << theCurrentMaxThreshold  << " and target is " << theTargetThreshold << RESET;
@@ -841,14 +748,14 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
     //                     LOG(INFO) << YELLOW << "Checking if we can go closer to the expected value. Iteration " << theCurrentIteration << RESET;
     //                     LOG(INFO) << MAGENTA << " Vtrim - 1 " << +VtrimAttempt - 1 << RESET;
     //                     uint8_t theDACDownValue = std::max(uint8_t(0), uint8_t(VtrimAttempt - 1));
-    //                     SetVtrim(theReadoutChip,theDACDownValue);
+    //                     fReadoutChipInterface->SetVtrim(theReadoutChip,theDACDownValue);
     //                     std::this_thread::sleep_for(std::chrono::milliseconds(2));
     //                     ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
     //                     auto MaxThresholdDown = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
                     
     //                     uint8_t theDACUpValue = std::min(uint8_t(theMaxVtrim), uint8_t(VtrimAttempt + 1));
     //                     LOG(DEBUG) << MAGENTA << "Vtrim + 1 " << +VtrimAttempt + 1<< RESET;
-    //                     SetVtrim(theReadoutChip,theDACUpValue);
+    //                     fReadoutChipInterface->SetVtrim(theReadoutChip,theDACUpValue);
     //                     std::this_thread::sleep_for(std::chrono::milliseconds(2));
     //                     ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
     //                     auto MaxThresholdUp = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
@@ -873,7 +780,7 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
     //                     else
     //                     {
     //                         LOG(DEBUG) << BOLDGREEN << "Good extrapolation of Vtrim " << VtrimAttempt << RESET;
-    //                         SetVtrim(theReadoutChip,VtrimAttempt); 
+    //                         fReadoutChipInterface->SetVtrim(theReadoutChip,VtrimAttempt); 
     //                         std::this_thread::sleep_for(std::chrono::milliseconds(2));
     //                         ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
     //                         auto theThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
@@ -881,7 +788,7 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
     //                         isSearching = false;
     //                     }
     //                     LOG(INFO) << BOLDMAGENTA << "Writing DAC val " << +VtrimAttempt << RESET;
-    //                     SetVtrim(theReadoutChip,VtrimAttempt);   std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    //                     fReadoutChipInterface->SetVtrim(theReadoutChip,VtrimAttempt);   std::this_thread::sleep_for(std::chrono::milliseconds(2));
     //                     ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
     //                     theCurrentMaxThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
     //                     LOG(INFO) << BOLDMAGENTA << "Get Threshold " << theCurrentMaxThreshold << RESET;
@@ -935,9 +842,9 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
                                 {
 
 
-                                    auto currentTrim = ReadTrimBitsChannel(theReadoutChip, row, col);
+                                    auto currentTrim = fReadoutChipInterface->ReadTrimBitsChannel(theReadoutChip, row, col);
                                     auto newTrim = currentTrim -1;
-                                    SetTrimBitsChannel(theReadoutChip, newTrim, row, col);
+                                    fReadoutChipInterface->SetTrimBitsChannel(theReadoutChip, newTrim, row, col);
                                     // ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                                     // auto     cType = theReadoutChip->getFrontEndType();
                                     // if(cType == FrontEndType::MPA2)

@@ -67,6 +67,12 @@ class SSA2Interface : public ReadoutChipInterface
     float getVrefPrecision(Ph2_HwDescription::ReadoutChip* pSSA2);
     float getVrefMinValue(Ph2_HwDescription::ReadoutChip* pSSA2);
     float getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pSSA2);
+
+    bool     SetVtrim(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t Vtrim);
+    bool     SetTrimBitsAll(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t trimBits);
+    bool     SetTrimBitsChannel(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t trimBits, uint16_t row, uint16_t col);
+    uint16_t ReadTrimBitsChannel(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t row, uint16_t col);
+
     bool  WriteChipRegBits(Ph2_HwDescription::Chip* theSSA, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = false);
 
     std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>>

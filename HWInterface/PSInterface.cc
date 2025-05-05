@@ -162,6 +162,14 @@ float PSInterface::getVrefPrecision(ReadoutChip* pPS) { return getInterface(pPS)
 float PSInterface::getVrefMinValue(ReadoutChip* pPS) { return getInterface(pPS)->getVrefMinValue(pPS); }
 float PSInterface::getVrefMaxValue(ReadoutChip* pPS) { return getInterface(pPS)->getVrefMaxValue(pPS); }
 
+bool PSInterface::SetVtrim(ReadoutChip* pPS, uint16_t Vtrim) { return getInterface(pPS)->SetVtrim(pPS, Vtrim); }
+
+bool PSInterface::SetTrimBitsAll(ReadoutChip* pPS, uint16_t trimBits) { return getInterface(pPS)->SetTrimBitsAll(pPS, trimBits); }
+
+bool PSInterface::SetTrimBitsChannel(ReadoutChip* pPS, uint16_t trimBits, uint16_t row, uint16_t col) { return getInterface(pPS)->SetTrimBitsChannel(pPS, trimBits, row, col); }
+
+uint16_t PSInterface::ReadTrimBitsChannel(ReadoutChip* pPS, uint16_t row, uint16_t col) { return getInterface(pPS)->ReadTrimBitsChannel(pPS, row, col); }
+
 bool PSInterface::injectNoiseClusters(ReadoutChip* pPS, std::vector<Cluster> theClusterList)
 {
     if(pPS->getFrontEndType() == FrontEndType::MPA2) { return fTheMPA2Interface->injectNoiseClusters(pPS, theClusterList); }

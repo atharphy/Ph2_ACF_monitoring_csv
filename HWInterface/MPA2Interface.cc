@@ -953,6 +953,37 @@ bool MPA2Interface::disableTestPadsOutput(ReadoutChip* pMPA2)
 //     return this->selectBlock(pMPA2, 0);
 // }
 
+bool MPA2Interface::SetVtrim(ReadoutChip* pMPA2, uint16_t Vtrim)
+{
+    bool success = this->WriteChipReg(pMPA2, "C0", Vtrim);
+    success = success && this->WriteChipReg(pMPA2, "C1", Vtrim);
+    success = success && this->WriteChipReg(pMPA2, "C2", Vtrim);
+    success = success && this->WriteChipReg(pMPA2, "C3", Vtrim);
+    success = success && this->WriteChipReg(pMPA2, "C4", Vtrim);
+    success = success && this->WriteChipReg(pMPA2, "C5", Vtrim);
+    success = success && this->WriteChipReg(pMPA2, "C6", Vtrim);
+    return success;
+}
+
+bool MPA2Interface::SetTrimBitsAll(ReadoutChip* pMPA2, uint16_t trimBits)
+{
+    return this->WriteChipReg(pMPA2, "TrimDAC_ALL", trimBits);
+}
+
+bool MPA2Interface::SetTrimBitsChannel(ReadoutChip* pMPA2, uint16_t trimBits, uint16_t row, uint16_t col)
+{
+        std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
+        return this->WriteChipReg(pMPA2, cRegName, trimBits );
+}
+uint16_t MPA2Interface::ReadTrimBitsChannel(ReadoutChip* pMPA2, uint16_t row, uint16_t col)
+{
+    std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
+    return this->ReadChipReg(pMPA2,cRegName);
+}
+
+
+
+
 bool MPA2Interface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerify)
 {
     setBoard(pChip->getBeBoardId());
