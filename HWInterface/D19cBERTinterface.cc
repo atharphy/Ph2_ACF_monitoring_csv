@@ -558,7 +558,6 @@ std::tuple<bool, bool, std::map<uint16_t, bool>> D19cBERTinterface::isStartPatte
             while(iteration < maxIterations)
             {
                 firstData = getFirstData(theHybrid->getId(), lineNumber);
-                std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] line = " << +lineNumber << " firstData = " << std::hex << firstData << std::dec << std::endl;
 
                 if(firstData != 0xfedececa)
                 {
