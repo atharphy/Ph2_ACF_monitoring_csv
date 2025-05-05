@@ -1040,11 +1040,11 @@
     <Setting name="OTChipToCICecv_MPAshiftRegisterPattern">0xAA</Setting>
     <Setting name="OTChipToCICecv_ListOfMPAslvsCurrents">1, 4, 7</Setting>
 
-    <Setting name="OTSSAtoMPAecv_NumberOfIterations">1000</Setting>
+    <Setting name="OTSSAtoMPAecv_NumberOfTestedStubBits">1e6</Setting>
+    <Setting name="OTSSAtoMPAecv_NumberOfTestedL1Bits">1e5</Setting>
     <Setting name="OTSSAtoMPAecv_ListOfSSAslvsCurrents">1, 4, 7</Setting>
 
-    <Setting name="OTverifyCICdataWord_NumberOfTestedStubBits">1e6</Setting>
-    <Setting name="OTverifyCICdataWord_NumberOfTestedL1Bits">1e5</Setting>
+    <Setting name="OTSSAtoSSAecv_NumberOfTestedStubBits">1e6</Setting>
     <Setting name="OTSSAtoSSAecv_ListOfSSAslvsCurrents">1, 4, 7</Setting>
 
     <Setting name="OTPSringOscillatorTest_NumberOfClockCycles">100</Setting>
