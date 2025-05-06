@@ -52,27 +52,39 @@ void DQMHistogramPedestalEqualization::book(TFile* theOutputFile, DetectorContai
 
     fDetectorContainer->addReadoutChipQueryFunction(selectCBCfunction, selectCBCfunctionName);
     HistContainer<TH1I> hOffsetCBC("ChannelOffsetValues", "Channel offset values", NCHANNELS, -0.5, NCHANNELS - 0.5);
+    hOffsetCBC.fTheHistogram->GetXaxis()->SetTitle("Channel");
+    hOffsetCBC.fTheHistogram->GetYaxis()->SetTitle("Offset");
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOffsetHistograms, hOffsetCBC);
 
     HistContainer<TH1F> hOccupancyCBC("ChannelOccupancyAfterOffsetEqualization", "Channel occupancy after offset equalization", NCHANNELS, -0.5, NCHANNELS - 0.5);
+    hOccupancyCBC.fTheHistogram->GetXaxis()->SetTitle("Channel");
+    hOccupancyCBC.fTheHistogram->GetYaxis()->SetTitle("Occupancy");
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOccupancyHistograms, hOccupancyCBC);
     fDetectorContainer->removeReadoutChipQueryFunction(selectCBCfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
     HistContainer<TH1I> hOffsetSSA("ChannelOffsetValues", "Channel offset values", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
+    hOffsetSSA.fTheHistogram->GetXaxis()->SetTitle("Channel");
+    hOffsetSSA.fTheHistogram->GetYaxis()->SetTitle("Offset");
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOffsetHistograms, hOffsetSSA);
 
     HistContainer<TH1F> hOccupancySSA("ChannelOccupancyAfterOffsetEqualization", "Channel occupancy after offset equalization", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
+    hOccupancySSA.fTheHistogram->GetXaxis()->SetTitle("Channel");
+    hOccupancySSA.fTheHistogram->GetYaxis()->SetTitle("Occupancy");
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOccupancyHistograms, hOccupancySSA);
     fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
     HistContainer<TH2I> hOffsetMPA("2DChannelOffsetValues", "2D channel offset values", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
+    hOffsetMPA.fTheHistogram->GetXaxis()->SetTitle("Row");
+    hOffsetMPA.fTheHistogram->GetYaxis()->SetTitle("Column");
     hOffsetMPA.fTheHistogram->SetStats(false);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOffsetHistograms, hOffsetMPA);
 
     HistContainer<TH2F> hOccupancyMPA(
         "2DChannelOccupancyAfterOffsetEqualization", "2D channel occupancy after offset equalization", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
+    hOffsetMPA.fTheHistogram->GetXaxis()->SetTitle("Row");
+    hOffsetMPA.fTheHistogram->GetYaxis()->SetTitle("Column");
     hOccupancyMPA.fTheHistogram->SetStats(false);
     RootContainerFactory::bookChipHistograms(theOutputFile, theDetectorStructure, fDetectorOccupancyHistograms, hOccupancyMPA);
 
