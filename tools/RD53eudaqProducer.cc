@@ -17,12 +17,7 @@ void RD53eudaqProducer::DoReset()
     RD53eudaqProducer::DoTerminate();
 }
 
-void RD53eudaqProducer::DoInitialise()
-{
-    std::stringstream outp;
-    RD53sysCntrPhys.InitializeHw(configFile, outp);
-    RD53sysCntrPhys.InitializeSettings(configFile, outp);
-}
+void RD53eudaqProducer::DoInitialise() {}
 
 void RD53eudaqProducer::DoConfigure() { RD53sysCntrPhys.localConfigure("", -1); }
 
@@ -40,35 +35,6 @@ void RD53eudaqProducer::DoStartRun()
     RD53sysCntrPhys.theCurrentRun = GetRunNumber();
     swTrigCnt                     = 0;
     previousTLUTrigId             = 0;
-
-    // #####################
-    // # Send a BORE event #
-    // #####################
-    auto ev = eudaq::Event::MakeUnique(EUDAQ::EVENT);
-    ev->SetBORE();
-
-    // ######################################
-    // # Add extra information to the event #
-    // ######################################
-    ev->SetTag("Dataformat version", CMSITEventData::DataFormatVersion);
-    ev->SetTag("Configuration file", "\n" + RD53sysCntrPhys.fParsedFile.str());
-    for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
-    {
-        std::stringstream header;
-        header << "Firmware version: B" << cBoard->getId();
-        ev->SetTag(header.str().c_str(), static_cast<RD53FWInterface*>(RD53sysCntrPhys.fBeBoardFWMap[cBoard->getId()])->getBoardInfo());
-
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    std::stringstream header;
-                    std::stringstream chipData = cChip->getRegMapStream();
-                    header << "Register map and mask: B" << cBoard->getId() << "_O" << cOpticalGroup->getId() << "_H" << cHybrid->getId() << "_C" << +cChip->getId();
-                    ev->SetTag(header.str().c_str(), "\n" + chipData.str());
-                }
-    }
-    RD53eudaqProducer::MySendEvent(std::move(ev));
 
     // #############################
     // # Add extra event if needed #
@@ -164,6 +130,34 @@ void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
     }
 }
 
+const void RD53eudaqProducer::AddBoreInfoToEvent(eudaq::Event& ev)
+{
+    // ###############################################################
+    // # Add Ph2ACF configuration and extra information to the event #
+    // ###############################################################
+
+    ev.SetBORE();
+
+    ev.SetTag("Dataformat version", CMSITEventData::DataFormatVersion);
+    ev.SetTag("Configuration file", "\n" + RD53sysCntrPhys.fParsedFile.str());
+    for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
+    {
+        std::stringstream header;
+        header << "Firmware version: B" << cBoard->getId();
+        ev.SetTag(header.str().c_str(), static_cast<RD53FWInterface*>(RD53sysCntrPhys.fBeBoardFWMap[cBoard->getId()])->getBoardInfo());
+
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    std::stringstream header;
+                    std::stringstream chipData = cChip->getRegMapStream();
+                    header << "Register map and mask: B" << cBoard->getId() << "_O" << cOpticalGroup->getId() << "_H" << cHybrid->getId() << "_C" << +cChip->getId();
+                    ev.SetTag(header.str().c_str(), "\n" + chipData.str());
+                }
+    }
+}
+
 void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList)
 {
     // #######################################################################################################################
@@ -187,6 +181,11 @@ void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_
             auto                      tluTrigId  = RD53EvtList[it].tlu_trigger_id;
             CMSITEventData::EventData theEvent{
                 std::time(nullptr), static_cast<uint32_t>(eudaqProducer->RD53sysCntrPhys.nTRIGxEvent), RD53EvtList[it].l1a_counter, RD53EvtList[it].tdc, RD53EvtList[it].bx_counter, tluTrigId, {}};
+
+            // #########################
+            // # Add BORE if 1st event #
+            // #########################
+            if(eudaqProducer->GetEventN() == 0) eudaqProducer->AddBoreInfoToEvent(*ev);
 
             // ########################################################
             // # @TMP@ : choose between internal vs TLU event counter #

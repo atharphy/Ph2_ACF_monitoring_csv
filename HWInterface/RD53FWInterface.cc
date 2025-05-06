@@ -971,11 +971,12 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
 
 void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
 {
+    std::map<std::string, uint32_t> register_overrides{};
+    std::set<std::string>           valid_registers{
+        "ext_clk_en", "trigger_source", "dio5_ch1_thr", "dio5_ch2_thr", "dio5_ch3_thr", "dio5_ch4_thr", "dio5_ch5_thr", "dio5_en", "dio5_term_50ohm_en", "dio5_ch_out_en"};
+
     for(const auto& it: pBoard->getBeBoardRegMap())
-        if((it.second.fPrmptCfg == true) &&
-           ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos) || (it.first.find("dio5_ch1_thr") != std::string::npos) ||
-            (it.first.find("dio5_ch2_thr") != std::string::npos) || (it.first.find("dio5_ch3_thr") != std::string::npos) || (it.first.find("dio5_ch4_thr") != std::string::npos) ||
-            (it.first.find("dio5_ch5_thr") != std::string::npos)))
+        if(it.second.fPrmptCfg == true && std::any_of(valid_registers.begin(), valid_registers.end(), [&](auto reg) { return it.first.find(reg) != std::string::npos; }))
         {
             if(it.first.find("ext_clk_en") != std::string::npos)
             {
@@ -995,7 +996,7 @@ void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
                 {
                     LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be TLU" << RESET;
                     config->enable             = true;
-                    config->ch_out_en          = config->ch_out_en | 0x05;
+                    config->ch_out_en          = config->ch_out_en | 0x0D;
                     config->tlu_en             = true;
                     config->tlu_handshake_mode = 0x02;
                 }
@@ -1010,20 +1011,48 @@ void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
                 config->ch4_thr = it.second.fValue;
             else if(it.first.find("dio5_ch5_thr") != std::string::npos)
                 config->ch5_thr = it.second.fValue;
+            else if(it.first.find("dio5_en") != std::string::npos)
+                register_overrides["dio5_en"] = it.second.fValue;
+            else if(it.first.find("dio5_ch_out_en") != std::string::npos)
+                register_overrides["dio5_ch_out_en"] = it.second.fValue;
+            else if(it.first.find("dio5_term_50ohm_en") != std::string::npos)
+                register_overrides["dio5_term_50ohm_en"] = it.second.fValue;
         }
+
+    // Enable 50ohms termination on all inputs
+    config->fiftyohm_en = 0x1f ^ config->ch_out_en;
+
+    // Apply override values from XML file on automatically set registers
+    auto override_warn = [](std::string regname, uint32_t val)
+    { LOG(WARNING) << BOLDBLUE << "\t--> Overriding register " << BOLDYELLOW << regname << BOLDBLUE << " with user set value " << BOLDYELLOW << "0x" << std::hex << val << RESET; };
+
+    auto oreg = register_overrides.end();
+    if((oreg = register_overrides.find("dio5_en")) != register_overrides.end())
+    {
+        config->enable = oreg->second;
+        override_warn(oreg->first, oreg->second);
+    }
+    if((oreg = register_overrides.find("dio5_ch_out_en")) != register_overrides.end())
+    {
+        config->ch_out_en = oreg->second;
+        override_warn(oreg->first, oreg->second);
+    }
+    if((oreg = register_overrides.find("dio5_term_50ohm_en")) != register_overrides.end())
+    {
+        config->fiftyohm_en = oreg->second;
+        override_warn(oreg->first, oreg->second);
+    }
 }
 
 void RD53FWInterface::SendDIO5Cfg(const DIO5Config* config)
 {
-    const uint8_t fiftyOhmEnable = 0x12; // @CONST@
-
     if(RegManager::ReadReg("user.stat_regs.global_reg.dio5_not_ready") == true) LOG(ERROR) << BOLDRED << "DIO5 not ready" << RESET;
 
     if(RegManager::ReadReg("user.stat_regs.global_reg.dio5_error") == true) LOG(ERROR) << BOLDRED << "DIO5 is in error" << RESET;
 
     RegManager::WriteStackReg({{"user.ctrl_regs.ext_tlu_reg1.dio5_en", (uint32_t)config->enable},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en", (uint32_t)config->ch_out_en},
-                               {"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)fiftyOhmEnable},
+                               {"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)config->fiftyohm_en},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr", (uint32_t)config->ch1_thr},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr", (uint32_t)config->ch2_thr},
                                {"user.ctrl_regs.ext_tlu_reg2.dio5_ch3_thr", (uint32_t)config->ch3_thr},

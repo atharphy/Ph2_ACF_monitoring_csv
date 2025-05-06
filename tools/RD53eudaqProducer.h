@@ -51,9 +51,11 @@ class RD53eudaqProducer : public eudaq::Producer
     void DoTerminate() override;
     void RunLoop() override;
 
-    void Creator(Ph2_System::SystemController& RD53SysCntr, const std::string& fileName);
-    void MainLoop();
-    void MySendEvent(eudaq::EventSP theEvent);
+    void       Creator(Ph2_System::SystemController& RD53SysCntr, const std::string& fileName);
+    void       MainLoop();
+    void       MySendEvent(eudaq::EventSP theEvent);
+    const void AddBoreInfoToEvent(eudaq::Event& ev);
+    uint32_t   GetEventN() { return m_evt_c; };
 
     uint32_t previousTLUTrigId;
     size_t   swTrigCnt;
