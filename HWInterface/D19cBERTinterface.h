@@ -181,8 +181,8 @@ class D19cBERTinterface
     void                  injectError(uint8_t hybridId, uint8_t lineId);
     void                  selectFrameCounters(bool isMSB);
     void                  waitForNeededBits(bool is10Gmodule, float numberOfMatchedBits);
-    std::pair<bool, bool> isStartPatternFound(BoardContainer* theBoardContainer, uint8_t lineNumber);
-    bool                  retrieveBitTestedCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber, bool is10Gmodule, float numberOfMatchedBits);
+    std::tuple<bool, bool, std::map<uint16_t, bool>> isStartPatternFound(BoardContainer* theBoardContainer, uint8_t lineNumber);
+    bool                  retrieveBitTestedCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber, bool is10Gmodule, float numberOfMatchedBits, std::map<uint16_t, bool> startPatternFoundHybridMap);
     void                  retrieveErrorCounter(OpticalGroupDataContainer* theOpticalGroupContainer, uint8_t numberOfLines);
     void                  retrieveErrorCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber);
     uint64_t              readNumberOfTestedBit(uint16_t hybridId, uint8_t lineId, bool is10Gmodule);

@@ -2,7 +2,7 @@
 <HwDescription>
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="1">
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.10:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.192:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <configuration file_name="${PH2ACF_BASE_DIR}/settings/BeBoardFiles/uDTC_registers_PS.xml"/>
     <CDCE configure="0" clockRate="320"/>
         
@@ -25,7 +25,7 @@
                 <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode -->
                 <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/> <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
                 <InjectedCharge  stripCharge="70" pixelCharge="70"/> <!-- in DAC units for each chip type - their electron value is different though! -->
-                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" driveStrength="3" edgeSelect="0"/>
+                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" driveStrength="3" edgeSelect="1"/>
             </Global>
 
             <SSA2_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
@@ -294,11 +294,11 @@
     <Setting name="OTChipToCICecv_MPAshiftRegisterPattern">0xAA</Setting>
     <Setting name="OTChipToCICecv_ListOfMPAslvsCurrents">1, 4, 7</Setting>
 
-    <Setting name="OTSSAtoMPAecv_NumberOfIterations">1000</Setting>
+    <Setting name="OTSSAtoMPAecv_NumberOfTestedStubBits">1e6</Setting>
+    <Setting name="OTSSAtoMPAecv_NumberOfTestedL1Bits">1e5</Setting>
     <Setting name="OTSSAtoMPAecv_ListOfSSAslvsCurrents">1, 4, 7</Setting>
 
-    <Setting name="OTverifyCICdataWord_NumberOfTestedStubBits">1e6</Setting>
-    <Setting name="OTverifyCICdataWord_NumberOfTestedL1Bits">1e5</Setting>
+    <Setting name="OTSSAtoSSAecv_NumberOfTestedStubBits">1e6</Setting>
     <Setting name="OTSSAtoSSAecv_ListOfSSAslvsCurrents">1, 4, 7</Setting>
 
     <Setting name="OTPSringOscillatorTest_NumberOfClockCycles">100</Setting>
