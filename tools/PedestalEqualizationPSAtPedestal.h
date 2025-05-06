@@ -43,14 +43,7 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     void TuneVtrim();
     void TuneTrimBits();
     void SetTargetThreshold();
-    void DoScan(
-                            uint16_t                             boardId,
-                            const std::string&                   dacName,
-                            const std::vector<uint16_t>&         dacList,
-                            uint32_t                             numberOfEvents,
-                            std::vector<DetectorDataContainer*>& detectorContainerVector,
-                            int32_t                              numberOfEventsPerBurst
-    );
+
     static std::string fCalibrationDescription;
     bool                  fWithSSA = false;
     bool                  fWithMPA = false;
