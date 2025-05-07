@@ -843,7 +843,7 @@ bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip, const GenericData
         for(size_t cLine = 0; cLine < 5; cLine++)
         {
             uint8_t cAlVal = (theWordAlignmentValues.at(cFeId).at(cLine) & 0xF);
-            cValue      = cValue | (cAlVal << (cCounter % 2) * 4);
+            cValue         = cValue | (cAlVal << (cCounter % 2) * 4);
             if((1 + cCounter) % 2 == 0)
             {
                 std::string cRegName = "EXT_WA_DELAY" + (boost::format("%|02|") % cIndx).str();
