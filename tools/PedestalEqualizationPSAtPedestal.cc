@@ -610,13 +610,10 @@ void PedestalEqualizationPSAtPedestal::TuneVtrim()
                     //now find maximum threshold
                     uint16_t theMaxVtrim = 0x1F;
                     ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                    std::cout << " have readoutchip" << std::endl;
                     fReadoutChipInterface->SetVtrim(theReadoutChip, theMaxVtrim);
-                    std::cout << " set vtrim to max" << std::endl;
                     ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
-                    std::cout << " DONE ScanThresholdChip" << std::endl;
-                    std::cout << " getting threhsold fTheMaxOccupancyThresholdContainers row, col" << fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col) << std::endl;
-                     std::cout << " getting threhsold fTheMaxOccupancyThresholdContainers 0, 3 " << fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(0,3) << std::endl;
+                    std::cout << " getting threhsold fTheMaxOccupancyThresholdContainers row, col " << fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col) << std::endl;
+                    std::cout << " getting threhsold fTheMaxOccupancyThresholdContainers 0, 3 " << fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(0,3) << std::endl;
                     auto theMaximumThreshold =  fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
                     LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " maximum threshold at maximum Vtrim " << theMaximumThreshold << RESET;
 
@@ -741,6 +738,8 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
                         for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
                             theChipContainer->getChannel<uint16_t>(row,col) = cChip->getChannel<uint16_t>(row,col);
+                            bool isChannelPrint = (row == 0 && col == 7);
+                            if(isChannelPrint) LOG(INFO) << MAGENTA << " theMaxTrimBitsMaxOccupancyThresholdContainers " <<  theChipContainer->getChannel<uint16_t>(row,col) << " fTheMaxOccupancyThresholdContainers " << cChip->getChannel<uint16_t>(row,col) << RESET;
                         }
                     }
                 }
@@ -788,6 +787,13 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
     }
 
     LOG(INFO) << BOLDMAGENTA << " Scan Trim Bit " << RESET;
+    DetectorDataContainer theCurrentThresholdContainers;
+    // GenericDataArray < threshold, trim bit, isSearching >
+    ContainerFactory::copyAndInitChannel<std::pair<std::pair<uint16_t, uint16_t>, bool>>(*fDetectorContainer, theCurrentThresholdContainers);
+    DetectorDataContainer theUpTrimBitsMaxOccupancyThresholdContainers;
+    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theUpTrimBitsMaxOccupancyThresholdContainers);
+    DetectorDataContainer theDownTrimBitsMaxOccupancyThresholdContainers;
+    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theDownTrimBitsMaxOccupancyThresholdContainers);
 
     for(auto cBoard: *fDetectorContainer)
     {
@@ -797,6 +803,7 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
             {
                 for(auto cChip: *cHybrid)
                 {
+                    LOG(INFO) << BOLDYELLOW << " CHIP " << cChip->getId() << RESET;
                     auto theTargetThreshold = fTheTargetThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                     ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                  
@@ -804,7 +811,7 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
                     {
                         for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                         {
-                            bool isChannelPrint = (row == 0 && col == 5);
+                            bool isChannelPrint = (row == 0 && col == 7);
                             auto theMaximumThreshold =  theMaxTrimBitsMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
                             if (isChannelPrint) LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " maximum threshold at maximum trim bit " << theMaximumThreshold << RESET;
 
@@ -815,90 +822,161 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBits()
                             // Assume linear relationship for change in Vtrim and change in the threshold giving max occupancy
                             float theTrimBitStepSize = (float(theMaximumThreshold) - float(theMinimumThreshold))/float(theMaxTrimBits);
                             if (isChannelPrint) LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << "  step " << theTrimBitStepSize << RESET;
-                            uint16_t TrimBitsAttempt = (theTargetThreshold - theMinimumThreshold)/theTrimBitStepSize;
-                            if (isChannelPrint) LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " first Vtrim to set  " << theTrimBitStepSize << RESET;
+                            uint16_t TrimBitsAttempt = (float(theTargetThreshold) - float(theMinimumThreshold))/theTrimBitStepSize;
+                            if (isChannelPrint) LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " first TrimBit to set  " << TrimBitsAttempt << RESET;
+                            if(TrimBitsAttempt > theMaxTrimBits )TrimBitsAttempt =theMaxTrimBits;
 
                             fReadoutChipInterface->SetTrimBitsChannel(theReadoutChip,TrimBitsAttempt, row, col);
                         }
                     }
                     ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
 
-                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                    bool     isSearching         = true;
+                    uint32_t theCurrentIteration = 0;
+                    while(isSearching)
                     {
-                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        LOG(INFO) << MAGENTA <<  " Searching iteration " << theCurrentIteration << RESET;
+                        auto theChipContainer = theCurrentThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+            
+                        LOG(INFO )<< MAGENTA <<  "Read the current threshold and then set the trim bit lower one unit wrt guess " << RESET;
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                         {
-                            bool isChannelPrint = (row == 0 && col == 5);
-                            auto theCurrentMaxThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
-                            if(isChannelPrint) LOG(INFO) << BOLDGREEN <<  " Chip " <<cChip->getId() << " the first guessed threshold is " << theCurrentMaxThreshold  << " and target is " << theTargetThreshold << RESET;
-                    
-                            // Now checking if we can go even closer to the expected value
-                            bool     isSearching         = true;
-                            uint32_t theCurrentIteration = 0;
-                            while(isSearching)
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
                             {
+                                bool isChannelPrint = (row == 0 && col == 7);
+                                auto theCurrentMaxThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
                                 if(isChannelPrint) LOG(INFO) << YELLOW << "Checking if we can go closer to the expected value. Iteration " << theCurrentIteration << RESET;
                                 auto TrimBitsAttempt = fReadoutChipInterface->ReadTrimBitsChannel(cChip, row, col);
+                                theChipContainer->getChannel<std::pair<std::pair<u_int16_t,uint16_t>, bool>>(row,col) = std::make_pair(std::make_pair(theCurrentMaxThreshold,TrimBitsAttempt), true);
+
+                                if(isChannelPrint) LOG(INFO) << BOLDGREEN <<  " Chip " <<cChip->getId() << " the first guessed threshold is " << theCurrentMaxThreshold  << " and target is " << theTargetThreshold << RESET;
+                            
+                                // Now checking if we can go even closer to the expected value
+
+
                                 if(isChannelPrint) LOG(INFO) << MAGENTA << " minus 1 " << +TrimBitsAttempt - 1 << RESET;
                                 uint8_t theDACDownValue = std::max(uint8_t(0), uint8_t(TrimBitsAttempt - 1));
+                                if(isChannelPrint) LOG(INFO) << MAGENTA << " theDACDownValue " << +theDACDownValue << RESET;
                                 fReadoutChipInterface->SetTrimBitsChannel(theReadoutChip,theDACDownValue, row, col);
-                                
-                                ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
-                                auto MaxThresholdDown = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
-                            
-                                uint8_t theDACUpValue = std::min(uint8_t(theMaxTrimBits), uint8_t(TrimBitsAttempt + 1));
-                                if(isChannelPrint) LOG(INFO) << MAGENTA << "Vtrim + 1 " << +TrimBitsAttempt + 1<< RESET;
-                                fReadoutChipInterface->SetTrimBitsChannel(theReadoutChip,theDACUpValue, row, col);
-                                
-                                ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
-                                auto MaxThresholdUp = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+                                if(isChannelPrint) LOG(INFO) << MAGENTA << " done updating trim bits " << RESET;
+                            }
+                        }
+                        LOG(INFO) << MAGENTA << " scan thresholds per chip " << RESET;
+                        ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+                        LOG(INFO) << MAGENTA << " DONE scan thresholds per chip " << RESET;
 
+                        
+                        auto theDownChipContainer = theDownTrimBitsMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                        LOG(INFO) << MAGENTA << " theDownChipContainer " << RESET;
+                        auto theUpChipContainer = theUpTrimBitsMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                        LOG(INFO )<< MAGENTA <<  "Read the down threshold and then set the trim bit higher by one unit wrt guess" << RESET;
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                        {
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                            {
+                                bool isChannelPrint = (row == 0 && col == 7);
+
+                                auto MaxThresholdDown = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+                                if(isChannelPrint) LOG(INFO) << MAGENTA <<" DownThr " << MaxThresholdDown << RESET;
+                                theDownChipContainer->getChannel<uint16_t>(row, col) = MaxThresholdDown;
+
+                                auto theCurrentValues = theChipContainer->getChannel<std::pair<std::pair<uint16_t,uint16_t>, bool>>(row, col);
+                                auto TrimBitsAttempt = theCurrentValues.first.second;
+                                if(isChannelPrint) LOG(INFO) << MAGENTA << "Vtrim + 1 " << +TrimBitsAttempt + 1<< RESET;
+                                uint8_t theDACUpValue = std::min(uint8_t(theMaxTrimBits), uint8_t(TrimBitsAttempt + 1));
+                                
+                                fReadoutChipInterface->SetTrimBitsChannel(theReadoutChip,theDACUpValue, row, col);
+                            }
+                        }
+                        
+                        ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+
+                        LOG(INFO) << BOLDYELLOW << "Read the up threshold and then check wich trim bit is closer to target " << RESET;
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                        {
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                            {
+                                bool isChannelPrint = (row == 0 && col == 7);
+
+                                auto MaxThresholdUp = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+                                if(isChannelPrint) LOG(INFO) << MAGENTA <<" UpThr " << MaxThresholdUp << RESET;
+                                theUpChipContainer->getChannel<uint16_t>(row, col) = MaxThresholdUp;
+                        //     }
+                        // }
+
+                        // for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                        // {
+                        //     for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        //     {
+                        //         bool isChannelPrint = (row == 0 && col == 7);
+
+                                auto theCurrentValues = theChipContainer->getChannel<std::pair<std::pair<uint16_t,uint16_t>, bool>>(row, col);
+                                auto theCurrentMaxThreshold = theCurrentValues.first.first;
+                                auto TrimBitsAttempt =  theCurrentValues.first.second;
+                                auto MaxThresholdDown = theDownChipContainer->getChannel<uint16_t>(row, col);
+                                // auto MaxThresholdUp = theUpChipContainer->getChannel<uint16_t>(row, col);
+                                if(isChannelPrint) LOG(INFO) << BLUE << " up " << MaxThresholdUp << " current " << theCurrentMaxThreshold << " down " << MaxThresholdDown << RESET;
                                 float theExpectedDifference     = std::fabs(theTargetThreshold - theCurrentMaxThreshold);
                                 float theExpectedDifferenceDown = std::fabs(theTargetThreshold - MaxThresholdDown);
                                 float theExpectedDifferenceUp   = std::fabs(theTargetThreshold - MaxThresholdUp);
                             
                                 if((theExpectedDifferenceDown < theExpectedDifference) || (theExpectedDifferenceUp < theExpectedDifference))
                                 {
-                                    LOG(DEBUG) << BOLDRED << "Not precise extrapolation in PedestalEqualizationAtPedestal: theExpectedDifferenceDown:" << theExpectedDifferenceDown
+                                    if(isChannelPrint) LOG(INFO) << BOLDRED << "Not precise extrapolation in PedestalEqualizationAtPedestal: theExpectedDifferenceDown:" << theExpectedDifferenceDown
                                                << ", theExpectedDifferenceUp:" << theExpectedDifferenceUp << ", theExpectedDifference:" << theExpectedDifference << RESET;
                                     if((theExpectedDifferenceDown < theExpectedDifference))
                                     {
-                                        TrimBitsAttempt    = theDACDownValue;
+                                        TrimBitsAttempt    = std::max(uint8_t(0), uint8_t(TrimBitsAttempt - 1));
                                     }
                                     if((theExpectedDifferenceUp < theExpectedDifference))
                                     {
-                                        TrimBitsAttempt    = theDACUpValue;
+                                        TrimBitsAttempt    = std::min(uint8_t(theMaxTrimBits), uint8_t(TrimBitsAttempt + 1));
                                     }
                                 }
                                 else
                                 {
-                                    LOG(DEBUG) << BOLDGREEN << "Good extrapolation of TrimBits " << TrimBitsAttempt << RESET;
-                                    fReadoutChipInterface->SetTrimBitsChannel(theReadoutChip,TrimBitsAttempt, row, col); 
+                                    if(isChannelPrint) LOG(INFO) << BOLDGREEN << "Good extrapolation of TrimBits " << TrimBitsAttempt << RESET;
+                                    fReadoutChipInterface->SetTrimBitsChannel(theReadoutChip, TrimBitsAttempt, row, col); 
                                     
-                                    ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
-                                    auto theThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
-                                    if (isChannelPrint) LOG(INFO) << BOLDGREEN << " get threshold " << theThreshold << " with target " << theTargetThreshold << RESET;
-                                    isSearching = false;
+                                    //ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+                                    //auto theThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+                                    //if (isChannelPrint) LOG(INFO) << BOLDGREEN << " get threshold " << theThreshold << " with target " << theTargetThreshold << RESET;
+                                    theCurrentValues.second = false;
                                 }
-                                if (isChannelPrint)  LOG(INFO) << BOLDMAGENTA << "Writing DAC val " << +TrimBitsAttempt << RESET;
-                                fReadoutChipInterface->SetTrimBitsChannel(theReadoutChip,TrimBitsAttempt, row, col);   
-                                ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
-                                theCurrentMaxThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
-                                if (isChannelPrint) LOG(INFO) << BOLDMAGENTA << "Get Threshold " << theCurrentMaxThreshold << RESET;
-                                theCurrentIteration += 1;
-                                if (theCurrentIteration >= 31) isSearching = false;
+                                isSearching = (isSearching && theCurrentValues.second);
+                                if (isChannelPrint)  LOG(INFO) << BOLDMAGENTA << "Writing DAC val " << TrimBitsAttempt << " isSearching " <<  isSearching << RESET; 
+                                fReadoutChipInterface->SetTrimBitsChannel(theReadoutChip,TrimBitsAttempt, row, col);
+                                theChipContainer->getChannel<std::pair<std::pair<uint16_t,uint16_t>, bool>>(row, col).first.second = TrimBitsAttempt;
+                                theChipContainer->getChannel<std::pair<std::pair<uint16_t,uint16_t>, bool>>(row, col).second = theCurrentValues.second;
                             }
-                            if(isChannelPrint) LOG(INFO) << BOLDGREEN << "Vtrim gives -> New max occupancy threshold value: " << theCurrentMaxThreshold << " Expected value: " << theTargetThreshold << RESET;
-
                         }
-                    }
+                        LOG(INFO) << BOLDYELLOW << "Scan threshold after updating trim bits and then get new current threshold " << RESET;
+                        ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                        {
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                            {
+                                bool isChannelPrint = (row == 0 && col == 7);
+                                auto theCurrentMaxThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+                                if (isChannelPrint) LOG(INFO) << BOLDMAGENTA << "Get Threshold " << theCurrentMaxThreshold << RESET;
+                                theChipContainer->getChannel<std::pair<std::pair<uint16_t,uint16_t>, bool>>(row, col).first.first = theCurrentMaxThreshold;
+                            
+                            }
+                        }
+                        theCurrentIteration += 1;
+                        LOG(INFO) << BOLDYELLOW << "Update iteration " << RESET;
+                        if (theCurrentIteration > theMaxTrimBits)
+                        { 
+                            isSearching = false;              
+                            LOG(INFO) << BOLDRED << "REACHED MAX NUMBER IF ITERATIONS!!!! " << RESET;          
+                        }
+                    }// searching
                 } //chip
             }
         }
     }        
     std::cout << " close all loops" << std::endl;
     ScanThreshold();
-
-
 
 
 //     int totalIterations = 31;
