@@ -107,12 +107,12 @@ void RD53eudaqProducer::Creator(Ph2_System::SystemController& RD53SysCntr, const
     RD53sysCntrPhys.setGenericEvtConverter(RD53eudaqProducer::RD53eudaqEvtConverter(this));
 }
 
-void RD53eudaqProducer::MainLoop()
+void RD53eudaqProducer::MainLoop() const
 {
     while(this->IsConnected() == true) std::this_thread::sleep_for(std::chrono::milliseconds(EUDAQ::WAIT));
 }
 
-void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent) const
+void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
 {
     const auto MAXATTEMPTS = 2;
     for(auto i = 0; i < MAXATTEMPTS; i++)
@@ -130,7 +130,7 @@ void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent) const
     }
 }
 
-const void RD53eudaqProducer::AddBoreInfoToEvent(eudaq::Event& ev) const
+void RD53eudaqProducer::AddBoreInfoToEvent(eudaq::Event& ev) const
 {
     // ################################################################
     // # Add Ph2-ACF configuration and extra information to the event #
@@ -145,7 +145,7 @@ const void RD53eudaqProducer::AddBoreInfoToEvent(eudaq::Event& ev) const
     {
         std::stringstream header;
         header << "Firmware version: B" << cBoard->getId();
-        ev.SetTag(header.str().c_str(), static_cast<RD53FWInterface*>(RD53sysCntrPhys.fBeBoardFWMap[cBoard->getId()])->getBoardInfo());
+        ev.SetTag(header.str().c_str(), static_cast<RD53FWInterface*>(RD53sysCntrPhys.fBeBoardFWMap.at(cBoard->getId()))->getBoardInfo());
 
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -159,7 +159,7 @@ const void RD53eudaqProducer::AddBoreInfoToEvent(eudaq::Event& ev) const
     }
 }
 
-void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList)
+void RD53eudaqProducer::RD53eudaqEvtConverter::operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList) const
 {
     // #######################################################################################################################
     // # EUDAQ event parameters                                                                                              #
