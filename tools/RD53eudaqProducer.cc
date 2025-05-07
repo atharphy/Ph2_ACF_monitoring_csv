@@ -112,7 +112,7 @@ void RD53eudaqProducer::MainLoop()
     while(this->IsConnected() == true) std::this_thread::sleep_for(std::chrono::milliseconds(EUDAQ::WAIT));
 }
 
-void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
+void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent) const
 {
     const auto MAXATTEMPTS = 2;
     for(auto i = 0; i < MAXATTEMPTS; i++)
@@ -130,16 +130,17 @@ void RD53eudaqProducer::MySendEvent(eudaq::EventSP theEvent)
     }
 }
 
-const void RD53eudaqProducer::AddBoreInfoToEvent(eudaq::Event& ev)
+const void RD53eudaqProducer::AddBoreInfoToEvent(eudaq::Event& ev) const
 {
-    // ###############################################################
-    // # Add Ph2ACF configuration and extra information to the event #
-    // ###############################################################
+    // ################################################################
+    // # Add Ph2-ACF configuration and extra information to the event #
+    // ################################################################
 
     ev.SetBORE();
 
     ev.SetTag("Dataformat version", CMSITEventData::DataFormatVersion);
     ev.SetTag("Configuration file", "\n" + RD53sysCntrPhys.fParsedFile.str());
+
     for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
     {
         std::stringstream header;

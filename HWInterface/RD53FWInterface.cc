@@ -976,7 +976,7 @@ void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
         "ext_clk_en", "trigger_source", "dio5_ch1_thr", "dio5_ch2_thr", "dio5_ch3_thr", "dio5_ch4_thr", "dio5_ch5_thr", "dio5_en", "dio5_term_50ohm_en", "dio5_ch_out_en"};
 
     for(const auto& it: pBoard->getBeBoardRegMap())
-        if(it.second.fPrmptCfg == true && std::any_of(valid_registers.begin(), valid_registers.end(), [&](auto reg) { return it.first.find(reg) != std::string::npos; }))
+        if((it.second.fPrmptCfg == true) && (std::any_of(valid_registers.begin(), valid_registers.end(), [&](auto reg) { return it.first.find(reg) != std::string::npos; })))
         {
             if(it.first.find("ext_clk_en") != std::string::npos)
             {
@@ -1019,10 +1019,14 @@ void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
                 register_overrides["dio5_term_50ohm_en"] = it.second.fValue;
         }
 
-    // Enable 50ohms termination on all inputs
+    // ############################################
+    // # Enable 50 Ohms termination on all inputs #
+    // ############################################
     config->fiftyohm_en = 0x1f ^ config->ch_out_en;
 
-    // Apply override values from XML file on automatically set registers
+    // ######################################################################
+    // # Apply override values from XML file on automatically set registers #
+    // ######################################################################
     auto override_warn = [](std::string regname, uint32_t val)
     { LOG(WARNING) << BOLDBLUE << "\t--> Overriding register " << BOLDYELLOW << regname << BOLDBLUE << " with user set value " << BOLDYELLOW << "0x" << std::hex << val << RESET; };
 
