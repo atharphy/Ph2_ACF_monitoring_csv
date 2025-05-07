@@ -99,8 +99,12 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         for(uint8_t col = 0; col < numberOfCols; col += 2)
                         {
                             uint32_t rawCounter                         = pData.at(dataIndex++);
-                            theChip->getChannel<uint16_t>(row, col)     = rawCounter & 0x7F;
-                            theChip->getChannel<uint16_t>(row, col + 1) = (rawCounter >> 15) & 0x7F;
+                            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] rawCounter = " << std::hex << rawCounter << std::dec << std::endl;
+
+                            theChip->getChannel<uint16_t>(row, col)     = rawCounter & 0x7FFF;
+                            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theChip->getChannel<uint16_t>(row, col) = " << std::hex << theChip->getChannel<uint16_t>(row, col) << std::dec << std::endl;
+                            theChip->getChannel<uint16_t>(row, col + 1) = (rawCounter >> 16) & 0x7FFF;
+                            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] theChip->getChannel<uint16_t>(row, col + 1) = " << std::hex << theChip->getChannel<uint16_t>(row, col + 1) << std::dec << std::endl;
                         }
                     }
                 }
