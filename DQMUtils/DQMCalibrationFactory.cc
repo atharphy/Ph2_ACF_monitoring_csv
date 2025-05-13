@@ -245,7 +245,6 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCICBX0Alignment,
              DQMHistogramOTalignStubPackage,
              DQMHistogramOTverifyCICdataWord,
-             DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise>("2SquickTest");
 
