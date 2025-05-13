@@ -286,7 +286,11 @@ void OTverifyCICdataWord::runL1Interations(Ph2_HwInterface::D19cFWInterface* the
         float errorBitNumber = testedBitNumber - thePatternMatcher.countMatchingBits(orderedLineOutputVector);
         if(errorBitNumber > 0)
         {
-            if(std::all_of(orderedLineOutputVector.begin(), orderedLineOutputVector.end(), [](int i) { return i == 0; })) continue;
+            if(std::all_of(orderedLineOutputVector.begin(), orderedLineOutputVector.end(), [](int i) { return i == 0; }))
+            {
+                ++numberOfIgnoredPatterns;
+                continue;
+            }
             size_t numberOfEmpyWords = 0;
             for(auto theWord: orderedLineOutputVector)
             {
