@@ -92,20 +92,18 @@ void ChipL1EventInfo::parseData(std::vector<uint32_t>::const_iterator dataStart,
     fErrorCode       = getWord<2, 0x3>(dataStart, bitStart);
     fPipelineAddress = getWord<9, 0x1FF>(dataStart, bitStart + 2);
     fL1id            = getWord<9, 0x1FF>(dataStart, bitStart + 11);
-    fRawData[7]      = getWord<30, 0x3FFFFFFF>(dataStart, bitStart + 20);
-    for(size_t wordIndex = 0; wordIndex < 7; ++wordIndex) { fRawData[wordIndex] = getWord<32, 0xFFFFFFFF>(dataStart, bitStart + 242 - (32 * wordIndex)); }
+    for(size_t wordIndex = 0; wordIndex < 7; ++wordIndex) { fRawData[wordIndex] = getWord<32, 0xFFFFFFFF>(dataStart, bitStart + 20 + (32 * wordIndex)); }
+    fRawData[7]      = getWord<30, 0x3FFFFFFF>(dataStart, bitStart + 20 + 32*7) << 2;
 }
 
-bool ChipL1EventInfo::isChannelHit(uint8_t channel) const { return (fRawData.at(channel / 32) >> (channel % 32)) & 0x1; }
+bool ChipL1EventInfo::isChannelHit(uint8_t channel) const { return (fRawData.at(channel / 32) >> (31 - channel % 32)) & 0x1; }
 
 void ChipL1EventInfo::print() const
 {
-    auto reversedRawData = fRawData;
-    std::reverse(reversedRawData.begin(), reversedRawData.end());
     std::cout << "ErrorCode             = " << +fErrorCode << std::endl;
     std::cout << "PipelineAddress       = " << +fPipelineAddress << std::endl;
     std::cout << "L1id                  = " << +fL1id << std::endl;
-    std::cout << "RawData               = " << getPatternPrintout(reversedRawData, 1) << std::endl;
+    std::cout << "RawData               = " << getPatternPrintout(fRawData, 1) << std::endl;
 }
 
 std::vector<uint8_t> ChipL1EventInfo::getChannelHitList() const
@@ -299,7 +297,7 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
 
             for(size_t numberOfCBCblock = 0; numberOfCBCblock < 25; ++numberOfCBCblock)
             {
-                for(size_t chipIdForCIC = 0; chipIdForCIC < NUMBER_OF_CIC_PORTS; ++chipIdForCIC)
+                for(int chipIdForCIC = NUMBER_OF_CIC_PORTS - 1; chipIdForCIC >= 0; --chipIdForCIC)
                 {
                     uint32_t currentWordOffsetQuotient  = currentCBCwordOffset / 32;
                     uint32_t currentWordOffsetRemainder = currentCBCwordOffset % 32;
