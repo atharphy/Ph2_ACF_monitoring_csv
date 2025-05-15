@@ -249,4 +249,6 @@ std::vector<uint32_t> getPossiblePatterns(uint8_t injectedPattern, bool is10Gmod
 
 std::vector<std::vector<uint32_t>> splitBits(const std::vector<uint32_t>& input, uint32_t numberOfSplits);
 
+std::string runCommand(const std::string& cmd);
+
 #endif

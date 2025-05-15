@@ -510,11 +510,18 @@ void LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         for(auto cOpticalGroup: *pBoard)
         {
             // Get register name dependent of OG
-            std::string cRegName;
+            std::string cRegNameHybrid0;
+            std::string cRegNameHybrid1;
             if(cOpticalGroup->getId() < 10)
-                cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9";
+            {
+                cRegNameHybrid0 = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid0_link0_link9";
+                cRegNameHybrid1 = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid1_link0_link9";
+            }
             else
-                cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11";
+            {
+                cRegNameHybrid0 = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid0_link10_link11";
+                cRegNameHybrid1 = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid1_link10_link11";
+            }
 
             // gethybrid IDs
             std::vector<uint8_t>                    cHybridIds(0);
@@ -560,7 +567,8 @@ void LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                         cRegValue = (cPackageDelay << cOpticalGroup->getId() % 10 * 3) + cFinalDelayOGs_link10_link11;
 
                     LOG(INFO) << BOLDYELLOW << "OG#" << cOpticalGroup->getId() << "\t.. Package delay of " << +cPackageDelay << " -- reg value " << std::bitset<32>(cRegValue) << RESET;
-                    fBeBoardInterface->WriteBoardReg(pBoard, cRegName, cRegValue);
+                    fBeBoardInterface->WriteBoardReg(pBoard, cRegNameHybrid0, cRegValue);
+                    fBeBoardInterface->WriteBoardReg(pBoard, cRegNameHybrid1, cRegValue);
                     cInterface->Bx0Alignment();
 
                     ReadNEvents(pBoard, cNevents);
