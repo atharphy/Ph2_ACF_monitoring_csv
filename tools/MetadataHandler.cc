@@ -65,7 +65,7 @@ void MetadataHandler::fillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theGitTagContainer);
     theGitTagContainer.getSummary<std::string>() = theGitTag;
 
-    std::string           theGitCommitHash = runCommand("git rev-parse HEAD");
+    std::string theGitCommitHash = runCommand("git rev-parse HEAD");
     theGitCommitHash.erase(theGitCommitHash.find_last_not_of(" \n\r\t") + 1);
     DetectorDataContainer theGitCommitHashContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theGitCommitHashContainer);

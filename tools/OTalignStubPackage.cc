@@ -213,13 +213,13 @@ bool OTalignStubPackage::AlignStubPackage()
                     allHybridsAligned = false;
                     continue;
                 }
-                auto bestPackageDelay = std::find_if(theBestPackageDelayVector.begin(), theBestPackageDelayVector.end(), [](bool value) { return value; }) - theBestPackageDelayVector.begin(); // find intex of the best phase
-           
+                auto bestPackageDelay = std::find_if(theBestPackageDelayVector.begin(), theBestPackageDelayVector.end(), [](bool value) { return value; }) -
+                                        theBestPackageDelayVector.begin(); // find intex of the best phase
+
                 if(theOpticalGroup->getId() < 10)
                     bestPackageDelayLink0Link9[theHybrid->getId() % 2] |= (bestPackageDelay << (theOpticalGroup->getId() % 10) * 3);
                 else
                     bestPackageDelayLink10Link11[theHybrid->getId() % 2] |= (bestPackageDelay << (theOpticalGroup->getId() % 10) * 3);
-
             }
         }
 
