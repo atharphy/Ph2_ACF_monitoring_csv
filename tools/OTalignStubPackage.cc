@@ -38,7 +38,7 @@ void OTalignStubPackage::Running()
     LOG(INFO) << "Starting OTalignStubPackage measurement.";
     Initialise();
     size_t numberOtIterations    = 0;
-    size_t maxNumberOfIterations = 10;
+    size_t maxNumberOfIterations = 1;
     while(numberOtIterations < maxNumberOfIterations)
     {
         if(AlignStubPackage()) break;

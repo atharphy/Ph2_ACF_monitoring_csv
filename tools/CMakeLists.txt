@@ -124,8 +124,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     endforeach(sourcefile ${BINARIES})
 
     TARGET_LINK_LIBRARIES(Ph2_Tools ${LIBS})
-    target_compile_definitions(Ph2_Tools PRIVATE
-    "-DGIT_COMMIT=\"${GIT_COMMIT}\"" "-DGIT_TAG=\"${GIT_TAG}\"")
+    target_compile_definitions(Ph2_Tools PRIVATE)
 
     message("--     ${BoldCyan}#### End ####${Reset}")
 
@@ -161,8 +160,7 @@ else()
             EXCLUDE SSAPhysics.h SSAPhysics.cc
             )
 
-    target_compile_definitions(Ph2_Tools PRIVATE
-    "-DGIT_COMMIT=\"${GIT_COMMIT}\"" "-DGIT_TAG=\"${GIT_TAG}\"")
+    target_compile_definitions(Ph2_Tools PRIVATE)
 
     install_headers()
     install_source()
