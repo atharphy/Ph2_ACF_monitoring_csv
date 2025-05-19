@@ -615,7 +615,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                     // skip if not MPA. MPA holds cluster information for both pixel and strip
                     if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                     // Get pixel clusters
-                    std::vector<PixelClusterPS> cPClusters = static_cast<const D19cCic2Event*>(pPh2Event)->GetPixelClusters(cHybridId, cChipId);
+                    auto cPClusters = static_cast<const D19cCic2Event*>(pPh2Event)->GetPixelClusters(cHybridId, cChipId);
                     // Extract pixel hit information
                     // #FIXME not using GetHits for a more readable code
                     for(auto cCluster: cPClusters)
@@ -655,7 +655,7 @@ void Eudaq2Producer::ConvertToSubEvent(const BeBoard* pBoard, const Event* pPh2E
                     } // end of PixelClusterPS loop
 
                     // Get strip clusters
-                    std::vector<StripClusterPS> cSClusters = static_cast<const D19cCic2Event*>(pPh2Event)->GetStripClusters(cHybridId, cChipId);
+                    auto cSClusters = static_cast<const D19cCic2Event*>(pPh2Event)->GetStripClusters(cHybridId, cChipId);
                     // Extract strip hit information
                     for(auto cCluster: cSClusters)
                     {

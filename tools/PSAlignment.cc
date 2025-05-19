@@ -312,7 +312,7 @@ bool PSAlignment::AlignStubInputs(BeBoard* pBoard)
                                     {
                                         if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                                         if(cChip->getId() != cChipId) continue;
-                                        std::vector<EventStub> stubs = static_cast<D19cCic2Event*>(ev)->StubVector(cHybrid->getId(), cChip->getId());
+                                        auto stubs = static_cast<D19cCic2Event*>(ev)->StubVector(cHybrid->getId(), cChip->getId());
                                         for(auto& st: stubs)
                                         {
                                             if((2 * cCol) == st.getPosition() and (cRow - 1) == st.getRow()) MatchNStubtot += 1; // Match row and column
@@ -454,8 +454,8 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                             if(cChip->getFrontEndType() != FrontEndType::MPA2) continue;
                                             if(cChip->getId() != cChipId) continue;
 
-                                            std::vector<PixelClusterPS> Pclus = static_cast<D19cCic2Event*>(ev)->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                                            std::vector<StripClusterPS> Sclus = static_cast<D19cCic2Event*>(ev)->GetStripClusters(cHybrid->getId(), cChip->getId());
+                                            auto Pclus = static_cast<D19cCic2Event*>(ev)->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                                            auto Sclus = static_cast<D19cCic2Event*>(ev)->GetStripClusters(cHybrid->getId(), cChip->getId());
 
                                             for(auto& pc: Pclus)
                                             {
@@ -650,10 +650,10 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs(ReadoutChip* pC
     {
         bool operator()(StripClusterPS a, StripClusterPS b) const { return a.fAddress < b.fAddress; }
     } customSortSclus;
-    struct
-    {
-        bool operator()(EventStub a, EventStub b) const { return a.fPosition < b.fPosition; }
-    } customSortStubs;
+    // struct
+    // {
+    //     bool operator()(EventStub a, EventStub b) const { return a.fPosition < b.fPosition; }
+    // } customSortStubs;
 
     std::vector<std::pair<uint8_t, uint8_t>> cGoodCombinationsStubs;
     cGoodCombinationsStubs.clear();
@@ -727,7 +727,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs(ReadoutChip* pC
                         {
                             size_t cStubCntr = 0;
                             // sort stubs by position
-                            std::sort(cStubs.begin(), cStubs.end(), customSortStubs);
+                            // std::sort(cStubs.begin(), cStubs.end(), customSortStubs);
                             size_t cMatchedStubSeeds = 0;
                             for(auto cInjection: pInjections)
                             {
@@ -1428,7 +1428,7 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
 
     return cOneFoundForAll;
 }
-bool PSAlignment::CheckL1Data(std::vector<PixelClusterPS> pPClusters, std::vector<StripClusterPS> pSClusters, std::vector<Injection> pInjections)
+bool PSAlignment::CheckL1Data(ClusterCollection<PixelClusterPS, 32> pPClusters, ClusterCollection<StripClusterPS, 32> pSClusters, std::vector<Injection> pInjections)
 {
     bool cFmatch = true;
 
@@ -1584,10 +1584,10 @@ bool PSAlignment::CheckFullMatch(ReadoutChip* pChip, const std::vector<Event*>& 
     {
         bool operator()(StripClusterPS a, StripClusterPS b) const { return a.fAddress < b.fAddress; }
     } customSortSclus;
-    struct
-    {
-        bool operator()(EventStub a, EventStub b) const { return a.fPosition < b.fPosition; }
-    } customSortStubs;
+    // struct
+    // {
+    //     bool operator()(EventStub a, EventStub b) const { return a.fPosition < b.fPosition; }
+    // } customSortStubs;
 
     float  cMatchingCount   = (pTriggerMult == 0) ? (pEvents.size() - 1) : pEvents.size() / (float)(1 + pTriggerMult);
     size_t cMatchedEvents   = 0;
@@ -1621,7 +1621,7 @@ bool PSAlignment::CheckFullMatch(ReadoutChip* pChip, const std::vector<Event*>& 
         {
             size_t cStubCntr = 0;
             // sort stubs by position
-            std::sort(cStubs.begin(), cStubs.end(), customSortStubs);
+            // std::sort(cStubs.begin(), cStubs.end(), customSortStubs);
             size_t cMatchedStubSeeds = 0;
             for(auto cInjection: pInjections)
             {

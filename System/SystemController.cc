@@ -1173,8 +1173,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
                         std::vector<uint32_t> cEvent(cEventIterator, cEnd);
                         if(pBoard->getFrontEndType() == FrontEndType::CIC2)
                         {
-                            bool cWithCBC3 = !(fEventType == EventType::VR2S);
-                            fEventList.push_back(new D19cCic2Event(pBoard, cEvent, cWithCBC3, cTLUconfig));
+                            fEventList.push_back(new D19cCic2Event(pBoard, cEvent, cTLUconfig));
                         }
                         cEventIndex++;
                     }

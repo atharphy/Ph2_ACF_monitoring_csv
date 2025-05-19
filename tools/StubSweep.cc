@@ -208,7 +208,7 @@ void StubSweep::SweepStubs(uint32_t pNEvents)
 
                                 do {
                                     cNhits                        = cEvents[j]->GetNHits(cHybridId, cCbcId);
-                                    std::vector<EventStub> cStubs = static_cast<D19cCic2Event*>(cEvents[j])->StubVector(cHybridId, cCbcId);
+                                    auto cStubs = static_cast<D19cCic2Event*>(cEvents[j])->StubVector(cHybridId, cCbcId);
                                     cStubPosition                 = cStubs[0].getPosition();
                                     j++;
                                 } while(cNhits != cChannelPair.size() && j < cEvents.size());
@@ -309,7 +309,7 @@ uint8_t StubSweep::getStubPosition(std::vector<Event*> pEvents, uint32_t pHybrid
         if(cEvent->StubBit(pHybridId, pCbcId))
         {
             // only look at the first stub that comes out of the cbc
-            std::vector<EventStub> cStubs = static_cast<D19cCic2Event*>(cEvent)->StubVector(pHybridId, pCbcId);
+            auto cStubs = static_cast<D19cCic2Event*>(cEvent)->StubVector(pHybridId, pCbcId);
             EventStub              cStub  = cStubs[0];
             cStubPosition                 = cStub.getPosition();
             cCenter                       = cStub.getCenter();

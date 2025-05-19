@@ -93,6 +93,7 @@ void CalibrationExample::Running()
 {
     LOG(INFO) << "Starting calibration example measurement.";
     Initialise();
+    setSameDac("Threshold", 593);
     runCalibrationExample();
     LOG(INFO) << "Done with calibration example.";
 }

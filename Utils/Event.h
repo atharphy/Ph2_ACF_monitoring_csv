@@ -176,12 +176,6 @@ class Event
     // # VIRTUAL METHODS #
     // ###################
     /*!
-     * \brief Set an Event to the Event map
-     * \param pEvent : Event to set
-     * \return Aknowledgement of the Event setting (1/0)
-     */
-    virtual void Set(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list) {}
-    /*!
      * \brief Convert Data to Hex string
      * \return Data string in hex
      */
@@ -200,28 +194,28 @@ class Event
      * \param pCbcId : Cbc Id
      * \return Data Bit vector
      */
-    virtual std::vector<bool> DataBitVector(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
+    virtual std::vector<bool> DataBitVector(uint8_t pHybridId, uint8_t pCbcId) { return {}; }
     /*!
      * \brief Function to get all Error bits
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Error bit
      */
-    virtual uint32_t Error(uint8_t pHybridId, uint8_t pCbcId) const { return 0; }
+    virtual uint32_t Error(uint8_t pHybridId, uint8_t pCbcId) { return 0; }
     /*!
      * \brief Function to get pipeline address
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Pipeline address
      */
-    virtual uint32_t PipelineAddress(uint8_t pHybridId, uint8_t pCbcId) const { return 0; }
+    virtual uint32_t PipelineAddress(uint8_t pHybridId, uint8_t pCbcId) { return 0; }
     /*!
      * \brief Function to get pipeline address
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Pipeline address
      */
-    virtual uint32_t L1Id(uint8_t pHybridId, uint8_t pCbcId) const { return 0; }
+    virtual uint32_t L1Id(uint8_t pHybridId, uint8_t pCbcId) { return 0; }
 
     /*!
      * \brief Function to get pipeline address
@@ -229,7 +223,7 @@ class Event
      * \param pCbcId : Cbc Id
      * \return Pipeline address
      */
-    virtual uint32_t BxId(uint8_t pHybridId) const { return 0; }
+    virtual uint32_t BxId(uint8_t pHybridId) { return 0; }
     /*!
      * \brief Function to get a CBC pixel bit data
      * \param pHybridId : Hybrid Id
@@ -237,7 +231,7 @@ class Event
      * \param i : pixel bit data number i
      * \return Data Bit
      */
-    virtual bool DataBit(uint8_t pHybridId, uint8_t pCbcId, uint8_t row, uint8_t col) const { return true; }
+    virtual bool DataBit(uint8_t pHybridId, uint8_t pCbcId, uint8_t row, uint8_t col) { return true; }
 
     /*!
      * \brief Function to get Stub bit
@@ -245,7 +239,7 @@ class Event
      * \param pCbcId : Cbc Id
      * \return stub bit?
      */
-    virtual bool StubBit(uint8_t pHybridId, uint8_t pCbcId) const { return true; }
+    virtual bool StubBit(uint8_t pHybridId, uint8_t pCbcId) { return true; }
 
     /*!
      * \brief Function to count the Hits in this event
@@ -253,14 +247,14 @@ class Event
      * \param pCbcId : Cbc Id
      * \return number of hits
      */
-    virtual uint32_t GetNHits(uint8_t pHybridId, uint8_t pCbcId) const { return 0; }
+    virtual uint32_t GetNHits(uint8_t pHybridId, uint8_t pCbcId) { return 0; }
     /*!
      * \brief Function to get a sparsified hit vector
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return vector with hit channels (row, col)
      */
-    virtual std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId) const
+    virtual std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId)
     {
         std::cerr << __PRETTY_FUNCTION__ << " not implemented! Aborting..." << std::endl;
         abort();

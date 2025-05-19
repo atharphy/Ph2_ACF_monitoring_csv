@@ -16,8 +16,8 @@ class D19cPSEventAS : public Event
     D19cPSEventAS(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list);
     ~D19cPSEventAS() {}
 
-    void        Set(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list) override;
-    uint32_t    GetNHits(uint8_t pHybridId, uint8_t pMPAId) const override;
+    void        Set(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list);
+    uint32_t    GetNHits(uint8_t pHybridId, uint8_t pMPAId) override;
     void        fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) override;
     static void configureFastReadout(bool enableFastReadout);
 

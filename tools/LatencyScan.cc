@@ -314,8 +314,8 @@ void LatencyScan::ScanLatency()
                                 }
                                 else
                                 {
-                                    std::vector<PixelClusterPS> cPclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                                    std::vector<StripClusterPS> cSclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetStripClusters(cHybrid->getId(), cChip->getId());
+                                    auto cPclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                                    auto cSclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetStripClusters(cHybrid->getId(), cChip->getId());
 
                                     cTotalHitsS0 += cPclstrs.size();
                                     cTotalHitsS1 += cSclstrs.size();
@@ -689,7 +689,7 @@ void LatencyScan::ScanLatency2D()
                                 for(auto cCbc: *cHybrid)
                                 {
                                     int                    cHitCounter  = cEvent->GetNHits(cHybrid->getId(), cCbc->getId());
-                                    std::vector<EventStub> cStubs       = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cCbc->getId());
+                                    auto                   cStubs       = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cCbc->getId());
                                     int                    cStubCounter = cStubs.size();
 
                                     if(cHitCounter == 0) {}
@@ -904,7 +904,7 @@ std::map<HybridContainer*, uint8_t> LatencyScan::ScanStubLatency(uint8_t pStartL
     return cStubLatencyMap;
 }
 
-int LatencyScan::countStubs(Hybrid* pFe, const Event* pEvent, std::string pHistName, uint8_t pParameter)
+int LatencyScan::countStubs(Hybrid* pFe, Event* pEvent, std::string pHistName, uint8_t pParameter)
 {
     // loop over Hybrids & Cbcs and count hits separately
     int cStubCounter = 0;
@@ -914,7 +914,7 @@ int LatencyScan::countStubs(Hybrid* pFe, const Event* pEvent, std::string pHistN
 
     for(auto cCbc: *pFe)
     {
-        if(pEvent->StubBit(pFe->getId(), cCbc->getId())) cStubCounter += static_cast<const D19cCic2Event*>(pEvent)->StubVector(pFe->getId(), cCbc->getId()).size();
+        if(pEvent->StubBit(pFe->getId(), cCbc->getId())) cStubCounter += static_cast<D19cCic2Event*>(pEvent)->StubVector(pFe->getId(), cCbc->getId()).size();
     }
     int   cBin        = cTmpHist->FindBin(pParameter);
     float cBinContent = cTmpHist->GetBinContent(cBin);

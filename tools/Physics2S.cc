@@ -235,7 +235,7 @@ void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Even
             {
                 for(const auto cChip: *cHybrid)
                 {
-                    std::vector<EventStub> stubList = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
+                    auto stubList = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
 
                     for(auto& stub: stubList)
                     {
