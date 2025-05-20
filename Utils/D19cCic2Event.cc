@@ -87,7 +87,7 @@ void HybridL1EventInfo::print() const
     std::cout << "NumberOfPixelClusters = " << +fNumberOfPixelClusters << std::endl;
 }
 
-void ChipL1EventInfo::parseData(std::vector<uint32_t>::const_iterator dataStart, size_t bitStart)
+void ChipL1EventInfo::parseData(std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9>::const_iterator dataStart, size_t bitStart)
 {
     fErrorCode       = getWord<2, 0x3>(dataStart, bitStart);
     fPipelineAddress = getWord<9, 0x1FF>(dataStart, bitStart + 2);
@@ -171,6 +171,7 @@ bool D19cCic2Event::fIsSparsified = true;
 
 BoardDataContainer D19cCic2Event::fDecodedL1Event = BoardDataContainer();
 BoardDataContainer D19cCic2Event::fDecodedStubEvent = BoardDataContainer();
+std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9> D19cCic2Event::fTheChipDataVector = std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9>();
 
 // Event implementation
 D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list, bool pWithTLU)
@@ -340,7 +341,7 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
         }
         else
         {
-            std::vector<std::vector<uint32_t>> theChipDataVector(NUMBER_OF_CIC_PORTS, std::vector<uint32_t>(9, 0));
+            fTheChipDataVector.fill(0);
 
             uint32_t currentCBCwordOffset = 0;
 
@@ -356,12 +357,12 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
 
                     if(32 - L1_UNSPARSFIED_BLOCK_SIZE_2S >= currentWordOffsetRemainder)
                     {
-                        theChipDataVector[chipIdForCIC][currentWordOffsetQuotient] |= (theWord << (32 - L1_UNSPARSFIED_BLOCK_SIZE_2S - currentWordOffsetRemainder));
+                        fTheChipDataVector[chipIdForCIC * 9 + currentWordOffsetQuotient] |= (theWord << (32 - L1_UNSPARSFIED_BLOCK_SIZE_2S - currentWordOffsetRemainder));
                     }
                     else
                     {
-                        theChipDataVector[chipIdForCIC][currentWordOffsetQuotient] |= (theWord >> (L1_UNSPARSFIED_BLOCK_SIZE_2S - 32 + currentWordOffsetRemainder));
-                        theChipDataVector[chipIdForCIC][currentWordOffsetQuotient + 1] |= (theWord << (32 - (L1_UNSPARSFIED_BLOCK_SIZE_2S - 32 + currentWordOffsetRemainder)));
+                        fTheChipDataVector[chipIdForCIC * 9 + currentWordOffsetQuotient] |= (theWord >> (L1_UNSPARSFIED_BLOCK_SIZE_2S - 32 + currentWordOffsetRemainder));
+                        fTheChipDataVector[chipIdForCIC * 9 + currentWordOffsetQuotient + 1] |= (theWord << (32 - (L1_UNSPARSFIED_BLOCK_SIZE_2S - 32 + currentWordOffsetRemainder)));
                     }
                 }
                 currentCBCwordOffset += L1_UNSPARSFIED_BLOCK_SIZE_2S;
@@ -369,7 +370,7 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
 
             for(auto* theChipEventContainer: *theHybridEventContainer)
             {
-                theChipEventContainer->getSummary<ChipL1EventInfo>().parseData(theChipDataVector[getIdForCic(theHybridEventContainer->getId(), theChipEventContainer->getId())].begin());
+                theChipEventContainer->getSummary<ChipL1EventInfo>().parseData(fTheChipDataVector.begin() + 9 * getIdForCic(theHybridEventContainer->getId(), theChipEventContainer->getId()));
             }
         }
     }

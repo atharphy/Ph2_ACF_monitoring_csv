@@ -15,6 +15,7 @@
 #include "Event.h"
 #include <iterator>
 #include <numeric>
+#include <array>
 
 namespace Ph2_HwInterface
 {
@@ -132,7 +133,7 @@ struct HybridL1EventInfo
 struct ChipL1EventInfo
 {
     ChipL1EventInfo() {}
-    void                  parseData(std::vector<uint32_t>::const_iterator dataStart, size_t bitStart = 0);
+    void                  parseData(std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9>::const_iterator dataStart, size_t bitStart = 0);
     uint8_t               fErrorCode{0};
     uint16_t              fPipelineAddress{0};
     uint16_t              fL1id{0};
@@ -273,6 +274,7 @@ class D19cCic2Event : public Event
 
     static BoardDataContainer fDecodedL1Event;
     static BoardDataContainer fDecodedStubEvent;
+    static std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9> fTheChipDataVector;
     static bool ifAreDecodedEventContainersReady;
 
     uint8_t fTLUenabled   = 0;
