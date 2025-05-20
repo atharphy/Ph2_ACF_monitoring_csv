@@ -44,6 +44,11 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
     theTH1FChipStripMax.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripMaxHistograms, theTH1FChipStripMax);
 
+    HistContainer<TH1I> theTH1IStripTrimBits("ChannelTrimBits", "Channel trim bits", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
+    theTH1IStripTrimBits.fTheHistogram->GetXaxis()->SetTitle("Channel");
+    theTH1IStripTrimBits.fTheHistogram->GetYaxis()->SetTitle("Trimbits");
+    RootContainerFactory::bookChipHistograms<HistContainer<TH1I>>(theOutputFile, theDetectorStructure, fDetectorStripTrimBitsHistograms, theTH1IStripTrimBits);
+
     fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
@@ -57,6 +62,12 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
     theTH1FChipPixelMax.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelMaxHistograms, theTH1FChipPixelMax);
  
+
+    HistContainer<TH1I> theTH1IPixelTrimBits("ChannelTrimBits", "Channel trim bits", NMPAROWS*NSSACHANNELS, -0.5, NMPAROWS*NSSACHANNELS - 0.5);
+    theTH1IPixelTrimBits.fTheHistogram->GetXaxis()->SetTitle("Channel");
+    theTH1IPixelTrimBits.fTheHistogram->GetYaxis()->SetTitle("Trimbits");
+    RootContainerFactory::bookChipHistograms<HistContainer<TH1I>>(theOutputFile, theDetectorStructure, fDetectorPixelTrimBitsHistograms, theTH1IPixelTrimBits);
+  
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
 
     HistContainer<TH1F> theTH1FChipMax("ThresholdForMaximumOccupancyDistribution", "Threshold for maximum occupancy distribution", 256, -0.5, 256 - 0.5);
@@ -64,7 +75,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
     theTH1FChipMax.fTheHistogram->GetYaxis()->SetTitle("Entries");
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipMaxHistograms, theTH1FChipMax);
 
-       
+    
 }
 
 //========================================================================================================================
@@ -91,6 +102,7 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
     // As example, I'm expecting to receive a data stream from an uint32_t contained from calibration "PedestalEqualizationPSAtPedestal"
     ContainerSerialization theOccupancyStreamer("PedestalEqualizationPSAtPedestalOccupancy");
     ContainerSerialization theMaxStreamer("PedestalEqualizationPSAtPedestalMax");
+    ContainerSerialization theTrimBitsStreamer("PedestalEqualizationPSAtPedestalTrimBits");
 
     if(theOccupancyStreamer.attachDeserializer(inputStream))
     {
@@ -111,7 +123,17 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
         DetectorDataContainer theDetectorData = theMaxStreamer.deserializeChipContainer<uint16_t, EmptyContainer>(fDetectorContainer);
         // Filling the histograms
-        fillMaxPlots(theDetectorData); // FIXME!
+        fillMaxPlots(theDetectorData);
+        return true;
+    }
+    if(theTrimBitsStreamer.attachDeserializer(inputStream))
+    {
+        // It matched! Decoding data
+        std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
+        // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
+        DetectorDataContainer theDetectorData = theTrimBitsStreamer.deserializeChipContainer<uint16_t, EmptyContainer>(fDetectorContainer);
+        // Filling the histograms
+        fillTrimBitsPlots(theDetectorData); 
         return true;
     }
     //the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
@@ -248,3 +270,55 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDa
         }
     }
 }
+
+void DQMHistogramPedestalEqualizationPSAtPedestal::fillTrimBitsPlots(const DetectorDataContainer& TrimBitContainers)
+{
+    for(auto cBoard: TrimBitContainers)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    auto     cType = theReadoutChip->getFrontEndType();
+
+                    TH1I* hTrimBits= nullptr;
+                    if(cType == FrontEndType::SSA2)
+                    {
+                        hTrimBits = fDetectorStripTrimBitsHistograms.getObject(cBoard->getId())
+                                      ->getObject(cOpticalGroup->getId())
+                                      ->getObject(cHybrid->getId())
+                                      ->getObject(cChip->getId())
+                                      ->getSummary<HistContainer<TH1I>>()
+                                      .fTheHistogram;
+                    }
+                    else if(cType == FrontEndType::MPA2)
+                    {
+                        hTrimBits = fDetectorPixelTrimBitsHistograms.getObject(cBoard->getId())
+                                          ->getObject(cOpticalGroup->getId())
+                                          ->getObject(cHybrid->getId())
+                                          ->getObject(cChip->getId())
+                                          ->getSummary<HistContainer<TH1I>>()
+                                          .fTheHistogram;
+                    }
+
+                    auto theChipContainer = TrimBitContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    if(theChipContainer->hasChannelContainer() == false) continue;
+
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        {
+                            uint16_t trimBit      = theChipContainer->getChannel<uint16_t>(row, col);
+                            auto bin = linearizeRowAndCols(row, col, cChip->getNumberOfCols());
+                            hTrimBits->SetBinContent(bin + 1, trimBit);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
