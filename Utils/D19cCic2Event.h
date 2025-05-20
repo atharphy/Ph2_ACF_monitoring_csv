@@ -137,7 +137,7 @@ struct ChipL1EventInfo
     uint8_t               fErrorCode{0};
     uint16_t              fPipelineAddress{0};
     uint16_t              fL1id{0};
-    std::vector<uint32_t> fRawData {std::vector<uint32_t>(8, 0)};
+    std::array<uint32_t, 8> fRawData {0, 0, 0, 0, 0, 0, 0, 0};
     inline bool           isChannelHit(uint8_t channel) const;
     std::vector<uint8_t>  getChannelHitList() const;
     inline uint8_t        countNumberOfHits() const;

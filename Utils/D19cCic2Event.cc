@@ -103,7 +103,8 @@ void ChipL1EventInfo::print() const
     std::cout << "ErrorCode             = " << +fErrorCode << std::endl;
     std::cout << "PipelineAddress       = " << +fPipelineAddress << std::endl;
     std::cout << "L1id                  = " << +fL1id << std::endl;
-    std::cout << "RawData               = " << getPatternPrintout(fRawData, 1) << std::endl;
+    std::vector<uint32_t> rawDataVector(fRawData.begin(), fRawData.end());
+    std::cout << "RawData               = " << getPatternPrintout(rawDataVector, 1) << std::endl;
 }
 
 std::vector<uint8_t> ChipL1EventInfo::getChannelHitList() const
@@ -462,31 +463,60 @@ const std::vector<uint8_t>* D19cCic2Event::getCicToChipMapping(uint16_t theHybri
 void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId)
 {
     decodeEvent();
-    std::vector<std::pair<uint16_t, uint16_t>> cHits; // row and col
+    auto readoutChipId = chipContainer->getId();
+    ChipDataContainer* theChipL1Container;
     try
     {
-        cHits = this->GetHits(hybridId, chipContainer->getId());
+        theChipL1Container = fDecodedL1Event.getChip(hybridId / 2, hybridId, readoutChipId);
     }
     catch(const std::exception& e)
     {
-        // This may happen if one object was disabled after the data container was already created
+        // hybrid was disabled
         return;
     }
+    if(theChipL1Container == nullptr) return;
 
-    for(auto cHit: cHits)
+    auto updateIfUnmasked = [chipContainer, &testChannelGroup](uint16_t row, uint16_t col)
     {
-        if(cHit.first >= chipContainer->getNumberOfRows() || cHit.second >= chipContainer->getNumberOfCols())
+        if(testChannelGroup->isChannelEnabled(row, col))
         {
-            LOG(WARNING) << WARNING_FORMAT << "Error decoding hit vector for OpticalGroup " << +hybridId / 2 << " Hybrid " << +hybridId << " Chip " << chipContainer->getId() << RESET;
-            LOG(WARNING) << WARNING_FORMAT << "Received hit with row " << cHit.first << " col " << cHit.second << RESET;
-            continue;
+            chipContainer->getChannel<Occupancy>(row, col).fOccupancy += 1.;
         }
-        if(testChannelGroup->isChannelEnabled(cHit.first, cHit.second))
+    };
+
+    if(fIsSparsified)
+    {
+        if(fIs2S)
         {
-            chipContainer->getChannel<Occupancy>(cHit.first, cHit.second).fOccupancy += 1.;
-            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << chipContainer->getChannel<Occupancy>(cHit.first, cHit.second).fOccupancy << std::endl;
+            for(auto theCluster: theChipL1Container->getSummary<ClusterCollection<Cluster2S, 31>>())
+            {
+                for(size_t channel = theCluster.fFirstStrip; channel < theCluster.fFirstStrip + theCluster.fClusterWidth; ++channel)
+                { 
+                    updateIfUnmasked(0, channel);
+                }
+            }
         }
-        // else std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] impossible! hit on chip ID " << chipContainer->getId() << " -> " << cHit.first << " - " << cHit.second << std::endl;
+        else
+        {
+            if(readoutChipId < 8)
+            {
+                for(auto theCluster: theChipL1Container->getSummary<ClusterCollection<StripClusterPS, 32>>())
+                {
+                    for(size_t channel = theCluster.fAddress; channel < theCluster.fAddress + theCluster.fWidth; ++channel) { updateIfUnmasked(0, channel); }
+                }
+            }
+            else
+            {
+                for(auto theCluster: theChipL1Container->getSummary<ClusterCollection<PixelClusterPS, 32>>())
+                {
+                    for(size_t channel = theCluster.fAddress; channel < theCluster.fAddress + theCluster.fWidth; ++channel) { updateIfUnmasked(theCluster.fZpos, channel); }
+                }
+            }
+        }
+    }
+    else
+    {
+        for(auto theHitChannel: theChipL1Container->getSummary<ChipL1EventInfo>().getChannelHitList()) { updateIfUnmasked(0, theHitChannel); }
     }
 }
 
