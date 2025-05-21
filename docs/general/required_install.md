@@ -71,7 +71,7 @@ sudo dnf install erlang
 ## uHAL libraries (cactus)
 
 ```shell
-sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.el9.repo -o /etc/yum.repos.d/ipbus-sw.repo
+sudo curl https://ipbus.web.cern.ch/doc/user/html/_downloads/ipbus-sw.repo -o /etc/yum.repos.d/ipbus-sw.repo
 sudo dnf clean all
 sudo dnf groupinstall -y uhal controlhub
 ```

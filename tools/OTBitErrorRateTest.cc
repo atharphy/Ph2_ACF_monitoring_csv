@@ -66,7 +66,7 @@ void OTBitErrorRateTest::bitErrorRateTestPerLine(Ph2_HwDescription::BeBoard* the
                                                  BoardDataContainer*         theFECContainer,
                                                  BoardDataContainer*         thePhaseClockDelayContainer,
                                                  float                       numberOfBits,
-                                                 float                       lineNumber)
+                                                 uint8_t                     lineNumber)
 {
     bool is10Gmodule = flpGBTInterface->GetChipRate(theBoard->getFirstObject()->flpGBT) == 10;
 
@@ -100,7 +100,8 @@ void OTBitErrorRateTest::bitErrorRateTestPerLine(Ph2_HwDescription::BeBoard* the
             theAlignerInterface->enableAlignmentOnPRBS(theHybrid->getId());
             if(!tryLineAlignment(theAlignerInterface, theHybrid, lineNumber))
             {
-                LOG(ERROR) << ERROR_FORMAT << "Failed to align OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << RESET;
+                if(!fSuppressErrorPrintout)
+                    LOG(ERROR) << ERROR_FORMAT << "Failed to align OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +lineNumber << RESET;
             }
             theAlignerInterface->disableAlignmentOnPRBS(theHybrid->getId());
         }
@@ -109,6 +110,7 @@ void OTBitErrorRateTest::bitErrorRateTestPerLine(Ph2_HwDescription::BeBoard* the
     D19cBERTinterface* theBERTinterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getBERTinterface();
 
     theBERTinterface->setUsePRBS(true);
+    theBERTinterface->setSuppressErrorPrintout(fSuppressErrorPrintout);
 
     fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_en_bit", 1);
     fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.lpgbt_fec_config.fec_err_cnt_rst_bit", 1);
@@ -157,6 +159,7 @@ void OTBitErrorRateTest::bitErrorRateTest(uint8_t line)
     DetectorDataContainer theBestPhaseCountainer;
     ContainerFactory::copyAndInitOpticalGroup<uint16_t>(*fDetectorContainer, theBestPhaseCountainer);
 
+    fSuppressErrorPrintout = true;
     for(uint16_t phase = 0; phase < maximumPhase; ++phase)
     {
         DetectorDataContainer thePhaseCountainer;
@@ -181,6 +184,7 @@ void OTBitErrorRateTest::bitErrorRateTest(uint8_t line)
             }
         }
     }
+    fSuppressErrorPrintout = false;
 
     // find mimumum BERT
     DetectorDataContainer theBERTcounterMinimum;

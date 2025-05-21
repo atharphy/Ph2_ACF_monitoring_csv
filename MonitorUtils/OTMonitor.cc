@@ -89,11 +89,13 @@ float OTMonitor::readLpGBTmonitorValue(Ph2_HwDescription::OpticalGroup* theOptic
     auto theLpGBT          = static_cast<Ph2_HwDescription::lpGBT*>(theOpticalGroup->flpGBT);
     auto theLpGBRInterface = fTheSystemController->flpGBTInterface;
 
-    auto readTemperature = [theLpGBRInterface, theOpticalGroup, theLpGBT](const std::string& theNTCtype, float pExpectedROhm)
+    auto readTemperature = [theLpGBRInterface, theOpticalGroup, theLpGBT](const std::string& theNTCtype)
     {
         std::string sensorTemperatureADC = theOpticalGroup->getNTCMap().at(theNTCtype);
         theLpGBRInterface->CdacSetCurrent(theLpGBT, sensorTemperatureADC, theLpGBRInterface->_CdacCodeToCurrent(theLpGBT, sensorTemperatureADC, 0xaa));
-        float resistance = theLpGBRInterface->MeasureResistance(theLpGBT, sensorTemperatureADC, pExpectedROhm, false);
+        float expectedROhm = theLpGBRInterface->GetLastNTCResistance(theLpGBT, theNTCtype);
+        float resistance   = theLpGBRInterface->MeasureResistance(theLpGBT, sensorTemperatureADC, expectedROhm, false);
+        theLpGBRInterface->SetLastNTCResistance(theLpGBT, theNTCtype, resistance);
         return NTChandler::getInstance().getTemperature(theNTCtype, resistance);
     };
 
@@ -101,8 +103,8 @@ float OTMonitor::readLpGBTmonitorValue(Ph2_HwDescription::OpticalGroup* theOptic
     if(std::regex_match(monitorValueName, std::regex("^ADC[0-7]$"))) { monitorValue = theLpGBRInterface->AdcGetVin(theLpGBT, monitorValueName, "VREF/2", 0); }
     else if(std::regex_match(monitorValueName, std::regex("^VDD.*"))) { monitorValue = theLpGBRInterface->MeasurePowerSupplyVoltage(theLpGBT, monitorValueName); }
     else if(monitorValueName == "LpGBTtemp") { monitorValue = theLpGBRInterface->MeasureTemperature(theLpGBT); }
-    else if(monitorValueName == "SensorTemp") { monitorValue = readTemperature("Sensor", 1000); }
-    else if(monitorValueName == "VTRxTemp") { monitorValue = readTemperature("VTRx+", 10000); }
+    else if(monitorValueName == "SensorTemp") { monitorValue = readTemperature("Sensor"); }
+    else if(monitorValueName == "VTRxTemp") { monitorValue = readTemperature("VTRx+"); }
     else if(monitorValueName == "1V25_Left") { monitorValue = theLpGBRInterface->AdcGetVin(theLpGBT, "ADC1", "VREF/2", 0) * (310. / 200.); }
     else if(monitorValueName == "VIN") { monitorValue = theLpGBRInterface->AdcGetVin(theLpGBT, "ADC2", "VREF/2", 0) * (95.6 / 4.7); }
     else if(monitorValueName == "VTRxLeakageCurr") { monitorValue = 2.5 - theLpGBRInterface->AdcGetVin(theLpGBT, "ADC5", "VREF/2", 0) * (146 / 47); }

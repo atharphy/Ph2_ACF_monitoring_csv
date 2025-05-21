@@ -590,7 +590,7 @@ void lpGBTInterface::ResetRxDll(Chip* pChip, const std::vector<uint8_t>& pGroups
 
 bool lpGBTInterface::IsPUSMDone(Chip* pChip) { return lpGBTInterface::GetPUSMStatus(pChip) == revertedPUSMStatusMap["READY"]; }
 
-void lpGBTInterface::PrintChipMode(Chip* pChip)
+uint8_t lpGBTInterface::PrintChipMode(Chip* pChip)
 {
     uint8_t cChipMode = (ReadChipReg(pChip, "ConfigPins") & 0xF0) >> 4;
     switch(cChipMode)
@@ -660,6 +660,8 @@ void lpGBTInterface::PrintChipMode(Chip* pChip)
                   << "; LpGBT Mode = " << BOLDYELLOW << "Transceiver" << RESET;
         break;
     }
+
+    return cChipMode;
 }
 
 uint8_t lpGBTInterface::GetPUSMStatus(Chip* pChip) { return ReadChipReg(pChip, "PUSMStatus"); }
@@ -1946,7 +1948,6 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
     float     value;
 
     auto cChip = pOpticalGroup->flpGBT;
-
     if(registerName.find("TEMP") != std::string::npos)
     {
         value = lpGBTInterface::MeasureTemperature(cChip);
@@ -1995,6 +1996,25 @@ float lpGBTInterface::ReadChipMonitor(const OpticalGroup* pOpticalGroup, const s
         value = lpGBTInterface::ReadADC(cChip, registerName, "VREF/2", 0, silentRunning);
 
     return value;
+}
+
+float lpGBTInterface::GetLastNTCResistance(lpGBT* pChip, const std::string& theNTCtype)
+{
+    if(theNTCtype == "Sensor")
+        return pChip->getNTCResistance();
+    else if(theNTCtype == "VTRx+")
+        return pChip->getVtrxNTCResistance();
+    throw std::runtime_error("GetLastNTCResistance - No NTC type found");
+}
+void lpGBTInterface::SetLastNTCResistance(lpGBT* pChip, const std::string& theNTCtype, float resistance)
+
+{
+    if(theNTCtype == "Sensor")
+        pChip->setNTCResistance(resistance);
+    else if(theNTCtype == "VTRx+")
+        pChip->setVtrxNTCResistance(resistance);
+    else
+        throw std::runtime_error("SetLastNTCResistance - No NTC type found");
 }
 
 void lpGBTInterface::hardReset(Ph2_HwDescription::Chip* pChip)

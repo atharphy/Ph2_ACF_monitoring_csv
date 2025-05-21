@@ -102,7 +102,7 @@
 			<Register name="test_pulse">
 				<Register name="delay_after_fast_reset">100</Register>
 				<Register name="delay_after_test_pulse">200</Register>
-				<Register name="delay_before_next_pulse">200</Register>
+				<Register name="delay_before_next_pulse">400</Register>
 				<Register name="en_fast_reset">0</Register>
 				<Register name="en_l1a">1</Register>
 				<Register name="en_shutter">0</Register>
@@ -206,9 +206,6 @@
 				<Register name="auto_l1_capture">0</Register>
 				<Register name="chip_select">0</Register>
 				<Register name="hybrid_select">1</Register>
-			</Register>
-			<Register name="stubs">
-				<Register name="stub_package_delay">2</Register>
 			</Register>
 		</Register>
 		<Register name="readout_block">

@@ -22,7 +22,7 @@ void TriggerInterface::ReconfigureTriggerFSM(std::vector<std::pair<std::string, 
     LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::ReconfigureTriggerFSM is absent" << RESET;
 }
 
-bool TriggerInterface::Start()
+bool TriggerInterface::Start(bool checkIfStarted)
 {
     LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::Start is absent" << RESET;
     return false;

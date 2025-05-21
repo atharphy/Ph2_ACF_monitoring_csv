@@ -49,7 +49,7 @@ class OTBitErrorRateTest : public OTalignBoardDataWord
                                  BoardDataContainer*         theFECContainer,
                                  BoardDataContainer*         thePhaseClockDelayContainer,
                                  float                       numberOfBits,
-                                 float                       lineNumber);
+                                 uint8_t                     lineNumber);
     void bitErrorRateTest();
     void bitErrorRateTest(uint8_t line);
 

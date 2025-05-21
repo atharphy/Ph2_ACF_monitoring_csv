@@ -307,6 +307,12 @@ void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
 
     for(auto cHit: cHits)
     {
+        if(cHit.first >= chipContainer->getNumberOfRows() || cHit.second >= chipContainer->getNumberOfCols())
+        {
+            LOG(WARNING) << WARNING_FORMAT << "Error decoding hit vector for OpticalGroup " << +hybridId / 2 << " Hybrid " << +hybridId << " Chip " << chipContainer->getId() << RESET;
+            LOG(WARNING) << WARNING_FORMAT << "Received hit with row " << cHit.first << " col " << cHit.second << RESET;
+            continue;
+        }
         if(testChannelGroup->isChannelEnabled(cHit.first, cHit.second)) { chipContainer->getChannel<Occupancy>(cHit.first, cHit.second).fOccupancy += 1.; }
         // else std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] impossible! hit on chip ID " << chipContainer->getId() << " -> " << cHit.first << " - " << cHit.second << std::endl;
     }
@@ -339,16 +345,6 @@ std::vector<PCluster> D19cCic2Event::GetPixelClusters(uint8_t pHybridId, uint8_t
         return cPClusters;
     }
     auto cClusterWords = fEventHitList.at(cHybridIndex).second;
-    // decltype(fEventHitList[0].second) cClusterWords;
-    // try
-    // {
-    //     cClusterWords = fEventHitList.at(getHybridIndex(pHybridId)).second;
-    // }
-    // catch(const std::exception& e)
-    // {
-    //     std::cerr << e.what() << '\n';
-    //     return cPClusters;
-    // }
     if(cClusterWords.size() == 0) return cPClusters;
 
     // LOG (INFO) << BOLDGREEN << " D19cCic2Event::GetPixelClusters for Fe" << +pHybridId << "..." << RESET;
@@ -419,35 +415,10 @@ std::vector<SCluster> D19cCic2Event::GetStripClusters(uint8_t pHybridId, uint8_t
             cSCluster.fWidth   = cWdth + 1; //((*cIterator) & ((0x7) << (0 + 1))) >> (0 + 1);
             cSCluster.fMip     = cMip;      //((*cIterator) & ((0x1) << 0)) >> 0;
             cSClusters.push_back(cSCluster);
-            // LOG(INFO) << BOLDYELLOW << "S-cluster in chip " << +pReadoutChipId << ", address : " << unsigned(cSCluster.fAddress) << "," << unsigned(cSCluster.fWidth) << ","
-            //            << unsigned(cSCluster.fMip) << RESET;
         }
         cIterator++;
-    };
+    }
     return cSClusters;
-    // std::vector<SCluster> result;
-    // uint8_t NSclus = GetNStripClusters(pHybridId, pReadoutChipId);
-    // SCluster aSCluster;
-    // auto&  cClusterWords = fEventHitList.at(getHybridIndex(pHybridId)).second;
-    // //uint8_t cSClusterSize = D19C_SCluster_SIZE_32_MPA;
-    // //uint8_t deltaword     = 3*32;
-
-    // for(int ic=0; ic <NSclus ; ic++)
-    // {
-    // //decoding might now be right here...
-
-    //     aSCluster.fAddress = ((0x000007f0 & cClusterWords[ic]) >> 4);
-    //     aSCluster.fMip     = (0x0000000e & cClusterWords[ic]) >> 1;
-    //     aSCluster.fWidth   = 0x00000001 & cClusterWords[ic];
-
-    //     //LOG(INFO) << BOLDRED << "STRIPS" << RESET;
-    //     //LOG (INFO) << BOLDRED << std::bitset<14>(cClusterWords[ic]) << RESET;
-    //     //LOG(INFO) << BOLDRED << unsigned(aSCluster.fAddress)<<","<<unsigned(aSCluster.fWidth)<<","<< unsigned(aSCluster.fMip)<< RESET;
-
-    //     result.push_back(aSCluster);
-
-    // }
-    // return result;
 }
 
 std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word(uint8_t pHybridId, uint8_t pReadoutChipId) const
@@ -462,24 +433,6 @@ std::bitset<RAW_L1_CBC> D19cCic2Event::getRawL1Word(uint8_t pHybridId, uint8_t p
     //     << RESET;
     auto& cDataBitset = fEventRawList.at(cHybridIndex).second.at(cIndx);
     return cDataBitset;
-}
-
-std::string D19cCic2Event::HexString() const
-{
-    // std::stringbuf tmp;
-    // std::ostream os ( &tmp );
-
-    // os << std::hex;
-
-    // for ( uint32_t i = 0; i < fEventSize; i++ )
-    // os << std::uppercase << std::setw ( 2 ) << std::setfill ( '0' ) << ( fEventData.at (i) & 0xFF000000 ) << " " << (
-    // fEventData.at (i) & 0x00FF0000 ) << " " << ( fEventData.at (i) & 0x0000FF00 ) << " " << ( fEventData.at (i) &
-    // 0x000000FF );
-
-    ////os << std::endl;
-
-    // return tmp.str();
-    return "";
 }
 
 std::string D19cCic2Event::DataHexString(uint8_t pHybridId, uint8_t pCbcId) const
@@ -606,44 +559,6 @@ uint32_t D19cCic2Event::PipelineAddress(uint8_t pHybridId, uint8_t pReadoutChipI
         for(size_t cIndex = 0; cIndex < cPipeline.size(); cIndex++) cPipeline[cPipeline.size() - 1 - cIndex] = cDataBitset[cDataBitset.size() - cOffset - 1 - cIndex];
         return cPipeline.to_ulong();
     }
-}
-
-std::bitset<NMPAROWS * NSSACHANNELS> D19cCic2Event::decodePClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const
-{
-    // std::cout << __PRETTY_FUNCTION__ << " Searching for hybrid id " << +pHybridId << std::endl;
-    auto&                                cClusterWords = fEventHitList.at(getHybridIndex(pHybridId)).second;
-    std::bitset<NMPAROWS * NSSACHANNELS> cBitSet(0);
-    size_t                               cClusterId = 0;
-    for(auto cCluster: cClusterWords)
-    {
-        uint8_t cChipId       = (cCluster & ((0x7) << (0 + 4 + 3 + 7))) >> (0 + 4 + 3 + 7);
-        auto    cChipIdMapped = this->getChipIdMapped(pHybridId, pReadoutChipId);
-        if(cChipId == cChipIdMapped)
-        {
-            // figure out if it is an S or a P cluster
-            uint8_t cFlag = (cCluster & (0x1 << 31)) >> 31;
-            if(cFlag == 0) // s cluster
-            {
-                SCluster cSCluster;
-                cSCluster.fAddress = (cCluster & ((0x7F) << (0 + 1 + 3))) >> (0 + 1 + 3);
-                cSCluster.fWidth   = (cCluster & ((0x7) << (0 + 1))) >> (0 + 1);
-                cSCluster.fMip     = (cCluster & ((0x1) << 0)) >> 0;
-                // cSClusters.push_back(cSCluster);
-                // LOG(DEBUG) << BOLDRED << "S-cluster, address : " << unsigned(cSCluster.fAddress) << "," << unsigned(cSCluster.fWidth) << "," << unsigned(cSCluster.fMip) << RESET;
-            }
-            else
-            {
-                PCluster aPCluster;
-                aPCluster.fAddress = (cCluster & ((0x7F) << (0 + 4 + 3))) >> (0 + 4 + 3);
-                aPCluster.fWidth   = (cCluster & ((0x7) << (0 + 4))) >> (0 + 4);
-                aPCluster.fZpos    = (cCluster & ((0xF) << 0)) >> 0;
-                // cPClusters.push_back(aPCluster);
-                // LOG(DEBUG) << BOLDGREEN << "P-cluster, address : " << unsigned(aPCluster.fAddress) << "," << unsigned(aPCluster.fWidth) << "," << unsigned(aPCluster.fZpos) << RESET;
-            }
-            cClusterId++;
-        }
-    }
-    return cBitSet;
 }
 
 std::bitset<NCHANNELS> D19cCic2Event::decodeClusters(uint8_t pHybridId, uint8_t pReadoutChipId) const
