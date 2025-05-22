@@ -207,7 +207,6 @@
         <Register name="gtx_rx_polarity">
           <Register name="fmc_l12"> 1024 </Register>
           <Register name="fmc_l8"> 0 </Register>
-          <Register name="cmd_strobe"> 0 </Register>
         </Register>
         -->
       </Register>
