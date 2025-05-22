@@ -42,6 +42,7 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     void FindTargetThreshold();
     void TuneVtrim();
     void TuneTrimBits();
+    void TuneTrimBitsBinary();
     void SetTargetThreshold();
 
     static std::string fCalibrationDescription;
