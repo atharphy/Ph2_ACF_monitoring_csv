@@ -39,10 +39,6 @@ void ECVLinkAlignmentOT::Initialise()
     Prepare();
     SetName("ECVLinkAlignmentOT");
 
-    // list of board registers that can be modified by this tool
-    std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay"};
-    SetBrdRegstoPerserve(cBrdRegsToKeep);
-
     // no Chip registers to perserve
 
     // initialize containers that hold values found by this tool

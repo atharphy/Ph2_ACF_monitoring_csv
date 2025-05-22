@@ -123,7 +123,8 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
     fPulseAmplitude              = findValueInSettings<double>("PedeNoise_PulseAmplitude", 0);
     fPulseAmplitudePix           = findValueInSettings<double>("PedeNoise_PulseAmplitudePix", fPulseAmplitude);
-    std::cout << __PRETTY_FUNCTION__ << " fPulseAmplitudePix " << +fPulseAmplitudePix << std::endl;
+    LOG(INFO) << BOLDMAGENTA << " Strip injection pulse height = " << +fPulseAmplitude << RESET;
+    if(fWithMPA) LOG(INFO) << BOLDMAGENTA << " Pixel injection pulse height = " << +fPulseAmplitudePix << RESET;
     fPedeNoiseLimit          = findValueInSettings<double>("PedeNoiseLimit", 10); // NOT IN XML
     fPedeNoiseMask           = findValueInSettings<double>("PedeNoiseMask", 0);   // NOT IN XML
     fPedeNoiseMaskUntrimmed  = findValueInSettings<double>("PedeNoise_MaskUntrimmed", 0);

@@ -505,7 +505,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
     {
         if(pValue != 0 && pValue != 1)
         {
-            std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pRegName = " << pRegName << " -> pValue can be only 0 or 1" << std::endl;
+            std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] pRegName = " << pRegName << " -> pValue can be only 0 or 1" << std::endl;
             abort();
         }
         uint16_t enableRegisterValue;

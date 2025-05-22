@@ -168,7 +168,7 @@ void OTverifyMPASSAdataWord::injectStubsPS(Ph2_HwDescription::ReadoutChip* theMP
 {
     if(listOfStubs.size() != 1)
     {
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] listOfStubs must be exactly one to test SSA to MPA cluster lines! Aborting..." << std::endl;
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] listOfStubs must be exactly one to test SSA to MPA cluster lines! Aborting..." << std::endl;
         abort();
     }
 
@@ -183,7 +183,7 @@ PatternMatcher OTverifyMPASSAdataWord::producePatternMatcherPS(uint8_t chipIdFor
 {
     if(listOfStubs.size() != 1)
     {
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] listOfStubs must be exactly one to test SSA to MPA cluster lines! Aborting..." << std::endl;
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] listOfStubs must be exactly one to test SSA to MPA cluster lines! Aborting..." << std::endl;
         abort();
     }
     size_t numberOfStubs = 8 * listOfStubs.size();

@@ -316,10 +316,10 @@ bool CicInterface::ManualBx0Alignment(Chip* pChip, uint8_t pBx0delay)
     setBoard(pChip->getBeBoardId());
     LOG(INFO) << BOLDBLUE << "Manually settomg BX0 delay value in CIC on FE" << +pChip->getHybridId() << " to " << +pBx0delay << " clock cycles." << RESET;
     bool cSuccess = this->WriteChipReg(pChip, cRegName, cValue);
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cRegName << " to 0x" << std::hex << +cValue << std::dec << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cRegName << " to 0x" << std::hex << +cValue << std::dec << std::endl;
     if(!cSuccess) return cSuccess;
     cSuccess = cSuccess && this->WriteChipReg(pChip, "EXT_BX0_DELAY", pBx0delay);
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing EXT_BX0_DELAY to 0x" << std::hex << +pBx0delay << std::dec << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing EXT_BX0_DELAY to 0x" << std::hex << +pBx0delay << std::dec << std::endl;
     return cSuccess;
 }
 // run automated Bx0 alignment - FIX ME
@@ -666,7 +666,7 @@ bool CicInterface::AutomatedBX0Alignment(Chip* pChip, std::vector<uint8_t> pAlig
             if((cRegValue & 0x02) == 2)
             {
                 auto bx0delay = this->retrieveExternalBX0AlignmentValue(pChip);
-                std::cout << " AUTO_BXO_DONE " << (cRegValue & 0x02) << " delay found " << bx0delay << std::endl;
+                LOG(INFO) << BOLDGREEN << " AUTO_BXO_DONE " << (cRegValue & 0x02) << " delay found " << bx0delay << RESET;
 
                 alignmentCompleted = true;
                 break;
@@ -842,8 +842,8 @@ bool CicInterface::ConfigureExternalWordAlignment(Chip* pChip, const GenericData
     {
         for(size_t cLine = 0; cLine < 5; cLine++)
         {
-            auto cAlVal = (theWordAlignmentValues.at(cFeId).at(cLine) & 0xF);
-            cValue      = cValue | (cAlVal << (cCounter % 2) * 4);
+            uint8_t cAlVal = (theWordAlignmentValues.at(cFeId).at(cLine) & 0xF);
+            cValue         = cValue | (cAlVal << (cCounter % 2) * 4);
             if((1 + cCounter) % 2 == 0)
             {
                 std::string cRegName = "EXT_WA_DELAY" + (boost::format("%|02|") % cIndx).str();
@@ -1309,7 +1309,7 @@ bool CicInterface::ConfigureStubOutput(Chip* pChip, uint8_t pLineSel)
     uint8_t cNlines       = 5 + cValue;
     LOG(INFO) << BOLDMAGENTA << "Configuring CIC" << +pChip->getHybridId() << " to produce stubs on " << +cNlines << "/6 output lines... writing 0x" << std::hex << +cValueToWrite << std::dec
               << " to CIC register " << cRegName << RESET;
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cRegName << " to 0x" << std::hex << +cValueToWrite << std::dec << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cRegName << " to 0x" << std::hex << +cValueToWrite << std::dec << std::endl;
     return this->WriteChipReg(pChip, cRegName, cValueToWrite);
 }
 bool CicInterface::SelectMode(Chip* pChip, uint8_t pMode)
@@ -1390,7 +1390,7 @@ bool CicInterface::ConfigureTermination(Chip* pChip, uint8_t pClkTerm, uint8_t p
     LOG(INFO) << BOLDBLUE << "Configuring termination on CIC CLk + Rx pads . register set to 0x" << std::hex << +cValue << std::dec << RESET;
     LOG(INFO) << BOLDBLUE << "\t\t.. Clk Term set to " << +pClkTerm << RESET;
     LOG(INFO) << BOLDBLUE << "\t\t.. Rx Term set to " << +pRxTerm << RESET;
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] SLVS_PADS_CONFIG  to 0x" << std::hex << cValue << std::dec << std::endl;
+    // std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] SLVS_PADS_CONFIG  to 0x" << std::hex << cValue << std::dec << std::endl;
     return this->WriteChipReg(pChip, "SLVS_PADS_CONFIG", cValue);
 }
 // configure drive strength

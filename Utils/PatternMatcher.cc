@@ -245,7 +245,7 @@ void PatternMatcher::addTrailingZeros(size_t totalNumberOfBitNeeded)
 {
     if(totalNumberOfBitNeeded < fPatternNumberOfBits)
     {
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] totalNumberOfBitNeeded (" << totalNumberOfBitNeeded << ") is less then the number of bits already present in the pattern ("
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] totalNumberOfBitNeeded (" << totalNumberOfBitNeeded << ") is less then the number of bits already present in the pattern ("
                   << fPatternNumberOfBits << "). Aborting" << std::endl;
         abort();
     }

@@ -30,7 +30,22 @@ bool D19clpGBTInterface::ConfigureChip(Ph2_HwDescription::Chip* pChip, bool pVer
     pChip->printChipType(cOutput);
     uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
     LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pChip->getId() << "] , Version[" << +cChipVersion << "]" << RESET;
-    PrintChipMode(pChip);
+
+    size_t numberOtIterations    = 0;
+    size_t maxNumberOfIterations = 10;
+    while(numberOtIterations < maxNumberOfIterations)
+    {
+        uint8_t chipMode = PrintChipMode(pChip);
+        if(chipMode != 0) break;
+        ++numberOtIterations;
+        LOG(WARNING) << WARNING_FORMAT << "Error reading LpGBT chip mode on Board " << +pChip->getBeBoardId() << " Optical group " << +pChip->getOpticalGroupId()
+                     << ", retry register read one more time" << RESET;
+    }
+    if(numberOtIterations >= maxNumberOfIterations)
+    {
+        LOG(ERROR) << ERROR_FORMAT << "Failed to read LpGBT chip mode on Board " << +pChip->getBeBoardId() << " Optical group " << +pChip->getOpticalGroupId() << RESET;
+        throw std::runtime_error("Failed to read LpGBT chip mode");
+    }
 
     // Waiting for at least PauseForDllConfig state before configuring chip. If state beyond, then I can still configure
     uint16_t cIter = 0, cMaxIter = 200;
@@ -337,10 +352,10 @@ void D19clpGBTInterface::configureClockSettings(Ph2_HwDescription::Chip* pChip, 
 
     std::string cClkHReg = "EPCLK" + std::to_string(pClk) + "ChnCntrH";
     std::string cClkLReg = "EPCLK" + std::to_string(pClk) + "ChnCntrL";
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkHReg << " to 0x" << std::hex << (fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq)
-              << std::dec << std::endl;
-    std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkLReg << " to 0x" << std::hex
-              << (fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth) << std::dec << std::endl;
+    LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkHReg << " to 0x" << std::hex
+              << (fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq) << std::dec << RESET;
+    LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] writing " << cClkLReg << " to 0x" << std::hex
+              << (fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth) << std::dec << RESET;
     WriteChipReg(pChip, cClkHReg, fClkConfig.fClkInvert << 6 | fClkConfig.fClkDriveStr << 3 | fClkConfig.fClkFreq);
     WriteChipReg(pChip, cClkLReg, fClkConfig.fClkPreEmphStr << 5 | fClkConfig.fClkPreEmphMode << 3 | fClkConfig.fClkPreEmphWidth);
 }

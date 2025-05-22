@@ -1,4 +1,6 @@
 #include "OTCMNoise.h"
+#include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19cTriggerInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
@@ -24,7 +26,7 @@ void OTCMNoise::Initialize()
     LOG(INFO) << "Histograms and Settings initialised.";
 }
 
-void OTCMNoise::SetThresholds()
+void OTCMNoise::SetThresholds(int manualVcth, float nSigma)
 {
     // Set Vcth to pedestal, or overload with manual setting
     ThresholdVisitor cVisitor(fReadoutChipInterface, 0);
@@ -36,16 +38,16 @@ void OTCMNoise::SetThresholds()
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                LOG(INFO) << BOLDGREEN << "Setting Manual Vcth to " << fManualVcth << RESET;
-                if(fManualVcth != 0)
+                if(manualVcth != 0)
                 {
-                    cVisitor.setThreshold(fManualVcth);
+                    LOG(INFO) << BOLDGREEN << "Setting Manual Vcth to " << manualVcth << RESET;
+                    cVisitor.setThreshold(manualVcth);
                     static_cast<OuterTrackerHybrid*>(cHybrid)->accept(cVisitor);
                 }
                 else
                 {
-                    LOG(INFO) << BOLDCYAN << "Not setting manual threshold! Running with threshold at the pedestal." << RESET;
-                    for(auto theChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(theChip, "Threshold", round(theChip->getAveragePedestal())); }
+                    LOG(INFO) << BOLDCYAN << "Running with threshold at the pedestal + " << nSigma << " sigma." << RESET;
+                    for(auto theChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(theChip, "Threshold", round(theChip->getAveragePedestal() - nSigma * theChip->getAverageNoise())); };
                 }
 
                 for(auto cChip: *cHybrid)
@@ -63,8 +65,13 @@ void OTCMNoise::SetThresholds()
     }
 }
 
-void OTCMNoise::TakeData()
+void OTCMNoise::TakeData(float fThreshold)
 {
+    if(fManualVcth != 0)
+        LOG(INFO) << BOLDGREEN << "Taking data with Manual Vcth to " << fManualVcth << RESET;
+    else
+        LOG(INFO) << BOLDGREEN << "Taking data with threshold at the pedestal + " << fThreshold << " sigma." << RESET;
+
     ThresholdVisitor cVisitor(fReadoutChipInterface);
     this->accept(cVisitor);
     fVcth = cVisitor.getThreshold();
@@ -131,7 +138,7 @@ void OTCMNoise::TakeData()
         // BeBoard* theBoard = static_cast<BeBoard*>(cBoard);
         BeBoard* theBoard = static_cast<BeBoard*>(fDetectorContainer->getObject(cBoard->getId()));
 
-        fBeBoardInterface->Start(theBoard);
+        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard))->getTriggerInterface()->Start(true);
         uint32_t cN = fNevents;
         while(cN != 0)
         {
@@ -291,17 +298,17 @@ void OTCMNoise::TakeData()
         } // end acquisition loop
     }
 #ifdef __USE_ROOT__
-    fDQMHistogramOTCMNoise.fillChipHitPlots(theChipHitContainer, true);
-    fDQMHistogramOTCMNoise.fillHybridHitPlots(theHybridHitContainer);
-    fDQMHistogramOTCMNoise.fillModuleHitPlots(theModuleHitContainer);
+    fDQMHistogramOTCMNoise.fillChipHitPlots(theChipHitContainer, true, fThreshold);
+    fDQMHistogramOTCMNoise.fillHybridHitPlots(theHybridHitContainer, fThreshold);
+    fDQMHistogramOTCMNoise.fillModuleHitPlots(theModuleHitContainer, fThreshold);
 
-    fDQMHistogramOTCMNoise.fillHybridCorrelationPlots(the2DHybridCorrelationContainer);
-    fDQMHistogramOTCMNoise.fillChipCorrelationPlots(the2DChipCorrelationContainer);
-    fDQMHistogramOTCMNoise.fillSensorChipCorrelationPlots(the2DSensorChipCorrelationContainer);
-    fDQMHistogramOTCMNoise.fillSensorHybridCorrelationPlots(the2DSensorHybridCorrelationContainer);
-    fDQMHistogramOTCMNoise.fillSensorModuleCorrelationPlots(the2DSensorModuleCorrelationContainer);
-    if(f2DHistograms) fDQMHistogramOTCMNoise.fill2DHitPlots(the2DHitContainer);
-    if(f2DHistogramsLight) fDQMHistogramOTCMNoise.fill2DHitLightPlots(the2DChipHitContainer);
+    fDQMHistogramOTCMNoise.fillHybridCorrelationPlots(the2DHybridCorrelationContainer, fThreshold);
+    fDQMHistogramOTCMNoise.fillChipCorrelationPlots(the2DChipCorrelationContainer, fThreshold);
+    fDQMHistogramOTCMNoise.fillSensorChipCorrelationPlots(the2DSensorChipCorrelationContainer, fThreshold);
+    fDQMHistogramOTCMNoise.fillSensorHybridCorrelationPlots(the2DSensorHybridCorrelationContainer, fThreshold);
+    fDQMHistogramOTCMNoise.fillSensorModuleCorrelationPlots(the2DSensorModuleCorrelationContainer, fThreshold);
+    if(f2DHistograms) fDQMHistogramOTCMNoise.fill2DHitPlots(the2DHitContainer, fThreshold);
+    if(f2DHistogramsLight) fDQMHistogramOTCMNoise.fill2DHitLightPlots(the2DChipHitContainer, fThreshold);
 
 #else
     if(fDQMStreamerEnabled)
@@ -320,21 +327,21 @@ void OTCMNoise::TakeData()
         {
             LOG(INFO) << "Streaming " << cStreamable.first << RESET;
             ContainerSerialization theHitSerializationSum(cStreamable.first);
-            theHitSerializationSum.streamByOpticalGroupContainer(fDQMStreamer, *(cStreamable.second));
+            theHitSerializationSum.streamByOpticalGroupContainer(fDQMStreamer, *(cStreamable.second), fThreshold);
         }
 
         if(f2DHistograms)
         {
             LOG(INFO) << "Streaming OTCMNoise2DHitStream" << RESET;
             ContainerSerialization the2DHitSerialization("OTCMNoise2DHitStream");
-            the2DHitSerialization.streamByOpticalGroupContainer(fDQMStreamer, the2DHitContainer);
+            the2DHitSerialization.streamByOpticalGroupContainer(fDQMStreamer, the2DHitContainer, fThreshold);
         }
 
         if(f2DHistogramsLight)
         {
             LOG(INFO) << "Streaming OTCMNoise2DHitLightStream" << RESET;
             ContainerSerialization the2DLightHitSerialization("OTCMNoise2DHitLightStream");
-            the2DLightHitSerialization.streamByChipContainer(fDQMStreamer, the2DChipHitContainer);
+            the2DLightHitSerialization.streamByChipContainer(fDQMStreamer, the2DChipHitContainer, fThreshold);
         }
     }
 #endif
@@ -347,12 +354,14 @@ void OTCMNoise::parseSettings()
     f2DHistograms      = findValueInSettings<double>("CMNoise_2DHistograms", 0);
     f2DHistogramsLight = findValueInSettings<double>("CMNoise_2DHistogramsLight", 0);
     fManualVcth        = findValueInSettings<double>("CMNoise_manualVcth", 0);
+    fListOfThresholds  = convertStringToFloatList(findValueInSettings<std::string>("CMNoise_nSigmas", "0"));
 
     LOG(INFO) << "Parsed the following settings:";
     LOG(INFO) << "	Running " << fNevents;
     LOG(INFO) << "	2D Histograms? " << f2DHistograms;
     LOG(INFO) << "	2D Histograms Light? " << f2DHistogramsLight;
     LOG(INFO) << "	Manual Vcth " << fManualVcth;
+    for(auto& cThreshold: fListOfThresholds) { LOG(INFO) << "	Threshold (in Sigmas) " << cThreshold; }
 }
 
 void OTCMNoise::writeObjects() {}
@@ -368,8 +377,22 @@ void OTCMNoise::Running()
     }
     LOG(INFO) << "Starting CM noise measurement";
     Initialize();
-    SetThresholds();
-    TakeData();
+    // Set the Vcth manually
+    if(fManualVcth != 0)
+    {
+        SetThresholds(fManualVcth, 0);
+        TakeData(fManualVcth);
+    }
+    else
+    {
+        // Loop over the thresholds
+        for(auto& cThreshold: fListOfThresholds)
+        {
+            SetThresholds(0, cThreshold);
+            TakeData(cThreshold);
+        }
+    }
+
     Reset();
     LOG(INFO) << "Done with CM noise";
 }

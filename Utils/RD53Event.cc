@@ -288,7 +288,7 @@ bool RD53Event::EvtErrorHandler(uint32_t status)
 
     if(status & RD53EvtEncoder::CHIPNOHIT)
     {
-        LOG(ERROR) << BOLDRED << " Hit data are missing " << BOLDYELLOW << "--> retry" << RESET;
+        LOG(ERROR) << BOLDRED << "Hit data are missing " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 

@@ -121,7 +121,7 @@ class lpGBTInterface : public ChipInterface
     // # LpGBT block status functions #
     // ################################
     bool    IsPUSMDone(Ph2_HwDescription::Chip* pChip);
-    void    PrintChipMode(Ph2_HwDescription::Chip* pChip);
+    uint8_t PrintChipMode(Ph2_HwDescription::Chip* pChip);
     uint8_t GetPUSMStatus(Ph2_HwDescription::Chip* pChip);
     uint8_t GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
     bool    IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
@@ -230,6 +230,8 @@ class lpGBTInterface : public ChipInterface
     float   MeasureTemperature(Ph2_HwDescription::lpGBT* pChip, uint8_t pSamples = 1, bool pResetTempSensor = true);
     float   MeasurePowerSupplyVoltage(Ph2_HwDescription::lpGBT* pChip, const std::string& pPowerSupply, uint8_t pSamples = 1, bool pDisableMonitorAfterMeasurement = true);
     float   ReadChipMonitor(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, const std::string& registerName, bool silentRunning = false);
+    float   GetLastNTCResistance(Ph2_HwDescription::lpGBT* pChip, const std::string& theNTCtype);
+    void    SetLastNTCResistance(Ph2_HwDescription::lpGBT* pChip, const std::string& theNTCtype, float res);
 
     uint8_t                        fChosenPhase;
     std::map<std::string, uint8_t> GetPhaseTapMap();

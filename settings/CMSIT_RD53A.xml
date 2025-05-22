@@ -203,6 +203,13 @@
           <Register name="nb_slow_cmd_before_pll"> 0 </Register>
         </Register>
 
+        <!-- Change electrical polarity
+        <Register name="gtx_rx_polarity">
+          <Register name="fmc_l12"> 1024 </Register>
+          <Register name="fmc_l8"> 0 </Register>
+          <Register name="cmd_strobe"> 0 </Register>
+        </Register>
+        -->
       </Register>
     </Register>
 

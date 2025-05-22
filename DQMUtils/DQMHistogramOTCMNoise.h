@@ -47,24 +47,24 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
     bool fill(std::string& inputStream) override;
 
     // Fill correlation between top & bottom sensors, split by detector structure
-    void fillSensorChipCorrelationPlots(DetectorDataContainer& theHitData);
-    void fillSensorHybridCorrelationPlots(DetectorDataContainer& theHitData);
-    void fillSensorModuleCorrelationPlots(DetectorDataContainer& theHitData);
+    void fillSensorChipCorrelationPlots(DetectorDataContainer& theHitData, float threshold);
+    void fillSensorHybridCorrelationPlots(DetectorDataContainer& theHitData, float threshold);
+    void fillSensorModuleCorrelationPlots(DetectorDataContainer& theHitData, float threshold);
 
-    void fill2DHitPlots(DetectorDataContainer& theHitData);
-    void fill2DHitLightPlots(DetectorDataContainer& theHitData);
-    void fillHybridCorrelationPlots(DetectorDataContainer& theHybridData);
-    void fillChipCorrelationPlots(DetectorDataContainer& theHybridData);
-    void fillHitProfile(DetectorDataContainer& theHitData); // Not used at the moment
+    void fill2DHitPlots(DetectorDataContainer& theHitData, float threshold);
+    void fill2DHitLightPlots(DetectorDataContainer& theHitData, float threshold);
+    void fillHybridCorrelationPlots(DetectorDataContainer& theHybridData, float threshold);
+    void fillChipCorrelationPlots(DetectorDataContainer& theHybridData, float threshold);
+    void fillHitProfile(DetectorDataContainer& theHitData, float threshold); // Not used at the moment
 
     // Fill number of hits distribution, split by detector structure
-    void fillChipHitPlots(DetectorDataContainer& theHitData, bool pFitDistributions);
-    void fillChipHitPlots(DetectorDataContainer& theHitData);
-    void fillHybridHitPlots(DetectorDataContainer& theHitData);
-    void fillModuleHitPlots(DetectorDataContainer& theHitData);
+    void fillChipHitPlots(DetectorDataContainer& theHitData, bool pFitDistributions, float threshold);
+    void fillChipHitPlots(DetectorDataContainer& theHitData, float threshold);
+    void fillHybridHitPlots(DetectorDataContainer& theHitData, float threshold);
+    void fillModuleHitPlots(DetectorDataContainer& theHitData, float threshold);
 
     template <typename T1, typename T2, typename T3, typename T4>
-    bool processInputStream(std::string streamName, std::string& inputStream, void (DQMHistogramOTCMNoise::*function)(DetectorDataContainer&))
+    bool processInputStream(std::string streamName, std::string& inputStream, void (DQMHistogramOTCMNoise::*function)(DetectorDataContainer&, float))
     {
         ContainerSerialization theSerializer(streamName);
         try
@@ -72,8 +72,9 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
             if(theSerializer.attachDeserializer(inputStream))
             {
                 LOG(INFO) << "Matched stream " << streamName << "!" << RESET;
-                DetectorDataContainer fDetectorData = theSerializer.deserializeOpticalGroupContainer<T1, T2, T3, T4>(fDetectorContainer);
-                (this->*function)(fDetectorData);
+                float                 fThreshold    = 0;
+                DetectorDataContainer fDetectorData = theSerializer.deserializeOpticalGroupContainer<T1, T2, T3, T4>(fDetectorContainer, fThreshold);
+                (this->*function)(fDetectorData, fThreshold);
                 return true;
             }
         }
@@ -85,7 +86,7 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
     }
 
     template <typename T1, typename T2, typename T3, typename T4>
-    bool processInputStreamChip(std::string streamName, std::string& inputStream, void (DQMHistogramOTCMNoise::*function)(DetectorDataContainer&))
+    bool processInputStreamChip(std::string streamName, std::string& inputStream, void (DQMHistogramOTCMNoise::*function)(DetectorDataContainer&, float))
     {
         ContainerSerialization theSerializer(streamName);
         try
@@ -93,9 +94,9 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
             if(theSerializer.attachDeserializer(inputStream))
             {
                 LOG(INFO) << "Matched stream " << streamName << "!" << RESET;
-
-                DetectorDataContainer fDetectorData = theSerializer.deserializeChipContainer<T1, T2>(fDetectorContainer);
-                (this->*function)(fDetectorData);
+                float                 fThreshold    = 0;
+                DetectorDataContainer fDetectorData = theSerializer.deserializeChipContainer<T1, T2>(fDetectorContainer, fThreshold);
+                (this->*function)(fDetectorData, fThreshold);
                 return true;
             }
         }
@@ -117,35 +118,36 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
     void reset(void) override;
 
   private:
-    DetectorContainer*    fDetectorContainer;
-    DetectorDataContainer fChipHitHistograms;
-    DetectorDataContainer fChipHitHistogramsBottom;
-    DetectorDataContainer fChipHitHistogramsTop;
-    DetectorDataContainer fHybridHitHistograms;
-    DetectorDataContainer fHybridHitHistogramsBottom;
-    DetectorDataContainer fHybridHitHistogramsTop;
-    DetectorDataContainer fModuleHitHistograms;
-    DetectorDataContainer fModuleHitHistogramsBottom;
-    DetectorDataContainer fModuleHitHistogramsTop;
-    DetectorDataContainer f2DChipHitHistograms;
-    DetectorDataContainer f2DHybridHitHistograms;
-    DetectorDataContainer f2DModuleHitHistograms;
-    DetectorDataContainer f2DModuleHitHistogramsLight;
-    DetectorDataContainer f2DModuleHitHistogramsBottom;
-    DetectorDataContainer f2DModuleHitHistogramsTop;
-    DetectorDataContainer f2DHybridHitHistograms_chip;
-    DetectorDataContainer f2DModuleHitHistograms_chip;
-    DetectorDataContainer f2DModuleHitHistogramsBottom_chip;
-    DetectorDataContainer f2DModuleHitHistogramsTop_chip;
-    DetectorDataContainer f2DModuleSensorCorrelation;
-    DetectorDataContainer f2DHybridSensorCorrelation;
-    DetectorDataContainer f2DChipSensorCorrelation;
-    DetectorDataContainer f2DHybridCorrelation;
-    DetectorDataContainer f2DChipCorrelation;
+    DetectorContainer*                     fDetectorContainer;
+    std::map<float, DetectorDataContainer> fChipHitHistograms;
+    std::map<float, DetectorDataContainer> fChipHitHistogramsBottom;
+    std::map<float, DetectorDataContainer> fChipHitHistogramsTop;
+    std::map<float, DetectorDataContainer> fHybridHitHistograms;
+    std::map<float, DetectorDataContainer> fHybridHitHistogramsBottom;
+    std::map<float, DetectorDataContainer> fHybridHitHistogramsTop;
+    std::map<float, DetectorDataContainer> fModuleHitHistograms;
+    std::map<float, DetectorDataContainer> fModuleHitHistogramsBottom;
+    std::map<float, DetectorDataContainer> fModuleHitHistogramsTop;
+    std::map<float, DetectorDataContainer> f2DChipHitHistograms;
+    std::map<float, DetectorDataContainer> f2DHybridHitHistograms;
+    std::map<float, DetectorDataContainer> f2DModuleHitHistograms;
+    std::map<float, DetectorDataContainer> f2DModuleHitHistogramsLight;
+    std::map<float, DetectorDataContainer> f2DModuleHitHistogramsBottom;
+    std::map<float, DetectorDataContainer> f2DModuleHitHistogramsTop;
+    std::map<float, DetectorDataContainer> f2DHybridHitHistograms_chip;
+    std::map<float, DetectorDataContainer> f2DModuleHitHistograms_chip;
+    std::map<float, DetectorDataContainer> f2DModuleHitHistogramsBottom_chip;
+    std::map<float, DetectorDataContainer> f2DModuleHitHistogramsTop_chip;
+    std::map<float, DetectorDataContainer> f2DModuleSensorCorrelation;
+    std::map<float, DetectorDataContainer> f2DHybridSensorCorrelation;
+    std::map<float, DetectorDataContainer> f2DChipSensorCorrelation;
+    std::map<float, DetectorDataContainer> f2DHybridCorrelation;
+    std::map<float, DetectorDataContainer> f2DChipCorrelation;
 
-    uint32_t fNevents;
-    bool     f2DHistograms;
-    bool     f2DHistogramsLight;
+    uint32_t           fNevents;
+    bool               f2DHistograms;
+    bool               f2DHistogramsLight;
+    std::vector<float> fListOfThresholds{0};
 
     // fitting function
     void   fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint32_t pRange);

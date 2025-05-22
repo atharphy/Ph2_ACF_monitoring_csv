@@ -59,8 +59,8 @@ void DQMHistogramOTSSAtoSSAecv::book(TFile* theOutputFile, DetectorContainer& th
 
     for(auto slvsCurrent: listOfSSAslvsCurrents)
     {
-        HistContainer<TH2F> phaseScanErrorRate(Form("SSAtoSSA_SamplingEdgeErrorRate_SLVScurrent_%d", int(slvsCurrent)),
-                                               Form("SSA to SSA sampling edge error rate - SLVScurrent = %d", int(slvsCurrent)),
+        HistContainer<TH2F> phaseScanErrorRate(Form("SSAtoSSA_SamplingEdgeErrorRate_SSA_SLVScurrent_%d", int(slvsCurrent)),
+                                               Form("SSA to SSA sampling edge error rate - SSA SLVS current = %d", int(slvsCurrent)),
                                                2 * totalNumberOfShifts,
                                                -0.5,
                                                2 * totalNumberOfShifts - 0.5,
@@ -75,8 +75,8 @@ void DQMHistogramOTSSAtoSSAecv::book(TFile* theOutputFile, DetectorContainer& th
         phaseScanErrorRate.fTheHistogram->SetStats(false);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fPhaseScanErrorRate[slvsCurrent], phaseScanErrorRate);
 
-        HistContainer<TH2F> phaseScanTestedBits(Form("SSAtoSSA_SamplingEdgeTestedBits_SLVScurrent_%d", int(slvsCurrent)),
-                                                Form("SSA to SSA sampling edge tested bits - SLVScurrent = %d", int(slvsCurrent)),
+        HistContainer<TH2F> phaseScanTestedBits(Form("SSAtoSSA_SamplingEdgeTestedBits_SSA_SLVScurrent_%d", int(slvsCurrent)),
+                                                Form("SSA to SSA sampling edge tested bits - SSA SLVS current = %d", int(slvsCurrent)),
                                                 2 * totalNumberOfShifts,
                                                 -0.5,
                                                 2 * totalNumberOfShifts - 0.5,

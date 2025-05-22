@@ -62,8 +62,8 @@ void DQMHistogramOTChipToCICecv::book(TFile* theOutputFile, DetectorContainer& t
 
     for(auto slvsCurrent: listOfSlvsCurrents)
     {
-        HistContainer<TH2F> phaseScanMatchingErrorRate(Form("%stoCIC_PhaseScanErrorRate_%sStrength%d", chipName.c_str(), chipName.c_str(), int(slvsCurrent)),
-                                                       Form("%s to CIC phase scan error rate %s Strength %d", chipName.c_str(), chipName.c_str(), int(slvsCurrent)),
+        HistContainer<TH2F> phaseScanMatchingErrorRate(Form("%stoCIC_PhaseScanErrorRate_%s_SLVScurrent_%d", chipName.c_str(), chipName.c_str(), int(slvsCurrent)),
+                                                       Form("%s to CIC phase scan error rate %s SLVS current %d", chipName.c_str(), chipName.c_str(), int(slvsCurrent)),
                                                        numberOfPhases,
                                                        -0.5,
                                                        numberOfPhases - 0.5,
@@ -78,8 +78,8 @@ void DQMHistogramOTChipToCICecv::book(TFile* theOutputFile, DetectorContainer& t
         phaseScanMatchingErrorRate.fTheHistogram->SetStats(false);
         RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fErrorRateContainerMap[slvsCurrent], phaseScanMatchingErrorRate);
 
-        HistContainer<TH2F> phaseScanMatchingTestedBits(Form("%stoCIC_PhaseScanTestedBits_%sStrength%d", chipName.c_str(), chipName.c_str(), int(slvsCurrent)),
-                                                        Form("%s to CIC phase scan tested bits %s Strength %d", chipName.c_str(), chipName.c_str(), int(slvsCurrent)),
+        HistContainer<TH2F> phaseScanMatchingTestedBits(Form("%stoCIC_PhaseScanTestedBits_%s_SLVScurrent_%d", chipName.c_str(), chipName.c_str(), int(slvsCurrent)),
+                                                        Form("%s to CIC phase scan tested bits %s SLVS current %d", chipName.c_str(), chipName.c_str(), int(slvsCurrent)),
                                                         numberOfPhases,
                                                         -0.5,
                                                         numberOfPhases - 0.5,

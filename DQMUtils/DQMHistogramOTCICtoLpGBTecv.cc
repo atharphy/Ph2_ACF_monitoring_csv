@@ -63,8 +63,8 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
                 auto   ClockCICStrengthPolarityCombination = (hybridClockStrength * 100) + (CICStrength * 10) + polarity;
 
                 HistContainer<TH2F> ECVTestedBitsHistogram(
-                    Form("CICtoLpGBT_TestedBits_CIC_Signal_Strength_%.0f_LpGBT_Clock_Polarity_%.0f_Clock_Strength_%.0f", CICStrength, polarity, hybridClockStrength),
-                    Form("CIC to LpGBT tested bits CIC Signal Strength %.0f - LpGBT Clock Polarity %.0f Clock Strength %.0f", CICStrength, polarity, hybridClockStrength),
+                    Form("CICtoLpGBT_PatternMatchingTestedBits_CIC_SLVScurrent_%.0f_LpGBT_Clock_Polarity_%.0f_Clock_Strength_%.0f", CICStrength, polarity, hybridClockStrength),
+                    Form("CIC to LpGBT pattern matching tested bits CIC SLVS current %.0f - LpGBT Clock Polarity %.0f Clock Strength %.0f", CICStrength, polarity, hybridClockStrength),
                     numberOfXaxisBins,
                     -0.5,
                     numberOfXaxisBins - 0.5,
@@ -75,8 +75,8 @@ void DQMHistogramOTCICtoLpGBTecv::book(TFile* theOutputFile, DetectorContainer& 
                 RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fTestedBits[ClockCICStrengthPolarityCombination], ECVTestedBitsHistogram);
 
                 HistContainer<TH2F> ECVErrorRateHistogram(
-                    Form("CICtoLpGBT_ErrorRate_CIC_Signal_Strength_%.0f_LpGBT_Clock_Polarity_%.0f_Clock_Strength_%.0f", CICStrength, polarity, hybridClockStrength),
-                    Form("CIC to LpGBT error rate CIC Signal Strength %.0f - LpGBT Clock Polarity %.0f Clock Strength %.0f", CICStrength, polarity, hybridClockStrength),
+                    Form("CICtoLpGBT_PatternMatchingErrorRate_CIC_SLVScurrent_%.0f_LpGBT_Clock_Polarity_%.0f_Clock_Strength_%.0f", CICStrength, polarity, hybridClockStrength),
+                    Form("CIC to LpGBT pattern matching error rate CIC SLVS current %.0f - LpGBT Clock Polarity %.0f Clock Strength %.0f", CICStrength, polarity, hybridClockStrength),
                     numberOfXaxisBins,
                     -0.5,
                     numberOfXaxisBins - 0.5,

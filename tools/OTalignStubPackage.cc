@@ -19,9 +19,11 @@ OTalignStubPackage::~OTalignStubPackage() {}
 void OTalignStubPackage::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
-    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
-    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9");
-    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11");
+    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid0_link0_link9");
+    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid0_link10_link11");
+    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid1_link0_link9");
+    fRegisterHelper->freeBoardRegister("fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid1_link10_link11");
+    fIsKickoff = findValueInSettings<double>("isKickoff", 0) > 0;
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -35,7 +37,15 @@ void OTalignStubPackage::Running()
 {
     LOG(INFO) << "Starting OTalignStubPackage measurement.";
     Initialise();
-    AlignStubPackage();
+    size_t numberOtIterations    = 0;
+    size_t maxNumberOfIterations = 1;
+    while(numberOtIterations < maxNumberOfIterations)
+    {
+        if(AlignStubPackage()) break;
+        ++numberOtIterations;
+        LOG(WARNING) << WARNING_FORMAT << "Not all stub packages are correctly aligned" << RESET;
+    }
+    if(numberOtIterations >= maxNumberOfIterations) { LOG(ERROR) << ERROR_FORMAT << "Failed to align all stub packages" << RESET; }
     LOG(INFO) << "Done with OTalignStubPackage.";
     Reset();
 }
@@ -58,8 +68,10 @@ void OTalignStubPackage::Resume() {}
 
 void OTalignStubPackage::Reset() { fRegisterHelper->restoreSnapshot(); }
 
-void OTalignStubPackage::AlignStubPackage()
+bool OTalignStubPackage::AlignStubPackage()
 {
+    bool allHybridsAligned = true;
+
     uint16_t numberOfEvents                                   = 10;
     uint16_t triggerFrequency                                 = 400;   // kHz
     uint16_t clockFrequency                                   = 40000; // kHz
@@ -69,12 +81,12 @@ void OTalignStubPackage::AlignStubPackage()
 
     if(numberOfClockCyclesBetweenTwoConsecutiveTriggers != float(clockFrequency / float(triggerFrequency)))
     {
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Error: numberOfClockCyclesBetweenTwoConsecutiveTriggers must be an integer! Aborting..." << std::endl;
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Error: numberOfClockCyclesBetweenTwoConsecutiveTriggers must be an integer! Aborting..." << std::endl;
         abort();
     }
     if(numberOfClockCyclesAfterInitialReset + numberOfEvents * numberOfClockCyclesBetweenTwoConsecutiveTriggers >= cMaxBxCounter)
     {
-        std::cout << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Error: BxId roll over not handled by the procedure! Aborting" << std::endl;
+        std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] Error: BxId roll over not handled by the procedure! Aborting" << std::endl;
         abort();
     }
 
@@ -121,14 +133,14 @@ void OTalignStubPackage::AlignStubPackage()
 
         for(uint8_t thePackageDelay = 0; thePackageDelay < 8; thePackageDelay++)
         {
-            // std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "] thePackageDelay = " << +thePackageDelay << std::endl;
-
             uint32_t packageDelayValue = 0;
             for(size_t link = 0; link < 10; ++link) { packageDelayValue = packageDelayValue | (thePackageDelay << (3 * link)); }
 
             std::vector<std::pair<std::string, uint32_t>> packageDelayRegisterVector;
-            packageDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9", packageDelayValue});
-            packageDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11", packageDelayValue & 0x3F});
+            packageDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid0_link0_link9", packageDelayValue});
+            packageDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid0_link10_link11", packageDelayValue & 0x3F});
+            packageDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid1_link0_link9", packageDelayValue});
+            packageDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid1_link10_link11", packageDelayValue & 0x3F});
             fBeBoardInterface->WriteBoardMultReg(theBoard, packageDelayRegisterVector);
 
             // reset stub readout to load new setting
@@ -185,12 +197,11 @@ void OTalignStubPackage::AlignStubPackage()
             }
         }
 
-        uint32_t bestPackageDelayLink0Link9   = 0;
-        uint32_t bestPackageDelayLink10Link11 = 0;
+        std::map<uint16_t, uint32_t> bestPackageDelayLink0Link9   = {{0, 0}, {1, 0}};
+        std::map<uint16_t, uint32_t> bestPackageDelayLink10Link11 = {{0, 0}, {1, 0}};
 
         for(auto theOpticalGroup: *theBoard)
         {
-            std::vector<uint8_t> hybridBestPackageDelay;
             for(auto theHybrid: *theOpticalGroup)
             {
                 auto theBestPackageDelayVector = theBestPackageDelayContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<bool>>();
@@ -199,33 +210,24 @@ void OTalignStubPackage::AlignStubPackage()
                 {
                     LOG(ERROR) << ERROR_FORMAT << "ERROR for Board " << +theBoard->getId() << " OpticalGroup " << +theOpticalGroup->getId() << " Hybrid " << +theHybrid->getId()
                                << ": number of best package delay = " << numberOfBestPackageDelays << ", expected to be 1" << RESET;
+                    allHybridsAligned = false;
                     continue;
                 }
-                hybridBestPackageDelay.push_back(std::find_if(theBestPackageDelayVector.begin(), theBestPackageDelayVector.end(), [](bool value) { return value; }) -
-                                                 theBestPackageDelayVector.begin()); // find intex of the best phase
-            }
-            if(hybridBestPackageDelay.size() > 0)
-            {
-                // remove duplicate
-                std::sort(hybridBestPackageDelay.begin(), hybridBestPackageDelay.end());
-                hybridBestPackageDelay.erase(unique(hybridBestPackageDelay.begin(), hybridBestPackageDelay.end()), hybridBestPackageDelay.end());
-                if(hybridBestPackageDelay.size() > 1)
-                {
-                    LOG(ERROR) << BOLDRED << "ERROR for Board " << +theBoard->getId() << " OpticalGroup " << +theOpticalGroup->getId()
-                               << ": FW cannot handle different stub package delay within same OpticalGroup, setting the value found for Hybrid " << +theOpticalGroup->getFirstObject()->getId()
-                               << RESET;
-                }
+                auto bestPackageDelay = std::find_if(theBestPackageDelayVector.begin(), theBestPackageDelayVector.end(), [](bool value) { return value; }) -
+                                        theBestPackageDelayVector.begin(); // find intex of the best phase
 
                 if(theOpticalGroup->getId() < 10)
-                    bestPackageDelayLink0Link9 = (hybridBestPackageDelay.at(0) << theOpticalGroup->getId() % 10 * 3) | bestPackageDelayLink0Link9;
+                    bestPackageDelayLink0Link9[theHybrid->getId() % 2] |= (bestPackageDelay << (theOpticalGroup->getId() % 10) * 3);
                 else
-                    bestPackageDelayLink10Link11 = (hybridBestPackageDelay.at(0) << theOpticalGroup->getId() % 10 * 3) | bestPackageDelayLink10Link11;
+                    bestPackageDelayLink10Link11[theHybrid->getId() % 2] |= (bestPackageDelay << (theOpticalGroup->getId() % 10) * 3);
             }
         }
 
         std::vector<std::pair<std::string, uint32_t>> finalDelayRegisterVector;
-        finalDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9", bestPackageDelayLink0Link9});
-        finalDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11", bestPackageDelayLink10Link11});
+        finalDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid0_link0_link9", bestPackageDelayLink0Link9[0]});
+        finalDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid0_link10_link11", bestPackageDelayLink10Link11[0]});
+        finalDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid1_link0_link9", bestPackageDelayLink0Link9[1]});
+        finalDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid1_link10_link11", bestPackageDelayLink10Link11[1]});
         fBeBoardInterface->WriteBoardMultReg(theBoard, finalDelayRegisterVector);
     }
 
@@ -238,4 +240,6 @@ void OTalignStubPackage::AlignStubPackage()
         theBestStubPackageDelayContainerSerialization.streamByOpticalGroupContainer(fDQMStreamer, theBestPackageDelayContainer);
     }
 #endif
+
+    return allHybridsAligned;
 }

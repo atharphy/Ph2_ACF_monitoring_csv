@@ -130,9 +130,6 @@
                 <Register name="cic">
                 <Register name = "clock_enable"> 1 </Register>
         </Register>
-        <Register name="stubs">
-            <Register name = "stub_package_delay"> 7 </Register>
-        </Register>
     </Register>
 	<!-- Readout Block -->
     	<Register name="readout_block">
@@ -192,7 +189,8 @@
     <!--PedestalEqualization-->
 	<Setting name="Nevents">1000</Setting>
 	<Setting name="CMNoise_Nevents">1000</Setting>
-	<Setting name="CMNoise_manualVcth">0</Setting>
+	<Setting name="CMNoise_manualVcth">0</Setting> <!-- 0 = default (use CMNoise_nSigmas) -->
+    <Setting name="CMNoise_nSigmas">0, 3</Setting> <!-- 0 = pedestal, 1 = 1 sigma, 2 = 2 sigma, ... . Ignored if CMNoise_manualVcth!=0 -->
 	<Setting name="CMNoise_2DHistograms">1</Setting> <!-- Create additional Correlation plots. CPU & RAM intensive -->
 	<Setting name="CMNoise_2DHistogramsLight">0</Setting> <!-- Create additional Correlation plots. -->
     <Setting name="HoleMode">0</Setting>

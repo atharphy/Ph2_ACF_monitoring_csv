@@ -49,38 +49,39 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                 for(const auto cChip: *cHybrid)
                 {
                     float registerValue;
-                    try
-                    {
-                        if(fDetectorMonitorConfig.fSilentRunning == false)
-                            LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                                      << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                        auto* readoutChipInterface = fTheSystemController->fReadoutChipInterface;
+                    if(fDetectorMonitorConfig.fSilentRunning == false)
+                        LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                  << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    auto* readoutChipInterface = fTheSystemController->fReadoutChipInterface;
 
-                        bool tmp;
-                        if(static_cast<Ph2_HwInterface::RD53Interface*>(readoutChipInterface)->getADCobservable(registerName, tmp, fDetectorMonitorConfig.fSilentRunning) != -1)
-                            // #######################
-                            // # Monitor environment #
-                            // #######################
-                            registerValue =
-                                fTheSystemController->fBeBoardInterface->ReadChipMonitor(fTheSystemController->fReadoutChipInterface, cChip, registerName, fDetectorMonitorConfig.fSilentRunning);
-                        else
+                    bool tmp;
+                    if(static_cast<Ph2_HwInterface::RD53Interface*>(readoutChipInterface)->getADCobservable(registerName, tmp, fDetectorMonitorConfig.fSilentRunning) != -1)
+                        // #######################
+                        // # Monitor environment #
+                        // #######################
+                        registerValue =
+                            fTheSystemController->fBeBoardInterface->ReadChipMonitor(fTheSystemController->fReadoutChipInterface, cChip, registerName, fDetectorMonitorConfig.fSilentRunning);
+                    else
+                    {
+                        // #####################
+                        // # Monitor registers #
+                        // #####################
+                        try
                         {
-                            // #####################
-                            // # Monitor registers #
-                            // #####################
                             registerValue = readoutChipInterface->ReadChipReg(cChip, registerName);
                             if(fDetectorMonitorConfig.fSilentRunning == false)
                                 LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = 0x" << BOLDYELLOW << std::setprecision(0) << std::hex << registerValue << std::dec
                                           << RESET;
                         }
-                        theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ValueAndTime<float>>() =
-                            ValueAndTime<float>(registerValue, getTimeStampString());
+                        catch(const std::exception& e)
+                        {
+                            LOG(ERROR) << BOLDRED << e.what() << RESET;
+                            registerValue = -1;
+                        }
                     }
-                    catch(...)
-                    {
-                        theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(-1., getTimeStampString());
-                        return;
-                    }
+
+                    theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ValueAndTime<float>>() =
+                        ValueAndTime<float>(registerValue, getTimeStampString());
                 }
 
 #ifdef __USE_ROOT__
@@ -106,34 +107,34 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
             }
 
             float registerValue;
-            try
-            {
-                if(fDetectorMonitorConfig.fSilentRunning == false)
-                    LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]" << RESET;
-                auto* lpGBTInterface = fTheSystemController->flpGBTInterface;
+            if(fDetectorMonitorConfig.fSilentRunning == false)
+                LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]" << RESET;
+            auto* lpGBTInterface = fTheSystemController->flpGBTInterface;
 
-                if(lpGBTInterface->fADCInputMap.find(registerName) != lpGBTInterface->fADCInputMap.end())
-                    // #######################
-                    // # Monitor environment #
-                    // #######################
-                    registerValue = lpGBTInterface->ReadChipMonitor(cOpticalGroup, registerName, fDetectorMonitorConfig.fSilentRunning);
-                else
+            if(lpGBTInterface->fADCInputMap.find(registerName) != lpGBTInterface->fADCInputMap.end())
+                // #######################
+                // # Monitor environment #
+                // #######################
+                registerValue = lpGBTInterface->ReadChipMonitor(cOpticalGroup, registerName, fDetectorMonitorConfig.fSilentRunning);
+            else
+            {
+                // #####################
+                // # Monitor registers #
+                // #####################
+                try
                 {
-                    // #####################
-                    // # Monitor registers #
-                    // #####################
                     registerValue = lpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, registerName);
                     if(fDetectorMonitorConfig.fSilentRunning == false)
                         LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = 0x" << BOLDYELLOW << std::setprecision(0) << std::hex << registerValue << std::dec << RESET;
                 }
+                catch(const std::exception& e)
+                {
+                    LOG(ERROR) << BOLDRED << e.what() << RESET;
+                    registerValue = -1;
+                }
+            }
 
-                theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStampString());
-            }
-            catch(...)
-            {
-                theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(-1., getTimeStampString());
-                return;
-            }
+            theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStampString());
         }
 
 #ifdef __USE_ROOT__
