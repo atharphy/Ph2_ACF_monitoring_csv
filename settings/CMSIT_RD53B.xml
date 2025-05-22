@@ -50,8 +50,6 @@
               VCAL_HIGH              =   "2000"
               VCAL_MED               =    "100"
 
-              GP_LVDS_ROUTE_0        =   "1495"
-              GP_LVDS_ROUTE_1        =   "1495"
               TriggerConfig          =    "136"
               CLK_DATA_DELAY         =      "0"
               CAL_EDGE_FINE_DELAY    =      "0"
@@ -122,6 +120,12 @@
             HIT_SAMPLE_MODE          =      "1"
             EN_SEU_COUNT             =      "0"
             CDR_CONFIG_SEL_PD        =      "0"
+
+            GP_LVDS_OUT_0            =     "23"
+            GP_LVDS_OUT_1            =     "23"
+            GP_LVDS_OUT_2            =     "23"
+            GP_LVDS_OUT_3            =     "23"
+            GP_LVDS_EN_OUT           = "0b0000"
 
             LOCKLOSS_CNT             =      "0"
             BITFLIP_WNG_CNT          =      "0"
@@ -195,6 +199,12 @@
           <Register name="nb_slow_cmd_before_pll"> 0 </Register>
         </Register>
 
+        <!-- Change electrical polarity
+        <Register name="gtx_rx_polarity">
+          <Register name="fmc_l12"> 1024 </Register>
+          <Register name="fmc_l8"> 0 </Register>
+        </Register>
+        -->
       </Register>
     </Register>
 

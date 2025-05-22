@@ -34,7 +34,7 @@ class RD53eudaqProducer : public eudaq::Producer
     {
       public:
         RD53eudaqEvtConverter(RD53eudaqProducer* eudaqProducer) : eudaqProducer(eudaqProducer) {}
-        void operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList);
+        void operator()(const std::vector<Ph2_HwInterface::RD53Event>& RD53EvtList) const;
 
       private:
         RD53eudaqProducer* eudaqProducer;
@@ -51,9 +51,11 @@ class RD53eudaqProducer : public eudaq::Producer
     void DoTerminate() override;
     void RunLoop() override;
 
-    void Creator(Ph2_System::SystemController& RD53SysCntr, const std::string& fileName);
-    void MainLoop();
-    void MySendEvent(eudaq::EventSP theEvent);
+    void     Creator(Ph2_System::SystemController& RD53SysCntr, const std::string& fileName);
+    void     MainLoop() const;
+    void     MySendEvent(eudaq::EventSP theEvent);
+    void     AddBoreInfoToEvent(eudaq::Event& ev) const;
+    uint32_t GetEventN() const { return m_evt_c; }
 
     uint32_t previousTLUTrigId;
     size_t   swTrigCnt;

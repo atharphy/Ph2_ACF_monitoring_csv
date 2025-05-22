@@ -208,7 +208,7 @@ void SCurveHistograms::fillThrAndNoise(const DetectorDataContainer& ThrAndNoiseC
 
 void SCurveHistograms::process()
 {
-    drawChip<TH2F>(Occupancy2D, "gcolz", "electron", "Charge (electrons)");
+    drawChip<TH2F>(Occupancy2D, "gcolz logz", "electron", "Charge (electrons)");
     drawChip<TH3F>(Occupancy3D, "gcolz");
     drawChip<TH2F>(ErrorReadOut2D, "gcolz");
     drawChip<TH2F>(ErrorFit2D, "gcolz");
