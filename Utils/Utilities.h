@@ -265,5 +265,6 @@ inline uint32_t getWord(T dataStart, size_t bitStart)
         return (longerWord >> secondWordLSB) & Mask;
     }
 }
+std::string runCommand(const std::string& cmd);
 
 #endif

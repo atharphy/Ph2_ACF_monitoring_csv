@@ -168,7 +168,7 @@ void EventStub::print() const
 bool D19cCic2Event::ifAreDecodedEventContainersReady =  false;
 bool D19cCic2Event::fIs2S = true;
 bool D19cCic2Event::fIsSparsified = true;
-
+uintptr_t D19cCic2Event::fLastEventDecodedPointer = reinterpret_cast<uintptr_t>(nullptr);
 
 BoardDataContainer D19cCic2Event::fDecodedL1Event = BoardDataContainer();
 BoardDataContainer D19cCic2Event::fDecodedStubEvent = BoardDataContainer();
@@ -244,7 +244,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list,
 
 void D19cCic2Event::decodeEvent()
 {
-    if(isEventDecoded) return;
+    if(fLastEventDecodedPointer == reinterpret_cast<uintptr_t>(this)) return;
     
     // decode Header
     if(fLocalData.size() < 4)
@@ -306,7 +306,7 @@ void D19cCic2Event::decodeEvent()
         }
     }
 
-    isEventDecoded = true;
+    fLastEventDecodedPointer = reinterpret_cast<uintptr_t>(this);
 }
 
 uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventContainer, std::vector<uint32_t>::const_iterator dataStartIterator)

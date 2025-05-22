@@ -276,6 +276,7 @@ class D19cCic2Event : public Event
     static BoardDataContainer fDecodedStubEvent;
     static std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9> fTheChipDataVector;
     static bool ifAreDecodedEventContainersReady;
+    static uintptr_t fLastEventDecodedPointer;
 
     uint8_t fTLUenabled   = 0;
     static bool fIs2S;
@@ -283,8 +284,6 @@ class D19cCic2Event : public Event
 
     std::vector<uint32_t> fLocalData;
     const Ph2_HwDescription::BeBoard* fBoard;
-
-    bool isEventDecoded = false;
 
     // mapped id
     // takes chip id on the hybrid

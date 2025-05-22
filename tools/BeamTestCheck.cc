@@ -26,14 +26,7 @@ void BeamTestCheck::Initialise()
         // list of chip registers that can be modified by this tool
         SetChipRegstoPerserve(FrontEndType::CBC3, {"TriggerLatency1", "FeCtrl&TrgLat2"});
 
-        // list of board registers that can be modified by this tool
-        for(auto cBoard: *fDetectorContainer)
-        {
-            LOG(INFO) << BOLDYELLOW << "Package delay on BeBoard#" << +cBoard->getId() << " set to "
-                      << fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay") << RESET;
-        }
-        std::vector<std::string> cBrdRegsToKeep{
-            "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay", "fc7_daq_cnfg.fast_command_block.trigger_source", "fc7_daq_cnfg.tlu_block.handshake_mode"};
+        std::vector<std::string> cBrdRegsToKeep{"fc7_daq_cnfg.fast_command_block.trigger_source", "fc7_daq_cnfg.tlu_block.handshake_mode"};
         SetBrdRegstoPerserve(cBrdRegsToKeep);
     }
     initializeRecycleBin();
@@ -187,22 +180,10 @@ void BeamTestCheck::ValidateRaw()
 }
 void BeamTestCheck::Validate()
 {
-    auto stubDelay = fBeBoardInterface->ReadBoardReg(fDetectorContainer->getFirstObject(), "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
-    LOG(INFO) << BOLDRED << "stubDelay = " << stubDelay << RESET;
     fDetectorContainer->getFirstObject()->dumpRegisters();
 
     for(auto cBoard: *fDetectorContainer)
     {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            // Get register name dependent of OG
-            std::string cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link0_link9";
-            if(cOpticalGroup->getId() > 9) cRegName = "fc7_daq_cnfg.physical_interface_block.stubs_package_delay_link10_link11";
-
-            auto cVal = fBeBoardInterface->ReadBoardReg(cBoard, cRegName);
-            LOG(INFO) << "Link#" << cOpticalGroup->getId() << " Stub package register " << cRegName << " set to " << cVal << " binary: " << std::bitset<32>(cVal) << RESET;
-        } // Read package delay for all links
-
         for(auto cOpticalGroup: *cBoard)
         {
             std::string cRegName = GetStubLatencyRegName(cOpticalGroup->getId());

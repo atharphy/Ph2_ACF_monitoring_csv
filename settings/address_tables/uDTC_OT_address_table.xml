@@ -170,12 +170,8 @@
                 <node id="debug_blk_output" address = "0x03C" mask="0xFFFFFFFF"/>
                 <node id="debug_blk_signal" address = "0x03D" mask="0xFFFFFFFF"/>
 
-                <!-- <node id="stubs"          address="0x000"> -->
-                <node id="stubs"          address="0x046">
-                    <node id="stub_package_delay"               mask="0x00000007"/> 
-                </node>
                 <!-- 3 bits per link. Link 0 LSB and so on -->
-                <node id="stubs_package_delay_link0_link9"          address="0x046">
+                <node id="stubs_package_delay_hybrid0_link0_link9"          address="0x046">
                     <node id="link0"         mask="0x00000007"/> 
                     <node id="link1"         mask="0x00000038"/> 
                     <node id="link2"         mask="0x000001c0"/> 
@@ -187,7 +183,24 @@
                     <node id="link8"         mask="0x07000000"/>
                     <node id="link9"         mask="0x38000000"/> 
                 </node>
-                <node id="stubs_package_delay_link10_link11"          address="0x047">
+                <node id="stubs_package_delay_hybrid0_link10_link11"          address="0x047">
+                    <node id="link10"         mask="0x00000007"/> 
+                    <node id="link11"         mask="0x00000038"/> 
+                </node>
+
+                <node id="stubs_package_delay_hybrid1_link0_link9"          address="0x048">
+                    <node id="link0"         mask="0x00000007"/> 
+                    <node id="link1"         mask="0x00000038"/> 
+                    <node id="link2"         mask="0x000001c0"/> 
+                    <node id="link3"         mask="0x00000e00"/> 
+                    <node id="link4"         mask="0x00007000"/> 
+                    <node id="link5"         mask="0x00038000"/> 
+                    <node id="link6"         mask="0x001c0000"/> 
+                    <node id="link7"         mask="0x00e00000"/> 
+                    <node id="link8"         mask="0x07000000"/>
+                    <node id="link9"         mask="0x38000000"/> 
+                </node>
+                <node id="stubs_package_delay_hybrid1_link10_link11"          address="0x049">
                     <node id="link10"         mask="0x00000007"/> 
                     <node id="link11"         mask="0x00000038"/> 
                 </node>

@@ -59,12 +59,14 @@ void MetadataHandler::fillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theHostNameContainer);
     theHostNameContainer.getSummary<std::string>() = theHostName;
 
-    std::string           theGitTag = GIT_TAG;
+    std::string theGitTag = runCommand("git describe --tags HEAD");
+    theGitTag.erase(theGitTag.find_last_not_of(" \n\r\t") + 1);
     DetectorDataContainer theGitTagContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theGitTagContainer);
     theGitTagContainer.getSummary<std::string>() = theGitTag;
 
-    std::string           theGitCommitHash = GIT_COMMIT;
+    std::string theGitCommitHash = runCommand("git rev-parse HEAD");
+    theGitCommitHash.erase(theGitCommitHash.find_last_not_of(" \n\r\t") + 1);
     DetectorDataContainer theGitCommitHashContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theGitCommitHashContainer);
     theGitCommitHashContainer.getSummary<std::string>() = theGitCommitHash;

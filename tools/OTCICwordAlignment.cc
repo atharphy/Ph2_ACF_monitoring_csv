@@ -92,8 +92,6 @@ void OTCICwordAlignment::Reset()
         }
 
         // and check
-
-        // auto cPackageDelay = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.stubs.stub_package_delay");
         ReadNEvents(theBoard, 10);
         const std::vector<Event*>& cEvents = this->GetEvents();
         for(auto& cEvent: cEvents)
