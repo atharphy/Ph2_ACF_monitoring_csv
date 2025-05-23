@@ -285,6 +285,15 @@ class ReadoutChipInterface : public ChipInterface
         return 0;
     }
 
+    /// @brief Read the Vtrim value
+    /// @param theChip: pointer to Chip object
+    /// @return
+    virtual uint16_t ReadVtrim(Ph2_HwDescription::ReadoutChip* theReadoutChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
 
     /// @brief Set the same trim bits for all channels on one chip
     /// @param theChip: pointer to Chip object

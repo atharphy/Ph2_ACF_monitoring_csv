@@ -285,6 +285,10 @@ bool SSA2Interface::SetVtrim(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t Vtr
     return this->WriteChipReg(pSSA2, "Bias_D5DAC8", Vtrim);
 }
 
+uint16_t SSA2Interface::ReadVtrim(Ph2_HwDescription::ReadoutChip* pSSA2)
+{
+    return this->ReadChipReg(pSSA2, "Bias_D5DAC8");
+}
 bool SSA2Interface::SetTrimBitsAll(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t trimBits)
 {
     return this->WriteChipReg(pSSA2, "THTRIMMING", trimBits);

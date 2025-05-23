@@ -964,6 +964,17 @@ bool MPA2Interface::SetVtrim(ReadoutChip* pMPA2, uint16_t Vtrim)
     success = success && this->WriteChipReg(pMPA2, "C6", Vtrim);
     return success;
 }
+uint16_t MPA2Interface::ReadVtrim(ReadoutChip* pMPA2)
+{
+    uint16_t Vtrim = this->ReadChipReg(pMPA2, "C0");
+    Vtrim += this->ReadChipReg(pMPA2, "C1");
+    Vtrim += this->ReadChipReg(pMPA2, "C2");
+    Vtrim += this->ReadChipReg(pMPA2, "C3");
+    Vtrim += this->ReadChipReg(pMPA2, "C4");
+    Vtrim += this->ReadChipReg(pMPA2, "C5");
+    Vtrim += this->ReadChipReg(pMPA2, "C6");
+    return Vtrim/7;
+}
 
 bool MPA2Interface::SetTrimBitsAll(ReadoutChip* pMPA2, uint16_t trimBits)
 {

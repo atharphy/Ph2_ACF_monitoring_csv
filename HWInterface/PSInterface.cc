@@ -163,6 +163,7 @@ float PSInterface::getVrefMinValue(ReadoutChip* pPS) { return getInterface(pPS)-
 float PSInterface::getVrefMaxValue(ReadoutChip* pPS) { return getInterface(pPS)->getVrefMaxValue(pPS); }
 
 bool PSInterface::SetVtrim(ReadoutChip* pPS, uint16_t Vtrim) { return getInterface(pPS)->SetVtrim(pPS, Vtrim); }
+uint16_t PSInterface::ReadVtrim(ReadoutChip* pPS) { return getInterface(pPS)->ReadVtrim(pPS); }
 
 bool PSInterface::SetTrimBitsAll(ReadoutChip* pPS, uint16_t trimBits) { return getInterface(pPS)->SetTrimBitsAll(pPS, trimBits); }
 
