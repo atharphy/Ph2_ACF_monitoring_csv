@@ -35,15 +35,12 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     void Reset();
     void PrepareForInjection();
     void ScanThreshold();
-    void ScanThresholdChip(uint16_t boardId, uint16_t OGId, uint16_t hybridId, uint16_t ChipId);
     void
     FillMaxOccupancyMap(std::vector<DetectorDataContainer> detectorContainerVector, DetectorDataContainer& dacOccupancyContainers, uint16_t boardId, uint16_t OGId, uint16_t hybridId, uint16_t ChipId);
     void GetMaximumOccupancyThreshold(const DetectorDataContainer& dacOccupancyContainers);
     void GetLowestAndHighestMaxOccupancyThreshold();
     void FindTargetThreshold();
-    void TuneVtrim();
     void TuneVtrimBinary();
-    void TuneTrimBits();
     void TuneTrimBitsBinary();
     void SetTargetThreshold();
 
