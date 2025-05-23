@@ -41,6 +41,7 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     void GetLowestAndHighestMaxOccupancyThreshold();
     void FindTargetThreshold();
     void TuneVtrim();
+    void TuneVtrimBinary();
     void TuneTrimBits();
     void TuneTrimBitsBinary();
     void SetTargetThreshold();
