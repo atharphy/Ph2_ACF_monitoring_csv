@@ -169,8 +169,8 @@ void PedestalEqualizationPSAtPedestal::Running()
     ScanThreshold();
     GetLowestAndHighestMaxOccupancyThreshold();
     FindTargetThreshold();
-    TuneVtrim();
-    // TuneVtrimBinary();
+    // TuneVtrim();
+    TuneVtrimBinary();
     // TuneTrimBits();
     TuneTrimBitsBinary();
     SetTargetThreshold();
@@ -597,7 +597,7 @@ void PedestalEqualizationPSAtPedestal::FindTargetThreshold()
 void PedestalEqualizationPSAtPedestal::TuneVtrimBinary()
 {
     LOG(INFO) << __PRETTY_FUNCTION__ << RESET;
-    uint8_t theStartVTrim = 15;
+    uint8_t theStartVTrim = 0x10;
     uint8_t theVTrimBitsNumber = 5;
     DetectorDataContainer theFinalVTrimContainers;
     ContainerFactory::copyAndInitStructure<uint16_t>(*fDetectorContainer, theFinalVTrimContainers);
@@ -614,6 +614,24 @@ void PedestalEqualizationPSAtPedestal::TuneVtrimBinary()
                 {
 
                     fReadoutChipInterface->SetTrimBitsAll(cChip, 0x1F);
+                    fReadoutChipInterface->SetVtrim(cChip, theStartVTrim);
+                }
+            }
+        }
+    }
+
+    for (int ibit = theVTrimBitsNumber - 1; ibit >= 0; ibit--) 
+    {
+        ScanThreshold();
+
+        for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
                     auto theChipSmallestThresholdContainer = fTheSmallestThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                     auto theSmallestThreshold = theChipSmallestThresholdContainer->getSummary<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>();
                     auto theTargetThreshold = fTheTargetThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
@@ -624,23 +642,30 @@ void PedestalEqualizationPSAtPedestal::TuneVtrimBinary()
                     auto theMinimumThreshold = theSmallestThreshold.second;
                     LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " minimum threshold at minimum Vtrim " << theMinimumThreshold << RESET;
 
-                    fReadoutChipInterface->SetVtrim(cChip, theStartVTrim);
+                    // fReadoutChipInterface->SetVtrim(cChip, theStartVTrim);
                     // Start from most significant bit
-                    for (int ibit = theVTrimBitsNumber - 1; ibit >= 0; ibit--) 
-                    {
-                        ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+                    // for (int ibit = theVTrimBitsNumber - 1; ibit >= 0; ibit--) 
+                    // {
+                    //     ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
                         std::cout << " getting threhsold fTheMaxOccupancyThresholdContainers row, col " << fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col) << std::endl;
                         std::cout << " getting threhsold fTheMaxOccupancyThresholdContainers 0, 3 " << fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(0,3) << std::endl;
                         auto theCurrentThreshold =  fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
                         LOG(INFO) << BOLDYELLOW << " Chip " << cChip->getId() << " current threshold  " << theCurrentThreshold << RESET;
                         auto theChipDistanceFromTargetContainer = theDistanceFromTargetContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                        std::cout << " getting  theChipDistanceFromTargetContainer " << std::endl;
+
                         auto theChipVTrimBitsContainer = theFinalVTrimContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                        std::cout << " getting  theFinalVTrimContainers " << std::endl;
+                        
+                        auto theCurrentMaxOccupancyThreshold = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<uint16_t>(row,col);
+                        std::cout << " theCurrentMaxOccupancyThreshold " << theCurrentMaxOccupancyThreshold << std::endl;
 
                         // first iteration
-                        if(ibit== theVTrimBitsNumber - 1) theChipDistanceFromTargetContainer->getSummary<uint16_t>() = 255;
-                        uint8_t theVTrimBits = fReadoutChipInterface->ReadVtrim(cChip);
+                        if(ibit== theVTrimBitsNumber - 1) theChipDistanceFromTargetContainer->getSummary<uint16_t>() = std::fabs(theCurrentMaxOccupancyThreshold - theTargetThreshold);
 
-                        auto theCurrentMaxOccupancyThreshold = cChip->getChannel<uint16_t>(row,col);
+                        uint8_t theVTrimBits = fReadoutChipInterface->ReadVtrim(cChip);
+                        std::cout << " current Vtrim  " << +theVTrimBits << std::endl;
+
                         float distanceFromTarget = std::fabs(theCurrentMaxOccupancyThreshold - theTargetThreshold);
                         LOG(INFO) << MAGENTA << " bit  " << +ibit << " currentthreshold " << theCurrentMaxOccupancyThreshold << " target "<< theTargetThreshold << RESET;
 
@@ -664,7 +689,7 @@ void PedestalEqualizationPSAtPedestal::TuneVtrimBinary()
                         
                         fReadoutChipInterface->SetVtrim(cChip, theVTrimBits);
 
-                        LOG(INFO) << BOLDYELLOW << "Vtrim for CHIP " << cChip->getId() << " is " << theVTrimBits  << RESET;
+                        LOG(INFO) << BOLDYELLOW << "Vtrim for CHIP " << cChip->getId() << " is " << +theVTrimBits  << RESET;
                         LOG(INFO) << BOLDYELLOW << "Distance from target  " << distanceFromTarget << RESET;
                     }
                 }
@@ -818,8 +843,8 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBitsBinary()
         }
     }   
     //     // ScanThreshold();
-    //     for (int ibit = theTrimBitsNumber - 1 ; ibit >= 0; ibit--) 
-    // {
+    for (int ibit = theTrimBitsNumber - 1 ; ibit >= 0; ibit--) 
+    {
         ScanThreshold(); // Chip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
 
         for(auto cBoard: fTheMaxOccupancyThresholdContainers)
@@ -831,9 +856,9 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBitsBinary()
                     for(auto cChip: *cHybrid)
                     {
                             // Start from most significant bit
-    for (int ibit = theTrimBitsNumber - 1 ; ibit >= 0; ibit--) 
-    {
-        ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
+    // for (int ibit = theTrimBitsNumber - 1 ; ibit >= 0; ibit--) 
+    // {
+    //     ScanThresholdChip(cBoard->getId(),cOpticalGroup->getId(),cHybrid->getId(),cChip->getId());
 
                         ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                         auto theTargetThreshold = fTheTargetThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
