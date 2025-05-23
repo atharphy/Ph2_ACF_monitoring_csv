@@ -102,7 +102,6 @@ class PSInterface : public ReadoutChipInterface
     bool     SetTrimBitsChannel(Ph2_HwDescription::ReadoutChip* pPS, uint16_t trimBits, uint16_t row, uint16_t col);
     uint16_t ReadTrimBitsChannel(Ph2_HwDescription::ReadoutChip* pPS, uint16_t row, uint16_t col);
 
-
     bool setInjectionSchema(Ph2_HwDescription::ReadoutChip* pCbc, const std::shared_ptr<ChannelGroupBase> group, bool pVerifLoop = false);
 
     //

@@ -10,10 +10,10 @@
 #ifndef PedestalEqualizationPSAtPedestal_h__
 #define PedestalEqualizationPSAtPedestal_h__
 
-#include "tools/Tool.h"
+#include "Utils/ContainerRecycleBin.h"
 #include "tools/PedestalEqualization.h"
 #include "tools/PedestalEqualizationPSFullScan.h"
-#include "Utils/ContainerRecycleBin.h"
+#include "tools/Tool.h"
 #ifdef __USE_ROOT__
 // Calibration is not running on the SoC: I need to instantiate the DQM histogrammer here
 #include "DQMUtils/DQMHistogramPedestalEqualizationPSAtPedestal.h"
@@ -35,8 +35,9 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     void Reset();
     void PrepareForInjection();
     void ScanThreshold();
-    void ScanThresholdChip(uint16_t boardId,uint16_t OGId, uint16_t hybridId,uint16_t ChipId);
-    void FillMaxOccupancyMap(std::vector<DetectorDataContainer> detectorContainerVector, DetectorDataContainer& dacOccupancyContainers, uint16_t boardId,uint16_t OGId, uint16_t hybridId,uint16_t ChipId);
+    void ScanThresholdChip(uint16_t boardId, uint16_t OGId, uint16_t hybridId, uint16_t ChipId);
+    void
+    FillMaxOccupancyMap(std::vector<DetectorDataContainer> detectorContainerVector, DetectorDataContainer& dacOccupancyContainers, uint16_t boardId, uint16_t OGId, uint16_t hybridId, uint16_t ChipId);
     void GetMaximumOccupancyThreshold(const DetectorDataContainer& dacOccupancyContainers);
     void GetLowestAndHighestMaxOccupancyThreshold();
     void FindTargetThreshold();
@@ -46,14 +47,14 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     void TuneTrimBitsBinary();
     void SetTargetThreshold();
 
-    static std::string fCalibrationDescription;
+    static std::string    fCalibrationDescription;
     bool                  fWithSSA = false;
     bool                  fWithMPA = false;
     DetectorDataContainer fEventTypes;
     // Settings
     bool     fTestPulse{false};
     uint8_t  fTestPulseAmplitude{0};
-    uint8_t  fTestPulseAmplitudePix{0};   
+    uint8_t  fTestPulseAmplitudePix{0};
     uint32_t fEventsPerPoint{10};
     uint16_t fStripTargetVcth{0x0};
     uint16_t fPixelTargetVcth{0x0};
@@ -69,20 +70,21 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     uint32_t fPedestalEqualizationFullScanStart{110};
     float    fPedestalEqualizationFullScanCAP{1.0};
 
-    std::vector<uint16_t>                  dacList;
+    std::vector<uint16_t> dacList;
 
     DetectorDataContainer fTheMaxOccupancyThresholdContainers;
     DetectorDataContainer fTheTargetThresholdContainers;
     DetectorDataContainer fTheSmallestThresholdAtMaxOccupancyContainer;
     DetectorDataContainer fTheLargestThresholdAtMaxOccupancyContainer;
-    uint16_t fStopValue;
-    uint16_t fStartValue;
+    uint16_t              fStopValue;
+    uint16_t              fStartValue;
+
   private:
-    bool fOriginalIsFullScan;    
+    bool fOriginalIsFullScan;
     // bool     fOriginalUseFixRange;
     // uint16_t fOriginalMinThreshold;
     // uint16_t fOriginalMaxThreshold;
-    
+
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramPedestalEqualizationPSAtPedestal fDQMHistogramPedestalEqualizationPSAtPedestal;

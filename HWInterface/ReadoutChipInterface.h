@@ -274,7 +274,6 @@ class ReadoutChipInterface : public ChipInterface
     //     return false;
     // }
 
-
     /// @brief Set the Vtrim value
     /// @param theChip: pointer to Chip object
     /// @param Vtrim: Value for Vtrim to be set
@@ -294,7 +293,6 @@ class ReadoutChipInterface : public ChipInterface
         return 0;
     }
 
-
     /// @brief Set the same trim bits for all channels on one chip
     /// @param theChip: pointer to Chip object
     /// @param trimBits: value to be set
@@ -309,7 +307,7 @@ class ReadoutChipInterface : public ChipInterface
     /// @param theChip: pointer to Chip object
     /// @param trimBits: value to be set
     /// @param row: channel coordinate
-    /// @param col: channel coordinate  
+    /// @param col: channel coordinate
     /// @return
     virtual bool SetTrimBitsChannel(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t trimBits, uint16_t row, uint16_t col)
     {
@@ -320,7 +318,7 @@ class ReadoutChipInterface : public ChipInterface
     /// @brief Read the trim bits for 1 channel on one chip
     /// @param theChip: pointer to Chip object
     /// @param row: channel coordinate
-    /// @param col: channel coordinate  
+    /// @param col: channel coordinate
     /// @return
     virtual uint16_t ReadTrimBitsChannel(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t row, uint16_t col)
     {

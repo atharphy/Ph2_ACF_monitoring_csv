@@ -280,31 +280,21 @@ float SSA2Interface::getVrefMinValue(Ph2_HwDescription::ReadoutChip* pSSA2) { re
 //  This will be updated once we have the real values for each chip
 float SSA2Interface::getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pSSA2) { return SSA2_VREF_MAX; }
 
-bool SSA2Interface::SetVtrim(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t Vtrim)
-{
-    return this->WriteChipReg(pSSA2, "Bias_D5DAC8", Vtrim);
-}
+bool SSA2Interface::SetVtrim(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t Vtrim) { return this->WriteChipReg(pSSA2, "Bias_D5DAC8", Vtrim); }
 
-uint16_t SSA2Interface::ReadVtrim(Ph2_HwDescription::ReadoutChip* pSSA2)
-{
-    return this->ReadChipReg(pSSA2, "Bias_D5DAC8");
-}
-bool SSA2Interface::SetTrimBitsAll(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t trimBits)
-{
-    return this->WriteChipReg(pSSA2, "THTRIMMING", trimBits);
-}
+uint16_t SSA2Interface::ReadVtrim(Ph2_HwDescription::ReadoutChip* pSSA2) { return this->ReadChipReg(pSSA2, "Bias_D5DAC8"); }
+bool     SSA2Interface::SetTrimBitsAll(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t trimBits) { return this->WriteChipReg(pSSA2, "THTRIMMING", trimBits); }
 
 bool SSA2Interface::SetTrimBitsChannel(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t trimBits, uint16_t row, uint16_t col)
 {
-    std::string cRegName = "THTRIMMING_S" + std::to_string(col+1);
-    return this->WriteChipReg(pSSA2, cRegName, trimBits );
+    std::string cRegName = "THTRIMMING_S" + std::to_string(col + 1);
+    return this->WriteChipReg(pSSA2, cRegName, trimBits);
 }
 uint16_t SSA2Interface::ReadTrimBitsChannel(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t row, uint16_t col)
 {
-    std::string cRegName = "THTRIMMING_S" + std::to_string(col+1);
-    return this->ReadChipReg(pSSA2,cRegName);
+    std::string cRegName = "THTRIMMING_S" + std::to_string(col + 1);
+    return this->ReadChipReg(pSSA2, cRegName);
 }
-
 
 bool SSA2Interface::disableTestPadsOutput(ReadoutChip* pSSA2)
 {

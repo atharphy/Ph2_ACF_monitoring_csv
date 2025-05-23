@@ -115,7 +115,6 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fDQMHistogramPedestalEqualization.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
 
-
     // event types
     ContainerFactory::copyAndInitBoard<EventType>(*fDetectorContainer, fEventTypes);
     bool cForcePSasync = true;
