@@ -2176,9 +2176,7 @@ void Tool::measureBeBoardData(uint16_t boardId, uint32_t numberOfEvents, int32_t
 
     theScan.setDataContainer(fDetectorDataContainer);
     // Make sure async mode uses ReadNEvents
-    std::cout << " done theScan.setDataContainer " << std::endl;
     doScanOnAllGroupsBeBoard(boardId, numberOfEvents, numberOfEventsPerBurst, &theScan);
-    std::cout << " done doScanOnAllGroupsBeBoard " << std::endl;
     if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
         numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
 
