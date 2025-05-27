@@ -141,7 +141,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     uint8_t cChipVersion = static_cast<lpGBT*>(pChip)->getVersion();
     for(auto& ele: fPUSMStatusMap[cChipVersion]) revertedPUSMStatusMap[ele.second] = ele.first;
     fBoardFW->SetOptoLinkVersion(cChipVersion);
-    LOG(INFO) << GREEN << "LpGBT version: " << BOLDYELLOW << (cChipVersion == 0 ? "LpGBT-v0" : "LpGBT-v1") << RESET;
+    LOG(INFO) << GREEN << "LpGBT version: " << BOLDYELLOW << (cChipVersion == 0 ? "LpGBT-v0" : (cChipVersion == 1 ? "LpGBT-v1" : "LpGBT-v2")) << RESET;
 
     // #########################
     // # Configure PLL and DLL #

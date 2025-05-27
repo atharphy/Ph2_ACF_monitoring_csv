@@ -134,7 +134,7 @@ void lpGBTInterface::DumpChipRegisters(Chip* pChip)
 
 uint32_t lpGBTInterface::ReadChipFuseID(Chip* pChip, uint8_t version)
 {
-    if(version == 1)
+    if((version == 1) || (version == 2))
     {
         uint32_t cChipID   = 0;
         uint32_t cChipID_0 = lpGBTInterface::ReadChipFusedBlock(pChip, 0, 0);

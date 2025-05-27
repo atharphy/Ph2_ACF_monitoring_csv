@@ -1140,7 +1140,7 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
 
     // Actual readback: one word at a time
     uint32_t cRead  = 0;
-    uint8_t  nWords = (static_cast<const lpGBT*>(pChip)->getVersion() == 0 ? 7 : 6); // LpGBT-v0 --> 7th; LpGBT-v1 --> 6th
+    uint8_t  nWords = (static_cast<const lpGBT*>(pChip)->getVersion() == 0 ? 7 : 6); // LpGBT-v0 --> 7th; LpGBT-v1/v2 --> 6th
     for(uint8_t i = 0; i < nWords; i++)
     {
         RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x0}});
