@@ -160,8 +160,11 @@ void PedestalEqualizationPSAtPedestal::Running()
     GetLowestAndHighestMaxOccupancyThreshold();
     FindTargetThreshold();
     TuneVtrimBinary();
-    TuneTrimBitsBinary();
     SetTargetThreshold();
+    ScanTrimBit();
+    // TuneTrimBitsBinary();
+    SetTargetTrimBits();
+    ScanThreshold();
     LOG(INFO) << BOLDMAGENTA << "Done with PedestalEqualizationPSAtPedestal." << RESET;
 }
 
@@ -265,6 +268,84 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
 #endif
 }
 
+void PedestalEqualizationPSAtPedestal::ScanTrimBit()
+{
+    std::vector<uint16_t> trimbitList;
+    uint8_t theMaxTrimBit = 31;
+    uint8_t theMinTrimBit = 0;
+    const size_t nSteps = theMaxTrimBit - theMinTrimBit + 1;
+    for(auto i = 0u; i < nSteps; i++) 
+    { 
+        trimbitList.push_back(theMinTrimBit + i); 
+    }
+
+    std::cout << " trimbitList.size() " << trimbitList.size() << std::endl;
+    std::vector<DetectorDataContainer>  detectorContainerVector(trimbitList.size());
+    std::vector<DetectorDataContainer*> detectorContainerVectorPointers;
+    for(auto& container: detectorContainerVector)
+    {
+        ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, container);
+        detectorContainerVectorPointers.push_back(&container);
+    }
+   
+    this->scanDac("Offsets", trimbitList, fEventsPerPoint, detectorContainerVectorPointers, fNEventsPerBurst);
+    DetectorDataContainer dacOccupancyContainers;
+    ContainerFactory::copyAndInitChannel<std::map<uint16_t, float>>(*fDetectorContainer, dacOccupancyContainers);
+
+    for(size_t dacIt = 0; dacIt < trimbitList.size(); ++dacIt)
+    {
+        for(auto cBoard: detectorContainerVector.at(dacIt))
+        {
+            for(auto cOpticalGroup: *cBoard)
+            {
+                for(auto cHybrid: *cOpticalGroup)
+                {
+                    for(auto cChip: *cHybrid)
+                    {
+                        ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                        auto theThreshold = fReadoutChipInterface->ReadChipReg(theReadoutChip, "Threshold");
+                        auto Vtrim = fReadoutChipInterface->ReadVtrim(theReadoutChip);
+                        std::cout << " for chip " << cChip->getId() << " threshold was " << theThreshold << " and Vtrim " << Vtrim << std::endl;
+                        // auto theChipContainer =
+                        // detectorContainerVector.at(dacIt).getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                        if(cChip->hasChannelContainer() == false) continue;
+
+                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                        {
+                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                            {
+                                if(row == 0 && col == 3 ) std::cout << " for chip " << cChip->getId() << " for 1 channel at trim " << dacIt << " occupancy is " << cChip->getChannel<Occupancy>(row, col).fOccupancy << std::endl;
+                                auto targetMap = &(dacOccupancyContainers.getObject(cBoard->getId())
+                                                       ->getObject(cOpticalGroup->getId())
+                                                       ->getObject(cHybrid->getId())
+                                                       ->getObject(cChip->getId())
+                                                       ->getChannel<std::map<uint16_t, float>>(row, col));
+
+                                (*targetMap)[dacIt] = cChip->getChannel<Occupancy>(row, col).fOccupancy;
+                            } // col
+                        } // row
+                    } // chip
+                } // hybrid
+            } // optical group
+        } // board
+    } // dac
+
+    GetMaximumOccupancyTrimBits(dacOccupancyContainers);
+
+#ifdef __USE_ROOT__
+    fDQMHistogramPedestalEqualizationPSAtPedestal.fillTrimCurvePlotsVector(detectorContainerVector, trimbitList);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        for(size_t dacIt = 0; dacIt < trimbitList.size(); ++dacIt)
+        {
+            ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancyTrimBits");
+            theContainerSerialization.streamByChipContainer(fDQMStreamer, *detectorContainerVector.at(dacIt), dacIt);
+        }
+    }
+#endif
+}
+
 void PedestalEqualizationPSAtPedestal::FillMaxOccupancyMap(std::vector<DetectorDataContainer> detectorContainerVector,
                                                            DetectorDataContainer&             dacOccupancyContainers,
                                                            uint16_t                           boardId,
@@ -302,7 +383,7 @@ void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyThreshold(const Detect
                 for(auto cChip: *cHybrid)
                 {
                     auto theChipContainer = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                    LOG(INFO) << BOLDBLUE << "Looking for DACmaxOccupancy for chip " << cChip->getId() << RESET;
+                    LOG(DEBUG) << BOLDBLUE << "Looking for DACmaxOccupancy for chip " << cChip->getId() << RESET;
                     for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
@@ -327,6 +408,49 @@ void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyThreshold(const Detect
     {
         ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalMax");
         theContainerSerialization.streamByChipContainer(fDQMStreamer, fTheMaxOccupancyThresholdContainers);
+    }
+
+#endif
+}
+
+void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyTrimBits(const DetectorDataContainer& dacOccupancyContainers)
+{
+    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, fTheMaxOccupancyTrimBitsContainers);
+
+    for(auto cBoard: dacOccupancyContainers)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    auto theChipContainer = fTheMaxOccupancyTrimBitsContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    LOG(DEBUG) << BOLDBLUE << "Looking for DACmaxOccupancy for chip " << cChip->getId() << RESET;
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        {
+                            const auto& occupancyMap = cChip->getChannel<std::map<uint16_t, float>>(row, col);
+                            if(occupancyMap.empty()) continue;
+
+                            auto     maxIter         = std::max_element(occupancyMap.begin(), occupancyMap.end(), [](const auto& a, const auto& b) { return a.second < b.second; });
+                            uint16_t DACmaxOccupancy = maxIter->first;
+                            theChipContainer->getChannel<uint16_t>(row, col) = DACmaxOccupancy;
+                        } // col
+                    } // row
+                } // chip
+            }
+        }
+    }
+
+#ifdef __USE_ROOT__
+    fDQMHistogramPedestalEqualizationPSAtPedestal.fillMaxPlots(fTheMaxOccupancyTrimBitsContainers);
+#else
+    if(fDQMStreamerEnabled)
+    {
+        ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalMax");
+        theContainerSerialization.streamByChipContainer(fDQMStreamer, fTheMaxOccupancyTrimBitsContainers);
     }
 
 #endif
@@ -452,6 +576,32 @@ void PedestalEqualizationPSAtPedestal::SetTargetThreshold()
         }
     }
 }
+void PedestalEqualizationPSAtPedestal::SetTargetTrimBits()
+{
+    LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << RESET;
+
+    for(auto cBoard: fTheMaxOccupancyTrimBitsContainers)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        {
+                            fReadoutChipInterface->SetTrimBitsChannel(theReadoutChip, cChip->getChannel<uint16_t>(row,col), row, col);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void PedestalEqualizationPSAtPedestal::FindTargetThreshold()
 {
     LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << RESET;
@@ -521,6 +671,7 @@ void PedestalEqualizationPSAtPedestal::TuneVtrimBinary()
 
     for(int ibit = theVTrimBitsNumber - 1; ibit >= 0; ibit--)
     {
+        LOG(INFO) << BOLDMAGENTA << " Scanning Bit " << ibit  << RESET;
         ScanThreshold();
 
         for(auto cBoard: *fDetectorContainer)
@@ -591,7 +742,7 @@ void PedestalEqualizationPSAtPedestal::TuneVtrimBinary()
 
                         fReadoutChipInterface->SetVtrim(cChip, theVTrimBits);
 
-                        LOG(INFO) << BOLDYELLOW << "Vtrim for CHIP " << cChip->getId() << " is " << +theVTrimBits << RESET;
+                        LOG(INFO) << BOLDYELLOW << "Vtrim for  HYBRID " << cHybrid->getId() << " CHIP " << cChip->getId() << " is " << +theVTrimBits << RESET;
                         LOG(INFO) << BOLDYELLOW << "Distance from target  " << distanceFromTarget << RESET;
                     }
                 }
@@ -629,6 +780,7 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBitsBinary()
 
     for(int ibit = theTrimBitsNumber - 1; ibit >= 0; ibit--)
     {
+        LOG(INFO) << BOLDMAGENTA << " Scanning Bit " << ibit  << RESET;
         ScanThreshold(); 
 
         for(auto cBoard: fTheMaxOccupancyThresholdContainers)
@@ -695,7 +847,7 @@ void PedestalEqualizationPSAtPedestal::TuneTrimBitsBinary()
                             }
                         }
                         averageTrim /= cChip->getNumberOfRows() * cChip->getNumberOfCols();
-                        LOG(INFO) << BOLDYELLOW << "Average TrimDAC / channel Occupancy for CHIP " << cChip->getId() << " is " << averageTrim << " binary " << std::bitset<8>(averageTrim) << RESET;
+                        LOG(INFO) << BOLDYELLOW << "Average TrimDAC / channel Occupancy for HYBRID " << cHybrid->getId() << " CHIP " << cChip->getId() << " is " << averageTrim << " binary " << std::bitset<8>(averageTrim) << RESET;
                         LOG(INFO) << BOLDYELLOW << "Average distance from target  " << averageDistance / (cChip->getNumberOfRows() * cChip->getNumberOfCols()) << RESET;
                     }
                 }

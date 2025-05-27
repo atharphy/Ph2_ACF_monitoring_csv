@@ -531,6 +531,7 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     //     return this->ConfigureAmux(pSSA2, "Bandgap");
     // }
     // else if(pRegNameMod == "MonitorGround") { return this->ConfigureAmux(pSSA2, "GND"); }
+    else if(pRegNameMod == "Offsets") { return this->SetTrimBitsAll(static_cast<ReadoutChip*>(pSSA2),pValue);} //this->WriteChipReg(pSSA2, "THTRIMMING", pValue); }
     else if(pRegNameMod == "ReadoutMode") // AT THE TOP OF THIS METHOD _ALL IS REMOVED
     {
         return this->WriteChipRegBitsLocal(pSSA2, "control_1", pValue & 0x07, "mask_peri_D", 0x07);
