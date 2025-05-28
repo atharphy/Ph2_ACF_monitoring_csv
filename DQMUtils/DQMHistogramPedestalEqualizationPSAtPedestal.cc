@@ -34,16 +34,30 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
     auto        selectMPAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
     std::string selectMPAfunctionName = "SelectMPAfunction";
 
+    std::vector<std::string> theLabels = {"Untrimmed","IntermediateStep","Trimmed"};
     fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
-    HistContainer<TH2F> theTH2FChipStripSCurve("SCurve", "SCurve", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, 256, 0, 255);
-    theTH2FChipStripSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
-    theTH2FChipStripSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
-    RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipStripSCurveHistograms, theTH2FChipStripSCurve);
-
+    for (auto label : theLabels)
+    {
+        HistContainer<TH2F> theTH2FChipStripSCurve(Form("SCurve_%s", label.c_str()), Form("SCurve %s", label.c_str()), NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, 256, 0, 255);
+        theTH2FChipStripSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
+        theTH2FChipStripSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
+        RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipStripSCurveHistograms[label], theTH2FChipStripSCurve);
+    }
+    
     HistContainer<TH2F> theTH2FChipStripTrimCurve("TrimCurve", "TrimCurve", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, 32, 0, 31);
     theTH2FChipStripTrimCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
     theTH2FChipStripTrimCurve.fTheHistogram->GetYaxis()->SetTitle("Trim Bits");
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipStripTrimCurveHistograms, theTH2FChipStripTrimCurve);
+
+    HistContainer<TH1F> theTH1FChipStripSmallestThreshold("TheSmallestThresholdForMaxOccupancy", "TheSmallestThresholdForMaxOccupancy", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
+    theTH1FChipStripSmallestThreshold.fTheHistogram->GetXaxis()->SetTitle("Channel");
+    theTH1FChipStripSmallestThreshold.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
+    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripSmallestHistograms, theTH1FChipStripSmallestThreshold);
+
+    HistContainer<TH1F> theTH1FChipStripLargestThreshold("TheLargestThresholdForMaxOccupancy", "TheLargestThresholdForMaxOccupancy", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
+    theTH1FChipStripLargestThreshold.fTheHistogram->GetXaxis()->SetTitle("Channel");
+    theTH1FChipStripLargestThreshold.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
+    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripLargestHistograms, theTH1FChipStripLargestThreshold);
 
 
     HistContainer<TH1F> theTH1FChipStripMax("ChannelThresholdForMaximumOccupancy", "Channel threshold for maximum occupancy", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
@@ -59,15 +73,27 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
     fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
-    HistContainer<TH2F> theTH2FChipPixelSCurve("SCurve", "SCurve", NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5, 256, 0, 255);
-    theTH2FChipPixelSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
-    theTH2FChipPixelSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
-    RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelSCurveHistograms, theTH2FChipPixelSCurve);
+    for (auto label : theLabels)
+    {
+        HistContainer<TH2F> theTH2FChipPixelSCurve(Form("SCurve_%s", label.c_str()), Form("SCurve %s", label.c_str()), NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5, 256, 0, 255);
+        theTH2FChipPixelSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
+        theTH2FChipPixelSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
+        RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelSCurveHistograms[label], theTH2FChipPixelSCurve);
+    }
     HistContainer<TH2F> theTH2FChipPixelTrimCurve("TrimCurve", "TrimCurve", NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5, 32, 0, 31);
     theTH2FChipPixelTrimCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
     theTH2FChipPixelTrimCurve.fTheHistogram->GetYaxis()->SetTitle("Trim Bits");
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelTrimCurveHistograms, theTH2FChipPixelTrimCurve);
 
+    HistContainer<TH1F> theTH1FChipPixelSmallestThreshold("TheSmallestThresholdForMaxOccupancy", "TheSmallestThresholdForMaxOccupancy", NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5);
+    theTH1FChipPixelSmallestThreshold.fTheHistogram->GetXaxis()->SetTitle("Channel");
+    theTH1FChipPixelSmallestThreshold.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
+    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelSmallestHistograms, theTH1FChipPixelSmallestThreshold);
+
+    HistContainer<TH1F> theTH1FChipPixelLargestThreshold("TheLargestThresholdForMaxOccupancy", "TheLargestThresholdForMaxOccupancy", NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5);
+    theTH1FChipPixelLargestThreshold.fTheHistogram->GetXaxis()->SetTitle("Channel");
+    theTH1FChipPixelLargestThreshold.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
+    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelLargestHistograms, theTH1FChipPixelLargestThreshold);
 
     HistContainer<TH1F> theTH1FChipPixelMax("ChannelThresholdForMaximumOccupancy", "Channel threshold for maximum occupancy", NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5);
     theTH1FChipPixelMax.fTheHistogram->GetXaxis()->SetTitle("Channel");
@@ -81,10 +107,13 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
 
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
 
-    HistContainer<TH1F> theTH1FChipMax("ThresholdForMaximumOccupancyDistribution", "Threshold for maximum occupancy distribution", 256, -0.5, 256 - 0.5);
-    theTH1FChipMax.fTheHistogram->GetXaxis()->SetTitle("Threshold [VcTh]");
-    theTH1FChipMax.fTheHistogram->GetYaxis()->SetTitle("Entries");
-    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipMaxHistograms, theTH1FChipMax);
+    for (auto label : theLabels)
+    {
+        HistContainer<TH1F> theTH1FChipMax(Form("ThresholdForMaximumOccupancyDistribution_%s", label.c_str()), Form("Threshold for maximum occupancy distribution %s", label.c_str()), 256, -0.5, 256 - 0.5);
+        theTH1FChipMax.fTheHistogram->GetXaxis()->SetTitle("Threshold [VcTh]");
+        theTH1FChipMax.fTheHistogram->GetYaxis()->SetTitle("Entries");
+        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipMaxHistograms[label], theTH1FChipMax);
+    }    
 }
 
 //========================================================================================================================
@@ -112,17 +141,20 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
     ContainerSerialization theOccupancyTrimBitsStreamer("PedestalEqualizationPSAtPedestalOccupancyTrimBits");
     
     ContainerSerialization theMaxStreamer("PedestalEqualizationPSAtPedestalMax");
+    ContainerSerialization theReferenceStreamerSmall("PedestalEqualizationPSAtPedestalReferenceChannelSmall");
+    ContainerSerialization theReferenceStreamerLarge("PedestalEqualizationPSAtPedestalReferenceChannelLarge");
     ContainerSerialization theTrimBitsStreamer("PedestalEqualizationPSAtPedestalTrimBits");
 
     if(theOccupancyStreamer.attachDeserializer(inputStream))
     {
         // It matched! Decoding data
         std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
+        std::string label;
         uint16_t dacIt;
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
-        DetectorDataContainer theDetectorData = theOccupancyStreamer.deserializeChipContainer<Occupancy, uint16_t>(fDetectorContainer, dacIt);
+        DetectorDataContainer theDetectorData = theOccupancyStreamer.deserializeChipContainer<Occupancy,std::string, uint16_t >(fDetectorContainer, dacIt, label);
         // Filling the histograms
-        fillSCurvePlots(theDetectorData, dacIt);
+        fillSCurvePlots(theDetectorData, dacIt, label);
         return true;
     }
     if(theOccupancyTrimBitsStreamer.attachDeserializer(inputStream))
@@ -141,10 +173,11 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
     {
         // It matched! Decoding data
         std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
+        std::string label;
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
-        DetectorDataContainer theDetectorData = theMaxStreamer.deserializeChipContainer<uint16_t, EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer theDetectorData = theMaxStreamer.deserializeChipContainer<uint16_t, std::string>(fDetectorContainer);
         // Filling the histograms
-        fillMaxPlots(theDetectorData);
+        fillMaxPlots(theDetectorData, label);
         return true;
     }
     if(theTrimBitsStreamer.attachDeserializer(inputStream))
@@ -157,12 +190,104 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
         fillTrimBitsPlots(theDetectorData);
         return true;
     }
+
+    if(theReferenceStreamerSmall.attachDeserializer(inputStream))
+    {
+        // It matched! Decoding data
+        std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
+        // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
+        DetectorDataContainer theDetectorData = theReferenceStreamerSmall.deserializeChipContainer<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>, EmptyContainer>(fDetectorContainer);
+        // Filling the histograms
+        fillReferenceChannelPlots(theDetectorData, true);
+        return true;
+    }
+    if(theReferenceStreamerLarge.attachDeserializer(inputStream))
+    {
+        // It matched! Decoding data
+        std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
+        // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
+        DetectorDataContainer theDetectorData = theReferenceStreamerLarge.deserializeChipContainer<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>, EmptyContainer>(fDetectorContainer);
+        // Filling the histograms
+        fillReferenceChannelPlots(theDetectorData, false);
+        return true;
+    }
     // the stream does not match, the expected (DQM interface will try to check if other DQM istogrammers are looking
     //  for this stream)
     return false;
     // SoC utilities only - END
 }
-void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlots(const DetectorDataContainer& detectorContainer, const uint16_t dacIt)
+
+void DQMHistogramPedestalEqualizationPSAtPedestal::fillReferenceChannelPlots(const DetectorDataContainer& theThresholdAtMaxOccupancyContainer, bool isSmallest)
+{
+    for(auto cBoard: theThresholdAtMaxOccupancyContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    auto         cType          = theReadoutChip->getFrontEndType();
+
+                    TH1F* cChipHist = nullptr;
+                    if(cType == FrontEndType::SSA2)
+                    {
+
+                        if(isSmallest)
+                            cChipHist = fDetectorChipStripSmallestHistograms.getObject(cBoard->getId())
+                                          ->getObject(cOpticalGroup->getId())
+                                          ->getObject(cHybrid->getId())
+                                          ->getObject(cChip->getId())
+                                          ->getSummary<HistContainer<TH1F>>()
+                                          .fTheHistogram;
+                        else
+                            cChipHist = fDetectorChipStripLargestHistograms.getObject(cBoard->getId())
+                                          ->getObject(cOpticalGroup->getId())
+                                          ->getObject(cHybrid->getId())
+                                          ->getObject(cChip->getId())
+                                          ->getSummary<HistContainer<TH1F>>()
+                                          .fTheHistogram;
+                    }
+                    else if(cType == FrontEndType::MPA2)
+                    {
+                        if(isSmallest)
+                            cChipHist = fDetectorChipPixelSmallestHistograms.getObject(cBoard->getId())
+                                          ->getObject(cOpticalGroup->getId())
+                                          ->getObject(cHybrid->getId())
+                                          ->getObject(cChip->getId())
+                                          ->getSummary<HistContainer<TH1F>>()
+                                          .fTheHistogram;
+                        else
+                            cChipHist = fDetectorChipPixelLargestHistograms.getObject(cBoard->getId())
+                                          ->getObject(cOpticalGroup->getId())
+                                          ->getObject(cHybrid->getId())
+                                          ->getObject(cChip->getId())
+                                          ->getSummary<HistContainer<TH1F>>()
+                                          .fTheHistogram;
+                    }
+
+                    auto cChipContainer = theThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+
+                    if(cChipContainer->hasChannelContainer() == false) continue;
+
+                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
+                        {
+                            auto theContent      = cChipContainer->getSummary<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>();
+                            auto  bin               = linearizeRowAndCols(theContent.first.first, theContent.first.second, cChip->getNumberOfCols());
+                            cChipHist->SetBinContent(bin + 1, theContent.second);
+                            
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlots(const DetectorDataContainer& detectorContainer, const uint16_t dacIt, std::string label)
 {
     for(auto cBoard: detectorContainer)
     {
@@ -178,7 +303,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlots(const Detecto
                     TH2F* cChipSCurve = nullptr;
                     if(cType == FrontEndType::SSA2)
                     {
-                        cChipSCurve = fDetectorChipStripSCurveHistograms.getObject(cBoard->getId())
+                        cChipSCurve = fDetectorChipStripSCurveHistograms[label].getObject(cBoard->getId())
                                           ->getObject(cOpticalGroup->getId())
                                           ->getObject(cHybrid->getId())
                                           ->getObject(cChip->getId())
@@ -187,7 +312,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlots(const Detecto
                     }
                     else if(cType == FrontEndType::MPA2)
                     {
-                        cChipSCurve = fDetectorChipPixelSCurveHistograms.getObject(cBoard->getId())
+                        cChipSCurve = fDetectorChipPixelSCurveHistograms[label].getObject(cBoard->getId())
                                           ->getObject(cOpticalGroup->getId())
                                           ->getObject(cHybrid->getId())
                                           ->getObject(cChip->getId())
@@ -265,7 +390,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillTrimCurvePlots(const Dete
     }
 }
 
-void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlotsVector(const std::vector<DetectorDataContainer>& detectorContainerVector, const std::vector<uint16_t>& dacList)
+void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlotsVector(const std::vector<DetectorDataContainer>& detectorContainerVector, const std::vector<uint16_t>& dacList, std::string label)
 {
     if(dacList.size() != detectorContainerVector.size())
     {
@@ -273,7 +398,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillSCurvePlotsVector(const s
         abort();
     }
 
-    for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt) { fillSCurvePlots(detectorContainerVector.at(dacIt), dacIt); }
+    for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt) { fillSCurvePlots(detectorContainerVector.at(dacIt), dacIt, label); }
 }
 
 void DQMHistogramPedestalEqualizationPSAtPedestal::fillTrimCurvePlotsVector(const std::vector<DetectorDataContainer>& detectorContainerVector, const std::vector<uint16_t>& dacList)
@@ -287,7 +412,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillTrimCurvePlotsVector(cons
     for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt) { fillTrimCurvePlots(detectorContainerVector.at(dacIt), dacIt); }
 }
 
-void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDataContainer& dacOccupancyContainers)
+void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDataContainer& dacOccupancyContainers, std::string label)
 {
     for(auto cBoard: dacOccupancyContainers)
     {
@@ -301,7 +426,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDa
                     auto         cType          = theReadoutChip->getFrontEndType();
 
                     TH1F* cChipMax             = nullptr;
-                    TH1F* cChipMaxDistribution = fDetectorChipMaxHistograms.getObject(cBoard->getId())
+                    TH1F* cChipMaxDistribution = fDetectorChipMaxHistograms[label].getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
                                                      ->getObject(cChip->getId())
@@ -337,7 +462,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDa
                             cChipMaxDistribution->Fill(maxDac);
                         }
                     }
-                    fDetectorChipMaxHistograms.getObject(cBoard->getId())
+                    fDetectorChipMaxHistograms[label].getObject(cBoard->getId())
                         ->getObject(cOpticalGroup->getId())
                         ->getObject(cHybrid->getId())
                         ->getObject(cChip->getId())
