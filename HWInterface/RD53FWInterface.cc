@@ -1700,7 +1700,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
                     forceDone    = false;
 
                     LOG(INFO) << GREEN << "\t\t--> Frames with error(s) (Chip Lane: " << BOLDYELLOW << +lane << RESET << GREEN << "): " << BOLDYELLOW << nErrors << RESET << GREEN << " (" << BOLDYELLOW
-                              << std::fixed << std::setprecision(3) << nErrors / frameCounter * 100 << RESET << GREEN << "% of the sent frames)" << std::setprecision(-1) << RESET;
+                              << std::fixed << std::setprecision(3) << static_cast<double>(nErrors) / frameCounter * 100 << RESET << GREEN << "% of the sent frames)" << std::setprecision(-1) << RESET;
                 }
             }
         }
