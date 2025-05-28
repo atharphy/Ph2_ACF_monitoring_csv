@@ -17,6 +17,12 @@
 
 #include <iomanip>
 
+// #############################################################
+// # LpGBT version register: ROM                               #
+// # Address 0x1C5 for LpGBTv0: value 0xA5 = v0                #
+// # Address 0x1D7 for LpGBTv1/v2: values 0xA6 = v1, 0xAE = v2 #
+// #############################################################
+
 namespace Ph2_HwDescription
 {
 class lpGBT : public Chip
@@ -107,10 +113,10 @@ class lpGBT : public Chip
     void  setTemperature(float cTemperature) { fTemperature = cTemperature; }
     float getTemperature() { return fTemperature; }
 
-    // ################################################################################
-    // # Store the last value of the NTC measurement connected to the lpGBT           #
-    // # - Value serves as estimation of next measurement, its 1000 if not set        #
-    // ################################################################################
+    // #########################################################################
+    // # Store the last value of the NTC measurement connected to the lpGBT    #
+    // # - Value serves as estimation of next measurement, its 1000 if not set #
+    // #########################################################################
     float getNTCResistance() { return fNTCResistance; }
     void  setNTCResistance(float cNTCResistance);
 

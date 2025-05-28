@@ -82,7 +82,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void                ChipReSync() override;
 
     void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
-    void SetOptoLinkVersion(uint8_t version) override;
+    void SetOptoLinkVersion(bool version) override;
     // #############################
     float GetSFPParameter(std::string parameter, int channel);
 
