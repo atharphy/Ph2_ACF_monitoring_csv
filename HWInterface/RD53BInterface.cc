@@ -739,7 +739,7 @@ int RD53BInterface::getADCobservable(const std::string& observableName, bool& is
                                                                           {"POLY_TEMPSENS_TOP", 0x05},
                                                                           {"POLY_TEMPSENS_BOTTOM", 0x06},
                                                                           {"VCAL_HI", 0x07},
-                                                                          {"VCAL_MED", 0x08},
+                                                                          {"VCAL_MD", 0x08},
                                                                           {"LIN_FE_REF_KRUMCURR", 0x09},
                                                                           {"LIN_FE_GDAC_MAIN", 0x0A},
                                                                           {"LIN_FE_GDAC_LEFT", 0x0B},

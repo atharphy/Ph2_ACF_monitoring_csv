@@ -115,12 +115,8 @@ void ThrAdjustment::localConfigure(const std::string& histoFileName, int current
 void ThrAdjustment::run()
 {
     LOG(INFO) << RESET;
-    LOG(INFO) << BOLDMAGENTA << ">>> Searching for threshold maximizing the efficiency <<<" << RESET;
-    ThrAdjustment::bitWiseScanGlobal_Maximum(frontEnd->thresholdRegs, targetThreshold, startValue, stopValue);
-
-    LOG(INFO) << RESET;
     LOG(INFO) << BOLDMAGENTA << ">>> Searching for threshold corresponding to " << std::setprecision(1) << BOLDYELLOW << TARGETEFF * 100 << BOLDMAGENTA << "% efficiency <<<" << RESET;
-    ThrAdjustment::bitWiseScanGlobal_Zero(frontEnd->thresholdRegs, targetThreshold, startValue, stopValue);
+    ThrAdjustment::bitWiseScanGlobal(frontEnd->thresholdRegs, targetThreshold, startValue, stopValue);
 
     // ############################
     // # Fill threshold container #
@@ -175,10 +171,9 @@ void ThrAdjustment::fillHisto()
 #endif
 }
 
-void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue)
+void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue)
 {
-    char           zeroC = '0'; // '0' and '1' are for bootstrap, 'H' and 'L' are for full regime
-    float          zeroF = 0;
+    char           zeroC = 'L'; // 'H' and 'L' set direction
     uint16_t       init;
     const uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
     const float    goldenRatio  = (sqrt(5) - 1) / 2.;
@@ -194,13 +189,14 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
     DetectorDataContainer maxDACcontainer;
     DetectorDataContainer chargeContainer;
 
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, outputMidH, zeroF);
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, outputMidL, zeroF);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, outputMidH);
+    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, outputMidL);
 
     ContainerFactory::copyAndInitChip<char>(*fDetectorContainer, directionContainer, zeroC);
+
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, minDACcontainer, init = startValue);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midHDACcontainer);
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, downloadDACcontainer, init = 0);
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, downloadDACcontainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midLDACcontainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
 
@@ -249,79 +245,27 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                 for(const auto cOpticalGroup: *cBoard)
                     for(const auto cHybrid: *cOpticalGroup)
                         for(const auto cChip: *cHybrid)
-                            if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == 'H')
+                        {
+                            auto minDAC = minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                            auto maxDAC = maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+
+                            if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == 'L')
                             {
-                                midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                    midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                                const uint16_t DACval = minDAC + (maxDAC - minDAC) * (1 - goldenRatio);
 
-                                outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() =
-                                    outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>();
-
-                                midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                    minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
-                                    (maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() -
-                                     minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) *
-                                        goldenRatio;
-
+                                midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = DACval;
                                 downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                    midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                                    DACval;
                             }
-                            else if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == 'L')
-                            {
-                                midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                    midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-
-                                outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() =
-                                    outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>();
-
-                                midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                    minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
-                                    (maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() -
-                                     minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) *
-                                        (1 - goldenRatio);
-
-                                downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                    midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-                            }
-                            // #####################################################################
-                            // # Found threshold over TARGETEFF to the right of maximum efficiency #
-                            // # We are going to use it as lower bound for Global Zero scan        #
-                            // # We can move to the next chip                                      #
-                            // #####################################################################
-                            else if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == 'h')
-                            {
-                                downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                    midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-
-                                RD53RunProgress::total() -= ThrAdjustment::removeIterations(startValue, stopValue, i);
-                                i = numberOfBits + 1u;
-                            }
-                            // ########################
-                            // # Bootstrap conditions #
-                            // ########################
                             else
                             {
-                                midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                    minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
-                                    (maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() -
-                                     minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) *
-                                        goldenRatio;
+                                const uint16_t DACval = minDAC + (maxDAC - minDAC) * goldenRatio;
 
-                                midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                    minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
-                                    (maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() -
-                                     minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) *
-                                        (1 - goldenRatio);
-
-                                if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == '0')
-                                    downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                        midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-                                else if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() ==
-                                        '1')
-                                    downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                        midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                                midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = DACval;
+                                downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                    DACval;
                             }
-            if(i == numberOfBits + 1u) break; // Allows to compute last move
+                        }
 
             // ################
             // # Run analysis #
@@ -369,44 +313,81 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
                                              ->getSummary<GenericDataVector, OccupancyAndPh>()
                                              .fOccupancy;
 
-                            if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == 'H')
-                                outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = value;
-                            else if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == 'L')
-                                outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = value;
-                            else if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == '0')
+                            if(i == 0) // First iteration
                             {
                                 outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>()        = value;
-                                directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() = '1';
+                                directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() = 'H';
                                 continue;
                             }
-                            else if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == '1')
+                            else if(directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() == 'L')
+                                outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = value;
+                            else
                                 outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = value;
 
                             auto valueMidH = outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>();
                             auto valueMidL = outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>();
 
+                            if(i == numberOfBits + 1u)
+                            {
+                                // #######################
+                                // # Save best DAC value #
+                                // #######################
+                                if(fabs(valueMidL - TARGETEFF) < fabs(valueMidH - TARGETEFF))
+                                {
+                                    downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                        midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                                }
+                                else if(fabs(valueMidH - TARGETEFF) < fabs(valueMidL - TARGETEFF))
+                                {
+                                    downloadDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                        midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                                }
+                                break; // Allows to compute last move
+                            }
+
                             // #####################
                             // # Compute next move #
                             // #####################
-                            if(valueMidH > valueMidL)
-                            {
+
+                            // #########################
+                            // # Set new window limits #
+                            // #########################
+                            if((valueMidL < valueMidH) || (valueMidL > TARGETEFF))
                                 minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                     midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
 
-                                directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() = 'H';
+                            if(valueMidH > TARGETEFF)
+                                minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                    midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+
+                            if((valueMidL >= valueMidH) && (valueMidH < TARGETEFF))
+                                maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                    midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+
+                            // #########################################
+                            // # Set new internal values and direction #
+                            // #########################################
+                            if(valueMidL < valueMidH || valueMidH > TARGETEFF)
+                            {
+                                // If slope is positive or valueMidH is above TARGETEFF, Global Zero is to the right of midHDAC
+
+                                midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                    midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                                outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = valueMidH;
+                            }
+
+                            if(valueMidL >= valueMidH && valueMidL < TARGETEFF)
+                            {
+                                // If slope is negative or zero and valueMidL is below TARGETEFF, Global Zero is to the left of midLDAC and we move left, otherwise we move right
+
+                                midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                    midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                                outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = valueMidL;
+
+                                directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() = 'L';
                             }
                             else
-                            {
-                                if(valueMidH > TARGETEFF)
-                                    directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() = 'h';
-                                else
-                                {
-                                    maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                        midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-
-                                    directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() = 'L';
-                                }
-                            }
+                                directionContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<char>() = 'H';
                         }
         }
     }
@@ -422,137 +403,7 @@ void ThrAdjustment::bitWiseScanGlobal_Maximum(const std::vector<const char*>& re
     // # Download new DAC values #
     // ###########################
     LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    ThrAdjustment::establishStartingPoint(chargeContainer);
-    CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames, false, true, 0, true);
-    LOG(INFO) << BOLDMAGENTA << ">>> Maximization process completed <<<" << RESET;
-
-    // #################################
-    // # Reset masks to default values #
-    // #################################
-    CalibBase::copyMaskFromDefault("en in");
-}
-
-void ThrAdjustment::bitWiseScanGlobal_Zero(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue)
-{
-    float          tmp = 0;
-    uint16_t       init;
-    const uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
-
-    DetectorDataContainer minDACcontainer;
-    DetectorDataContainer midDACcontainer;
-    DetectorDataContainer maxDACcontainer;
-
-    DetectorDataContainer bestDACcontainer;
-    DetectorDataContainer bestContainer;
-
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, minDACcontainer);
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midDACcontainer);
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
-
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
-    ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp);
-
-    // #########################################
-    // # Set VCAL_HIGH to get target threshold #
-    // #########################################
-    for(const auto cBoard: *fDetectorContainer)
-        for(const auto cOpticalGroup: *cBoard)
-            for(const auto cHybrid: *cOpticalGroup)
-                for(const auto cChip: *cHybrid)
-                {
-                    uint16_t vcal_med_setting =
-                        static_cast<RD53*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()))
-                            ->getReg("VCAL_MED");
-                    uint16_t vcal_high_setting = round(RD53Shared::firstChip->Charge2VCal(targetThreshold)) + vcal_med_setting;
-                    this->fReadoutChipInterface->WriteChipReg(static_cast<RD53*>(cChip), "VCAL_HIGH", vcal_high_setting, true);
-
-                    LOG(INFO) << GREEN << "The target threshold for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
-                              << "/" << +cChip->getId() << RESET << GREEN "] is " << std::setprecision(1) << BOLDYELLOW << targetThreshold << RESET << GREEN << " electrons" << RESET;
-                    LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << BOLDBLUE << " = " << BOLDYELLOW << vcal_high_setting << BOLDBLUE << " for "
-                              << BOLDYELLOW << "VCAL_MED" << BOLDBLUE << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
-
-                    // ###################
-                    // # Set start value #
-                    // ###################
-                    uint16_t minValue = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits(regNames.at(0)));
-                    for(const auto& regName: regNames)
-                    {
-                        auto value = static_cast<RD53*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()))
-                                         ->getReg(regName);
-                        if(value < minValue) minValue = value;
-                    }
-                    minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = minValue;
-                }
-
-    for(auto i = 0u; i <= numberOfBits; i++)
-    {
-        // ###########################
-        // # Download new DAC values #
-        // ###########################
-        for(const auto cBoard: *fDetectorContainer)
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid)
-                        midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                            (minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
-                             maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) /
-                            2;
-        CalibBase::downloadNewDACvalues(midDACcontainer, regNames);
-
-        // ################
-        // # Run analysis #
-        // ################
-        PixelAlive::run();
-        auto output = PixelAlive::analyze();
-
-        // ##############################################
-        // # Send periodic data to monitor the progress #
-        // ##############################################
-        PixelAlive::sendData();
-
-        // #####################
-        // # Compute next step #
-        // #####################
-        for(const auto cBoard: *output)
-            for(const auto cOpticalGroup: *cBoard)
-                for(const auto cHybrid: *cOpticalGroup)
-                    for(const auto cChip: *cHybrid)
-                    {
-                        // #######################
-                        // # Build discriminator #
-                        // #######################
-                        float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fOccupancy;
-
-                        // ########################
-                        // # Save best DAC values #
-                        // ########################
-                        float oldValue = bestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>();
-
-                        if(fabs(newValue - TARGETEFF) <= fabs(oldValue - TARGETEFF))
-                        {
-                            bestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = newValue;
-
-                            bestDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-                        }
-
-                        if(newValue < TARGETEFF)
-
-                            maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-
-                        else
-
-                            minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-                    }
-    }
-
-    // ###########################
-    // # Download new DAC values #
-    // ###########################
-    LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    CalibBase::downloadNewDACvalues(bestDACcontainer, regNames, false, true, 0);
+    CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames, false, true, 0);
 
     // ################
     // # Run analysis #
