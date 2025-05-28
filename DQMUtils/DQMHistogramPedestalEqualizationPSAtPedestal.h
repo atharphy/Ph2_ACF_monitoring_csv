@@ -60,6 +60,7 @@ class DQMHistogramPedestalEqualizationPSAtPedestal : public DQMHistogramBase
     DetectorDataContainer fDetectorChipPixelTrimCurveHistograms;
     DetectorDataContainer fDetectorChipStripMaxHistograms;
     DetectorDataContainer fDetectorChipPixelMaxHistograms;
+    DetectorDataContainer fDetectorChipPixelMax2DHistograms;
     std::map<std::string, DetectorDataContainer> fDetectorChipMaxHistograms;
     DetectorDataContainer fDetectorPixelTrimBitsHistograms;
     DetectorDataContainer fDetectorStripTrimBitsHistograms;

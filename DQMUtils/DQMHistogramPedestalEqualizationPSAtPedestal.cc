@@ -38,13 +38,13 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
     fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
     for (auto label : theLabels)
     {
-        HistContainer<TH2F> theTH2FChipStripSCurve(Form("SCurve_%s", label.c_str()), Form("SCurve %s", label.c_str()), NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, 256, 0, 255);
+        HistContainer<TH2F> theTH2FChipStripSCurve(Form("SCurve_%s", label.c_str()), Form("SCurve %s", label.c_str()), NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, 256, -0.5, 256 - 0.5);
         theTH2FChipStripSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
         theTH2FChipStripSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
         RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipStripSCurveHistograms[label], theTH2FChipStripSCurve);
     }
     
-    HistContainer<TH2F> theTH2FChipStripTrimCurve("TrimCurve", "TrimCurve", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, 32, 0, 31);
+    HistContainer<TH2F> theTH2FChipStripTrimCurve("TrimCurve", "TrimCurve", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, 32, -0.5, 31.5);
     theTH2FChipStripTrimCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
     theTH2FChipStripTrimCurve.fTheHistogram->GetYaxis()->SetTitle("Trim Bits");
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipStripTrimCurveHistograms, theTH2FChipStripTrimCurve);
@@ -75,12 +75,12 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
     for (auto label : theLabels)
     {
-        HistContainer<TH2F> theTH2FChipPixelSCurve(Form("SCurve_%s", label.c_str()), Form("SCurve %s", label.c_str()), NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5, 256, 0, 255);
+        HistContainer<TH2F> theTH2FChipPixelSCurve(Form("SCurve_%s", label.c_str()), Form("SCurve %s", label.c_str()), NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5, 256, -0.5, 256 - 0.5);
         theTH2FChipPixelSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
         theTH2FChipPixelSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
         RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelSCurveHistograms[label], theTH2FChipPixelSCurve);
     }
-    HistContainer<TH2F> theTH2FChipPixelTrimCurve("TrimCurve", "TrimCurve", NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5, 32, 0, 31);
+    HistContainer<TH2F> theTH2FChipPixelTrimCurve("TrimCurve", "TrimCurve", NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5, 32, -0.5, 31.5);
     theTH2FChipPixelTrimCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
     theTH2FChipPixelTrimCurve.fTheHistogram->GetYaxis()->SetTitle("Trim Bits");
     RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelTrimCurveHistograms, theTH2FChipPixelTrimCurve);
@@ -99,6 +99,12 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
     theTH1FChipPixelMax.fTheHistogram->GetXaxis()->SetTitle("Channel");
     theTH1FChipPixelMax.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
     RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelMaxHistograms, theTH1FChipPixelMax);
+
+    HistContainer<TH2F> theTH2FChipPixelMax("2DChannelThresholdForMaximumOccupancy", "2D Channel threshold for maximum occupancy", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS -0.5);
+    theTH2FChipPixelMax.fTheHistogram->GetXaxis()->SetTitle("Col");
+    theTH2FChipPixelMax.fTheHistogram->GetYaxis()->SetTitle("Row");
+    RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelMax2DHistograms, theTH2FChipPixelMax);
+
 
     HistContainer<TH1I> theTH1IPixelTrimBits("ChannelTrimBits", "Channel trim bits", NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5);
     theTH1IPixelTrimBits.fTheHistogram->GetXaxis()->SetTitle("Channel");
@@ -426,6 +432,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDa
                     auto         cType          = theReadoutChip->getFrontEndType();
 
                     TH1F* cChipMax             = nullptr;
+                    TH2F* cChipMax2D             = nullptr;
                     TH1F* cChipMaxDistribution = fDetectorChipMaxHistograms[label].getObject(cBoard->getId())
                                                      ->getObject(cOpticalGroup->getId())
                                                      ->getObject(cHybrid->getId())
@@ -450,6 +457,12 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDa
                                        ->getObject(cChip->getId())
                                        ->getSummary<HistContainer<TH1F>>()
                                        .fTheHistogram;
+                        cChipMax2D = fDetectorChipPixelMax2DHistograms.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(cHybrid->getId())
+                        ->getObject(cChip->getId())
+                        ->getSummary<HistContainer<TH2F>>()
+                        .fTheHistogram;
                     }
 
                     for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
@@ -459,6 +472,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDa
                             auto     bin    = linearizeRowAndCols(row, col, cChip->getNumberOfCols());
                             uint16_t maxDac = cChip->getChannel<uint16_t>(row, col);
                             cChipMax->SetBinContent(bin + 1, maxDac);
+                            if(cChipMax2D != nullptr ) cChipMax2D->SetBinContent(col+1, row+1, maxDac);
                             cChipMaxDistribution->Fill(maxDac);
                         }
                     }
