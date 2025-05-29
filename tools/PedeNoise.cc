@@ -130,6 +130,11 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fPedeNoiseMaskUntrimmed  = findValueInSettings<double>("PedeNoise_MaskUntrimmed", 0);
     fPedeNoiseUntrimmedLimit = findValueInSettings<double>("PedeNoise_UntrimmedLimit", 0.0);
     fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
+    if(fWithMPA && fEventsPerPoint > 1000)
+    {
+        fEventsPerPoint = 1000;
+        LOG(INFO) << BOLDRED << " Limiting the number of events to 1000 to avoid rollover of the MPA Ripple counter." << RESET;
+    }
     fUseFixRange             = findValueInSettings<double>("PedeNoise_UseFixRange", 0);
     fMinThreshold            = findValueInSettings<double>("PedeNoise_MinThreshold", 0);
     fMaxThreshold            = findValueInSettings<double>("PedeNoise_MaxThreshold", 0);

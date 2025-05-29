@@ -50,7 +50,7 @@ void PedestalEqualizationPSAtPedestal::Initialise(bool pAllChan, bool pDisableSt
     }
     if(fWithSSA && !fWithMPA) LOG(INFO) << BOLDBLUE << "PedestalEqualization with SSAs" << RESET;
     if(fWithMPA && !fWithSSA) LOG(INFO) << BOLDBLUE << "PedestalEqualization with MPAs" << RESET;
-    if(fWithSSA && fWithMPA) LOG(INFO) << BOLDBLUE << "PedestalEqualization with SSAs+MPAs" << RESET;
+    if(fWithSSA && fWithMPA)  LOG(INFO) << BOLDBLUE << "PedestalEqualization with SSAs+MPAs" << RESET;
 
     for(auto cFrontEndType: cAllFrontEndTypes)
     {
@@ -70,12 +70,6 @@ void PedestalEqualizationPSAtPedestal::Initialise(bool pAllChan, bool pDisableSt
 
     this->fAllChan = pAllChan;
 
-    // fSkipMaskedChannels                = findValueInSettings<double>("SkipMaskedChannels", 0);
-    // fMaskChannelsFromOtherGroups       = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
-    // fCheckLoop                         = findValueInSettings<double>("VerificationLoop", 1);
-    // fPedestalEqualizationMaskUntrimmed = findValueInSettings<double>("PedestalEqualization_MaskUntrimmed", 0);
-
-    // FOR SSA Full Scan
     fOriginalIsFullScan = findValueInSettings<double>("FullScan", 0) > 0;
     setValueInSettings<double>("FullScan", 1);
 
@@ -98,6 +92,11 @@ void PedestalEqualizationPSAtPedestal::Initialise(bool pAllChan, bool pDisableSt
     fTestPulseAmplitudePix = 1; // findValueInSettings<double>("PedestalEqualization_PulseAmplitudePixFullScan", 0);
 
     fEventsPerPoint  = findValueInSettings<double>("Nevents", 10);
+    if( fEventsPerPoint > 1000)
+    {
+        fEventsPerPoint = 1000;
+        LOG(INFO) << BOLDRED << " Limiting the number of events to 1000 to avoid rollover of the MPA Ripple counter." << RESET;
+    }
     fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
     // fOccupancyAtPedestal     = findValueInSettings<double>("PedestalEqualization_Occupancy", 0.56);
     uint8_t cDefTargetOffset = 0xF;
@@ -155,7 +154,7 @@ void PedestalEqualizationPSAtPedestal::Running()
 
     LOG(INFO) << BOLDMAGENTA << "Starting PedestalEqualizationPSAtPedestal measurement." << RESET;
     Initialise(false);
-    PrepareForInjection();
+    PrepareForInjection(); // This sets the chips in the correct status. It also sets Vtrim and Trim Bits in their initial configuration
     ScanThreshold("Untrimmed");
     GetLowestAndHighestMaxOccupancyThreshold();
     FindTargetThreshold();
@@ -170,7 +169,7 @@ void PedestalEqualizationPSAtPedestal::Running()
 
 void PedestalEqualizationPSAtPedestal::PrepareForInjection()
 {
-    // figure  out if you should normalize or not
+    // This sets the chips in the correct status. It also sets Vtrim and Trim Bits in their initial configuration
     uint cNormalize = 1;
     setNormalization(cNormalize);
 
@@ -183,6 +182,8 @@ void PedestalEqualizationPSAtPedestal::PrepareForInjection()
             {
                 for(auto cChip: *cHybrid)
                 {
+                    // As a starting point we choose the max trim bit but the Vtrim giving the smallest range. 
+                    // Vtrim goes in opposites directions for MPAs and SSAs
                     uint16_t VtrimForMaxRange;
                     auto     cType = cChip->getFrontEndType();
                     if(cType == FrontEndType::MPA2)
