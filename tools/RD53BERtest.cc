@@ -92,7 +92,7 @@ void BERtest::run()
         // #########
         for(const auto cBoard: *fDetectorContainer)
         {
-            const uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+            const uint8_t frontendSpeed = (uint8_t)static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
             static_cast<RD53Interface*>(this->fReadoutChipInterface)->StartPRBSpattern(cBoard);
 
             std::map<uint32_t, std::vector<uint8_t>> optogroup_id_hybrid_id_chip_id_chip_lanes;
@@ -123,7 +123,7 @@ void BERtest::run()
         // ############
         for(const auto cBoard: *fDetectorContainer)
         {
-            const uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+            const uint8_t frontendSpeed = (uint8_t)static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
 
             for(const auto cOpticalGroup: *cBoard)
             {
@@ -156,7 +156,7 @@ void BERtest::run()
         // ############
         for(const auto cBoard: *fDetectorContainer)
         {
-            const uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+            const uint8_t frontendSpeed = (uint8_t)static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
             static_cast<RD53Interface*>(this->fReadoutChipInterface)->StartPRBSpattern(cBoard);
 
             for(const auto cOpticalGroup: *cBoard)
