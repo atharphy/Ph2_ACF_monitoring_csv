@@ -760,9 +760,18 @@ void PedestalEqualizationPSAtPedestal::TuneVtrimBinary()
                             theChipVTrimBitsContainer->getSummary<uint16_t>()          = theVTrimBits;
                         }
 
-                        // Reject bit if the occupancy is too high
-                        if((ibit > 0 && theCurrentMaxOccupancyThreshold > theTargetThreshold)) { theVTrimBits &= ~(1 << ibit); }
-                        else { theVTrimBits |= (1 << ibit); }
+                        ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                        if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
+                        {
+                            // Reject bit if the occupancy is too high
+                            if((ibit > 0 && theCurrentMaxOccupancyThreshold > theTargetThreshold)) { theVTrimBits &= ~(1 << ibit); }
+                            else { theVTrimBits |= (1 << ibit); }
+                        }
+                        else if(theReadoutChip->getFrontEndType() == FrontEndType::SSA2)
+                        {
+                            if((ibit > 0 && theCurrentMaxOccupancyThreshold < theTargetThreshold)) { theVTrimBits &= ~(1 << ibit); }
+                            else { theVTrimBits |= (1 << ibit); }
+                        }
                         if(ibit > 0) theVTrimBits |= (1 << (ibit - 1)); // Setting next bit to 1 for the test
 
                         fReadoutChipInterface->SetVtrim(cChip, theVTrimBits);
