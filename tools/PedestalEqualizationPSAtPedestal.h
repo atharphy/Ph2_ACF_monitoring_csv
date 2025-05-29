@@ -43,9 +43,9 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     void GetLowestAndHighestMaxOccupancyThreshold();
     void FindTargetThreshold();
     void TuneVtrimBinary();
-    void TuneTrimBitsBinary();
     void SetTargetThreshold();
     void SetTargetTrimBits();
+    void SetInitialConditions();
     static std::string    fCalibrationDescription;
     bool                  fWithSSA = false;
     bool                  fWithMPA = false;

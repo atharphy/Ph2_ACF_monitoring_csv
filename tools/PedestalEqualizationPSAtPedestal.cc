@@ -161,7 +161,6 @@ void PedestalEqualizationPSAtPedestal::Running()
     TuneVtrimBinary();
     SetTargetThreshold();
     ScanTrimBit();
-    // TuneTrimBitsBinary();
     SetTargetTrimBits();
     ScanThreshold("Trimmed");
     LOG(INFO) << BOLDMAGENTA << "Done with PedestalEqualizationPSAtPedestal." << RESET;
@@ -169,11 +168,36 @@ void PedestalEqualizationPSAtPedestal::Running()
 
 void PedestalEqualizationPSAtPedestal::PrepareForInjection()
 {
-    // This sets the chips in the correct status. It also sets Vtrim and Trim Bits in their initial configuration
     uint cNormalize = 1;
     setNormalization(cNormalize);
 
     this->enableTestPulse(true);
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    auto     cType = cChip->getFrontEndType();
+                    if(cType == FrontEndType::MPA2)
+                    {
+                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitudePix);
+                    }
+                    else // SSA
+                    {
+                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitude);
+                    }
+                }
+            }
+        }
+    }
+    LOG(INFO) << BLUE << "Enabled test pulse. " << RESET;
+    this->setTestAllChannels(true);
+}
+void PedestalEqualizationPSAtPedestal::SetInitialConditions()
+{
     for(auto cBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *cBoard)
@@ -188,12 +212,10 @@ void PedestalEqualizationPSAtPedestal::PrepareForInjection()
                     auto     cType = cChip->getFrontEndType();
                     if(cType == FrontEndType::MPA2)
                     {
-                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitudePix);
                         VtrimForMaxRange = 0x0;
                     }
                     else // SSA
                     {
-                        fReadoutChipInterface->WriteChipReg(cChip, "InjectedCharge", fTestPulseAmplitude);
                         VtrimForMaxRange = 0x1F;
                     }
                     fReadoutChipInterface->SetTrimBitsAll(cChip, 0x1F);
@@ -202,10 +224,7 @@ void PedestalEqualizationPSAtPedestal::PrepareForInjection()
             }
         }
     }
-    LOG(INFO) << BLUE << "Enabled test pulse. " << RESET;
-    this->setTestAllChannels(true);
 }
-
 void PedestalEqualizationPSAtPedestal::ScanThreshold(std::string label)
 {
     std::vector<DetectorDataContainer>  detectorContainerVector(dacList.size());
@@ -785,149 +804,6 @@ void PedestalEqualizationPSAtPedestal::TuneVtrimBinary()
     }
 }
 
-void PedestalEqualizationPSAtPedestal::TuneTrimBitsBinary()
-{
-    LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << RESET;
-
-    DetectorDataContainer theFinalTrimBitsContainers;
-    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theFinalTrimBitsContainers);
-    DetectorDataContainer theDistanceFromTargetContainers;
-    ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, theDistanceFromTargetContainers);
-
-    uint8_t theStartTrimBits  = 0x10;
-    uint8_t theTrimBitsNumber = 5;
-
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                    fReadoutChipInterface->SetTrimBitsAll(theReadoutChip, theStartTrimBits);
-                }
-            }
-        }
-    }
-
-    for(int ibit = theTrimBitsNumber - 1; ibit >= 0; ibit--)
-    {
-        LOG(INFO) << BOLDMAGENTA << " Scanning Bit " << ibit  << RESET;
-        ScanThreshold(); 
-
-        for(auto cBoard: fTheMaxOccupancyThresholdContainers)
-        {
-            for(auto cOpticalGroup: *cBoard)
-            {
-                for(auto cHybrid: *cOpticalGroup)
-                {
-                    for(auto cChip: *cHybrid)
-                    {
-                        ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                        auto         theTargetThreshold =
-                            fTheTargetThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-                        auto theChipDistanceFromTargetContainer =
-                            theDistanceFromTargetContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                        auto theChipTrimBitsContainer =
-                            theFinalTrimBitsContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                        float averageTrim     = 0;
-                        float averageDistance = 0;
-                        for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
-                        {
-                            for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
-                            {
-                                // bool isChannelPrint = (row == 4 && col == 110);
-
-                                // if(isChannelPrint) std::cout << " ibit " << ibit << std::endl;
-                                // first iteration
-                                // if(isChannelPrint) std::cout << " initial distance " << theChipDistanceFromTargetContainer->getChannel<uint16_t>(row, col) << std::endl;
-                                uint8_t theTrimBits = fReadoutChipInterface->ReadTrimBitsChannel(theReadoutChip, row, col);
-                                // if(isChannelPrint) std::cout << " initial trim bits " << +theTrimBits << " binary " << std::bitset<8>(theTrimBits) << std::endl;
-
-                                averageTrim += theTrimBits;
-                                auto theCurrentMaxOccupancyThreshold = cChip->getChannel<uint16_t>(row, col);
-                                if(ibit == theTrimBitsNumber - 1) theChipDistanceFromTargetContainer->getChannel<uint16_t>(row, col) = std::fabs(theCurrentMaxOccupancyThreshold - theTargetThreshold);
-
-                                float distanceFromTarget = std::fabs(theCurrentMaxOccupancyThreshold - theTargetThreshold);
-                                // if(isChannelPrint) LOG(INFO) << MAGENTA << " bit  " << +ibit << " currentthreshold " << theCurrentMaxOccupancyThreshold << " target " << theTargetThreshold << RESET;
-
-                                if(distanceFromTarget < theChipDistanceFromTargetContainer->getChannel<uint16_t>(row, col) || ibit == theTrimBitsNumber - 1)
-                                {
-                                    // if(isChannelPrint) LOG(INFO) << MAGENTA << " updating final trimbits " << +theTrimBits << " distance " << distanceFromTarget << RESET;
-                                    theChipDistanceFromTargetContainer->getChannel<uint16_t>(row, col) = distanceFromTarget;
-                                    theChipTrimBitsContainer->getChannel<uint16_t>(row, col)           = theTrimBits;
-                                }
-                                averageDistance += distanceFromTarget;
-                                // Reject bit if the occupancy is too high
-                                if((ibit > 0 && theCurrentMaxOccupancyThreshold > theTargetThreshold))
-                                {
-                                    theTrimBits &= ~(1 << ibit);
-                                    // if(isChannelPrint) LOG(INFO) << MAGENTA << " updating trimbits for current > target " << +theTrimBits << " binary " << std::bitset<8>(theTrimBits) << RESET;
-                                }
-                                else
-                                {
-                                    theTrimBits |= (1 << ibit);
-                                    // if(isChannelPrint) LOG(INFO) << MAGENTA << " accepting bit " << +theTrimBits << " binary " << std::bitset<8>(theTrimBits) << RESET;
-                                }
-                                if(ibit > 0)
-                                {
-                                    theTrimBits |= (1 << (ibit - 1)); // Setting next bit to 1 for the test
-                                    // if(isChannelPrint) LOG(INFO) << MAGENTA << " updating trim bits " << +theTrimBits << " binary " << std::bitset<8>(theTrimBits) << RESET;
-                                }
-                                fReadoutChipInterface->SetTrimBitsChannel(theReadoutChip, theTrimBits, row, col);
-                                // if(isChannelPrint) LOG(INFO) << MAGENTA << " next trimbits " << +theTrimBits << " binary " << std::bitset<8>(theTrimBits) << RESET;
-                            }
-                        }
-                        averageTrim /= cChip->getNumberOfRows() * cChip->getNumberOfCols();
-                        LOG(INFO) << BOLDYELLOW << "Average TrimDAC / channel Occupancy for HYBRID " << cHybrid->getId() << " CHIP " << cChip->getId() << " is " << averageTrim << " binary " << std::bitset<8>(averageTrim) << RESET;
-                        LOG(INFO) << BOLDYELLOW << "Average distance from target  " << averageDistance / (cChip->getNumberOfRows() * cChip->getNumberOfCols()) << RESET;
-                    }
-                }
-            }
-        }
-    }
-#ifdef __USE_ROOT__
-    LOG(INFO) << BLUE << "fillTrimBitsPlots " << RESET;
-    fDQMHistogramPedestalEqualizationPSAtPedestal.fillTrimBitsPlots(theFinalTrimBitsContainers);
-#else
-    if(fDQMStreamerEnabled)
-    {
-        ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalTrimBits");
-        theContainerSerialization.streamByChipContainer(fDQMStreamer, theFinalTrimBitsContainers);
-    }
-
-#endif
-    for(auto cBoard: *fDetectorContainer)
-    {
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
-                    {
-                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
-                        {
-                            auto trimBits = theFinalTrimBitsContainers.getObject(cBoard->getId())
-                                                ->getObject(cOpticalGroup->getId())
-                                                ->getObject(cHybrid->getId())
-                                                ->getObject(cChip->getId())
-                                                ->getChannel<uint16_t>(row, col);
-                            fReadoutChipInterface->SetTrimBitsChannel(theReadoutChip, trimBits, row, col);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    ScanThreshold();
-}
-
-
 void PedestalEqualizationPSAtPedestal::Stop(void)
 {
     LOG(INFO) << "Stopping PedestalEqualizationPSAtPedestal measurement.";
@@ -947,9 +823,10 @@ void PedestalEqualizationPSAtPedestal::Resume() {}
 
 void PedestalEqualizationPSAtPedestal::Reset()
 {
-    setValueInSettings<double>("FullScan", fOriginalIsFullScan ? 1 : 0); // restoring full scan original setting
-    // setValueInSettings<double>("PedeNoise_UseFixRange", fOriginalUseFixRange ? 1 : 0);
-    // setValueInSettings<double>("PedeNoise_MinThreshold", fOriginalMinThreshold);
-    // setValueInSettings<double>("PedeNoise_MinThreshold", fOriginalMaxThreshold);
-    PedestalEqualization::Reset();
+    fRegisterHelper->restoreSnapshot();
+    // setValueInSettings<double>("FullScan", fOriginalIsFullScan ? 1 : 0); // restoring full scan original setting
+    // // setValueInSettings<double>("PedeNoise_UseFixRange", fOriginalUseFixRange ? 1 : 0);
+    // // setValueInSettings<double>("PedeNoise_MinThreshold", fOriginalMinThreshold);
+    // // setValueInSettings<double>("PedeNoise_MinThreshold", fOriginalMaxThreshold);
+    // PedestalEqualization::Reset();
 }
