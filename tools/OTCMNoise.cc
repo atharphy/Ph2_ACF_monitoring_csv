@@ -298,7 +298,7 @@ void OTCMNoise::TakeData(float fThreshold)
         } // end acquisition loop
     }
 #ifdef __USE_ROOT__
-    fDQMHistogramOTCMNoise.fillChipHitPlots(theChipHitContainer, true, fThreshold);
+    fDQMHistogramOTCMNoise.fillChipHitPlots(theChipHitContainer, false, fThreshold);
     fDQMHistogramOTCMNoise.fillHybridHitPlots(theHybridHitContainer, fThreshold);
     fDQMHistogramOTCMNoise.fillModuleHitPlots(theModuleHitContainer, fThreshold);
 

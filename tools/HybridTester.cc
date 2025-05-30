@@ -7,9 +7,9 @@ struct HistogramFiller : public HwDescriptionVisitor
 {
     TH1F*        fBotHist;
     TH1F*        fTopHist;
-    const Event* fEvent;
+    Event* fEvent;
 
-    HistogramFiller(TH1F* pBotHist, TH1F* pTopHist, const Event* pEvent) : fBotHist(pBotHist), fTopHist(pTopHist), fEvent(pEvent) {}
+    HistogramFiller(TH1F* pBotHist, TH1F* pTopHist, Event* pEvent) : fBotHist(pBotHist), fTopHist(pTopHist), fEvent(pEvent) {}
 
     void visit(ChipContainer* pCbc)
     {
@@ -241,7 +241,7 @@ void HybridTester::Initialize(bool pThresholdScan)
     fDeadChannelsBottom.clear();
 }
 
-uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_t pValue)
+uint32_t HybridTester::fillSCurves(BeBoard* pBoard, Event* pEvent, uint16_t pValue)
 {
     uint32_t cHitCounter = 0;
 
@@ -256,7 +256,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_
                 uint32_t cbcEventCounter = 0;
                 for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
                 {
-                    if ( pEvent->DataBit( cCbc->getHybridId(), cCbc->getId(), cId ) )
+                    if ( pEvent->DataBit( cCbc->getHybridId(), cCbc->getId(), 0, cId ) )
                     {
                         sCurveHist->Fill( pValue );
                         cHitCounter++;
@@ -272,7 +272,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, const Event* pEvent, uint16_
                 {
                     // for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
                     //{
-                    // if ( pEvent->DataBit ( cCbc->getHybridId(), cCbc->getId(), cId ) )
+                    // if ( pEvent->DataBit ( cCbc->getHybridId(), cCbc->getId(), 0, cId ) )
                     //{
                     // cScurve->second->Fill ( pValue );
                     // cHitCounter++;

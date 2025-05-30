@@ -198,13 +198,13 @@ std::vector<uint8_t> Cic::getMapping()
 {
     bool c2S = ((getReg("FE_CONFIG") & 0x01) == 0);
     if(c2S)
-        return fFeMapping2S;
+        return fChipToCicMapping2S;
     else // a bit too many else, but easier to read
     {
         if(getHybridId() % 2 == 0)
-            return fFeMappingPSR;
+            return fChipToCicMappingPSR;
         else
-            return fFeMappingPSL;
+            return fChipToCicMappingPSL;
     }
 }
 

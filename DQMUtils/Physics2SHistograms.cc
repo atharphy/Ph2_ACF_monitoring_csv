@@ -65,7 +65,7 @@ void Physics2SHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
 // 		            }
 //                     for(int pos=0; pos<NCHANNELS; ++pos)
 // 		            {
-// 						if(data2S.fClusters[pos].fSensor == 0)topClusterHistograms->Fill(data2S.fClusters[pos].getBaricentre());
+// 						if(data2S.fClusters[pos].getSensor() == 0)topClusterHistograms->Fill(data2S.fClusters[pos].getBaricentre());
 // 						else bottomClusterHistograms->Fill(data2S.fClusters[pos].getBaricentre());
 // 		            }
 

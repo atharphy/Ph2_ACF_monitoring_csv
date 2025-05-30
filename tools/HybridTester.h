@@ -212,7 +212,7 @@ class HybridTester : public Tool
     }
 
     // To measure the occupancy per Chip
-    uint32_t fillSCurves(Ph2_HwDescription::BeBoard* pBoard, const Ph2_HwInterface::Event* pEvent, uint16_t pValue);
+    uint32_t fillSCurves(Ph2_HwDescription::BeBoard* pBoard, Ph2_HwInterface::Event* pEvent, uint16_t pValue);
     void     updateSCurveCanvas(Ph2_HwDescription::BeBoard* pBoard);
     void     processSCurves(uint32_t pEventsperVcth);
 
