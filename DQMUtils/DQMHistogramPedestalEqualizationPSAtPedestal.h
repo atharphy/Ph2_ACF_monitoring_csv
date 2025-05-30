@@ -54,26 +54,26 @@ class DQMHistogramPedestalEqualizationPSAtPedestal : public DQMHistogramBase
      * \brief Reset histogram
      */
     void reset(void) override;
-    std::map<std::string, DetectorDataContainer> fDetectorChipStripSCurveHistograms;
-    std::map<std::string, DetectorDataContainer> fDetectorChipPixelSCurveHistograms;
+    DetectorDataContainer fDetectorChipStripSCurveHistograms;
+    DetectorDataContainer fDetectorChipPixelSCurveHistograms;
     DetectorDataContainer fDetectorChipStripTrimCurveHistograms;
     DetectorDataContainer fDetectorChipPixelTrimCurveHistograms;
     DetectorDataContainer fDetectorChipStripMaxHistograms;
     DetectorDataContainer fDetectorChipPixelMaxHistograms;
     DetectorDataContainer fDetectorChipPixelMax2DHistograms;
-    std::map<std::string, DetectorDataContainer> fDetectorChipMaxHistograms;
+    DetectorDataContainer fDetectorChipMaxHistograms;
     DetectorDataContainer fDetectorPixelTrimBitsHistograms;
     DetectorDataContainer fDetectorStripTrimBitsHistograms;
     DetectorDataContainer fDetectorChipStripSmallestHistograms;
     DetectorDataContainer fDetectorChipStripLargestHistograms;
     DetectorDataContainer fDetectorChipPixelSmallestHistograms;
     DetectorDataContainer fDetectorChipPixelLargestHistograms;
-    void                  fillSCurvePlotsVector(const std::vector<DetectorDataContainer>& detectorContainerVector, const std::vector<uint16_t>& dacList, std::string label);
-    void                  fillSCurvePlots(const DetectorDataContainer& detectorContainer, uint16_t dacIt, std::string label);
+    void                  fillSCurvePlotsVector(const std::vector<DetectorDataContainer>& detectorContainerVector, const std::vector<uint16_t>& dacList);
+    void                  fillSCurvePlots(const DetectorDataContainer& detectorContainer, uint16_t dacIt);
     void                  fillTrimCurvePlots(const DetectorDataContainer& detectorContainer, uint16_t dacIt);
     void                  fillTrimCurvePlotsVector(const std::vector<DetectorDataContainer>& detectorContainerVector, const std::vector<uint16_t>& dacList);
     void fillReferenceChannelPlots(const DetectorDataContainer& theThresholdAtMaxOccupancyContainer, bool isSmallest);
-    void fillMaxPlots(const DetectorDataContainer& dacOccupancyContainers, std::string label = "IntermediateStep");
+    void fillMaxPlots(const DetectorDataContainer& dacOccupancyContainers);
     void fillTrimBitsPlots(const DetectorDataContainer& TrimBitContainers);
 
   private:

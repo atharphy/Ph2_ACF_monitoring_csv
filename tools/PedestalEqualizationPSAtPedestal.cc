@@ -87,6 +87,7 @@ void PedestalEqualizationPSAtPedestal::Initialise(bool pAllChan, bool pDisableSt
     for(auto i = 0u; i < nSteps; i++) { dacList.push_back(fStartValue + i); }
 
     fNsigma = findValueInSettings<double>("PedestalEqualizationPSAtPedestal_Sigma", 3);
+    fDoDebugHists = findValueInSettings<double>("PedestalEqualizationPSAtPedestal_SaveDebugHists", 1) > 0;
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -129,14 +130,14 @@ void PedestalEqualizationPSAtPedestal::Running()
     Initialise(false);
     PrepareForInjection(); // This sets the chips in the correct status.
     SetInitialConditions(); // Sets Vtrim and Trim Bits in their initial configuration
-    ScanThreshold("Untrimmed");
+    ScanThreshold();
     GetLowestAndHighestMaxOccupancyThreshold();
     FindTargetThreshold();
     TuneVtrimBinary();
     SetTargetThreshold();
     ScanTrimBit();
     SetTargetTrimBits();
-    ScanThreshold("Trimmed");
+    ScanThreshold();
     LOG(INFO) << BOLDMAGENTA << "Done with PedestalEqualizationPSAtPedestal." << RESET;
 }
 
@@ -199,7 +200,7 @@ void PedestalEqualizationPSAtPedestal::SetInitialConditions()
         }
     }
 }
-void PedestalEqualizationPSAtPedestal::ScanThreshold(std::string label)
+void PedestalEqualizationPSAtPedestal::ScanThreshold()
 {
     std::vector<DetectorDataContainer>  detectorContainerVector(dacList.size());
     std::vector<DetectorDataContainer*> detectorContainerVectorPointers;
@@ -223,8 +224,6 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold(std::string label)
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        // auto theChipContainer =
-                        // detectorContainerVector.at(dacIt).getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                         if(cChip->hasChannelContainer() == false) continue;
 
                         for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
@@ -246,17 +245,17 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold(std::string label)
         } // board
     } // dac
 
-    GetMaximumOccupancyThreshold(dacOccupancyContainers, label);
+    GetMaximumOccupancyThreshold(dacOccupancyContainers);
 
 #ifdef __USE_ROOT__
-    fDQMHistogramPedestalEqualizationPSAtPedestal.fillSCurvePlotsVector(detectorContainerVector, dacList, label);
+    fDQMHistogramPedestalEqualizationPSAtPedestal.fillSCurvePlotsVector(detectorContainerVector, dacList);
 #else
     if(fDQMStreamerEnabled)
     {
         for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
         {
             ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancy");
-            theContainerSerialization.streamByChipContainer(fDQMStreamer, *detectorContainerVector.at(dacIt), dacIt, label);
+            theContainerSerialization.streamByChipContainer(fDQMStreamer, *detectorContainerVector.at(dacIt), dacIt);
         }
     }
 #endif
@@ -295,12 +294,6 @@ void PedestalEqualizationPSAtPedestal::ScanTrimBit()
                 {
                     for(auto cChip: *cHybrid)
                     {
-                        // ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                        // auto theThreshold = fReadoutChipInterface->ReadChipReg(theReadoutChip, "Threshold");
-                        // auto Vtrim = fReadoutChipInterface->ReadVtrim(theReadoutChip);
-                        // //std::cout << " for chip " << cChip->getId() << " threshold was " << theThreshold << " and Vtrim " << Vtrim << std::endl;
-                        // auto theChipContainer =
-                        // detectorContainerVector.at(dacIt).getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                         if(cChip->hasChannelContainer() == false) continue;
 
                         for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
@@ -325,6 +318,9 @@ void PedestalEqualizationPSAtPedestal::ScanTrimBit()
 
     GetMaximumOccupancyTrimBits(dacOccupancyContainers);
 
+    // These plots are useful for debugging only
+    if(fDoDebugHists)
+    {
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualizationPSAtPedestal.fillTrimCurvePlotsVector(detectorContainerVector, trimbitList);
 #else
@@ -337,6 +333,7 @@ void PedestalEqualizationPSAtPedestal::ScanTrimBit()
         }
     }
 #endif
+    }
 }
 
 void PedestalEqualizationPSAtPedestal::FillMaxOccupancyMap(std::vector<DetectorDataContainer> detectorContainerVector,
@@ -363,7 +360,7 @@ void PedestalEqualizationPSAtPedestal::FillMaxOccupancyMap(std::vector<DetectorD
     }
 }
 
-void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyThreshold(const DetectorDataContainer& dacOccupancyContainers, std::string label)
+void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyThreshold(const DetectorDataContainer& dacOccupancyContainers)
 {
     ContainerFactory::copyAndInitChannel<uint16_t>(*fDetectorContainer, fTheMaxOccupancyThresholdContainers);
 
@@ -401,12 +398,12 @@ void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyThreshold(const Detect
     }
 
 #ifdef __USE_ROOT__
-    fDQMHistogramPedestalEqualizationPSAtPedestal.fillMaxPlots(fTheMaxOccupancyThresholdContainers, label);
+    fDQMHistogramPedestalEqualizationPSAtPedestal.fillMaxPlots(fTheMaxOccupancyThresholdContainers);
 #else
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalMax");
-        theContainerSerialization.streamByChipContainer(fDQMStreamer, fTheMaxOccupancyThresholdContainers, label);
+        theContainerSerialization.streamByChipContainer(fDQMStreamer, fTheMaxOccupancyThresholdContainers);
     }
 
 #endif
@@ -554,6 +551,10 @@ void PedestalEqualizationPSAtPedestal::GetLowestAndHighestMaxOccupancyThreshold(
             } // hybrid
         } // OG
     } // board
+
+    // These plots are useful for debugging only
+    if(fDoDebugHists)
+    {
 #ifdef __USE_ROOT__
     LOG(INFO) << BLUE << "fillReferenceChannelPlots " << RESET;
     fDQMHistogramPedestalEqualizationPSAtPedestal.fillReferenceChannelPlots(fTheSmallestThresholdAtMaxOccupancyContainer, true);
@@ -567,6 +568,7 @@ void PedestalEqualizationPSAtPedestal::GetLowestAndHighestMaxOccupancyThreshold(
         theContainerSerializationLarge.streamByChipContainer(fDQMStreamer, fTheLargestThresholdAtMaxOccupancyContainer);
     }
 #endif
+    }
 }
 
 void PedestalEqualizationPSAtPedestal::SetTargetThreshold()
