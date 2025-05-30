@@ -133,7 +133,7 @@ void Cic::loadfRegMap(const std::string& filename)
         exit(1);
     }
 
-    for(auto& cRegItem: fRegMap) { LOG(DEBUG) << BOLDBLUE << "CIC register : " << cRegItem.first << " --- " << +cRegItem.second.fValue << RESET; }
+    // for(auto& cRegItem: fRegMap) { LOG(DEBUG) << BOLDBLUE << "CIC register : " << cRegItem.first << " --- " << +cRegItem.second.fValue << RESET; }
 }
 
 std::stringstream Cic::getRegMapStream()
