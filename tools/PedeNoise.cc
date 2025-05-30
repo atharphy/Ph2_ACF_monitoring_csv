@@ -749,9 +749,9 @@ void PedeNoise::extractPedeNoise()
                                     binCenter = (mPixelIt->first + (previousPixelIterator)->first) / 2.;
                                     // if(previousOccupancy > currentOccupancy) { continue; }
                                 }
-                                //avoid  MPA and SSA pedestal peak to influence the noise calculation
-                                if(previousOccupancy > 1 ) previousOccupancy = 1;
-                                if(currentOccupancy > 1 ) currentOccupancy = 1;
+                                // avoid  MPA and SSA pedestal peak to influence the noise calculation
+                                if(previousOccupancy > 1) previousOccupancy = 1;
+                                if(currentOccupancy > 1) currentOccupancy = 1;
 
                                 fThresholdAndNoiseContainer->getObject(board->getId())
                                     ->getObject(opticalGroup->getId())

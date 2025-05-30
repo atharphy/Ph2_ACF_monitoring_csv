@@ -5,8 +5,8 @@
 // fill the Histograms, count the hits and increment Vcth
 struct HistogramFiller : public HwDescriptionVisitor
 {
-    TH1F*        fBotHist;
-    TH1F*        fTopHist;
+    TH1F*  fBotHist;
+    TH1F*  fTopHist;
     Event* fEvent;
 
     HistogramFiller(TH1F* pBotHist, TH1F* pTopHist, Event* pEvent) : fBotHist(pBotHist), fTopHist(pTopHist), fEvent(pEvent) {}

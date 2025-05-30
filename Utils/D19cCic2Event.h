@@ -13,9 +13,9 @@
 #define __D19cCic2Event_H__
 
 #include "Event.h"
+#include <array>
 #include <iterator>
 #include <numeric>
-#include <array>
 
 namespace Ph2_HwInterface
 {
@@ -36,37 +36,20 @@ struct Cluster2S
     void         print() const;
 };
 
-template<typename T, size_t N>
+template <typename T, size_t N>
 struct ClusterCollection
 {
     ClusterCollection() {};
-    uint8_t fNumberOfClusters {0};
-    void addCluster(T theCluster)
-    {
-        theContainer[fNumberOfClusters++] = theCluster;
-    }
-    auto begin()
-    {
-        return theContainer.begin();
-    }
-    auto begin() const
-    {
-        return theContainer.begin();
-    }
-    auto end()
-    {
-        return theContainer.begin() + fNumberOfClusters;
-    }
-    auto end() const
-    {
-        return theContainer.begin() + fNumberOfClusters;
-    }
-    size_t size() const
-    {
-        return fNumberOfClusters;
-    }
-    auto& operator[](std::size_t i) { return theContainer[i]; }
+    uint8_t     fNumberOfClusters{0};
+    void        addCluster(T theCluster) { theContainer[fNumberOfClusters++] = theCluster; }
+    auto        begin() { return theContainer.begin(); }
+    auto        begin() const { return theContainer.begin(); }
+    auto        end() { return theContainer.begin() + fNumberOfClusters; }
+    auto        end() const { return theContainer.begin() + fNumberOfClusters; }
+    size_t      size() const { return fNumberOfClusters; }
+    auto&       operator[](std::size_t i) { return theContainer[i]; }
     const auto& operator[](std::size_t i) const { return theContainer[i]; }
+
   private:
     std::array<T, N> theContainer;
 };
@@ -133,15 +116,15 @@ struct HybridL1EventInfo
 struct ChipL1EventInfo
 {
     ChipL1EventInfo() {}
-    void                  parseData(std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9>::const_iterator dataStart, size_t bitStart = 0);
-    uint8_t               fErrorCode{0};
-    uint16_t              fPipelineAddress{0};
-    uint16_t              fL1id{0};
-    std::array<uint32_t, 8> fRawData {0, 0, 0, 0, 0, 0, 0, 0};
-    inline bool           isChannelHit(uint8_t channel) const;
-    std::vector<uint8_t>  getChannelHitList() const;
-    inline uint8_t        countNumberOfHits() const;
-    void                  print() const;
+    void                    parseData(std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9>::const_iterator dataStart, size_t bitStart = 0);
+    uint8_t                 fErrorCode{0};
+    uint16_t                fPipelineAddress{0};
+    uint16_t                fL1id{0};
+    std::array<uint32_t, 8> fRawData{0, 0, 0, 0, 0, 0, 0, 0};
+    inline bool             isChannelHit(uint8_t channel) const;
+    std::vector<uint8_t>    getChannelHitList() const;
+    inline uint8_t          countNumberOfHits() const;
+    void                    print() const;
 };
 
 struct HybridStubEventInfo
@@ -272,17 +255,17 @@ class D19cCic2Event : public Event
     std::vector<uint8_t>        fCicToChipMappingPSL{1, 0, 7, 6, 2, 3, 4, 5}; // Index hybrid Hybrid Id , Value CIC Hybrid Id
     const std::vector<uint8_t>* getCicToChipMapping(uint16_t theHybridId) const;
 
-    static BoardDataContainer fDecodedL1Event;
-    static BoardDataContainer fDecodedStubEvent;
+    static BoardDataContainer                            fDecodedL1Event;
+    static BoardDataContainer                            fDecodedStubEvent;
     static std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9> fTheChipDataVector;
-    static bool ifAreDecodedEventContainersReady;
-    static uintptr_t fLastEventDecodedPointer;
+    static bool                                          ifAreDecodedEventContainersReady;
+    static uintptr_t                                     fLastEventDecodedPointer;
 
-    uint8_t fTLUenabled   = 0;
+    uint8_t     fTLUenabled = 0;
     static bool fIs2S;
     static bool fIsSparsified;
 
-    std::vector<uint32_t> fLocalData;
+    std::vector<uint32_t>             fLocalData;
     const Ph2_HwDescription::BeBoard* fBoard;
 
     // mapped id

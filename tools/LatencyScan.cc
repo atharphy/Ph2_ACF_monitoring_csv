@@ -688,9 +688,9 @@ void LatencyScan::ScanLatency2D()
                                 // now loop the channels for this particular event and increment a counter
                                 for(auto cCbc: *cHybrid)
                                 {
-                                    int                    cHitCounter  = cEvent->GetNHits(cHybrid->getId(), cCbc->getId());
-                                    auto                   cStubs       = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cCbc->getId());
-                                    int                    cStubCounter = cStubs.size();
+                                    int  cHitCounter  = cEvent->GetNHits(cHybrid->getId(), cCbc->getId());
+                                    auto cStubs       = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cCbc->getId());
+                                    int  cStubCounter = cStubs.size();
 
                                     if(cHitCounter == 0) {}
 

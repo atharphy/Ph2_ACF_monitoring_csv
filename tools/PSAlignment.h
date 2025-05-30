@@ -146,7 +146,7 @@ class PSAlignment : public OTTool
                         size_t                                      pTriggerMult);
     bool CheckL1Data(Ph2_HwInterface::ClusterCollection<Ph2_HwInterface::PixelClusterPS, 32> pPClusters,
                      Ph2_HwInterface::ClusterCollection<Ph2_HwInterface::StripClusterPS, 32> pSClusters,
-                     const std::vector<Ph2_HwInterface::Injection>      pInjections);
+                     const std::vector<Ph2_HwInterface::Injection>                           pInjections);
 // booking histograms
 #ifdef __USE_ROOT__
 //  DQMHistogramCic fDQMHistogram;

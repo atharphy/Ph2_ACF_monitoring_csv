@@ -252,15 +252,15 @@ std::vector<std::vector<uint32_t>> splitBits(const std::vector<uint32_t>& input,
 template <size_t Nbits, size_t Mask, typename T>
 inline uint32_t getWord(T dataStart, size_t bitStart)
 {
-    auto firstWordPointer = dataStart + bitStart / 32;
-    size_t                                firstWordMSB     = 31 - bitStart % 32;
-    size_t                                secondWordLSB    = 32 - (Nbits + bitStart) % 32;
+    auto   firstWordPointer = dataStart + bitStart / 32;
+    size_t firstWordMSB     = 31 - bitStart % 32;
+    size_t secondWordLSB    = 32 - (Nbits + bitStart) % 32;
     if(firstWordMSB >= Nbits - 1) { return (*firstWordPointer >> secondWordLSB) & Mask; }
     else
     {
-        auto secondWordPointer = dataStart + (bitStart + Nbits) / 32;
-        uint64_t                              longerWord        = *firstWordPointer;
-        longerWord                                              = longerWord << 32;
+        auto     secondWordPointer = dataStart + (bitStart + Nbits) / 32;
+        uint64_t longerWord        = *firstWordPointer;
+        longerWord                 = longerWord << 32;
         longerWord |= *secondWordPointer;
         return (longerWord >> secondWordLSB) & Mask;
     }

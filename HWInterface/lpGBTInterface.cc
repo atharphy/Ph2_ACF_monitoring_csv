@@ -1820,7 +1820,7 @@ float lpGBTInterface::MeasureResistance(lpGBT* pChip, const std::string& pChanne
 
     float   cCurrentA = 0.5 / pExpectedROhm;
     uint8_t cCdacCode = _CdacGetOptimumCodeForCurrent(pChip, pChannel, cCurrentA);
-    
+
     // LOG(DEBUG) << BOLDBLUE << "Optimum cdac code: " << +cCdacCode << RESET;
 
     std::vector<uint8_t> cCdacCodesVec;
