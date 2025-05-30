@@ -135,12 +135,12 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
         fEventsPerPoint = 1000;
         LOG(INFO) << BOLDRED << " Limiting the number of events to 1000 to avoid rollover of the MPA Ripple counter." << RESET;
     }
-    fUseFixRange             = findValueInSettings<double>("PedeNoise_UseFixRange", 0);
-    fMinThreshold            = findValueInSettings<double>("PedeNoise_MinThreshold", 0);
-    fMaxThreshold            = findValueInSettings<double>("PedeNoise_MaxThreshold", 0);
-    fNeventsForValidation    = findValueInSettings<double>("NeventsForValidation", 10000); // NOT IN XML
-    fMaskingThreshold        = findValueInSettings<double>("MaskingThreshold", 0.001);     // NOT IN XML
-    fPedeNoiseLatency        = findValueInSettings<double>("PedeNoiseLatency", 198);
+    fUseFixRange          = findValueInSettings<double>("PedeNoise_UseFixRange", 0);
+    fMinThreshold         = findValueInSettings<double>("PedeNoise_MinThreshold", 0);
+    fMaxThreshold         = findValueInSettings<double>("PedeNoise_MaxThreshold", 0);
+    fNeventsForValidation = findValueInSettings<double>("NeventsForValidation", 10000); // NOT IN XML
+    fMaskingThreshold     = findValueInSettings<double>("MaskingThreshold", 0.001);     // NOT IN XML
+    fPedeNoiseLatency     = findValueInSettings<double>("PedeNoiseLatency", 198);
 
     bool fastCounterReadout = findValueInSettings<double>("PedeNoise_FastCounterReadout", 1) > 0;
 

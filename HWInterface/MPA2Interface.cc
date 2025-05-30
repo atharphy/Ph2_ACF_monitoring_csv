@@ -334,7 +334,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         // return this->WriteChipReg(pMPA2, "ADCcontrol", pValue , false);
         return this->WriteChipRegBits(pMPA2, "ADCcontrol", pValue, "Mask", cRegMask, false);
     }
-    else if(pRegName == "Offsets") { return this->SetTrimBitsAll(static_cast<ReadoutChip*>(pMPA2), pValue);} //this->WriteChipReg(pMPA2, "TrimDAC_ALL", pValue, false); }
+    else if(pRegName == "Offsets") { return this->SetTrimBitsAll(static_cast<ReadoutChip*>(pMPA2), pValue); }
     else if(pRegName == "ReadoutMode") { return this->WriteChipRegBits(pMPA2, "Control_1", pValue, "Mask", 0x3, false); }
     else if(pRegName == "RetimePix")
     {

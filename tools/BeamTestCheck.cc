@@ -292,24 +292,24 @@ void BeamTestCheck::CheckWithExternal(uint8_t pContinuousReadout)
 
     if(fScanL1Latency) ScanL1Latency(pContinuousReadout);
     if(fScanStubLatency) ScanStubLatency(pContinuousReadout);
-        /*// print out optimal L1 + stub latencies
-        for(auto cBoard: *fDetectorContainer)
+    /*// print out optimal L1 + stub latencies
+    for(auto cBoard: *fDetectorContainer)
+    {
+        LOG(INFO) << BOLDYELLOW << "BeBoard#" << +cBoard->getId() << " optimal stub latency found to be " << fOptimalStubLatency.getObject(cBoard->getId())->getSummary<uint16_t>() << RESET;
+        for(auto cOpticalGroup: *cBoard) // for on opticalGroup - begin
         {
-            LOG(INFO) << BOLDYELLOW << "BeBoard#" << +cBoard->getId() << " optimal stub latency found to be " << fOptimalStubLatency.getObject(cBoard->getId())->getSummary<uint16_t>() << RESET;
-            for(auto cOpticalGroup: *cBoard) // for on opticalGroup - begin
+            for(auto cHybrid: *cOpticalGroup) // for on hybrid - begin
             {
-                for(auto cHybrid: *cOpticalGroup) // for on hybrid - begin
+                LOG(INFO) << BOLDYELLOW << "\tHybrid#" << +cHybrid->getId() << RESET;
+                for(auto cChip: *cHybrid) // for on chip - begin
                 {
-                    LOG(INFO) << BOLDYELLOW << "\tHybrid#" << +cHybrid->getId() << RESET;
-                    for(auto cChip: *cHybrid) // for on chip - begin
-                    {
-                        auto& cLat =
-        fOptimalL1Latency.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>(); LOG(INFO) << BOLDYELLOW
-        << "\t\tChip#" << +cChip->getId() << " optimal L1 latency found to be " << cLat << RESET;
-                    }
+                    auto& cLat =
+    fOptimalL1Latency.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>(); LOG(INFO) << BOLDYELLOW
+    << "\t\tChip#" << +cChip->getId() << " optimal L1 latency found to be " << cLat << RESET;
                 }
             }
-        }*/
+        }
+    }*/
 
 #ifdef __USE_ROOT__
     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);

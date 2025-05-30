@@ -53,7 +53,7 @@ class DQMHistogramPedestalEqualizationPSAtPedestal : public DQMHistogramBase
     /*!
      * \brief Reset histogram
      */
-    void reset(void) override;
+    void                  reset(void) override;
     DetectorDataContainer fDetectorChipStripSCurveHistograms;
     DetectorDataContainer fDetectorChipPixelSCurveHistograms;
     DetectorDataContainer fDetectorChipStripTrimCurveHistograms;
@@ -72,9 +72,9 @@ class DQMHistogramPedestalEqualizationPSAtPedestal : public DQMHistogramBase
     void                  fillSCurvePlots(const DetectorDataContainer& detectorContainer, uint16_t dacIt);
     void                  fillTrimCurvePlots(const DetectorDataContainer& detectorContainer, uint16_t dacIt);
     void                  fillTrimCurvePlotsVector(const std::vector<DetectorDataContainer>& detectorContainerVector, const std::vector<uint16_t>& dacList);
-    void fillReferenceChannelPlots(const DetectorDataContainer& theThresholdAtMaxOccupancyContainer, bool isSmallest);
-    void fillMaxPlots(const DetectorDataContainer& dacOccupancyContainers);
-    void fillTrimBitsPlots(const DetectorDataContainer& TrimBitContainers);
+    void                  fillReferenceChannelPlots(const DetectorDataContainer& theThresholdAtMaxOccupancyContainer, bool isSmallest);
+    void                  fillMaxPlots(const DetectorDataContainer& dacOccupancyContainers);
+    void                  fillTrimBitsPlots(const DetectorDataContainer& TrimBitContainers);
 
   private:
     DetectorContainer* fDetectorContainer;
