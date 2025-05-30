@@ -172,7 +172,7 @@ class DQMHistogramBase
     }
 
     template <typename Hist>
-    void drawChip(DetectorDataContainer& HistDataContainer, const char* opt = "", const std::string additionalAxisType = "", const char* additionalAxisTitle = "", bool isNoise = false)
+    void drawChip(DetectorDataContainer& HistDataContainer, const std::string& opt = "", const std::string& additionalAxisType = "", const char* additionalAxisTitle = "", bool isNoise = false)
     {
         for(auto cBoard: HistDataContainer)
             for(auto cOpticalGroup: *cBoard)
@@ -183,7 +183,8 @@ class DQMHistogramBase
                         auto hist   = cChip->getSummary<CanvasContainer<Hist>>().fTheHistogram;
 
                         canvas->cd();
-                        hist->Draw(opt);
+                        if(opt.find("logz") != std::string::npos) canvas->SetLogz();
+                        hist->Draw(opt.c_str());
                         canvas->Modified();
                         canvas->Update();
 
@@ -220,7 +221,7 @@ class DQMHistogramBase
     }
 
     template <typename Hist>
-    void drawOpticalGroup(DetectorDataContainer& HistDataContainer, const char* opt = "", const std::string additionalAxisType = "", const char* additionalAxisTitle = "", bool isNoise = false)
+    void drawOpticalGroup(DetectorDataContainer& HistDataContainer, const std::string& opt = "", const std::string& additionalAxisType = "", const char* additionalAxisTitle = "", bool isNoise = false)
     {
         for(auto cBoard: HistDataContainer)
             for(auto cOpticalGroup: *cBoard)
@@ -229,7 +230,8 @@ class DQMHistogramBase
                 auto hist   = cOpticalGroup->getSummary<CanvasContainer<Hist>>().fTheHistogram;
 
                 canvas->cd();
-                hist->Draw(opt);
+                if(opt.find("logz") != std::string::npos) canvas->SetLogz();
+                hist->Draw(opt.c_str());
                 canvas->Modified();
                 canvas->Update();
 

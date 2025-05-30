@@ -50,7 +50,6 @@
 		</Register>
         <Register name="cic">
                 <Register name = "clock_enable"> 1 </Register>
-                <Register name = "stub_package_delay"> 5 </Register>
         </Register>
     </Register>
 	<!-- Readout Block -->

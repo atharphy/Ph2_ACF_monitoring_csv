@@ -86,12 +86,12 @@ void D19cPSCounterFWInterface::SlowRead(const BeBoard* pBoard)
 
                 for(auto cIter = cRegItems.begin(); cIter < cRegItems.end(); cIter += 4)
                 {
-                    auto cMSBCounterOdd  = (*cIter).fValue;
-                    auto cLSBCounterOdd  = (*(cIter + 1)).fValue;
-                    auto cMSBCounterEven = (*(cIter + 2)).fValue;
-                    auto cLSBCounterEven = (*(cIter + 3)).fValue;
+                    uint32_t cMSBCounterOdd  = (*cIter).fValue;
+                    uint32_t cLSBCounterOdd  = (*(cIter + 1)).fValue;
+                    uint32_t cMSBCounterEven = (*(cIter + 2)).fValue;
+                    uint32_t cLSBCounterEven = (*(cIter + 3)).fValue;
 
-                    uint32_t cValue = ((cChip->getFrontEndType() == FrontEndType::MPA2 ? 1 : 0) << 31) | (cMSBCounterEven << 23) | (cLSBCounterEven << 15) | (cMSBCounterOdd << 8) | cLSBCounterOdd;
+                    uint32_t cValue = (cMSBCounterEven << 24) | (cLSBCounterEven << 16) | (cMSBCounterOdd << 8) | cLSBCounterOdd;
                     fData.push_back(cValue);
                 }
             } // chip loop

@@ -542,16 +542,18 @@ void D19cBERTinterface::waitForNeededBits(bool is10Gmodule, float numberOfMatche
     if(waitInMilliSeconds > 0) { std::this_thread::sleep_for(std::chrono::milliseconds(waitInMilliSeconds)); }
 }
 
-std::pair<bool, bool> D19cBERTinterface::isStartPatternFound(BoardContainer* theBoardContainer, uint8_t lineNumber)
+std::tuple<bool, bool, std::map<uint16_t, bool>> D19cBERTinterface::isStartPatternFound(BoardContainer* theBoardContainer, uint8_t lineNumber)
 {
-    bool allLineStarted        = true;
-    bool atLeastOneLineStarted = false;
+    std::tuple<bool, bool, std::map<uint16_t, bool>> startPatternFoundResults;
+    std::get<0>(startPatternFoundResults) = true;
+    std::get<1>(startPatternFoundResults) = false;
     for(auto theOpticalGroup: *theBoardContainer)
     {
         for(auto theHybrid: *theOpticalGroup)
         {
-            uint16_t iteration     = 0;
-            uint16_t maxIterations = 3;
+            std::get<2>(startPatternFoundResults)[theHybrid->getId()] = false;
+            uint16_t iteration                                        = 0;
+            uint16_t maxIterations                                    = 3;
             uint32_t firstData;
             while(iteration < maxIterations)
             {
@@ -563,7 +565,8 @@ std::pair<bool, bool> D19cBERTinterface::isStartPatternFound(BoardContainer* the
                     {
                         if((firstData >> 16) == BERT_ALIGNMENT_PATTERN)
                         {
-                            atLeastOneLineStarted = true;
+                            std::get<2>(startPatternFoundResults)[theHybrid->getId()] = true;
+                            std::get<1>(startPatternFoundResults)                     = true;
                             break;
                         }
                     }
@@ -572,7 +575,8 @@ std::pair<bool, bool> D19cBERTinterface::isStartPatternFound(BoardContainer* the
                         if(((firstData && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16) ==
                            ((fCheckedPatternMap.at(theHybrid->getId()).at(0) && fCheckedPatternMaskMap.at(theHybrid->getId()).at(0)) >> 16))
                         {
-                            atLeastOneLineStarted = true;
+                            std::get<2>(startPatternFoundResults)[theHybrid->getId()] = true;
+                            std::get<1>(startPatternFoundResults)                     = true;
                             break;
                         }
                     }
@@ -584,12 +588,12 @@ std::pair<bool, bool> D19cBERTinterface::isStartPatternFound(BoardContainer* the
                 if(!fSuppressErrorPrintout)
                     LOG(WARNING) << WARNING_FORMAT << "Failed to find BERT start pattern on OpticalGroup " << theOpticalGroup->getId() << " Hybrid " << theHybrid->getId() << " line " << +lineNumber
                                  << " after " << maxIterations << " iterations. Last word read = 0x" << std::hex << firstData << std::dec << RESET;
-                allLineStarted = false;
+                std::get<0>(startPatternFoundResults) = false;
             }
         }
     }
 
-    return std::make_pair(allLineStarted, atLeastOneLineStarted);
+    return startPatternFoundResults;
 }
 
 bool D19cBERTinterface::isStateMachineStarted(BoardContainer* theBoardContainer, uint8_t lineNumber)
@@ -635,7 +639,11 @@ uint64_t D19cBERTinterface::readNumberOfTestedBit(uint16_t hybridId, uint8_t lin
     return theBitCounterCounter;
 }
 
-bool D19cBERTinterface::retrieveBitTestedCounterLine(BoardDataContainer* theBoardContainer, uint8_t lineNumber, bool is10Gmodule, float numberOfMatchedBits)
+bool D19cBERTinterface::retrieveBitTestedCounterLine(BoardDataContainer*      theBoardContainer,
+                                                     uint8_t                  lineNumber,
+                                                     bool                     is10Gmodule,
+                                                     float                    numberOfMatchedBits,
+                                                     std::map<uint16_t, bool> startPatternFoundHybridMap)
 {
     bool correctFrameFound = true;
     for(auto theOpticalGroup: *theBoardContainer)
@@ -644,7 +652,10 @@ bool D19cBERTinterface::retrieveBitTestedCounterLine(BoardDataContainer* theBoar
         {
             auto& theCounterVector     = theHybrid->getSummary<GenericDataArray<uint64_t, 2>>();
             auto& theBitCounterCounter = theCounterVector.at(0);
-            theBitCounterCounter       = readNumberOfTestedBit(theHybrid->getId(), lineNumber, is10Gmodule);
+            if(!startPatternFoundHybridMap.at(theHybrid->getId()))
+                theBitCounterCounter = 0;
+            else
+                theBitCounterCounter = readNumberOfTestedBit(theHybrid->getId(), lineNumber, is10Gmodule);
             if(theBitCounterCounter < numberOfMatchedBits)
             {
                 correctFrameFound = false;
@@ -696,22 +707,22 @@ BoardDataContainer D19cBERTinterface::runBERTonSingleLine(BoardContainer* theBoa
     BoardDataContainer theBoardBERTcounterResult;
     ContainerFactory::copyAndInitHybrid<GenericDataArray<uint64_t, 2>>(*theBoardContainer, theBoardBERTcounterResult);
 
-    std::pair<bool, bool> isStartFound;
-    size_t                maxNumberOfIteration = 1;
-    size_t                iterationNumber      = 0;
+    std::tuple<bool, bool, std::map<uint16_t, bool>> isStartFound;
+    size_t                                           maxNumberOfIteration = 1;
+    size_t                                           iterationNumber      = 0;
     while(iterationNumber < maxNumberOfIteration)
     {
+        ++iterationNumber;
         loadAllCheckedPatternsInBoard(theBoardContainer);
 
         startPatternSyncronization(hybridId, lineId);
 
         isStartFound = isStartPatternFound(theBoardContainer, lineNumber);
-        if(isStartFound.first)
+        if(std::get<0>(isStartFound) || (iterationNumber >= maxNumberOfIteration && std::get<1>(isStartFound)))
         {
             startBitErrorRateTest(hybridId, lineId);
             if(isStateMachineStarted(theBoardContainer, lineNumber)) { break; }
         }
-        ++iterationNumber;
         if(iterationNumber >= maxNumberOfIteration) break;
         stopBitErrorRateTest(hybridId, lineId);
         haltBitErrorRateTest(hybridId, lineId);
@@ -722,14 +733,14 @@ BoardDataContainer D19cBERTinterface::runBERTonSingleLine(BoardContainer* theBoa
         LOG(ERROR) << ERROR_FORMAT << "Failed to properly start BERT on line " << +lineNumber << " after " << maxNumberOfIteration << " trials" << RESET;
     }
 
-    if(isStartFound.second)
+    if(std::get<1>(isStartFound))
     {
         waitForNeededBits(is10Gmodule, numberOfMatchedBits);
 
         stopBitErrorRateTest(hybridId, lineId);
 
         retrieveErrorCounterLine(&theBoardBERTcounterResult, lineNumber);
-        retrieveBitTestedCounterLine(&theBoardBERTcounterResult, lineNumber, is10Gmodule, numberOfMatchedBits);
+        retrieveBitTestedCounterLine(&theBoardBERTcounterResult, lineNumber, is10Gmodule, numberOfMatchedBits, std::get<2>(isStartFound));
 
         haltBitErrorRateTest(hybridId, lineId);
     }

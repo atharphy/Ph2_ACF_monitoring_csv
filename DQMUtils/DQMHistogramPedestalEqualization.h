@@ -71,8 +71,6 @@ class DQMHistogramPedestalEqualization : public DQMHistogramBase
     void processOccupancy(ChipDataContainer* theChipDataContainer)
     {
         T* offsetHistogram = theChipDataContainer->getSummary<HistContainer<T>>().fTheHistogram;
-        offsetHistogram->GetXaxis()->SetTitle("Channel");
-        offsetHistogram->GetYaxis()->SetTitle("Offset");
         offsetHistogram->DrawCopy();
     }
 };

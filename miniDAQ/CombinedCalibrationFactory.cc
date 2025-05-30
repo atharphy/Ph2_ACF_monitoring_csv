@@ -93,10 +93,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
-             OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
-             //  OTCICBX0Alignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord>("Outer Tracker", "alignment");
 
@@ -114,9 +114,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
-             OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              PedestalEqualization>("Outer Tracker", "calibration");
@@ -124,9 +125,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
-             OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              PedestalEqualization,
@@ -135,7 +137,6 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
-             OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
              OTverifyCICdataWord,
@@ -144,9 +145,11 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              PedeNoise,
              KIRA>("Outer Tracker", "calibrationandpedenoiseandkira"); // will be used in future version of GIPHT
 
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PedeNoise>("Outer Tracker", "pedenoise");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedeNoise>("Outer Tracker", "pedenoise");
 
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PedestalEqualization, PedeNoise>("Outer Tracker", "calibrationandpedenoise");
+
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualization, PedeNoise>("Outer Tracker",
+                                                                                                                                                                        "calibrationandpedenoise");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PedestalEqualizationPSFullScan, PedeNoisePSLowInjection>(
         "Outer Tracker", "fullcalibrationandpedenoise");
 
@@ -158,9 +161,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
-             OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              PedestalEqualization,
@@ -169,22 +173,32 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
-             OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              CalibrationExample>("Outer Tracker", "calibrationexample");
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PSCounterTest>("Outer Tracker", "pscountertest");
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, LatencyScan>(
-        "Outer Tracker", "otlatency");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PSCounterTest>("Outer Tracker", "pscountertest");
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
+             OTverifyCICdataWord,
+             OTverifyMPASSAdataWord,
+             LatencyScan>("Outer Tracker", "otlatency");
 
     Register<OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
-             OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              ExtTriggerLatencyScan>("Outer Tracker", "exttriggerotlatency");
@@ -201,8 +215,16 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTalignBoardDataWord, OTCMNoise>("2S Module", "commonNoise2S");
 
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, OTverifyCICdataWord, OTverifyMPASSAdataWord, CBCPulseShape>(
-        "2S Module", "cbcpulseshape");
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
+             OTverifyCICdataWord,
+             OTverifyMPASSAdataWord,
+             CBCPulseShape>("2S Module", "cbcpulseshape");
 
     Register<TuneLpGBTVref,
              OTVTRxLightYieldScan,
@@ -210,9 +232,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
-             OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
              OTverifyCICdataWord,
              PedestalEqualization,
              PedeNoise>("2S Module", "2SquickTest");
@@ -223,9 +246,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
-             OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
              OTverifyCICdataWord,
              PedestalEqualization,
              PedeNoise,
@@ -261,9 +285,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
-             OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              OTPSringOscillatorTest,
@@ -277,9 +302,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
-             OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              OTPSringOscillatorTest,
@@ -303,9 +329,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
-             OTalignStubPackage,
              OTCICphaseAlignment,
              OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              OTPSringOscillatorTest,
