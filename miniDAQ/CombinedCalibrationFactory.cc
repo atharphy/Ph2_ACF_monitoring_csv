@@ -153,8 +153,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PedestalEqualizationPSFullScan, PedeNoisePSLowInjection>(
         "Outer Tracker", "fullcalibrationandpedenoise");
 
-    Register<OTalignBoardDataWord, PedestalEqualizationPSAtPedestal>("Outer Tracker", "pedestalcalibration");
-    Register<OTalignBoardDataWord, PedestalEqualizationPSAtPedestal, PedeNoisePSLowInjection>("Outer Tracker", "pedestalcalibrationandpedenoise");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualizationPSAtPedestal>("Outer Tracker", "pedestalcalibration");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualizationPSAtPedestal, PedeNoisePSLowInjection>("Outer Tracker", "pedestalcalibrationandpedenoise");
 
     Register<TuneLpGBTVref,
              OTPSADCCalibration,
