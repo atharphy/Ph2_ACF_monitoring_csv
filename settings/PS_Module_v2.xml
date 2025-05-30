@@ -192,6 +192,11 @@
     <Setting name="PedestalEqualization_PulseAmplitudePixFullScan">30</Setting>
     <Setting name="PedestalEqualization_FastCounterReadout">1</Setting>
 
+    <Setting name="PedestalEqualizationPSAtPedestal_FastCounterReadout">1</Setting>
+    <Setting name="PedestalEqualizationPSAtPedestal_MinThreshold">0</Setting>
+    <Setting name="PedestalEqualizationPSAtPedestal_MaxThreshold">150</Setting>
+    <Setting name="PedestalEqualizationPSAtPedestal_Sigma">3</Setting>
+
     <Setting name="StartPhase">0</Setting>
     <Setting name="PhaseRange">7</Setting>
     <Setting name="PhaseStartLatency">290</Setting>

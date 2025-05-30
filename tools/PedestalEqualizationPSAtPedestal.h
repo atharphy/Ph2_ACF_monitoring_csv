@@ -51,23 +51,13 @@ class PedestalEqualizationPSAtPedestal : public PedestalEqualization
     bool                  fWithMPA = false;
     DetectorDataContainer fEventTypes;
     // Settings
-    bool     fTestPulse{false};
     uint8_t  fTestPulseAmplitude{0};
     uint8_t  fTestPulseAmplitudePix{0};
     uint32_t fEventsPerPoint{10};
-    uint16_t fStripTargetVcth{0x0};
-    uint16_t fPixelTargetVcth{0x0};
-    uint8_t  fTargetOffset{0x80};
-    bool     fCheckLoop{true};
     bool     fAllChan{true};
-    bool     fDisableStubLogic{true};
-    bool     fPedestalEqualizationMaskUntrimmed{false};
     uint32_t fMaxNevents{65535};
     int      fNEventsPerBurst{-1};
-    // float    fOccupancyAtPedestal{0.56};
-    uint8_t  fUseMean{1};
-    uint32_t fPedestalEqualizationFullScanStart{110};
-    float    fPedestalEqualizationFullScanCAP{1.0};
+    float fNsigma{3};
 
     std::vector<uint16_t> dacList;
 

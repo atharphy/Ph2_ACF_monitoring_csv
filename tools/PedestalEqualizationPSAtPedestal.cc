@@ -14,12 +14,7 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-std::string PedestalEqualizationPSAtPedestal::fCalibrationDescription = "Equalize the pedestal/threshold for all channels with higher precision near the pedestal";
-// This class should do the same as the PedestalEqualization with PS FullScan but do the MPA in a different way!!!!
-// I will have to copy stuff from PedestalEqualization because of the SSA (cannot have fast counter without MPA!), but then do things differently for MPA!
-// PedestalEqualizationPSAtPedestal::PedestalEqualizationPSAtPedestal() : Tool() {}
-
-// PedestalEqualizationPSAtPedestal::~PedestalEqualizationPSAtPedestal() {}
+std::string PedestalEqualizationPSAtPedestal::fCalibrationDescription = "Equalize the pedestal/threshold for all channels with higher precision near the pedestal. In addition to the trim bits it equalizes also Vtrim.";
 
 void PedestalEqualizationPSAtPedestal::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
@@ -31,6 +26,7 @@ void PedestalEqualizationPSAtPedestal::Initialise(bool pAllChan, bool pDisableSt
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_D5DAC8$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_THDAC$");
 
+    // This is very similar to the PedestalEqualization class.
     DetectorDataContainer theOccupancyContainer;
     fDetectorDataContainer = &theOccupancyContainer;
     ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
@@ -70,26 +66,9 @@ void PedestalEqualizationPSAtPedestal::Initialise(bool pAllChan, bool pDisableSt
 
     this->fAllChan = pAllChan;
 
-    fOriginalIsFullScan = findValueInSettings<double>("FullScan", 0) > 0;
-    setValueInSettings<double>("FullScan", 1);
-
-    // To use full scan
-    // fOriginalUseFixRange = findValueInSettings<double>("PedeNoise_UseFixRange", 0) > 0;
-    // setValueInSettings<double>("PedeNoise_UseFixRange", 1);
-    // fOriginalMinThreshold = findValueInSettings<double>("PedeNoise_MinThreshold", 0);
-    // setValueInSettings<double>("PedeNoise_MinThreshold", 0);
-    // fOriginalMaxThreshold = findValueInSettings<double>("PedeNoise_MaxThreshold", 0);
-    // setValueInSettings<double>("PedeNoise_MaxThreshold", 254);
-
-    fPedestalEqualizationFullScanStart = findValueInSettings<double>("PedestalEqualization_FullScanStart", 110);
-    fPedestalEqualizationFullScanCAP   = findValueInSettings<double>("PedestalEqualizationFullScanCAP", 1.0);
-
-    fTestPulseAmplitude    = findValueInSettings<double>("PedestalEqualization_PulseAmplitude", 0);
-    fTestPulseAmplitudePix = findValueInSettings<double>("PedestalEqualization_PulseAmplitudePix", fTestPulseAmplitude);
-
-    std::cout << " FULL SCAN AMPLITUDE!" << std::endl;
-    fTestPulseAmplitude    = 1; // findValueInSettings<double>("PedestalEqualization_PulseAmplitudeFullScan", 0);
-    fTestPulseAmplitudePix = 1; // findValueInSettings<double>("PedestalEqualization_PulseAmplitudePixFullScan", 0);
+    // We are pretending to be injecting to have the calibration working but we want to be at the pedestal so we put the smallest charge
+    fTestPulseAmplitude    = 1;
+    fTestPulseAmplitudePix = 1;
 
     fEventsPerPoint  = findValueInSettings<double>("Nevents", 10);
     if( fEventsPerPoint > 1000)
@@ -98,22 +77,16 @@ void PedestalEqualizationPSAtPedestal::Initialise(bool pAllChan, bool pDisableSt
         LOG(INFO) << BOLDRED << " Limiting the number of events to 1000 to avoid rollover of the MPA Ripple counter." << RESET;
     }
     fNEventsPerBurst = (fEventsPerPoint >= fMaxNevents) ? fMaxNevents : -1;
-    // fOccupancyAtPedestal     = findValueInSettings<double>("PedestalEqualization_Occupancy", 0.56);
-    uint8_t cDefTargetOffset = 0xF;
-    fTargetOffset            = findValueInSettings<double>("PedestalEqualizationTargetOffset", cDefTargetOffset);
-    bool fastCounterReadout  = findValueInSettings<double>("PedestalEqualization_FastCounterReadout", 1) > 0;
-    // LOG(INFO) << BOLDBLUE << "PedestalEqualization::Initialise Occupancy at pedestal is " << fOccupancyAtPedestal << " target offset is " << +fTargetOffset << RESET;
+    bool fastCounterReadout  = findValueInSettings<double>("PedestalEqualizationPSAtPedestal_FastCounterReadout", 1) > 0;
     this->SetSkipMaskedChannels(fSkipMaskedChannels);
 
-    if(fTestPulseAmplitude == 0)
-        fTestPulse = 0;
-    else
-        fTestPulse = 1;
 
-    fStopValue          = 150;
-    fStartValue         = 0;
+    fStopValue          = findValueInSettings<double>("PedestalEqualizationPSAtPedestal_MaxThreshold", 150);
+    fStartValue         = findValueInSettings<double>("PedestalEqualizationPSAtPedestal_MinThreshold", 0);
     const size_t nSteps = fStopValue - fStartValue + 1;
     for(auto i = 0u; i < nSteps; i++) { dacList.push_back(fStartValue + i); }
+
+    fNsigma = findValueInSettings<double>("PedestalEqualizationPSAtPedestal_Sigma", 3);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
@@ -300,7 +273,6 @@ void PedestalEqualizationPSAtPedestal::ScanTrimBit()
         trimbitList.push_back(theMinTrimBit + i); 
     }
 
-    std::cout << " trimbitList.size() " << trimbitList.size() << std::endl;
     std::vector<DetectorDataContainer>  detectorContainerVector(trimbitList.size());
     std::vector<DetectorDataContainer*> detectorContainerVectorPointers;
     for(auto& container: detectorContainerVector)
@@ -529,10 +501,9 @@ void PedestalEqualizationPSAtPedestal::GetLowestAndHighestMaxOccupancyThreshold(
                     LOG(DEBUG) << BLUE  << "Chip " << cChip->getId() << "Standard deviation: " << stddev << RESET;
 
                     // Define Nσ range
-                    float Nsigma = 3;
-                    float lowerBound = std::max(float(1), float(theMean - Nsigma * stddev));
-                    float upperBound = std::min(float(255), float(theMean + Nsigma * stddev));
-                    LOG(DEBUG) << BLUE  << "Chip " << cChip->getId() << " " << Nsigma <<"σ range: [" << lowerBound << ", " << upperBound << "]" << RESET;
+                    float lowerBound = std::max(float(1), float(theMean - fNsigma * stddev));
+                    float upperBound = std::min(float(255), float(theMean + fNsigma * stddev));
+                    LOG(DEBUG) << BLUE  << "Chip " << cChip->getId() << " " << fNsigma <<"σ range: [" << lowerBound << ", " << upperBound << "]" << RESET;
 
                     // Get max and min channel
                     for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
@@ -831,9 +802,4 @@ void PedestalEqualizationPSAtPedestal::Resume() {}
 void PedestalEqualizationPSAtPedestal::Reset()
 {
     fRegisterHelper->restoreSnapshot();
-    // setValueInSettings<double>("FullScan", fOriginalIsFullScan ? 1 : 0); // restoring full scan original setting
-    // // setValueInSettings<double>("PedeNoise_UseFixRange", fOriginalUseFixRange ? 1 : 0);
-    // // setValueInSettings<double>("PedeNoise_MinThreshold", fOriginalMinThreshold);
-    // // setValueInSettings<double>("PedeNoise_MinThreshold", fOriginalMaxThreshold);
-    // PedestalEqualization::Reset();
 }
