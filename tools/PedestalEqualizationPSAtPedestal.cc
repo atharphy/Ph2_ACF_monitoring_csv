@@ -154,7 +154,8 @@ void PedestalEqualizationPSAtPedestal::Running()
 
     LOG(INFO) << BOLDMAGENTA << "Starting PedestalEqualizationPSAtPedestal measurement." << RESET;
     Initialise(false);
-    PrepareForInjection(); // This sets the chips in the correct status. It also sets Vtrim and Trim Bits in their initial configuration
+    PrepareForInjection(); // This sets the chips in the correct status.
+    SetInitialConditions(); // Sets Vtrim and Trim Bits in their initial configuration
     ScanThreshold("Untrimmed");
     GetLowestAndHighestMaxOccupancyThreshold();
     FindTargetThreshold();
@@ -411,9 +412,15 @@ void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyThreshold(const Detect
                             const auto& occupancyMap = cChip->getChannel<std::map<uint16_t, float>>(row, col);
                             if(occupancyMap.empty()) continue;
 
-                            auto     maxIter         = std::max_element(occupancyMap.begin(), occupancyMap.end(), [](const auto& a, const auto& b) { return a.second < b.second; });
-                            uint16_t DACmaxOccupancy = maxIter->first;
-                            theChipContainer->getChannel<uint16_t>(row, col) = DACmaxOccupancy;
+                            float DACmaxOccupancy = 0;
+                            float totalOccupancy = 0;
+                            for (const auto& [trimBit, occupancy] : occupancyMap) 
+                            {
+                                DACmaxOccupancy+=static_cast<float>(trimBit)*occupancy;
+                                totalOccupancy+=occupancy;
+                            }
+                            DACmaxOccupancy /=totalOccupancy;
+                            theChipContainer->getChannel<uint16_t>(row, col) = static_cast<uint16_t>(std::lround(DACmaxOccupancy));
                         } // col
                     } // row
                 } // chip
