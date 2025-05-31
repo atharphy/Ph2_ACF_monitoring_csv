@@ -48,7 +48,7 @@ std::string RD53Shared::gitInfo(const std::string& what)
     if(what == "commit")
         system(std::string(cd + "git rev-parse HEAD >> git.log").c_str());
     else if(what == "tag")
-        system(std::string(cd + "git describe >> git.log").c_str());
+        system(std::string(cd + "git describe --tag --abbrev=0 >> git.log").c_str());
 
     std::ifstream gitFile(base + "/git.log");
     gitFile >> myString;
