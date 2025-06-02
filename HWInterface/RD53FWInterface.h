@@ -86,7 +86,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // #############################
     float GetSFPParameter(std::string parameter, int channel);
 
-    uint16_t ReadAutoreadReg(const std::string& which);
+    uint16_t ReadAutoreadReg(const uint8_t hybridId, const uint8_t chipId, const std::string& which);
     void     ConfigurePCTestAdapter(const std::string& config);
     void     SelectBERcheckBitORFrame(const uint8_t bitORframe);
     void     WriteArbitraryRegister(const std::string&                regName,

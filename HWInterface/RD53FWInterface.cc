@@ -1261,8 +1261,10 @@ float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
     return result;
 }
 
-uint16_t RD53FWInterface::ReadAutoreadReg(const std::string& which)
+uint16_t RD53FWInterface::ReadAutoreadReg(const uint8_t hybridId, const uint8_t chipId, const std::string& which)
 {
+    RegManager::WriteReg("user.ctrl_regs.Register_RdBack.AutoRead_addr_a", hybridId << (this->hybridType - 1) | chipId);
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
     uint16_t value = 0;
     if(which == "A")
         RegManager::ReadReg("user.stat_regs.AutoRead_Reg_A");
