@@ -1261,6 +1261,16 @@ float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
     return result;
 }
 
+uint16_t RD53FWInterface::ReadAutoreadReg(const std::string& which)
+{
+    uint16_t value = 0;
+    if(which == "A")
+        RegManager::ReadReg("user.stat_regs.AutoRead_Reg_A");
+    else if(which == "B")
+        RegManager::ReadReg("user.stat_regs.AutoRead_Reg_B");
+    return value;
+}
+
 void RD53FWInterface::ConfigurePCTestAdapter(const std::string& config)
 {
     std::string configPath = expandEnvironmentVariables(config);
