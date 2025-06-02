@@ -173,7 +173,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramPedestalEqualizationPSAtPedestal,
-             DQMHistogramPedeNoise>("pedestalcalibrationandpedenoise");
+             DQMHistogramPedeNoise>("PSpedestalcalibrationandpedenoise");
 
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,
@@ -338,7 +338,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramOTPSringOscillatorTest,
-             DQMHistogramPedestalEqualization,
+             DQMHistogramPedestalEqualizationPSAtPedestal,
              DQMHistogramPedeNoise,
              DQMHistogramOTinjectionDelayOptimization,
              DQMHistogramOTinjectionOccupancyScan,
@@ -365,7 +365,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramOTPSringOscillatorTest,
-             DQMHistogramPedestalEqualization,
+             DQMHistogramPedestalEqualizationPSAtPedestal,
              DQMHistogramPedeNoise>("PSfullTestPart1");
 
     Register<DQMMetadataOT,
