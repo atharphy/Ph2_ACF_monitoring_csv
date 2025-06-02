@@ -68,8 +68,8 @@ void PedestalEqualizationPSAtPedestal::Initialise(bool pAllChan, bool pDisableSt
     this->fAllChan = pAllChan;
 
     // We are pretending to be injecting to have the calibration working but we want to be at the pedestal so we put the smallest charge
-    fTestPulseAmplitude    = 1;
-    fTestPulseAmplitudePix = 1;
+    fTestPulseAmplitude    = 0;
+    fTestPulseAmplitudePix = 0;
 
     fEventsPerPoint = findValueInSettings<double>("Nevents", 10);
     if(fEventsPerPoint > 1000)
@@ -138,6 +138,7 @@ void PedestalEqualizationPSAtPedestal::Running()
     ScanTrimBit();
     SetTargetTrimBits();
     ScanThreshold();
+    Reset();
     LOG(INFO) << BOLDMAGENTA << "Done with PedestalEqualizationPSAtPedestal." << RESET;
 }
 
@@ -526,9 +527,9 @@ void PedestalEqualizationPSAtPedestal::GetLowestAndHighestMaxOccupancyThreshold(
                         } // col
                     } // row
 
-                    LOG(INFO) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtSmallestThresholdAtMaxOccupancy << " col " << colAtSmallestThresholdAtMaxOccupancy
+                    LOG(DEBUG) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtSmallestThresholdAtMaxOccupancy << " col " << colAtSmallestThresholdAtMaxOccupancy
                               << " (bin " << binAtSmallestThresholdAtMaxOccupancy << ") has the lowest DAC giving the maximum occupancy at " << smallestThresholdAtMaxOccupancy << RESET;
-                    LOG(INFO) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtLargestThresholdAtMaxOccupancy << " col " << colAtLargestThresholdAtMaxOccupancy
+                    LOG(DEBUG) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtLargestThresholdAtMaxOccupancy << " col " << colAtLargestThresholdAtMaxOccupancy
                               << " (bin " << binAtLargestThresholdAtMaxOccupancy << ") has the highest DAC giving the maximum occupancy at " << largestThresholdAtMaxOccupancy << RESET;
                     auto theLowestThreshold = std::make_pair(std::make_pair(rowAtSmallestThresholdAtMaxOccupancy, colAtSmallestThresholdAtMaxOccupancy), smallestThresholdAtMaxOccupancy);
                     auto theChipSmallestThresholdContainer =
@@ -647,7 +648,7 @@ void PedestalEqualizationPSAtPedestal::FindTargetThreshold()
                     auto     row               = theLargestThreshold.first.first;
                     auto     col               = theLargestThreshold.first.second;
                     uint16_t theTargetTreshold = cChip->getChannel<uint16_t>(row, col);
-                    LOG(INFO) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << row << " col " << col << " has the maximum occupancy at " << theTargetTreshold
+                    LOG(DEBUG) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << row << " col " << col << " has the maximum occupancy at " << theTargetTreshold
                               << " before was at " << theLargestThreshold.second << RESET;
                     auto theChipTargetThresholdContainer =
                         fTheTargetThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
@@ -764,8 +765,8 @@ void PedestalEqualizationPSAtPedestal::TuneVtrimBinary()
 
                         fReadoutChipInterface->SetVtrim(cChip, theVTrimBits);
 
-                        LOG(INFO) << BOLDYELLOW << "Vtrim for  HYBRID " << cHybrid->getId() << " CHIP " << cChip->getId() << " is " << +theVTrimBits << RESET;
-                        LOG(INFO) << BOLDYELLOW << "Distance from target  " << distanceFromTarget << RESET;
+                        LOG(DEBUG) << BOLDYELLOW << "Vtrim for  HYBRID " << cHybrid->getId() << " CHIP " << cChip->getId() << " is " << +theVTrimBits << RESET;
+                        LOG(DEBUG) << BOLDYELLOW << "Distance from target  " << distanceFromTarget << RESET;
                     }
                 }
             }
@@ -790,4 +791,13 @@ void PedestalEqualizationPSAtPedestal::Pause() {}
 
 void PedestalEqualizationPSAtPedestal::Resume() {}
 
-void PedestalEqualizationPSAtPedestal::Reset() { fRegisterHelper->restoreSnapshot(); }
+void PedestalEqualizationPSAtPedestal::Reset() 
+{ 
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto theEventType = fEventTypes.getObject(cBoard->getId())->getSummary<EventType>();
+        cBoard->setEventType(theEventType);
+        if(theEventType != EventType::PSAS) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitalizeL1ReadoutInterface(cBoard); }
+    }
+    fRegisterHelper->restoreSnapshot(); 
+}
