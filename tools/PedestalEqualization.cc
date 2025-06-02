@@ -85,7 +85,6 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     fFullScan                          = findValueInSettings<double>("FullScan", 0);
 
     fPedestalEqualizationFullScanStart = findValueInSettings<double>("PedestalEqualization_FullScanStart", 110);
-    fPedestalEqualizationFullScanCAP   = findValueInSettings<double>("PedestalEqualizationFullScanCAP", 1.0);
 
     fTestPulseAmplitude    = findValueInSettings<double>("PedestalEqualization_PulseAmplitude", 0);
     fTestPulseAmplitudePix = findValueInSettings<double>("PedestalEqualization_PulseAmplitudePix", fTestPulseAmplitude);
@@ -111,6 +110,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     else
         fTestPulse = 1;
 
+    std::cout << " fTestPulse "<< fTestPulse << " fTestPulseAmplitude " << fTestPulseAmplitude << RESET;
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
