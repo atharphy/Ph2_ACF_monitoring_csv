@@ -528,9 +528,9 @@ void PedestalEqualizationPSAtPedestal::GetLowestAndHighestMaxOccupancyThreshold(
                     } // row
 
                     LOG(DEBUG) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtSmallestThresholdAtMaxOccupancy << " col " << colAtSmallestThresholdAtMaxOccupancy
-                              << " (bin " << binAtSmallestThresholdAtMaxOccupancy << ") has the lowest DAC giving the maximum occupancy at " << smallestThresholdAtMaxOccupancy << RESET;
+                               << " (bin " << binAtSmallestThresholdAtMaxOccupancy << ") has the lowest DAC giving the maximum occupancy at " << smallestThresholdAtMaxOccupancy << RESET;
                     LOG(DEBUG) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << rowAtLargestThresholdAtMaxOccupancy << " col " << colAtLargestThresholdAtMaxOccupancy
-                              << " (bin " << binAtLargestThresholdAtMaxOccupancy << ") has the highest DAC giving the maximum occupancy at " << largestThresholdAtMaxOccupancy << RESET;
+                               << " (bin " << binAtLargestThresholdAtMaxOccupancy << ") has the highest DAC giving the maximum occupancy at " << largestThresholdAtMaxOccupancy << RESET;
                     auto theLowestThreshold = std::make_pair(std::make_pair(rowAtSmallestThresholdAtMaxOccupancy, colAtSmallestThresholdAtMaxOccupancy), smallestThresholdAtMaxOccupancy);
                     auto theChipSmallestThresholdContainer =
                         fTheSmallestThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
@@ -649,7 +649,7 @@ void PedestalEqualizationPSAtPedestal::FindTargetThreshold()
                     auto     col               = theLargestThreshold.first.second;
                     uint16_t theTargetTreshold = cChip->getChannel<uint16_t>(row, col);
                     LOG(DEBUG) << BOLDGREEN << " for chip " << cChip->getId() << " the channel in row " << row << " col " << col << " has the maximum occupancy at " << theTargetTreshold
-                              << " before was at " << theLargestThreshold.second << RESET;
+                               << " before was at " << theLargestThreshold.second << RESET;
                     auto theChipTargetThresholdContainer =
                         fTheTargetThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                     theChipTargetThresholdContainer->getSummary<uint16_t>() = theTargetTreshold;
@@ -791,13 +791,13 @@ void PedestalEqualizationPSAtPedestal::Pause() {}
 
 void PedestalEqualizationPSAtPedestal::Resume() {}
 
-void PedestalEqualizationPSAtPedestal::Reset() 
-{ 
+void PedestalEqualizationPSAtPedestal::Reset()
+{
     for(auto cBoard: *fDetectorContainer)
     {
         auto theEventType = fEventTypes.getObject(cBoard->getId())->getSummary<EventType>();
         cBoard->setEventType(theEventType);
         if(theEventType != EventType::PSAS) { static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->InitalizeL1ReadoutInterface(cBoard); }
     }
-    fRegisterHelper->restoreSnapshot(); 
+    fRegisterHelper->restoreSnapshot();
 }

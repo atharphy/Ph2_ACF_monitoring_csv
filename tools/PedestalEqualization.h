@@ -91,7 +91,7 @@ class PedestalEqualization : public Tool
     // float    fOccupancyAtPedestal{0.56};
     // uint8_t  fUseMean{1};
     // uint32_t fPedestalEqualizationFullScanStart{110};
-  
+
     // // to hold the original register values
     // // DetectorDataContainer fStubLogicCointainer;
     // // DetectorDataContainer fHIPCountCointainer;

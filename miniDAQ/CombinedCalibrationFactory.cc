@@ -147,14 +147,15 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedeNoise>("Outer Tracker", "pedenoise");
 
-
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualization, PedeNoise>("Outer Tracker",
                                                                                                                                                                         "calibrationandpedenoise");
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PedestalEqualizationPSFullScan, PedeNoisePSLowInjection>(
         "Outer Tracker", "fullcalibrationandpedenoise");
 
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualizationPSAtPedestal>("Outer Tracker", "PSpedestalcalibration");
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualizationPSAtPedestal, PedeNoisePSLowInjection>("Outer Tracker", "PSpedestalcalibrationandpedenoise");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualizationPSAtPedestal>("Outer Tracker",
+                                                                                                                                                                         "PSpedestalcalibration");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualizationPSAtPedestal, PedeNoisePSLowInjection>(
+        "Outer Tracker", "PSpedestalcalibrationandpedenoise");
 
     Register<TuneLpGBTVref,
              OTPSADCCalibration,
