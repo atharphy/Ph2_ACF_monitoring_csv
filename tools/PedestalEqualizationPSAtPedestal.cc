@@ -258,6 +258,7 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
 
 void PedestalEqualizationPSAtPedestal::ScanTrimBit()
 {
+    LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << RESET;
     std::vector<uint16_t> trimbitList;
     uint8_t               theMaxTrimBit = 31;
     uint8_t               theMinTrimBit = 0;
