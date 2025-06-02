@@ -325,21 +325,21 @@ void OTCMNoise::TakeData(float fThreshold)
 
         for(auto cStreamable: cStreamableMap)
         {
-            LOG(INFO) << "Streaming " << cStreamable.first << RESET;
+            // LOG(INFO) << "Streaming " << cStreamable.first << RESET;
             ContainerSerialization theHitSerializationSum(cStreamable.first);
             theHitSerializationSum.streamByOpticalGroupContainer(fDQMStreamer, *(cStreamable.second), fThreshold);
         }
 
         if(f2DHistograms)
         {
-            LOG(INFO) << "Streaming OTCMNoise2DHitStream" << RESET;
+            // LOG(INFO) << "Streaming OTCMNoise2DHitStream" << RESET;
             ContainerSerialization the2DHitSerialization("OTCMNoise2DHitStream");
             the2DHitSerialization.streamByOpticalGroupContainer(fDQMStreamer, the2DHitContainer, fThreshold);
         }
 
         if(f2DHistogramsLight)
         {
-            LOG(INFO) << "Streaming OTCMNoise2DHitLightStream" << RESET;
+            // LOG(INFO) << "Streaming OTCMNoise2DHitLightStream" << RESET;
             ContainerSerialization the2DLightHitSerialization("OTCMNoise2DHitLightStream");
             the2DLightHitSerialization.streamByChipContainer(fDQMStreamer, the2DChipHitContainer, fThreshold);
         }

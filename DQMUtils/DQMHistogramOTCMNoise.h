@@ -71,7 +71,7 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
         {
             if(theSerializer.attachDeserializer(inputStream))
             {
-                LOG(INFO) << "Matched stream " << streamName << "!" << RESET;
+                // LOG(INFO) << "Matched stream " << streamName << "!" << RESET;
                 float                 fThreshold    = 0;
                 DetectorDataContainer fDetectorData = theSerializer.deserializeOpticalGroupContainer<T1, T2, T3, T4>(fDetectorContainer, fThreshold);
                 (this->*function)(fDetectorData, fThreshold);
@@ -80,7 +80,7 @@ class DQMHistogramOTCMNoise : public DQMHistogramBase
         }
         catch(const std::exception& e) // reference to the base of a polymorphic object
         {
-            LOG(INFO) << BOLDRED << " Unable to read stream " << streamName << ": " << e.what() << RESET;
+            LOG(ERROR) << ERROR_FORMAT << " Unable to read stream " << streamName << ": " << e.what() << RESET;
         }
         return false;
     }
