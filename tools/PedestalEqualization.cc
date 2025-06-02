@@ -110,7 +110,6 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
     else
         fTestPulse = 1;
 
-    std::cout << " fTestPulse "<< fTestPulse << " fTestPulseAmplitude " << fTestPulseAmplitude << RESET;
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualization.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
