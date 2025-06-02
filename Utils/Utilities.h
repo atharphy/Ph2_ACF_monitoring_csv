@@ -254,7 +254,7 @@ inline uint32_t getWord(T dataStart, size_t bitStart)
 {
     auto   firstWordPointer = dataStart + bitStart / 32;
     size_t firstWordMSB     = 31 - bitStart % 32;
-    size_t secondWordLSB    = 32 - (Nbits + bitStart) % 32;
+    size_t secondWordLSB    = (32 - (Nbits + bitStart) % 32) % 32;
     if(firstWordMSB >= Nbits - 1) { return (*firstWordPointer >> secondWordLSB) & Mask; }
     else
     {
