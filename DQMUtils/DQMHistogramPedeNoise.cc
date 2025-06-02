@@ -88,17 +88,32 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
             }
         }
 
-        // Pedestal
-        HistContainer<TH1F> theTH1FChipStripPedestalContainer("PedestalDistribution", "Pedestal distribution", 2048, -0.5, 1023.5);
-        theTH1FChipStripPedestalContainer.fTheHistogram->GetXaxis()->SetTitle("Threshold [VcTh]");
-        theTH1FChipStripPedestalContainer.fTheHistogram->GetYaxis()->SetTitle("Entries");
-        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripPedestalHistograms, theTH1FChipStripPedestalContainer);
-        //
-        HistContainer<TH1F> theTH1FChannelStripPedestalContainer("ChannelPedestal", "Channel pedestal", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
-        theTH1FChannelStripPedestalContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
-        theTH1FChannelStripPedestalContainer.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
-        RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripPedestalHistograms, theTH1FChannelStripPedestalContainer);
-
+        if(fWithCBC)
+        {
+            // Pedestal
+            HistContainer<TH1F> theTH1FChipStripPedestalContainer("PedestalDistribution", "Pedestal distribution", 2048, -0.5, 1023.5);
+            theTH1FChipStripPedestalContainer.fTheHistogram->GetXaxis()->SetTitle("Threshold [VcTh]");
+            theTH1FChipStripPedestalContainer.fTheHistogram->GetYaxis()->SetTitle("Entries");
+            RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripPedestalHistograms, theTH1FChipStripPedestalContainer);
+            //
+            HistContainer<TH1F> theTH1FChannelStripPedestalContainer("ChannelPedestal", "Channel pedestal", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
+            theTH1FChannelStripPedestalContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
+            theTH1FChannelStripPedestalContainer.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
+            RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripPedestalHistograms, theTH1FChannelStripPedestalContainer);
+        }
+        if(fWithSSA)
+        {
+            // Pedestal
+            HistContainer<TH1F> theTH1FChipStripPedestalContainer("PulseHeightDistribution", "Pulse height distribution", 2048, -0.5, 1023.5);
+            theTH1FChipStripPedestalContainer.fTheHistogram->GetXaxis()->SetTitle("Threshold [VcTh]");
+            theTH1FChipStripPedestalContainer.fTheHistogram->GetYaxis()->SetTitle("Entries");
+            RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipStripPedestalHistograms, theTH1FChipStripPedestalContainer);
+            //
+            HistContainer<TH1F> theTH1FChannelStripPedestalContainer("ChannelPulseHeight", "Channel pulse height", fNStripChannels, -0.5, float(fNStripChannels) - 0.5);
+            theTH1FChannelStripPedestalContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
+            theTH1FChannelStripPedestalContainer.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
+            RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelStripPedestalHistograms, theTH1FChannelStripPedestalContainer);
+        }
         // Noise
         HistContainer<TH1F> theTH1FHybridStripNoiseContainer("StripChannelNoise", "Strip channel noise", fNStripChannels * 8, -0.5, float(fNStripChannels) * 8 - 0.5);
         theTH1FHybridStripNoiseContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
@@ -188,12 +203,12 @@ void DQMHistogramPedeNoise::book(TFile* theOutputFile, DetectorContainer& theDet
         }
 
         // Pedestal
-        HistContainer<TH1F> theTH1FChipPixelPedestalContainer("PedestalDistribution", "Pedestal distribution", 2048, -0.5, 1023.5);
+        HistContainer<TH1F> theTH1FChipPixelPedestalContainer("PulseHeightDistribution", "Pulse height distribution", 2048, -0.5, 1023.5);
         theTH1FChipPixelPedestalContainer.fTheHistogram->GetXaxis()->SetTitle("Threshold [VcTh]");
         theTH1FChipPixelPedestalContainer.fTheHistogram->GetYaxis()->SetTitle("Entries");
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelPedestalHistograms, theTH1FChipPixelPedestalContainer);
         //
-        HistContainer<TH1F> theTH1FChannelPixelPedestalContainer("ChannelPedestal", "Channel pedestal", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
+        HistContainer<TH1F> theTH1FChannelPixelPedestalContainer("ChannelPulseHeight", "Channel pulse height", fNPixelChannels, -0.5, float(fNPixelChannels) - 0.5);
         theTH1FChannelPixelPedestalContainer.fTheHistogram->GetXaxis()->SetTitle("Channel");
         theTH1FChannelPixelPedestalContainer.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
         RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fDetectorChannelPixelPedestalHistograms, theTH1FChannelPixelPedestalContainer);
