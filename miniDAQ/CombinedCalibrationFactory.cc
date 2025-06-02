@@ -153,8 +153,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PedestalEqualizationPSFullScan, PedeNoisePSLowInjection>(
         "Outer Tracker", "fullcalibrationandpedenoise");
 
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualizationPSAtPedestal>("Outer Tracker", "pedestalcalibration");
-    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualizationPSAtPedestal, PedeNoisePSLowInjection>("Outer Tracker", "pedestalcalibrationandpedenoise");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualizationPSAtPedestal>("Outer Tracker", "PSpedestalcalibration");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualizationPSAtPedestal, PedeNoisePSLowInjection>("Outer Tracker", "PSpedestalcalibrationandpedenoise");
 
     Register<TuneLpGBTVref,
              OTPSADCCalibration,
@@ -309,7 +309,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              OTPSringOscillatorTest,
-             PedestalEqualizationPSFullScan,
+             PedestalEqualizationPSAtPedestal,
              PedeNoisePSLowInjection,
              OTinjectionDelayOptimization,
              OTinjectionOccupancyScan,
@@ -336,7 +336,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              OTPSringOscillatorTest,
-             PedestalEqualizationPSFullScan,
+             PedestalEqualizationPSAtPedestal,
              PedeNoisePSLowInjection>("PS Module", "PSfullTestPart1");
 
     Register<OTalignBoardDataWord,
