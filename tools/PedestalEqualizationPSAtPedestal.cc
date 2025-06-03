@@ -250,7 +250,7 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
         for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
         {
             ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancy");
-            theContainerSerialization.streamByChipContainer(fDQMStreamer, *detectorContainerVector.at(dacIt), dacIt);
+            theContainerSerialization.streamByChipContainer(fDQMStreamer, detectorContainerVector.at(dacIt), dacIt);
         }
     }
 #endif
@@ -323,7 +323,7 @@ void PedestalEqualizationPSAtPedestal::ScanTrimBit()
             for(size_t dacIt = 0; dacIt < trimbitList.size(); ++dacIt)
             {
                 ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancyTrimBits");
-                theContainerSerialization.streamByChipContainer(fDQMStreamer, *detectorContainerVector.at(dacIt), dacIt);
+                theContainerSerialization.streamByChipContainer(fDQMStreamer, detectorContainerVector.at(dacIt), dacIt);
             }
         }
 #endif
