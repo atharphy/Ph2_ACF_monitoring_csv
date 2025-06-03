@@ -25,8 +25,8 @@ void OTSSAtoMPAecv::Initialise(void)
     fFirstStrip = 6;
     fStripGap   = 6;
     // free the registers in case any
-    fNumberOfStubBits      = findValueInSettings<double>("OTverifyCICdataWord_NumberOfTestedStubBits", 1e8);
-    fNumberOfL1Bits        = findValueInSettings<double>("OTverifyCICdataWord_NumberOfTestedL1Bits", 1e6);
+    fNumberOfStubBits      = findValueInSettings<double>("OTSSAtoMPAecv_NumberOfTestedStubBits", 1e8);
+    fNumberOfL1Bits        = findValueInSettings<double>("OTSSAtoMPAecv_NumberOfTestedL1Bits", 1e6);
     fListOfSSAslvsCurrents = convertStringToFloatList(findValueInSettings<std::string>("OTSSAtoMPAecv_ListOfSSAslvsCurrents", "1, 4, 7"));
 
     ContainerFactory::copyAndInitHybrid<GenericDataArray<float, NUMBER_OF_CIC_PORTS, 9, 2>>(*fDetectorContainer, fPatternMatchingEfficiencyContainer);

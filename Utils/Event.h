@@ -29,74 +29,6 @@ namespace Ph2_HwInterface
 {
 using EventDataMap = std::map<uint16_t, std::vector<uint32_t>>;
 
-/*!
- * \class EventCluster
- * \brief EventCluster object for the Event
- */
-class EventCluster
-{
-  public:
-    uint8_t  fSensor;
-    uint16_t fFirstStrip;
-    uint8_t  fClusterWidth;
-    float    getBaricentre();
-};
-
-class PSCluster
-{
-  public:
-    uint32_t fPixelId;
-    uint8_t  fWidth;
-    uint8_t  fMip;
-    uint8_t  fHybridId;
-};
-
-class PCluster
-{
-  public:
-    PCluster() : fAddress(255u), fWidth(255u), fZpos(255u) {};
-    uint8_t fAddress;
-    uint8_t fWidth;
-    uint8_t fZpos;
-    float   getBaricentre(); // Barycenter?
-};
-
-class SCluster
-{
-  public:
-    SCluster() : fAddress(255u), fMip(255u), fWidth(255u) {};
-    uint8_t fAddress;
-    uint8_t fMip;
-    uint8_t fWidth;
-    float   getBaricentre();
-};
-
-class EventStub
-{
-  public:
-    EventStub(uint8_t pPosition, uint8_t pBend, uint8_t pRow = 0) : fPosition(pPosition), fBend(pBend), fRow(pRow)
-    {
-        // with Strips starting at 0
-        fCenter = static_cast<float>((pPosition / 2.)); // for PS
-        // fCenter = static_cast<float>((pPosition / 2.) - 1); // is this correct for 2S?
-    }
-    EventStub() : fPosition(255u), fBend(255u), fRow(255u), fCenter(-999.) {};
-    uint8_t getPosition() { return fPosition; }
-    uint8_t getBend() { return fBend; }
-    uint8_t getRow() { return fRow; }
-    float   getCenter() { return fCenter; }
-
-  public:
-    uint8_t fPosition;
-    uint8_t fBend;
-    uint8_t fRow;
-    float   fCenter;
-};
-/*!
- * \class Event
- * \brief Event container to manipulate event flux from the Cbc
- */
-
 class Event
 {
     /*
@@ -117,14 +49,6 @@ class Event
     uint32_t fEventCountCBC; /*!< Cbc Event Counter */
     uint32_t fEventSize;
     uint16_t fL1Number;
-
-    // for CBC3 use
-    uint8_t  fBeId;
-    uint8_t  fNCbc;
-    uint8_t  fNSSA;
-    uint8_t  fNSSA2;
-    uint8_t  fNMPA;
-    uint16_t fEventDataSize;
 
     uint16_t encodeId(const uint8_t& pHybridId, const uint8_t& pCbcId) const { return (pHybridId << 8 | pCbcId); }
 
@@ -252,12 +176,6 @@ class Event
     // # VIRTUAL METHODS #
     // ###################
     /*!
-     * \brief Set an Event to the Event map
-     * \param pEvent : Event to set
-     * \return Aknowledgement of the Event setting (1/0)
-     */
-    virtual void Set(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& list) {}
-    /*!
      * \brief Convert Data to Hex string
      * \return Data string in hex
      */
@@ -271,55 +189,33 @@ class Event
      */
     virtual uint32_t GetEventCountCBC() const { return 0; }
     /*!
-     * \brief Function to get bit string in hexadecimal format for CBC data
-     * \param pHybridId : Hybrid Id
-     * \param pCbcId : Cbc Id
-     * \return Data Bit string in Hex
-     */
-    virtual std::string DataHexString(uint8_t pHybridId, uint8_t pCbcId) const { return ""; }
-    /*!
-     * \brief Function to get bit string of CBC data
-     * \param pHybridId : Hybrid Id
-     * \param pCbcId : Cbc Id
-     * \return Data Bit string
-     */
-    virtual std::string DataBitString(uint8_t pHybridId, uint8_t pCbcId) const { return ""; }
-    /*!
      * \brief Function to get bit vector of CBC data
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Data Bit vector
      */
-    virtual std::vector<bool> DataBitVector(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
-    /*!
-     * \brief Function to get Error bit
-     * \param pHybridId : Hybrid Id
-     * \param pCbcId : Cbc Id
-     * \param i : Error bit number i
-     * \return Error bit
-     */
-    virtual bool Error(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const { return false; }
+    virtual std::vector<bool> DataBitVector(uint8_t pHybridId, uint8_t pCbcId) { return {}; }
     /*!
      * \brief Function to get all Error bits
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Error bit
      */
-    virtual uint32_t Error(uint8_t pHybridId, uint8_t pCbcId) const { return 0; }
+    virtual uint32_t Error(uint8_t pHybridId, uint8_t pCbcId) { return 0; }
     /*!
      * \brief Function to get pipeline address
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Pipeline address
      */
-    virtual uint32_t PipelineAddress(uint8_t pHybridId, uint8_t pCbcId) const { return 0; }
+    virtual uint32_t PipelineAddress(uint8_t pHybridId, uint8_t pCbcId) { return 0; }
     /*!
      * \brief Function to get pipeline address
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Pipeline address
      */
-    virtual uint32_t L1Id(uint8_t pHybridId, uint8_t pCbcId) const { return 0; }
+    virtual uint32_t L1Id(uint8_t pHybridId, uint8_t pCbcId) { return 0; }
 
     /*!
      * \brief Function to get pipeline address
@@ -327,7 +223,7 @@ class Event
      * \param pCbcId : Cbc Id
      * \return Pipeline address
      */
-    virtual uint32_t BxId(uint8_t pHybridId) const { return 0; }
+    virtual uint32_t BxId(uint8_t pHybridId) { return 0; }
     /*!
      * \brief Function to get a CBC pixel bit data
      * \param pHybridId : Hybrid Id
@@ -335,27 +231,15 @@ class Event
      * \param i : pixel bit data number i
      * \return Data Bit
      */
-    virtual bool DataBit(uint8_t pHybridId, uint8_t pCbcId, uint32_t i) const { return true; }
+    virtual bool DataBit(uint8_t pHybridId, uint8_t pCbcId, uint8_t row, uint8_t col) { return true; }
+
     /*!
      * \brief Function to get Stub bit
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return stub bit?
      */
-    virtual std::string StubBitString(uint8_t pHybridId, uint8_t pCbcId) const { return ""; }
-    /*!
-     * \brief Function to get Stub bit
-     * \param pHybridId : Hybrid Id
-     * \param pCbcId : Cbc Id
-     * \return stub bit?
-     */
-    virtual bool StubBit(uint8_t pHybridId, uint8_t pCbcId) const { return true; }
-    /*!
-     * \brief Get a vector of Stubs - will be empty for Cbc2
-     * \param pHybridId : Hybrid Id
-     * \param pCbcId : Cbc Id
-     */
-    virtual std::vector<EventStub> StubVector(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
+    virtual bool StubBit(uint8_t pHybridId, uint8_t pCbcId) { return true; }
 
     /*!
      * \brief Function to count the Hits in this event
@@ -363,40 +247,22 @@ class Event
      * \param pCbcId : Cbc Id
      * \return number of hits
      */
-    virtual uint32_t GetNHits(uint8_t pHybridId, uint8_t pCbcId) const { return 0; }
+    virtual uint32_t GetNHits(uint8_t pHybridId, uint8_t pCbcId) { return 0; }
     /*!
      * \brief Function to get a sparsified hit vector
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return vector with hit channels (row, col)
      */
-    virtual std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId) const
+    virtual std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId)
     {
         std::cerr << __PRETTY_FUNCTION__ << " not implemented! Aborting..." << std::endl;
         abort();
         return {};
     }
-    /*!
-     * \brief Function to get an encoded SLinkEvent object
-     * \param pBoard : pointer to Ph2_HwDescription::BeBoard
-     * \param pSet : set of condition data parsed from config file
-     * \return SlinkEvent object
-     */
-    virtual SLinkEvent GetSLinkEvent(Ph2_HwDescription::BeBoard* pBoard) const
-    {
-        SLinkEvent e;
-        return e;
-    }
 
-    friend std::ostream& operator<<(std::ostream& out, const Event& ev)
-    {
-        ev.print(out);
-        return out;
-    }
-
-    virtual std::vector<EventCluster> getClusters(uint8_t pHybridId, uint8_t pCbcId) const { return {}; }
-    virtual void                      fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup);
-    virtual void                      fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) = 0;
+    virtual void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup);
+    virtual void fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) = 0;
 
     // split stream of data
     template <std::size_t N>
@@ -422,9 +288,6 @@ class Event
             cWordCounter++;
         } while(cIterator < pData.end() && cId < pSize);
     }
-
-  protected:
-    virtual void print(std::ostream& out) const {}
 };
 
 } // namespace Ph2_HwInterface

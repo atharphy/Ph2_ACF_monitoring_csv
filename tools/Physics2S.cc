@@ -204,7 +204,7 @@ void Physics2S::display()
 //                     if(curchip->getFrontEndType() != FrontEndType::MPA2) continue;
 
 // 					auto data2S = cChip->getSummary<Data2S<NCHANNELS, MAX_NUMBER_OF_STUB_CLUSTERS_2S>>();
-//                     data2S.fClusters    = fromVectorToGenericDataArray<EventCluster, NCHANNELS>(static_cast<D19cCic2Event*>(event)->getClusters(cHybrid->getId(), cChip->getId()));
+//                     data2S.fClusters    = fromVectorToGenericDataArray<Cluster2S, NCHANNELS>(static_cast<D19cCic2Event*>(event)->getClusters(cHybrid->getId(), cChip->getId()));
 //                     data2S.fStubs       = fromVectorToGenericDataArray<EventStub, MAX_NUMBER_OF_STUB_CLUSTERS_2S>(static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId()));
 // 				}
 // 			}
@@ -235,7 +235,7 @@ void Physics2S::fillDataContainer(BoardContainer* cBoard, const std::vector<Even
             {
                 for(const auto cChip: *cHybrid)
                 {
-                    std::vector<EventStub> stubList = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
+                    auto stubList = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
 
                     for(auto& stub: stubList)
                     {

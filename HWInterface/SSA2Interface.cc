@@ -199,7 +199,7 @@ uint32_t SSA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << " not found for this chip type - aborting." << RESET;
         abort();
     }
-    LOG(DEBUG) << BOLDMAGENTA << "For SSA " << +pChip->getId() << " converting " << pRegName << " to " << +theRegister->second << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << "For SSA " << +pChip->getId() << " converting " << pRegName << " to " << +theRegister->second << RESET;
     return SSA2Interface::ReadADC(pChip, theRegister->second);
 }
 
@@ -221,21 +221,21 @@ uint32_t SSA2Interface::ReadADC(ReadoutChip* pChip, uint8_t pInput)
 
 uint32_t SSA2Interface::readADCGround(ReadoutChip* pSSA2)
 {
-    LOG(DEBUG) << BOLDMAGENTA << "GND  " << +this->readADC(static_cast<ReadoutChip*>(pSSA2), "GND") << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << "GND  " << +this->readADC(static_cast<ReadoutChip*>(pSSA2), "GND") << RESET;
     return this->readADC(static_cast<ReadoutChip*>(pSSA2), "GND");
 }
 
 uint32_t SSA2Interface::readADCBandGap(ReadoutChip* pSSA2)
 {
     auto theBandGap = this->readADC(static_cast<ReadoutChip*>(pSSA2), "VBG");
-    LOG(DEBUG) << BOLDMAGENTA << "VBG  " << theBandGap << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << "VBG  " << theBandGap << RESET;
     return theBandGap;
 }
 
 uint32_t SSA2Interface::readADCVref(ReadoutChip* pSSA2)
 {
     uint8_t theVrefADC = readADC(pSSA2, "ADC_VREF");
-    LOG(DEBUG) << BOLDMAGENTA << "ADC_VREF  " << +theVrefADC << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << "ADC_VREF  " << +theVrefADC << RESET;
     return theVrefADC;
 }
 

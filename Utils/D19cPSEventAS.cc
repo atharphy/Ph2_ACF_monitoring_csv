@@ -139,7 +139,7 @@ void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, cons
     }
 }
 
-uint32_t D19cPSEventAS::GetNHits(uint8_t pHybridId, uint8_t pChipId) const
+uint32_t D19cPSEventAS::GetNHits(uint8_t pHybridId, uint8_t pChipId)
 {
     const auto& theChipEventChannelVector = fTheOccupancyContainer.getChip(pHybridId / 2, pHybridId % 2, pChipId)->getChannelContainer<uint16_t>();
     return std::accumulate(theChipEventChannelVector->begin(), theChipEventChannelVector->end(), 0);
