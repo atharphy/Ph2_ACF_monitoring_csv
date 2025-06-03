@@ -1505,15 +1505,15 @@ void Tool::fullScan(const std::string& dacName, uint32_t numberOfEvents, const f
 void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_t numberOfEvents, const float& targetOccupancy, int32_t numberOfEventsPerBurst, int32_t startVal, bool mask)
 {
     DetectorDataContainer* outputDataContainer = fDetectorDataContainer;
-    bool localDAC    = false;
-    bool isChipFound = false;
+    bool                   localDAC            = false;
+    bool                   isChipFound         = false;
     for(auto theOpticalGroup: *(fDetectorContainer->getObject(boardId)))
     {
         for(auto theHybrid: *theOpticalGroup)
         {
             if(theHybrid->size() > 0)
             {
-                localDAC = theHybrid->getFirstObject()->isDACLocal(dacName);
+                localDAC    = theHybrid->getFirstObject()->isDACLocal(dacName);
                 isChipFound = true;
                 break;
             }
@@ -1595,7 +1595,8 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
                         {
                             currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = threshToSet;
                             // LOG(INFO) << BOLDBLUE << "\t.. current setting is "
-                            //           << currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() << RESET;
+                            //           << currentDacList->getObject(boardId)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() <<
+                            //           RESET;
                         }
                     }
                 }
@@ -1604,10 +1605,7 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
 
         if(localDAC)
             setAllLocalDacBeBoard(boardId, dacName, *currentDacList);
-        else
-        {
-            setAllGlobalDacBeBoard(boardId, dacName, *currentDacList);
-        }
+        else { setAllGlobalDacBeBoard(boardId, dacName, *currentDacList); }
         Occupancy noOccupancy;
         ContainerFactory::reinitializeContainer(*currentStepOccupancyContainer, noOccupancy);
         fDetectorDataContainer = currentStepOccupancyContainer;
