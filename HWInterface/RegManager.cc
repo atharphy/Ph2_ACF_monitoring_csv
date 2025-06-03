@@ -438,6 +438,7 @@ bool RegManager::exceptionCatchedBoardDispatch(const std::string& callingFunctio
         }
     }
 
+    fNumberOfErrors = 0;
     return true;
 }
 

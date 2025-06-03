@@ -266,10 +266,10 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     if(currentChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                     // std::cout<<__LINE__<<std::endl;
-                    std::vector<PCluster> pixelClusterList = static_cast<D19cCic2Event*>(event)->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                    auto pixelClusterList = static_cast<D19cCic2Event*>(event)->GetPixelClusters(cHybrid->getId(), cChip->getId());
                     // std::cout<<"Numer of pixel clusters = "<<pixelClusterList.size() << " - ";
-                    std::vector<SCluster>  stripClusterList = static_cast<D19cCic2Event*>(event)->GetStripClusters(cHybrid->getId(), cChip->getId());
-                    std::vector<EventStub> stubList         = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
+                    auto stripClusterList = static_cast<D19cCic2Event*>(event)->GetStripClusters(cHybrid->getId(), cChip->getId());
+                    auto stubList         = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
 
                     // std::cout<<__LINE__<<std::endl;
                     for(auto& pixelCluster: pixelClusterList)

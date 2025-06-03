@@ -454,7 +454,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                             if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                             if(cEvent->GetHits(cHybrid->getId(), cChip->getId()).size() == 0) continue;
 
-                            auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                            auto cStubs = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cChip->getId());
                             cNstubsThisHybrd += cStubs.size();
                             cNStubsFound += cStubs.size();
                         } // Chips
@@ -495,7 +495,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                         {
                             if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
-                            auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                            auto cStubs = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cChip->getId());
                             auto cHits  = cEvent->GetHits(cHybrid->getId(), cChip->getId());
                             if((int)(cHits.size()) > 0 && (int)cStubs.size() > 0)
                             {

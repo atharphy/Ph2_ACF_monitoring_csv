@@ -4,6 +4,7 @@
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
+#include <filesystem>
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/DQMMetadata.h"
@@ -59,13 +60,31 @@ void MetadataHandler::fillInitialConditions()
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theHostNameContainer);
     theHostNameContainer.getSummary<std::string>() = theHostName;
 
-    std::string theGitTag = runCommand("git describe --tags HEAD");
+    std::string gitRepositoryDirectory;
+    if(std::getenv("OTSDAQ_CMSTRACKER_DIR") != nullptr)
+    {
+        try
+        {
+            std::filesystem::path gitLinkPath   = std::string(std::getenv("OTSDAQ_CMSTRACKER_DIR")) + "/src/otsdaq-cmstracker/Ph2_ACF/.git";
+            std::filesystem::path gitTargetPath = std::filesystem::read_symlink(gitLinkPath);
+
+            std::string gitTargetPathString = gitTargetPath.string();
+            gitRepositoryDirectory          = gitTargetPathString.substr(0, gitTargetPathString.length() - 4);
+        }
+        catch(const std::exception& e)
+        {
+            LOG(WARNING) << e.what();
+        }
+    }
+    else { gitRepositoryDirectory = std::string(std::getenv("PH2ACF_BASE_DIR")); }
+    std::string theGitTag = runCommand("git -C " + gitRepositoryDirectory + " describe --tags HEAD");
     theGitTag.erase(theGitTag.find_last_not_of(" \n\r\t") + 1);
+
     DetectorDataContainer theGitTagContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theGitTagContainer);
     theGitTagContainer.getSummary<std::string>() = theGitTag;
 
-    std::string theGitCommitHash = runCommand("git rev-parse HEAD");
+    std::string theGitCommitHash = runCommand("git -C " + gitRepositoryDirectory + " rev-parse HEAD");
     theGitCommitHash.erase(theGitCommitHash.find_last_not_of(" \n\r\t") + 1);
     DetectorDataContainer theGitCommitHashContainer;
     ContainerFactory::copyAndInitDetector<std::string>(*fDetectorContainer, theGitCommitHashContainer);

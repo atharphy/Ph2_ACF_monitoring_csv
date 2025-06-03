@@ -157,4 +157,18 @@ enum class EventType
 
 #define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 
+#define CLUSTER_2S_DATA_SIZE 14 // bits
+#define CLUSTER_2S_DATA_MASK 0x3FFF
+#define STRIP_CLUSTER_PS_DATA_SIZE 14 // bits
+#define STRIP_CLUSTER_PS_DATA_MASK 0x3FFF
+#define PIXEL_CLUSTER_PS_DATA_SIZE 17 // bits
+#define PIXEL_CLUSTER_PS_DATA_MASK 0x1FFFF
+
+#define STUB_2S_DATA_SIZE 15 // bits
+#define STUB_2S_DATA_MASK 0x7FFF
+#define STUB_PS_DATA_SIZE 18 // bits
+#define STUB_PS_DATA_MASK 0x3FFFF
+
+#define L1_UNSPARSFIED_BLOCK_SIZE_2S 11
+
 #endif
