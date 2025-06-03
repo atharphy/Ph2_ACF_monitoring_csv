@@ -68,14 +68,20 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                         // #####################
                         if((registerName.find("_AUTORA") != std::string::npos) || (registerName.find("_AUTORB") != std::string::npos))
                         {
-                            auto&       theBeBoardFW = fTheSystemController->fBeBoardFWMap.find(cBoard->getId())->second;
-                            std::string which        = "B";
+                            auto& theBeBoardFW = fTheSystemController->fBeBoardFWMap.find(cBoard->getId())->second;
+
+                            std::string which = "B";
                             if(registerName.find("_AUTORA") != std::string::npos)
                                 which = "A";
                             else if(registerName.find("_AUTORB") != std::string::npos)
                                 which = "B";
+
                             registerValue =
                                 static_cast<Ph2_HwInterface::RD53FWInterface*>(theBeBoardFW)->ReadAutoreadReg(cHybrid->getId(), static_cast<Ph2_HwDescription::RD53*>(cChip)->getChipLane(), which);
+
+                            if(fDetectorMonitorConfig.fSilentRunning == false)
+                                LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = 0x" << BOLDYELLOW << std::setprecision(0) << std::hex << registerValue << std::dec
+                                          << RESET;
                         }
                         else
                         {
