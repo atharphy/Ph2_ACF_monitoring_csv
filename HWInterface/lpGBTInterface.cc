@@ -165,12 +165,12 @@ uint32_t lpGBTInterface::ReadChipFuseID(Chip* pChip, uint8_t version)
             LOG(DEBUG) << GREEN << "No redundant LpGBT ID, only use first register" << RESET;
             cChipID = cChipID_0;
         }
-        LOG(INFO) << GREEN << "FuseID from LpGBT optical group " << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET
+        LOG(INFO) << GREEN << "FuseID from LpGBT OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << RESET
                   << GREEN << ": 0x" << BOLDYELLOW << std::hex << +cChipID << std::dec << RESET;
         return cChipID;
     }
 
-    LOG(INFO) << GREEN << "No FuseID for version 0 LpGBT optical group " << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board " << BOLDYELLOW << +pChip->getBeBoardId()
+    LOG(INFO) << GREEN << "No FuseID for version 0 LpGBT OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board ID " << BOLDYELLOW << +pChip->getBeBoardId()
               << RESET;
     return 0;
 }
