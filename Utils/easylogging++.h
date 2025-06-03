@@ -20,7 +20,7 @@
 #if __cplusplus >= 201103L
 #define ELPP_CXX11 1
 #endif // __cplusplus >= 201103L
-#if (defined(__GNUC__))
+#if(defined(__GNUC__))
 #define ELPP_COMPILER_GCC 1
 #else
 #define ELPP_COMPILER_GCC 0
@@ -39,14 +39,14 @@
 #endif
 #define ELPP_CRT_DBG_WARNINGS ELPP_COMPILER_MSVC
 #if ELPP_COMPILER_MSVC
-#if (_MSC_VER == 1600)
+#if(_MSC_VER == 1600)
 #define ELPP_CXX0X 1
-#elif (_MSC_VER >= 1700)
+#elif(_MSC_VER >= 1700)
 #define ELPP_CXX11 1
 #endif
 #endif
 // Clang++
-#if (defined(__clang__) && (__clang__ == 1))
+#if(defined(__clang__) && (__clang__ == 1))
 #define ELPP_COMPILER_CLANG 1
 #else
 #define ELPP_COMPILER_CLANG 0
@@ -59,55 +59,55 @@
 #endif // !defined(__GLIBCXX__) || __GLIBCXX__ >= 20150426
 #endif // __has_include(<thread>)
 #endif
-#if (defined(__MINGW32__) || defined(__MINGW64__))
+#if(defined(__MINGW32__) || defined(__MINGW64__))
 #define ELPP_MINGW 1
 #else
 #define ELPP_MINGW 0
 #endif
-#if (defined(__CYGWIN__) && (__CYGWIN__ == 1))
+#if(defined(__CYGWIN__) && (__CYGWIN__ == 1))
 #define ELPP_CYGWIN 1
 #else
 #define ELPP_CYGWIN 0
 #endif
-#if (defined(__INTEL_COMPILER))
+#if(defined(__INTEL_COMPILER))
 #define ELPP_COMPILER_INTEL 1
 #else
 #define ELPP_COMPILER_INTEL 0
 #endif
 // Operating System Evaluation
 // Windows
-#if (defined(_WIN32) || defined(_WIN64))
+#if(defined(_WIN32) || defined(_WIN64))
 #define ELPP_OS_WINDOWS 1
 #else
 #define ELPP_OS_WINDOWS 0
 #endif
 // Linux
-#if (defined(__linux) || defined(__linux__))
+#if(defined(__linux) || defined(__linux__))
 #define ELPP_OS_LINUX 1
 #else
 #define ELPP_OS_LINUX 0
 #endif
-#if (defined(__APPLE__))
+#if(defined(__APPLE__))
 #define ELPP_OS_MAC 1
 #else
 #define ELPP_OS_MAC 0
 #endif
-#if (defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
+#if(defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
 #define ELPP_OS_FREEBSD 1
 #else
 #define ELPP_OS_FREEBSD 0
 #endif
-#if (defined(__sun))
+#if(defined(__sun))
 #define ELPP_OS_SOLARIS 1
 #else
 #define ELPP_OS_SOLARIS 0
 #endif
-#if (defined(_AIX))
+#if(defined(_AIX))
 #define ELPP_OS_AIX 1
 #else
 #define ELPP_OS_AIX 0
 #endif
-#if (defined(__NetBSD__))
+#if(defined(__NetBSD__))
 #define ELPP_OS_NETBSD 1
 #else
 #define ELPP_OS_NETBSD 0
@@ -117,18 +117,18 @@
 #else
 #define ELPP_OS_EMSCRIPTEN 0
 #endif
-#if (defined(__QNX__) || defined(__QNXNTO__))
+#if(defined(__QNX__) || defined(__QNXNTO__))
 #define ELPP_OS_QNX 1
 #else
 #define ELPP_OS_QNX 0
 #endif
 // Unix
-#if ((ELPP_OS_LINUX || ELPP_OS_MAC || ELPP_OS_FREEBSD || ELPP_OS_NETBSD || ELPP_OS_SOLARIS || ELPP_OS_AIX || ELPP_OS_EMSCRIPTEN || ELPP_OS_QNX) && (!ELPP_OS_WINDOWS))
+#if((ELPP_OS_LINUX || ELPP_OS_MAC || ELPP_OS_FREEBSD || ELPP_OS_NETBSD || ELPP_OS_SOLARIS || ELPP_OS_AIX || ELPP_OS_EMSCRIPTEN || ELPP_OS_QNX) && (!ELPP_OS_WINDOWS))
 #define ELPP_OS_UNIX 1
 #else
 #define ELPP_OS_UNIX 0
 #endif
-#if (defined(__ANDROID__))
+#if(defined(__ANDROID__))
 #define ELPP_OS_ANDROID 1
 #else
 #define ELPP_OS_ANDROID 0
@@ -154,7 +154,7 @@
 #endif // !defined(ELPP_INTERNAL_DEBUGGING_OUT)
 // Internal Assertions and errors
 #if !defined(ELPP_DISABLE_ASSERT)
-#if (defined(ELPP_DEBUG_ASSERT_FAILURE))
+#if(defined(ELPP_DEBUG_ASSERT_FAILURE))
 #define ELPP_ASSERT(expr, msg)                                                                                                                                                                         \
     if(!(expr))                                                                                                                                                                                        \
     {                                                                                                                                                                                                  \
@@ -209,7 +209,7 @@
 #undef ELPP_INTERNAL_INFO
 #define ELPP_INTERNAL_ERROR(msg, pe)
 #endif // defined(ELPP_DEBUG_ERRORS)
-#if (defined(ELPP_DEBUG_INFO))
+#if(defined(ELPP_DEBUG_INFO))
 #if !(defined(ELPP_INTERNAL_INFO_LEVEL))
 #define ELPP_INTERNAL_INFO_LEVEL 9
 #endif // !(defined(ELPP_INTERNAL_INFO_LEVEL))
@@ -228,8 +228,8 @@
 #undef ELPP_INTERNAL_INFO
 #define ELPP_INTERNAL_INFO(lvl, msg)
 #endif // (defined(ELPP_DEBUG_INFO))
-#if (defined(ELPP_FEATURE_ALL)) || (defined(ELPP_FEATURE_CRASH_LOG))
-#if (ELPP_COMPILER_GCC && !ELPP_MINGW && !ELPP_CYGWIN && !ELPP_OS_ANDROID && !ELPP_OS_EMSCRIPTEN && !ELPP_OS_QNX)
+#if(defined(ELPP_FEATURE_ALL)) || (defined(ELPP_FEATURE_CRASH_LOG))
+#if(ELPP_COMPILER_GCC && !ELPP_MINGW && !ELPP_CYGWIN && !ELPP_OS_ANDROID && !ELPP_OS_EMSCRIPTEN && !ELPP_OS_QNX)
 #define ELPP_STACKTRACE 1
 #else
 #if ELPP_COMPILER_MSVC
@@ -274,10 +274,10 @@
 #define STRCPY(a, b, len) strcpy(a, b)
 #endif
 // Compiler specific support evaluations
-#if (ELPP_MINGW && !defined(ELPP_FORCE_USE_STD_THREAD))
+#if(ELPP_MINGW && !defined(ELPP_FORCE_USE_STD_THREAD))
 #define ELPP_USE_STD_THREADING 0
 #else
-#if ((ELPP_COMPILER_CLANG && defined(ELPP_CLANG_SUPPORTS_THREAD)) || (!ELPP_COMPILER_CLANG && defined(ELPP_CXX11)) || defined(ELPP_FORCE_USE_STD_THREAD))
+#if((ELPP_COMPILER_CLANG && defined(ELPP_CLANG_SUPPORTS_THREAD)) || (!ELPP_COMPILER_CLANG && defined(ELPP_CXX11)) || defined(ELPP_FORCE_USE_STD_THREAD))
 #define ELPP_USE_STD_THREADING 1
 #else
 #define ELPP_USE_STD_THREADING 0
@@ -325,42 +325,42 @@
 #else
 #define ELPP_LOGGING_ENABLED 1
 #endif
-#if (!defined(ELPP_DISABLE_DEBUG_LOGS) && (ELPP_LOGGING_ENABLED))
+#if(!defined(ELPP_DISABLE_DEBUG_LOGS) && (ELPP_LOGGING_ENABLED))
 #define ELPP_DEBUG_LOG 1
 #else
 #define ELPP_DEBUG_LOG 0
 #endif // (!defined(ELPP_DISABLE_DEBUG_LOGS) && (ELPP_LOGGING_ENABLED))
-#if (!defined(ELPP_DISABLE_INFO_LOGS) && (ELPP_LOGGING_ENABLED))
+#if(!defined(ELPP_DISABLE_INFO_LOGS) && (ELPP_LOGGING_ENABLED))
 #define ELPP_INFO_LOG 1
 #else
 #define ELPP_INFO_LOG 0
 #endif // (!defined(ELPP_DISABLE_INFO_LOGS) && (ELPP_LOGGING_ENABLED))
-#if (!defined(ELPP_DISABLE_WARNING_LOGS) && (ELPP_LOGGING_ENABLED))
+#if(!defined(ELPP_DISABLE_WARNING_LOGS) && (ELPP_LOGGING_ENABLED))
 #define ELPP_WARNING_LOG 1
 #else
 #define ELPP_WARNING_LOG 0
 #endif // (!defined(ELPP_DISABLE_WARNING_LOGS) && (ELPP_LOGGING_ENABLED))
-#if (!defined(ELPP_DISABLE_ERROR_LOGS) && (ELPP_LOGGING_ENABLED))
+#if(!defined(ELPP_DISABLE_ERROR_LOGS) && (ELPP_LOGGING_ENABLED))
 #define ELPP_ERROR_LOG 1
 #else
 #define ELPP_ERROR_LOG 0
 #endif // (!defined(ELPP_DISABLE_ERROR_LOGS) && (ELPP_LOGGING_ENABLED))
-#if (!defined(ELPP_DISABLE_FATAL_LOGS) && (ELPP_LOGGING_ENABLED))
+#if(!defined(ELPP_DISABLE_FATAL_LOGS) && (ELPP_LOGGING_ENABLED))
 #define ELPP_FATAL_LOG 1
 #else
 #define ELPP_FATAL_LOG 0
 #endif // (!defined(ELPP_DISABLE_FATAL_LOGS) && (ELPP_LOGGING_ENABLED))
-#if (!defined(ELPP_DISABLE_TRACE_LOGS) && (ELPP_LOGGING_ENABLED))
+#if(!defined(ELPP_DISABLE_TRACE_LOGS) && (ELPP_LOGGING_ENABLED))
 #define ELPP_TRACE_LOG 1
 #else
 #define ELPP_TRACE_LOG 0
 #endif // (!defined(ELPP_DISABLE_TRACE_LOGS) && (ELPP_LOGGING_ENABLED))
-#if (!defined(ELPP_DISABLE_VERBOSE_LOGS) && (ELPP_LOGGING_ENABLED))
+#if(!defined(ELPP_DISABLE_VERBOSE_LOGS) && (ELPP_LOGGING_ENABLED))
 #define ELPP_VERBOSE_LOG 1
 #else
 #define ELPP_VERBOSE_LOG 0
 #endif // (!defined(ELPP_DISABLE_VERBOSE_LOGS) && (ELPP_LOGGING_ENABLED))
-#if (!(ELPP_CXX0X || ELPP_CXX11))
+#if(!(ELPP_CXX0X || ELPP_CXX11))
 #error "C++0x (or higher) support not detected! (Is `-std=c++11' missing?)"
 #endif // (!(ELPP_CXX0X || ELPP_CXX11))
 // Headers
@@ -1050,7 +1050,7 @@ class ThreadSafe
 static std::string getCurrentThreadId(void)
 {
     std::stringstream ss;
-#if (ELPP_OS_WINDOWS)
+#if(ELPP_OS_WINDOWS)
     ss << GetCurrentThreadId();
 #endif // (ELPP_OS_WINDOWS)
     return ss.str();
@@ -3048,15 +3048,15 @@ ELPP_LITERAL("(") << elem->first << ELPP_LITERAL(", ") << elem->second << ELPP_L
 #define ELPP_WX_HASH_MAP_ENABLED(ContainerType)
 #endif // defined(ELPP_WXWIDGETS_LOGGING)
        // Other classes
-  template <class Class>
-  ELPP_SIMPLE_LOG(const Class&)
+    template <class Class>
+    ELPP_SIMPLE_LOG(const Class&)
 #undef ELPP_SIMPLE_LOG
 #undef ELPP_ITERATOR_CONTAINER_LOG_ONE_ARG
 #undef ELPP_ITERATOR_CONTAINER_LOG_TWO_ARG
 #undef ELPP_ITERATOR_CONTAINER_LOG_THREE_ARG
 #undef ELPP_ITERATOR_CONTAINER_LOG_FOUR_ARG
 #undef ELPP_ITERATOR_CONTAINER_LOG_FIVE_ARG
-  private : Logger* m_logger;
+    private : Logger* m_logger;
     const base::type::char_t* m_containerLogSeparator;
 
     template <class Iterator>
