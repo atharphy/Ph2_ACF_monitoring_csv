@@ -59,7 +59,7 @@ void CalibrationExample::runCalibrationExample(void)
                         {
                             // retreive data in the old way and add to the current number of hits of the corresponding
                             // channel
-                            channel += event->DataBit(hybrid->getId(), chip->getId(), channelNumber++);
+                            channel += event->DataBit(hybrid->getId(), chip->getId(), 0, channelNumber++);
                         } // for on channel - end
                     } // for on chip - end
                 } // for on hybrid - end
@@ -93,6 +93,7 @@ void CalibrationExample::Running()
 {
     LOG(INFO) << "Starting calibration example measurement.";
     Initialise();
+    setSameDac("Threshold", 593);
     runCalibrationExample();
     LOG(INFO) << "Done with calibration example.";
 }

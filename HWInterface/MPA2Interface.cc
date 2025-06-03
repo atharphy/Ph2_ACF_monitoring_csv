@@ -825,9 +825,9 @@ uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << "not found for this chip type - aborting." << RESET;
         abort();
     }
-    LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA " << +pChip->getId() << " register " << pRegName << " block " << +theRegister->second.first << " shift " << +theRegister->second.second << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA " << +pChip->getId() << " register " << pRegName << " block " << +theRegister->second.first << " shift " << +theRegister->second.second << RESET;
     uint16_t ADC = this->ADCMeasure(static_cast<ReadoutChip*>(pChip), theRegister->second.first, theRegister->second.second, 0, numberOfRead);
-    LOG(DEBUG) << BOLDMAGENTA << " ADC " << ADC << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << " ADC " << ADC << RESET;
     return ADC;
 }
 
