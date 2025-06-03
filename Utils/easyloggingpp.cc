@@ -1032,7 +1032,7 @@ std::string OS::getDeviceName(void)
 
 const std::string OS::getBashOutput(const char* command)
 {
-#if(ELPP_OS_UNIX && !ELPP_OS_ANDROID && !ELPP_CYGWIN)
+#if (ELPP_OS_UNIX && !ELPP_OS_ANDROID && !ELPP_CYGWIN)
     if(command == nullptr) { return std::string(); }
     FILE* proc = nullptr;
     if((proc = popen(command, "r")) == nullptr)
