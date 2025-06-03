@@ -91,7 +91,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t cL12FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l12_type");
     uint32_t cL08FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l8_type");
 
-    LOG(INFO) << BOLDBLUE << "\t--> SW commit number : " << BOLDYELLOW << RD53Shared::gitGitCommit() << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> SW commit number : " << BOLDYELLOW << RD53Shared::gitInfo("commit") << BOLDBLUE << " -- SW tag : " << BOLDYELLOW << RD53Shared::gitInfo("tag") << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor << BOLDBLUE << " -- Date (yy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/"
               << cFWday << BOLDBLUE << " -- Time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Link type : " << BOLDYELLOW << (cLinkType == 0 ? "electrical" : "optical") << BOLDBLUE << " -- Optical speed : " << BOLDYELLOW
@@ -1140,7 +1140,7 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
 
     // Actual readback: one word at a time
     uint32_t cRead  = 0;
-    uint8_t  nWords = (static_cast<const lpGBT*>(pChip)->getVersion() == 0 ? 7 : 6); // LpGBT-v0 --> 7th; LpGBT-v1 --> 6th
+    uint8_t  nWords = (static_cast<const lpGBT*>(pChip)->getVersion() == 0 ? 7 : 6); // LpGBT-v0 --> 7th; LpGBT-v1/v2 --> 6th
     for(uint8_t i = 0; i < nWords; i++)
     {
         RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x0}});
@@ -1186,7 +1186,7 @@ void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, uint8_t ModuleId, uint8_t
 }
 
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
-void RD53FWInterface::SetOptoLinkVersion(uint8_t version) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.lpgbt_version", version); }
+void RD53FWInterface::SetOptoLinkVersion(bool version) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.lpgbt_version", version); }
 
 float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
 {
@@ -1259,6 +1259,24 @@ float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
         LOG(DEBUG) << "The SFP's output for channel " << channel << " is " << result << RESET;
 
     return result;
+}
+
+uint16_t RD53FWInterface::ReadAutoreadReg(const uint8_t hybridId, const uint8_t chipId, const std::string& which)
+{
+    if(which == "A")
+        RegManager::WriteReg("user.ctrl_regs.Register_RdBack.AutoRead_addr_a", hybridId << (this->hybridType - 1) | chipId);
+    else if(which == "B")
+        RegManager::WriteReg("user.ctrl_regs.Register_RdBack.AutoRead_addr_b", hybridId << (this->hybridType - 1) | chipId);
+
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+
+    uint16_t value = 0;
+    if(which == "A")
+        value = RegManager::ReadReg("user.stat_regs.AutoRead_Reg_A");
+    else if(which == "B")
+        value = RegManager::ReadReg("user.stat_regs.AutoRead_Reg_B");
+
+    return value;
 }
 
 void RD53FWInterface::ConfigurePCTestAdapter(const std::string& config)
@@ -1700,7 +1718,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
                     forceDone    = false;
 
                     LOG(INFO) << GREEN << "\t\t--> Frames with error(s) (Chip Lane: " << BOLDYELLOW << +lane << RESET << GREEN << "): " << BOLDYELLOW << nErrors << RESET << GREEN << " (" << BOLDYELLOW
-                              << std::fixed << std::setprecision(3) << nErrors / frameCounter * 100 << RESET << GREEN << "% of the sent frames)" << std::setprecision(-1) << RESET;
+                              << std::fixed << std::setprecision(3) << static_cast<double>(nErrors) / frameCounter * 100 << RESET << GREEN << "% of the sent frames)" << std::setprecision(-1) << RESET;
                 }
             }
         }

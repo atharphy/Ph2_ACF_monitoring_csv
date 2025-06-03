@@ -660,7 +660,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
             auto cL1IdCIC  = static_cast<D19cCic2Event*>(pEvent)->L1Id(cHybrid->getId(), 0);
             auto cL1Status = static_cast<D19cCic2Event*>(pEvent)->L1Status(cHybrid->getId());
             auto cBxId     = (pEvent)->BxId(cHybrid->getId());
-            auto cStubStat = static_cast<D19cCic2Event*>(pEvent)->Status(cHybrid->getId());
+            auto cStubStat = static_cast<D19cCic2Event*>(pEvent)->StubStatus(cHybrid->getId());
 
             if(pEvent->GetEventCount() < 10000)
             {

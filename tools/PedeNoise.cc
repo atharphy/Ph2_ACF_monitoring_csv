@@ -723,8 +723,8 @@ void PedeNoise::extractPedeNoise()
                                                            ->getChannel<Occupancy>(row, col)
                                                            .fOccupancy;
                                     binCenter = (mStripIt->first + (previousStripIterator)->first) / 2.;
-                                    if(cType == FrontEndType::SSA2)
-                                        if((previousOccupancy > currentOccupancy) || previousOccupancy > 1) { continue; } // helps when trimming near the pedestal
+                                    // if(cType == FrontEndType::SSA2)
+                                    //     if((previousOccupancy > currentOccupancy)) { continue; } // helps when trimming near the pedestal
                                 }
                                 else if(cType == FrontEndType::MPA2)
                                 {
@@ -747,8 +747,11 @@ void PedeNoise::extractPedeNoise()
                                                            ->getChannel<Occupancy>(row, col)
                                                            .fOccupancy;
                                     binCenter = (mPixelIt->first + (previousPixelIterator)->first) / 2.;
-                                    if(previousOccupancy > currentOccupancy) { continue; }
+                                    // if(previousOccupancy > currentOccupancy) { continue; }
                                 }
+                                // avoid  MPA and SSA pedestal peak to influence the noise calculation
+                                if(previousOccupancy > 1) previousOccupancy = 1;
+                                if(currentOccupancy > 1) currentOccupancy = 1;
 
                                 fThresholdAndNoiseContainer->getObject(board->getId())
                                     ->getObject(opticalGroup->getId())

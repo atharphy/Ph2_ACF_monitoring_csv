@@ -252,7 +252,7 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                                 cEventHits++;
                             } // end for cId
                             // Fill the cluster histos, use the middleware clustering
-                            std::vector<EventCluster> cClusters = cEvent->getClusters(cHybrid->getId(), cCbc->getId());
+                            auto cClusters = static_cast<D19cCic2Event*>(cEvent)->getClusters(cHybrid->getId(), cCbc->getId());
                             cEventClusters += cClusters.size();
                             // Now fill the ClusterWidth per VCth plots:
                             for(auto& cCluster: cClusters)
@@ -260,15 +260,16 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                                 double cClusterSize = cCluster.fClusterWidth;
                                 cVcthClusters->Fill(cClusterSize, cCluster.fClusterWidth); // Cluster size counter
                                 uint32_t cStrip = cCluster.getBaricentre() * 2 + cCbc->getId() * 127 * 2;
-                                LOG(DEBUG) << BOLDBLUE << "\t " << cClusterSize << " strip cluster found with center in strip " << cStrip << " [half-strips] of sensor " << +cCluster.fSensor << RESET;
-                                if(cCluster.fSensor == 0)
+                                LOG(DEBUG) << BOLDBLUE << "\t " << cClusterSize << " strip cluster found with center in strip " << cStrip << " [half-strips] of sensor " << +cCluster.getSensor()
+                                           << RESET;
+                                if(cCluster.getSensor() == 0)
                                 {
                                     if(cCluster.fClusterWidth == 1) cClustersS0->Fill(cStrip, cVCth);
                                     cClustersEvenHist->Fill(cVCth);
                                     cClusterSizeEven->Fill(cVCth, cClusterSize);
                                     cClusters2DEvenHist->Fill(cVCth, cClusterSize);
                                 }
-                                else if(cCluster.fSensor == 1)
+                                else if(cCluster.getSensor() == 1)
                                 {
                                     if(cCluster.fClusterWidth == 1) cClustersS1->Fill(cStrip, cVCth);
                                     cClustersOddHist->Fill(cVCth);

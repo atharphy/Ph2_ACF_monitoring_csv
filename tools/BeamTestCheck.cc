@@ -393,13 +393,13 @@ void BeamTestCheck::UpdateClusterContainers(BeBoard* pBoard, const std::vector<E
                             cClusterOccupancyCS1->getSummary<GenericDataArray<float, VECSIZE>>().at(pIndx) = 0;
                         }
 
-                        auto   cClusters    = (*cEventIter)->getClusters(cHybrid->getId(), cChip->getId());
+                        auto   cClusters    = static_cast<D19cCic2Event*>((*cEventIter))->getClusters(cHybrid->getId(), cChip->getId());
                         size_t cNClustersS0 = 0;
                         size_t cNClustersS1 = 0;
                         for(auto cCluster: cClusters)
                         {
-                            cNClustersS0 += (cCluster.fSensor == 0) ? 1 : 0;
-                            cNClustersS1 += (cCluster.fSensor == 1) ? 1 : 0;
+                            cNClustersS0 += (cCluster.getSensor() == 0) ? 1 : 0;
+                            cNClustersS1 += (cCluster.getSensor() == 1) ? 1 : 0;
                         }
 
                         // adjust
@@ -1061,7 +1061,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                     // auto              cL1IdCIC  = static_cast<D19cCic2Event*>(*cEventIter)->L1Id(cHybrid->getId(), 0);
                     auto cL1Status = static_cast<D19cCic2Event*>(*cEventIter)->L1Status(cHybrid->getId());
                     auto cBxId     = (*cEventIter)->BxId(cHybrid->getId());
-                    auto cStubStat = static_cast<D19cCic2Event*>(*cEventIter)->Status(cHybrid->getId());
+                    auto cStubStat = static_cast<D19cCic2Event*>(*cEventIter)->StubStatus(cHybrid->getId());
                     LOG(DEBUG) << BOLDYELLOW << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status "
                                << std::bitset<8>(cStubStat) << RESET;
                     auto&                cOccHybrid = fDetectorDataContainer->getObject(cBrdIndx)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId());
@@ -1114,7 +1114,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                     {
                         if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
-                        auto  cStubs   = (*cEventIter)->StubVector(cHybrid->getId(), cChip->getId());
+                        auto  cStubs   = static_cast<D19cCic2Event*>((*cEventIter))->StubVector(cHybrid->getId(), cChip->getId());
                         auto& cLyrSwap = cLyrSwp.getObject(cBrdIndx)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint8_t>();
                         // if its a CBC .. look for events with exactly 2 clusters
                         if(cChip->getFrontEndType() == FrontEndType::MPA2)

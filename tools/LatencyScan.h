@@ -67,7 +67,7 @@ class LatencyScan : public Tool
     void initializeRecycleBin() { fRecycleBin.setDetectorContainer(fDetectorContainer); }
 
   private:
-    int  countStubs(Ph2_HwDescription::Hybrid* pFe, const Ph2_HwInterface::Event* pEvent, std::string pHistName, uint8_t pParameter);
+    int  countStubs(Ph2_HwDescription::Hybrid* pFe, Ph2_HwInterface::Event* pEvent, std::string pHistName, uint8_t pParameter);
     void updateHists(std::string pHistName, bool pFinal);
 
     //  Members

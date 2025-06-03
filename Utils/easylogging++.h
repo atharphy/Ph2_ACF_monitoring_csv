@@ -3047,7 +3047,7 @@ ELPP_LITERAL("(") << elem->first << ELPP_LITERAL(", ") << elem->second << ELPP_L
 #define ELPP_WX_ENABLED(ContainerType)
 #define ELPP_WX_HASH_MAP_ENABLED(ContainerType)
 #endif // defined(ELPP_WXWIDGETS_LOGGING)
-    // Other classes
+       // Other classes
     template <class Class>
     ELPP_SIMPLE_LOG(const Class&)
 #undef ELPP_SIMPLE_LOG
