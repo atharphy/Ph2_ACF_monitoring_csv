@@ -249,7 +249,14 @@ void MetadataHandler::fillNameContainerWithChipIDs()
             {
                 for(auto cChip: *cHybrid)
                 {
-                    uint32_t chipFuseId = fReadoutChipInterface->ReadChipFuseID(cChip);
+                    uint32_t chipFuseId = 0;
+                    try
+                    {
+                        chipFuseId = fReadoutChipInterface->ReadChipFuseID(cChip);
+                    }
+                    catch(const std::out_of_range& e)
+                    {
+                    }
                     fNameContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::string>() =
                         std::to_string(chipFuseId);
                 }

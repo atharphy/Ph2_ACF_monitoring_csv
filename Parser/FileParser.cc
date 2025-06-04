@@ -1520,7 +1520,8 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             // # Specific for IT #
             // ###################
             const std::string RxGroupsConfig = cChild.attribute("RxGroups").as_string("0000");
-            if(RxGroupsConfig.size() != NCHIPLANES) throw std::runtime_error("The \"RxGroups\" attribute of RD53 should contain 4 characters ('0' up to '9')");
+            if((RxGroupsConfig.size() != NCHIPLANES) || (strcmp(RxGroupsConfig.c_str(), "NNNN") == 0))
+                throw std::runtime_error("The \"RxGroups\" attribute of RD53 should contain 4 characters ('0' up to '9', or 'N', but not all 'N')");
             auto                    cRxGroups = parseString<uint8_t, NCHIPLANES>(RxGroupsConfig);
             std::unordered_set<int> theSet(cRxGroups.begin(), cRxGroups.end());
             if(theSet.size() < cRxGroups.size() - std::count(cRxGroups.begin(), cRxGroups.end(), 0xFF) + 1) throw std::runtime_error("The \"RxGroups\" attribute has a group used with multiple lanes");
