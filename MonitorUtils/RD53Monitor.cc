@@ -48,7 +48,7 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    float registerValue;
+                    float registerValue = -1;
                     if(fDetectorMonitorConfig.fSilentRunning == false)
                         LOG(INFO) << GREEN << "Reading monitored data for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                                   << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
@@ -66,17 +66,37 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                         // #####################
                         // # Monitor registers #
                         // #####################
-                        try
+                        if((registerName.find("_AUTORA") != std::string::npos) || (registerName.find("_AUTORB") != std::string::npos))
                         {
-                            registerValue = readoutChipInterface->ReadChipReg(cChip, registerName);
+                            auto& theBeBoardFW = fTheSystemController->fBeBoardFWMap.find(cBoard->getId())->second;
+
+                            std::string which = "B";
+                            if(registerName.find("_AUTORA") != std::string::npos)
+                                which = "A";
+                            else if(registerName.find("_AUTORB") != std::string::npos)
+                                which = "B";
+
+                            registerValue =
+                                static_cast<Ph2_HwInterface::RD53FWInterface*>(theBeBoardFW)->ReadAutoreadReg(cHybrid->getId(), static_cast<Ph2_HwDescription::RD53*>(cChip)->getChipLane(), which);
+
                             if(fDetectorMonitorConfig.fSilentRunning == false)
                                 LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = 0x" << BOLDYELLOW << std::setprecision(0) << std::hex << registerValue << std::dec
                                           << RESET;
                         }
-                        catch(const std::exception& e)
+                        else
                         {
-                            LOG(ERROR) << BOLDRED << e.what() << RESET;
-                            registerValue = -1;
+                            try
+                            {
+                                registerValue = readoutChipInterface->ReadChipReg(cChip, registerName);
+                                if(fDetectorMonitorConfig.fSilentRunning == false)
+                                    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = 0x" << BOLDYELLOW << std::setprecision(0) << std::hex << registerValue
+                                              << std::dec << RESET;
+                            }
+                            catch(const std::exception& e)
+                            {
+                                LOG(ERROR) << BOLDRED << e.what() << RESET;
+                                registerValue = -1;
+                            }
                         }
                     }
 

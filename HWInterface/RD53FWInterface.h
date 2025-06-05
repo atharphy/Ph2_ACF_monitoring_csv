@@ -82,24 +82,25 @@ class RD53FWInterface : public BeBoardFWInterface
     void                ChipReSync() override;
 
     void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
-    void SetOptoLinkVersion(uint8_t version) override;
+    void SetOptoLinkVersion(bool version) override;
     // #############################
     float GetSFPParameter(std::string parameter, int channel);
 
-    void ConfigurePCTestAdapter(const std::string& config);
-    void SelectBERcheckBitORFrame(const uint8_t bitORframe);
-    void WriteArbitraryRegister(const std::string&                regName,
-                                const uint32_t                    value,
-                                const Ph2_HwDescription::BeBoard* pBoard                = nullptr,
-                                ReadoutChipInterface*             pReadoutChipInterface = nullptr,
-                                const bool                        doReset               = false);
-    void ResetBoard();
-    void ResetFastCmdBlk();
-    void ResetSlowCmdFIFO();
-    void ResetReadBkFIFO();
-    void ResetReadoutBlk();
-    bool silentRunning{false};
-    bool showRunProgress{false};
+    uint16_t ReadAutoreadReg(const uint8_t hybridId, const uint8_t chipId, const std::string& which);
+    void     ConfigurePCTestAdapter(const std::string& config);
+    void     SelectBERcheckBitORFrame(const uint8_t bitORframe);
+    void     WriteArbitraryRegister(const std::string&                regName,
+                                    const uint32_t                    value,
+                                    const Ph2_HwDescription::BeBoard* pBoard                = nullptr,
+                                    ReadoutChipInterface*             pReadoutChipInterface = nullptr,
+                                    const bool                        doReset               = false);
+    void     ResetBoard();
+    void     ResetFastCmdBlk();
+    void     ResetSlowCmdFIFO();
+    void     ResetReadBkFIFO();
+    void     ResetReadoutBlk();
+    bool     silentRunning{false};
+    bool     showRunProgress{false};
 
     // ####################################
     // # Check AURORA lock on data stream #
