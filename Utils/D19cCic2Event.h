@@ -40,13 +40,10 @@ template <typename T, size_t N>
 struct ClusterCollection
 {
     ClusterCollection() {};
-    uint8_t     fNumberOfClusters{0};
-    void        addCluster(T theCluster)
+    uint8_t fNumberOfClusters{0};
+    void    addCluster(T theCluster)
     {
-        if(fNumberOfClusters >= N)
-        {
-            throw std::runtime_error("Stub limit reached");
-        }
+        if(fNumberOfClusters >= N) { throw std::runtime_error("Stub limit reached"); }
         theContainer[fNumberOfClusters++] = theCluster;
     }
     auto        begin() { return theContainer.begin(); }
