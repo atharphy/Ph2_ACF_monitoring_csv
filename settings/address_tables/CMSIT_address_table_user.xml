@@ -126,8 +126,8 @@
 
     <node id="Register_RdBack"      address="0x0000000F"      permission="rw"      description="">
       <node id="fifo_reset"            mask="0x00000001"      permission="rw"      description="" />
-      <node id="AutoRead_addr_a"       mask="0x0000003E"      permission="rw"      description="" />
-      <node id="AutoRead_addr_b"       mask="0x000007C0"      permission="rw"      description="" />
+      <node id="AutoRead_Addr_B"       mask="0x0000003E"      permission="rw"      description="" />
+      <node id="AutoRead_Addr_A"       mask="0x000007C0"      permission="rw"      description="" />
     </node>
 
     <node id="Aurora_block"          address="0x00000010"     permission="rw"      description="">
@@ -335,8 +335,8 @@
     <!-- Register Readout -->
     <node id="Register_Rdback_fifo" address="0x00000010"      permission="r"       mode="non-incremental" description="Fifo with Register Read-back data from all chips."> </node>
 
-    <node id="AutoRead_Reg_A"       address="0x00000011"      permission="r"       description="Auto-Read Register-A Data of the selected chip"> </node>
-    <node id="AutoRead_Reg_B"       address="0x00000012"      permission="r"       description="Auto-Read Register-B Data of the selected chip"> </node>
+    <node id="AutoRead_Reg_B"       address="0x00000011"      permission="r"       description="Auto-Read Register-B Data of the selected chip"> </node>
+    <node id="AutoRead_Reg_A"       address="0x00000012"      permission="r"       description="Auto-Read Register-A Data of the selected chip"> </node>
 
     <node id="gtx_refclk_rate"      address="0x00000013"      permission="r"       description=""> </node>
     <node id="clkin_rate"           address="0x00000014"      permission="r"       description=""> </node>

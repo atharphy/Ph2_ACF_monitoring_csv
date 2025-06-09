@@ -267,7 +267,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         fBoardType                 = cFirstBoard->getBoardType();
         if(fBoardType == BoardType::D19C)
         {
-            LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards.." << RESET;
+            LOG(INFO) << BOLDBLUE << "Initializing HwInterfaces for OT BeBoards..." << RESET;
             if(cFirstBoard->size() > 0) // # Of optical groups connected to Board0
             {
                 auto cFirstOpticalGroup = cFirstBoard->getFirstObject();

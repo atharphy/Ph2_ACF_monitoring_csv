@@ -19,6 +19,7 @@
 // ######################
 // # Specific libraries #
 // ######################
+#include "HWDescription/RD53.h"
 #include "HWDescription/lpGBT.h"
 #include "HWInterface/RD53Interface.h"
 #include "HWInterface/RD53lpGBTInterface.h"

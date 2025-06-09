@@ -39,13 +39,16 @@ size_t RD53Shared::countBitsOne(size_t num)
 
 void RD53Shared::resetDefaultFloat() { std::cout.setf(std::ios_base::fmtflags(0), std::ios_base::floatfield); }
 
-std::string RD53Shared::gitGitCommit()
+std::string RD53Shared::gitInfo(const std::string& what)
 {
     std::string myString;
     std::string base(std::getenv("PH2ACF_BASE_DIR"));
     std::string cd("cd " + base + "; ");
 
-    system(std::string(cd + "git rev-parse HEAD >> git.log").c_str());
+    if(what == "commit")
+        system(std::string(cd + "git rev-parse HEAD >> git.log").c_str());
+    else if(what == "tag")
+        system(std::string(cd + "git describe --tag --abbrev=0 >> git.log").c_str());
 
     std::ifstream gitFile(base + "/git.log");
     gitFile >> myString;
