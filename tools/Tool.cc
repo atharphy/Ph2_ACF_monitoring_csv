@@ -2215,7 +2215,7 @@ void Tool::scanBeBoardDac(uint16_t                             boardId,
             this->sendData();
         }
     }
-    else
+    else if((RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53Bv1) || (RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53Bv2))
     {
         // #######################
         // # Loop over goups ... #
@@ -2234,6 +2234,8 @@ void Tool::scanBeBoardDac(uint16_t                             boardId,
         }
         for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), numberOfEvents);
     }
+    else
+        throw std::runtime_error("[Tool::scanBeBoardDac]\tError, FrontEnd type not found");
 }
 
 // Set global DAC for all CBCs in the BeBoard
