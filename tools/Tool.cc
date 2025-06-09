@@ -2201,21 +2201,9 @@ void Tool::scanBeBoardDac(uint16_t                             boardId,
         abort();
     }
 
-    if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A)
-    {
-        // #######################
-        // # Loop over DAC ...   #
-        // # Loop over goups ... #
-        // #######################
-
-        for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
-        {
-            fDetectorDataContainer = detectorContainerVector.at(dacIt);
-            setDacAndMeasureBeBoardData(boardId, dacName, dacList.at(dacIt), numberOfEvents, numberOfEventsPerBurst);
-            this->sendData();
-        }
-    }
-    else if((RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53Bv1) || (RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53Bv2))
+    if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS ||
+       fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S || RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53Bv1 ||
+       RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53Bv2)
     {
         // #######################
         // # Loop over goups ... #
@@ -2233,6 +2221,20 @@ void Tool::scanBeBoardDac(uint16_t                             boardId,
             numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
         }
         for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), numberOfEvents);
+    }
+    else if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A)
+    {
+        // #######################
+        // # Loop over DAC ...   #
+        // # Loop over goups ... #
+        // #######################
+
+        for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
+        {
+            fDetectorDataContainer = detectorContainerVector.at(dacIt);
+            setDacAndMeasureBeBoardData(boardId, dacName, dacList.at(dacIt), numberOfEvents, numberOfEventsPerBurst);
+            this->sendData();
+        }
     }
     else
         throw std::runtime_error("[Tool::scanBeBoardDac]\tError, FrontEnd type not found");
