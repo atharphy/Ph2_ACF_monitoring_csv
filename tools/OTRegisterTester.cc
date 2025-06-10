@@ -50,7 +50,7 @@ void OTRegisterTester::TestRegisters()
         {
             for(auto cHybrid: *theOpticalGroup)
             {
-                LOG(INFO) << BOLDYELLOW << "Testing registers on hybrid " << cHybrid->getId() << RESET;
+                LOG(INFO) << BOLDYELLOW << "Testing registers on hybrid " << getHybridString(theBoard->getId(), theOpticalGroup->getId(), cHybrid->getId()) << RESET;
                 auto& theRegisterMatchingEfficiency = fPatternMatchingEfficiencyContainer.getObject(cHybrid->getBeBoardId())
                                                           ->getObject(cHybrid->getOpticalGroupId())
                                                           ->getObject(cHybrid->getHybridId())
@@ -58,7 +58,7 @@ void OTRegisterTester::TestRegisters()
                 theRegisterMatchingEfficiency.assign(totalNumberOfChips, 0);
                 for(auto theChip: *cHybrid)
                 {
-                    LOG(INFO) << BOLDYELLOW << "    Chip " << theChip->getId() << RESET;
+                    LOG(INFO) << BOLDYELLOW << "    Chip " << getReadoutChipString(theBoard->getId(), theOpticalGroup->getId(), cHybrid->getId(), theChip->getId()) << RESET;
                     if(isPS)
                     {
                         if(theChip->getFrontEndType() == FrontEndType::MPA2)

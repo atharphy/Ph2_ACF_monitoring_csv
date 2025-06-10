@@ -166,7 +166,6 @@ void PedestalEqualizationPSAtPedestal::PrepareForInjection()
             }
         }
     }
-    LOG(INFO) << BLUE << "Enabled test pulse. " << RESET;
     this->setTestAllChannels(true);
 }
 void PedestalEqualizationPSAtPedestal::SetInitialConditions()

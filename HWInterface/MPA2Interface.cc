@@ -651,7 +651,7 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
     std::stringstream cOutput;
     setBoard(pMPA2->getBeBoardId());
     pMPA2->printChipType(cOutput);
-    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pMPA2->getId() << "]" << RESET;
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pMPA2->getId() << "] on Hybrid"<< +pMPA2->getHybridId() << RESET;
 
     std::vector<uint32_t> cVec;
     ChipRegMap            cRegMap = pMPA2->getRegMap();

@@ -46,7 +46,7 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
     std::stringstream cOutput;
     setBoard(pSSA2->getBeBoardId());
     pSSA2->printChipType(cOutput);
-    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pSSA2->getId() << "] oh Hybrid" << +pSSA2->getHybridId() << RESET;
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pSSA2->getId() << "] on Hybrid" << +pSSA2->getHybridId() << RESET;
 
     // write mask registers
     std::vector<std::string> cMaskRegs{"peri_A", "peri_D", "strip"};

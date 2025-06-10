@@ -127,7 +127,7 @@ void OTCICBX0Alignment::BX0Alignment()
                 theBX0AlignmentValue       = fCicInterface->retrieveExternalBX0AlignmentValue(cCic);
                 ++theBX0AlignmentValue; // increased by one bases on the experience with multuple PS, but root cause not understood
                 cSuccessAlign = cSuccessAlign && fCicInterface->ConfigureExternalBX0Delay(cCic, theBX0AlignmentValue);
-                if(cSuccessAlign) { LOG(INFO) << BOLDBLUE << "Automated BX0 alignment procedure " << BOLDGREEN << " SUCCEEDED!" << RESET; }
+                if(cSuccessAlign) { LOG(INFO) << BOLDBLUE << "Automated BX0 alignment procedure on " << BOLDMAGENTA << getHybridString(theBoard->getId(),theOpticalGroup->getId(),theHybrid->getId()) << BOLDGREEN << " SUCCEEDED!" << RESET; }
                 else
                 {
                     LOG(INFO) << BOLDRED << "Automated BX0 alignment procedure " << BOLDRED << " FAILED!" << RESET;
