@@ -78,7 +78,7 @@ class DQMHistogramOTPScommonNoise : public DQMHistogramBase
         const GenericDataArray<uint32_t, T1, T2>& cDataSummary = ChipContainer->getSummary<GenericDataArray<uint32_t, T1, T2>>();
         for(uint16_t iChan2 = 0; iChan2 < T2; iChan2++)
         {
-            for(uint16_t iChan1 = 0; iChan1 < T1; iChan1++) { theHistogram->SetBinContent(iChan1, iChan2, cDataSummary.at(iChan1).at(iChan2)); }
+            for(uint16_t iChan1 = 0; iChan1 < T1; iChan1++) { theHistogram->SetBinContent(iChan1 + 1, iChan2 + 1, cDataSummary.at(iChan1).at(iChan2)); }
         }
         theHistogram->Sumw2();
     }
