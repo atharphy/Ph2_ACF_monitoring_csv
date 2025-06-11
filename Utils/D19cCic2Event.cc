@@ -221,7 +221,8 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list,
             }
         }
 
-        ContainerFactory::copyAndInitStructure<EmptyContainer, ClusterCollection<EventStub, 5>, HybridStubEventInfo, EmptyContainer, EmptyContainer>(*pBoard, fDecodedStubEvent);
+        if(fIs2S) { ContainerFactory::copyAndInitStructure<EmptyContainer, ClusterCollection<EventStub, 3>, HybridStubEventInfo, EmptyContainer, EmptyContainer>(*pBoard, fDecodedStubEvent); }
+        else { ContainerFactory::copyAndInitStructure<EmptyContainer, ClusterCollection<EventStub, 5>, HybridStubEventInfo, EmptyContainer, EmptyContainer>(*pBoard, fDecodedStubEvent); }
 
         ifAreDecodedEventContainersReady = true;
     }
@@ -287,7 +288,11 @@ void D19cCic2Event::decodeEvent()
             theCurrentHybridDataPointer += theL1EventDataSize;
 
             auto& theHybridStubEventContainer = fDecodedStubEvent.getHybrid(theOpticalGroup->getId(), theHybrid->getId());
-            for(auto theChip: *theHybridStubEventContainer) { theChip->getSummary<ClusterCollection<EventStub, 5>>().fNumberOfClusters = 0; }
+            for(auto theChip: *theHybridStubEventContainer)
+            {
+                if(fIs2S) { theChip->getSummary<ClusterCollection<EventStub, 3>>().fNumberOfClusters = 0; }
+                else { theChip->getSummary<ClusterCollection<EventStub, 5>>().fNumberOfClusters = 0; }
+            }
             uint16_t theStubEventDataSize = decodeHybridStubEvent(theHybridStubEventContainer, theCurrentHybridDataPointer);
 
             theCurrentHybridDataPointer += theStubEventDataSize;
@@ -397,13 +402,15 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
 
 uint16_t D19cCic2Event::decodeHybridStubEvent(HybridDataContainer* theHybridStubEventContainer, std::vector<uint32_t>::const_iterator dataStartIterator)
 {
-    HybridStubEventInfo& theHybridStubEventInfo = theHybridStubEventContainer->getSummary<HybridStubEventInfo, ClusterCollection<EventStub, 5>>();
-    theHybridStubEventInfo.parseData(dataStartIterator);
+    HybridStubEventInfo* theHybridStubEventInfo;
+    if(fIs2S) { theHybridStubEventInfo = &theHybridStubEventContainer->getSummary<HybridStubEventInfo, ClusterCollection<EventStub, 3>>(); }
+    else { theHybridStubEventInfo = &theHybridStubEventContainer->getSummary<HybridStubEventInfo, ClusterCollection<EventStub, 5>>(); }
+    theHybridStubEventInfo->parseData(dataStartIterator);
 
     auto theCicToChipMapping = getCicToChipMapping(theHybridStubEventContainer->getId());
 
     size_t currentBitCount = 32 * 2;
-    for(size_t stubNumber = 0; stubNumber < theHybridStubEventInfo.fNumberOfStubs; ++stubNumber)
+    for(size_t stubNumber = 0; stubNumber < theHybridStubEventInfo->fNumberOfStubs; ++stubNumber)
     {
         if(fIs2S)
         {
@@ -411,7 +418,15 @@ uint16_t D19cCic2Event::decodeHybridStubEvent(HybridDataContainer* theHybridStub
             EventStub theEventStub;
             if(theEventStub.parseData(theClusterWord, true))
             {
-                theHybridStubEventContainer->getObject((*theCicToChipMapping)[theClusterWord >> (STUB_2S_DATA_SIZE - 3)])->getSummary<ClusterCollection<EventStub, 5>>().addCluster(theEventStub);
+                try
+                {
+                    theHybridStubEventContainer->getObject((*theCicToChipMapping)[theClusterWord >> (STUB_2S_DATA_SIZE - 3)])->getSummary<ClusterCollection<EventStub, 3>>().addCluster(theEventStub);
+                }
+                catch(const std::exception& e)
+                {
+                    LOG(DEBUG) << WARNING_FORMAT << "Number of stubs for OpticalGroup " << theHybridStubEventContainer->getId() / 2 << " Hybrid " << theHybridStubEventContainer->getId() << " Chip "
+                               << (*theCicToChipMapping)[theClusterWord >> (STUB_2S_DATA_SIZE - 3)] << RESET;
+                }
             }
             currentBitCount += STUB_2S_DATA_SIZE;
         }
@@ -421,7 +436,17 @@ uint16_t D19cCic2Event::decodeHybridStubEvent(HybridDataContainer* theHybridStub
             EventStub theEventStub;
             if(theEventStub.parseData(theClusterWord, false))
             {
-                theHybridStubEventContainer->getObject((*theCicToChipMapping)[theClusterWord >> (STUB_PS_DATA_SIZE - 3)] + 8)->getSummary<ClusterCollection<EventStub, 5>>().addCluster(theEventStub);
+                try
+                {
+                    theHybridStubEventContainer->getObject((*theCicToChipMapping)[theClusterWord >> (STUB_PS_DATA_SIZE - 3)] + 8)
+                        ->getSummary<ClusterCollection<EventStub, 5>>()
+                        .addCluster(theEventStub);
+                }
+                catch(const std::exception& e)
+                {
+                    LOG(DEBUG) << WARNING_FORMAT << "Number of stubs for OpticalGroup " << theHybridStubEventContainer->getId() / 2 << " Hybrid " << theHybridStubEventContainer->getId() << " Chip "
+                               << (*theCicToChipMapping)[theClusterWord >> (STUB_PS_DATA_SIZE - 3)] + 8 << RESET;
+                }
             }
             currentBitCount += STUB_PS_DATA_SIZE;
         }
@@ -566,13 +591,17 @@ uint32_t D19cCic2Event::Error(uint8_t pHybridId, uint8_t pReadoutChipId)
 uint32_t D19cCic2Event::BxId(uint8_t pHybridId)
 {
     decodeEvent();
-    return fDecodedStubEvent.getHybrid(pHybridId / 2, pHybridId)->getSummary<HybridStubEventInfo, ClusterCollection<EventStub, 5>>().fBunchCrossingId;
+    auto theHybridStubContainer = fDecodedStubEvent.getHybrid(pHybridId / 2, pHybridId);
+    if(fIs2S) { return theHybridStubContainer->getSummary<HybridStubEventInfo, ClusterCollection<EventStub, 3>>().fBunchCrossingId; }
+    else { return theHybridStubContainer->getSummary<HybridStubEventInfo, ClusterCollection<EventStub, 5>>().fBunchCrossingId; }
 }
 
 uint16_t D19cCic2Event::StubStatus(uint8_t pHybridId)
 {
     decodeEvent();
-    return fDecodedStubEvent.getHybrid(pHybridId / 2, pHybridId)->getSummary<HybridStubEventInfo, ClusterCollection<EventStub, 5>>().fStatusBits;
+    auto theHybridStubContainer = fDecodedStubEvent.getHybrid(pHybridId / 2, pHybridId);
+    if(fIs2S) { return theHybridStubContainer->getSummary<HybridStubEventInfo, ClusterCollection<EventStub, 3>>().fStatusBits; }
+    else { return theHybridStubContainer->getSummary<HybridStubEventInfo, ClusterCollection<EventStub, 5>>().fStatusBits; }
 }
 
 uint32_t D19cCic2Event::L1Id(uint8_t pHybridId, uint8_t pReadoutChipId)
@@ -684,16 +713,29 @@ std::vector<bool> D19cCic2Event::DataBitVector(uint8_t pHybridId, uint8_t pReado
     }
 }
 
-ClusterCollection<EventStub, 5> D19cCic2Event::StubVector(uint8_t pHybridId, uint8_t pReadoutChipId)
+std::vector<EventStub> D19cCic2Event::StubVector(uint8_t pHybridId, uint8_t pReadoutChipId)
 {
     decodeEvent();
-    return fDecodedStubEvent.getChip(pHybridId / 2, pHybridId, pReadoutChipId)->getSummary<ClusterCollection<EventStub, 5>>();
+    std::vector<EventStub> theStubVector;
+    auto                   theHybridStubContainer = fDecodedStubEvent.getHybrid(pHybridId / 2, pHybridId);
+
+    if(fIs2S)
+    {
+        for(auto& eventStub: theHybridStubContainer->getSummary<ClusterCollection<EventStub, 3>>()) { theStubVector.push_back(eventStub); }
+    }
+    else
+    {
+        for(auto& eventStub: theHybridStubContainer->getSummary<ClusterCollection<EventStub, 5>>()) { theStubVector.push_back(eventStub); }
+    }
+    return theStubVector;
 }
 
 bool D19cCic2Event::StubBit(uint8_t pHybridId, uint8_t pCbcId)
 {
     decodeEvent();
-    return (fDecodedStubEvent.getChip(pHybridId / 2, pHybridId, pCbcId)->getSummary<ClusterCollection<EventStub, 5>>().size() > 0);
+    auto theChipStubContainer = fDecodedStubEvent.getChip(pHybridId / 2, pHybridId, pCbcId);
+    if(fIs2S) { return theChipStubContainer->getSummary<ClusterCollection<EventStub, 3>>().size() > 0; }
+    else { return theChipStubContainer->getSummary<ClusterCollection<EventStub, 5>>().size() > 0; }
 }
 
 uint32_t D19cCic2Event::GetNHits(uint8_t pHybridId, uint8_t pReadoutChipId)
@@ -831,11 +873,19 @@ void D19cCic2Event::print()
 
             auto theStubHybrid = fDecodedStubEvent.getHybrid(theOpticalGroup->getId(), theHybrid->getId());
             std::cout << "Stub header" << std::endl;
-            theStubHybrid->getSummary<HybridStubEventInfo, ClusterCollection<EventStub, 5>>().print();
+            if(fIs2S) { theStubHybrid->getSummary<HybridStubEventInfo, ClusterCollection<EventStub, 3>>().print(); }
+            else { theStubHybrid->getSummary<HybridStubEventInfo, ClusterCollection<EventStub, 5>>().print(); }
             for(auto theChip: *theStubHybrid)
             {
                 std::cout << "Chip id = " << theChip->getId() << std::endl;
-                for(auto theStub: theChip->getSummary<ClusterCollection<EventStub, 5>>()) { theStub.print(); }
+                if(fIs2S)
+                {
+                    for(auto theStub: theChip->getSummary<ClusterCollection<EventStub, 3>>()) { theStub.print(); }
+                }
+                else
+                {
+                    for(auto theStub: theChip->getSummary<ClusterCollection<EventStub, 5>>()) { theStub.print(); }
+                }
             }
         }
     }

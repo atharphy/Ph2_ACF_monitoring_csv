@@ -40,8 +40,12 @@ template <typename T, size_t N>
 struct ClusterCollection
 {
     ClusterCollection() {};
-    uint8_t     fNumberOfClusters{0};
-    void        addCluster(T theCluster) { theContainer[fNumberOfClusters++] = theCluster; }
+    uint8_t fNumberOfClusters{0};
+    void    addCluster(T theCluster)
+    {
+        if(fNumberOfClusters >= N) { throw std::runtime_error("Stub limit reached"); }
+        theContainer[fNumberOfClusters++] = theCluster;
+    }
     auto        begin() { return theContainer.begin(); }
     auto        begin() const { return theContainer.begin(); }
     auto        end() { return theContainer.begin() + fNumberOfClusters; }
@@ -216,7 +220,7 @@ class D19cCic2Event : public Event
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      */
-    ClusterCollection<EventStub, 5> StubVector(uint8_t pHybridId, uint8_t pCbcId);
+    std::vector<EventStub> StubVector(uint8_t pHybridId, uint8_t pCbcId);
     /*!
      * \brief Function to count the Hits in this event
      * \param pHybridId : Hybrid Id
