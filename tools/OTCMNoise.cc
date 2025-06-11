@@ -46,7 +46,8 @@ void OTCMNoise::SetThresholds(int manualVcth, float nSigma)
                 }
                 else
                 {
-                    LOG(INFO) << BOLDCYAN << "Running with threshold at the pedestal + " << nSigma << " sigma for " << getHybridString(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId()) << RESET;
+                    LOG(INFO) << BOLDCYAN << "Running with threshold at the pedestal + " << nSigma << " sigma for " << getHybridString(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId())
+                              << RESET;
                     for(auto theChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(theChip, "Threshold", round(theChip->getAveragePedestal() - nSigma * theChip->getAverageNoise())); };
                 }
 

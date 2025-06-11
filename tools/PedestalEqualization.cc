@@ -425,7 +425,8 @@ void PedestalEqualization::FindOffsets()
                         }
                     }
 
-                    LOG(INFO) << BOLDRED << "Mean offset on " << getReadoutChipString(board->getId(),opticalGroup->getId(),hybrid->getId(),chip->getId()) << " is : " << (cMeanOffset) / (double)roc->getNumberOfChannels() << " Vcth units." << RESET;
+                    LOG(INFO) << BOLDRED << "Mean offset on " << getReadoutChipString(board->getId(), opticalGroup->getId(), hybrid->getId(), chip->getId())
+                              << " is : " << (cMeanOffset) / (double)roc->getNumberOfChannels() << " Vcth units." << RESET;
                 } // for on chip - end
             } // for on hybrid - end
         } // for on opticalGroup - end

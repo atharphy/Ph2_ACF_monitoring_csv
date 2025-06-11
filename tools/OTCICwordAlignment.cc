@@ -143,7 +143,11 @@ void OTCICwordAlignment::WordAlignment(uint32_t pWait_us)
                                                    ->getSummary<GenericDataArray<uint8_t, NUMBER_OF_CIC_PORTS, NUMBER_OF_LINES_PER_CIC_PORTS - 1>>();
                 theWordAlignmentValues = fCicInterface->retrieveExternalWordAlignmentValues(cCic);
                 cSuccessAlign          = cSuccessAlign && fCicInterface->ConfigureExternalWordAlignment(cCic, theWordAlignmentValues);
-                if(cSuccessAlign) { LOG(INFO) << BOLDBLUE << "Automated word alignment procedure on " << BOLDMAGENTA << getHybridString(theBoard->getId(),theOpticalGroup->getId(),theHybrid->getId()) << BOLDGREEN << " SUCCEEDED!" << RESET; }
+                if(cSuccessAlign)
+                {
+                    LOG(INFO) << BOLDBLUE << "Automated word alignment procedure on " << BOLDMAGENTA << getHybridString(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId()) << BOLDGREEN
+                              << " SUCCEEDED!" << RESET;
+                }
                 else
                 {
                     LOG(INFO) << BOLDRED << "Automated word alignment procedure " << BOLDRED << " FAILED!" << RESET;
