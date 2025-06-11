@@ -127,7 +127,7 @@ bool D19cPSCounterFWInterface::FastRead(const Ph2_HwDescription::BeBoard* theBoa
         }
         if(cDDR3state != 0xA)
         {
-            LOG(WARNING) << WARNING_FORMAT << "Failed to read DDR3" << RESET;
+            LOG(WARNING) << WARNING_FORMAT << "Failed to read DDR3, FSM state = " << cDDR3state << RESET;
             return false;
         }
 
