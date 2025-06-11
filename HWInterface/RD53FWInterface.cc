@@ -25,8 +25,8 @@ const std::array<std::string, 8> RD53FWInterface::FastCommandsConfig::fastCmdWhi
                                                                                           "user.ctrl_regs.fast_cmd_reg_2.trigger_duration",
                                                                                           "user.ctrl_regs.fast_cmd_reg_2.HitOr_enable_l12"}; // @CONST@
 
-RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
-    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), ddr3Offset(0), FWinfo(0)
+RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* pBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, pBoard), ddr3Offset(0), FWinfo(0)
 {
 }
 
@@ -41,7 +41,7 @@ void RD53FWInterface::setFileHandler(FileHandler* pHandler)
         LOG(ERROR) << BOLDRED << "NULL FileHandler" << RESET;
 }
 
-void RD53FWInterface::ResetSequence(const std::string& refClockRate)
+void RD53FWInterface::ResetSequence(const BeBoard* pBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Resetting the backend board... it may take a while" << RESET;
 
@@ -52,7 +52,8 @@ void RD53FWInterface::ResetSequence(const std::string& refClockRate)
     // ##############################
     // # Initialize clock generator #
     // ##############################
-    RD53FWInterface::InitializeClockGenerator(refClockRate);
+    auto CDCEconfig = pBoard->configCDCE();
+    if(CDCEconfig.first == true) RD53FWInterface::InitializeClockGenerator(CDCEconfig.second);
 
     // ###################################
     // # Reset optical link slow control #
@@ -1421,7 +1422,7 @@ void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const u
 // # Clock generator #
 // ###################
 
-void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, bool doStoreInEEPROM)
+void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doStoreInEEPROM)
 // ############################
 // # refClockRate = 160 [MHz] #
 // # refClockRate = 320 [MHz] #
@@ -1454,9 +1455,9 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
     // 0xyy8203yy --> 320 MHz
     // 0xyy8003yy --> 480 MHz
 
-    if(refClockRate == "160")
+    if(refClockRate == 160)
         SPIregSettings[1] = 0xEB020321;
-    else if(refClockRate == "320")
+    else if(refClockRate == 320)
         SPIregSettings[1] = 0xEB820321;
     else
         throw Exception("[RD53FWInterface::InitializeClockGenerator] CDCE reference clock rate not recognized");

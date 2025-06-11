@@ -55,7 +55,7 @@ namespace Ph2_HwInterface
 class RD53FWInterface : public BeBoardFWInterface
 {
   public:
-    RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, Ph2_HwDescription::BeBoard* theBoard);
+    RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, Ph2_HwDescription::BeBoard* pBoard);
     ~RD53FWInterface() { delete fFileHandler; }
 
     // #############################
@@ -66,7 +66,6 @@ class RD53FWInterface : public BeBoardFWInterface
     uint32_t  getBoardFirmwareVersion() override { return FWinfo; }
     BoardType getBoardType() const override { return BoardType::RD53; }
 
-    void ResetSequence(const std::string& refClockRate);
     void ConfigureBoard(const Ph2_HwDescription::BeBoard* pBoard) override;
     void PrintFWstatus() override;
 
@@ -84,6 +83,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
     void SetOptoLinkVersion(bool version) override;
     // #############################
+    void  ResetSequence(const Ph2_HwDescription::BeBoard* pBoard);
     float GetSFPParameter(std::string parameter, int channel);
 
     uint16_t ReadAutoreadReg(const uint8_t hybridId, const uint8_t chipId, const std::string& which);
@@ -236,7 +236,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // ###################
     // # Clock generator #
     // ###################
-    void InitializeClockGenerator(const std::string& refClockRate = "160", bool doStoreInEEPROM = false);
+    void InitializeClockGenerator(uint32_t refClockRate = 160, bool doStoreInEEPROM = false);
     void ReadClockGenerator();
 
     FastCommandsConfig localCfgFastCmd;
