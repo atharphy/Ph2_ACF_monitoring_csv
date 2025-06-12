@@ -1455,6 +1455,8 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doSto
     // 0xyy8203yy --> 320 MHz
     // 0xyy8003yy --> 480 MHz
 
+    LOG(WARNING) << BOLDRED << "CDCE will be reconfigured (Was it really necessary?)" << RESET;
+
     if(refClockRate == 160)
         SPIregSettings[1] = 0xEB020321;
     else if(refClockRate == 320)
