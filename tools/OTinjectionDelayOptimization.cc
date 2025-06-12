@@ -286,7 +286,7 @@ void OTinjectionDelayOptimization::prepareInjectionDelayScan2S()
                 {
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
                     {
-                        LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET;
                         static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression(cChip, false, true, 0);
                     }
                 }
