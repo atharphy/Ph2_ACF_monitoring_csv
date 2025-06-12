@@ -425,11 +425,11 @@ void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyTrimBits(const Detecto
 
                             auto     maxIter         = std::max_element(occupancyMap.begin(), occupancyMap.end(), [](const auto& a, const auto& b) { return a.second < b.second; });
                             uint16_t DACmaxOccupancy = maxIter->first;
-                            if (maxIter->second == 0.0f) 
+                            if(maxIter->second == 0.0f)
                             {
-                                LOG(DEBUG) << RED << "All occupancies are zero for row "<< row << " col " << col << " setting trim bit to max " << RESET;
+                                LOG(DEBUG) << RED << "All occupancies are zero for row " << row << " col " << col << " setting trim bit to max " << RESET;
                                 DACmaxOccupancy = 0x1F;
-                            } 
+                            }
 
                             theChipContainer->getChannel<uint16_t>(row, col) = DACmaxOccupancy;
                         } // col
