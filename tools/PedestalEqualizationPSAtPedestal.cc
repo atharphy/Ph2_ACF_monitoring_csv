@@ -385,10 +385,10 @@ void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyThreshold(const Detect
                             DACmaxOccupancy /= totalOccupancy;
                             thePedestal += DACmaxOccupancy;
                             theChipContainer->getChannel<uint16_t>(row, col) = static_cast<uint16_t>(std::lround(DACmaxOccupancy));
-                            
+
                         } // col
                     } // row
-                    thePedestal = thePedestal/(cChip->getNumberOfCols()*cChip->getNumberOfRows());
+                    thePedestal                 = thePedestal / (cChip->getNumberOfCols() * cChip->getNumberOfRows());
                     ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                     theReadoutChip->setAveragePedestal(thePedestal);
                 } // chip
