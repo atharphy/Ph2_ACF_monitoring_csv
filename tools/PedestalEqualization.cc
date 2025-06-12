@@ -151,7 +151,7 @@ void PedestalEqualization::Initialise(bool pAllChan, bool pDisableStubLogic)
                         // if it is a CBC3, disable the stub logic for this procedure
                         if(theChip->getFrontEndType() == FrontEndType::CBC3)
                         {
-                            LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for offset tuning for CBC " << +chip->getId() << RESET;
+                            LOG(DEBUG) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for offset tuning for CBC " << +chip->getId() << RESET;
                             // fStubLogicCointainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId())->getSummary<uint8_t>() =
                             //     fReadoutChipInterface->ReadChipReg(theChip, "Pipe&StubInpSel&Ptwidth");
                             // uint8_t value = fReadoutChipInterface->ReadChipReg(theChip, "HIP&TestMode");
@@ -425,7 +425,8 @@ void PedestalEqualization::FindOffsets()
                         }
                     }
 
-                    LOG(INFO) << BOLDRED << "Mean offset on Chip" << +chip->getId() << " is : " << (cMeanOffset) / (double)roc->getNumberOfChannels() << " Vcth units." << RESET;
+                    LOG(INFO) << BOLDRED << "Mean offset on " << getReadoutChipString(board->getId(), opticalGroup->getId(), hybrid->getId(), chip->getId())
+                              << " is : " << (cMeanOffset) / (double)roc->getNumberOfChannels() << " Vcth units." << RESET;
                 } // for on chip - end
             } // for on hybrid - end
         } // for on opticalGroup - end
