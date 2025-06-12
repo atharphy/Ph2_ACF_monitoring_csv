@@ -116,7 +116,15 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
         for(pugi::xml_attribute cAttribute: cChild.attributes())
         {
             if(std::string(cAttribute.name()) == BEBOARD_CDCE_CONFIGURE_ATTRIBUTE_NAME) cConfigureCDCE = cConfigureCDCE | (convertAnyInt(cAttribute.value()) == 1);
-            if(std::string(cAttribute.name()) == BEBOARD_CDCE_CLOCKRATE_ATTRIBUTE_NAME) cClockRateCDCE = convertAnyInt(cAttribute.value());
+            if(std::string(cAttribute.name()) == BEBOARD_CDCE_CLOCKRATE_ATTRIBUTE_NAME)
+            {
+                if(std::strcmp(cAttribute.value(), "ELE") == 0)
+                    cClockRateCDCE = 320;
+                else if(std::strcmp(cAttribute.value(), "OPT") == 0)
+                    cClockRateCDCE = 160;
+                else
+                    cClockRateCDCE = convertAnyInt(cAttribute.value());
+            }
         }
     }
     cBeBoard->setCDCEconfiguration(cConfigureCDCE, cClockRateCDCE);

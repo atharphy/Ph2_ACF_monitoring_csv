@@ -1455,7 +1455,20 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doSto
     // 0xyy8203yy --> 320 MHz
     // 0xyy8003yy --> 480 MHz
 
-    LOG(WARNING) << BOLDRED << "CDCE will be reconfigured (Was it really necessary?)" << RESET;
+    // ##################################
+    // # Request feedback from the user #
+    // ##################################
+    std::string input;
+    LOG(WARNING) << BOLDRED << "The CDCE has a limited number of reconfiguration cycles. You should not reconfigure it unless strictly necessary. Do you want to continue ('yes' / 'no')?" << RESET;
+    std::cin >> input;
+    // Convert input to lowercase for case-insensitive comparison
+    std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+    if(input != "yes")
+    {
+        LOG(WARNING) << RESET << GREEN << "Not configuring the CDCE. Please set in the XML file the CDCE configure setting to 0" << RESET;
+        return;
+    }
+    LOG(WARNING) << RESET << BOLDRED << "CDCE will be reconfigured" << RESET;
 
     if(refClockRate == 160)
         SPIregSettings[1] = 0xEB020321;
