@@ -237,7 +237,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // # Clock generator #
     // ###################
     void InitializeClockGenerator(uint32_t refClockRate = 160, bool doStoreInEEPROM = false);
-    void ReadClockGenerator();
+    bool ReadClockGenerator(uint32_t reference[] = {}, bool checkMatch = false, bool verbose = true);
 
     FastCommandsConfig localCfgFastCmd;
     size_t             ddr3Offset;

@@ -1455,6 +1455,15 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doSto
     // 0xyy8203yy --> 320 MHz
     // 0xyy8003yy --> 480 MHz
 
+    // ########################################
+    // # Check if CDCE was already programmed #
+    // ########################################
+    if(RD53FWInterface::ReadClockGenerator(SPIregSettings, true, false) == false)
+    {
+        LOG(INFO) << GREEN << "The CDCE was already programmed --> Skipping reprogramming" << RESET;
+        return;
+    }
+
     // ##################################
     // # Request feedback from the user #
     // ##################################
@@ -1504,15 +1513,16 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doSto
     }
 }
 
-void RD53FWInterface::ReadClockGenerator()
+bool RD53FWInterface::ReadClockGenerator(uint32_t reference[], bool checkMatch, bool verbose)
 {
+    bool           match = true;
     const uint32_t writeSPI(0x8FA38014);                                                       // Write to SPI @CONST@
     const uint32_t SPIreadCommands[] = {0x0E, 0x1E, 0x2E, 0x3E, 0x4E, 0x5E, 0x6E, 0x7E, 0x8E}; // @CONST@
 
-    LOG(INFO) << GREEN << "Reading clock generator (CDCE62005) configuration" << RESET;
-    for(const auto value: SPIreadCommands)
+    if(verbose == true) LOG(INFO) << GREEN << "Reading clock generator (CDCE62005) configuration" << RESET;
+    for(auto i = 0; i < 9; i++)
     {
-        RegManager::WriteReg("system.spi.tx_data", value);
+        RegManager::WriteReg("system.spi.tx_data", SPIreadCommands[i]);
         RegManager::WriteReg("system.spi.command", writeSPI);
 
         RegManager::WriteReg("system.spi.tx_data", 0xAAAAAAAA); // Dummy write
@@ -1521,8 +1531,12 @@ void RD53FWInterface::ReadClockGenerator()
         uint32_t          readback = RegManager::ReadReg("system.spi.rx_data");
         std::stringstream myString("");
         myString << std::right << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << readback << std::dec;
-        LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << std::dec << RESET;
+        if(verbose == true) LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << std::dec << RESET;
+
+        if((checkMatch == true) && (i != 8) && (readback != reference[i])) match = false;
     }
+
+    return match;
 }
 
 // #################################################
