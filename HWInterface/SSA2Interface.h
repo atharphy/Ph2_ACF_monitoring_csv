@@ -67,7 +67,14 @@ class SSA2Interface : public ReadoutChipInterface
     float getVrefPrecision(Ph2_HwDescription::ReadoutChip* pSSA2);
     float getVrefMinValue(Ph2_HwDescription::ReadoutChip* pSSA2);
     float getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pSSA2);
-    bool  WriteChipRegBits(Ph2_HwDescription::Chip* theSSA, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = false);
+
+    bool     SetVtrim(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t Vtrim);
+    uint16_t ReadVtrim(Ph2_HwDescription::ReadoutChip* pSSA2);
+    bool     SetTrimBitsAll(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t trimBits);
+    bool     SetTrimBitsChannel(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t trimBits, uint16_t row, uint16_t col);
+    uint16_t ReadTrimBitsChannel(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t row, uint16_t col);
+
+    bool WriteChipRegBits(Ph2_HwDescription::Chip* theSSA, const std::string& pRegNode, uint16_t pValue, const std::string& pMaskReg, uint8_t mask, bool pVerify = false);
 
     std::pair<std::pair<std::string, uint16_t>, std::vector<std::pair<std::string, uint16_t>>>
     packLocalRegisters(Ph2_HwDescription::ReadoutChip* pSSA2, const std::string& dacName, const ChipContainer& localRegValues);
@@ -85,12 +92,14 @@ class SSA2Interface : public ReadoutChipInterface
     // Map of the bias structure registers
     // < register name , <default register value (DAC) , expected value in V on the test pad>
     typedef std::pair<uint8_t, float>              DAC_expectedValue;
-    const std::map<std::string, DAC_expectedValue> SSA2_BIAS_STRUCTURE_DEFAULT = {{"Bias_D5BFEED", std::make_pair(0x0F, 0.082)},
-                                                                                  {"Bias_D5PREAMP", std::make_pair(0x0F, 0.082)},
-                                                                                  {"Bias_D5TDR", std::make_pair(0x0F, 0.115)},
-                                                                                  {"Bias_D5ALLV", std::make_pair(0x0F, 0.082)},
-                                                                                  {"Bias_D5ALLI", std::make_pair(0x0F, 0.082)},
-                                                                                  {"Bias_D5DAC8", std::make_pair(0x0F, 0.086)}};
+    const std::map<std::string, DAC_expectedValue> SSA2_BIAS_STRUCTURE_DEFAULT = {
+        {"Bias_D5BFEED", std::make_pair(0x0F, 0.082)},
+        {"Bias_D5PREAMP", std::make_pair(0x0F, 0.082)},
+        {"Bias_D5TDR", std::make_pair(0x0F, 0.115)},
+        {"Bias_D5ALLV", std::make_pair(0x0F, 0.082)},
+        {"Bias_D5ALLI", std::make_pair(0x0F, 0.082)} //,
+                                                     //{"Bias_D5DAC8", std::make_pair(0x0F, 0.086)}
+    };
 
     // std::map<std::string, uint8_t> fAmuxMap = {{"BoosterFeedback", 0}, // FIXMEEEE this map is wrong!! the one in ReadADC is correct                                                  // FIXME
     //                                            {"PreampBias", 1},

@@ -46,7 +46,7 @@ bool SSA2Interface::ConfigureChip(Chip* pSSA2, bool pVerify, uint32_t pBlockSize
     std::stringstream cOutput;
     setBoard(pSSA2->getBeBoardId());
     pSSA2->printChipType(cOutput);
-    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pSSA2->getId() << "] oh Hybrid" << +pSSA2->getHybridId() << RESET;
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pSSA2->getId() << "] on Hybrid" << +pSSA2->getHybridId() << RESET;
 
     // write mask registers
     std::vector<std::string> cMaskRegs{"peri_A", "peri_D", "strip"};
@@ -262,7 +262,7 @@ const std::map<std::string, std::pair<uint8_t, float>> SSA2Interface::getBiasStr
 // FIXME At the moment we are setting the exepected values
 //  of bandgap and ADC_VREF to the default nominal value.
 //  This will be updated once we have the real values for each chip
-float SSA2Interface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2) { return SSA2_VBG_EXPECTED; }
+float SSA2Interface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pSSA2) { return SSA2_VBG_EXPECTED; }
 // FIXME At the moment we are setting the exepected values
 //  of bandgap and ADC_VREF to the default nominal value.
 //  This will be updated once we have the real values for each chip
@@ -279,6 +279,22 @@ float SSA2Interface::getVrefMinValue(Ph2_HwDescription::ReadoutChip* pSSA2) { re
 //  of bandgap and ADC_VREF to the default nominal value.
 //  This will be updated once we have the real values for each chip
 float SSA2Interface::getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pSSA2) { return SSA2_VREF_MAX; }
+
+bool SSA2Interface::SetVtrim(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t Vtrim) { return this->WriteChipReg(pSSA2, "Bias_D5DAC8", Vtrim); }
+
+uint16_t SSA2Interface::ReadVtrim(Ph2_HwDescription::ReadoutChip* pSSA2) { return this->ReadChipReg(pSSA2, "Bias_D5DAC8"); }
+bool     SSA2Interface::SetTrimBitsAll(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t trimBits) { return this->WriteChipReg(pSSA2, "THTRIMMING", trimBits); }
+
+bool SSA2Interface::SetTrimBitsChannel(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t trimBits, uint16_t row, uint16_t col)
+{
+    std::string cRegName = "THTRIMMING_S" + std::to_string(col + 1);
+    return this->WriteChipReg(pSSA2, cRegName, trimBits);
+}
+uint16_t SSA2Interface::ReadTrimBitsChannel(Ph2_HwDescription::ReadoutChip* pSSA2, uint16_t row, uint16_t col)
+{
+    std::string cRegName = "THTRIMMING_S" + std::to_string(col + 1);
+    return this->ReadChipReg(pSSA2, cRegName);
+}
 
 bool SSA2Interface::disableTestPadsOutput(ReadoutChip* pSSA2)
 {
@@ -515,7 +531,8 @@ bool SSA2Interface::WriteChipReg(Chip* pSSA2, const std::string& pRegName, uint1
     //     return this->ConfigureAmux(pSSA2, "Bandgap");
     // }
     // else if(pRegNameMod == "MonitorGround") { return this->ConfigureAmux(pSSA2, "GND"); }
-    else if(pRegNameMod == "ReadoutMode") // AT THE TOP OF THIS METHOD _ALL IS REMOVED
+    else if(pRegNameMod == "Offsets") { return this->SetTrimBitsAll(static_cast<ReadoutChip*>(pSSA2), pValue); } // this->WriteChipReg(pSSA2, "THTRIMMING", pValue); }
+    else if(pRegNameMod == "ReadoutMode")                                                                        // AT THE TOP OF THIS METHOD _ALL IS REMOVED
     {
         return this->WriteChipRegBitsLocal(pSSA2, "control_1", pValue & 0x07, "mask_peri_D", 0x07);
     }

@@ -31,7 +31,7 @@ void OTCMNoise::SetThresholds(int manualVcth, float nSigma)
     // Set Vcth to pedestal, or overload with manual setting
     ThresholdVisitor cVisitor(fReadoutChipInterface, 0);
 
-    LOG(INFO) << "OT_MODULE_TEST:: Setting threshold on each chip" << RESET;
+    LOG(INFO) << "Setting threshold on each chip" << RESET;
     for(auto pBoard: *fDetectorContainer)
     {
         for(auto cOpticalGroup: *pBoard)
@@ -40,19 +40,20 @@ void OTCMNoise::SetThresholds(int manualVcth, float nSigma)
             {
                 if(manualVcth != 0)
                 {
-                    LOG(INFO) << BOLDGREEN << "Setting Manual Vcth to " << manualVcth << RESET;
+                    LOG(INFO) << BOLDGREEN << "Setting Manual Vcth to " << manualVcth << " for " << getHybridString(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId()) << RESET;
                     cVisitor.setThreshold(manualVcth);
                     static_cast<OuterTrackerHybrid*>(cHybrid)->accept(cVisitor);
                 }
                 else
                 {
-                    LOG(INFO) << BOLDCYAN << "Running with threshold at the pedestal + " << nSigma << " sigma." << RESET;
+                    LOG(INFO) << BOLDCYAN << "Running with threshold at the pedestal + " << nSigma << " sigma for " << getHybridString(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId())
+                              << RESET;
                     for(auto theChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(theChip, "Threshold", round(theChip->getAveragePedestal() - nSigma * theChip->getAverageNoise())); };
                 }
 
                 for(auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << BOLDGREEN << "Disabling stub reconstruction" << RESET;
+                    LOG(DEBUG) << BOLDGREEN << "Disabling stub reconstruction" << RESET;
                     static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression(cChip, false, true, 0);
 
                     // if (cChip->getId()!=4){

@@ -127,6 +127,28 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
             }
         }
     }
+
+    if(cConfigureCDCE)
+    {
+        std::string input;
+        LOG(INFO)
+            << BOLDRED
+            << "The configuration file is requiring to reconfigure the CDCE. This ASIC has a limited number of reconfiguration cycles and you should not reconfigure it unless strictly necessary. Do you want to continue? Type 'yes' to proceed or anything else to abort: "
+            << RESET;
+        std::getline(std::cin, input);
+
+        // Convert input to lowercase for case-insensitive comparison
+        std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+
+        if(input != "yes")
+        {
+            LOG(INFO) << BOLDRED << "Aborting. Please set in the xml file the CDCE configure setting to 0\n" << RESET;
+            abort();
+        }
+
+        LOG(INFO) << BOLDRED << "CDCE will be reconfigured" << RESET;
+    }
+
     cBeBoard->setCDCEconfiguration(cConfigureCDCE, cClockRateCDCE);
 
     if(cBoardType == BEBOARD_TYPE_ATTRIBUTE_D19C_VALUE)

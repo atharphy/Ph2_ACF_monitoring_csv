@@ -32,6 +32,7 @@
 #include "DQMUtils/DQMHistogramOTverifyMPASSAdataWord.h"
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #include "DQMUtils/DQMHistogramPedestalEqualization.h"
+#include "DQMUtils/DQMHistogramPedestalEqualizationPSAtPedestal.h"
 #include "DQMUtils/DQMMetadataIT.h"
 #include "DQMUtils/DQMMetadataOT.h"
 #include "DQMUtils/PSPhysicsHistograms.h"
@@ -169,6 +170,18 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCICwordAlignment,
              DQMHistogramOTCICBX0Alignment,
              DQMHistogramOTalignStubPackage,
+             DQMHistogramOTverifyCICdataWord,
+             DQMHistogramOTverifyMPASSAdataWord,
+             DQMHistogramPedestalEqualizationPSAtPedestal,
+             DQMHistogramPedeNoise>("PSpedestalcalibrationandpedenoise");
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramOTPSADCCalibration,
@@ -324,7 +337,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramOTPSringOscillatorTest,
-             DQMHistogramPedestalEqualization,
+             DQMHistogramPedestalEqualizationPSAtPedestal,
              DQMHistogramPedeNoise,
              DQMHistogramOTinjectionDelayOptimization,
              DQMHistogramOTinjectionOccupancyScan,
@@ -351,7 +364,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramOTPSringOscillatorTest,
-             DQMHistogramPedestalEqualization,
+             DQMHistogramPedestalEqualizationPSAtPedestal,
              DQMHistogramPedeNoise>("PSfullTestPart1");
 
     Register<DQMMetadataOT,

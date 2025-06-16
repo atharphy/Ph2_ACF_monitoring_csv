@@ -31,7 +31,7 @@ void OTPSADCCalibration::Initialise(void)
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_D5TDR$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_D5ALLV$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_D5ALLI$");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_D5DAC8$");
+    // fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_D5DAC8$");
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: plots are booked during initialization
