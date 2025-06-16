@@ -119,9 +119,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
             if(std::string(cAttribute.name()) == BEBOARD_CDCE_CLOCKRATE_ATTRIBUTE_NAME)
             {
                 if(std::strcmp(cAttribute.value(), "ELE") == 0)
-                    cClockRateCDCE = 320;
-                else if(std::strcmp(cAttribute.value(), "OPT") == 0)
                     cClockRateCDCE = 160;
+                else if(std::strcmp(cAttribute.value(), "OPT") == 0)
+                    cClockRateCDCE = 320;
                 else
                     cClockRateCDCE = convertAnyInt(cAttribute.value());
             }

@@ -1436,7 +1436,7 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doSto
         0xEB840302, // OUT2 --> DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
         0xEB840303, // OUT3 --> Not used (240 MHz, LVDS, phase shift 0 deg)
         0xEB140334, // OUT4 --> Not used (40 MHz, LVDS, R4.1 = 1, ph4adjc = 0)
-        0x10000E75, // Reference selection: 0x10000E75 primary reference, 0x10000EB5 secondary reference
+        0x10000EB5, // Reference selection: 0x10000E75 primary reference, 0x10000EB5 secondary reference
         0x030E02E6, // VCO selection: 0xyyyyyyEy select VCO1 if CDCE reference is 40 MHz, 0xyyyyyyFy select VCO2 if CDCE reference is > 40 MHz
                     // VCO1, PS = 4, FD = 12, FB = 1, ChargePump 50 uA, Internal Filter, R6.20 = 0, AuxOut = enable, AuxOut = OUT2
         0xBD800DF7, // RC network parameters: C2 = 473.5 pF, R2 = 98.6 kOhm, C1 = 0 pF, C3 = 0 pF, R3 = 5 kOhm etc, SEL_DEL1 = 1, SEL_DEL2 = 1
@@ -1455,10 +1455,20 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doSto
     // 0xyy8203yy --> 320 MHz
     // 0xyy8003yy --> 480 MHz
 
+    // #######################
+    // # Set clock frequency #
+    // #######################
+    if(refClockRate == 160)
+        SPIregSettings[1] = 0xEB020321;
+    else if(refClockRate == 320)
+        SPIregSettings[1] = 0xEB820321;
+    else
+        throw Exception("[RD53FWInterface::InitializeClockGenerator] CDCE reference clock rate not recognized");
+
     // ########################################
     // # Check if CDCE was already programmed #
     // ########################################
-    if(RD53FWInterface::ReadClockGenerator(SPIregSettings, true, false) == false)
+    if(RD53FWInterface::ReadClockGenerator(SPIregSettings, true, false) == true)
     {
         LOG(INFO) << GREEN << "The CDCE was already programmed --> Skipping reprogramming" << RESET;
         return;
@@ -1470,8 +1480,7 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doSto
     std::string input;
     LOG(WARNING) << BOLDRED << "The CDCE has a limited number of reconfiguration cycles. You should not reconfigure it unless strictly necessary. Do you want to continue ('yes' / 'no')?" << RESET;
     std::cin >> input;
-    // Convert input to lowercase for case-insensitive comparison
-    std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+    std::transform(input.begin(), input.end(), input.begin(), ::tolower); // Convert input to lowercase for case-insensitive comparison
     if(input != "yes")
     {
         LOG(WARNING) << RESET << GREEN << "Not configuring the CDCE. Please set in the XML file the CDCE configure setting to 0" << RESET;
@@ -1479,13 +1488,9 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doSto
     }
     LOG(WARNING) << RESET << BOLDRED << "CDCE will be reconfigured" << RESET;
 
-    if(refClockRate == 160)
-        SPIregSettings[1] = 0xEB020321;
-    else if(refClockRate == 320)
-        SPIregSettings[1] = 0xEB820321;
-    else
-        throw Exception("[RD53FWInterface::InitializeClockGenerator] CDCE reference clock rate not recognized");
-
+    // #########
+    // # Write #
+    // #########
     for(const auto value: SPIregSettings)
     {
         RegManager::WriteReg("system.spi.tx_data", value);
@@ -1520,7 +1525,7 @@ bool RD53FWInterface::ReadClockGenerator(uint32_t reference[], bool checkMatch, 
     const uint32_t SPIreadCommands[] = {0x0E, 0x1E, 0x2E, 0x3E, 0x4E, 0x5E, 0x6E, 0x7E, 0x8E}; // @CONST@
 
     if(verbose == true) LOG(INFO) << GREEN << "Reading clock generator (CDCE62005) configuration" << RESET;
-    for(auto i = 0; i < 9; i++)
+    for(auto i = 0u; i < RD53Shared::arraySize(SPIreadCommands); i++)
     {
         RegManager::WriteReg("system.spi.tx_data", SPIreadCommands[i]);
         RegManager::WriteReg("system.spi.command", writeSPI);
@@ -1533,7 +1538,7 @@ bool RD53FWInterface::ReadClockGenerator(uint32_t reference[], bool checkMatch, 
         myString << std::right << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << readback << std::dec;
         if(verbose == true) LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << std::dec << RESET;
 
-        if((checkMatch == true) && (i != 8) && (readback != reference[i])) match = false;
+        if((checkMatch == true) && (i != RD53Shared::arraySize(SPIreadCommands) - 1) && (readback != reference[i])) match = false;
     }
 
     return match;
