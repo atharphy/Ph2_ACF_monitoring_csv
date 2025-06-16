@@ -5,6 +5,7 @@
 #include "HWInterface/D19cOpticalInterface.h"
 #include "HWInterface/VTRxInterface.h"
 #include "MonitorUtils/DetectorMonitor.h"
+#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -23,6 +24,13 @@ void OTVTRXLightOff::Running()
     Initialise();
     TurnOffLight();
     fKeepRunning = false;
+    if(fDQMStreamerEnabled == true)
+    {
+        std::string  doneWithRunMessage = END_OF_TRANSMISSION_MESSAGE;
+        PacketHeader thePacketHeader;
+        thePacketHeader.addPacketHeader(doneWithRunMessage);
+        fDQMStreamer->broadcast(doneWithRunMessage);
+    }
 }
 
 void OTVTRXLightOff::TurnOffLight()

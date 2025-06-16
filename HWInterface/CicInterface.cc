@@ -469,7 +469,7 @@ bool CicInterface::AutomatedWordAlignment(Chip* pChip, std::vector<uint8_t> pAli
 bool CicInterface::PrepareForAutomatedBX0Alignment(Chip* theCic, std::vector<uint8_t> pAlignmentPatterns, uint8_t pLine, uint8_t pFEChip)
 {
     setBoard(theCic->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Running automated BX0 alignment in CIC on FE" << +theCic->getHybridId() << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Prepare for automated BX0 alignment in CIC on FE" << +theCic->getHybridId() << RESET;
     LOG(INFO) << BOLDBLUE << "Configuring BX0 alignment patterns on CIC" << RESET;
     bool cSuccess;
     cSuccess = ConfigureAlignmentPatterns(theCic, pAlignmentPatterns);
@@ -577,7 +577,7 @@ bool CicInterface::CheckAutomatedBX0Alignment(Chip* pChip)
 bool CicInterface::AutomatedBX0Alignment(Chip* pChip, std::vector<uint8_t> pAlignmentPatterns)
 {
     setBoard(pChip->getBeBoardId());
-    LOG(INFO) << BOLDBLUE << "Running automated BX0 alignment in CIC on FE" << +pChip->getHybridId() << RESET;
+    LOG(INFO) << BOLDMAGENTA << "Running automated BX0 alignment in CIC on FE" << +pChip->getHybridId() << RESET;
     LOG(INFO) << BOLDBLUE << "Configuring BX0 alignment patterns on CIC" << RESET;
     bool cSuccess;
     cSuccess = ConfigureAlignmentPatterns(pChip, pAlignmentPatterns);

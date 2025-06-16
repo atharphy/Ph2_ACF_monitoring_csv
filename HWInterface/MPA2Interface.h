@@ -137,6 +137,13 @@ class MPA2Interface : public ReadoutChipInterface
     float getVrefMinValue(Ph2_HwDescription::ReadoutChip* pMPA2);
     float getVrefMaxValue(Ph2_HwDescription::ReadoutChip* pMPA2);
 
+    bool     SetVtrim(Ph2_HwDescription::ReadoutChip* pMPA2, uint16_t Vtrim);
+    uint16_t ReadVtrim(Ph2_HwDescription::ReadoutChip* pMPA2);
+
+    bool     SetTrimBitsAll(Ph2_HwDescription::ReadoutChip* pMPA2, uint16_t trimBits);
+    bool     SetTrimBitsChannel(Ph2_HwDescription::ReadoutChip* pMPA2, uint16_t trimBits, uint16_t row, uint16_t col);
+    uint16_t ReadTrimBitsChannel(Ph2_HwDescription::ReadoutChip* pMPA2, uint16_t row, uint16_t col);
+
     float                                calculateADCLSB(Ph2_HwDescription::ReadoutChip* pMPA2, float theVrefValue = MPA2_VREF_EXPECTED) override;
     bool                                 injectNoiseClusters(Ph2_HwDescription::ReadoutChip* pMPA, std::vector<Cluster> theClusterList);
     const std::map<std::string, uint8_t> ECM_TABLE = {{"StubWindow", 0}, {"StubMode", 6}};

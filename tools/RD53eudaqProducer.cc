@@ -141,7 +141,7 @@ void RD53eudaqProducer::AddBoreInfoToEvent(eudaq::Event& ev) const
     ev.SetTag("Dataformat version", CMSITEventData::DataFormatVersion);
     ev.SetTag("Configuration file", "\n" + RD53sysCntrPhys.fParsedFile.str());
 
-    for(const auto cBoard: *(RD53sysCntrPhys.fDetectorContainer))
+    for(const auto cBoard: *RD53sysCntrPhys.fDetectorContainer)
     {
         std::stringstream header;
         header << "Firmware version: B" << cBoard->getId();

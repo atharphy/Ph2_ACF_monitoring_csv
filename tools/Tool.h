@@ -259,7 +259,15 @@ class Tool : public Ph2_System::SystemController
                  uint32_t                            numberOfEvents,
                  std::vector<DetectorDataContainer*> detectorContainerVector,
                  int32_t                             numberOfEventsPerBurst = -1);
-
+    void scanDacChip(const std::string&                  dacName,
+                     const std::vector<uint16_t>&        dacList,
+                     uint32_t                            numberOfEvents,
+                     std::vector<DetectorDataContainer*> detectorContainerVector,
+                     int32_t                             numberOfEventsPerBurst,
+                     uint16_t                            boardId,
+                     uint16_t                            OGId,
+                     uint16_t                            hybridId,
+                     uint16_t                            ChipId);
     // One dimensional dac scan per BeBoard
     void scanBeBoardDac(uint16_t                             boardId,
                         const std::string&                   dacName,
