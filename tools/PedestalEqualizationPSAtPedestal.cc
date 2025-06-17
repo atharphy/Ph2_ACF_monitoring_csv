@@ -367,6 +367,7 @@ void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyThreshold(const Detect
                 {
                     auto theChipContainer = fTheMaxOccupancyThresholdContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
                     LOG(DEBUG) << BOLDBLUE << "Looking for DACmaxOccupancy for chip " << cChip->getId() << RESET;
+                    float thePedestal = 0;
                     for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
@@ -382,9 +383,14 @@ void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyThreshold(const Detect
                                 totalOccupancy += occupancy;
                             }
                             DACmaxOccupancy /= totalOccupancy;
+                            thePedestal += DACmaxOccupancy;
                             theChipContainer->getChannel<uint16_t>(row, col) = static_cast<uint16_t>(std::lround(DACmaxOccupancy));
+
                         } // col
                     } // row
+                    thePedestal                 = thePedestal / (cChip->getNumberOfCols() * cChip->getNumberOfRows());
+                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                    theReadoutChip->setAveragePedestal(thePedestal);
                 } // chip
             }
         }
@@ -415,7 +421,7 @@ void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyTrimBits(const Detecto
                 for(auto cChip: *cHybrid)
                 {
                     auto theChipContainer = fTheMaxOccupancyTrimBitsContainers.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                    LOG(DEBUG) << BOLDBLUE << "Looking for DACmaxOccupancy for chip " << cChip->getId() << RESET;
+                    LOG(DEBUG) << BOLDBLUE << "Looking for DACmaxOccupancy for chip " << getReadoutChipString(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId()) << RESET;
                     for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
@@ -425,6 +431,12 @@ void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyTrimBits(const Detecto
 
                             auto     maxIter         = std::max_element(occupancyMap.begin(), occupancyMap.end(), [](const auto& a, const auto& b) { return a.second < b.second; });
                             uint16_t DACmaxOccupancy = maxIter->first;
+                            if(maxIter->second == 0.0f)
+                            {
+                                LOG(DEBUG) << RED << "All occupancies are zero for row " << row << " col " << col << " setting trim bit to max " << RESET;
+                                DACmaxOccupancy = 0x1F;
+                            }
+
                             theChipContainer->getChannel<uint16_t>(row, col) = DACmaxOccupancy;
                         } // col
                     } // row
