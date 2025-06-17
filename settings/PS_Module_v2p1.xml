@@ -2,7 +2,7 @@
 <HwDescription>
   <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
   <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="1">
-    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.192:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
+    <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.10:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <configuration file_name="${PH2ACF_BASE_DIR}/settings/BeBoardFiles/uDTC_registers_PS.xml"/>
     <CDCE configure="0" clockRate="320"/>
         
@@ -283,6 +283,7 @@
     <Setting name="OTinjectionDelayOptimization_MPAtestPulseValue">0.5</Setting> <!-- MIP units -->
     <Setting name="OTinjectionDelayOptimization_SSAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
     <Setting name="OTinjectionDelayOptimization_MPAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
+    <Setting name="OTinjectionDelayOptimization_CBCnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
 
     <Setting name="OTMeasureOccupancy_NumberOfEvents">10000</Setting>
     <Setting name="OTMeasureOccupancy_SSAtestPulseValue">1.</Setting> <!-- MIP units -->
@@ -296,6 +297,9 @@
     <Setting name="OTinjectionOccupancyScan_ListOfInjectedPulses"> 0, 0.25, 0.5, 1., 2.</Setting> <!-- MIP units -->
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithoutInjection"> 1000000</Setting>
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithInjection"> 1000</Setting>
+    <Setting name="OTinjectionOccupancyScan_SSAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
+    <Setting name="OTinjectionOccupancyScan_MPAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
+    <Setting name="OTinjectionOccupancyScan_CBCnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
 
     <Setting name="OTalignLpGBTinputsForBypass_NumberOfTestedBits"> 1e6</Setting>
 
