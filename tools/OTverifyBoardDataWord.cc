@@ -4,9 +4,7 @@
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/Utilities.h"
-#include <nlohmann/json.hpp>
 #include <sstream>
-using json = nlohmann::json;
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -34,13 +32,6 @@ void OTverifyBoardDataWord::Initialise(void)
     // Calibration is not running on the SoC: plots are booked during initialization
     fDQMHistogramOTverifyBoardDataWord.book(fResultFile, *fDetectorContainer, fSettingsMap);
 #endif
-    std::string fJsonOutputPath = findValueInSettings<std::string>("JsonOutfile", "");
-    if (fJsonOutputPath != "")
-    {
-            LOG(INFO) << BOLDYELLOW << "Writing json output to : " << fJsonOutputPath << RESET;
-            std::ofstream* outStream = new std::ofstream(fJsonOutputPath);
-            setOfStream(outStream);
-    }
 }
 
 void OTverifyBoardDataWord::ConfigureCalibration() {}
@@ -95,24 +86,6 @@ void OTverifyBoardDataWord::runIntegrityTest()
         }
     }
 
-    // write to ofstream if requested
-    if(fOfStream != nullptr)
-    {
-        json j;
-        j["type"] = "data";
-        for(auto theBoard: fPatternMatchingEfficiencyContainer)
-        {
-            for(auto theOpticalGroup: *theBoard)
-            {
-                for(auto theHybrid: *theOpticalGroup)
-                {
-                    j["data"]["BoardDataWord"][std::to_string(theBoard->getId())][std::to_string(theOpticalGroup->getId())][std::to_string(theHybrid->getId())] =
-                        theHybrid->getSummary<std::vector<float>>();
-                }
-            }
-        }
-        *(fOfStream) << j << std::endl;
-    }
 #ifdef __USE_ROOT__
     fDQMHistogramOTverifyBoardDataWord.fillPatternMatchingEfficiency(fPatternMatchingEfficiencyContainer);
 #else
