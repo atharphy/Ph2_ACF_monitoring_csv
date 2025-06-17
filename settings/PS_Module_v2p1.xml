@@ -299,7 +299,6 @@
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithInjection"> 1000</Setting>
     <Setting name="OTinjectionOccupancyScan_SSAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
     <Setting name="OTinjectionOccupancyScan_MPAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
-    <Setting name="OTinjectionOccupancyScan_CBCnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
 
     <Setting name="OTalignLpGBTinputsForBypass_NumberOfTestedBits"> 1e6</Setting>
 
