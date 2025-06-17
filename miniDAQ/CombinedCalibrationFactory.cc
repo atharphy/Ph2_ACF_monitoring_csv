@@ -66,11 +66,6 @@ using namespace MessageUtils;
 
 CombinedCalibrationFactory::CombinedCalibrationFactory()
 {
-    // reduced test set for integration
-    Register<OTlpGBTID>("Integration", "LPGBTID");
-
-    Register<TuneLpGBTVref, OTVTRxLightYieldScan, OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord>("Integration", "MinimalTest");
-
     // Common calibrations
     Register<TuneLpGBTVref>("Common", "tunelpgbtvref");
 
@@ -373,6 +368,11 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTPSringOscillatorTest>("PS Module", "ringOscillatorTest");
 
     Register<OTalignBoardDataWord, OTPScommonNoise>("PS Module", "commonNoisePS");
+
+    // reduced test set for DEE integration
+    Register<OTlpGBTID>("DEE Integration", "LPGBTID");
+
+    Register<TuneLpGBTVref, OTVTRxLightYieldScan, OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord>("DEE Integration", "MinimalTest");
 
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");
