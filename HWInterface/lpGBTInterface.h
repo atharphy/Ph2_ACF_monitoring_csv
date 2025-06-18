@@ -248,8 +248,10 @@ class lpGBTInterface : public ChipInterface
     std::map<uint8_t, uint8_t> fGroup2BERTsourceCourse      = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}};
     std::map<uint8_t, uint8_t> fChannelSpeed2BERTsourceFine = {{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {6, 5}, {8, 6}}; // channel + 4 * (2 - frontendSpeed)
 
-    // Power Up State Machine maps for both LpGBT-v0 and LpGBT-v1
-    // Map read as : map[lpgbt_version][state_id] = state_description
+    // ##################################################################
+    // # Power Up State Machine maps for both LpGBT-v0 and LpGBT-v1/2   #
+    // # Map read as : map[lpgbt_version][state_id] = state_description #
+    // ##################################################################
     std::map<uint8_t, std::map<uint8_t, std::string>> fPUSMStatusMap = {{0,
                                                                          {{0, "ARESET"},
                                                                           {1, "RESET"},
