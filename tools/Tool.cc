@@ -906,6 +906,8 @@ void Tool::dumpConfigFiles(bool checkReadOnlyRegisters)
 
     if(checkReadOnlyRegisters) readAllReadOnlyRegisters();
 
+    if(std::getenv("OTSDAQ_CMSTRACKER_DIR") != nullptr) return;
+
     if(!fDirectoryName.empty())
     {
         FileDumper theFileDumper(fDirectoryName);
