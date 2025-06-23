@@ -1001,6 +1001,7 @@ void DQMHistogramPedeNoise::fitSCurves()
                             else if((cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS))
                             {
                                 TF1* cFit = new TF1("SCurveFit", MyErfc, cChannelPedestal - (cChannelNoise * 5), cChannelPedestal + (cChannelNoise * 5), 2);
+                                cFit->SetNpx(100);
                                 cFit->SetParameter(0, cChannelPedestal);
                                 cFit->SetParameter(1, cChannelNoise);
 
