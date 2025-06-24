@@ -2269,15 +2269,15 @@ void Tool::scanBeBoardDac(uint16_t                             boardId,
         // # Loop over goups ... #
         // # Loop over DAC ...   #
         // #######################
+
         ScanBeBoardDacPerGroup theScan(this);
         theScan.setDataContainerVector(&detectorContainerVector);
         theScan.setDacName(dacName);
         theScan.setDacList(&dacList);
+
         doScanOnAllGroupsBeBoard(boardId, numberOfEvents, numberOfEventsPerBurst, &theScan);
         if(fDetectorContainer->getObject(boardId)->getBoardType() == BoardType::D19C)
-        {
             numberOfEvents = numberOfEvents * (fBeBoardInterface->ReadBoardReg(fDetectorContainer->getObject(boardId), "fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity") + 1);
-        }
         for(auto container: detectorContainerVector) container->normalizeAndAverageContainers(fDetectorContainer, getChannelGroupHandlerContainer(), numberOfEvents);
     }
     else if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53A)

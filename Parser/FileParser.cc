@@ -116,35 +116,43 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
         for(pugi::xml_attribute cAttribute: cChild.attributes())
         {
             if(std::string(cAttribute.name()) == BEBOARD_CDCE_CONFIGURE_ATTRIBUTE_NAME) cConfigureCDCE = cConfigureCDCE | (convertAnyInt(cAttribute.value()) == 1);
-            if(std::string(cAttribute.name()) == BEBOARD_CDCE_CLOCKRATE_ATTRIBUTE_NAME) cClockRateCDCE = convertAnyInt(cAttribute.value());
+            if(std::string(cAttribute.name()) == BEBOARD_CDCE_CLOCKRATE_ATTRIBUTE_NAME)
+            {
+                if(std::strcmp(cAttribute.value(), "ELE") == 0)
+                    cClockRateCDCE = 160;
+                else if(std::strcmp(cAttribute.value(), "OPT") == 0)
+                    cClockRateCDCE = 320;
+                else
+                    cClockRateCDCE = convertAnyInt(cAttribute.value());
+            }
         }
     }
-
-    if(cConfigureCDCE)
-    {
-        std::string input;
-        LOG(INFO)
-            << BOLDRED
-            << "The configuration file is requiring to reconfigure the CDCE. This ASIC has a limited number of reconfiguration cycles and you should not reconfigure it unless strictly necessary. Do you want to continue? Type 'yes' to proceed or anything else to abort: "
-            << RESET;
-        std::getline(std::cin, input);
-
-        // Convert input to lowercase for case-insensitive comparison
-        std::transform(input.begin(), input.end(), input.begin(), ::tolower);
-
-        if(input != "yes")
-        {
-            LOG(INFO) << BOLDRED << "Aborting. Please set in the xml file the CDCE configure setting to 0\n" << RESET;
-            abort();
-        }
-
-        LOG(INFO) << BOLDRED << "CDCE will be reconfigured" << RESET;
-    }
-
-    cBeBoard->setCDCEconfiguration(cConfigureCDCE, cClockRateCDCE);
 
     if(cBoardType == BEBOARD_TYPE_ATTRIBUTE_D19C_VALUE)
+    {
+        if(cConfigureCDCE)
+        {
+            std::string input;
+            LOG(INFO)
+                << BOLDRED
+                << "The configuration file is requiring to reconfigure the CDCE. This ASIC has a limited number of reconfiguration cycles and you should not reconfigure it unless strictly necessary. Do you want to continue? Type 'yes' to proceed or anything else to abort: "
+                << RESET;
+            std::getline(std::cin, input);
+
+            // Convert input to lowercase for case-insensitive comparison
+            std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+
+            if(input != "yes")
+            {
+                LOG(INFO) << BOLDRED << "Aborting. Please set in the xml file the CDCE configure setting to 0\n" << RESET;
+                abort();
+            }
+
+            LOG(INFO) << BOLDRED << "CDCE will be reconfigured" << RESET;
+        }
+
         cBeBoard->setBoardType(BoardType::D19C);
+    }
     else if(cBoardType == BEBOARD_TYPE_ATTRIBUTE_RD53_VALUE)
         cBeBoard->setBoardType(BoardType::RD53);
     else
@@ -154,6 +162,8 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
         throw Exception(errorstring.c_str());
         exit(EXIT_FAILURE);
     }
+
+    cBeBoard->setCDCEconfiguration(cConfigureCDCE, cClockRateCDCE);
 
     pugi::xml_attribute cEventTypeAttribute = pBeBordNode.attribute(BEBOARD_EVENT_TYPE_ATTRIBUTE_NAME);
     std::string         cEventTypeString;

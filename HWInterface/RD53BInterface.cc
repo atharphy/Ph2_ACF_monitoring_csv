@@ -83,7 +83,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     for(auto i = 0u; i < registerClkDataDelayList.size(); i++)
     {
         auto cRegItem = pRD53RegMap.find(*std::next(registerClkDataDelayList.begin(), i));
-        if((cRegItem->second.fPrmptCfg == true) && (cRegItem != pRD53RegMap.end()))
+        if((cRegItem != pRD53RegMap.end()) && (cRegItem->second.fPrmptCfg == true))
         {
             doWriteClkDataDelay = true;
 

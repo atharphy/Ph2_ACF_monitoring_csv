@@ -74,6 +74,12 @@ std::string gitInfo(const std::string& what);
 
 constexpr size_t setBits(size_t nBit2Set) { return (1L << nBit2Set) - 1; }
 
+template <size_t N>
+static auto arraySize(const uint32_t (&arr)[N])
+{
+    return N;
+}
+
 template <typename T>
 static void setFirstChip(T& theDetectorContainer)
 {

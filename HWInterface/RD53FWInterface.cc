@@ -25,8 +25,8 @@ const std::array<std::string, 8> RD53FWInterface::FastCommandsConfig::fastCmdWhi
                                                                                           "user.ctrl_regs.fast_cmd_reg_2.trigger_duration",
                                                                                           "user.ctrl_regs.fast_cmd_reg_2.HitOr_enable_l12"}; // @CONST@
 
-RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
-    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), ddr3Offset(0), FWinfo(0)
+RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* pBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, pBoard), ddr3Offset(0), FWinfo(0)
 {
 }
 
@@ -41,7 +41,7 @@ void RD53FWInterface::setFileHandler(FileHandler* pHandler)
         LOG(ERROR) << BOLDRED << "NULL FileHandler" << RESET;
 }
 
-void RD53FWInterface::ResetSequence(const std::string& refClockRate)
+void RD53FWInterface::ResetSequence(const BeBoard* pBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Resetting the backend board... it may take a while" << RESET;
 
@@ -52,7 +52,8 @@ void RD53FWInterface::ResetSequence(const std::string& refClockRate)
     // ##############################
     // # Initialize clock generator #
     // ##############################
-    RD53FWInterface::InitializeClockGenerator(refClockRate);
+    auto CDCEconfig = pBoard->configCDCE();
+    if(CDCEconfig.first == true) RD53FWInterface::InitializeClockGenerator(CDCEconfig.second);
 
     // ###################################
     // # Reset optical link slow control #
@@ -218,8 +219,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
         LOG(ERROR) << BOLDRED << "===== Aborting =====" << RESET;
         exit(EXIT_FAILURE);
     }
-    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz"
-              << std::setprecision(-1) << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical - ELE (optical - OPT) readout): " << BOLDYELLOW << gtxClk / 1000.
+              << " MHz" << std::setprecision(-1) << RESET;
     if(!((fabs(gtxClk / 1000. - 160) < clkSafeMargin) || (fabs(gtxClk / 1000. - 320) < clkSafeMargin)))
     {
         LOG(ERROR) << BOLDRED << "GTX receiver clock frequency not nominal" << RESET;
@@ -1421,7 +1422,7 @@ void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const u
 // # Clock generator #
 // ###################
 
-void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, bool doStoreInEEPROM)
+void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doStoreInEEPROM)
 // ############################
 // # refClockRate = 160 [MHz] #
 // # refClockRate = 320 [MHz] #
@@ -1435,7 +1436,7 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
         0xEB840302, // OUT2 --> DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
         0xEB840303, // OUT3 --> Not used (240 MHz, LVDS, phase shift 0 deg)
         0xEB140334, // OUT4 --> Not used (40 MHz, LVDS, R4.1 = 1, ph4adjc = 0)
-        0x10000E75, // Reference selection: 0x10000E75 primary reference, 0x10000EB5 secondary reference
+        0x10000EB5, // Reference selection: 0x10000E75 primary reference, 0x10000EB5 secondary reference
         0x030E02E6, // VCO selection: 0xyyyyyyEy select VCO1 if CDCE reference is 40 MHz, 0xyyyyyyFy select VCO2 if CDCE reference is > 40 MHz
                     // VCO1, PS = 4, FD = 12, FB = 1, ChargePump 50 uA, Internal Filter, R6.20 = 0, AuxOut = enable, AuxOut = OUT2
         0xBD800DF7, // RC network parameters: C2 = 473.5 pF, R2 = 98.6 kOhm, C1 = 0 pF, C3 = 0 pF, R3 = 5 kOhm etc, SEL_DEL1 = 1, SEL_DEL2 = 1
@@ -1454,13 +1455,42 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
     // 0xyy8203yy --> 320 MHz
     // 0xyy8003yy --> 480 MHz
 
-    if(refClockRate == "160")
+    // #######################
+    // # Set clock frequency #
+    // #######################
+    if(refClockRate == 160)
         SPIregSettings[1] = 0xEB020321;
-    else if(refClockRate == "320")
+    else if(refClockRate == 320)
         SPIregSettings[1] = 0xEB820321;
     else
         throw Exception("[RD53FWInterface::InitializeClockGenerator] CDCE reference clock rate not recognized");
 
+    // ########################################
+    // # Check if CDCE was already programmed #
+    // ########################################
+    if(RD53FWInterface::ReadClockGenerator(SPIregSettings, true, false) == true)
+    {
+        LOG(INFO) << GREEN << "The CDCE was already programmed --> Skipping reprogramming" << RESET;
+        return;
+    }
+
+    // ##################################
+    // # Request feedback from the user #
+    // ##################################
+    std::string input;
+    LOG(WARNING) << BOLDRED << "The CDCE has a limited number of reconfiguration cycles. You should not reconfigure it unless strictly necessary. Do you want to continue ('yes' / 'no')?" << RESET;
+    std::cin >> input;
+    std::transform(input.begin(), input.end(), input.begin(), ::tolower); // Convert input to lowercase for case-insensitive comparison
+    if(input != "yes")
+    {
+        LOG(WARNING) << RESET << GREEN << "Not configuring the CDCE. Please set in the XML file the CDCE configure setting to 0" << RESET;
+        return;
+    }
+    LOG(WARNING) << RESET << BOLDRED << "CDCE will be reconfigured" << RESET;
+
+    // #########
+    // # Write #
+    // #########
     for(const auto value: SPIregSettings)
     {
         RegManager::WriteReg("system.spi.tx_data", value);
@@ -1488,15 +1518,16 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
     }
 }
 
-void RD53FWInterface::ReadClockGenerator()
+bool RD53FWInterface::ReadClockGenerator(uint32_t reference[], bool checkMatch, bool verbose)
 {
+    bool           match = true;
     const uint32_t writeSPI(0x8FA38014);                                                       // Write to SPI @CONST@
     const uint32_t SPIreadCommands[] = {0x0E, 0x1E, 0x2E, 0x3E, 0x4E, 0x5E, 0x6E, 0x7E, 0x8E}; // @CONST@
 
-    LOG(INFO) << GREEN << "Reading clock generator (CDCE62005) configuration" << RESET;
-    for(const auto value: SPIreadCommands)
+    if(verbose == true) LOG(INFO) << GREEN << "Reading clock generator (CDCE62005) configuration" << RESET;
+    for(auto i = 0u; i < RD53Shared::arraySize(SPIreadCommands); i++)
     {
-        RegManager::WriteReg("system.spi.tx_data", value);
+        RegManager::WriteReg("system.spi.tx_data", SPIreadCommands[i]);
         RegManager::WriteReg("system.spi.command", writeSPI);
 
         RegManager::WriteReg("system.spi.tx_data", 0xAAAAAAAA); // Dummy write
@@ -1505,8 +1536,12 @@ void RD53FWInterface::ReadClockGenerator()
         uint32_t          readback = RegManager::ReadReg("system.spi.rx_data");
         std::stringstream myString("");
         myString << std::right << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << readback << std::dec;
-        LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << std::dec << RESET;
+        if(verbose == true) LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << std::dec << RESET;
+
+        if((checkMatch == true) && (i != RD53Shared::arraySize(SPIreadCommands) - 1) && (readback != reference[i])) match = false;
     }
+
+    return match;
 }
 
 // #################################################
