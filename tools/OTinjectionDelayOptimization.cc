@@ -209,7 +209,7 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
                     auto theChipAveragePedestalAndBestDelay =
                         theBestThresholdAndDelayContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<uint16_t, uint16_t>>();
                     auto latencyAndDelay = calculateDACsFromTotalDelay(theChipAveragePedestalAndBestDelay.second, is2Smodule);
-                    // fReadoutChipInterface->WriteChipReg(theChip, "Threshold", theChipAveragePedestalAndBestDelay.first); // This is now set during the occupancy measurement
+                    fReadoutChipInterface->WriteChipReg(theChip, "Threshold", theChipAveragePedestalAndBestDelay.first); // This is now set during the occupancy measurement
                     fReadoutChipInterface->WriteChipReg(theChip, "TriggerLatency", latencyAndDelay.first);
                     auto theChipFrontEndType = theChip->getFrontEndType();
                     if(theChipFrontEndType == FrontEndType::CBC3) fReadoutChipInterface->WriteChipReg(theChip, "TestPulseDelay", latencyAndDelay.second);
