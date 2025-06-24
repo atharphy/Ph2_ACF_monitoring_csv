@@ -30,8 +30,8 @@ OTMeasureOccupancy::~OTMeasureOccupancy()
 void OTMeasureOccupancy::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC[0-6]$");   // threshold
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_THDAC$");   // threshold
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC[0-6]$"); // threshold
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_THDAC$"); // threshold
 
     // free the registers in case any
 
@@ -213,13 +213,14 @@ void OTMeasureOccupancy::setOptimalThreshold()
                     float thePedestal           = theChip->getAveragePedestal();
                     float distanceFromThreshold = 0;
                     auto  theChipFrontEndType   = theChip->getFrontEndType();
-                    
+
                     if(theChipFrontEndType == FrontEndType::CBC3) distanceFromThreshold = -expectedNoise * fCBCnumberOfSigmaNoiseAwayFromPedestal;
-                    if(theChipFrontEndType == FrontEndType::SSA2) 
+                    if(theChipFrontEndType == FrontEndType::SSA2)
                     {
                         float correctedSSAsigma = fSSAnumberOfSigmaNoiseAwayFromPedestal - 1;
-                        distanceFromThreshold = expectedNoise * correctedSSAsigma;
-                        LOG(INFO) << BOLDRED << " For SSAs, we subract one sigma from studies performed on PS_16_FNL-10011, using " << correctedSSAsigma << " instead of " << fSSAnumberOfSigmaNoiseAwayFromPedestal << " as the Noise Sigma away from the pedestal." << RESET;
+                        distanceFromThreshold   = expectedNoise * correctedSSAsigma;
+                        LOG(INFO) << BOLDRED << " For SSAs, we subract one sigma from studies performed on PS_16_FNL-10011, using " << correctedSSAsigma << " instead of "
+                                  << fSSAnumberOfSigmaNoiseAwayFromPedestal << " as the Noise Sigma away from the pedestal." << RESET;
                     }
                     if(theChipFrontEndType == FrontEndType::MPA2) distanceFromThreshold = expectedNoise * fMPAnumberOfSigmaNoiseAwayFromPedestal;
                     float theBestThreshold = thePedestal + distanceFromThreshold;
