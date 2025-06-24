@@ -292,7 +292,7 @@ void PulseShape::fitGraph(int pLow)
                 cPulseFit->SetParLimits(4, 0, 255);
                 cPulseFit->SetParameter(4, 35);
             }
-
+            cPulseFit->SetNpx(100);
             cChannel->fPulse->Fit(cPulseFit, "R+S");
             TString     cDirName = "PulseshapeFits";
             TDirectory* cDir     = dynamic_cast<TDirectory*>(gROOT->FindObject(cDirName));

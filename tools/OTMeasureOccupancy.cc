@@ -30,6 +30,9 @@ OTMeasureOccupancy::~OTMeasureOccupancy()
 void OTMeasureOccupancy::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC[0-6]$"); // threshold
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_THDAC$"); // threshold
+
     // free the registers in case any
 
     fNumberOfEvents    = findValueInSettings<double>("OTMeasureOccupancy_NumberOfEvents", 10000);
@@ -85,6 +88,7 @@ void OTMeasureOccupancy::measureChannelOccupancy(size_t iteration)
     else
         prepareOccupancyMeasurementPS();
 
+    setOptimalThreshold();
     if(fThresholdOffset != 0) applyThresholdOffset();
 
     DetectorDataContainer theOccupancyContainer;
@@ -193,6 +197,38 @@ void OTMeasureOccupancy::prepareOccupancyMeasurementPS()
     setFWTestPulse(injectPulse);
     this->setTestAllChannels(injectAllChannels);
     this->fMaskChannelsFromOtherGroups = true;
+}
+
+void OTMeasureOccupancy::setOptimalThreshold()
+{
+    for(auto theBoard: *fDetectorContainer)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                for(auto theChip: *theHybrid)
+                {
+                    float expectedNoise         = theChip->getAverageNoise();
+                    float thePedestal           = theChip->getAveragePedestal();
+                    float distanceFromThreshold = 0;
+                    auto  theChipFrontEndType   = theChip->getFrontEndType();
+
+                    if(theChipFrontEndType == FrontEndType::CBC3) distanceFromThreshold = -expectedNoise * fCBCnumberOfSigmaNoiseAwayFromPedestal;
+                    if(theChipFrontEndType == FrontEndType::SSA2)
+                    {
+                        float correctedSSAsigma = fSSAnumberOfSigmaNoiseAwayFromPedestal - 1;
+                        distanceFromThreshold   = expectedNoise * correctedSSAsigma;
+                        LOG(INFO) << BOLDRED << " For SSAs, we subract one sigma from studies performed on PS_16_FNL-10011, using " << correctedSSAsigma << " instead of "
+                                  << fSSAnumberOfSigmaNoiseAwayFromPedestal << " as the Noise Sigma away from the pedestal." << RESET;
+                    }
+                    if(theChipFrontEndType == FrontEndType::MPA2) distanceFromThreshold = expectedNoise * fMPAnumberOfSigmaNoiseAwayFromPedestal;
+                    float theBestThreshold = thePedestal + distanceFromThreshold;
+                    fReadoutChipInterface->WriteChipReg(theChip, "Threshold", std::round(theBestThreshold));
+                }
+            }
+        }
+    }
 }
 
 void OTMeasureOccupancy::applyThresholdOffset()

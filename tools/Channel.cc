@@ -156,7 +156,7 @@ void Channel::fitHist(uint32_t pEventsperVcth, bool pHole, uint16_t pValue, TStr
 
         fFit->SetParameter(0, cMid);
         fFit->SetParameter(1, sqrt(2) * cWidth);
-
+        fFit->SetNpx(100);
         // Fit
         fScurve->Fit(fFit, "RNQ+");
         // fScurve->Fit ( fFit, "RQ+" );

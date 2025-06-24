@@ -567,7 +567,7 @@ void HybridTester::processSCurves(uint32_t pEventsperVcth)
             // Fit
             cFit->second->SetParameter(0, cMid);
             cFit->second->SetParameter(1, cWidth);
-
+            cFit->second->SetNpx(100);
             cScurve.second->Fit(cFit->second, "RNQ+");
             cScurve.second->SetLineStyle(2);
             cFit->second->Draw("same");
