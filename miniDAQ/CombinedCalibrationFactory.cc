@@ -5,6 +5,7 @@
 #include "tools/CalibrationExample.h"
 #include "tools/CombinedCalibration.h"
 #include "tools/ConfigureOnly.h"
+#include "tools/MonitorOnly.h"
 #include "tools/ECVLinkAlignmentOT.h"
 #include "tools/ExtTriggerLatencyScan.h"
 #include "tools/KIRA.h"
@@ -67,6 +68,47 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<TuneLpGBTVref>("Common", "tunelpgbtvref");
 
     Register<TuneLpGBTVref, ConfigureOnly>("Common", "configureonly");
+    Register<TuneLpGBTVref, MonitorOnly>("Common", "monitoronly");
+
+    
+    Register<TuneLpGBTVref,
+             OTPSADCCalibration,
+             OTVTRxLightYieldScan,
+             //OTLpGBTEyeOpeningTest,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
+             OTverifyCICdataWord,
+             OTverifyMPASSAdataWord,
+             OTPSringOscillatorTest,
+             PedestalEqualizationPSFullScan,
+             PedeNoisePSLowInjection,
+             OTinjectionDelayOptimization,
+             OTinjectionOccupancyScan,
+             OTPScommonNoise
+             >("Outer Tracker", "commonnoise");
+
+    /* v6-04
+    Register<TuneLpGBTVref, 
+                         OTVTRxLightYieldScan,//: Scan VTRx+ ouput bias and modulation settings and measure the light power
+                        OTalignLpGBTinputs,//: Optimize LpGBT Rx phases to properly decode the inputs from the CICs
+                        OTalignBoardDataWord,//: Find bitslips in the FPGA to decode triggered data on to decode words
+                        OTalignStubPackage,//: Find stub package delay to properly decode stubs in the FC7
+                        OTCICphaseAlignment,//: Run the CIC automatic procedure to find the sampling phase for CBC/MPA stub and L1 lines
+                        OTCICwordAlignment,//: Run the CIC automatic word alignment procedure to properly decode CBC/MPA stub lines
+                        OTPSringOscillatorTest,//: Insert brief calibration description here
+                        OTPSADCCalibration,//: Calibrate the ADC of MPA and SSA chips. First it calibrates VREF using the bandgap values, then it calibrates the ADC biases.
+                        PedestalEqualizationPSFullScan,//: Equalize the pedestal/threshold for all channels with higher precision
+                        PedeNoisePSLowInjection,//: Measure noise and pulse peak with low injection
+                        OTinjectionDelayOptimization,//: Optimize delay for injecting calibration pulses
+//                        OTinjectionOccupancyScan,//: Measure occupancy for different pulse injection
+                        OTPScommonNoise//: Measure common noise in PS modules
+    */
+
 
     // OT calibrations
 
