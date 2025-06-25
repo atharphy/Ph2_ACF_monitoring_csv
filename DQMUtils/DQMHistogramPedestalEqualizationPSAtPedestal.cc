@@ -153,7 +153,7 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
     if(theOccupancyStreamer.attachDeserializer(inputStream))
     {
         // It matched! Decoding data
-        std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
+        // std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
         uint16_t dacIt;
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
         DetectorDataContainer theDetectorData = theOccupancyStreamer.deserializeChipContainer<Occupancy, uint16_t>(fDetectorContainer, dacIt);
@@ -164,7 +164,7 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
     if(theOccupancyTrimBitsStreamer.attachDeserializer(inputStream))
     {
         // It matched! Decoding data
-        std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
+        // std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
         uint16_t dacIt;
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
         DetectorDataContainer theDetectorData = theOccupancyTrimBitsStreamer.deserializeChipContainer<Occupancy, uint16_t>(fDetectorContainer, dacIt);
@@ -176,7 +176,7 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
     if(theMaxStreamer.attachDeserializer(inputStream))
     {
         // It matched! Decoding data
-        std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
+        // std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
         DetectorDataContainer theDetectorData = theMaxStreamer.deserializeChipContainer<uint16_t, EmptyContainer>(fDetectorContainer);
         // Filling the histograms
@@ -186,7 +186,7 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
     if(theTrimBitsStreamer.attachDeserializer(inputStream))
     {
         // It matched! Decoding data
-        std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
+        // std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
         DetectorDataContainer theDetectorData = theTrimBitsStreamer.deserializeChipContainer<uint16_t, EmptyContainer>(fDetectorContainer);
         // Filling the histograms
@@ -197,7 +197,7 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
     if(theReferenceStreamerSmall.attachDeserializer(inputStream))
     {
         // It matched! Decoding data
-        std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
+        // std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
         DetectorDataContainer theDetectorData = theReferenceStreamerSmall.deserializeChipContainer<EmptyContainer, std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>(fDetectorContainer);
         // Filling the histograms
@@ -207,7 +207,7 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
     if(theReferenceStreamerLarge.attachDeserializer(inputStream))
     {
         // It matched! Decoding data
-        std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
+        // std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
         DetectorDataContainer theDetectorData = theReferenceStreamerLarge.deserializeChipContainer<EmptyContainer, std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>(fDetectorContainer);
         // Filling the histograms
@@ -459,6 +459,8 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDa
                                          ->getSummary<HistContainer<TH2F>>()
                                          .fTheHistogram;
                     }
+
+                    if(cChip->hasChannelContainer() == false) continue;
 
                     for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
