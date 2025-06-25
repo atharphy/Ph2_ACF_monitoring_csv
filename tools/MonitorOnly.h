@@ -19,6 +19,10 @@ class MonitorOnly : public Tool
     void Resume() override;
 
     static std::string fCalibrationDescription;
+    
+    // Signal handler for cleanup on termination
+    static void signalHandler(int signal);
+    static MonitorOnly* fInstance;
 
   private:
     void createNamedPipes();
@@ -26,6 +30,7 @@ class MonitorOnly : public Tool
     void monitorCommandPipe();
     void writeDataToPipe();
     bool processCommand(const std::string& command);
+    void loadMQTTSettings();
     
     // MQTT functionality
     void publishToMQTT(const std::string& payload);

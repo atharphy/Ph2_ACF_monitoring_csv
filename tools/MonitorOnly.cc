@@ -3,6 +3,7 @@
 #include "HWDescription/Definition.h"
 #include "Utils/NTChandler.h"
 #include "HWInterface/PSInterface.h"
+#include "Utils/ConsoleColor.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -14,19 +15,35 @@
 #include <stdexcept>
 #include <thread>
 #include <atomic>
+#include <signal.h>
+#include <errno.h>
 
 using namespace Ph2_HwInterface;
 
 std::string MonitorOnly::fCalibrationDescription = "Monitor only test with named pipe communication";
+MonitorOnly* MonitorOnly::fInstance = nullptr;
+
+void MonitorOnly::signalHandler(int signal)
+{
+    LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " Received signal " << signal << ", cleaning up..." << RESET;
+    if (fInstance) {
+        fInstance->fKeepMonitoring.store(false);
+    }
+}
 
 MonitorOnly::MonitorOnly() : Tool()
 {
-    fDataPipeName = "/tmp/monitor_data_pipe";
-    fCommandPipeName = "/tmp/monitor_command_pipe";
+    // Set up static instance for signal handling
+    fInstance = this;
+    
+    // Include PID in pipe names to avoid conflicts between multiple instances
+    pid_t pid = getpid();
+    fDataPipeName = "/tmp/monitor_data_pipe_" + std::to_string(pid);
+    fCommandPipeName = "/tmp/monitor_command_pipe_" + std::to_string(pid);
     fKeepMonitoring.store(false);
     fPaused.store(false);
     
-    // MQTT settings
+    // Default MQTT settings (will be overridden by XML if present)
     fMQTTBrokerHost = "cmslabserver";  // Default MQTT broker
     fMQTTBrokerPort = 1883;         // Default MQTT port
     fMQTTTopic = "/ph2acf/data";  // Default topic
@@ -35,7 +52,40 @@ MonitorOnly::MonitorOnly() : Tool()
 
 MonitorOnly::~MonitorOnly()
 {
+    // Ensure monitoring is stopped
+    fKeepMonitoring.store(false);
+    
+    // Wait for command thread to finish if it's running
+    if (fCommandThread.joinable()) {
+        fCommandThread.join();
+    }
+    
     cleanupNamedPipes();
+    
+    // Clear static instance
+    if (fInstance == this) {
+        fInstance = nullptr;
+    }
+}
+
+void MonitorOnly::loadMQTTSettings()
+{
+    // Load MQTT settings from XML configuration
+    try {
+        fMQTTBrokerHost = findValueInSettings("MQTTBrokerHost", std::string("cmslabserver"));
+        fMQTTBrokerPort = findValueInSettings("MQTTBrokerPort", 1883);
+        fMQTTTopic = findValueInSettings("MQTTTopic", std::string("/ph2acf/data"));
+        bool mqttEnabled = findValueInSettings("MQTTEnabled", true);
+        fMQTTEnabled.store(mqttEnabled);
+        
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " MQTT Settings loaded from XML:" << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << "   Broker Host: " << fMQTTBrokerHost << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << "   Broker Port: " << fMQTTBrokerPort << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << "   Topic: " << fMQTTTopic << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << "   Enabled: " << (fMQTTEnabled.load() ? "Yes" : "No") << RESET;
+    } catch (const std::exception& e) {
+        LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Warning: Could not load MQTT settings from XML, using defaults: " << e.what() << RESET;
+    }
 }
 
 void MonitorOnly::createNamedPipes()
@@ -46,46 +96,69 @@ void MonitorOnly::createNamedPipes()
     
     // Create named pipes
     if (mkfifo(fDataPipeName.c_str(), 0666) == -1) {
-        std::cerr << "Error creating data pipe: " << fDataPipeName << std::endl;
+        LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " Error creating data pipe: " << fDataPipeName << RESET;
         perror("mkfifo data");
     } else {
-        std::cout << "Created data pipe: " << fDataPipeName << std::endl;
+        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " Created data pipe: " << fDataPipeName << RESET;
     }
     
     if (mkfifo(fCommandPipeName.c_str(), 0666) == -1) {
-        std::cerr << "Error creating command pipe: " << fCommandPipeName << std::endl;
+        LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " Error creating command pipe: " << fCommandPipeName << RESET;
         perror("mkfifo command");
     } else {
-        std::cout << "Created command pipe: " << fCommandPipeName << std::endl;
+        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " Created command pipe: " << fCommandPipeName << RESET;
     }
 }
 
 void MonitorOnly::cleanupNamedPipes()
 {
-    // Close pipes if open
-    if (fDataPipe.is_open()) {
-        fDataPipe.close();
+    // Close pipes if open with error handling
+    try {
+        if (fDataPipe.is_open()) {
+            fDataPipe.close();
+            LOG(DEBUG) << BOLDGREEN << __PRETTY_FUNCTION__ << " Data pipe closed" << RESET;
+        }
+    } catch (const std::exception& e) {
+        LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Error closing data pipe: " << e.what() << RESET;
     }
-    if (fCommandPipe.is_open()) {
-        fCommandPipe.close();
+    
+    try {
+        if (fCommandPipe.is_open()) {
+            fCommandPipe.close();
+            LOG(DEBUG) << BOLDGREEN << __PRETTY_FUNCTION__ << " Command pipe closed" << RESET;
+        }
+    } catch (const std::exception& e) {
+        LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Error closing command pipe: " << e.what() << RESET;
     }
     
     // Remove named pipes
-    unlink(fDataPipeName.c_str());
-    unlink(fCommandPipeName.c_str());
+    if (unlink(fDataPipeName.c_str()) == 0) {
+        LOG(DEBUG) << BOLDGREEN << __PRETTY_FUNCTION__ << " Removed data pipe: " << fDataPipeName << RESET;
+    }
+    if (unlink(fCommandPipeName.c_str()) == 0) {
+        LOG(DEBUG) << BOLDGREEN << __PRETTY_FUNCTION__ << " Removed command pipe: " << fCommandPipeName << RESET;
+    }
 }
 
 void MonitorOnly::Running()
 {
-    std::cout << __PRETTY_FUNCTION__ << " Starting MonitorOnly test" << std::endl;
+    LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " Starting MonitorOnly test" << RESET;
+    
+    // Set up signal handlers for clean shutdown when we actually start monitoring
+    signal(SIGINT, signalHandler);  // Ctrl+C
+    signal(SIGTERM, signalHandler); // Termination signal
+    signal(SIGPIPE, SIG_IGN);      // Ignore SIGPIPE to prevent crashes on pipe closure
+    
+    // Load MQTT settings from XML configuration
+    loadMQTTSettings();
     
     // Create named pipes
     createNamedPipes();
     
-    std::cout << "Temperature monitoring will start immediately." << std::endl;
-    std::cout << "- MQTT publishing: " << (fMQTTEnabled.load() ? "ENABLED" : "DISABLED") << std::endl;
-    std::cout << "- Named pipe: Available for readers at " << fDataPipeName << std::endl;
-    std::cout << "- Command pipe: Available at " << fCommandPipeName << std::endl;
+    LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " Temperature monitoring will start immediately." << RESET;
+    LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " - MQTT publishing: " << (fMQTTEnabled.load() ? "ENABLED" : "DISABLED") << RESET;
+    LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " - Named pipe: Available for readers at " << fDataPipeName << RESET;
+    LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " - Command pipe: Available at " << fCommandPipeName << RESET;
     
     fKeepMonitoring.store(true);
     fPaused.store(false);
@@ -96,20 +169,34 @@ void MonitorOnly::Running()
     // Main monitoring loop - write data to pipe
     writeDataToPipe();
     
+    // Check if we were stopped (either by command or signal)
+    if (!fKeepMonitoring.load()) {
+        LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Monitoring stopped, cleaning up..." << RESET;
+        // Don't wait for command thread if we were stopped by signal
+        if (fCommandThread.joinable()) {
+            fCommandThread.detach(); // Let it finish naturally
+        }
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " MonitorOnly test completed (early exit)" << RESET;
+        return;
+    }
+    
     // Wait for command thread to finish
     if (fCommandThread.joinable()) {
         fCommandThread.join();
     }
     
-    std::cout << __PRETTY_FUNCTION__ << " MonitorOnly test completed" << std::endl;
+    LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " MonitorOnly test completed" << RESET;
 }
 
 void MonitorOnly::writeDataToPipe()
 {
-    std::cout << "Starting temperature monitoring..." << std::endl;
+    LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " Starting temperature monitoring..." << RESET;
     
     // Try to open data pipe for writing (non-blocking)
     bool pipe_available = false;
+    
+    // Cache for LpGBT fuse IDs to avoid repeated register reads
+    std::map<uint32_t, uint32_t> fuseIdCache; // optical group ID -> fuse ID
     
     int counter = 0;
     while (fKeepMonitoring.load()) {
@@ -127,29 +214,35 @@ void MonitorOnly::writeDataToPipe()
                     if (theLpGBT == nullptr) continue;
                     
                     try {
-                        // Read LpGBT temperature
-                        float lpgbtTemp = flpGBTInterface->MeasureTemperature(theLpGBT);
-                        json_payload += ",\"LpGBT_OG" + std::to_string(opticalGroup->getId()) + "_temp\":" + std::to_string(lpgbtTemp);
-                        
-                        // Read LpGBT fuse ID
-                        uint32_t lpgbtFuseId = flpGBTInterface->ReadChipFuseID(theLpGBT);
-                        json_payload += ",\"LpGBT_OG" + std::to_string(opticalGroup->getId()) + "_fuseId\":" + std::to_string(lpgbtFuseId);
-                        
-                        // Read sensor temperature (external NTC)
-                        if (!opticalGroup->getNTCMap().empty()) {
-                            auto ntcMap = opticalGroup->getNTCMap();
-                            for (const auto& ntcEntry : ntcMap) {
-                                if (ntcEntry.first == "Sensor") {
-                                    try {
-                                        flpGBTInterface->CdacSetCurrent(theLpGBT, ntcEntry.second, 
-                                            flpGBTInterface->_CdacCodeToCurrent(theLpGBT, ntcEntry.second, 0xaa));
-                                        float resistance = flpGBTInterface->MeasureResistance(theLpGBT, ntcEntry.second, 1000, true);
-                                        float sensorTemp = NTChandler::getInstance().getTemperature(ntcEntry.first, resistance);
-                                        json_payload += ",\"Sensor_OG" + std::to_string(opticalGroup->getId()) + "_temp\":" + std::to_string(sensorTemp);
-                                    } catch (...) {
-                                        json_payload += ",\"Sensor_OG" + std::to_string(opticalGroup->getId()) + "_temp\":\"ERROR\"";
+                        if (counter % 20 == 0) {
+                            // Read LpGBT temperature
+                            float lpgbtTemp = flpGBTInterface->MeasureTemperature(theLpGBT);
+                            json_payload += ",\"LpGBT_OG" + std::to_string(opticalGroup->getId()) + "_temp\":" + std::to_string(lpgbtTemp);
+                            
+                            // Read LpGBT fuse ID (cached to avoid repeated register reads)
+                            uint32_t ogId = opticalGroup->getId();
+                            if (fuseIdCache.find(ogId) == fuseIdCache.end()) {
+                                fuseIdCache[ogId] = flpGBTInterface->ReadChipFuseID(theLpGBT);
+                            }
+                            json_payload += ",\"LpGBT_OG" + std::to_string(ogId) + "_fuseId\":" + std::to_string(fuseIdCache[ogId]);
+                            
+                            // Read sensor temperature (external NTC)
+                
+                            if (!opticalGroup->getNTCMap().empty()) {
+                                auto ntcMap = opticalGroup->getNTCMap();
+                                for (const auto& ntcEntry : ntcMap) {
+                                    if (ntcEntry.first == "Sensor") {
+                                        try {
+                                            flpGBTInterface->CdacSetCurrent(theLpGBT, ntcEntry.second, 
+                                                flpGBTInterface->_CdacCodeToCurrent(theLpGBT, ntcEntry.second, 0xaa));
+                                            float resistance = flpGBTInterface->MeasureResistance(theLpGBT, ntcEntry.second, 1000, true);
+                                            float sensorTemp = NTChandler::getInstance().getTemperature(ntcEntry.first, resistance);
+                                            json_payload += ",\"Sensor_OG" + std::to_string(opticalGroup->getId()) + "_temp\":" + std::to_string(sensorTemp);
+                                        } catch (...) {
+                                            json_payload += ",\"Sensor_OG" + std::to_string(opticalGroup->getId()) + "_temp\":\"ERROR\"";
+                                        }
+                                        break;
                                     }
-                                    break;
                                 }
                             }
                         }
@@ -169,7 +262,7 @@ void MonitorOnly::writeDataToPipe()
                                             chipTemp = thePSInterface->measureTemperature(chip);
                                             // Debug output for first few readings
                                             if (counter < 3) {
-                                                std::cout << "SSA chip " << chip->getId() << " temp: " << chipTemp << std::endl;
+                                                LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << " SSA chip " << chip->getId() << " temp: " << chipTemp << RESET;
                                             }
                                         }
                                     }
@@ -181,7 +274,7 @@ void MonitorOnly::writeDataToPipe()
                                             chipTemp = thePSInterface->measureTemperature(chip);
                                             // Debug output for first few readings
                                             if (counter < 3) {
-                                                std::cout << "MPA chip " << chip->getId() << " temp: " << chipTemp << std::endl;
+                                                LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << " MPA chip " << chip->getId() << " temp: " << chipTemp << RESET;
                                             }
                                         }
                                     }
@@ -222,13 +315,13 @@ void MonitorOnly::writeDataToPipe()
             // Close JSON object
             json_payload += "}";
             
-            // For pipe output, use the old format for compatibility
-            std::string data_line = "TEMP_DATA_" + std::to_string(counter) + 
-                                  ": timestamp=" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
-                                      std::chrono::steady_clock::now().time_since_epoch()).count());
+            // // For pipe output, use the old format for compatibility
+            // std::string data_line = "TEMP_DATA_" + std::to_string(counter) + 
+            //                       ": timestamp=" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
+            //                           std::chrono::steady_clock::now().time_since_epoch()).count());
             
             // Convert JSON back to comma-separated format for pipe (legacy compatibility)
-            std::string pipe_data = data_line;
+            std::string pipe_data = json_payload;
             // Extract data from JSON and append to pipe_data (simplified conversion)
             // This maintains backward compatibility with existing pipe readers
             pipe_data += "\n";
@@ -240,24 +333,59 @@ void MonitorOnly::writeDataToPipe()
                 if (pipe_fd >= 0) {
                     // Someone is reading, we can use the pipe
                     close(pipe_fd);  // Close the test fd
-                    fDataPipe.open(fDataPipeName, std::ios::out);
-                    if (fDataPipe.is_open()) {
-                        pipe_available = true;
-                        std::cout << "Data pipe reader connected, enabling pipe output" << std::endl;
+                    try {
+                        fDataPipe.open(fDataPipeName, std::ios::out);
+                        if (fDataPipe.is_open() && fDataPipe.good()) {
+                            pipe_available = true;
+                            LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " Data pipe reader connected, enabling pipe output" << RESET;
+                        } else {
+                            fDataPipe.close();
+                        }
+                    } catch (const std::exception& e) {
+                        LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Failed to open data pipe for writing: " << e.what() << RESET;
+                        if (fDataPipe.is_open()) {
+                            fDataPipe.close();
+                        }
+                    }
+                } else if (errno != ENXIO) {
+                    // ENXIO is expected when no reader is present, other errors are worth noting
+                    // Only log occasionally to avoid spam
+                    static int open_error_count = 0;
+                    if (++open_error_count % 100 == 0) {
+                        LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Pipe open attempt failed (error count: " << open_error_count 
+                                  << ", errno: " << errno << ")" << RESET;
                     }
                 }
             }
             
             // Write to pipe if available (using legacy format for compatibility)
             if (pipe_available && fDataPipe.is_open()) {
-                fDataPipe << pipe_data;
-                fDataPipe.flush();
-                
-                // Check if pipe is still open (reader disconnected)
-                if (fDataPipe.fail()) {
+                try {
+                    fDataPipe << pipe_data;
+                    fDataPipe.flush();
+                    
+                    // Check if pipe is still open (reader disconnected)
+                    if (fDataPipe.fail() || fDataPipe.bad()) {
+                        fDataPipe.clear();  // Clear error flags
+                        fDataPipe.close();
+                        pipe_available = false;
+                        LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Data pipe reader disconnected, disabling pipe output" << RESET;
+                    }
+                } catch (const std::ios_base::failure& e) {
+                    // Handle pipe write failure (e.g., broken pipe)
+                    LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Pipe write failed (reader disconnected): " << e.what() << RESET;
                     fDataPipe.close();
                     pipe_available = false;
-                    std::cout << "Data pipe reader disconnected, disabling pipe output" << std::endl;
+                } catch (const std::exception& e) {
+                    // Handle other exceptions
+                    LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Unexpected error writing to pipe: " << e.what() << RESET;
+                    fDataPipe.close();
+                    pipe_available = false;
+                } catch (...) {
+                    // Handle any other exceptions
+                    LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Unknown error writing to pipe, disabling pipe output" << RESET;
+                    fDataPipe.close();
+                    pipe_available = false;
                 }
             }
             
@@ -267,8 +395,8 @@ void MonitorOnly::writeDataToPipe()
             counter++;
             
             // Print periodic status
-            if (counter % 10 == 0) {
-                std::cout << "Sent " << counter << " temperature data packets" << std::endl;
+            if (counter % 3 == 0) {
+                LOG(INFO) << BOLDMAGENTA << __PRETTY_FUNCTION__ << " Sent " << counter << " temperature data packets" << RESET;
             }
         }
         
@@ -276,47 +404,71 @@ void MonitorOnly::writeDataToPipe()
         usleep(1000000); // 1 second
     }
     
-    std::cout << "Temperature monitoring stopped. Total packets sent: " << counter << std::endl;
+    LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " Temperature monitoring stopped. Total packets sent: " << counter << RESET;
     
     // Clean up pipe if it was opened
-    if (fDataPipe.is_open()) {
-        fDataPipe.close();
+    try {
+        if (fDataPipe.is_open()) {
+            fDataPipe.close();
+        }
+    } catch (const std::exception& e) {
+        LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Error closing data pipe at end of monitoring: " << e.what() << RESET;
     }
 }
 
 void MonitorOnly::monitorCommandPipe()
 {
-    std::cout << "Starting command monitoring thread..." << std::endl;
+    LOG(DEBUG) << BOLDCYAN << __PRETTY_FUNCTION__ << " Starting command monitoring thread..." << RESET;
     
     while (fKeepMonitoring.load()) {
-        // Try to open command pipe for reading (non-blocking)
-        fCommandPipe.open(fCommandPipeName, std::ios::in);
-        
-        if (fCommandPipe.is_open()) {
-            std::cout << "Command pipe opened for reading" << std::endl;
+        try {
+            // Try to open command pipe for reading (non-blocking)
+            fCommandPipe.open(fCommandPipeName, std::ios::in);
             
-            std::string command;
-            while (fKeepMonitoring.load() && std::getline(fCommandPipe, command)) {
-                if (!command.empty()) {
-                    std::cout << "Received command: '" << command << "'" << std::endl;
-                    
-                    bool should_exit = processCommand(command);
-                    if (should_exit) {
-                        std::cout << "Exit command received, stopping monitoring..." << std::endl;
-                        fKeepMonitoring.store(false);
+            if (fCommandPipe.is_open()) {
+                LOG(DEBUG) << BOLDGREEN << __PRETTY_FUNCTION__ << " Command pipe opened for reading" << RESET;
+                
+                std::string command;
+                while (fKeepMonitoring.load()) {
+                    try {
+                        if (std::getline(fCommandPipe, command)) {
+                            if (!command.empty()) {
+                                LOG(INFO) << BOLDCYAN << __PRETTY_FUNCTION__ << " Received command: '" << command << "'" << RESET;
+                                
+                                bool should_exit = processCommand(command);
+                                if (should_exit) {
+                                    LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Exit command received, stopping monitoring..." << RESET;
+                                    fKeepMonitoring.store(false);
+                                    break;
+                                }
+                            }
+                        } else {
+                            // End of file or pipe closed
+                            if (fCommandPipe.eof() || fCommandPipe.fail()) {
+                                break;
+                            }
+                        }
+                    } catch (const std::exception& e) {
+                        LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Error reading from command pipe: " << e.what() << RESET;
                         break;
                     }
                 }
+                
+                try {
+                    fCommandPipe.close();
+                } catch (const std::exception& e) {
+                    LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Error closing command pipe: " << e.what() << RESET;
+                }
             }
-            
-            fCommandPipe.close();
+        } catch (const std::exception& e) {
+            LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Error in command pipe monitoring: " << e.what() << RESET;
         }
         
         // Short sleep before trying to reopen
         usleep(100000); // 100ms
     }
     
-    std::cout << "Command monitoring thread finished" << std::endl;
+    LOG(DEBUG) << BOLDCYAN << __PRETTY_FUNCTION__ << " Command monitoring thread finished" << RESET;
 }
 
 bool MonitorOnly::processCommand(const std::string& command)
@@ -326,30 +478,32 @@ bool MonitorOnly::processCommand(const std::string& command)
     }
     else if (command == "pause") {
         fPaused.store(true);
-        std::cout << "Monitoring paused" << std::endl;
+        LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Monitoring paused" << RESET;
     }
     else if (command == "resume") {
         fPaused.store(false);
-        std::cout << "Monitoring resumed" << std::endl;
+        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " Monitoring resumed" << RESET;
     }
     else if (command == "status") {
-        std::cout << "Status: " << (fPaused.load() ? "PAUSED" : "RUNNING") << std::endl;
-        std::cout << "Named Pipe: " << (fDataPipe.is_open() ? "CONNECTED" : "DISCONNECTED") << std::endl;
-        std::cout << "MQTT: " << (fMQTTEnabled.load() ? "ENABLED" : "DISABLED") << std::endl;
-        std::cout << "MQTT Broker: " << fMQTTBrokerHost << ":" << fMQTTBrokerPort << std::endl;
-        std::cout << "MQTT Topic: " << fMQTTTopic << std::endl;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " Status: " << (fPaused.load() ? "PAUSED" : "RUNNING") << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " Data Pipe: " << fDataPipeName << " (" << (fDataPipe.is_open() ? "CONNECTED" : "DISCONNECTED") << ")" << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " Command Pipe: " << fCommandPipeName << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " MQTT: " << (fMQTTEnabled.load() ? "ENABLED" : "DISABLED") << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " MQTT Broker: " << fMQTTBrokerHost << ":" << fMQTTBrokerPort << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " MQTT Topic: " << fMQTTTopic << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " Process PID: " << getpid() << RESET;
     }
     else if (command == "mqtt_enable") {
         fMQTTEnabled.store(true);
-        std::cout << "MQTT enabled" << std::endl;
+        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " MQTT enabled" << RESET;
     }
     else if (command == "mqtt_disable") {
         fMQTTEnabled.store(false);
-        std::cout << "MQTT disabled" << std::endl;
+        LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " MQTT disabled" << RESET;
     }
     else {
-        std::cout << "Unknown command: " << command << std::endl;
-        std::cout << "Available commands: exit, quit, stop, pause, resume, status, mqtt_enable, mqtt_disable" << std::endl;
+        LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " Unknown command: " << command << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " Available commands: exit, quit, stop, pause, resume, status, mqtt_enable, mqtt_disable" << RESET;
     }
     
     return false; // Don't exit
@@ -357,7 +511,7 @@ bool MonitorOnly::processCommand(const std::string& command)
 
 void MonitorOnly::Stop()
 {
-    std::cout << __PRETTY_FUNCTION__ << " Stopping MonitorOnly" << std::endl;
+    LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " Stopping MonitorOnly" << RESET;
     
     fKeepMonitoring.store(false);
     
@@ -367,17 +521,19 @@ void MonitorOnly::Stop()
     }
     
     cleanupNamedPipes();
+    
+    LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " MonitorOnly stopped and cleaned up" << RESET;
 }
 
 void MonitorOnly::Pause()
 {
-    std::cout << __PRETTY_FUNCTION__ << " Pausing MonitorOnly" << std::endl;
+    LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Pausing MonitorOnly" << RESET;
     fPaused.store(true);
 }
 
 void MonitorOnly::Resume()
 {
-    std::cout << __PRETTY_FUNCTION__ << " Resuming MonitorOnly" << std::endl;
+    LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " Resuming MonitorOnly" << RESET;
     fPaused.store(false);
 }
 
@@ -408,7 +564,7 @@ void MonitorOnly::publishToMQTT(const std::string& payload)
         // Only log errors occasionally to avoid spam
         static int error_count = 0;
         if (error_count++ % 100 == 0) {
-            std::cerr << "MQTT publish failed (error count: " << error_count << ")" << std::endl;
+            LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " MQTT publish failed (error count: " << error_count << ")" << RESET;
         }
     }
 }
