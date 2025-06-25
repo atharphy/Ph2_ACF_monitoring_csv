@@ -460,8 +460,8 @@ void PedestalEqualizationPSAtPedestal::GetMaximumOccupancyTrimBits(const Detecto
 void PedestalEqualizationPSAtPedestal::GetLowestAndHighestMaxOccupancyThreshold()
 {
     //((row, col), threshold)
-    ContainerFactory::copyAndInitStructure<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>(*fDetectorContainer, fTheSmallestThresholdAtMaxOccupancyContainer);
-    ContainerFactory::copyAndInitStructure<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>(*fDetectorContainer, fTheLargestThresholdAtMaxOccupancyContainer);
+    ContainerFactory::copyAndInitChip<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>(*fDetectorContainer, fTheSmallestThresholdAtMaxOccupancyContainer);
+    ContainerFactory::copyAndInitChip<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>(*fDetectorContainer, fTheLargestThresholdAtMaxOccupancyContainer);
 
     for(auto cBoard: fTheMaxOccupancyThresholdContainers)
     {

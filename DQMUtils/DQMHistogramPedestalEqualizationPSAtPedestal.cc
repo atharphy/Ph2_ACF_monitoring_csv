@@ -199,7 +199,7 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
         // It matched! Decoding data
         std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
-        DetectorDataContainer theDetectorData = theReferenceStreamerSmall.deserializeChipContainer<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>, EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer theDetectorData = theReferenceStreamerSmall.deserializeChipContainer<EmptyContainer, std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>(fDetectorContainer);
         // Filling the histograms
         fillReferenceChannelPlots(theDetectorData, true);
         return true;
@@ -209,7 +209,7 @@ bool DQMHistogramPedestalEqualizationPSAtPedestal::fill(std::string& inputStream
         // It matched! Decoding data
         std::cout << "Matched PedestalEqualizationPSAtPedestal!!!!!\n";
         // Need to tell to the streamer what data are contained (in this case in every channel there is an object of type MyType)
-        DetectorDataContainer theDetectorData = theReferenceStreamerLarge.deserializeChipContainer<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>, EmptyContainer>(fDetectorContainer);
+        DetectorDataContainer theDetectorData = theReferenceStreamerLarge.deserializeChipContainer<EmptyContainer, std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>(fDetectorContainer);
         // Filling the histograms
         fillReferenceChannelPlots(theDetectorData, false);
         return true;
