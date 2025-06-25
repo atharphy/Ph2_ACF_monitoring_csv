@@ -4,6 +4,7 @@
 #include "Utils/NTChandler.h"
 #include "HWInterface/PSInterface.h"
 #include "Utils/ConsoleColor.h"
+#include "MonitorUtils/DetectorMonitor.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -42,6 +43,7 @@ MonitorOnly::MonitorOnly() : Tool()
     fCommandPipeName = "/tmp/monitor_command_pipe_" + std::to_string(pid);
     fKeepMonitoring.store(false);
     fPaused.store(false);
+    fDQMWasRunning = false;  // Initialize DQM monitoring state
     
     // Default MQTT settings (will be overridden by XML if present)
     fMQTTBrokerHost = "cmslabserver";  // Default MQTT broker
@@ -59,6 +61,9 @@ MonitorOnly::~MonitorOnly()
     if (fCommandThread.joinable()) {
         fCommandThread.join();
     }
+    
+    // Re-enable DQM monitoring in case it was disabled
+    enableDQMMonitoring();
     
     cleanupNamedPipes();
     
@@ -160,6 +165,9 @@ void MonitorOnly::Running()
     LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " - Named pipe: Available for readers at " << fDataPipeName << RESET;
     LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " - Command pipe: Available at " << fCommandPipeName << RESET;
     
+    // Disable DQM monitoring to avoid register access conflicts
+    disableDQMMonitoring();
+    
     fKeepMonitoring.store(true);
     fPaused.store(false);
     
@@ -172,6 +180,8 @@ void MonitorOnly::Running()
     // Check if we were stopped (either by command or signal)
     if (!fKeepMonitoring.load()) {
         LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Monitoring stopped, cleaning up..." << RESET;
+        // Re-enable DQM monitoring before exit
+        enableDQMMonitoring();
         // Don't wait for command thread if we were stopped by signal
         if (fCommandThread.joinable()) {
             fCommandThread.detach(); // Let it finish naturally
@@ -184,6 +194,9 @@ void MonitorOnly::Running()
     if (fCommandThread.joinable()) {
         fCommandThread.join();
     }
+    
+    // Re-enable DQM monitoring before normal exit
+    enableDQMMonitoring();
     
     LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " MonitorOnly test completed" << RESET;
 }
@@ -491,6 +504,7 @@ bool MonitorOnly::processCommand(const std::string& command)
         LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " MQTT: " << (fMQTTEnabled.load() ? "ENABLED" : "DISABLED") << RESET;
         LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " MQTT Broker: " << fMQTTBrokerHost << ":" << fMQTTBrokerPort << RESET;
         LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " MQTT Topic: " << fMQTTTopic << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " DQM Monitoring: " << (fDetectorMonitor != nullptr ? (fDQMWasRunning ? "CONTROLLED_BY_MONITOR_ONLY" : "AVAILABLE") : "NOT_AVAILABLE") << RESET;
         LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " Process PID: " << getpid() << RESET;
     }
     else if (command == "mqtt_enable") {
@@ -501,9 +515,17 @@ bool MonitorOnly::processCommand(const std::string& command)
         fMQTTEnabled.store(false);
         LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " MQTT disabled" << RESET;
     }
+    else if (command == "dqm_disable") {
+        disableDQMMonitoring();
+        LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " DQM monitoring manually disabled" << RESET;
+    }
+    else if (command == "dqm_enable") {
+        enableDQMMonitoring();
+        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " DQM monitoring manually enabled" << RESET;
+    }
     else {
         LOG(INFO) << BOLDRED << __PRETTY_FUNCTION__ << " Unknown command: " << command << RESET;
-        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " Available commands: exit, quit, stop, pause, resume, status, mqtt_enable, mqtt_disable" << RESET;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " Available commands: exit, quit, stop, pause, resume, status, mqtt_enable, mqtt_disable, dqm_disable, dqm_enable" << RESET;
     }
     
     return false; // Don't exit
@@ -519,6 +541,9 @@ void MonitorOnly::Stop()
     if (fCommandThread.joinable()) {
         fCommandThread.join();
     }
+    
+    // Re-enable DQM monitoring before cleanup
+    enableDQMMonitoring();
     
     cleanupNamedPipes();
     
@@ -566,5 +591,25 @@ void MonitorOnly::publishToMQTT(const std::string& payload)
         if (error_count++ % 100 == 0) {
             LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " MQTT publish failed (error count: " << error_count << ")" << RESET;
         }
+    }
+}
+
+void MonitorOnly::disableDQMMonitoring()
+{
+    if (fDetectorMonitor != nullptr) {
+        fDetectorMonitor->stopMonitoring();
+        fDQMWasRunning = true;
+        LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " DQM monitoring disabled to avoid register conflicts" << RESET;
+    } else {
+        fDQMWasRunning = false;
+        LOG(INFO) << BOLDBLUE << __PRETTY_FUNCTION__ << " No DQM monitoring found to disable" << RESET;
+    }
+}
+
+void MonitorOnly::enableDQMMonitoring()
+{
+    if (fDetectorMonitor != nullptr && fDQMWasRunning) {
+        fDetectorMonitor->startMonitoring();
+        LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " DQM monitoring re-enabled" << RESET;
     }
 }

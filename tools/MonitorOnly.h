@@ -32,6 +32,10 @@ class MonitorOnly : public Tool
     bool processCommand(const std::string& command);
     void loadMQTTSettings();
     
+    // DQM monitoring control methods
+    void disableDQMMonitoring();
+    void enableDQMMonitoring();
+    
     // MQTT functionality
     void publishToMQTT(const std::string& payload);
 
@@ -44,6 +48,9 @@ class MonitorOnly : public Tool
     
     std::ofstream fDataPipe;
     std::ifstream fCommandPipe;
+    
+    // Track if DQM monitoring was running before we disabled it
+    bool fDQMWasRunning;
     
     // MQTT settings
     std::string fMQTTBrokerHost;
