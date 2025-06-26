@@ -233,8 +233,9 @@
          StopIfCommFails       = 0:  don't exit if some AURORA lanes are down StopIfCommFails       = 1: exit if some AURORA lanes are down
 
          DoNSteps        (threqu):           if != 0 then run threqu with step of 1 for only DoNSteps times
-         TargetCharge    (thradj):           average charge (electrons) corresponding to ToT point = max value - 1
+         TargetCharge    (gainopt):          average charge (electrons) corresponding to ToT point = max value - 1
          TargetOcc       (thrmin):           average pixel occupancy
+         TargetThr       (thradj):           target threshold in electrons
          MaxMaskedPixels (thrmin):           percentage of masked pixels
          OccPerPixel     (pixelalive,noise): per pixel occupancy threshold below/above which pixels are masked
          UnstuckPixels   (pixelalive) = 0: do not try to unstuck pixels; UnstuckPixels = 1: set TDAC to 0 to unstuck pixels

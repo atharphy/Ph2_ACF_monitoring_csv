@@ -1474,20 +1474,6 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doSto
         return;
     }
 
-    // ##################################
-    // # Request feedback from the user #
-    // ##################################
-    std::string input;
-    LOG(WARNING) << BOLDRED << "The CDCE has a limited number of reconfiguration cycles. You should not reconfigure it unless strictly necessary. Do you want to continue ('yes' / 'no')?" << RESET;
-    std::cin >> input;
-    std::transform(input.begin(), input.end(), input.begin(), ::tolower); // Convert input to lowercase for case-insensitive comparison
-    if(input != "yes")
-    {
-        LOG(WARNING) << RESET << GREEN << "Not configuring the CDCE. Please set in the XML file the CDCE configure setting to 0" << RESET;
-        return;
-    }
-    LOG(WARNING) << RESET << BOLDRED << "CDCE will be reconfigured" << RESET;
-
     // #########
     // # Write #
     // #########
@@ -1510,6 +1496,21 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doSto
     // #########################
     if(doStoreInEEPROM == true)
     {
+        // ##################################
+        // # Request feedback from the user #
+        // ##################################
+        std::string input;
+        LOG(WARNING) << BOLDRED << "The CDCE E2PROM has a limited number of reconfiguration cycles. You should not reconfigure it unless strictly necessary. Do you want to continue ('yes' / 'no')?"
+                     << RESET;
+        std::cin >> input;
+        std::transform(input.begin(), input.end(), input.begin(), ::tolower); // Convert input to lowercase for case-insensitive comparison
+        if(input != "yes")
+        {
+            LOG(WARNING) << RESET << GREEN << "Not configuring the CDCE E2PROM" << RESET;
+            return;
+        }
+        LOG(WARNING) << RESET << BOLDRED << "CDCE E2PROM will be reconfigured" << RESET;
+
         RegManager::WriteReg("system.spi.tx_data", writeEEPROM);
         RegManager::WriteReg("system.spi.command", writeSPI);
 
