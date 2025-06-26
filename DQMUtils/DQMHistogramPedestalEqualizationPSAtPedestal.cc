@@ -269,19 +269,10 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillReferenceChannelPlots(con
                                             .fTheHistogram;
                     }
 
-                    auto cChipContainer = theThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-
-                    if(cChipContainer->hasChannelContainer() == false) continue;
-
-                    for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
-                    {
-                        for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)
-                        {
-                            auto theContent = cChipContainer->getSummary<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>();
-                            auto bin        = linearizeRowAndCols(theContent.first.first, theContent.first.second, cChip->getNumberOfCols());
-                            cChipHist->SetBinContent(bin + 1, theContent.second);
-                        }
-                    }
+                    if(cChip->hasSummary() == false) continue;
+                    auto theContent = cChip->getSummary<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>();
+                    auto bin        = linearizeRowAndCols(theContent.first.first, theContent.first.second, cChip->getNumberOfCols());
+                    cChipHist->SetBinContent(bin + 1, theContent.second);
                 }
             }
         }
@@ -434,7 +425,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDa
                                                      ->getObject(cChip->getId())
                                                      ->getSummary<HistContainer<TH1F>>()
                                                      .fTheHistogram;
-                    cChipMaxDistribution->Reset();
+                    // cChipMaxDistribution->Reset();
                     if(cType == FrontEndType::SSA2)
                     {
                         cChipMax = fDetectorChipStripMaxHistograms.getObject(cBoard->getId())
@@ -461,7 +452,7 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillMaxPlots(const DetectorDa
                     }
 
                     if(cChip->hasChannelContainer() == false) continue;
-
+                    cChipMaxDistribution->Reset();
                     for(uint16_t row = 0; row < cChip->getNumberOfRows(); ++row)
                     {
                         for(uint16_t col = 0; col < cChip->getNumberOfCols(); ++col)

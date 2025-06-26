@@ -181,7 +181,7 @@
     <Setting name="PedestalEqualizationPSAtPedestal_MinThreshold">0</Setting>
     <Setting name="PedestalEqualizationPSAtPedestal_MaxThreshold">150</Setting>
     <Setting name="PedestalEqualizationPSAtPedestal_Sigma">3</Setting>
-    <Setting name="PedestalEqualizationPSAtPedestal_SaveDebugHists">1</Setting>
+    <Setting name="PedestalEqualizationPSAtPedestal_SaveDebugHists">0</Setting>
 
     <Setting name="PedeNoisePSLowInjection_PulseAmplitude">30</Setting>
     <Setting name="PedeNoisePSLowInjection_PulseAmplitudePix">30</Setting>
