@@ -269,11 +269,8 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::fillReferenceChannelPlots(con
                                             .fTheHistogram;
                     }
 
-                    auto cChipContainer = theThresholdAtMaxOccupancyContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-
-                    if(cChipContainer->hasChannelContainer() == false) continue;
-
-                    auto theContent = cChipContainer->getSummary<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>();
+                    if(cChip->hasSummary() == false) continue;
+                    auto theContent = cChip->getSummary<std::pair<std::pair<uint16_t, uint16_t>, uint16_t>>();
                     auto bin        = linearizeRowAndCols(theContent.first.first, theContent.first.second, cChip->getNumberOfCols());
                     cChipHist->SetBinContent(bin + 1, theContent.second);
                 }
