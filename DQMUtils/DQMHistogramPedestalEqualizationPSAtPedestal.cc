@@ -36,14 +36,14 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
 
     bool doDebugHists = findValueInSettings<double>(pSettingsMap, "PedestalEqualizationPSAtPedestal_SaveDebugHists", 1) > 0;
 
-    fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
-    HistContainer<TH2F> theTH2FChipStripSCurve("ThresholdScanAtPedestal", "Threshold scan at pedestal", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, 256, -0.5, 256 - 0.5);
-    theTH2FChipStripSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
-    theTH2FChipStripSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
-    RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipStripSCurveHistograms, theTH2FChipStripSCurve);
-
     if(doDebugHists)
     {
+        fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
+        HistContainer<TH2F> theTH2FChipStripSCurve("ThresholdScanAtPedestal", "Threshold scan at pedestal", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, 256, -0.5, 256 - 0.5);
+        theTH2FChipStripSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
+        theTH2FChipStripSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
+        RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipStripSCurveHistograms, theTH2FChipStripSCurve);
+
         HistContainer<TH2F> theTH2FChipStripTrimCurve("TrimCurve", "TrimCurve", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, 32, -0.5, 31.5);
         theTH2FChipStripTrimCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
         theTH2FChipStripTrimCurve.fTheHistogram->GetYaxis()->SetTitle("Trim Bits");
@@ -74,13 +74,13 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
 
     fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
 
-    HistContainer<TH2F> theTH2FChipPixelSCurve("ThresholdScanAtPedestal", "Threshold scan at pedestal", NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5, 256, -0.5, 256 - 0.5);
-    theTH2FChipPixelSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
-    theTH2FChipPixelSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
-    RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelSCurveHistograms, theTH2FChipPixelSCurve);
-
     if(doDebugHists)
     {
+        HistContainer<TH2F> theTH2FChipPixelSCurve("ThresholdScanAtPedestal", "Threshold scan at pedestal", NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5, 256, -0.5, 256 - 0.5);
+        theTH2FChipPixelSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
+        theTH2FChipPixelSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
+        RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, theDetectorStructure, fDetectorChipPixelSCurveHistograms, theTH2FChipPixelSCurve);
+
         HistContainer<TH2F> theTH2FChipPixelTrimCurve("TrimCurve", "TrimCurve", NMPAROWS * NSSACHANNELS, -0.5, NMPAROWS * NSSACHANNELS - 0.5, 32, -0.5, 31.5);
         theTH2FChipPixelTrimCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
         theTH2FChipPixelTrimCurve.fTheHistogram->GetYaxis()->SetTitle("Trim Bits");
