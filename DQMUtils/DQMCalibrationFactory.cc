@@ -405,6 +405,12 @@ DQMCalibrationFactory::DQMCalibrationFactory()
 
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTPScommonNoise>("commonNoisePS");
 
+    // ########################################
+    // # Reduced test set for DEE integration #
+    // ########################################
+    Register<DQMMetadataOT>("LPGBTID");
+    Register<DQMMetadataOT, DQMHistogramOTVTRxLightYieldScan, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord>("MinimalTest");
+
     // ###################
     // # IT calibrations #
     // ###################
