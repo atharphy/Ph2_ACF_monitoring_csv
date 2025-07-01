@@ -240,7 +240,8 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
     } // dac
 
     GetMaximumOccupancyThreshold(dacOccupancyContainers);
-
+    if(fDoDebugHists)
+    {
 #ifdef __USE_ROOT__
     fDQMHistogramPedestalEqualizationPSAtPedestal.fillSCurvePlotsVector(detectorContainerVector, dacList);
 #else
@@ -253,6 +254,7 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
         }
     }
 #endif
+    }
 }
 
 void PedestalEqualizationPSAtPedestal::ScanTrimBit()
