@@ -20,6 +20,8 @@ class OTlpGBTID : public OTTool
     void Pause() override;
     void Resume() override;
 
+    static std::string fCalibrationDescription;
+
     void ReadlpGBTIDs();
 };
 #endif

@@ -17,6 +17,7 @@
 #include "tools/OTCMNoise.h"
 #include "tools/OTChipToCICecv.h"
 #include "tools/OTCicBypassTest.h"
+#include "tools/OTLightTransmission.h"
 #include "tools/OTLpGBTEyeOpeningTest.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
@@ -35,6 +36,7 @@
 #include "tools/OTalignStubPackage.h"
 #include "tools/OTinjectionDelayOptimization.h"
 #include "tools/OTinjectionOccupancyScan.h"
+#include "tools/OTlpGBTID.h"
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/OTverifyCICdataWord.h"
 #include "tools/OTverifyMPASSAdataWord.h"
@@ -366,6 +368,11 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTPSringOscillatorTest>("PS Module", "ringOscillatorTest");
 
     Register<OTalignBoardDataWord, OTPScommonNoise>("PS Module", "commonNoisePS");
+
+    // reduced test set for DEE integration
+    Register<OTlpGBTID>("DEE Integration", "LPGBTID");
+
+    Register<TuneLpGBTVref, OTVTRxLightYieldScan, OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord>("DEE Integration", "MinimalTest");
 
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");

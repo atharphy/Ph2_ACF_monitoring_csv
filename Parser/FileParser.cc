@@ -1477,6 +1477,7 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
     std::vector<std::string> listOfStringSettings{"RegNameDAC1",
                                                   "RegNameDAC2",
                                                   "DataOutputDir",
+                                                  "JsonOutfile",
                                                   "KIRA_ID",
                                                   "CMNoise_nSigmas",
                                                   "OTCICtoLpGBTecv_CICStrength",
