@@ -243,16 +243,16 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
     if(fDoDebugHists)
     {
 #ifdef __USE_ROOT__
-    fDQMHistogramPedestalEqualizationPSAtPedestal.fillSCurvePlotsVector(detectorContainerVector, dacList);
+        fDQMHistogramPedestalEqualizationPSAtPedestal.fillSCurvePlotsVector(detectorContainerVector, dacList);
 #else
-    if(fDQMStreamerEnabled)
-    {
-        for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
+        if(fDQMStreamerEnabled)
         {
-            ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancy");
-            theContainerSerialization.streamByChipContainer(fDQMStreamer, detectorContainerVector.at(dacIt), dacIt);
+            for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
+            {
+                ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancy");
+                theContainerSerialization.streamByChipContainer(fDQMStreamer, detectorContainerVector.at(dacIt), dacIt);
+            }
         }
-    }
 #endif
     }
 }
