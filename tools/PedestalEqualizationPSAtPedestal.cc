@@ -240,19 +240,21 @@ void PedestalEqualizationPSAtPedestal::ScanThreshold()
     } // dac
 
     GetMaximumOccupancyThreshold(dacOccupancyContainers);
-
-#ifdef __USE_ROOT__
-    fDQMHistogramPedestalEqualizationPSAtPedestal.fillSCurvePlotsVector(detectorContainerVector, dacList);
-#else
-    if(fDQMStreamerEnabled)
+    if(fDoDebugHists)
     {
-        for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
+#ifdef __USE_ROOT__
+        fDQMHistogramPedestalEqualizationPSAtPedestal.fillSCurvePlotsVector(detectorContainerVector, dacList);
+#else
+        if(fDQMStreamerEnabled)
         {
-            ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancy");
-            theContainerSerialization.streamByChipContainer(fDQMStreamer, detectorContainerVector.at(dacIt), dacIt);
+            for(size_t dacIt = 0; dacIt < dacList.size(); ++dacIt)
+            {
+                ContainerSerialization theContainerSerialization("PedestalEqualizationPSAtPedestalOccupancy");
+                theContainerSerialization.streamByChipContainer(fDQMStreamer, detectorContainerVector.at(dacIt), dacIt);
+            }
         }
-    }
 #endif
+    }
 }
 
 void PedestalEqualizationPSAtPedestal::ScanTrimBit()
