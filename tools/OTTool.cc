@@ -71,11 +71,11 @@ void OTTool::Prepare()
 
     // retrieve json output file path and set output fstream
     std::string fJsonOutputPath = findValueInSettings<std::string>("JsonOutfile", "");
-    if (fJsonOutputPath != "")
+    if(fJsonOutputPath != "")
     {
-            LOG(INFO) << BOLDYELLOW << "Writing json output to : " << fJsonOutputPath << RESET;
-	    std::ofstream* outStream = new std::ofstream(fJsonOutputPath);
-	    setOfStream(outStream);
+        LOG(INFO) << BOLDYELLOW << "Writing json output to : " << fJsonOutputPath << RESET;
+        std::ofstream* outStream = new std::ofstream(fJsonOutputPath);
+        setOfStream(outStream);
     }
 
     if(fReadoutMode == 1) return;
