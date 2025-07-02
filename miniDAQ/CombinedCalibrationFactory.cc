@@ -5,11 +5,11 @@
 #include "tools/CalibrationExample.h"
 #include "tools/CombinedCalibration.h"
 #include "tools/ConfigureOnly.h"
-#include "tools/MonitorOnly.h"
 #include "tools/ECVLinkAlignmentOT.h"
 #include "tools/ExtTriggerLatencyScan.h"
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
+#include "tools/MonitorOnly.h"
 #include "tools/OTBitErrorRateTest.h"
 #include "tools/OTCICBX0Alignment.h"
 #include "tools/OTCICphaseAlignment.h"
@@ -70,11 +70,10 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<TuneLpGBTVref, ConfigureOnly>("Common", "configureonly");
     Register<MonitorOnly>("Outer Tracker", "monitoronly");
 
-    
     Register<TuneLpGBTVref,
              OTPSADCCalibration,
              OTVTRxLightYieldScan,
-             //OTLpGBTEyeOpeningTest,
+             // OTLpGBTEyeOpeningTest,
              OTalignLpGBTinputs,
              OTalignBoardDataWord,
              OTverifyBoardDataWord,
@@ -89,16 +88,11 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              PedeNoisePSLowInjection,
              OTinjectionDelayOptimization,
              OTinjectionOccupancyScan,
-             OTPScommonNoise
-             >("PS Module", "PScommonnoise");
-    Register<
-             OTalignBoardDataWord,
-             OTalignStubPackage,
-             OTPScommonNoise
-             >("PS Module", "PScommonnoisenocalib");
+             OTPScommonNoise>("PS Module", "PScommonnoise");
+    Register<OTalignBoardDataWord, OTalignStubPackage, OTPScommonNoise>("PS Module", "PScommonnoisenocalib");
 
     /* v6-04
-    Register<TuneLpGBTVref, 
+    Register<TuneLpGBTVref,
                          OTVTRxLightYieldScan,//: Scan VTRx+ ouput bias and modulation settings and measure the light power
                         OTalignLpGBTinputs,//: Optimize LpGBT Rx phases to properly decode the inputs from the CICs
                         OTalignBoardDataWord,//: Find bitslips in the FPGA to decode triggered data on to decode words
@@ -113,7 +107,6 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 //                        OTinjectionOccupancyScan,//: Measure occupancy for different pulse injection
                         OTPScommonNoise//: Measure common noise in PS modules
     */
-
 
     // OT calibrations
 

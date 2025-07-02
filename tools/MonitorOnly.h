@@ -2,10 +2,10 @@
 #define __MONITOR_ONLY__
 
 #include "tools/Tool.h"
-#include <string>
-#include <thread>
 #include <atomic>
 #include <fstream>
+#include <string>
+#include <thread>
 
 class MonitorOnly : public Tool
 {
@@ -19,9 +19,9 @@ class MonitorOnly : public Tool
     void Resume() override;
 
     static std::string fCalibrationDescription;
-    
+
     // Signal handler for cleanup on termination
-    static void signalHandler(int signal);
+    static void         signalHandler(int signal);
     static MonitorOnly* fInstance;
 
   private:
@@ -31,31 +31,31 @@ class MonitorOnly : public Tool
     void writeDataToPipe();
     bool processCommand(const std::string& command);
     void loadMQTTSettings();
-    
+
     // DQM monitoring control methods
     void disableDQMMonitoring();
     void enableDQMMonitoring();
-    
+
     // MQTT functionality
     void publishToMQTT(const std::string& payload);
 
     std::string fDataPipeName;
     std::string fCommandPipeName;
-    
-    std::thread fCommandThread;
+
+    std::thread       fCommandThread;
     std::atomic<bool> fKeepMonitoring;
     std::atomic<bool> fPaused;
-    
+
     std::ofstream fDataPipe;
     std::ifstream fCommandPipe;
-    
+
     // Track if DQM monitoring was running before we disabled it
     bool fDQMWasRunning;
-    
+
     // MQTT settings
-    std::string fMQTTBrokerHost;
-    int fMQTTBrokerPort;
-    std::string fMQTTTopic;
+    std::string       fMQTTBrokerHost;
+    int               fMQTTBrokerPort;
+    std::string       fMQTTTopic;
     std::atomic<bool> fMQTTEnabled;
 };
 
