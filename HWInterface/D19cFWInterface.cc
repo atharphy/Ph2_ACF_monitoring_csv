@@ -1027,7 +1027,7 @@ void D19cFWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
     if(fL1ReadoutInterface == nullptr) LOG(INFO) << BOLDRED << "L1ReadoutInterface is a nullptr.." << RESET;
 
     size_t iterationNumber       = 0;
-    size_t maxNumberOfIterations = 10;
+    size_t maxNumberOfIterations = 2;
     while(iterationNumber < maxNumberOfIterations)
     {
         auto cTriggerRate = ReadReg("fc7_daq_cnfg.fast_command_block.user_trigger_frequency");

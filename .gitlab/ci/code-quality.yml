@@ -13,7 +13,7 @@ variables:
 
 # See: https://gitlab.cern.ch/gitlabci-examples/static_code_analysis
 quality:cpplint:
-  image: cfreak/codeclimate-cpplint:latest
+  image: registry.cern.ch/docker.io/cfreak/codeclimate-cpplint:latest
   stage: quality
   tags:
     - k8s-default

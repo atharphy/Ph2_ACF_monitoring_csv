@@ -92,7 +92,7 @@ void BERtest::run()
         // #########
         for(const auto cBoard: *fDetectorContainer)
         {
-            const uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+            const uint8_t frontendSpeed = (uint8_t)static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
             static_cast<RD53Interface*>(this->fReadoutChipInterface)->StartPRBSpattern(cBoard);
 
             std::map<uint32_t, std::vector<uint8_t>> optogroup_id_hybrid_id_chip_id_chip_lanes;
@@ -123,10 +123,16 @@ void BERtest::run()
         // ############
         for(const auto cBoard: *fDetectorContainer)
         {
-            const uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+            const uint8_t frontendSpeed = (uint8_t)static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
 
             for(const auto cOpticalGroup: *cBoard)
             {
+                if(cOpticalGroup->flpGBT == nullptr)
+                {
+                    LOG(WARNING) << BOLDRED << "The OpticalGroup ID " << BOLDYELLOW << cOpticalGroup->getId() << BOLDRED << " has not LpGBT connected" << RESET;
+                    continue;
+                }
+
                 std::map<uint32_t, std::vector<uint8_t>> optogroup_id_hybrid_id_chip_id_chip_lanes;
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
@@ -156,10 +162,17 @@ void BERtest::run()
         // ############
         for(const auto cBoard: *fDetectorContainer)
         {
-            const uint8_t frontendSpeed = (uint8_t) static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
+            const uint8_t frontendSpeed = (uint8_t)static_cast<RD53FWInterface*>(fBeBoardFWMap[cBoard->getId()])->ReadoutSpeed();
             static_cast<RD53Interface*>(this->fReadoutChipInterface)->StartPRBSpattern(cBoard);
 
             for(const auto cOpticalGroup: *cBoard)
+            {
+                if(cOpticalGroup->flpGBT == nullptr)
+                {
+                    LOG(WARNING) << BOLDRED << "The OpticalGroup ID " << BOLDYELLOW << cOpticalGroup->getId() << BOLDRED << " has not LpGBT connected" << RESET;
+                    continue;
+                }
+
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
@@ -169,6 +182,7 @@ void BERtest::run()
                         const auto value = flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, cGroups, cChannel, given_time, frames_or_time, frontendSpeed);
                         theBERtestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<double>() = value;
                     }
+            }
 
             static_cast<RD53Interface*>(this->fReadoutChipInterface)->StopPRBSpattern(cBoard);
             static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Downlink(cBoard);

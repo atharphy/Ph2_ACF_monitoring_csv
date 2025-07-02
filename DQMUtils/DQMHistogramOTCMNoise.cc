@@ -789,7 +789,7 @@ void DQMHistogramOTCMNoise::fitCMNoise(TH1F* pHitCountHist, TF1* pFit, uint32_t 
     // initialize cmnFraction to 0 anc later extract from fit
     double cmnFraction = 0.5;
     pFit->SetRange(0, pRange);
-
+    pFit->SetNpx(100);
     // Set Parameters
     pFit->SetParameter(0, threshold);
     pFit->SetParameter(1, cmnFraction);

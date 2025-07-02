@@ -49,14 +49,9 @@ class ThrAdjustment : public PixelAlive
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     if(cHybrid->fullSize() > nIterationsChip) nIterationsChip = cHybrid->fullSize();
-        const uint16_t nIterationsThrMax  = floor(log2(stopValue - startValue + 1) + 2);
         const uint16_t nIterationsThrZero = floor(log2(stopValue - startValue + 1) + 3);
-        return PixelAlive::getNumberIterations() * (nIterationsThrMax * nIterationsChip + nIterationsThrZero);
-    }
-    size_t removeIterations(size_t startValue, size_t stopValue, size_t i)
-    {
-        const uint16_t nIterationsThrMax = floor(log2(stopValue - startValue + 1) + 2);
-        return PixelAlive::getNumberIterations() * (nIterationsThrMax - i);
+        const uint16_t moreIterations     = 1;
+        return PixelAlive::getNumberIterations() * (nIterationsThrZero * nIterationsChip + moreIterations);
     }
 
     void analyze();
@@ -67,8 +62,7 @@ class ThrAdjustment : public PixelAlive
     void fillHisto() override;
     void establishStartingPoint(DetectorDataContainer& chargeContainer);
 
-    void bitWiseScanGlobal_Maximum(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue);
-    void bitWiseScanGlobal_Zero(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue);
 
     DetectorDataContainer theThrContainer;
 

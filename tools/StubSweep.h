@@ -83,9 +83,8 @@ class StubSweep : public Tool
         {-1.5, 0x0d},
         {-2.0, 0x0c},
         {-2.5, 0x0b},
-        {-3.0, 0x0a}
-        // { -3.0 , 0x06}, {-2.5, 0x05 } , {-2.0 , 0x04} , {-1.5, 0x03} , {-1.0, 0x02} , {-0.5,0x01} , {0,0x00},
-        // { 3.0  , 0x0a} , {2.5 , 0x0b} , {2.0 , 0x0c } , {1.5,0x0d}, {1.0,0x0e}  , {0.5, 0x0f}
+        {-3.0, 0x0a} // { -3.0 , 0x06}, {-2.5, 0x05 } , {-2.0 , 0x04} , {-1.5, 0x03} , {-1.0, 0x02} , {-0.5,0x01} , {0,0x00},
+                     // { 3.0  , 0x0a} , {2.5 , 0x0b} , {2.0 , 0x0c } , {1.5,0x0d}, {1.0,0x0e}  , {0.5, 0x0f}
     };
 
     void setCorrelationWinodwOffsets(Ph2_HwDescription::Chip* pCbc, double pOffsetR1, double pOffsetR2, double pOffsetR3, double pOffsetR4);

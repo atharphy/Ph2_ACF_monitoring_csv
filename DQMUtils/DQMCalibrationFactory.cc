@@ -32,6 +32,7 @@
 #include "DQMUtils/DQMHistogramOTverifyMPASSAdataWord.h"
 #include "DQMUtils/DQMHistogramPedeNoise.h"
 #include "DQMUtils/DQMHistogramPedestalEqualization.h"
+#include "DQMUtils/DQMHistogramPedestalEqualizationPSAtPedestal.h"
 #include "DQMUtils/DQMMetadataIT.h"
 #include "DQMUtils/DQMMetadataOT.h"
 #include "DQMUtils/PSPhysicsHistograms.h"
@@ -173,6 +174,18 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTalignStubPackage,
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
+             DQMHistogramPedestalEqualizationPSAtPedestal,
+             DQMHistogramPedeNoise>("PSpedestalcalibrationandpedenoise");
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTverifyCICdataWord,
+             DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramOTPSADCCalibration,
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise>("adccalibrationandpedenoise");
@@ -247,7 +260,6 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTCICBX0Alignment,
              DQMHistogramOTalignStubPackage,
              DQMHistogramOTverifyCICdataWord,
-             DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramPedestalEqualization,
              DQMHistogramPedeNoise>("2SquickTest");
 
@@ -327,7 +339,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramOTPSringOscillatorTest,
-             DQMHistogramPedestalEqualization,
+             DQMHistogramPedestalEqualizationPSAtPedestal,
              DQMHistogramPedeNoise,
              DQMHistogramOTinjectionDelayOptimization,
              DQMHistogramOTinjectionOccupancyScan,
@@ -354,7 +366,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTverifyCICdataWord,
              DQMHistogramOTverifyMPASSAdataWord,
              DQMHistogramOTPSringOscillatorTest,
-             DQMHistogramPedestalEqualization,
+             DQMHistogramPedestalEqualizationPSAtPedestal,
              DQMHistogramPedeNoise>("PSfullTestPart1");
 
     Register<DQMMetadataOT,
@@ -394,6 +406,12 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMHistogramOTPSringOscillatorTest>("ringOscillatorTest");
 
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTPScommonNoise>("commonNoisePS");
+
+    // ########################################
+    // # Reduced test set for DEE integration #
+    // ########################################
+    Register<DQMMetadataOT>("LPGBTID");
+    Register<DQMMetadataOT, DQMHistogramOTVTRxLightYieldScan, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord>("MinimalTest");
 
     // ###################
     // # IT calibrations #

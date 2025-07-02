@@ -25,8 +25,8 @@ const std::array<std::string, 8> RD53FWInterface::FastCommandsConfig::fastCmdWhi
                                                                                           "user.ctrl_regs.fast_cmd_reg_2.trigger_duration",
                                                                                           "user.ctrl_regs.fast_cmd_reg_2.HitOr_enable_l12"}; // @CONST@
 
-RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* theBoard)
-    : BeBoardFWInterface(pId, pUri, pAddressTable, theBoard), ddr3Offset(0), FWinfo(0)
+RD53FWInterface::RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, BeBoard* pBoard)
+    : BeBoardFWInterface(pId, pUri, pAddressTable, pBoard), ddr3Offset(0), FWinfo(0)
 {
 }
 
@@ -41,7 +41,7 @@ void RD53FWInterface::setFileHandler(FileHandler* pHandler)
         LOG(ERROR) << BOLDRED << "NULL FileHandler" << RESET;
 }
 
-void RD53FWInterface::ResetSequence(const std::string& refClockRate)
+void RD53FWInterface::ResetSequence(const BeBoard* pBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Resetting the backend board... it may take a while" << RESET;
 
@@ -52,7 +52,8 @@ void RD53FWInterface::ResetSequence(const std::string& refClockRate)
     // ##############################
     // # Initialize clock generator #
     // ##############################
-    RD53FWInterface::InitializeClockGenerator(refClockRate);
+    auto CDCEconfig = pBoard->configCDCE();
+    if(CDCEconfig.first == true) RD53FWInterface::InitializeClockGenerator(CDCEconfig.second);
 
     // ###################################
     // # Reset optical link slow control #
@@ -91,7 +92,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t cL12FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l12_type");
     uint32_t cL08FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l8_type");
 
-    LOG(INFO) << BOLDBLUE << "\t--> SW commit number : " << BOLDYELLOW << RD53Shared::gitGitCommit() << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> SW commit number : " << BOLDYELLOW << RD53Shared::gitInfo("commit") << BOLDBLUE << " -- SW tag : " << BOLDYELLOW << RD53Shared::gitInfo("tag") << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor << BOLDBLUE << " -- Date (yy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/"
               << cFWday << BOLDBLUE << " -- Time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Link type : " << BOLDYELLOW << (cLinkType == 0 ? "electrical" : "optical") << BOLDBLUE << " -- Optical speed : " << BOLDYELLOW
@@ -218,8 +219,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
         LOG(ERROR) << BOLDRED << "===== Aborting =====" << RESET;
         exit(EXIT_FAILURE);
     }
-    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz"
-              << std::setprecision(-1) << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical - ELE (optical - OPT) readout): " << BOLDYELLOW << gtxClk / 1000.
+              << " MHz" << std::setprecision(-1) << RESET;
     if(!((fabs(gtxClk / 1000. - 160) < clkSafeMargin) || (fabs(gtxClk / 1000. - 320) < clkSafeMargin)))
     {
         LOG(ERROR) << BOLDRED << "GTX receiver clock frequency not nominal" << RESET;
@@ -277,7 +278,7 @@ void RD53FWInterface::PrintFWstatus()
     // # Check hybrid registers #
     // ##########################
     this->hybridType = RegManager::ReadReg("user.stat_regs.aurora_rx.Hybrid_type");
-    LOG(INFO) << GREEN << "Hybrid type: " << BOLDYELLOW << this->hybridType << RESET << GREEN " (1=Single chip, 2=Dual chip, 4=Quad chip)" << RESET;
+    LOG(INFO) << GREEN << "Hybrid type: " << BOLDYELLOW << +this->hybridType << RESET << GREEN " (1=Single chip, 2=Dual chip, 4=Quad chip)" << RESET;
 
     uint32_t hybrid = RegManager::ReadReg("user.stat_regs.aurora_rx.Nb_of_modules");
     LOG(INFO) << GREEN << "Number of hybrids which can be potentially readout: " << BOLDYELLOW << hybrid << RESET;
@@ -971,11 +972,12 @@ void RD53FWInterface::ConfigureFastCommands(const BeBoard*            pBoard,
 
 void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
 {
+    std::map<std::string, uint32_t> register_overrides{};
+    std::set<std::string>           valid_registers{
+        "ext_clk_en", "trigger_source", "dio5_ch1_thr", "dio5_ch2_thr", "dio5_ch3_thr", "dio5_ch4_thr", "dio5_ch5_thr", "dio5_en", "dio5_term_50ohm_en", "dio5_ch_out_en"};
+
     for(const auto& it: pBoard->getBeBoardRegMap())
-        if((it.second.fPrmptCfg == true) &&
-           ((it.first.find("ext_clk_en") != std::string::npos) || (it.first.find("trigger_source") != std::string::npos) || (it.first.find("dio5_ch1_thr") != std::string::npos) ||
-            (it.first.find("dio5_ch2_thr") != std::string::npos) || (it.first.find("dio5_ch3_thr") != std::string::npos) || (it.first.find("dio5_ch4_thr") != std::string::npos) ||
-            (it.first.find("dio5_ch5_thr") != std::string::npos)))
+        if((it.second.fPrmptCfg == true) && (std::any_of(valid_registers.begin(), valid_registers.end(), [&](auto reg) { return it.first.find(reg) != std::string::npos; })))
         {
             if(it.first.find("ext_clk_en") != std::string::npos)
             {
@@ -995,7 +997,7 @@ void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
                 {
                     LOG(INFO) << BOLDBLUE << "\t--> Trigger source was selected to be TLU" << RESET;
                     config->enable             = true;
-                    config->ch_out_en          = config->ch_out_en | 0x05;
+                    config->ch_out_en          = config->ch_out_en | 0x0D;
                     config->tlu_en             = true;
                     config->tlu_handshake_mode = 0x02;
                 }
@@ -1010,20 +1012,52 @@ void RD53FWInterface::ConfigureDIO5(const BeBoard* pBoard, DIO5Config* config)
                 config->ch4_thr = it.second.fValue;
             else if(it.first.find("dio5_ch5_thr") != std::string::npos)
                 config->ch5_thr = it.second.fValue;
+            else if(it.first.find("dio5_en") != std::string::npos)
+                register_overrides["dio5_en"] = it.second.fValue;
+            else if(it.first.find("dio5_ch_out_en") != std::string::npos)
+                register_overrides["dio5_ch_out_en"] = it.second.fValue;
+            else if(it.first.find("dio5_term_50ohm_en") != std::string::npos)
+                register_overrides["dio5_term_50ohm_en"] = it.second.fValue;
         }
+
+    // ############################################
+    // # Enable 50 Ohms termination on all inputs #
+    // ############################################
+    config->fiftyohm_en = 0x1f ^ config->ch_out_en;
+
+    // ######################################################################
+    // # Apply override values from XML file on automatically set registers #
+    // ######################################################################
+    auto override_warn = [](std::string regname, uint32_t val)
+    { LOG(WARNING) << BOLDBLUE << "\t--> Overriding register " << BOLDYELLOW << regname << BOLDBLUE << " with user set value " << BOLDYELLOW << "0x" << std::hex << val << RESET; };
+
+    auto oreg = register_overrides.end();
+    if((oreg = register_overrides.find("dio5_en")) != register_overrides.end())
+    {
+        config->enable = oreg->second;
+        override_warn(oreg->first, oreg->second);
+    }
+    if((oreg = register_overrides.find("dio5_ch_out_en")) != register_overrides.end())
+    {
+        config->ch_out_en = oreg->second;
+        override_warn(oreg->first, oreg->second);
+    }
+    if((oreg = register_overrides.find("dio5_term_50ohm_en")) != register_overrides.end())
+    {
+        config->fiftyohm_en = oreg->second;
+        override_warn(oreg->first, oreg->second);
+    }
 }
 
 void RD53FWInterface::SendDIO5Cfg(const DIO5Config* config)
 {
-    const uint8_t fiftyOhmEnable = 0x12; // @CONST@
-
     if(RegManager::ReadReg("user.stat_regs.global_reg.dio5_not_ready") == true) LOG(ERROR) << BOLDRED << "DIO5 not ready" << RESET;
 
     if(RegManager::ReadReg("user.stat_regs.global_reg.dio5_error") == true) LOG(ERROR) << BOLDRED << "DIO5 is in error" << RESET;
 
     RegManager::WriteStackReg({{"user.ctrl_regs.ext_tlu_reg1.dio5_en", (uint32_t)config->enable},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_ch_out_en", (uint32_t)config->ch_out_en},
-                               {"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)fiftyOhmEnable},
+                               {"user.ctrl_regs.ext_tlu_reg1.dio5_term_50ohm_en", (uint32_t)config->fiftyohm_en},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_ch1_thr", (uint32_t)config->ch1_thr},
                                {"user.ctrl_regs.ext_tlu_reg1.dio5_ch2_thr", (uint32_t)config->ch2_thr},
                                {"user.ctrl_regs.ext_tlu_reg2.dio5_ch3_thr", (uint32_t)config->ch3_thr},
@@ -1107,7 +1141,7 @@ uint32_t RD53FWInterface::ReadOptoLinkRegister(const Chip* pChip, const uint32_t
 
     // Actual readback: one word at a time
     uint32_t cRead  = 0;
-    uint8_t  nWords = (static_cast<const lpGBT*>(pChip)->getVersion() == 0 ? 7 : 6); // LpGBT-v0 --> 7th; LpGBT-v1 --> 6th
+    uint8_t  nWords = (static_cast<const lpGBT*>(pChip)->getVersion() == 0 ? 7 : 6); // LpGBT-v0 --> 7th; LpGBT-v1/v2 --> 6th
     for(uint8_t i = 0; i < nWords; i++)
     {
         RegManager::WriteStackReg({{"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x1}, {"user.ctrl_regs.lpgbt_1.ic_rx_fifo_rd_en", 0x0}});
@@ -1153,7 +1187,7 @@ void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, uint8_t ModuleId, uint8_t
 }
 
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
-void RD53FWInterface::SetOptoLinkVersion(uint8_t version) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.lpgbt_version", version); }
+void RD53FWInterface::SetOptoLinkVersion(bool version) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.lpgbt_version", version); }
 
 float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
 {
@@ -1226,6 +1260,24 @@ float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
         LOG(DEBUG) << "The SFP's output for channel " << channel << " is " << result << RESET;
 
     return result;
+}
+
+uint16_t RD53FWInterface::ReadAutoreadReg(const uint8_t hybridId, const uint8_t chipId, const std::string& which)
+{
+    if(which == "A")
+        RegManager::WriteReg("user.ctrl_regs.Register_RdBack.AutoRead_Addr_A", hybridId << (this->hybridType - 1) | chipId);
+    else if(which == "B")
+        RegManager::WriteReg("user.ctrl_regs.Register_RdBack.AutoRead_Addr_B", hybridId << (this->hybridType - 1) | chipId);
+
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
+
+    uint16_t value = 0;
+    if(which == "A")
+        value = RegManager::ReadReg("user.stat_regs.AutoRead_Reg_A");
+    else if(which == "B")
+        value = RegManager::ReadReg("user.stat_regs.AutoRead_Reg_B");
+
+    return value;
 }
 
 void RD53FWInterface::ConfigurePCTestAdapter(const std::string& config)
@@ -1370,7 +1422,7 @@ void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const u
 // # Clock generator #
 // ###################
 
-void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, bool doStoreInEEPROM)
+void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doStoreInEEPROM)
 // ############################
 // # refClockRate = 160 [MHz] #
 // # refClockRate = 320 [MHz] #
@@ -1384,7 +1436,7 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
         0xEB840302, // OUT2 --> DDR3 clock reference: 240 MHz, LVDS, phase shift 0 deg
         0xEB840303, // OUT3 --> Not used (240 MHz, LVDS, phase shift 0 deg)
         0xEB140334, // OUT4 --> Not used (40 MHz, LVDS, R4.1 = 1, ph4adjc = 0)
-        0x10000E75, // Reference selection: 0x10000E75 primary reference, 0x10000EB5 secondary reference
+        0x10000EB5, // Reference selection: 0x10000E75 primary reference, 0x10000EB5 secondary reference
         0x030E02E6, // VCO selection: 0xyyyyyyEy select VCO1 if CDCE reference is 40 MHz, 0xyyyyyyFy select VCO2 if CDCE reference is > 40 MHz
                     // VCO1, PS = 4, FD = 12, FB = 1, ChargePump 50 uA, Internal Filter, R6.20 = 0, AuxOut = enable, AuxOut = OUT2
         0xBD800DF7, // RC network parameters: C2 = 473.5 pF, R2 = 98.6 kOhm, C1 = 0 pF, C3 = 0 pF, R3 = 5 kOhm etc, SEL_DEL1 = 1, SEL_DEL2 = 1
@@ -1403,13 +1455,42 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
     // 0xyy8203yy --> 320 MHz
     // 0xyy8003yy --> 480 MHz
 
-    if(refClockRate == "160")
+    // #######################
+    // # Set clock frequency #
+    // #######################
+    if(refClockRate == 160)
         SPIregSettings[1] = 0xEB020321;
-    else if(refClockRate == "320")
+    else if(refClockRate == 320)
         SPIregSettings[1] = 0xEB820321;
     else
         throw Exception("[RD53FWInterface::InitializeClockGenerator] CDCE reference clock rate not recognized");
 
+    // ########################################
+    // # Check if CDCE was already programmed #
+    // ########################################
+    if(RD53FWInterface::ReadClockGenerator(SPIregSettings, true, false) == true)
+    {
+        LOG(INFO) << GREEN << "The CDCE was already programmed --> Skipping reprogramming" << RESET;
+        return;
+    }
+
+    // ##################################
+    // # Request feedback from the user #
+    // ##################################
+    std::string input;
+    LOG(WARNING) << BOLDRED << "The CDCE has a limited number of reconfiguration cycles. You should not reconfigure it unless strictly necessary. Do you want to continue ('yes' / 'no')?" << RESET;
+    std::cin >> input;
+    std::transform(input.begin(), input.end(), input.begin(), ::tolower); // Convert input to lowercase for case-insensitive comparison
+    if(input != "yes")
+    {
+        LOG(WARNING) << RESET << GREEN << "Not configuring the CDCE. Please set in the XML file the CDCE configure setting to 0" << RESET;
+        return;
+    }
+    LOG(WARNING) << RESET << BOLDRED << "CDCE will be reconfigured" << RESET;
+
+    // #########
+    // # Write #
+    // #########
     for(const auto value: SPIregSettings)
     {
         RegManager::WriteReg("system.spi.tx_data", value);
@@ -1437,15 +1518,16 @@ void RD53FWInterface::InitializeClockGenerator(const std::string& refClockRate, 
     }
 }
 
-void RD53FWInterface::ReadClockGenerator()
+bool RD53FWInterface::ReadClockGenerator(uint32_t reference[], bool checkMatch, bool verbose)
 {
+    bool           match = true;
     const uint32_t writeSPI(0x8FA38014);                                                       // Write to SPI @CONST@
     const uint32_t SPIreadCommands[] = {0x0E, 0x1E, 0x2E, 0x3E, 0x4E, 0x5E, 0x6E, 0x7E, 0x8E}; // @CONST@
 
-    LOG(INFO) << GREEN << "Reading clock generator (CDCE62005) configuration" << RESET;
-    for(const auto value: SPIreadCommands)
+    if(verbose == true) LOG(INFO) << GREEN << "Reading clock generator (CDCE62005) configuration" << RESET;
+    for(auto i = 0u; i < RD53Shared::arraySize(SPIreadCommands); i++)
     {
-        RegManager::WriteReg("system.spi.tx_data", value);
+        RegManager::WriteReg("system.spi.tx_data", SPIreadCommands[i]);
         RegManager::WriteReg("system.spi.command", writeSPI);
 
         RegManager::WriteReg("system.spi.tx_data", 0xAAAAAAAA); // Dummy write
@@ -1454,8 +1536,12 @@ void RD53FWInterface::ReadClockGenerator()
         uint32_t          readback = RegManager::ReadReg("system.spi.rx_data");
         std::stringstream myString("");
         myString << std::right << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << readback << std::dec;
-        LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << std::dec << RESET;
+        if(verbose == true) LOG(INFO) << BOLDBLUE << "\t--> SPI register content: 0x" << BOLDYELLOW << std::hex << std::uppercase << myString.str() << std::dec << RESET;
+
+        if((checkMatch == true) && (i != RD53Shared::arraySize(SPIreadCommands) - 1) && (readback != reference[i])) match = false;
     }
+
+    return match;
 }
 
 // #################################################
@@ -1667,7 +1753,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
                     forceDone    = false;
 
                     LOG(INFO) << GREEN << "\t\t--> Frames with error(s) (Chip Lane: " << BOLDYELLOW << +lane << RESET << GREEN << "): " << BOLDYELLOW << nErrors << RESET << GREEN << " (" << BOLDYELLOW
-                              << std::fixed << std::setprecision(3) << nErrors / frameCounter * 100 << RESET << GREEN << "% of the sent frames)" << std::setprecision(-1) << RESET;
+                              << std::fixed << std::setprecision(3) << static_cast<double>(nErrors) / frameCounter * 100 << RESET << GREEN << "% of the sent frames)" << std::setprecision(-1) << RESET;
                 }
             }
         }

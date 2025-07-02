@@ -161,7 +161,7 @@ void PixelAlive::run()
 
                             for(auto i = 0u; i < numberOfBits; i++)
                             {
-                                if((cChip->getReg(regName) & (1 << i)) != 0)
+                                if((cChip->getRegMap()[regName].fDefValue & (1 << i)) == 0)
                                 {
                                     regValueMap[regName] ^= 1 << i;
                                     continue;
@@ -251,6 +251,7 @@ void PixelAlive::run()
                                                           << RD53Shared::firstChip->getNRows() * RD53Constants::NROW_CORE << RESET;
                                         }
                                     }
+
                                     badPixelsCounterChip += badPixelsCounterCoreCol;
                                     static_cast<RD53*>(cChip)->copyMaskFromDefault("en hb");
                                 }

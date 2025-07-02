@@ -3,6 +3,7 @@
 <HwDescription>
   <BeBoard Id="0" boardType="RD53" eventType="VR" configure="1" comment="">
     <connection id="cmsinnertracker.crate0.slot0" uri="chtcp-2.0://localhost:10203?target=fc7-1:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/CMSIT_address_table.xml" />
+    <CDCE configure="0" clockRate="ELE"/>
     <!---
         <connection id="cmsinnertracker.crate0.slot0" uri="ipbusudp-2.0://fc7-1:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/CMSIT_address_table.xml" />
     -->
@@ -50,8 +51,6 @@
               VCAL_HIGH              =   "2000"
               VCAL_MED               =    "100"
 
-              GP_LVDS_ROUTE_0        =   "1495"
-              GP_LVDS_ROUTE_1        =   "1495"
               TriggerConfig          =    "136"
               CLK_DATA_DELAY         =      "0"
               CAL_EDGE_FINE_DELAY    =      "0"
@@ -122,6 +121,12 @@
             HIT_SAMPLE_MODE          =      "1"
             EN_SEU_COUNT             =      "0"
             CDR_CONFIG_SEL_PD        =      "0"
+
+            GP_LVDS_OUT_0            =     "23"
+            GP_LVDS_OUT_1            =     "23"
+            GP_LVDS_OUT_2            =     "23"
+            GP_LVDS_OUT_3            =     "23"
+            GP_LVDS_EN_OUT           = "0b0000"
 
             LOCKLOSS_CNT             =      "0"
             BITFLIP_WNG_CNT          =      "0"
@@ -195,6 +200,12 @@
           <Register name="nb_slow_cmd_before_pll"> 0 </Register>
         </Register>
 
+        <!-- Change electrical polarity
+        <Register name="gtx_rx_polarity">
+          <Register name="fmc_l12"> 1024 </Register>
+          <Register name="fmc_l8"> 0 </Register>
+        </Register>
+        -->
       </Register>
     </Register>
 

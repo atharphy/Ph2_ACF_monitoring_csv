@@ -130,12 +130,17 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
     fPedeNoiseMaskUntrimmed  = findValueInSettings<double>("PedeNoise_MaskUntrimmed", 0);
     fPedeNoiseUntrimmedLimit = findValueInSettings<double>("PedeNoise_UntrimmedLimit", 0.0);
     fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
-    fUseFixRange             = findValueInSettings<double>("PedeNoise_UseFixRange", 0);
-    fMinThreshold            = findValueInSettings<double>("PedeNoise_MinThreshold", 0);
-    fMaxThreshold            = findValueInSettings<double>("PedeNoise_MaxThreshold", 0);
-    fNeventsForValidation    = findValueInSettings<double>("NeventsForValidation", 10000); // NOT IN XML
-    fMaskingThreshold        = findValueInSettings<double>("MaskingThreshold", 0.001);     // NOT IN XML
-    fPedeNoiseLatency        = findValueInSettings<double>("PedeNoiseLatency", 198);
+    if(fWithMPA && fEventsPerPoint > 1000)
+    {
+        fEventsPerPoint = 1000;
+        LOG(INFO) << BOLDRED << " Limiting the number of events to 1000 to avoid rollover of the MPA Ripple counter." << RESET;
+    }
+    fUseFixRange          = findValueInSettings<double>("PedeNoise_UseFixRange", 0);
+    fMinThreshold         = findValueInSettings<double>("PedeNoise_MinThreshold", 0);
+    fMaxThreshold         = findValueInSettings<double>("PedeNoise_MaxThreshold", 0);
+    fNeventsForValidation = findValueInSettings<double>("NeventsForValidation", 10000); // NOT IN XML
+    fMaskingThreshold     = findValueInSettings<double>("MaskingThreshold", 0.001);     // NOT IN XML
+    fPedeNoiseLatency     = findValueInSettings<double>("PedeNoiseLatency", 198);
 
     bool fastCounterReadout = findValueInSettings<double>("PedeNoise_FastCounterReadout", 1) > 0;
 
@@ -210,7 +215,7 @@ void PedeNoise::disableStubLogic()
                 {
                     if(cChip->getFrontEndType() == FrontEndType::CBC3)
                     {
-                        LOG(INFO) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET;
+                        LOG(DEBUG) << BOLDBLUE << "Chip Type = CBC3 - thus disabling Stub logic for pedestal and noise measurement." << RESET;
                         static_cast<CbcInterface*>(fReadoutChipInterface)->enableHipSuppression(cChip, false, true, 0);
                         fStubLogicValue->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                             fReadoutChipInterface->ReadChipReg(static_cast<ReadoutChip*>(cChip), "Pipe&StubInpSel&Ptwidth");
@@ -723,8 +728,8 @@ void PedeNoise::extractPedeNoise()
                                                            ->getChannel<Occupancy>(row, col)
                                                            .fOccupancy;
                                     binCenter = (mStripIt->first + (previousStripIterator)->first) / 2.;
-                                    if(cType == FrontEndType::SSA2)
-                                        if((previousOccupancy > currentOccupancy) || previousOccupancy > 1) { continue; } // helps when trimming near the pedestal
+                                    // if(cType == FrontEndType::SSA2)
+                                    //     if((previousOccupancy > currentOccupancy)) { continue; } // helps when trimming near the pedestal
                                 }
                                 else if(cType == FrontEndType::MPA2)
                                 {
@@ -747,8 +752,11 @@ void PedeNoise::extractPedeNoise()
                                                            ->getChannel<Occupancy>(row, col)
                                                            .fOccupancy;
                                     binCenter = (mPixelIt->first + (previousPixelIterator)->first) / 2.;
-                                    if(previousOccupancy > currentOccupancy) { continue; }
+                                    // if(previousOccupancy > currentOccupancy) { continue; }
                                 }
+                                // avoid  MPA and SSA pedestal peak to influence the noise calculation
+                                if(previousOccupancy > 1) previousOccupancy = 1;
+                                if(currentOccupancy > 1) currentOccupancy = 1;
 
                                 fThresholdAndNoiseContainer->getObject(board->getId())
                                     ->getObject(opticalGroup->getId())
@@ -850,6 +858,7 @@ void PedeNoise::extractPedeNoise()
                 {
                     const auto& noiseAndThreshold =
                         fThresholdAndNoiseContainer->getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<ThresholdAndNoise, ThresholdAndNoise>();
+                    if(theChip->getFrontEndType() == FrontEndType::CBC3) theChip->setAveragePedestal(noiseAndThreshold.fThreshold);
                     theChip->setAverageNoise(noiseAndThreshold.fNoise);
                 }
             }

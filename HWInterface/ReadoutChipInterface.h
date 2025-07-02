@@ -274,6 +274,58 @@ class ReadoutChipInterface : public ChipInterface
     //     return false;
     // }
 
+    /// @brief Set the Vtrim value
+    /// @param theChip: pointer to Chip object
+    /// @param Vtrim: Value for Vtrim to be set
+    /// @return
+    virtual bool SetVtrim(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t Vtrim)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /// @brief Read the Vtrim value
+    /// @param theChip: pointer to Chip object
+    /// @return
+    virtual uint16_t ReadVtrim(Ph2_HwDescription::ReadoutChip* theReadoutChip)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /// @brief Set the same trim bits for all channels on one chip
+    /// @param theChip: pointer to Chip object
+    /// @param trimBits: value to be set
+    /// @return
+    virtual bool SetTrimBitsAll(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t trimBits)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /// @brief Set the trim bits for 1 channel on one chip
+    /// @param theChip: pointer to Chip object
+    /// @param trimBits: value to be set
+    /// @param row: channel coordinate
+    /// @param col: channel coordinate
+    /// @return
+    virtual bool SetTrimBitsChannel(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t trimBits, uint16_t row, uint16_t col)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
+    /// @brief Read the trim bits for 1 channel on one chip
+    /// @param theChip: pointer to Chip object
+    /// @param row: channel coordinate
+    /// @param col: channel coordinate
+    /// @return
+    virtual uint16_t ReadTrimBitsChannel(Ph2_HwDescription::ReadoutChip* theReadoutChip, uint16_t row, uint16_t col)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return 0;
+    }
+
     /*!
      * \brief Write all Local registers on Chip and Chip Config File (able to recognize local parameter names)
      * \param pCbc

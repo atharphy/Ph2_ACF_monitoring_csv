@@ -177,6 +177,12 @@
     <Setting name="PedestalEqualization_PulseAmplitudePixFullScan">30</Setting>
     <Setting name="PedestalEqualization_FastCounterReadout">1</Setting>
 
+    <Setting name="PedestalEqualizationPSAtPedestal_FastCounterReadout">1</Setting>
+    <Setting name="PedestalEqualizationPSAtPedestal_MinThreshold">0</Setting>
+    <Setting name="PedestalEqualizationPSAtPedestal_MaxThreshold">150</Setting>
+    <Setting name="PedestalEqualizationPSAtPedestal_Sigma">3</Setting>
+    <Setting name="PedestalEqualizationPSAtPedestal_SaveDebugHists">0</Setting>
+
     <Setting name="PedeNoisePSLowInjection_PulseAmplitude">30</Setting>
     <Setting name="PedeNoisePSLowInjection_PulseAmplitudePix">30</Setting>
 
@@ -270,6 +276,8 @@
     <Setting name="OTinjectionOccupancyScan_ListOfInjectedPulses"> 0, 0.25, 0.5, 1., 2.</Setting> <!-- MIP units -->
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithoutInjection"> 1000000</Setting>
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithInjection"> 1000</Setting>
+    <Setting name="OTinjectionOccupancyScan_SSAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
+    <Setting name="OTinjectionOccupancyScan_MPAnumberOfSigmaNoiseAwayFromPedestal">5.</Setting>
 
     <Setting name="OTalignLpGBTinputsForBypass_NumberOfTestedBits"> 1e6</Setting>
 

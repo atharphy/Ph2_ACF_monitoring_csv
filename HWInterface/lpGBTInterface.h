@@ -248,8 +248,10 @@ class lpGBTInterface : public ChipInterface
     std::map<uint8_t, uint8_t> fGroup2BERTsourceCourse      = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}, {6, 7}};
     std::map<uint8_t, uint8_t> fChannelSpeed2BERTsourceFine = {{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {6, 5}, {8, 6}}; // channel + 4 * (2 - frontendSpeed)
 
-    // Power Up State Machine maps for both LpGBT-v0 and LpGBT-v1
-    // Map read as : map[lpgbt_version][state_id] = state_description
+    // ##################################################################
+    // # Power Up State Machine maps for both LpGBT-v0 and LpGBT-v1/2   #
+    // # Map read as : map[lpgbt_version][state_id] = state_description #
+    // ##################################################################
     std::map<uint8_t, std::map<uint8_t, std::string>> fPUSMStatusMap = {{0,
                                                                          {{0, "ARESET"},
                                                                           {1, "RESET"},
@@ -271,6 +273,27 @@ class lpGBTInterface : public ChipInterface
                                                                           {17, "WAIT_CHNS_LOCKED"},
                                                                           {18, "READY"}}},
                                                                         {1,
+                                                                         {{0, "ARESET"},
+                                                                          {1, "RESET"},
+                                                                          {2, "WAIT_VDD_STABLE"},
+                                                                          {3, "WAIT_VDD_HIGHER_THAN_0V90"},
+                                                                          {4, "STATE_COPY_FUSES"},
+                                                                          {5, "STATE_CALCULATE_CHECKSUM"},
+                                                                          {6, "COPY_ROM"},
+                                                                          {7, "PAUSE_FOR_PLL_CONFIG"},
+                                                                          {8, "WAIT_POWER_GOOD"},
+                                                                          {9, "RESET_PLL"},
+                                                                          {10, "WAIT_PLL_LOCK"},
+                                                                          {11, "INIT_SCRAM"},
+                                                                          {12, "RESETOUT"},
+                                                                          {13, "I2C_TRANS"},
+                                                                          {14, "PAUSE_FOR_DLL_CONFIG"},
+                                                                          {15, "RESET_DLLS"},
+                                                                          {16, "WAIT_DLL_LOCK"},
+                                                                          {17, "RESET_LOGIC_USING_DLL"},
+                                                                          {18, "WAIT_CHNS_LOCKED"},
+                                                                          {19, "READY"}}},
+                                                                        {2,
                                                                          {{0, "ARESET"},
                                                                           {1, "RESET"},
                                                                           {2, "WAIT_VDD_STABLE"},

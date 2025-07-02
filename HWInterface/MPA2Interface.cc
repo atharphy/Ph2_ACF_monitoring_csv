@@ -334,7 +334,7 @@ bool MPA2Interface::WriteChipReg(Chip* pMPA2, const std::string& pRegName, uint1
         // return this->WriteChipReg(pMPA2, "ADCcontrol", pValue , false);
         return this->WriteChipRegBits(pMPA2, "ADCcontrol", pValue, "Mask", cRegMask, false);
     }
-    else if(pRegName == "Offsets") { return this->WriteChipReg(pMPA2, "TrimDAC_ALL", pValue, false); }
+    else if(pRegName == "Offsets") { return this->SetTrimBitsAll(static_cast<ReadoutChip*>(pMPA2), pValue); }
     else if(pRegName == "ReadoutMode") { return this->WriteChipRegBits(pMPA2, "Control_1", pValue, "Mask", 0x3, false); }
     else if(pRegName == "RetimePix")
     {
@@ -651,7 +651,7 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
     std::stringstream cOutput;
     setBoard(pMPA2->getBeBoardId());
     pMPA2->printChipType(cOutput);
-    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pMPA2->getId() << "]" << RESET;
+    LOG(INFO) << BOLDBLUE << cOutput.str() << "...Configuring chip with Id[" << +pMPA2->getId() << "] on Hybrid" << +pMPA2->getHybridId() << RESET;
 
     std::vector<uint32_t> cVec;
     ChipRegMap            cRegMap = pMPA2->getRegMap();
@@ -825,9 +825,9 @@ uint32_t MPA2Interface::readADC(Ph2_HwDescription::ReadoutChip* pChip, std::stri
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << " " << pRegName << "not found for this chip type - aborting." << RESET;
         abort();
     }
-    LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA " << +pChip->getId() << " register " << pRegName << " block " << +theRegister->second.first << " shift " << +theRegister->second.second << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << "ReadADC for MPA " << +pChip->getId() << " register " << pRegName << " block " << +theRegister->second.first << " shift " << +theRegister->second.second << RESET;
     uint16_t ADC = this->ADCMeasure(static_cast<ReadoutChip*>(pChip), theRegister->second.first, theRegister->second.second, 0, numberOfRead);
-    LOG(DEBUG) << BOLDMAGENTA << " ADC " << ADC << RESET;
+    // LOG(DEBUG) << BOLDMAGENTA << " ADC " << ADC << RESET;
     return ADC;
 }
 
@@ -952,6 +952,42 @@ bool MPA2Interface::disableTestPadsOutput(ReadoutChip* pMPA2)
 //     auto theBlock = ADC_CONTROL_TABLE
 //     return this->selectBlock(pMPA2, 0);
 // }
+
+bool MPA2Interface::SetVtrim(ReadoutChip* pMPA2, uint16_t Vtrim)
+{
+    bool success = this->WriteChipReg(pMPA2, "C0", Vtrim);
+    success      = success && this->WriteChipReg(pMPA2, "C1", Vtrim);
+    success      = success && this->WriteChipReg(pMPA2, "C2", Vtrim);
+    success      = success && this->WriteChipReg(pMPA2, "C3", Vtrim);
+    success      = success && this->WriteChipReg(pMPA2, "C4", Vtrim);
+    success      = success && this->WriteChipReg(pMPA2, "C5", Vtrim);
+    success      = success && this->WriteChipReg(pMPA2, "C6", Vtrim);
+    return success;
+}
+uint16_t MPA2Interface::ReadVtrim(ReadoutChip* pMPA2)
+{
+    uint16_t Vtrim = this->ReadChipReg(pMPA2, "C0");
+    Vtrim += this->ReadChipReg(pMPA2, "C1");
+    Vtrim += this->ReadChipReg(pMPA2, "C2");
+    Vtrim += this->ReadChipReg(pMPA2, "C3");
+    Vtrim += this->ReadChipReg(pMPA2, "C4");
+    Vtrim += this->ReadChipReg(pMPA2, "C5");
+    Vtrim += this->ReadChipReg(pMPA2, "C6");
+    return Vtrim / 7;
+}
+
+bool MPA2Interface::SetTrimBitsAll(ReadoutChip* pMPA2, uint16_t trimBits) { return this->WriteChipReg(pMPA2, "TrimDAC_ALL", trimBits); }
+
+bool MPA2Interface::SetTrimBitsChannel(ReadoutChip* pMPA2, uint16_t trimBits, uint16_t row, uint16_t col)
+{
+    std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
+    return this->WriteChipReg(pMPA2, cRegName, trimBits);
+}
+uint16_t MPA2Interface::ReadTrimBitsChannel(ReadoutChip* pMPA2, uint16_t row, uint16_t col)
+{
+    std::string cRegName = "TrimDAC_C" + std::to_string(col) + "_R" + std::to_string(row);
+    return this->ReadChipReg(pMPA2, cRegName);
+}
 
 bool MPA2Interface::enableInjection(ReadoutChip* pChip, bool inject, bool pVerify)
 {

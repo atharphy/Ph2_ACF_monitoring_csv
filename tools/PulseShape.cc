@@ -292,7 +292,7 @@ void PulseShape::fitGraph(int pLow)
                 cPulseFit->SetParLimits(4, 0, 255);
                 cPulseFit->SetParameter(4, 35);
             }
-
+            cPulseFit->SetNpx(100);
             cChannel->fPulse->Fit(cPulseFit, "R+S");
             TString     cDirName = "PulseshapeFits";
             TDirectory* cDir     = dynamic_cast<TDirectory*>(gROOT->FindObject(cDirName));
@@ -404,7 +404,7 @@ uint32_t PulseShape::fillVcthHist(BeBoard* pBoard, Event* pEvent, uint32_t pVcth
                 {
                     for(auto& cChannel: cChannelVector->second)
                     {
-                        if(pEvent->DataBit(cHybrid->getId(), cCbc->getId(), cChannel->fChannelId - 1))
+                        if(pEvent->DataBit(cHybrid->getId(), cCbc->getId(), 0, cChannel->fChannelId - 1))
                         {
                             cChannel->fillHist(pVcth);
                             cHits++;

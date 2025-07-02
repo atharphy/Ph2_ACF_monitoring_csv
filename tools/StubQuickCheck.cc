@@ -189,7 +189,7 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                 for(auto cChip: *cHybrid)
                 {
                     auto cHits  = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                    auto cStubs = cEvent->StubVector(cHybrid->getId(), cChip->getId());
+                    auto cStubs = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cChip->getId());
 
                     // quick cut on exactly one hit in each layer
                     if(cHits.size() > 2) continue;

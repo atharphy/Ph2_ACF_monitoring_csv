@@ -8,7 +8,9 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
-OTLightTransmission::OTLightTransmission(int channel) : OTTool() { cChannel = channel; }
+std::string OTLightTransmission::fCalibrationDescription = "Measure all light transmission parameters";
+
+OTLightTransmission::OTLightTransmission() : OTTool() {}
 
 OTLightTransmission::~OTLightTransmission() {}
 
@@ -32,13 +34,15 @@ void OTLightTransmission::ReadRegisters()
 {
 #ifdef __USE_ROOT__
     json j;
-    j["type"]                        = "data";
-    D19cFWInterface*       interface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getFirstObject()));
-    std::list<std::string> to_read{"T", "V", "I", "TX", "RX"};
-    for(auto item: to_read)
+    j["type"] = "data";
+    for(auto theBoard: *fDetectorContainer)
     {
-        j["data"][item] = interface->GetSFPParameter_L12(item, cChannel);
-        LOG(INFO) << BOLDBLUE << "Transciever measurement for" << item << " is " << j["data"][item] << RESET;
+        D19cFWInterface* theFWinterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
+        for(auto theOpticalGroup: *theBoard)
+        {
+            j["data"]["RX"] = theFWinterface->GetSFPParameter(theOpticalGroup, "RX");
+            LOG(INFO) << BOLDBLUE << "Transciever RX is : " << j["data"]["RX"] << RESET;
+        }
     }
     if(fOfStream != nullptr) { *(fOfStream) << j << std::endl; }
 #endif

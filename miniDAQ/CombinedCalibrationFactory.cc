@@ -18,6 +18,7 @@
 #include "tools/OTCMNoise.h"
 #include "tools/OTChipToCICecv.h"
 #include "tools/OTCicBypassTest.h"
+#include "tools/OTLightTransmission.h"
 #include "tools/OTLpGBTEyeOpeningTest.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
@@ -36,6 +37,7 @@
 #include "tools/OTalignStubPackage.h"
 #include "tools/OTinjectionDelayOptimization.h"
 #include "tools/OTinjectionOccupancyScan.h"
+#include "tools/OTlpGBTID.h"
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/OTverifyCICdataWord.h"
 #include "tools/OTverifyMPASSAdataWord.h"
@@ -44,6 +46,7 @@
 #include "tools/PedeNoise.h"
 #include "tools/PedeNoisePSLowInjection.h"
 #include "tools/PedestalEqualization.h"
+#include "tools/PedestalEqualizationPSAtPedestal.h"
 #include "tools/PedestalEqualizationPSFullScan.h"
 #include "tools/Physics2S.h"
 #include "tools/RD53ClockDelay.h"
@@ -188,6 +191,13 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualization, PedeNoise>("Outer Tracker",
                                                                                                                                                                         "calibrationandpedenoise");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTalignStubPackage, OTCICphaseAlignment, OTCICwordAlignment, PedestalEqualizationPSFullScan, PedeNoisePSLowInjection>(
+        "Outer Tracker", "fullcalibrationandpedenoise");
+
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualizationPSAtPedestal>("Outer Tracker",
+                                                                                                                                                                         "PSpedestalcalibration");
+    Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, PedestalEqualizationPSAtPedestal, PedeNoisePSLowInjection>(
+        "Outer Tracker", "PSpedestalcalibrationandpedenoise");
 
     Register<TuneLpGBTVref,
              OTPSADCCalibration,
@@ -342,7 +352,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              OTPSringOscillatorTest,
-             PedestalEqualizationPSFullScan,
+             PedestalEqualizationPSAtPedestal,
              PedeNoisePSLowInjection,
              OTinjectionDelayOptimization,
              OTinjectionOccupancyScan,
@@ -369,7 +379,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTverifyCICdataWord,
              OTverifyMPASSAdataWord,
              OTPSringOscillatorTest,
-             PedestalEqualizationPSFullScan,
+             PedestalEqualizationPSAtPedestal,
              PedeNoisePSLowInjection>("PS Module", "PSfullTestPart1");
 
     Register<OTalignBoardDataWord,
@@ -398,6 +408,11 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTPSringOscillatorTest>("PS Module", "ringOscillatorTest");
 
     Register<OTalignBoardDataWord, OTPScommonNoise>("PS Module", "commonNoisePS");
+
+    // reduced test set for DEE integration
+    Register<OTlpGBTID>("DEE Integration", "LPGBTID");
+
+    Register<TuneLpGBTVref, OTVTRxLightYieldScan, OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord>("DEE Integration", "MinimalTest");
 
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");

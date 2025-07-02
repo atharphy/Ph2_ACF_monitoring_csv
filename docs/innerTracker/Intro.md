@@ -2,7 +2,7 @@
 
 ## Recommended software and firmware versions
 
-- Software git branch / tag : `Dev` / `v6-06`
+- Software git branch / tag : `Dev` / `v6-12`
 - Firmware tag: `v5-00`
 
 ## Important webpages and information
@@ -28,7 +28,8 @@ If you want to use it purely by the web, just go to: <https://panthera.fit.edu/>
 to add modules and then “Upload Electrical” to upload Sequences by hand, or “Upload Mechanical” to upload mechanical
 information by hand. There are “?” icons that give you helpful hints. However, if you want to use Panthera using GUI
 or TUI, you should get the requisite packages when you install GUI or TUI itself.
-There’s nothing you need to install separately.
+There’s nothing you need to install separately. For bug report use: <https://gitlab.cern.ch/sdemares/panthera/>,
+while for Felis use <https://gitlab.cern.ch/sdemares/felis/>.
 - Submodule providing common (TUI/GUI) calibration settings: <https://gitlab.cern.ch/cms_tk_ph2/inner-tracker-tests/>
 
 ### Miscellanea

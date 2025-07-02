@@ -55,7 +55,7 @@ namespace Ph2_HwInterface
 class RD53FWInterface : public BeBoardFWInterface
 {
   public:
-    RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, Ph2_HwDescription::BeBoard* theBoard);
+    RD53FWInterface(const std::string& pId, const std::string& pUri, const std::string& pAddressTable, Ph2_HwDescription::BeBoard* pBoard);
     ~RD53FWInterface() { delete fFileHandler; }
 
     // #############################
@@ -66,7 +66,6 @@ class RD53FWInterface : public BeBoardFWInterface
     uint32_t  getBoardFirmwareVersion() override { return FWinfo; }
     BoardType getBoardType() const override { return BoardType::RD53; }
 
-    void ResetSequence(const std::string& refClockRate);
     void ConfigureBoard(const Ph2_HwDescription::BeBoard* pBoard) override;
     void PrintFWstatus() override;
 
@@ -82,24 +81,26 @@ class RD53FWInterface : public BeBoardFWInterface
     void                ChipReSync() override;
 
     void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
-    void SetOptoLinkVersion(uint8_t version) override;
+    void SetOptoLinkVersion(bool version) override;
     // #############################
+    void  ResetSequence(const Ph2_HwDescription::BeBoard* pBoard);
     float GetSFPParameter(std::string parameter, int channel);
 
-    void ConfigurePCTestAdapter(const std::string& config);
-    void SelectBERcheckBitORFrame(const uint8_t bitORframe);
-    void WriteArbitraryRegister(const std::string&                regName,
-                                const uint32_t                    value,
-                                const Ph2_HwDescription::BeBoard* pBoard                = nullptr,
-                                ReadoutChipInterface*             pReadoutChipInterface = nullptr,
-                                const bool                        doReset               = false);
-    void ResetBoard();
-    void ResetFastCmdBlk();
-    void ResetSlowCmdFIFO();
-    void ResetReadBkFIFO();
-    void ResetReadoutBlk();
-    bool silentRunning{false};
-    bool showRunProgress{false};
+    uint16_t ReadAutoreadReg(const uint8_t hybridId, const uint8_t chipId, const std::string& which);
+    void     ConfigurePCTestAdapter(const std::string& config);
+    void     SelectBERcheckBitORFrame(const uint8_t bitORframe);
+    void     WriteArbitraryRegister(const std::string&                regName,
+                                    const uint32_t                    value,
+                                    const Ph2_HwDescription::BeBoard* pBoard                = nullptr,
+                                    ReadoutChipInterface*             pReadoutChipInterface = nullptr,
+                                    const bool                        doReset               = false);
+    void     ResetBoard();
+    void     ResetFastCmdBlk();
+    void     ResetSlowCmdFIFO();
+    void     ResetReadBkFIFO();
+    void     ResetReadoutBlk();
+    bool     silentRunning{false};
+    bool     showRunProgress{false};
 
     // ####################################
     // # Check AURORA lock on data stream #
@@ -190,8 +191,8 @@ class RD53FWInterface : public BeBoardFWInterface
     {
         bool     enable             = false;
         bool     ext_clk_en         = false;
-        uint32_t ch_out_en          = 0; // chn-1 = clk. to TLU, chn-2 = ext. trigger, chn-3 = busy to TLU, chn-4 = reset to TLU, chn-5 = ext. clk.
-        uint32_t fiftyohm_en        = 0;
+        uint32_t ch_out_en          = 0; // chn-1 = clk. to TLU, chn-2 = ext. trigger, chn-3 = busy to TLU, chn-4 = HitOr out, chn-5 = ext. clk.
+        uint32_t fiftyohm_en        = 0x12;
         uint32_t ch1_thr            = 0x80; // [(thr/256*(5-1)V + 1V) * 3.3V/5V]
         uint32_t ch2_thr            = 0x80;
         uint32_t ch3_thr            = 0x80;
@@ -235,8 +236,8 @@ class RD53FWInterface : public BeBoardFWInterface
     // ###################
     // # Clock generator #
     // ###################
-    void InitializeClockGenerator(const std::string& refClockRate = "160", bool doStoreInEEPROM = false);
-    void ReadClockGenerator();
+    void InitializeClockGenerator(uint32_t refClockRate = 160, bool doStoreInEEPROM = false);
+    bool ReadClockGenerator(uint32_t reference[] = {}, bool checkMatch = false, bool verbose = true);
 
     FastCommandsConfig localCfgFastCmd;
     size_t             ddr3Offset;
