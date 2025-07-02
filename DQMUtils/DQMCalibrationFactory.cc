@@ -60,6 +60,8 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMMetadataOT>("configureonly");
 
     // OT calibrations
+    Register("monitoronly");
+
     Register<DQMMetadataOT, DQMHistogramPedeNoise>("noiseOT");
 
     Register<DQMMetadataOT>("vtrxoff");

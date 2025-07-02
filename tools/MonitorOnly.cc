@@ -215,16 +215,29 @@ void MonitorOnly::writeDataToPipe()
     while (fKeepMonitoring.load()) {
         if (!fPaused.load()) {
             // Create JSON payload
-            std::string json_payload = "{";
-            json_payload += "\"counter\":" + std::to_string(counter) + ",";
-            json_payload += "\"timestamp\":" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
-                                      std::chrono::steady_clock::now().time_since_epoch()).count());
             
             // Read temperatures from all boards/optical groups
             for (const auto& board : *fDetectorContainer) {
                 for (const auto& opticalGroup : *board) {
+                    std::string json_payload = "{";
+                    json_payload += "\"counter\":" + std::to_string(counter) + ",";
+                    json_payload += "\"timestamp\":" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                      std::chrono::steady_clock::now().time_since_epoch()).count());
+                    //add beboard
+                    json_payload += ",\"BeBoardId\":" + std::to_string(board->getId());
+                    //add optical group
+                    //json_payload += ",\"OpticalGroupId\":" + std::to_string(opticalGroup->getId());
                     auto theLpGBT = static_cast<Ph2_HwDescription::lpGBT*>(opticalGroup->flpGBT);
                     if (theLpGBT == nullptr) continue;
+                 // Read LpGBT fuse ID (cached to avoid repeated register reads)
+                            uint32_t ogId = opticalGroup->getId();
+                            if (fuseIdCache.find(ogId) == fuseIdCache.end()) {
+                                fuseIdCache[ogId] = flpGBTInterface->ReadChipFuseID(theLpGBT);
+                            }
+                            json_payload += ",\"LpGBT_OG" + std::to_string(ogId) + "_fuseId\":" + std::to_string(fuseIdCache[ogId]);
+                           
+
+
                     
                     try {
                         if (counter % 20 == 0) {
@@ -232,13 +245,7 @@ void MonitorOnly::writeDataToPipe()
                             float lpgbtTemp = flpGBTInterface->MeasureTemperature(theLpGBT);
                             json_payload += ",\"LpGBT_OG" + std::to_string(opticalGroup->getId()) + "_temp\":" + std::to_string(lpgbtTemp);
                             
-                            // Read LpGBT fuse ID (cached to avoid repeated register reads)
-                            uint32_t ogId = opticalGroup->getId();
-                            if (fuseIdCache.find(ogId) == fuseIdCache.end()) {
-                                fuseIdCache[ogId] = flpGBTInterface->ReadChipFuseID(theLpGBT);
-                            }
-                            json_payload += ",\"LpGBT_OG" + std::to_string(ogId) + "_fuseId\":" + std::to_string(fuseIdCache[ogId]);
-                            
+                        
                             // Read sensor temperature (external NTC)
                 
                             if (!opticalGroup->getNTCMap().empty()) {
@@ -322,88 +329,88 @@ void MonitorOnly::writeDataToPipe()
                     } catch (...) {
                         json_payload += ",\"LpGBT_OG" + std::to_string(opticalGroup->getId()) + "_temp\":\"ERROR\"";
                     }
-                }
-            }
-            
-            // Close JSON object
-            json_payload += "}";
-            
-            // // For pipe output, use the old format for compatibility
-            // std::string data_line = "TEMP_DATA_" + std::to_string(counter) + 
-            //                       ": timestamp=" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
-            //                           std::chrono::steady_clock::now().time_since_epoch()).count());
-            
-            // Convert JSON back to comma-separated format for pipe (legacy compatibility)
-            std::string pipe_data = json_payload;
-            // Extract data from JSON and append to pipe_data (simplified conversion)
-            // This maintains backward compatibility with existing pipe readers
-            pipe_data += "\n";
-            
-            // Try to write to pipe only if someone is listening
-            if (!pipe_available && !fDataPipe.is_open()) {
-                // Try to open pipe in non-blocking mode
-                int pipe_fd = open(fDataPipeName.c_str(), O_WRONLY | O_NONBLOCK);
-                if (pipe_fd >= 0) {
-                    // Someone is reading, we can use the pipe
-                    close(pipe_fd);  // Close the test fd
-                    try {
-                        fDataPipe.open(fDataPipeName, std::ios::out);
-                        if (fDataPipe.is_open() && fDataPipe.good()) {
-                            pipe_available = true;
-                            LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " Data pipe reader connected, enabling pipe output" << RESET;
-                        } else {
-                            fDataPipe.close();
-                        }
-                    } catch (const std::exception& e) {
-                        LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Failed to open data pipe for writing: " << e.what() << RESET;
-                        if (fDataPipe.is_open()) {
-                            fDataPipe.close();
-                        }
-                    }
-                } else if (errno != ENXIO) {
-                    // ENXIO is expected when no reader is present, other errors are worth noting
-                    // Only log occasionally to avoid spam
-                    static int open_error_count = 0;
-                    if (++open_error_count % 100 == 0) {
-                        LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Pipe open attempt failed (error count: " << open_error_count 
-                                  << ", errno: " << errno << ")" << RESET;
-                    }
-                }
-            }
-            
-            // Write to pipe if available (using legacy format for compatibility)
-            if (pipe_available && fDataPipe.is_open()) {
-                try {
-                    fDataPipe << pipe_data;
-                    fDataPipe.flush();
+     
+                    // Close JSON object
+                    json_payload += "}";
                     
-                    // Check if pipe is still open (reader disconnected)
-                    if (fDataPipe.fail() || fDataPipe.bad()) {
-                        fDataPipe.clear();  // Clear error flags
-                        fDataPipe.close();
-                        pipe_available = false;
-                        LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Data pipe reader disconnected, disabling pipe output" << RESET;
+                    // // For pipe output, use the old format for compatibility
+                    // std::string data_line = "TEMP_DATA_" + std::to_string(counter) + 
+                    //                       ": timestamp=" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
+                    //                           std::chrono::steady_clock::now().time_since_epoch()).count());
+                    
+                    // Convert JSON back to comma-separated format for pipe (legacy compatibility)
+                    std::string pipe_data = json_payload;
+                    // Extract data from JSON and append to pipe_data (simplified conversion)
+                    // This maintains backward compatibility with existing pipe readers
+                    pipe_data += "\n";
+                    
+                    // Try to write to pipe only if someone is listening
+                    if (!pipe_available && !fDataPipe.is_open()) {
+                        // Try to open pipe in non-blocking mode
+                        int pipe_fd = open(fDataPipeName.c_str(), O_WRONLY | O_NONBLOCK);
+                        if (pipe_fd >= 0) {
+                            // Someone is reading, we can use the pipe
+                            close(pipe_fd);  // Close the test fd
+                            try {
+                                fDataPipe.open(fDataPipeName, std::ios::out);
+                                if (fDataPipe.is_open() && fDataPipe.good()) {
+                                    pipe_available = true;
+                                    LOG(INFO) << BOLDGREEN << __PRETTY_FUNCTION__ << " Data pipe reader connected, enabling pipe output" << RESET;
+                                } else {
+                                    fDataPipe.close();
+                                }
+                            } catch (const std::exception& e) {
+                                LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Failed to open data pipe for writing: " << e.what() << RESET;
+                                if (fDataPipe.is_open()) {
+                                    fDataPipe.close();
+                                }
+                            }
+                        } else if (errno != ENXIO) {
+                            // ENXIO is expected when no reader is present, other errors are worth noting
+                            // Only log occasionally to avoid spam
+                            static int open_error_count = 0;
+                            if (++open_error_count % 100 == 0) {
+                                LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Pipe open attempt failed (error count: " << open_error_count 
+                                        << ", errno: " << errno << ")" << RESET;
+                            }
+                        }
                     }
-                } catch (const std::ios_base::failure& e) {
-                    // Handle pipe write failure (e.g., broken pipe)
-                    LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Pipe write failed (reader disconnected): " << e.what() << RESET;
-                    fDataPipe.close();
-                    pipe_available = false;
-                } catch (const std::exception& e) {
-                    // Handle other exceptions
-                    LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Unexpected error writing to pipe: " << e.what() << RESET;
-                    fDataPipe.close();
-                    pipe_available = false;
-                } catch (...) {
-                    // Handle any other exceptions
-                    LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Unknown error writing to pipe, disabling pipe output" << RESET;
-                    fDataPipe.close();
-                    pipe_available = false;
+                    
+                    // Write to pipe if available (using legacy format for compatibility)
+                    if (pipe_available && fDataPipe.is_open()) {
+                        try {
+                            fDataPipe << pipe_data;
+                            fDataPipe.flush();
+                            
+                            // Check if pipe is still open (reader disconnected)
+                            if (fDataPipe.fail() || fDataPipe.bad()) {
+                                fDataPipe.clear();  // Clear error flags
+                                fDataPipe.close();
+                                pipe_available = false;
+                                LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Data pipe reader disconnected, disabling pipe output" << RESET;
+                            }
+                        } catch (const std::ios_base::failure& e) {
+                            // Handle pipe write failure (e.g., broken pipe)
+                            LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Pipe write failed (reader disconnected): " << e.what() << RESET;
+                            fDataPipe.close();
+                            pipe_available = false;
+                        } catch (const std::exception& e) {
+                            // Handle other exceptions
+                            LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Unexpected error writing to pipe: " << e.what() << RESET;
+                            fDataPipe.close();
+                            pipe_available = false;
+                        } catch (...) {
+                            // Handle any other exceptions
+                            LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Unknown error writing to pipe, disabling pipe output" << RESET;
+                            fDataPipe.close();
+                            pipe_available = false;
+                        }
+                    }
+                    
+                    // Always publish JSON to MQTT
+                    publishToMQTT(json_payload);
                 }
             }
-            
-            // Always publish JSON to MQTT
-            publishToMQTT(json_payload);
             
             counter++;
             

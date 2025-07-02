@@ -42,6 +42,7 @@ class OTPScommonNoise : public Tool
     void     TakeData(float numberOfSigma);
 
   private:
+      bool         saveRawData;
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself
     DQMHistogramOTPScommonNoise fDQMHistogramOTPScommonNoise;

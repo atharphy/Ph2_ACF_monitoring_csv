@@ -68,7 +68,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<TuneLpGBTVref>("Common", "tunelpgbtvref");
 
     Register<TuneLpGBTVref, ConfigureOnly>("Common", "configureonly");
-    Register<TuneLpGBTVref, MonitorOnly>("Common", "monitoronly");
+    Register<MonitorOnly>("Outer Tracker", "monitoronly");
 
     
     Register<TuneLpGBTVref,
@@ -90,7 +90,12 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTinjectionDelayOptimization,
              OTinjectionOccupancyScan,
              OTPScommonNoise
-             >("Outer Tracker", "commonnoise");
+             >("PS Module", "PScommonnoise");
+    Register<
+             OTalignBoardDataWord,
+             OTalignStubPackage,
+             OTPScommonNoise
+             >("PS Module", "PScommonnoisenocalib");
 
     /* v6-04
     Register<TuneLpGBTVref, 
@@ -387,7 +392,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTRegisterTester>("PS Module", "PSfullTestPart2");
 
     Register<PSPhysics>("PS Module", "psphysics");
-
+    Register<TuneLpGBTVref, OTPSADCCalibration>("PS Module", "ADCandVREF");
     Register<OTalignBoardDataWord, OTPSADCCalibration>("PS Module", "ADCBiasCalibration");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoMPAecv>("PS Module", "SSAtoMPAecv");
