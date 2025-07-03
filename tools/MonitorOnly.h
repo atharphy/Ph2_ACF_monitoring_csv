@@ -1,0 +1,62 @@
+#ifndef __MONITOR_ONLY__
+#define __MONITOR_ONLY__
+
+#include "tools/Tool.h"
+#include <atomic>
+#include <fstream>
+#include <string>
+#include <thread>
+
+class MonitorOnly : public Tool
+{
+  public:
+    MonitorOnly();
+    ~MonitorOnly();
+
+    void Running() override;
+    void Stop() override;
+    void Pause() override;
+    void Resume() override;
+
+    static std::string fCalibrationDescription;
+
+    // Signal handler for cleanup on termination
+    static void         signalHandler(int signal);
+    static MonitorOnly* fInstance;
+
+  private:
+    void createNamedPipes();
+    void cleanupNamedPipes();
+    void monitorCommandPipe();
+    void writeDataToPipe();
+    bool processCommand(const std::string& command);
+    void loadMQTTSettings();
+
+    // DQM monitoring control methods
+    void disableDQMMonitoring();
+    void enableDQMMonitoring();
+
+    // MQTT functionality
+    void publishToMQTT(const std::string& payload);
+
+    std::string fDataPipeName;
+    std::string fCommandPipeName;
+
+    std::thread       fCommandThread;
+    std::atomic<bool> fKeepMonitoring;
+    std::atomic<bool> fPaused;
+
+    std::ofstream fDataPipe;
+    std::ifstream fCommandPipe;
+
+    // Track if DQM monitoring was running before we disabled it
+    bool fDQMWasRunning;
+
+    // MQTT settings
+    std::string       fMQTTBrokerHost;
+    int               fMQTTBrokerPort;
+    std::string       fMQTTTopic;
+    std::atomic<bool> fMQTTEnabled;
+};
+
+#endif
