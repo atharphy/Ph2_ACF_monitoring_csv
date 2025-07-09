@@ -533,6 +533,7 @@ int main(int argc, char** argv)
         vs.Inherit(&mySysCntr);
         vs.localConfigure(fileName, runNumber);
         vs.run();
+        vs.analyze();
         vs.draw();
     }
     else if(whichCalib == "eye")

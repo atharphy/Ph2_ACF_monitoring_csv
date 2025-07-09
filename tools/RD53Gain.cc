@@ -8,7 +8,6 @@
 */
 
 #include "RD53Gain.h"
-
 #include "Utils/ContainerSerialization.h"
 #include <boost/multiprecision/number.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
@@ -584,6 +583,9 @@ void Gain::computeStats(const std::vector<float>& x,
         ublas::vector<double> tmpVec2(ublas::prod(ublas::trans(H), tmpVec1));
         ublas::vector<double> myPar(ublas::prod(parCov, tmpVec2));
 
+        // ##############################
+        // # Save parameters and errors #
+        // ##############################
         std::copy(myPar.begin(), myPar.end(), par.begin());
         for(auto i = 0u; i < NGAINPAR; i++) parErr[i] = (limitToTindex >= nData) && (i >= NGAINPAR / 2) ? 0.0 : sqrt(parCov(i, i));
 

@@ -84,6 +84,7 @@
               SAMPLE_N_TIMES         =     "10"
               WAIT_MUX_CONFIG        =    "100"
               VREF_ADC               =    "800"
+              INJ_CAP                =     "80"
               />
         </RD53Bv1>
 

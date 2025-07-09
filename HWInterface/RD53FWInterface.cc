@@ -53,7 +53,16 @@ void RD53FWInterface::ResetSequence(const BeBoard* pBoard)
     // # Initialize clock generator #
     // ##############################
     auto CDCEconfig = pBoard->configCDCE();
-    if(CDCEconfig.first == true) RD53FWInterface::InitializeClockGenerator(CDCEconfig.second);
+    if(CDCEconfig.first == true)
+    {
+        // ########################################
+        // # Check in case CDCE clock was not set #
+        // ########################################
+        if((CDCEconfig.second != 160) && (CDCEconfig.second != 320))
+            if(pBoard->getFirstObject()->flpGBT == nullptr) CDCEconfig.second = 160;
+
+        RD53FWInterface::InitializeClockGenerator(CDCEconfig.second);
+    }
 
     // ###################################
     // # Reset optical link slow control #

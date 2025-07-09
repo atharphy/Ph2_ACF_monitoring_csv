@@ -225,14 +225,20 @@ uint32_t RD53A::getCalCmd(bool cal_edge_mode, size_t cal_edge_delay, size_t cal_
 
 float RD53A::VCal2Charge(float VCal, bool isNoise) const
 {
+    // #################################
+    // # "INJ_CAP" is unit of [0.1xfF] #
+    // #################################
     const auto Vref = this->getRegItem("VREF_ADC").fValue / 1000.; // @CONST@ : Conversion from [mV] to [V]
-    return (Vref / RD53AchargeConvertion::ADCrange) * VCal / RD53AchargeConvertion::ele * (RD53AchargeConvertion::cap * 1e4) + (isNoise == false ? RD53AchargeConvertion::offset : 0);
+    return (Vref / RD53AchargeConvertion::ADCrange) * VCal / RD53AchargeConvertion::ele * (this->getRegItem("INJ_CAP").fValue * 1e3) + (isNoise == false ? RD53AchargeConvertion::offset : 0);
 }
 
 float RD53A::Charge2VCal(float Charge) const
 {
+    // #################################
+    // # "INJ_CAP" is unit of [0.1xfF] #
+    // #################################
     const auto Vref = this->getRegItem("VREF_ADC").fValue / 1000.; // @CONST@ : Conversion from [mV] to [V]
-    return (Charge - RD53AchargeConvertion::offset) / (RD53AchargeConvertion::cap * 1e4) * RD53AchargeConvertion::ele / (Vref / RD53AchargeConvertion::ADCrange);
+    return (Charge - RD53AchargeConvertion::offset) / (this->getRegItem("INJ_CAP").fValue * 1e3) * RD53AchargeConvertion::ele / (Vref / RD53AchargeConvertion::ADCrange);
 }
 
 } // namespace Ph2_HwDescription

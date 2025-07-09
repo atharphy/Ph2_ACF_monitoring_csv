@@ -39,14 +39,19 @@ class VTRxLightYieldScan : public CalibBase
     void run() override;
     void draw(bool saveData = true) override;
 
+    std::shared_ptr<DetectorDataContainer> analyze();
+
     VTRxLightYieldScanHistograms* histos;
 
   private:
     void fillHisto() override;
 
-    std::vector<uint16_t> dac1List;
-    std::vector<uint16_t> dac2List;
-    DetectorDataContainer theVTRxLightYieldScanContainer;
+    void computeStats(const std::vector<uint16_t>& x, const std::vector<float>& y, float& intercept, float& slope, float& chi2, float& DoF);
+
+    std::vector<uint16_t>                  dac1List;
+    std::vector<uint16_t>                  dac2List;
+    DetectorDataContainer                  theVTRxLightYieldScanContainer;
+    std::shared_ptr<DetectorDataContainer> summaryContainer;
 
   protected:
     // ######################################
