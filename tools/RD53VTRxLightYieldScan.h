@@ -46,7 +46,7 @@ class VTRxLightYieldScan : public CalibBase
   private:
     void fillHisto() override;
 
-    void computeStats(const std::vector<uint16_t>& x, const std::vector<float>& y, float& intercept, float& slope, float& chi2, float& DoF);
+    void computeStats(const std::vector<uint16_t>& x, const std::vector<float>& y, float& slope, float& sloErr, float& chi2, float& DoF);
 
     std::vector<uint16_t>                  dac1List;
     std::vector<uint16_t>                  dac2List;

@@ -169,8 +169,8 @@ std::shared_ptr<DetectorDataContainer> VTRxLightYieldScan::analyze()
         for(const auto cOpticalGroup: *cBoard)
         {
             if(cOpticalGroup->getSummary<std::vector<float>>().size() == 0) continue;
-            float intercept1, slope1;
-            float intercept2, slope2;
+            float slope1, sloErr1;
+            float slope2, sloErr2;
             float chi21, DoF1;
             float chi22, DoF2;
 
@@ -179,23 +179,22 @@ std::shared_ptr<DetectorDataContainer> VTRxLightYieldScan::analyze()
             // #############################
             auto midPoint = dac2List.size() / 2;
             for(auto i = 0u; i < dac1List.size(); i++) measurements1[i] = cOpticalGroup->getSummary<std::vector<float>>().at(i * dac2List.size() + midPoint);
-            VTRxLightYieldScan::computeStats(dac1List, measurements1, intercept1, slope1, chi21, DoF1);
+            VTRxLightYieldScan::computeStats(dac1List, measurements1, slope1, sloErr1, chi21, DoF1);
 
             // #############################
             // # Evaluate slope along dac2 #
             // #############################
             midPoint = dac1List.size() / 2;
             for(auto j = 0u; j < dac2List.size(); j++) measurements2[j] = cOpticalGroup->getSummary<std::vector<float>>().at(midPoint * dac2List.size() + j);
-            VTRxLightYieldScan::computeStats(dac2List, measurements2, intercept2, slope2, chi22, DoF2);
+            VTRxLightYieldScan::computeStats(dac2List, measurements2, slope2, sloErr2, chi22, DoF2);
 
             // ##########
             // # Result #
             // ##########
-            if((slope1 > 0) && (slope2 < 0)) summaryContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<bool>() = true;
+            if((slope1 / sloErr1 > 1) && (slope2 / sloErr2 < -1)) summaryContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<bool>() = true;
             LOG(INFO) << GREEN << "VTRx+ [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << std::setprecision(2)
-                      << "] has (intercept, slope) along x = " << BOLDYELLOW << "(" << intercept1 << ", " << slope1 << ")" << RESET << GREEN << " and (intercept, slope) along y = " << BOLDYELLOW
-                      << "(" << intercept2 << ", " << slope2 << ")" << RESET << GREEN << " --> "
-                      << (summaryContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<bool>() == true ? BOLDYELLOW : BOLDRED)
+                      << "] has slope along x = " << BOLDYELLOW << slope1 << "+/-" << sloErr1 << RESET << GREEN << " and slope along y = " << BOLDYELLOW << slope2 << "+/-" << sloErr2 << RESET << GREEN
+                      << " --> " << (summaryContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<bool>() == true ? BOLDYELLOW : BOLDRED)
                       << (summaryContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<bool>() == true ? "GOOD" : "BAD") << std::setprecision(-1) << RESET;
         }
 
@@ -209,11 +208,11 @@ void VTRxLightYieldScan::fillHisto()
 #endif
 }
 
-void VTRxLightYieldScan::computeStats(const std::vector<uint16_t>& x, const std::vector<float>& y, float& intercept, float& slope, float& chi2, float& DoF)
+void VTRxLightYieldScan::computeStats(const std::vector<uint16_t>& x, const std::vector<float>& y, float& slope, float& sloErr, float& chi2, float& DoF)
 {
     chi2               = -1;
-    intercept          = 0;
     slope              = 0;
+    sloErr             = 0;
     const size_t nData = x.size();
     const size_t nPar  = 2;
     DoF                = nData - nPar;
@@ -286,8 +285,8 @@ void VTRxLightYieldScan::computeStats(const std::vector<uint16_t>& x, const std:
         // ###################
         // # Save parameters #
         // ###################
-        intercept = myPar[0];
-        slope     = myPar[1];
+        slope  = myPar[1];
+        sloErr = sqrt(parCov(1, 1));
 
         // ################
         // # Compute chi2 #
