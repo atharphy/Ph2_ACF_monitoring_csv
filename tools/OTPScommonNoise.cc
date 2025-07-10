@@ -68,7 +68,7 @@ void OTPScommonNoise::SetThresholds(float numberOfSigma)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    float theSigma = (cChip->getFrontEndType() == FrontEndType::SSA2) ? theStripSigma : thePixelSigma;
+                    float theSigma = (cChip->getFrontEndType() == FrontEndType::SSA2) ? theStripSigma * SSA_NOISE_SIGMA_SCALE_FACTOR : thePixelSigma;
                     LOG(INFO) << BOLDYELLOW << " chip " << getReadoutChipString(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId())
                               << " cChip->getAveragePedestal(): " << cChip->getAveragePedestal() << " cChip->getAverageNoise: " << cChip->getAverageNoise() << RESET;
                     float theThreshold = cChip->getAveragePedestal() + cChip->getAverageNoise() * theSigma;
