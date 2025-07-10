@@ -425,7 +425,7 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTinjectionDelayOptimization,
              DQMHistogramOTinjectionOccupancyScan,
              DQMHistogramOTPScommonNoise>("PScommonnoise");
-             
+
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTalignStubPackage, DQMHistogramOTPScommonNoise>("PScommonnoisenocalib");
 
     // ########################################

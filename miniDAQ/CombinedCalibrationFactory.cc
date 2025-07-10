@@ -387,7 +387,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTinjectionDelayOptimization,
              OTinjectionOccupancyScan,
              OTPScommonNoise>("PS Module", "PScommonnoise");
-             
+
     Register<OTalignBoardDataWord, OTalignStubPackage, OTPScommonNoise>("PS Module", "PScommonnoisenocalib");
 
     // reduced test set for DEE integration
