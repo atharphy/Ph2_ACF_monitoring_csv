@@ -61,6 +61,8 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMMetadataOT>("configureonly");
 
     // OT calibrations
+    Register<DQMMetadataOT>("monitoronly");
+
     Register<DQMMetadataOT, DQMHistogramPedeNoise>("noiseOT");
 
     Register<DQMMetadataOT>("vtrxoff");
@@ -404,6 +406,12 @@ DQMCalibrationFactory::DQMCalibrationFactory()
     Register<DQMHistogramOTPSringOscillatorTest>("ringOscillatorTest");
 
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTPScommonNoise>("commonNoisePS");
+
+    // ########################################
+    // # Reduced test set for DEE integration #
+    // ########################################
+    Register<DQMMetadataOT>("LPGBTID");
+    Register<DQMMetadataOT, DQMHistogramOTVTRxLightYieldScan, DQMHistogramOTalignLpGBTinputs, DQMHistogramOTalignBoardDataWord, DQMHistogramOTverifyBoardDataWord>("MinimalTest");
 
     // ###################
     // # IT calibrations #
