@@ -25,9 +25,9 @@ void OTinjectionOccupancyScan::Initialise(void)
     fListOfPulseValues                     = convertStringToFloatList(findValueInSettings<std::string>("OTinjectionOccupancyScan_ListOfInjectedPulses", "0, 0.25, 0.5, 1., 2."));
     fNumberOfEventsWithoutInjection        = findValueInSettings<double>("OTinjectionOccupancyScan_NumberOfEventsWithoutInjection", 1000000);
     fNumberOfEventsWithInjection           = findValueInSettings<double>("OTinjectionOccupancyScan_NumberOfEventsWithInjection", 1000);
-    fCBCnumberOfSigmaNoiseAwayFromPedestal = findValueInSettings<double>("OTinjectionDelayOptimization_CBCnumberOfSigmaNoiseAwayFromPedestal", 5.);
-    fSSAnumberOfSigmaNoiseAwayFromPedestal = findValueInSettings<double>("OTinjectionDelayOptimization_SSAnumberOfSigmaNoiseAwayFromPedestal", 5.);
-    fMPAnumberOfSigmaNoiseAwayFromPedestal = findValueInSettings<double>("OTinjectionDelayOptimization_MPAnumberOfSigmaNoiseAwayFromPedestal", 5.);
+    fCBCnumberOfSigmaNoiseAwayFromPedestal = findValueInSettings<double>("OTinjectionOccupancyScan_CBCnumberOfSigmaNoiseAwayFromPedestal", 5.);
+    fSSAnumberOfSigmaNoiseAwayFromPedestal = findValueInSettings<double>("OTinjectionOccupancyScan_SSAnumberOfSigmaNoiseAwayFromPedestal", 5.);
+    fMPAnumberOfSigmaNoiseAwayFromPedestal = findValueInSettings<double>("OTinjectionOccupancyScan_MPAnumberOfSigmaNoiseAwayFromPedestal", 5.);
     fForceChannelGroup                     = false;
     fThresholdOffset                       = 0;
 
