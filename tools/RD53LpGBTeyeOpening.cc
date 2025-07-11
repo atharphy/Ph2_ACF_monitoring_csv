@@ -30,6 +30,7 @@ void LpGBTeyeOpening::Running()
     LOG(INFO) << GREEN << "[LpGBTeyeOpening::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     LpGBTeyeOpening::run();
+    LpGBTeyeOpening::analyze();
     LpGBTeyeOpening::draw();
     LpGBTeyeOpening::sendData();
 }
@@ -160,6 +161,65 @@ void LpGBTeyeOpening::draw(bool saveData)
 
     if(doDisplay == true) myApp->Run(true);
 #endif
+}
+
+std::shared_ptr<DetectorDataContainer> LpGBTeyeOpening::analyze()
+{
+    bool False       = false;
+    summaryContainer = std::make_shared<DetectorDataContainer>();
+    ContainerFactory::copyAndInitOpticalGroup<bool>(*fDetectorContainer, *summaryContainer, False);
+
+    for(const auto cBoard: theLpGBTeyeOpeningContainer)
+        for(const auto cOpticalGroup: *cBoard)
+        {
+            auto& theEyeArray = cOpticalGroup->getSummary<GenericDataArray<uint16_t, TIMEMAX, VOLTMAX>>();
+            if(theEyeArray.size() == 0) continue;
+
+            // double zMax = theEyeArray.GetMaximum(); // @TMP@
+            double zMax                         = 0; // @TMP@
+            double eyeOpeningThresholdWrtMaxCut = 0; // @TMP@/
+
+            std::array<float, VOLTMAX> yProjection{0};
+            for(uint8_t voltage = 0; voltage < VOLTMAX; voltage++)
+                for(uint8_t time = 0; time < TIMEMAX; time++) yProjection.at(voltage) += theEyeArray.at(time).at(voltage);
+            auto yBinMax = std::max_element(yProjection.begin(), yProjection.end());
+
+            double eyeCrossingVoltage          = std::distance(yProjection.begin(), yBinMax);
+            double eyeCrossingVoltageSum       = yProjection.at(eyeCrossingVoltage);
+            double eyeCrossingVoltageMinus1Sum = yProjection.at(eyeCrossingVoltage - 1);
+            double eyeCrossingVoltagePlus1Sum  = yProjection.at(eyeCrossingVoltage + 1);
+
+            // ##############################################################
+            // # Delta around max allows to find a bit better the real peak #
+            // ##############################################################
+            double delta = 0.5 * (eyeCrossingVoltageMinus1Sum - eyeCrossingVoltagePlus1Sum) / (eyeCrossingVoltageMinus1Sum + eyeCrossingVoltagePlus1Sum - 2 * eyeCrossingVoltageSum);
+            double eyeCrossingFractionalOffset = eyeCrossingVoltage + delta;
+
+            // ####################################################################################################################
+            // # After the projected Y max has been found, the histo is sliced at that point to get the crossing width of the eye #
+            // ####################################################################################################################
+            std::array<float, TIMEMAX> xProjectionAtMaxy{0};
+            for(uint8_t time = 0; time < TIMEMAX; time++) xProjectionAtMaxy.at(time) = theEyeArray.at(time).at(eyeCrossingVoltage);
+            double threshold = eyeOpeningThresholdWrtMaxCut * zMax;
+
+            double crossingWidthAtyMax = 0;
+            for(const auto& ele: xProjectionAtMaxy)
+                if(ele < threshold) crossingWidthAtyMax += 1;
+
+            double eyeOpeningArea = 0;
+            for(uint8_t voltage = 0; voltage < VOLTMAX; voltage++)
+                for(uint8_t time = 0; time < TIMEMAX; time++)
+                {
+                    double binContent = theEyeArray.at(time).at(voltage);
+                    if(binContent > threshold) eyeOpeningArea += 1 * 100; // Multiplied by 100 to get a percentage
+                }
+            eyeOpeningArea /= VOLTMAX * TIMEMAX;
+
+            LOG(INFO) << GREEN << "eyeCrossingFractionalOffset = " << BOLDYELLOW << eyeCrossingFractionalOffset << RESET << GREEN << "; crossingWidthAtyMax = " << BOLDYELLOW << crossingWidthAtyMax
+                      << RESET << GREEN << "; eyeOpeningArea = " << BOLDYELLOW << eyeOpeningArea << RESET;
+        }
+
+    return summaryContainer;
 }
 
 void LpGBTeyeOpening::fillHisto()
