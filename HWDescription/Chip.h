@@ -40,9 +40,9 @@ struct ChipRegMask
     uint8_t fBitShift;
     uint8_t fNbits;
 };
-class ChipFuseID // I think this makes sennse in chip?
+class ChipFuseID // I think this makes sense in chip?
 {
-    uint32_t fVal;
+    uint32_t fVal = 0;
 
   public:
     uint8_t Pos() { return (fVal & 0xFF); }
@@ -51,6 +51,7 @@ class ChipFuseID // I think this makes sennse in chip?
     uint8_t Status() { return (fVal >> 20) & 0x3; }
     uint8_t Process() { return (fVal >> 22) & 0x1F; }
     uint8_t ADCRef() { return (fVal >> 27) & 0x1F; }
+    uint32_t    GetId() {return fVal;};
     void    SetId(uint32_t fID) { fVal = fID; };
 };
 

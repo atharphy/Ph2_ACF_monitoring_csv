@@ -770,6 +770,9 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
         cSuccess &= WriteChipMultReg(pMPA2, globalSettings, false);
         cSuccess &= WriteChipMultReg(pMPA2, localSettings);
     }
+
+    LoadCalibrationData(pMPA2);
+
     return cSuccess;
 }
 
@@ -885,6 +888,7 @@ bool MPA2Interface::selectBlock(Chip* pMPA2, uint8_t block, uint8_t testPoint, u
 
 uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2, uint8_t version)
 {
+    std::cout << " before initialization fuse ID is " << pMPA2->pChipFuseID.GetId() << std::endl;
     this->WriteChipReg(pMPA2, "EfuseMode", 0x0);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
     this->WriteChipReg(pMPA2, "EfuseMode", 0xF);
@@ -898,6 +902,152 @@ uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2, uint8_t version)
     LOG(INFO) << GREEN << "FuseID from MPA2#" << +pMPA2->getId() << " Pos " << +pMPA2->pChipFuseID.Pos() << " Wafer " << +pMPA2->pChipFuseID.Wafer() << " Lot " << +pMPA2->pChipFuseID.Lot()
               << " Status " << +pMPA2->pChipFuseID.Status() << " Process " << +pMPA2->pChipFuseID.Process() << " ADCRef " << +pMPA2->pChipFuseID.ADCRef() << RESET;
     return val;
+}
+
+void MPA2Interface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, std::string pFileName)
+{
+    std::cout << __PRETTY_FUNCTION__ <<std::endl;
+    // # Load fCalibration data from a local CSV file based for the specific chipid
+
+    // # Arguments:
+    // # pFileName: Path of CSV file containing fCalibration data
+    // # pFuseId: FuseID for which fCalibration data should be loaded
+
+    // # Raises:
+    // # LpgbtCalibrationWarning: If loading fCalibration data failed
+    // # FileNotFoundError: If the file does not exis
+    uint32_t pFuseId = pChip->pChipFuseID.GetId();
+    if (pFuseId == 0)
+    {
+        pFuseId = this->ReadChipFuseID(pChip);
+    }
+    LOG(INFO) << GREEN << "Loading calibration data for MPA on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup " << BOLDYELLOW << +pChip->getOpticalGroupId()
+              << RESET << GREEN << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pFuseId << std::dec << RESET;
+
+    // bool                                  cCalibrationLoaded = false;
+    std::ifstream                         file(pFileName.c_str(), std::ios::in);
+    std::cout << " filename " << pFileName.c_str() << std::endl;
+    // std::vector<std::vector<std::string>> data;
+    std::vector<std::vector<std::string>> data;
+    // std::vector<std::string>              row;
+    std::vector<std::string>              headers;
+    // std::map<std::string, float>          theADCcalibrationMap;
+    std::string                           line;
+    // uint32_t                              cRowCounter = 0;
+
+    if(file.is_open())
+    {
+        std::cout << " file open" << std::endl;
+    
+        // Get header
+
+        // Read header line
+        if (std::getline(file, line)) 
+        {
+            std::cout << " line " << line << std::endl;
+            std::stringstream ss(line);
+            std::string cell;
+            while (std::getline(ss, cell, ',')) 
+            {
+                headers.push_back(cell);
+            }
+        }
+
+        // Read data
+        std::vector<std::vector<std::string>> data;
+        int counter = 0;
+        while (std::getline(file, line)) 
+        {
+            if(counter % 1000 == 0) std::cout << line << std::endl;
+            
+            std::stringstream ss(line);
+            std::string cell;
+            std::vector<std::string> row;
+
+            while (std::getline(ss, cell, ',')) 
+            {
+
+                if(counter % 1000 == 0)
+                {
+                    std::cout << " cell " << std::endl;
+                    std::cout << cell << std::endl;
+                } 
+                row.push_back(cell);
+            }
+            counter++;
+            data.push_back(row);
+        }
+}
+
+        // while(getline(file, line))
+        // {
+        //     cRowCounter++;
+        //     if(cRowCounter < 1)
+        //     {
+        //         Skip header (version check possible)
+    //             if(cRowCounter == 4)
+    //             {
+    //                 // Read field names
+    //                 cHeaderRow.clear();
+    //                 std::stringstream str(line);
+    //                 while(getline(str, word, ',')) cHeaderRow.push_back(word);
+    //             }
+    //             continue;
+    //         }
+
+    //         row.clear();
+    //         std::stringstream str(line);
+
+    //         while(getline(str, word, ',')) row.push_back(word);
+    //         uint32_t cRowChipId = strtoul(row[0].c_str(), 0, 16);
+
+    //         if(cRowChipId == pFuseId)
+    //         {
+    //             for(uint32_t j = 1; j < row.size(); j++)
+    //             {
+    //                 LOG(DEBUG) << BOLDBLUE << cHeaderRow[j] << RESET;
+    //                 LOG(DEBUG) << BOLDBLUE << row[j] << RESET;
+    //                 theADCcalibrationMap[cHeaderRow[j]] = std::stof(row[j]);
+    //             }
+
+    //             pChip->setADCCalibrationData(theADCcalibrationMap);
+    //             cCalibrationLoaded = true;
+
+    //             break;
+    //         }
+    //     }
+
+    //     if(cCalibrationLoaded == false)
+    //     {
+    //         LOG(WARNING) << BOLDRED << "\t--> Calibration data not available for LpGBT on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW
+    //                      << +pChip->getOpticalGroupId() << BOLDRED << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pFuseId << std::dec << RESET;
+    //         LOG(WARNING) << BOLDBLUE << "\t--> Proceeding without LpGBT ADC calibrations" << RESET;
+    //     }
+    //     else
+    //         LOG(WARNING) << GREEN << "\t--> Calibration data available for LpGBT on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup ID " << BOLDYELLOW
+    //                      << +pChip->getOpticalGroupId() << RESET << GREEN << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pFuseId << std::dec << RESET;
+    // }
+    // else
+    // {
+    //     LOG(WARNING) << BOLDRED << "\t--> " << BOLDYELLOW << pFileName << BOLDRED << " could not be opened. Please check file path" << RESET;
+    //     LOG(WARNING) << BOLDBLUE << "\t--> Proceeding without LpGBT ADC calibrations" << RESET;
+    //     throw std::runtime_error(std::string("FileNotFoundError"));
+    // }
+
+    // pChip->setIsCalibrationDataLoaded(cCalibrationLoaded);
+    file.close();
+
+    int counter = 0;
+    // Print for verification
+    for (const auto& row : data) {
+        for (const auto& cell : row)
+        {
+            if(counter % 1000 == 0)
+                std::cout << cell << "\t";
+            counter++;
+        }
+        std::cout << std::endl;
+    }
 }
 
 bool MPA2Interface::setVrefFromFuseID(ReadoutChip* pMPA2)
