@@ -165,8 +165,9 @@ void LpGBTeyeOpening::draw(bool saveData)
 
 std::shared_ptr<DetectorDataContainer> LpGBTeyeOpening::analyze()
 {
-    bool False       = false;
-    summaryContainer = std::make_shared<DetectorDataContainer>();
+    const float eyeOpeningThresholdWrtMaxCut = 0.9; // @CONST@
+    bool        False                        = false;
+    summaryContainer                         = std::make_shared<DetectorDataContainer>();
     ContainerFactory::copyAndInitOpticalGroup<bool>(*fDetectorContainer, *summaryContainer, False);
 
     for(const auto cBoard: theLpGBTeyeOpeningContainer)
@@ -175,48 +176,88 @@ std::shared_ptr<DetectorDataContainer> LpGBTeyeOpening::analyze()
             auto& theEyeArray = cOpticalGroup->getSummary<GenericDataArray<uint16_t, TIMEMAX, VOLTMAX>>();
             if(theEyeArray.size() == 0) continue;
 
-            // double zMax = theEyeArray.GetMaximum(); // @TMP@
-            double zMax                         = 0; // @TMP@
-            double eyeOpeningThresholdWrtMaxCut = 0; // @TMP@/
-
+            float                      zMax = 0;
             std::array<float, VOLTMAX> yProjection{0};
             for(uint8_t voltage = 0; voltage < VOLTMAX; voltage++)
-                for(uint8_t time = 0; time < TIMEMAX; time++) yProjection.at(voltage) += theEyeArray.at(time).at(voltage);
+                for(uint8_t time = 0; time < TIMEMAX; time++)
+                {
+                    if(theEyeArray.at(time).at(voltage) > zMax) zMax = theEyeArray.at(time).at(voltage);
+                    yProjection.at(voltage) += theEyeArray.at(time).at(voltage);
+                }
             auto yBinMax = std::max_element(yProjection.begin(), yProjection.end());
 
-            double eyeCrossingVoltage          = std::distance(yProjection.begin(), yBinMax);
-            double eyeCrossingVoltageSum       = yProjection.at(eyeCrossingVoltage);
-            double eyeCrossingVoltageMinus1Sum = yProjection.at(eyeCrossingVoltage - 1);
-            double eyeCrossingVoltagePlus1Sum  = yProjection.at(eyeCrossingVoltage + 1);
+            float eyeCrossingVoltage          = std::distance(yProjection.begin(), yBinMax);
+            float eyeCrossingVoltageSum       = yProjection.at(eyeCrossingVoltage);
+            float eyeCrossingVoltageMinus1Sum = yProjection.at(eyeCrossingVoltage - 1);
+            float eyeCrossingVoltagePlus1Sum  = yProjection.at(eyeCrossingVoltage + 1);
 
             // ##############################################################
             // # Delta around max allows to find a bit better the real peak #
             // ##############################################################
-            double delta = 0.5 * (eyeCrossingVoltageMinus1Sum - eyeCrossingVoltagePlus1Sum) / (eyeCrossingVoltageMinus1Sum + eyeCrossingVoltagePlus1Sum - 2 * eyeCrossingVoltageSum);
-            double eyeCrossingFractionalOffset = eyeCrossingVoltage + delta;
+            float delta = 0.5 * (eyeCrossingVoltageMinus1Sum - eyeCrossingVoltagePlus1Sum) / (eyeCrossingVoltageMinus1Sum + eyeCrossingVoltagePlus1Sum - 2 * eyeCrossingVoltageSum);
+            float eyeCrossingFractionalOffset = eyeCrossingVoltage + delta;
 
             // ####################################################################################################################
             // # After the projected Y max has been found, the histo is sliced at that point to get the crossing width of the eye #
             // ####################################################################################################################
             std::array<float, TIMEMAX> xProjectionAtMaxy{0};
             for(uint8_t time = 0; time < TIMEMAX; time++) xProjectionAtMaxy.at(time) = theEyeArray.at(time).at(eyeCrossingVoltage);
-            double threshold = eyeOpeningThresholdWrtMaxCut * zMax;
+            float threshold = eyeOpeningThresholdWrtMaxCut * zMax;
 
-            double crossingWidthAtyMax = 0;
+            float crossingWidthAtyMax = 0;
             for(const auto& ele: xProjectionAtMaxy)
                 if(ele < threshold) crossingWidthAtyMax += 1;
 
-            double eyeOpeningArea = 0;
+            float eyeOpeningArea = 0;
             for(uint8_t voltage = 0; voltage < VOLTMAX; voltage++)
                 for(uint8_t time = 0; time < TIMEMAX; time++)
                 {
-                    double binContent = theEyeArray.at(time).at(voltage);
+                    float binContent = theEyeArray.at(time).at(voltage);
                     if(binContent > threshold) eyeOpeningArea += 1 * 100; // Multiplied by 100 to get a percentage
                 }
             eyeOpeningArea /= VOLTMAX * TIMEMAX;
 
-            LOG(INFO) << GREEN << "eyeCrossingFractionalOffset = " << BOLDYELLOW << eyeCrossingFractionalOffset << RESET << GREEN << "; crossingWidthAtyMax = " << BOLDYELLOW << crossingWidthAtyMax
-                      << RESET << GREEN << "; eyeOpeningArea = " << BOLDYELLOW << eyeOpeningArea << RESET;
+            LOG(INFO) << GREEN << "Results for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]" << RESET;
+
+            // #################
+            // # Voltage grade #
+            // #################
+            float voltageCrossingDifference = abs(eyeCrossingFractionalOffset - (VOLTMAX / 2)) / (VOLTMAX / 2);
+            LOG(INFO) << GREEN << "Eye crossing fractional offset = " << BOLDYELLOW << eyeCrossingFractionalOffset << RESET;
+            if(voltageCrossingDifference < 0.1)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "A" << RESET;
+            else if(voltageCrossingDifference < 0.2)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "B" << RESET;
+            else if(voltageCrossingDifference < 0.3)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "C" << RESET;
+            else if(voltageCrossingDifference >= 0.3)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDRED << "F" << RESET;
+
+            // ###############
+            // # Width grade #
+            // ###############
+            LOG(INFO) << GREEN << "Crossing width at yMax = " << BOLDYELLOW << crossingWidthAtyMax << RESET;
+            if(crossingWidthAtyMax <= 0.1)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "A" << RESET;
+            else if(crossingWidthAtyMax <= 0.2)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "B" << RESET;
+            else if(crossingWidthAtyMax <= 0.3)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "C" << RESET;
+            else if(crossingWidthAtyMax >= 0.3)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDRED << "F" << RESET;
+
+            // ##############
+            // # Area grade #
+            // ##############
+            LOG(INFO) << GREEN << "Eye opening area = " << BOLDYELLOW << eyeOpeningArea << RESET;
+            if(eyeOpeningArea >= 0.7)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "A" << RESET;
+            else if(eyeOpeningArea >= 0.6)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "B" << RESET;
+            else if(eyeOpeningArea >= 0.5)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "C" << RESET;
+            else if(eyeOpeningArea < 0.5)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDRED << "F" << RESET;
         }
 
     return summaryContainer;
