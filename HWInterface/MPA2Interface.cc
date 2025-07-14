@@ -888,7 +888,6 @@ bool MPA2Interface::selectBlock(Chip* pMPA2, uint8_t block, uint8_t testPoint, u
 
 uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2, uint8_t version)
 {
-    std::cout << " before initialization fuse ID is " << pMPA2->pChipFuseID.GetId() << std::endl;
     this->WriteChipReg(pMPA2, "EfuseMode", 0x0);
     std::this_thread::sleep_for(std::chrono::microseconds(10));
     this->WriteChipReg(pMPA2, "EfuseMode", 0xF);
@@ -899,6 +898,11 @@ uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2, uint8_t version)
                    (this->ReadChipReg(pMPA2, "EfuseValue0") << 0);
     pMPA2->pChipFuseID.SetId(val);
 
+
+
+
+
+
     LOG(INFO) << GREEN << "FuseID from MPA2#" << +pMPA2->getId() << " Pos " << +pMPA2->pChipFuseID.Pos() << " Wafer " << +pMPA2->pChipFuseID.Wafer() << " Lot " << +pMPA2->pChipFuseID.Lot()
               << " Status " << +pMPA2->pChipFuseID.Status() << " Process " << +pMPA2->pChipFuseID.Process() << " ADCRef " << +pMPA2->pChipFuseID.ADCRef() << RESET;
     return val;
@@ -906,7 +910,6 @@ uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2, uint8_t version)
 
 void MPA2Interface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, std::string pFileName)
 {
-    std::cout << __PRETTY_FUNCTION__ <<std::endl;
     // # Load fCalibration data from a local CSV file based for the specific chipid
 
     // # Arguments:
@@ -922,29 +925,22 @@ void MPA2Interface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, std::str
         pFuseId = this->ReadChipFuseID(pChip);
     }
     LOG(INFO) << GREEN << "Loading calibration data for MPA on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup " << BOLDYELLOW << +pChip->getOpticalGroupId()
-              << RESET << GREEN << " with Fuse ID 0x" << BOLDYELLOW << std::hex << +pFuseId << std::dec << RESET;
+              << RESET << GREEN << " with Fuse ID " << BOLDYELLOW << +pFuseId << RESET;
 
     // bool                                  cCalibrationLoaded = false;
     std::ifstream                         file(pFileName.c_str(), std::ios::in);
-    std::cout << " filename " << pFileName.c_str() << std::endl;
-    // std::vector<std::vector<std::string>> data;
-    std::vector<std::vector<std::string>> data;
-    // std::vector<std::string>              row;
     std::vector<std::string>              headers;
     // std::map<std::string, float>          theADCcalibrationMap;
     std::string                           line;
     // uint32_t                              cRowCounter = 0;
+    std::vector<std::map<std::string, std::string>> table;
 
     if(file.is_open())
     {
-        std::cout << " file open" << std::endl;
     
         // Get header
-
-        // Read header line
         if (std::getline(file, line)) 
         {
-            std::cout << " line " << line << std::endl;
             std::stringstream ss(line);
             std::string cell;
             while (std::getline(ss, cell, ',')) 
@@ -954,30 +950,30 @@ void MPA2Interface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, std::str
         }
 
         // Read data
-        std::vector<std::vector<std::string>> data;
-        int counter = 0;
         while (std::getline(file, line)) 
         {
-            if(counter % 1000 == 0) std::cout << line << std::endl;
-            
-            std::stringstream ss(line);
+    
+            std::stringstream lineStream(line);
             std::string cell;
-            std::vector<std::string> row;
+            std::map<std::string, std::string> rowMap;
 
-            while (std::getline(ss, cell, ',')) 
+            for (const auto& colName : headers) 
             {
-
-                if(counter % 1000 == 0)
+                if (!std::getline(lineStream, cell, ',')) 
                 {
-                    std::cout << " cell " << std::endl;
-                    std::cout << cell << std::endl;
-                } 
-                row.push_back(cell);
+                    cell.clear();                    // empty if the value is missing
+                }
+                rowMap[colName] = cell;
             }
-            counter++;
-            data.push_back(row);
+
+            if(rowMap["reticle"] == std::to_string(static_cast<int>(pChip->pChipFuseID.Pos())) && rowMap["wafer"] == std::to_string(static_cast<int>(pChip->pChipFuseID.Wafer())) && rowMap["lot_number"] == std::to_string(static_cast<int>(pChip->pChipFuseID.Lot())))
+            {
+                LOG(INFO) << BOLDGREEN << " MATCHED!!!" << RESET;
+            }
+            table.push_back(std::move(rowMap));      // store the whole row
         }
-}
+    }
+
 
         // while(getline(file, line))
         // {
@@ -1037,17 +1033,7 @@ void MPA2Interface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, std::str
     // pChip->setIsCalibrationDataLoaded(cCalibrationLoaded);
     file.close();
 
-    int counter = 0;
-    // Print for verification
-    for (const auto& row : data) {
-        for (const auto& cell : row)
-        {
-            if(counter % 1000 == 0)
-                std::cout << cell << "\t";
-            counter++;
-        }
-        std::cout << std::endl;
-    }
+
 }
 
 bool MPA2Interface::setVrefFromFuseID(ReadoutChip* pMPA2)
