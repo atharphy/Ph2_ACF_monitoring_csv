@@ -30,18 +30,18 @@ class BeBoard;
 // #######################
 namespace RD53FWconstants
 {
-const uint8_t   NMAXCHIP_HYBRID      = 4;      // Maximum number of chips in a hybrid
-const uint8_t   NLANE_DUALHYBRID     = 2;      // Number of lanes per dual hybrid
-const uint8_t   NLANE_QUADHYBRID     = 4;      // Number of lanes per quad hybrid
-const uint8_t   HEADEAR_WRTCMD       = 0xFF;   // Header of chip write command sequence
-const uint8_t   NBIT_FWVER           = 16;     // Number of bits for the firmware version
-const uint16_t  NBIT_SLOWCMD_FIFO    = 16;     // Slow command FIFO depth 65.536, i.e. 16 bits (in terms of 32-bit words)
-const uint16_t  NBIT_DATA_FIFO       = 27;     // Data FIFO depth 134.217.728, i.e. 27 bits (in terms of 32-bit words)
-const uint8_t   AURORA_SPEED         = 0;      // 0 = 1.28 Gbps, 1 = 640 Mbps
-const uint8_t   IPBUS_FASTDURATION   = 1;      // Duration of a fast command in terms of 40 MHz clk cycles
-const uint16_t  EVENT_STREAM_TIMEOUT = 0xFFFF; // Event stream timeout
-const uint16_t  CLK_OPT              = 320;    // Clock speed for optical readout
-const uint16_t  CLK_ELE              = 160;    // Clock speed for electrical readout
+const uint8_t  NMAXCHIP_HYBRID      = 4;      // Maximum number of chips in a hybrid
+const uint8_t  NLANE_DUALHYBRID     = 2;      // Number of lanes per dual hybrid
+const uint8_t  NLANE_QUADHYBRID     = 4;      // Number of lanes per quad hybrid
+const uint8_t  HEADEAR_WRTCMD       = 0xFF;   // Header of chip write command sequence
+const uint8_t  NBIT_FWVER           = 16;     // Number of bits for the firmware version
+const uint16_t NBIT_SLOWCMD_FIFO    = 16;     // Slow command FIFO depth 65.536, i.e. 16 bits (in terms of 32-bit words)
+const uint16_t NBIT_DATA_FIFO       = 27;     // Data FIFO depth 134.217.728, i.e. 27 bits (in terms of 32-bit words)
+const uint8_t  AURORA_SPEED         = 0;      // 0 = 1.28 Gbps, 1 = 640 Mbps
+const uint8_t  IPBUS_FASTDURATION   = 1;      // Duration of a fast command in terms of 40 MHz clk cycles
+const uint16_t EVENT_STREAM_TIMEOUT = 0xFFFF; // Event stream timeout
+const uint16_t CLK_OPT              = 320;    // Clock speed for optical readout
+const uint16_t CLK_ELE              = 160;    // Clock speed for electrical readout
 enum ReadoutSpeed : uint8_t
 {
     x1280,

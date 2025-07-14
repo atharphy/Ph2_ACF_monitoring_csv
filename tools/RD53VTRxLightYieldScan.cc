@@ -117,7 +117,16 @@ void VTRxLightYieldScan::run()
                 {
                     this->flpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "_I2CVTRxRegCH0MOD", dac2List[j] | 0x80);
                     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
-                    auto value = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter("RX", flpGBTInterface->GetSFPchannel(cOpticalGroup));
+                    float value = 0;
+                    try
+                    {
+                        value = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter("RX", flpGBTInterface->GetSFPchannel(cOpticalGroup));
+                    }
+                    catch(uhal::exception::BitsSetWhichAreForbiddenByBitMask& e)
+                    {
+                        LOG(ERROR) << BOLDRED << "[VTRxLightYieldScan::run] Error: likely wrong FMCId set in cfg. file" << RESET;
+                        throw uhal::exception::BitsSetWhichAreForbiddenByBitMask(e);
+                    }
 
                     // #################
                     // # Progress menu #

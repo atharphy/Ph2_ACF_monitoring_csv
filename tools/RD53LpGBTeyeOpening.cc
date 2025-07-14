@@ -223,7 +223,7 @@ std::shared_ptr<DetectorDataContainer> LpGBTeyeOpening::analyze()
             // # Voltage grade #
             // #################
             float voltageCrossingDifference = abs(eyeCrossingFractionalOffset - (VOLTMAX / 2)) / (VOLTMAX / 2);
-            LOG(INFO) << GREEN << "Eye crossing fractional offset = " << BOLDYELLOW << eyeCrossingFractionalOffset << RESET;
+            LOG(INFO) << GREEN << "Eye crossing fractional offset = " << BOLDYELLOW << std::setprecision(2) << eyeCrossingFractionalOffset << std::setprecision(-1) << RESET;
             if(voltageCrossingDifference < 0.1) // @CONST@
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "A" << RESET;
             else if(voltageCrossingDifference < 0.2)
@@ -236,7 +236,7 @@ std::shared_ptr<DetectorDataContainer> LpGBTeyeOpening::analyze()
             // ###############
             // # Width grade #
             // ###############
-            LOG(INFO) << GREEN << "Crossing width at yMax = " << BOLDYELLOW << crossingWidthAtyMax << RESET;
+            LOG(INFO) << GREEN << "Crossing width at yMax = " << BOLDYELLOW << std::setprecision(2) << crossingWidthAtyMax << std::setprecision(-1) << RESET;
             if(crossingWidthAtyMax <= 0.1) // @CONST@
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "A" << RESET;
             else if(crossingWidthAtyMax <= 0.2)
@@ -249,7 +249,7 @@ std::shared_ptr<DetectorDataContainer> LpGBTeyeOpening::analyze()
             // ##############
             // # Area grade #
             // ##############
-            LOG(INFO) << GREEN << "Eye opening area = " << BOLDYELLOW << eyeOpeningArea << RESET;
+            LOG(INFO) << GREEN << "Eye opening area = " << BOLDYELLOW << std::setprecision(2) << eyeOpeningArea << std::setprecision(-1) << RESET;
             if(eyeOpeningArea >= 0.7) // @CONST@
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "A" << RESET;
             else if(eyeOpeningArea >= 0.6)
