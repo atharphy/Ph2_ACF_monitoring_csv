@@ -59,9 +59,9 @@ void RD53FWInterface::ResetSequence(const BeBoard* pBoard)
         // # Check in case CDCE clock was not set #
         // ########################################
         if(RegManager::ReadReg("user.stat_regs.global_reg.link_type") == 0)
-            CDCEconfig.second = 320;
+            CDCEconfig.second = RD53FWconstants::CLK_ELE;
         else
-            CDCEconfig.second = 160;
+            CDCEconfig.second = RD53FWconstants::CLK_OPT;
 
         RD53FWInterface::InitializeClockGenerator(CDCEconfig.second);
     }
