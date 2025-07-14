@@ -548,6 +548,7 @@ int main(int argc, char** argv)
         es.Inherit(&mySysCntr);
         es.localConfigure(fileName, runNumber);
         es.run();
+        es.analyze();
         es.draw();
     }
     else if(whichCalib == "physics")
