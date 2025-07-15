@@ -92,7 +92,7 @@ MiddlewareStateMachine::Status MiddlewareStateMachine::status()
         LOG(ERROR) << ERROR_FORMAT << "Caught exception " << e.what() << ". Trying to save result directory before crashing" << RESET;
         this->abort();
 #endif
-        throw e;
+        throw std::runtime_error(e.what());
     }
 }
 

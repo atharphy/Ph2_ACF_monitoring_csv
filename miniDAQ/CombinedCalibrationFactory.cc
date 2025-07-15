@@ -9,6 +9,7 @@
 #include "tools/ExtTriggerLatencyScan.h"
 #include "tools/KIRA.h"
 #include "tools/LatencyScan.h"
+#include "tools/MonitorOnly.h"
 #include "tools/OTBitErrorRateTest.h"
 #include "tools/OTCICBX0Alignment.h"
 #include "tools/OTCICphaseAlignment.h"
@@ -17,6 +18,7 @@
 #include "tools/OTCMNoise.h"
 #include "tools/OTChipToCICecv.h"
 #include "tools/OTCicBypassTest.h"
+#include "tools/OTLightTransmission.h"
 #include "tools/OTLpGBTEyeOpeningTest.h"
 #include "tools/OTMeasureOccupancy.h"
 #include "tools/OTPSADCCalibration.h"
@@ -35,6 +37,7 @@
 #include "tools/OTalignStubPackage.h"
 #include "tools/OTinjectionDelayOptimization.h"
 #include "tools/OTinjectionOccupancyScan.h"
+#include "tools/OTlpGBTID.h"
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/OTverifyCICdataWord.h"
 #include "tools/OTverifyMPASSAdataWord.h"
@@ -68,6 +71,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<TuneLpGBTVref>("Common", "tunelpgbtvref");
 
     Register<TuneLpGBTVref, ConfigureOnly>("Common", "configureonly");
+    Register<MonitorOnly>("Outer Tracker", "monitoronly");
 
     // OT calibrations
 
@@ -353,7 +357,7 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTRegisterTester>("PS Module", "PSfullTestPart2");
 
     Register<PSPhysics>("PS Module", "psphysics");
-
+    Register<TuneLpGBTVref, OTPSADCCalibration>("PS Module", "ADCandVREF");
     Register<OTalignBoardDataWord, OTPSADCCalibration>("PS Module", "ADCBiasCalibration");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTSSAtoMPAecv>("PS Module", "SSAtoMPAecv");
@@ -365,7 +369,31 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     Register<OTPSringOscillatorTest>("PS Module", "ringOscillatorTest");
 
-    Register<OTalignBoardDataWord, OTPScommonNoise>("PS Module", "commonNoisePS");
+    Register<TuneLpGBTVref,
+             OTPSADCCalibration,
+             OTVTRxLightYieldScan,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
+             OTverifyCICdataWord,
+             OTverifyMPASSAdataWord,
+             OTPSringOscillatorTest,
+             PedestalEqualizationPSAtPedestal,
+             PedeNoisePSLowInjection,
+             OTinjectionDelayOptimization,
+             OTinjectionOccupancyScan,
+             OTPScommonNoise>("PS Module", "PScommonnoise");
+
+    Register<OTalignBoardDataWord, OTalignStubPackage, OTPScommonNoise>("PS Module", "PScommonnoisenocalib");
+
+    // reduced test set for DEE integration
+    Register<OTlpGBTID>("DEE Integration", "LPGBTID");
+
+    Register<TuneLpGBTVref, OTVTRxLightYieldScan, OTalignLpGBTinputs, OTalignBoardDataWord, OTverifyBoardDataWord>("DEE Integration", "MinimalTest");
 
     // IT calibrations
     Register<PixelAlive>("Inner Tracker", "pixelalive");

@@ -30,7 +30,7 @@ void OTPScommonNoise::Initialise(void)
 #endif
 }
 
-void OTPScommonNoise::ConfigureCalibration() {}
+void OTPScommonNoise::ConfigureCalibration() { saveRawData = this->findValueInSettings<double>("SaveRawData"); }
 
 void OTPScommonNoise::SetThresholds(float numberOfSigma)
 {
@@ -68,7 +68,7 @@ void OTPScommonNoise::SetThresholds(float numberOfSigma)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    float theSigma = (cChip->getFrontEndType() == FrontEndType::SSA2) ? theStripSigma : thePixelSigma;
+                    float theSigma = (cChip->getFrontEndType() == FrontEndType::SSA2) ? theStripSigma * SSA_NOISE_SIGMA_SCALE_FACTOR : thePixelSigma;
                     LOG(INFO) << BOLDYELLOW << " chip " << getReadoutChipString(pBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId())
                               << " cChip->getAveragePedestal(): " << cChip->getAveragePedestal() << " cChip->getAverageNoise: " << cChip->getAverageNoise() << RESET;
                     float theThreshold = cChip->getAveragePedestal() + cChip->getAverageNoise() * theSigma;
@@ -289,6 +289,14 @@ void OTPScommonNoise::TakeData(float numberOfSigma)
 
 void OTPScommonNoise::Running()
 {
+    if(saveRawData == true)
+    {
+        char      runString[100];
+        const int theRunNumber = Tool::fRunNumber;
+        sprintf(runString, "%d", theRunNumber);
+        this->addFileHandler(std::string("Results") + "/Run_" + runString + "/run_" + runString + ".raw", 'w');
+        this->initializeWriteFileHandler();
+    }
     if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S)
     {
         LOG(ERROR) << ERROR_FORMAT << " Running a PS calibration on a 2S module! " << RESET;

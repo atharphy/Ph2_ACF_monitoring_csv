@@ -18,14 +18,18 @@ OTinjectionOccupancyScan::~OTinjectionOccupancyScan() {}
 void OTinjectionOccupancyScan::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC[0-6]$"); // threshold
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_THDAC$"); // threshold
     // free the registers in case any
 
-    fListOfPulseValues              = convertStringToFloatList(findValueInSettings<std::string>("OTinjectionOccupancyScan_ListOfInjectedPulses", "0, 0.25, 0.5, 1., 2."));
-    fNumberOfEventsWithoutInjection = findValueInSettings<double>("OTinjectionOccupancyScan_NumberOfEventsWithoutInjection", 1000000);
-    fNumberOfEventsWithInjection    = findValueInSettings<double>("OTinjectionOccupancyScan_NumberOfEventsWithInjection", 1000);
-
-    fForceChannelGroup = false;
-    fThresholdOffset   = 0;
+    fListOfPulseValues                     = convertStringToFloatList(findValueInSettings<std::string>("OTinjectionOccupancyScan_ListOfInjectedPulses", "0, 0.25, 0.5, 1., 2."));
+    fNumberOfEventsWithoutInjection        = findValueInSettings<double>("OTinjectionOccupancyScan_NumberOfEventsWithoutInjection", 1000000);
+    fNumberOfEventsWithInjection           = findValueInSettings<double>("OTinjectionOccupancyScan_NumberOfEventsWithInjection", 1000);
+    fCBCnumberOfSigmaNoiseAwayFromPedestal = findValueInSettings<double>("OTinjectionOccupancyScan_CBCnumberOfSigmaNoiseAwayFromPedestal", 5.);
+    fSSAnumberOfSigmaNoiseAwayFromPedestal = findValueInSettings<double>("OTinjectionOccupancyScan_SSAnumberOfSigmaNoiseAwayFromPedestal", 5.);
+    fMPAnumberOfSigmaNoiseAwayFromPedestal = findValueInSettings<double>("OTinjectionOccupancyScan_MPAnumberOfSigmaNoiseAwayFromPedestal", 5.);
+    fForceChannelGroup                     = false;
+    fThresholdOffset                       = 0;
 
 #ifdef __USE_ROOT__
     fDQMHistogramOTMeasureOccupancy = new DQMHistogramOTinjectionOccupancyScan();
