@@ -127,10 +127,10 @@ void LpGBTeyeOpening::run()
                     // #################
                     // # Progress menu #
                     // #################
-                    LOG(INFO) << CYAN << "************* " << GREEN << "Scanning" << CYAN << " *************" << RESET;
-                    LOG(INFO) << GREEN << "Volt: " << BOLDYELLOW << std::setw(2) << std::fixed << +voltage << " mV (" << VOLTMAX - 1 << ") " << RESET << GREEN << "-- Time: " << BOLDYELLOW
-                              << std::setw(2) << std::fixed << +time << " ps (" << TIMEMAX - 1 << ")" << RESET;
-                    LOG(INFO) << CYAN << "************************************" << RESET;
+                    LOG(INFO) << CYAN << "************** " << GREEN << "Scanning" << CYAN << " **************" << RESET;
+                    LOG(INFO) << GREEN << "Volt: " << BOLDYELLOW << std::setw(2) << std::fixed << +voltage << " DAC (" << VOLTMAX - 1 << ") " << RESET << GREEN << "-- Time: " << BOLDYELLOW
+                              << std::setw(2) << std::fixed << +time << " DAC (" << TIMEMAX - 1 << ")" << RESET;
+                    LOG(INFO) << CYAN << "**************************************" << RESET;
                     if((voltage < VOLTMAX - 1) || (time < TIMEMAX - 1)) std::cout << std::setprecision(-1) << "\x1b[A\x1b[A\x1b[A";
 
                     theEyeArray.at(time).at(voltage) = flpGBTInterface->GetEOMCounter(cOpticalGroup->flpGBT);
@@ -194,8 +194,8 @@ std::shared_ptr<DetectorDataContainer> LpGBTeyeOpening::analyze()
             // ##############################################################
             // # Delta around max allows to find a bit better the real peak #
             // ##############################################################
-            float delta = 0.5 * (eyeCrossingVoltageMinus1Sum - eyeCrossingVoltagePlus1Sum) / (eyeCrossingVoltageMinus1Sum + eyeCrossingVoltagePlus1Sum - 2 * eyeCrossingVoltageSum);
-            float eyeCrossingFractionalOffset = eyeCrossingVoltage + delta;
+            float delta             = 0.5 * (eyeCrossingVoltageMinus1Sum - eyeCrossingVoltagePlus1Sum) / (eyeCrossingVoltageMinus1Sum + eyeCrossingVoltagePlus1Sum - 2 * eyeCrossingVoltageSum);
+            float eyeCrossingOffset = eyeCrossingVoltage + delta;
 
             // ####################################################################################################################
             // # After the projected Y max has been found, the histo is sliced at that point to get the crossing width of the eye #
@@ -208,55 +208,56 @@ std::shared_ptr<DetectorDataContainer> LpGBTeyeOpening::analyze()
             for(const auto& ele: xProjectionAtMaxy)
                 if(ele < threshold) crossingWidthAtyMax += 1;
 
-            float eyeOpeningArea = 0;
+            float fractionalEyeOpeningArea = 0;
             for(uint8_t voltage = 0; voltage < VOLTMAX; voltage++)
                 for(uint8_t time = 0; time < TIMEMAX; time++)
                 {
                     float binContent = theEyeArray.at(time).at(voltage);
-                    if(binContent > threshold) eyeOpeningArea += 1 * 100; // Multiplied by 100 to get a percentage
+                    if(binContent > threshold) fractionalEyeOpeningArea += 1 * 100;
                 }
-            eyeOpeningArea /= VOLTMAX * TIMEMAX;
+            fractionalEyeOpeningArea /= VOLTMAX * TIMEMAX;
 
             LOG(INFO) << GREEN << "Results for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]" << RESET;
 
             // #################
             // # Voltage grade #
             // #################
-            float voltageCrossingDifference = abs(eyeCrossingFractionalOffset - (VOLTMAX / 2)) / (VOLTMAX / 2);
-            LOG(INFO) << GREEN << "Eye crossing fractional offset = " << BOLDYELLOW << std::setprecision(2) << eyeCrossingFractionalOffset << std::setprecision(-1) << RESET;
-            if(voltageCrossingDifference < 0.1) // @CONST@
+            float fractionalVoltageCrossing = abs(eyeCrossingOffset - (VOLTMAX / 2)) / (VOLTMAX / 2) * 100;
+            LOG(INFO) << GREEN << "Fractional eye crossing offset = " << BOLDYELLOW << std::setprecision(1) << fractionalVoltageCrossing << std::setprecision(-1) << RESET << GREEN << "%" << RESET;
+            if(fractionalVoltageCrossing < 10) // @CONST@
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "A" << RESET;
-            else if(voltageCrossingDifference < 0.2)
+            else if(fractionalVoltageCrossing < 20)
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "B" << RESET;
-            else if(voltageCrossingDifference < 0.3)
+            else if(fractionalVoltageCrossing < 30)
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "C" << RESET;
-            else if(voltageCrossingDifference >= 0.3)
+            else if(fractionalVoltageCrossing >= 30)
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDRED << "F" << RESET;
 
             // ###############
             // # Width grade #
             // ###############
-            LOG(INFO) << GREEN << "Crossing width at yMax = " << BOLDYELLOW << std::setprecision(2) << crossingWidthAtyMax << std::setprecision(-1) << RESET;
-            if(crossingWidthAtyMax <= 0.1) // @CONST@
+            float fractionalCrossingWidth = crossingWidthAtyMax / TIMEMAX * 100;
+            LOG(INFO) << GREEN << "Fractional crossing width at yMax = " << BOLDYELLOW << std::setprecision(1) << fractionalCrossingWidth << std::setprecision(-1) << RESET << GREEN << "%" << RESET;
+            if(crossingWidthAtyMax <= 10) // @CONST@
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "A" << RESET;
-            else if(crossingWidthAtyMax <= 0.2)
+            else if(crossingWidthAtyMax <= 20)
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "B" << RESET;
-            else if(crossingWidthAtyMax <= 0.3)
+            else if(crossingWidthAtyMax <= 30)
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "C" << RESET;
-            else if(crossingWidthAtyMax >= 0.3)
+            else if(crossingWidthAtyMax >= 30)
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDRED << "F" << RESET;
 
             // ##############
             // # Area grade #
             // ##############
-            LOG(INFO) << GREEN << "Eye opening area = " << BOLDYELLOW << std::setprecision(2) << eyeOpeningArea << std::setprecision(-1) << RESET;
-            if(eyeOpeningArea >= 0.7) // @CONST@
+            LOG(INFO) << GREEN << "Fractional eye opening area = " << BOLDYELLOW << std::setprecision(1) << fractionalEyeOpeningArea << std::setprecision(-1) << RESET << GREEN << "%" << RESET;
+            if(fractionalEyeOpeningArea >= 70) // @CONST@
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "A" << RESET;
-            else if(eyeOpeningArea >= 0.6)
+            else if(fractionalEyeOpeningArea >= 60)
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "B" << RESET;
-            else if(eyeOpeningArea >= 0.5)
+            else if(fractionalEyeOpeningArea >= 50)
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "C" << RESET;
-            else if(eyeOpeningArea < 0.5)
+            else if(fractionalEyeOpeningArea < 50)
                 LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDRED << "F" << RESET;
         }
 
