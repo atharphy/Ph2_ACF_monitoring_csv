@@ -1021,7 +1021,18 @@ const std::map<std::string, std::pair<uint8_t, float>> MPA2Interface::getBiasStr
 // FIXME At the moment we are setting the exepected values
 //  of bandgap and ADC_VREF to the default nominal value.
 //  This will be updated once we have the real values for each chip
-float MPA2Interface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2) { return MPA2_VBG_EXPECTED; }
+float MPA2Interface::getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2) 
+{ 
+    float bandgap = MPA2_VBG_EXPECTED;
+    
+    if(static_cast<MPA2*>(pMPA2)->getIsCalibrationDataLoaded())
+    {
+        auto map = static_cast<MPA2*>(pMPA2)->getADCCalibrationMap();
+        bandgap = map["bandgap"];
+        std::cout << " calibrated bandgap " << bandgap << std::endl;
+    }
+    return bandgap; 
+}
 // FIXME At the moment we are setting the exepected values
 //  of bandgap and ADC_VREF to the default nominal value.
 //  This will be updated once we have the real values for each chip
