@@ -771,7 +771,7 @@ bool MPA2Interface::ConfigureChip(Chip* pMPA2, bool pVerify, uint32_t pBlockSize
         cSuccess &= WriteChipMultReg(pMPA2, localSettings);
     }
 
-    LoadCalibrationData(pMPA2);
+    LoadCalibrationData(static_cast<MPA2*>(pMPA2));
 
     return cSuccess;
 }
@@ -908,7 +908,7 @@ uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2, uint8_t version)
     return val;
 }
 
-void MPA2Interface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, std::string pFileName)
+void MPA2Interface::LoadCalibrationData(Ph2_HwDescription::MPA2* pChip, std::string pFileName)
 {
     // # Load fCalibration data from a local CSV file based for the specific chipid
 
@@ -927,13 +927,10 @@ void MPA2Interface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, std::str
     LOG(INFO) << GREEN << "Loading calibration data for MPA on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup " << BOLDYELLOW << +pChip->getOpticalGroupId()
               << RESET << GREEN << " with Fuse ID " << BOLDYELLOW << +pFuseId << RESET;
 
-    // bool                                  cCalibrationLoaded = false;
     std::ifstream                         file(pFileName.c_str(), std::ios::in);
     std::vector<std::string>              headers;
-    // std::map<std::string, float>          theADCcalibrationMap;
     std::string                           line;
-    // uint32_t                              cRowCounter = 0;
-    std::vector<std::map<std::string, std::string>> table;
+
 
     if(file.is_open())
     {
@@ -969,50 +966,17 @@ void MPA2Interface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, std::str
             if(rowMap["reticle"] == std::to_string(static_cast<int>(pChip->pChipFuseID.Pos())) && rowMap["wafer"] == std::to_string(static_cast<int>(pChip->pChipFuseID.Wafer())) && rowMap["lot_number"] == std::to_string(static_cast<int>(pChip->pChipFuseID.Lot())))
             {
                 LOG(INFO) << BOLDGREEN << " MATCHED!!!" << RESET;
+                pChip->setIsCalibrationDataLoaded(true);
+                pChip->setADCCalibrationMap(rowMap);
             }
-            table.push_back(std::move(rowMap));      // store the whole row
         }
     }
 
-
-        // while(getline(file, line))
-        // {
-        //     cRowCounter++;
-        //     if(cRowCounter < 1)
-        //     {
-        //         Skip header (version check possible)
-    //             if(cRowCounter == 4)
-    //             {
-    //                 // Read field names
-    //                 cHeaderRow.clear();
-    //                 std::stringstream str(line);
-    //                 while(getline(str, word, ',')) cHeaderRow.push_back(word);
-    //             }
-    //             continue;
-    //         }
-
-    //         row.clear();
-    //         std::stringstream str(line);
-
-    //         while(getline(str, word, ',')) row.push_back(word);
-    //         uint32_t cRowChipId = strtoul(row[0].c_str(), 0, 16);
-
-    //         if(cRowChipId == pFuseId)
-    //         {
-    //             for(uint32_t j = 1; j < row.size(); j++)
-    //             {
-    //                 LOG(DEBUG) << BOLDBLUE << cHeaderRow[j] << RESET;
-    //                 LOG(DEBUG) << BOLDBLUE << row[j] << RESET;
-    //                 theADCcalibrationMap[cHeaderRow[j]] = std::stof(row[j]);
-    //             }
-
-    //             pChip->setADCCalibrationData(theADCcalibrationMap);
-    //             cCalibrationLoaded = true;
-
-    //             break;
-    //         }
-    //     }
-
+    auto calibrationMap = pChip->getADCCalibrationMap();
+    for(const auto& field: calibrationMap) 
+    {
+        LOG(INFO) << GREEN << " field " << field.first << " value " << field.second << RESET;
+    }
     //     if(cCalibrationLoaded == false)
     //     {
     //         LOG(WARNING) << BOLDRED << "\t--> Calibration data not available for LpGBT on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << BOLDRED << " OpticalGroup ID " << BOLDYELLOW
@@ -1030,7 +994,6 @@ void MPA2Interface::LoadCalibrationData(Ph2_HwDescription::Chip* pChip, std::str
     //     throw std::runtime_error(std::string("FileNotFoundError"));
     // }
 
-    // pChip->setIsCalibrationDataLoaded(cCalibrationLoaded);
     file.close();
 
 

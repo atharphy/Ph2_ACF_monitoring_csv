@@ -240,9 +240,20 @@ std::string MPA2::getRowRegisterName(const std::string& theRegisterName, uint16_
     return rowRegisterName;
 }
 
-void MPA2::setADCCalibrationValue(const std::string& theCalibrationName, float theCalibrationValue) { fADCcalibrationMap.at(theCalibrationName) = theCalibrationValue; }
+void MPA2::setADCSlopeCalibrationValue(const std::string& theCalibrationName, float theCalibrationValue) { fADCcalibrationSlopeMap.at(theCalibrationName) = theCalibrationValue; }
 
-float MPA2::getADCCalibrationValue(const std::string& theCalibrationName) const { return fADCcalibrationMap.at(theCalibrationName); }
+float MPA2::getADCSlopeCalibrationValue(const std::string& theCalibrationName) const { return fADCcalibrationSlopeMap.at(theCalibrationName); }
+
+void MPA2::setADCCalibrationMap(const std::map<std::string, std::string>& theInputMap)
+{
+    for(const auto& theInput: theInputMap) 
+    {
+        if (fADCcalibrationData.find(theInput.first) != fADCcalibrationData.end()) // saving only what we are interested in
+        {
+            fADCcalibrationData[theInput.first] = std::stof(theInput.second);
+        }
+    }
+}
 
 uint8_t MPA2::convertMIPtoInjectedCharge(float numberOfMIPs)
 {

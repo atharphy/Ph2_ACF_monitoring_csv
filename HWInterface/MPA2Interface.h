@@ -15,6 +15,7 @@
 #include "HWInterface/BeBoardFWInterface.h"
 #include "HWInterface/D19clpGBTInterface.h"
 #include "HWInterface/ReadoutChipInterface.h"
+#include "HWDescription/MPA2.h"
 #include "pugixml.hpp"
 #include <vector>
 
@@ -128,7 +129,7 @@ class MPA2Interface : public ReadoutChipInterface
     uint32_t             readADCVref(Ph2_HwDescription::ReadoutChip* pMPA2);
     uint32_t             readVrefRegister(Ph2_HwDescription::ReadoutChip* pMPA2);
     uint32_t             readADCBandGap(Ph2_HwDescription::ReadoutChip* pMPA2);
-    void                 LoadCalibrationData(Ph2_HwDescription::Chip* pChip, std::string pFileName = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/settings/MPAFiles/combined_MPA2_calibration.csv"));
+    void                 LoadCalibrationData(Ph2_HwDescription::MPA2* pMPA2, std::string pFileName = expandEnvironmentVariables("${PH2ACF_BASE_DIR}/settings/MPAFiles/combined_MPA2_calibration.csv"));
 
     const std::map<std::string, std::pair<uint8_t, float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pMPA);
 
