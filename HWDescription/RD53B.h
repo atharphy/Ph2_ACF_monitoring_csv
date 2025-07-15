@@ -40,7 +40,6 @@ const uint8_t TRUNC_TIMEOUT   = 205; // Code for truncation due to readout timeo
 namespace RD53BchargeConvertion
 {
 const float ADCrange = 4096.0; // VCal total range
-const float cap      = 8.0;    // [fF]
 const float ele      = 1.6;    // [e-19]
 const float offset   = 64;     // Due to VCal_High vs VCal_Med offset difference [e-]
 } // namespace RD53BchargeConvertion

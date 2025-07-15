@@ -9,7 +9,11 @@
 
 #include "RD53VTRxLightYieldScan.h"
 #include "Utils/ContainerSerialization.h"
+#include <boost/multiprecision/number.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/matrix_proxy.hpp>
 
+using namespace boost::numeric;
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
@@ -43,6 +47,7 @@ void VTRxLightYieldScan::Running()
     LOG(INFO) << GREEN << "[VTRxLightYieldScan::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     VTRxLightYieldScan::run();
+    VTRxLightYieldScan::analyze();
     VTRxLightYieldScan::draw();
     VTRxLightYieldScan::sendData();
 }
@@ -112,7 +117,16 @@ void VTRxLightYieldScan::run()
                 {
                     this->flpGBTInterface->WriteChipReg(cOpticalGroup->flpGBT, "_I2CVTRxRegCH0MOD", dac2List[j] | 0x80);
                     std::this_thread::sleep_for(std::chrono::microseconds(lpGBTconstants::DEEPSLEEP));
-                    auto value = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter("RX", flpGBTInterface->GetSFPchannel(cOpticalGroup));
+                    float value = 0;
+                    try
+                    {
+                        value = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter("RX", flpGBTInterface->GetSFPchannel(cOpticalGroup));
+                    }
+                    catch(uhal::exception::BitsSetWhichAreForbiddenByBitMask& e)
+                    {
+                        LOG(ERROR) << BOLDRED << "[VTRxLightYieldScan::run] Error: likely wrong FMCId set in cfg. file" << RESET;
+                        throw uhal::exception::BitsSetWhichAreForbiddenByBitMask(e);
+                    }
 
                     // #################
                     // # Progress menu #
@@ -151,9 +165,143 @@ void VTRxLightYieldScan::draw(bool saveData)
 #endif
 }
 
+std::shared_ptr<DetectorDataContainer> VTRxLightYieldScan::analyze()
+{
+    bool False       = false;
+    summaryContainer = std::make_shared<DetectorDataContainer>();
+    ContainerFactory::copyAndInitOpticalGroup<bool>(*fDetectorContainer, *summaryContainer, False);
+
+    std::vector<float> measurements1(dac1List.size(), 0);
+    std::vector<float> measurements2(dac2List.size(), 0);
+
+    for(const auto cBoard: theVTRxLightYieldScanContainer)
+        for(const auto cOpticalGroup: *cBoard)
+        {
+            if(cOpticalGroup->getSummary<std::vector<float>>().size() == 0) continue;
+            float slope1, sloErr1;
+            float slope2, sloErr2;
+            float chi21, DoF1;
+            float chi22, DoF2;
+
+            // #############################
+            // # Evaluate slope along dac1 #
+            // #############################
+            auto midPoint = dac2List.size() / 2;
+            for(auto i = 0u; i < dac1List.size(); i++) measurements1[i] = cOpticalGroup->getSummary<std::vector<float>>().at(i * dac2List.size() + midPoint);
+            VTRxLightYieldScan::computeStats(dac1List, measurements1, slope1, sloErr1, chi21, DoF1);
+
+            // #############################
+            // # Evaluate slope along dac2 #
+            // #############################
+            midPoint = dac1List.size() / 2;
+            for(auto j = 0u; j < dac2List.size(); j++) measurements2[j] = cOpticalGroup->getSummary<std::vector<float>>().at(midPoint * dac2List.size() + j);
+            VTRxLightYieldScan::computeStats(dac2List, measurements2, slope2, sloErr2, chi22, DoF2);
+
+            // ##########
+            // # Result #
+            // ##########
+            if((slope1 / sloErr1 > 1) && (slope2 / sloErr2 < -1)) summaryContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<bool>() = true;
+            LOG(INFO) << GREEN << "VTRx+ [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << std::setprecision(2)
+                      << "] has slope along x = " << BOLDYELLOW << slope1 << "+/-" << sloErr1 << RESET << GREEN << " and slope along y = " << BOLDYELLOW << slope2 << "+/-" << sloErr2 << RESET << GREEN
+                      << " --> " << (summaryContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<bool>() == true ? BOLDYELLOW : BOLDRED)
+                      << (summaryContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<bool>() == true ? "GOOD" : "BAD") << std::setprecision(-1) << RESET;
+        }
+
+    return summaryContainer;
+}
+
 void VTRxLightYieldScan::fillHisto()
 {
 #ifdef __USE_ROOT__
     histos->fillIntensity(theVTRxLightYieldScanContainer);
 #endif
+}
+
+void VTRxLightYieldScan::computeStats(const std::vector<uint16_t>& x, const std::vector<float>& y, float& slope, float& sloErr, float& chi2, float& DoF)
+{
+    chi2               = -1;
+    slope              = 0;
+    sloErr             = 0;
+    const size_t nData = x.size();
+    const size_t nPar  = 2;
+    DoF                = nData - nPar;
+    if(DoF < 1) return;
+
+    // ########################
+    // # Compose error vector #
+    // ########################
+    std::vector<double> e(nData);
+    std::transform(y.begin(), y.end(), e.begin(), [](double y) { return sqrt(y); });
+
+    // ################################################
+    // # Declare matrices and vector for minimization #
+    // ################################################
+    ublas::matrix<double> H(nData, nPar, 0);
+    ublas::matrix<double> V(nData, nData, 0);
+    ublas::vector<double> myY(nData);
+
+    // ########################
+    // # Declare columns of H #
+    // ########################
+    ublas::vector<double> col0(nData, 0);
+    ublas::vector<double> col1(nData, 0);
+
+    // #####################
+    // # Fill columns of H #
+    // #####################
+    std::vector<double> ones(nData, 1);
+    std::copy(ones.begin(), ones.end(), col0.begin());
+    std::copy(x.begin(), x.end(), col1.begin());
+
+    // #############
+    // # Compose H #
+    // #############
+    column(H, 0) = col0;
+    column(H, 1) = col1;
+
+    // #############
+    // # Compose V #
+    // #############
+    ublas::identity_matrix<double> identityMatrix(nData);
+    ublas::vector<double>          identityVector(nData, 1);
+    ublas::vector<double>          e2(e.size());
+    std::copy(e.begin(), e.end(), e2.begin());
+    std::transform(e2.begin(), e2.end(), e2.begin(), [](double x) { return x * x; });
+    V = ublas::element_prod(ublas::outer_prod(identityVector, e2), identityMatrix);
+
+    // ############
+    // # Fill myY #
+    // ############
+    std::copy(y.begin(), y.end(), myY.begin());
+
+    // ################
+    // # Minimization #
+    // ################
+    auto invV(V);
+    for(auto i = 0u; i < nData; i++) invV(i, i) = 1 / V(i, i);
+
+    ublas::matrix<double> tmpMtx(ublas::prod(invV, H));
+    ublas::matrix<double> invParCov(ublas::prod(ublas::trans(H), tmpMtx));
+    auto                  parCov(invParCov);
+
+    auto det = RD53Shared::mtxInversion<double>(invParCov, parCov);
+    if((isnan(det) == false) && (det != 0))
+    {
+        ublas::vector<double> tmpVec1(ublas::prod(invV, myY));
+        ublas::vector<double> tmpVec2(ublas::prod(ublas::trans(H), tmpVec1));
+        ublas::vector<double> myPar(ublas::prod(parCov, tmpVec2));
+
+        // ###################
+        // # Save parameters #
+        // ###################
+        slope  = myPar[1];
+        sloErr = sqrt(parCov(1, 1));
+
+        // ################
+        // # Compute chi2 #
+        // ################
+        ublas::vector<double> num(myY - ublas::prod(H, myPar));
+        ublas::vector<double> tmpNum(ublas::prod(invV, num));
+        chi2 = ublas::inner_prod(num, tmpNum);
+    }
 }

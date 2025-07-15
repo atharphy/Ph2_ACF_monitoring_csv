@@ -217,7 +217,7 @@ int main(int argc, char** argv)
         // ##################
         if(reset == true)
         {
-            for(const auto cBoard: *mySysCntr.fDetectorContainer) static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getFirstObject()->getId()])->ResetSequence(cBoard);
+            for(const auto cBoard: *mySysCntr.fDetectorContainer) static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getId()])->ResetSequence(cBoard);
             exit(EXIT_SUCCESS);
         }
 
@@ -533,6 +533,7 @@ int main(int argc, char** argv)
         vs.Inherit(&mySysCntr);
         vs.localConfigure(fileName, runNumber);
         vs.run();
+        vs.analyze();
         vs.draw();
     }
     else if(whichCalib == "eye")
@@ -547,6 +548,7 @@ int main(int argc, char** argv)
         es.Inherit(&mySysCntr);
         es.localConfigure(fileName, runNumber);
         es.run();
+        es.analyze();
         es.draw();
     }
     else if(whichCalib == "physics")

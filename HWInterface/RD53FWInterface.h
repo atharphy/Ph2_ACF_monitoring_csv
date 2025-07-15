@@ -40,7 +40,8 @@ const uint16_t NBIT_DATA_FIFO       = 27;     // Data FIFO depth 134.217.728, i.
 const uint8_t  AURORA_SPEED         = 0;      // 0 = 1.28 Gbps, 1 = 640 Mbps
 const uint8_t  IPBUS_FASTDURATION   = 1;      // Duration of a fast command in terms of 40 MHz clk cycles
 const uint16_t EVENT_STREAM_TIMEOUT = 0xFFFF; // Event stream timeout
-
+const uint16_t CLK_OPT              = 320;    // Clock speed for optical readout
+const uint16_t CLK_ELE              = 160;    // Clock speed for electrical readout
 enum ReadoutSpeed : uint8_t
 {
     x1280,

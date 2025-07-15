@@ -53,7 +53,18 @@ void RD53FWInterface::ResetSequence(const BeBoard* pBoard)
     // # Initialize clock generator #
     // ##############################
     auto CDCEconfig = pBoard->configCDCE();
-    if(CDCEconfig.first == true) RD53FWInterface::InitializeClockGenerator(CDCEconfig.second);
+    if(CDCEconfig.first == true)
+    {
+        // ########################################
+        // # Check in case CDCE clock was not set #
+        // ########################################
+        if(RegManager::ReadReg("user.stat_regs.global_reg.link_type") == 0)
+            CDCEconfig.second = RD53FWconstants::CLK_ELE;
+        else
+            CDCEconfig.second = RD53FWconstants::CLK_OPT;
+
+        RD53FWInterface::InitializeClockGenerator(CDCEconfig.second);
+    }
 
     // ###################################
     // # Reset optical link slow control #
@@ -219,8 +230,8 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
         LOG(ERROR) << BOLDRED << "===== Aborting =====" << RESET;
         exit(EXIT_FAILURE);
     }
-    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical - ELE (optical - OPT) readout): " << BOLDYELLOW << gtxClk / 1000.
-              << " MHz" << std::setprecision(-1) << RESET;
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "GTX receiver clock frequency (~160 MHz (~320 MHz) for electrical (optical) readout): " << BOLDYELLOW << gtxClk / 1000. << " MHz"
+              << std::setprecision(-1) << RESET;
     if(!((fabs(gtxClk / 1000. - 160) < clkSafeMargin) || (fabs(gtxClk / 1000. - 320) < clkSafeMargin)))
     {
         LOG(ERROR) << BOLDRED << "GTX receiver clock frequency not nominal" << RESET;
@@ -1474,20 +1485,6 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doSto
         return;
     }
 
-    // ##################################
-    // # Request feedback from the user #
-    // ##################################
-    std::string input;
-    LOG(WARNING) << BOLDRED << "The CDCE has a limited number of reconfiguration cycles. You should not reconfigure it unless strictly necessary. Do you want to continue ('yes' / 'no')?" << RESET;
-    std::cin >> input;
-    std::transform(input.begin(), input.end(), input.begin(), ::tolower); // Convert input to lowercase for case-insensitive comparison
-    if(input != "yes")
-    {
-        LOG(WARNING) << RESET << GREEN << "Not configuring the CDCE. Please set in the XML file the CDCE configure setting to 0" << RESET;
-        return;
-    }
-    LOG(WARNING) << RESET << BOLDRED << "CDCE will be reconfigured" << RESET;
-
     // #########
     // # Write #
     // #########
@@ -1510,6 +1507,21 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doSto
     // #########################
     if(doStoreInEEPROM == true)
     {
+        // ##################################
+        // # Request feedback from the user #
+        // ##################################
+        std::string input;
+        LOG(WARNING) << BOLDRED << "The CDCE E2PROM has a limited number of reconfiguration cycles. You should not reconfigure it unless strictly necessary. Do you want to continue ('yes' / 'no')?"
+                     << RESET;
+        std::cin >> input;
+        std::transform(input.begin(), input.end(), input.begin(), ::tolower); // Convert input to lowercase for case-insensitive comparison
+        if(input != "yes")
+        {
+            LOG(WARNING) << RESET << GREEN << "Not configuring the CDCE E2PROM" << RESET;
+            return;
+        }
+        LOG(WARNING) << RESET << BOLDRED << "CDCE E2PROM will be reconfigured" << RESET;
+
         RegManager::WriteReg("system.spi.tx_data", writeEEPROM);
         RegManager::WriteReg("system.spi.command", writeSPI);
 

@@ -86,7 +86,7 @@ bool RegManager::WriteReg(const std::string& pRegNode, const uint32_t& pVal)
             return true;
         }
 
-        LOG(DEBUG) << "\nERROR !!\nValues are not consistent:\nExpected : " << pVal << "\nActual: " << comp;
+        LOG(DEBUG) << "[RegManager::WriteReg] Error: Values are not consistent: Expected = " << pVal << " Actual = " << comp << RESET;
     }
 
     return false;
@@ -126,7 +126,7 @@ bool RegManager::WriteStackReg(const std::vector<std::pair<std::string, uint32_t
             return true;
         }
 
-        LOG(DEBUG) << "\nERROR !!\n" << cNbErrors << " have not been written correctly";
+        LOG(DEBUG) << "[RegManager::WriteStackReg] Error: " << cNbErrors << " have not been written correctly" << RESET;
     }
 
     return false;

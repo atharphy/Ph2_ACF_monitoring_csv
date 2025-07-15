@@ -7,6 +7,8 @@ using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 using namespace Ph2_System;
 
+std::string OTlpGBTID::fCalibrationDescription = "Read LPGbt ID";
+
 OTlpGBTID::OTlpGBTID() : OTTool() {}
 
 OTlpGBTID::~OTlpGBTID() {}

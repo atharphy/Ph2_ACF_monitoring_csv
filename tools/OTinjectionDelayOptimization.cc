@@ -148,11 +148,11 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
                                 float distanceFromThreshold = 0;
                                 auto  theChipFrontEndType   = theChip->getFrontEndType();
                                 if(theChipFrontEndType == FrontEndType::CBC3) distanceFromThreshold = -expectedNoise * fCBCnumberOfSigmaNoiseAwayFromPedestal;
-                                if(theChipFrontEndType == FrontEndType::SSA2) distanceFromThreshold = expectedNoise * fSSAnumberOfSigmaNoiseAwayFromPedestal;
+                                if(theChipFrontEndType == FrontEndType::SSA2) distanceFromThreshold = expectedNoise * fSSAnumberOfSigmaNoiseAwayFromPedestal * SSA_NOISE_SIGMA_SCALE_FACTOR;
                                 if(theChipFrontEndType == FrontEndType::MPA2) distanceFromThreshold = expectedNoise * fMPAnumberOfSigmaNoiseAwayFromPedestal;
-                                float thePedestal      = float(theChipBestThresholdAndDelay.first) / numberOfIterations;
-                                float theBestThreshold = thePedestal + distanceFromThreshold;
-                                theChip->setAveragePedestal(thePedestal);
+                                // float thePedestal                  = float(theChipBestThresholdAndDelay.first) / numberOfIterations;
+                                float thePedestal                  = theChip->getAveragePedestal();
+                                float theBestThreshold             = thePedestal + distanceFromThreshold;
                                 theChipBestThresholdAndDelay.first = std::round(theBestThreshold);
                             }
                         }
@@ -209,7 +209,7 @@ void OTinjectionDelayOptimization::optimizeInjectionDelay()
                     auto theChipAveragePedestalAndBestDelay =
                         theBestThresholdAndDelayContainer.getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId())->getSummary<std::pair<uint16_t, uint16_t>>();
                     auto latencyAndDelay = calculateDACsFromTotalDelay(theChipAveragePedestalAndBestDelay.second, is2Smodule);
-                    fReadoutChipInterface->WriteChipReg(theChip, "Threshold", theChipAveragePedestalAndBestDelay.first);
+                    fReadoutChipInterface->WriteChipReg(theChip, "Threshold", theChipAveragePedestalAndBestDelay.first); // This is now set during the occupancy measurement
                     fReadoutChipInterface->WriteChipReg(theChip, "TriggerLatency", latencyAndDelay.first);
                     auto theChipFrontEndType = theChip->getFrontEndType();
                     if(theChipFrontEndType == FrontEndType::CBC3) fReadoutChipInterface->WriteChipReg(theChip, "TestPulseDelay", latencyAndDelay.second);

@@ -112,21 +112,11 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
     bool     cConfigureCDCE = false;
     uint32_t cClockRateCDCE = 120;
     for(pugi::xml_node cChild: pBeBordNode.children(BEBOARD_CDCE_NODE_NAME))
-    {
         for(pugi::xml_attribute cAttribute: cChild.attributes())
         {
             if(std::string(cAttribute.name()) == BEBOARD_CDCE_CONFIGURE_ATTRIBUTE_NAME) cConfigureCDCE = cConfigureCDCE | (convertAnyInt(cAttribute.value()) == 1);
-            if(std::string(cAttribute.name()) == BEBOARD_CDCE_CLOCKRATE_ATTRIBUTE_NAME)
-            {
-                if(std::strcmp(cAttribute.value(), "ELE") == 0)
-                    cClockRateCDCE = 160;
-                else if(std::strcmp(cAttribute.value(), "OPT") == 0)
-                    cClockRateCDCE = 320;
-                else
-                    cClockRateCDCE = convertAnyInt(cAttribute.value());
-            }
+            if(std::string(cAttribute.name()) == BEBOARD_CDCE_CLOCKRATE_ATTRIBUTE_NAME) cClockRateCDCE = convertAnyInt(cAttribute.value());
         }
-    }
 
     if(cBoardType == BEBOARD_TYPE_ATTRIBUTE_D19C_VALUE)
     {
@@ -1477,6 +1467,7 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
     std::vector<std::string> listOfStringSettings{"RegNameDAC1",
                                                   "RegNameDAC2",
                                                   "DataOutputDir",
+                                                  "JsonOutfile",
                                                   "KIRA_ID",
                                                   "CMNoise_nSigmas",
                                                   "OTCICtoLpGBTecv_CICStrength",

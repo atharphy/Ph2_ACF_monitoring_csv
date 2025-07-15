@@ -30,6 +30,7 @@ void LpGBTeyeOpening::Running()
     LOG(INFO) << GREEN << "[LpGBTeyeOpening::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     LpGBTeyeOpening::run();
+    LpGBTeyeOpening::analyze();
     LpGBTeyeOpening::draw();
     LpGBTeyeOpening::sendData();
 }
@@ -126,10 +127,10 @@ void LpGBTeyeOpening::run()
                     // #################
                     // # Progress menu #
                     // #################
-                    LOG(INFO) << CYAN << "************* " << GREEN << "Scanning" << CYAN << " *************" << RESET;
-                    LOG(INFO) << GREEN << "Volt: " << BOLDYELLOW << std::setw(2) << std::fixed << +voltage << " mV (" << VOLTMAX - 1 << ") " << RESET << GREEN << "-- Time: " << BOLDYELLOW
-                              << std::setw(2) << std::fixed << +time << " ps (" << TIMEMAX - 1 << ")" << RESET;
-                    LOG(INFO) << CYAN << "************************************" << RESET;
+                    LOG(INFO) << CYAN << "************** " << GREEN << "Scanning" << CYAN << " **************" << RESET;
+                    LOG(INFO) << GREEN << "Volt: " << BOLDYELLOW << std::setw(2) << std::fixed << +voltage << " DAC (" << VOLTMAX - 1 << ") " << RESET << GREEN << "-- Time: " << BOLDYELLOW
+                              << std::setw(2) << std::fixed << +time << " DAC (" << TIMEMAX - 1 << ")" << RESET;
+                    LOG(INFO) << CYAN << "**************************************" << RESET;
                     if((voltage < VOLTMAX - 1) || (time < TIMEMAX - 1)) std::cout << std::setprecision(-1) << "\x1b[A\x1b[A\x1b[A";
 
                     theEyeArray.at(time).at(voltage) = flpGBTInterface->GetEOMCounter(cOpticalGroup->flpGBT);
@@ -160,6 +161,107 @@ void LpGBTeyeOpening::draw(bool saveData)
 
     if(doDisplay == true) myApp->Run(true);
 #endif
+}
+
+std::shared_ptr<DetectorDataContainer> LpGBTeyeOpening::analyze()
+{
+    const float eyeOpeningThresholdWrtMaxCut = 0.9; // @CONST@
+    bool        False                        = false;
+    summaryContainer                         = std::make_shared<DetectorDataContainer>();
+    ContainerFactory::copyAndInitOpticalGroup<bool>(*fDetectorContainer, *summaryContainer, False);
+
+    for(const auto cBoard: theLpGBTeyeOpeningContainer)
+        for(const auto cOpticalGroup: *cBoard)
+        {
+            auto& theEyeArray = cOpticalGroup->getSummary<GenericDataArray<uint16_t, TIMEMAX, VOLTMAX>>();
+            if(theEyeArray.size() == 0) continue;
+
+            float                      zMax = 0;
+            std::array<float, VOLTMAX> yProjection{0};
+            for(uint8_t voltage = 0; voltage < VOLTMAX; voltage++)
+                for(uint8_t time = 0; time < TIMEMAX; time++)
+                {
+                    if(theEyeArray.at(time).at(voltage) > zMax) zMax = theEyeArray.at(time).at(voltage);
+                    yProjection.at(voltage) += theEyeArray.at(time).at(voltage);
+                }
+            auto yBinMax = std::max_element(yProjection.begin(), yProjection.end());
+
+            float eyeCrossingVoltage          = std::distance(yProjection.begin(), yBinMax);
+            float eyeCrossingVoltageSum       = yProjection.at(eyeCrossingVoltage);
+            float eyeCrossingVoltageMinus1Sum = yProjection.at(eyeCrossingVoltage - 1);
+            float eyeCrossingVoltagePlus1Sum  = yProjection.at(eyeCrossingVoltage + 1);
+
+            // ##############################################################
+            // # Delta around max allows to find a bit better the real peak #
+            // ##############################################################
+            float delta             = 0.5 * (eyeCrossingVoltageMinus1Sum - eyeCrossingVoltagePlus1Sum) / (eyeCrossingVoltageMinus1Sum + eyeCrossingVoltagePlus1Sum - 2 * eyeCrossingVoltageSum);
+            float eyeCrossingOffset = eyeCrossingVoltage + delta;
+
+            // ####################################################################################################################
+            // # After the projected Y max has been found, the histo is sliced at that point to get the crossing width of the eye #
+            // ####################################################################################################################
+            std::array<float, TIMEMAX> xProjectionAtMaxy{0};
+            for(uint8_t time = 0; time < TIMEMAX; time++) xProjectionAtMaxy.at(time) = theEyeArray.at(time).at(eyeCrossingVoltage);
+            float threshold = eyeOpeningThresholdWrtMaxCut * zMax;
+
+            float crossingWidthAtyMax = 0;
+            for(const auto& ele: xProjectionAtMaxy)
+                if(ele < threshold) crossingWidthAtyMax += 1;
+
+            float fractionalEyeOpeningArea = 0;
+            for(uint8_t voltage = 0; voltage < VOLTMAX; voltage++)
+                for(uint8_t time = 0; time < TIMEMAX; time++)
+                {
+                    float binContent = theEyeArray.at(time).at(voltage);
+                    if(binContent > threshold) fractionalEyeOpeningArea += 1 * 100;
+                }
+            fractionalEyeOpeningArea /= VOLTMAX * TIMEMAX;
+
+            LOG(INFO) << GREEN << "Results for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]" << RESET;
+
+            // #################
+            // # Voltage grade #
+            // #################
+            float fractionalVoltageCrossing = abs(eyeCrossingOffset - (VOLTMAX / 2)) / (VOLTMAX / 2) * 100;
+            LOG(INFO) << GREEN << "Fractional eye crossing offset = " << BOLDYELLOW << std::setprecision(1) << fractionalVoltageCrossing << std::setprecision(-1) << RESET << GREEN << "%" << RESET;
+            if(fractionalVoltageCrossing < 10) // @CONST@
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "A" << RESET;
+            else if(fractionalVoltageCrossing < 20)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "B" << RESET;
+            else if(fractionalVoltageCrossing < 30)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "C" << RESET;
+            else if(fractionalVoltageCrossing >= 30)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDRED << "F" << RESET;
+
+            // ###############
+            // # Width grade #
+            // ###############
+            float fractionalCrossingWidth = crossingWidthAtyMax / TIMEMAX * 100;
+            LOG(INFO) << GREEN << "Fractional crossing width at yMax = " << BOLDYELLOW << std::setprecision(1) << fractionalCrossingWidth << std::setprecision(-1) << RESET << GREEN << "%" << RESET;
+            if(crossingWidthAtyMax <= 10) // @CONST@
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "A" << RESET;
+            else if(crossingWidthAtyMax <= 20)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "B" << RESET;
+            else if(crossingWidthAtyMax <= 30)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "C" << RESET;
+            else if(crossingWidthAtyMax >= 30)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDRED << "F" << RESET;
+
+            // ##############
+            // # Area grade #
+            // ##############
+            LOG(INFO) << GREEN << "Fractional eye opening area = " << BOLDYELLOW << std::setprecision(1) << fractionalEyeOpeningArea << std::setprecision(-1) << RESET << GREEN << "%" << RESET;
+            if(fractionalEyeOpeningArea >= 70) // @CONST@
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "A" << RESET;
+            else if(fractionalEyeOpeningArea >= 60)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "B" << RESET;
+            else if(fractionalEyeOpeningArea >= 50)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDYELLOW << "C" << RESET;
+            else if(fractionalEyeOpeningArea < 50)
+                LOG(INFO) << BOLDBLUE << "\t--> Optical grade: " << BOLDRED << "F" << RESET;
+        }
+
+    return summaryContainer;
 }
 
 void LpGBTeyeOpening::fillHisto()
