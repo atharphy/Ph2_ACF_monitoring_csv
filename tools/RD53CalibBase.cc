@@ -85,8 +85,8 @@ void CalibBase::saveChipRegisters(bool doUpdateChip)
                     static_cast<RD53*>(cChip)->saveRegMap(cChip->getFileName(fileReg));
                     std::string command("mv " + cChip->getFileName(fileReg) + " " + this->fDirectoryName);
                     system(command.c_str());
-                    LOG(INFO) << BOLDBLUE << "\t--> Current calibration saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
-                              << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << BOLDBLUE << "] " << BOLDYELLOW << cChip->getFileName(fileReg) << RESET;
+                    LOG(INFO) << GREEN << "Current calibration saved the configuration file for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
+                              << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "] " << BOLDYELLOW << cChip->getFileName(fileReg) << RESET;
                 }
 
             if(cOpticalGroup->flpGBT != nullptr)
@@ -96,8 +96,8 @@ void CalibBase::saveChipRegisters(bool doUpdateChip)
                 std::string command("mv " + cOpticalGroup->flpGBT->getFileName(fileReg) + " " + this->fDirectoryName);
                 system(command.c_str());
 
-                LOG(INFO) << BOLDBLUE << "\t--> Current calibration saved the LpGBT configuration file for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
-                          << RESET << BOLDBLUE << "] " << BOLDYELLOW << cOpticalGroup->flpGBT->getFileName(fileReg) << RESET;
+                LOG(INFO) << GREEN << "Current calibration saved the LpGBT configuration file for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET
+                          << GREEN << "] " << BOLDYELLOW << cOpticalGroup->flpGBT->getFileName(fileReg) << RESET;
             }
         }
 }
