@@ -88,13 +88,13 @@ class MPA2 : public ReadoutChip
     float getADCSlopeCalibrationValue(const std::string& theCalibrationName) const override;
     void  setADCSlopeCalibrationValue(const std::string& theCalibrationName, float theCalibrationValue) override;
 
-    void setIsCalibrationDataLoaded(bool isLoaded) { fIsCalibrationDataLoaded = isLoaded; }
-    bool getIsCalibrationDataLoaded() const { return fIsCalibrationDataLoaded; }
+    void                         setIsCalibrationDataLoaded(bool isLoaded) { fIsCalibrationDataLoaded = isLoaded; }
+    bool                         getIsCalibrationDataLoaded() const { return fIsCalibrationDataLoaded; }
     std::map<std::string, float> getADCCalibrationMap() const { return fADCcalibrationData; }
     void                         setADCCalibrationMap(const std::map<std::string, std::string>& theInputMap);
 
   private:
-    bool  fIsCalibrationDataLoaded{false};
+    bool fIsCalibrationDataLoaded{false};
 
     // Default values, will be overwritten once the calibration is loaded
     std::map<std::string, float> fADCcalibrationData = {
@@ -102,7 +102,6 @@ class MPA2 : public ReadoutChip
         {"adc_ref", 15},
         {"temp", 800},
     };
-
 
   protected:
     static std::vector<std::string> fListOfGlobalPixelRegisters;

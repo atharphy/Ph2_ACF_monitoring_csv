@@ -246,9 +246,9 @@ float MPA2::getADCSlopeCalibrationValue(const std::string& theCalibrationName) c
 
 void MPA2::setADCCalibrationMap(const std::map<std::string, std::string>& theInputMap)
 {
-    for(const auto& theInput: theInputMap) 
+    for(const auto& theInput: theInputMap)
     {
-        if (fADCcalibrationData.find(theInput.first) != fADCcalibrationData.end()) // saving only what we are interested in
+        if(fADCcalibrationData.find(theInput.first) != fADCcalibrationData.end()) // saving only what we are interested in
         {
             fADCcalibrationData[theInput.first] = std::stof(theInput.second);
         }

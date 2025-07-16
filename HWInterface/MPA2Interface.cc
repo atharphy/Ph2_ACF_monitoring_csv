@@ -898,11 +898,6 @@ uint32_t MPA2Interface::ReadChipFuseID(Chip* pMPA2, uint8_t version)
                    (this->ReadChipReg(pMPA2, "EfuseValue0") << 0);
     pMPA2->pChipFuseID.SetId(val);
 
-
-
-
-
-
     LOG(INFO) << GREEN << "FuseID from MPA2#" << +pMPA2->getId() << " Pos " << +pMPA2->pChipFuseID.Pos() << " Wafer " << +pMPA2->pChipFuseID.Wafer() << " Lot " << +pMPA2->pChipFuseID.Lot()
               << " Status " << +pMPA2->pChipFuseID.Status() << " Process " << +pMPA2->pChipFuseID.Process() << " ADCRef " << +pMPA2->pChipFuseID.ADCRef() << RESET;
     return val;
@@ -913,52 +908,44 @@ void MPA2Interface::LoadCalibrationData(Ph2_HwDescription::MPA2* pChip, std::str
     // Load fCalibration data from a local CSV file based on the chip fuse ID
 
     uint32_t pFuseId = pChip->pChipFuseID.GetId();
-    if (pFuseId == 0)
-    {
-        pFuseId = this->ReadChipFuseID(pChip);
-    }
+    if(pFuseId == 0) { pFuseId = this->ReadChipFuseID(pChip); }
     LOG(DEBUG) << GREEN << "Loading calibration data for MPA on Board " << BOLDYELLOW << +pChip->getBeBoardId() << RESET << GREEN << " OpticalGroup " << BOLDYELLOW << +pChip->getOpticalGroupId()
-              << RESET << GREEN << " with Fuse ID " << BOLDYELLOW << +pFuseId << RESET;
+               << RESET << GREEN << " with Fuse ID " << BOLDYELLOW << +pFuseId << RESET;
 
-    std::ifstream                         file(pFileName.c_str(), std::ios::in);
-    std::vector<std::string>              headers;
-    std::string                           line;
-
+    std::ifstream            file(pFileName.c_str(), std::ios::in);
+    std::vector<std::string> headers;
+    std::string              line;
 
     if(file.is_open())
     {
-    
         // Get header
-        if (std::getline(file, line)) 
+        if(std::getline(file, line))
         {
             std::stringstream ss(line);
-            std::string cell;
-            while (std::getline(ss, cell, ',')) 
-            {
-                headers.push_back(cell);
-            }
+            std::string       cell;
+            while(std::getline(ss, cell, ',')) { headers.push_back(cell); }
         }
 
         // Read data
-        while (std::getline(file, line)) 
+        while(std::getline(file, line))
         {
-    
-            std::stringstream lineStream(line);
-            std::string cell;
+            std::stringstream                  lineStream(line);
+            std::string                        cell;
             std::map<std::string, std::string> rowMap;
 
-            for (const auto& colName : headers) 
+            for(const auto& colName: headers)
             {
-                if (!std::getline(lineStream, cell, ',')) 
+                if(!std::getline(lineStream, cell, ','))
                 {
-                    cell.clear();                    // empty if the value is missing
+                    cell.clear(); // empty if the value is missing
                 }
                 rowMap[colName] = cell;
             }
 
-            if(rowMap["reticle"] == std::to_string(static_cast<int>(pChip->pChipFuseID.Pos())) && rowMap["wafer"] == std::to_string(static_cast<int>(pChip->pChipFuseID.Wafer())) && rowMap["lot_number"] == std::to_string(static_cast<int>(pChip->pChipFuseID.Lot())))
+            if(rowMap["reticle"] == std::to_string(static_cast<int>(pChip->pChipFuseID.Pos())) && rowMap["wafer"] == std::to_string(static_cast<int>(pChip->pChipFuseID.Wafer())) &&
+               rowMap["lot_number"] == std::to_string(static_cast<int>(pChip->pChipFuseID.Lot())))
             {
-                LOG(DEBUG) << BOLDGREEN << " FOUND CALIBRATION DATA for MPA "<< getReadoutChipString(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId()) << RESET;
+                LOG(DEBUG) << BOLDGREEN << " FOUND CALIBRATION DATA for MPA " << getReadoutChipString(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId()) << RESET;
                 pChip->setIsCalibrationDataLoaded(true);
                 pChip->setADCCalibrationMap(rowMap);
             }
@@ -966,13 +953,15 @@ void MPA2Interface::LoadCalibrationData(Ph2_HwDescription::MPA2* pChip, std::str
 
         if(pChip->getIsCalibrationDataLoaded() == false)
         {
-            LOG(WARNING) << BOLDRED << "\t--> Calibration data not available for MPA "<< BOLDYELLOW << getReadoutChipString(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId()) << RESET << BOLDRED << " with Fuse ID " << BOLDYELLOW << +pFuseId << RESET;
+            LOG(WARNING) << BOLDRED << "\t--> Calibration data not available for MPA " << BOLDYELLOW
+                         << getReadoutChipString(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId()) << RESET << BOLDRED << " with Fuse ID " << BOLDYELLOW
+                         << +pFuseId << RESET;
             LOG(WARNING) << BOLDBLUE << "\t--> Proceeding with default values for ADC calibrations" << RESET;
         }
         else
-            LOG(WARNING) << GREEN << "\t--> Calibration data available for MPA " << BOLDYELLOW << getReadoutChipString(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId()) << RESET << GREEN << " with Fuse ID " << BOLDYELLOW << +pFuseId << RESET;
-     
-
+            LOG(WARNING) << GREEN << "\t--> Calibration data available for MPA " << BOLDYELLOW
+                         << getReadoutChipString(pChip->getBeBoardId(), pChip->getOpticalGroupId(), pChip->getHybridId(), pChip->getId()) << RESET << GREEN << " with Fuse ID " << BOLDYELLOW
+                         << +pFuseId << RESET;
     }
     else
     {
@@ -981,12 +970,7 @@ void MPA2Interface::LoadCalibrationData(Ph2_HwDescription::MPA2* pChip, std::str
         throw std::runtime_error(std::string("FileNotFoundError"));
     }
 
-       
-
-
     file.close();
-
-
 }
 
 bool MPA2Interface::setVrefFromFuseID(ReadoutChip* pMPA2)
@@ -1008,16 +992,16 @@ bool MPA2Interface::setVref(ReadoutChip* pMPA2, uint16_t VREFvalue)
 
 const std::map<std::string, std::pair<uint8_t, float>> MPA2Interface::getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pMPA2) { return MPA2_BIAS_STRUCTURE_DEFAULT; }
 
-float MPA2Interface::getBandGapValue(Ph2_HwDescription::ReadoutChip* pMPA2) 
-{ 
+float MPA2Interface::getBandGapValue(Ph2_HwDescription::ReadoutChip* pMPA2)
+{
     float bandgap = MPA2_VBG_EXPECTED;
-    
+
     if(static_cast<MPA2*>(pMPA2)->getIsCalibrationDataLoaded())
     {
         auto map = static_cast<MPA2*>(pMPA2)->getADCCalibrationMap();
-        bandgap = map["bandgap"]/1000.;
+        bandgap  = map["bandgap"] / 1000.;
     }
-    return bandgap; 
+    return bandgap;
 }
 
 float MPA2Interface::getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2) { return MPA2_VREF_EXPECTED; }

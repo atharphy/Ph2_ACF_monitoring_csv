@@ -95,7 +95,7 @@ void OTPSADCCalibration::CalibrateBias()
                     LOG(INFO) << BOLDYELLOW << "Going to calibrate the ADC bias registers..." << RESET;
                     CalibrateChipBias(theChip, theVrefValue);
                     uint32_t theADCBandgapValue = fReadoutChipInterface->readADCBandGap(theChip);
-                    float    theBandgapVoltage  = fReadoutChipInterface->getBandGapValue(theChip); // FIXME this should be the real bandgap value!! (and it is now for MPA, but not yet for SSA) 
+                    float    theBandgapVoltage  = fReadoutChipInterface->getBandGapValue(theChip); // FIXME this should be the real bandgap value!! (and it is now for MPA, but not yet for SSA)
                     float    theSlope           = theBandgapVoltage / (theADCBandgapValue - theGroundValue);
                     float    theOffset          = -theGroundValue * theSlope;
 
