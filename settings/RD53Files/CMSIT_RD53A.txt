@@ -228,6 +228,7 @@ ADC_MAXIMUM_VOLT          0xC3          0d839                   0d839           
 TEMPSENS_IDEAL_FACTOR     0xC4          0d1225                  0d1225                             16
 SAMPLE_N_TIMES            0xC5          0d10                    0d10                               16
 VREF_ADC                  0xC6          0d900                   0d900                              12
+INJ_CAP                   0xC7          0d85                    0d85                               16
 
 READTRIG_CNT              0x200         0b0                     0b0                                16
 RDWRFIFOERROR_CNT         0x201         0b0                     0b0                                16

@@ -98,7 +98,7 @@ int main(int argc, char** argv)
         std::stringstream outp;
         mySysCntr.InitializeHw(configFile, outp);
         mySysCntr.InitializeSettings(configFile, outp);
-        for(const auto cBoard: *mySysCntr.fDetectorContainer) static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getFirstObject()->getId()])->ResetSequence(cBoard);
+        for(const auto cBoard: *mySysCntr.fDetectorContainer) static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getId()])->ResetSequence(cBoard);
         exit(EXIT_SUCCESS);
     }
     else

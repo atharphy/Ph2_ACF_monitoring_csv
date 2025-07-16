@@ -113,7 +113,8 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
                                                                 "TEMPSENS_OFFSET_BOTTOM",
                                                                 "SAMPLE_N_TIMES",
                                                                 "WAIT_MUX_CONFIG",
-                                                                "VREF_ADC"}; // @CONST@
+                                                                "VREF_ADC",
+                                                                "INJ_CAP"}; // @CONST@
     const std::set<std::string> registerWhiteList            = {"DAC_PREAMP_L_LIN",
                                                                 "DAC_PREAMP_R_LIN",
                                                                 "DAC_PREAMP_TL_LIN",
