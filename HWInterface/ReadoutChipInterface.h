@@ -176,7 +176,7 @@ class ReadoutChipInterface : public ChipInterface
      * \brief Get the ADC band gap expected value. At the moment a default value is stored in the definition file
      * \param pChip: pointer to Chip object
      */
-    virtual float getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pChip)
+    virtual float getBandGapValue(Ph2_HwDescription::ReadoutChip* pChip)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 0;

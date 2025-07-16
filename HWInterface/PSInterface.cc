@@ -153,7 +153,7 @@ const std::map<std::string, std::pair<uint8_t, float>> PSInterface::getBiasStruc
 
 float PSInterface::calculateADCLSB(ReadoutChip* pPS, float theVrefValue) { return getInterface(pPS)->calculateADCLSB(pPS, theVrefValue); }
 
-float PSInterface::getBandGapExpectedValue(ReadoutChip* pPS) { return getInterface(pPS)->getBandGapExpectedValue(pPS); }
+float PSInterface::getBandGapValue(ReadoutChip* pPS) { return getInterface(pPS)->getBandGapValue(pPS); }
 
 float PSInterface::getVrefExpectedValue(ReadoutChip* pPS) { return getInterface(pPS)->getVrefExpectedValue(pPS); }
 

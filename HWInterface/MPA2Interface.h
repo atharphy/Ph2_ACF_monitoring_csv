@@ -133,7 +133,7 @@ class MPA2Interface : public ReadoutChipInterface
 
     const std::map<std::string, std::pair<uint8_t, float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pMPA);
 
-    float getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2);
+    float getBandGapValue(Ph2_HwDescription::ReadoutChip* pMPA2);
     float getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pMPA2);
     float getVrefPrecision(Ph2_HwDescription::ReadoutChip* pMPA2);
     float getVrefMinValue(Ph2_HwDescription::ReadoutChip* pMPA2);
