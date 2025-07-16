@@ -89,8 +89,8 @@ class MPA2 : public ReadoutChip
     void  setADCSlopeCalibrationValue(const std::string& theCalibrationName, float theCalibrationValue) override;
 
     void                         setIsCalibrationDataLoaded(bool isLoaded) { fIsCalibrationDataLoaded = isLoaded; }
-    bool                         getIsCalibrationDataLoaded() const { return fIsCalibrationDataLoaded; }
-    std::map<std::string, float> getADCCalibrationMap() const { return fADCcalibrationData; }
+    bool                         getIsCalibrationDataLoaded() const override { return fIsCalibrationDataLoaded; }
+    std::map<std::string, float> getADCCalibrationMap() const override { return fADCcalibrationData; }
     void                         setADCCalibrationMap(const std::map<std::string, std::string>& theInputMap);
 
   private:

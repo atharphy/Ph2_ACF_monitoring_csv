@@ -101,6 +101,13 @@ class ReadoutChip
         return std::make_pair(65535, 65535);
     }
 
+    virtual bool getIsCalibrationDataLoaded() const 
+    { 
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return false; 
+    }
+
+
     /*!
      * \brief Set chip average noise
      * \param theNoise
@@ -133,6 +140,11 @@ class ReadoutChip
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 999.;
     }
+    virtual std::map<std::string, float>  getADCCalibrationMap() const
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+        return {{"dummy",0}};
+    }
 
   protected:
     std::shared_ptr<ChannelGroupBase> fChipOriginalMask{nullptr};
@@ -141,8 +153,8 @@ class ReadoutChip
     std::map<std::string, float>      fADCcalibrationSlopeMap = {
         {"ADC_SLOPE", 0.0002},    // In volts, calculated as the target Vref (0.850 V) / ADC range (4095)
         {"ADC_OFFSET", 0.},       // In volts, assumed 0. It depends on the ground value
-        {"TEMP_SLOPE", -0.00103}, // mV / C
-        {"TEMP_OFFSET", 0.154}    // Voltage in mV at 25C
+        {"TEMP_SLOPE", -0.00103}, // V / C
+        {"TEMP_OFFSET", 0.154}    // Voltage in V at 25C
     };
 };
 } // namespace Ph2_HwDescription
