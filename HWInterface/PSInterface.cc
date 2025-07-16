@@ -364,9 +364,9 @@ float PSInterface::measureTemperature(Ph2_HwDescription::ReadoutChip* pPS)
     if(pPS->getIsCalibrationDataLoaded())
     {
         auto theCalibrationMap = pPS->getADCCalibrationMap();
-        theOffset = theCalibrationMap["temp"] * pPS->getADCSlopeCalibrationValue("ADC_SLOPE") + pPS->getADCSlopeCalibrationValue("ADC_OFFSET");
+        theOffset              = theCalibrationMap["temp"] * pPS->getADCSlopeCalibrationValue("ADC_SLOPE") + pPS->getADCSlopeCalibrationValue("ADC_OFFSET");
     }
-    return (readADCVoltage(pPS, "temperature") - theOffset ) / pPS->getADCSlopeCalibrationValue("TEMP_SLOPE") + 25;
+    return (readADCVoltage(pPS, "temperature") - theOffset) / pPS->getADCSlopeCalibrationValue("TEMP_SLOPE") + 25;
 }
 
 bool PSInterface::MaskAllChannels(Ph2_HwDescription::ReadoutChip* pPS, bool mask, bool pVerifLoop)

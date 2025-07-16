@@ -80,13 +80,13 @@ class SSA2 : public ReadoutChip
     void                         setADCCalibrationMap(const std::map<std::string, std::string>& theInputMap);
 
   private:
-      bool fIsCalibrationDataLoaded{false};
-      // Default values, will be overwritten once the calibration is loaded
-      std::map<std::string, float> fADCcalibrationData = {
+    bool fIsCalibrationDataLoaded{false};
+    // Default values, will be overwritten once the calibration is loaded
+    std::map<std::string, float> fADCcalibrationData = {
         {"bandgap", SSA2_VBG_EXPECTED},
         {"adc_ref", 15},
         {"temp", 800},
-        };
+    };
 
   protected:
     static std::vector<std::string> fListOfGlobalRegisters;

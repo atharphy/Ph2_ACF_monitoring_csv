@@ -101,12 +101,11 @@ class ReadoutChip
         return std::make_pair(65535, 65535);
     }
 
-    virtual bool getIsCalibrationDataLoaded() const 
-    { 
+    virtual bool getIsCalibrationDataLoaded() const
+    {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-        return false; 
+        return false;
     }
-
 
     /*!
      * \brief Set chip average noise
@@ -140,10 +139,10 @@ class ReadoutChip
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
         return 999.;
     }
-    virtual std::map<std::string, float>  getADCCalibrationMap() const
+    virtual std::map<std::string, float> getADCCalibrationMap() const
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
-        return {{"dummy",0}};
+        return {{"dummy", 0}};
     }
 
   protected:
