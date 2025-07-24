@@ -3,7 +3,8 @@
 ## Libraries needed by Ph2_ACF
 
 ```shell
-sudo dnf install -y boost-devel pugixml-devel json-devel
+sudo dnf install -y boost-devel pugixml-devel json-devel \
+     bzip2-devel xz-devel zlib-devel libzstd-devel
 ```
 
 ## Erlang (needed by uHAL)
