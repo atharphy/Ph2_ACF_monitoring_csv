@@ -1000,13 +1000,62 @@ void DQMHistogramPedeNoise::fitSCurves()
                             // Fit the S-curve for the PS module
                             else if((cOpticalGroup->getFrontEndType() == FrontEndType::OuterTrackerPS))
                             {
-                                TF1* cFit = new TF1("SCurveFit", MyErfc, cChannelPedestal - (cChannelNoise * 5), cChannelPedestal + (cChannelNoise * 5), 2);
+                                // Fit range obtained from hists is not great especially in cold. Try to improve it here by taking it directly from the hists.
+                                int lastOneIndex = -1;
+                                int firstZeroIndex = -1;
+                                uint8_t thresholdBins = cChannelSCurve->GetNbinsX();
+                                // Thresholds to handle floating point comparison
+                                double oneThreshold = 0.85;
+                                double zeroThreshold = 0.2;
+                
+                                // Find the last "1" before it decreases
+                                for (int l = 0; l < thresholdBins - 1; ++l) 
+                                {
+                                    if (cChannelSCurve->GetBinContent(l) > oneThreshold && cChannelSCurve->GetBinContent(l+1) < cChannelSCurve->GetBinContent(l)) 
+                                    {
+                                        lastOneIndex = l;
+                                        break;
+                                    }
+                                }
+                
+                                // Find the first "0" after the drop
+                                for (int l = thresholdBins - 1; l > 0; --l) 
+                                {
+                                    if (cChannelSCurve->GetBinContent(l) < zeroThreshold && cChannelSCurve->GetBinContent(l-1) > cChannelSCurve->GetBinContent(l)) 
+                                    {
+                                        firstZeroIndex = l;
+                                        break;
+                                    }
+                                }
+                                
+                                    // if (lastOneIndex != -1)
+                                    //     std::cout << "Last 1 before drop at x = " << cChannelSCurve->GetBinCenter(lastOneIndex) << ", y = " << y[lastOneIndex] << std::endl;
+                                    // else
+                                    //     std::cout << "No last 1 found." << std::endl;
+                
+                                    // if (firstZeroIndex != -1)
+                                    //     std::cout << "First 0 after drop at x = " << x[firstZeroIndex] << ", y = " << y[firstZeroIndex] << std::endl;
+                                    // else
+                                    //     std::cout << "No first 0 found." << std::endl;
+                                
+
+                                if(firstZeroIndex != -1 && lastOneIndex != -1) // avoid cases in which these bins are not found (e.g. for an empty channel)
+                                {
+                                    cChannelPedestal = (cChannelSCurve->GetBinCenter(lastOneIndex) + cChannelSCurve->GetBinCenter(firstZeroIndex))/2.;
+                                    cChannelNoise = (cChannelSCurve->GetBinCenter(firstZeroIndex)-cChannelSCurve->GetBinCenter(lastOneIndex))/2.;
+                                }
+                                float noiseTolerance = 3;
+                                float rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance);
+                                float rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance);
+
+                                TF1* cFit = new TF1("SCurveFit", MyErfc, rangeMinus, rangePlus, 2);
                                 cFit->SetNpx(100);
                                 cFit->SetParameter(0, cChannelPedestal);
                                 cFit->SetParameter(1, cChannelNoise);
 
                                 // Fit
                                 cChannelSCurve->Fit(cFit, "RQM");
+                                // cFit->SetRange(rangeMinus, rangePlus);
 
                                 theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThreshold      = cFit->GetParameter(0);
                                 theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoise          = cFit->GetParameter(1);
