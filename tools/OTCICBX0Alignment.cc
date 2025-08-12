@@ -120,25 +120,35 @@ void OTCICBX0Alignment::BX0Alignment()
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto& cCic          = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                bool  cSuccessAlign = fCicInterface->CheckAutomatedBX0Alignment(cCic);
+                int maxIterations = 5;
+                int iterations = 0;
+                bool  cSuccessAlign = false;
+                while ( !cSuccessAlign && iterations < maxIterations) 
+                {
+                    LOG(DEBUG) << YELLOW << "BX0 Iteration " << iterations << ", cSuccessAlign = " << cSuccessAlign << RESET;
+        
+                    auto& cCic          = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                    cSuccessAlign = fCicInterface->CheckAutomatedBX0Alignment(cCic);
 
-                auto& theBX0AlignmentValue = theBX0AlignmentDelayContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<uint16_t>();
-                theBX0AlignmentValue       = fCicInterface->retrieveExternalBX0AlignmentValue(cCic);
-                ++theBX0AlignmentValue; // increased by one bases on the experience with multuple PS, but root cause not understood
-                cSuccessAlign = cSuccessAlign && fCicInterface->ConfigureExternalBX0Delay(cCic, theBX0AlignmentValue);
-                if(cSuccessAlign)
-                {
-                    LOG(INFO) << BOLDBLUE << "Automated BX0 alignment procedure on " << BOLDMAGENTA << getHybridString(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId()) << BOLDGREEN
+                    auto& theBX0AlignmentValue = theBX0AlignmentDelayContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<uint16_t>();
+                    theBX0AlignmentValue       = fCicInterface->retrieveExternalBX0AlignmentValue(cCic);
+                    ++theBX0AlignmentValue; // increased by one bases on the experience with multiple PS, but root cause not understood
+                    cSuccessAlign = cSuccessAlign && fCicInterface->ConfigureExternalBX0Delay(cCic, theBX0AlignmentValue);
+                    cSuccessAlign = cSuccessAlign && (theBX0AlignmentValue < 32);
+                    if(cSuccessAlign)
+                    {
+                        LOG(INFO) << BOLDBLUE << "Automated BX0 alignment procedure on " << BOLDMAGENTA << getHybridString(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId()) << BOLDGREEN
                               << " SUCCEEDED!" << RESET;
-                }
-                else
-                {
-                    LOG(INFO) << BOLDRED << "Automated BX0 alignment procedure " << BOLDRED << " FAILED!" << RESET;
-                    LOG(INFO) << BOLDRED << "FAILED CIC BX0 alignment word on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id" << +theHybrid->getId()
-                              << " --- Hybrid will be disabled" << RESET;
-                    ExceptionHandler::getInstance()->disableHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId());
-                    continue;
+                    }
+                    if(!cSuccessAlign && iterations == maxIterations)
+                    {
+                        LOG(INFO) << BOLDRED << "Automated BX0 alignment procedure " << BOLDRED << " FAILED!" << RESET;
+                        LOG(INFO) << BOLDRED << "FAILED CIC BX0 alignment word on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id" << +theHybrid->getId()
+                                << " --- Hybrid will be disabled" << RESET;
+                        ExceptionHandler::getInstance()->disableHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId());
+                        continue;
+                    }
+                    ++iterations;
                 }
             } // hybrids
         } // optical group
