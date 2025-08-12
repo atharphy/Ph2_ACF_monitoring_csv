@@ -346,6 +346,11 @@ void CalibBase::SilentRunning(bool doSilentRunning)
     }
 }
 
+void CalibBase::SetInjectionType(RD53Shared::INJtype injType)
+{
+    CalibBase::WriteBroadcastChipReg("DIGITAL_INJ_EN", ((injType == RD53Shared::INJtype::Digital) || (injType == RD53Shared::INJtype::SelfTrigger)));
+}
+
 void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)
 {
     theCurrentRun = currentRun;

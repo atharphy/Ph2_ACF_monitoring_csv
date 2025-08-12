@@ -50,6 +50,11 @@ void SCurve::ConfigureCalibration()
     // #################################
     theRecyclingBin.setDetectorContainer(fDetectorContainer);
 
+    // ######################
+    // # Set injection type #
+    // ######################
+    CalibBase::SetInjectionType(injType);
+
     // #######################
     // # Initialize progress #
     // #######################

@@ -51,6 +51,7 @@ class CalibBase : public Tool
     void    ResetBoards();
     void    WriteBroadcastChipReg(const std::string& regName, const uint16_t value);
     void    SilentRunning(bool doSilentRunning);
+    void    SetInjectionType(RD53Shared::INJtype injType);
 
     void Stop() override;
     void ConfigureCalibration() override;
