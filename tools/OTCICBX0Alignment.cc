@@ -120,14 +120,14 @@ void OTCICBX0Alignment::BX0Alignment()
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                int maxIterations = 5;
-                int iterations = 0;
-                bool  cSuccessAlign = false;
-                while ( !cSuccessAlign && iterations < maxIterations) 
+                int  maxIterations = 5;
+                int  iterations    = 0;
+                bool cSuccessAlign = false;
+                while(!cSuccessAlign && iterations < maxIterations)
                 {
                     LOG(DEBUG) << YELLOW << "BX0 Iteration " << iterations << ", cSuccessAlign = " << cSuccessAlign << RESET;
-        
-                    auto& cCic          = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+
+                    auto& cCic    = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
                     cSuccessAlign = fCicInterface->CheckAutomatedBX0Alignment(cCic);
 
                     auto& theBX0AlignmentValue = theBX0AlignmentDelayContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<uint16_t>();
@@ -138,13 +138,13 @@ void OTCICBX0Alignment::BX0Alignment()
                     if(cSuccessAlign)
                     {
                         LOG(INFO) << BOLDBLUE << "Automated BX0 alignment procedure on " << BOLDMAGENTA << getHybridString(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId()) << BOLDGREEN
-                              << " SUCCEEDED!" << RESET;
+                                  << " SUCCEEDED!" << RESET;
                     }
                     if(!cSuccessAlign && iterations == maxIterations)
                     {
                         LOG(INFO) << BOLDRED << "Automated BX0 alignment procedure " << BOLDRED << " FAILED!" << RESET;
-                        LOG(INFO) << BOLDRED << "FAILED CIC BX0 alignment word on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id" << +theHybrid->getId()
-                                << " --- Hybrid will be disabled" << RESET;
+                        LOG(INFO) << BOLDRED << "FAILED CIC BX0 alignment word on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id"
+                                  << +theHybrid->getId() << " --- Hybrid will be disabled" << RESET;
                         ExceptionHandler::getInstance()->disableHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId());
                         continue;
                     }
