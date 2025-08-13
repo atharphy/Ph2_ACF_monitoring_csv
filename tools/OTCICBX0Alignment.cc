@@ -72,9 +72,9 @@ bool OTCICBX0Alignment::BX0Alignment()
 {
     LOG(INFO) << BOLDMAGENTA << "Starting CIC automated BX0 alignment procedure .... " << RESET;
 
-    bool allHybridsAligned = true;
-    std::string theQueryFunction = "skipSSAQuery";
-    auto        theSkipSSAquery  = [](const ChipContainer* theReadoutChip)
+    bool        allHybridsAligned = true;
+    std::string theQueryFunction  = "skipSSAQuery";
+    auto        theSkipSSAquery   = [](const ChipContainer* theReadoutChip)
     {
         if(static_cast<const ReadoutChip*>(theReadoutChip)->getFrontEndType() == FrontEndType::SSA2) return false;
         return true;
@@ -148,8 +148,8 @@ bool OTCICBX0Alignment::BX0Alignment()
                 else
                 {
                     LOG(INFO) << BOLDRED << "Automated BX0 alignment procedure " << BOLDRED << " FAILED!" << RESET;
-                    LOG(INFO) << BOLDRED << "FAILED CIC BX0 alignment word on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id"
-                              << +theHybrid->getId()<< RESET;
+                    LOG(INFO) << BOLDRED << "FAILED CIC BX0 alignment word on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id" << +theHybrid->getId()
+                              << RESET;
                     allHybridsAligned = false;
                     continue;
                 }
