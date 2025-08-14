@@ -650,6 +650,28 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip, uint8_t version)
     return eFuseCode;
 }
 
+uint32_t RD53BInterface::ReadChipIref(Chip* pChip)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    uint16_t IrefWire = RD53Interface::ReadChipReg(pChip, "IrefWireBonds");
+
+    if(static_cast<RD53*>(pChip)->getIrefCode() < 0)
+    {
+        std::stringstream myString;
+        myString << IrefWire;
+        throw std::out_of_range(myString.str().c_str());
+    }
+    else if(IrefWire != static_cast<RD53*>(pChip)->geteFuseCode())
+    {
+        std::stringstream myString;
+        myString << "Readout chip Iref code " << IrefWire << " does not match value in xml file " << +static_cast<RD53*>(pChip)->geteFuseCode();
+        throw std::runtime_error(myString.str());
+    }
+
+    return IrefWire;
+}
+
 void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
 {
     this->setBoard(pBoard->getId());

@@ -65,6 +65,7 @@ class RD53A : public RD53
           uint8_t            pRD53Id,
           uint8_t            pRD53Lane,
           int64_t            pRD53eFuseCode,
+          int64_t            pRD53IrefCode,
           const std::string& fileName,
           const std::string& cfgComment);
     RD53A(const RD53A&) = delete;
