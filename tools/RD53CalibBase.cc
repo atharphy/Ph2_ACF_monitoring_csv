@@ -31,7 +31,15 @@ void CalibBase::ConfigureCalibration()
 
 void CalibBase::Stop()
 {
+    // ########################
+    // # Stop the data taking #
+    // ########################
     Tool::Stop();
+
+    // #######################
+    // # Stop the monitoring #
+    // #######################
+    fDetectorMonitor->stopRunning();
 
 #ifdef __USE_ROOT__
     if(splitFile == true)
