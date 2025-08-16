@@ -36,7 +36,6 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
 
     bool doDebugHists = findValueInSettings<double>(pSettingsMap, "PedestalEqualizationPSAtPedestal_SaveDebugHists", 1) > 0;
 
-
     fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
 
     if(doDebugHists)
