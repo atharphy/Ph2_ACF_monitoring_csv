@@ -1046,6 +1046,8 @@ void DQMHistogramPedeNoise::fitSCurves()
 
                                 // Fit
                                 cChannelSCurve->Fit(cFit, "RQM");
+                                cChannelSCurve->Fit(cFit, "RQM");
+                                cChannelSCurve->Fit(cFit, "RQM");
                                 cFit->SetRange(rangeMinus, rangePlus);
 
                                 theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThreshold      = cFit->GetParameter(0);
