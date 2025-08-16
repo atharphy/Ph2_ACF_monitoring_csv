@@ -36,9 +36,11 @@ void DQMHistogramPedestalEqualizationPSAtPedestal::book(TFile* theOutputFile, De
 
     bool doDebugHists = findValueInSettings<double>(pSettingsMap, "PedestalEqualizationPSAtPedestal_SaveDebugHists", 1) > 0;
 
+
+    fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
+
     if(doDebugHists)
     {
-        fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
         HistContainer<TH2F> theTH2FChipStripSCurve("ThresholdScanAtPedestal", "Threshold scan at pedestal", NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, 256, -0.5, 256 - 0.5);
         theTH2FChipStripSCurve.fTheHistogram->GetXaxis()->SetTitle("Channel");
         theTH2FChipStripSCurve.fTheHistogram->GetYaxis()->SetTitle("Threshold [VcTh]");
