@@ -36,11 +36,6 @@ void CalibBase::Stop()
     // ########################
     Tool::Stop();
 
-    // #######################
-    // # Stop the monitoring #
-    // #######################
-    fDetectorMonitor->stopRunning();
-
 #ifdef __USE_ROOT__
     if(splitFile == true)
     {
