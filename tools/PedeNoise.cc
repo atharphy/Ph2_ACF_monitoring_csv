@@ -827,13 +827,13 @@ void PedeNoise::extractPedeNoise()
                             if(isnan(chip->getChannel<ThresholdAndNoise>(row, col).fNoise) || isinf(chip->getChannel<ThresholdAndNoise>(row, col).fNoise))
                             {
                                 LOG(DEBUG) << BOLDYELLOW << "Problem in deriving noise for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId()
-                                             << " ReadoutChip " << chip->getId() << " Channel row " << row << " col " << col << ", forcing it to 0." << RESET;
+                                           << " ReadoutChip " << chip->getId() << " Channel row " << row << " col " << col << ", forcing it to 0." << RESET;
                                 chip->getChannel<ThresholdAndNoise>(row, col).fNoise = 0.;
                             }
                             if(isnan(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold) || isinf(chip->getChannel<ThresholdAndNoise>(row, col).fThreshold))
                             {
-                                LOG(DEBUG) << BOLDYELLOW << "Problem in deriving threshold for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid "
-                                             << hybrid->getId() << " ReadoutChip " << chip->getId() << " Channel row " << row << " col " << col << ", forcing it to 0." << RESET;
+                                LOG(DEBUG) << BOLDYELLOW << "Problem in deriving threshold for Board " << board->getId() << " Optical Group " << opticalGroup->getId() << " Hybrid " << hybrid->getId()
+                                           << " ReadoutChip " << chip->getId() << " Channel row " << row << " col " << col << ", forcing it to 0." << RESET;
                                 chip->getChannel<ThresholdAndNoise>(row, col).fThreshold = 0.;
                             }
                             chip->getChannel<ThresholdAndNoise>(row, col).fThresholdError = 1;
