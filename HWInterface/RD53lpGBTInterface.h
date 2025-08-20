@@ -37,8 +37,10 @@ class RD53lpGBTInterface : public lpGBTInterface
     void SetUpLinkMapping(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
 
   private:
-    bool     WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify = true);
-    uint16_t ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
+    bool                             WriteReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress, uint16_t pValue, bool pVerify = true);
+    uint16_t                         ReadReg(Ph2_HwDescription::Chip* pChip, uint16_t pAddress);
+    std::pair<std::string, uint16_t> SetSpecialRegister(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pChipRegMap);
+    uint16_t                         SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size);
 };
 
 } // namespace Ph2_HwInterface

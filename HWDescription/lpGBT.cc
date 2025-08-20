@@ -11,6 +11,23 @@
 
 namespace Ph2_HwDescription
 {
+std::map<std::string, lpGBT::SpecialRegInfo> lpGBT::specialRegMap = {
+    {"EPRX00PhaseSelect", {"EPRX00ChnCntr", 4}}, {"EPRX01PhaseSelect", {"EPRX01ChnCntr", 4}}, {"EPRX02PhaseSelect", {"EPRX02ChnCntr", 4}}, {"EPRX03PhaseSelect", {"EPRX03ChnCntr", 4}},
+    {"EPRX10PhaseSelect", {"EPRX10ChnCntr", 4}}, {"EPRX11PhaseSelect", {"EPRX11ChnCntr", 4}}, {"EPRX12PhaseSelect", {"EPRX12ChnCntr", 4}}, {"EPRX13PhaseSelect", {"EPRX13ChnCntr", 4}},
+    {"EPRX20PhaseSelect", {"EPRX20ChnCntr", 4}}, {"EPRX21PhaseSelect", {"EPRX21ChnCntr", 4}}, {"EPRX22PhaseSelect", {"EPRX22ChnCntr", 4}}, {"EPRX23PhaseSelect", {"EPRX23ChnCntr", 4}},
+    {"EPRX30PhaseSelect", {"EPRX30ChnCntr", 4}}, {"EPRX31PhaseSelect", {"EPRX31ChnCntr", 4}}, {"EPRX32PhaseSelect", {"EPRX32ChnCntr", 4}}, {"EPRX33PhaseSelect", {"EPRX33ChnCntr", 4}},
+    {"EPRX40PhaseSelect", {"EPRX40ChnCntr", 4}}, {"EPRX41PhaseSelect", {"EPRX41ChnCntr", 4}}, {"EPRX42PhaseSelect", {"EPRX42ChnCntr", 4}}, {"EPRX43PhaseSelect", {"EPRX43ChnCntr", 4}},
+    {"EPRX50PhaseSelect", {"EPRX00ChnCntr", 4}}, {"EPRX51PhaseSelect", {"EPRX51ChnCntr", 4}}, {"EPRX52PhaseSelect", {"EPRX52ChnCntr", 4}}, {"EPRX53PhaseSelect", {"EPRX53ChnCntr", 4}},
+    {"EPRX60PhaseSelect", {"EPRX60ChnCntr", 4}}, {"EPRX61PhaseSelect", {"EPRX61ChnCntr", 4}}, {"EPRX62PhaseSelect", {"EPRX62ChnCntr", 4}}, {"EPRX63PhaseSelect", {"EPRX63ChnCntr", 4}},
+
+    {"EPRX00Eq", {"EPRX00ChnCntr", 0}},          {"EPRX01Eq", {"EPRX01ChnCntr", 0}},          {"EPRX02Eq", {"EPRX02ChnCntr", 0}},          {"EPRX03Eq", {"EPRX03ChnCntr", 0}},
+    {"EPRX10Eq", {"EPRX10ChnCntr", 0}},          {"EPRX11Eq", {"EPRX11ChnCntr", 0}},          {"EPRX12Eq", {"EPRX12ChnCntr", 0}},          {"EPRX13Eq", {"EPRX13ChnCntr", 0}},
+    {"EPRX20Eq", {"EPRX20ChnCntr", 0}},          {"EPRX21Eq", {"EPRX21ChnCntr", 0}},          {"EPRX22Eq", {"EPRX22ChnCntr", 0}},          {"EPRX23Eq", {"EPRX23ChnCntr", 0}},
+    {"EPRX30Eq", {"EPRX30ChnCntr", 0}},          {"EPRX31Eq", {"EPRX41ChnCntr", 0}},          {"EPRX32Eq", {"EPRX32ChnCntr", 0}},          {"EPRX33Eq", {"EPRX33ChnCntr", 0}},
+    {"EPRX40Eq", {"EPRX40ChnCntr", 0}},          {"EPRX41Eq", {"EPRX41ChnCntr", 0}},          {"EPRX42Eq", {"EPRX42ChnCntr", 0}},          {"EPRX43Eq", {"EPRX43ChnCntr", 0}},
+    {"EPRX50Eq", {"EPRX50ChnCntr", 0}},          {"EPRX51Eq", {"EPRX51ChnCntr", 0}},          {"EPRX52Eq", {"EPRX52ChnCntr", 0}},          {"EPRX53Eq", {"EPRX53ChnCntr", 0}},
+    {"EPRX60Eq", {"EPRX60ChnCntr", 0}},          {"EPRX61Eq", {"EPRX61ChnCntr", 0}},          {"EPRX62Eq", {"EPRX62ChnCntr", 0}},          {"EPRX63Eq", {"EPRX63ChnCntr", 0}}};
+
 lpGBT::lpGBT(uint8_t pBeId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName, const std::string& pConfigFilePath) : Chip(pBeId, FMCId, pOpticalGroupId, 0, pChipId)
 {
     fConfigFileName = fileName;
