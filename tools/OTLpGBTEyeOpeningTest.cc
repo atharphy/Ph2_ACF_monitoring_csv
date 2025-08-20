@@ -64,11 +64,11 @@ void OTLpGBTEyeOpeningTest::runEyeOpeningTest()
 
         uint8_t attenuationSetting;
         if(power == 1)
-            attenuationSetting = 0;
+            attenuationSetting = 3;
         else if(power == 2)
             attenuationSetting = 1;
         else if(power == 3)
-            attenuationSetting = 3;
+            attenuationSetting = 0;
         else
         {
             LOG(ERROR) << ERROR_FORMAT << "OTLpGBTEyeOpeningTest power settings can be only 1, 2 or 3, value " << power << " not valid, aborting" << RESET;

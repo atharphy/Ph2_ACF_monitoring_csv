@@ -390,7 +390,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
                 LOG(INFO) << BOLDMAGENTA << "UN-KNOWN MODULE TYPE" << RESET;
         }
     }
-std::cout<< __PRETTY_FUNCTION__ << " [" << __LINE__ << "]" << std::endl;
 
     fRegisterHelper = new RegisterHelper(fDetectorContainer, fBeBoardInterface, fReadoutChipInterface, fVTRxInterface, flpGBTInterface, fCicInterface, &fBeBoardFWMap);
 }

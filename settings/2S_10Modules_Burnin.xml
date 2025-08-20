@@ -11,7 +11,7 @@
             <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
 
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_2S.txt">
             <Settings
             />
             <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
@@ -52,7 +52,7 @@
             <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_2S.txt">
             <Settings
             />
             <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
@@ -96,7 +96,7 @@
             <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_2S.txt">
             <Settings
             />
             <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
@@ -140,7 +140,7 @@
             <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_2S.txt">
             <Settings
             />
             <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
@@ -184,7 +184,7 @@
             <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_2S.txt">
             <Settings
             />
             <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
@@ -228,7 +228,7 @@
             <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_2S.txt">
             <Settings
             />
             <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
@@ -270,7 +270,7 @@
             <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_2S.txt">
             <Settings
             />
             <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
@@ -312,7 +312,7 @@
             <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_2S.txt">
             <Settings
             />
             <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
@@ -354,7 +354,7 @@
             <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_2S.txt">
             <Settings
             />
             <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
@@ -396,7 +396,7 @@
             <NTCProperties type="Sensor" ADC="ADC4" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_2S.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_2S.txt">
             <Settings
             />
             <TuneVrefSettings ADC = "ADC2" ReferenceVoltage = "501" /> <!--Voltage given in mV!-->
