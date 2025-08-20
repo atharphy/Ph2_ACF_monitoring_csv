@@ -46,12 +46,15 @@ class LpGBTeyeOpening : public CalibBase
     void run() override;
     void draw(bool saveData = true) override;
 
+    std::shared_ptr<DetectorDataContainer> analyze();
+
     LpGBTeyeOpeningHistograms* histos;
 
   private:
     void fillHisto() override;
 
-    DetectorDataContainer theLpGBTeyeOpeningContainer;
+    DetectorDataContainer                  theLpGBTeyeOpeningContainer;
+    std::shared_ptr<DetectorDataContainer> summaryContainer;
 
   protected:
     // ######################################

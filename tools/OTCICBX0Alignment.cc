@@ -37,7 +37,15 @@ void OTCICBX0Alignment::Running()
     Initialise();
     // FIXME the retime pix scan is temporary, only to verify uniformity across modules
     if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ScanRetimePixAndBX0Alignment();
-    BX0Alignment();
+    size_t numberOtIterations    = 0;
+    size_t maxNumberOfIterations = 1;
+    while(numberOtIterations < maxNumberOfIterations)
+    {
+        if(BX0Alignment()) break;
+        ++numberOtIterations;
+        LOG(WARNING) << WARNING_FORMAT << "Not all BX0 delays are correctly found" << RESET;
+    }
+    if(numberOtIterations >= maxNumberOfIterations) { LOG(ERROR) << ERROR_FORMAT << "Failed to find all BX0 delays" << RESET; }
     LOG(INFO) << BOLDGREEN << "Done with OTCICBX0Alignment." << RESET;
     Reset();
 }
@@ -60,11 +68,13 @@ void OTCICBX0Alignment::Resume() {}
 
 void OTCICBX0Alignment::Reset() { fRegisterHelper->restoreSnapshot(); }
 
-void OTCICBX0Alignment::BX0Alignment()
+bool OTCICBX0Alignment::BX0Alignment()
 {
     LOG(INFO) << BOLDMAGENTA << "Starting CIC automated BX0 alignment procedure .... " << RESET;
-    std::string theQueryFunction = "skipSSAQuery";
-    auto        theSkipSSAquery  = [](const ChipContainer* theReadoutChip)
+
+    bool        allHybridsAligned = true;
+    std::string theQueryFunction  = "skipSSAQuery";
+    auto        theSkipSSAquery   = [](const ChipContainer* theReadoutChip)
     {
         if(static_cast<const ReadoutChip*>(theReadoutChip)->getFrontEndType() == FrontEndType::SSA2) return false;
         return true;
@@ -88,7 +98,7 @@ void OTCICBX0Alignment::BX0Alignment()
                     LOG(INFO) << BOLDRED << "No FE suitable for BX0 alignment enabled on Board id " << +cCic->getBeBoardId() << " OpticalGroup id" << +cCic->getOpticalGroupId() << " Hybrid id "
                               << +cCic->getHybridId() << " --- Hybrid will be disabled" << RESET;
                     ExceptionHandler::getInstance()->disableHybrid(cCic->getBeBoardId(), cCic->getOpticalGroupId(), cCic->getHybridId());
-                    return;
+                    return false;
                 }
                 // std::cout << " the FE to use is " << +theFEtoUse->getId() << std::endl;
                 auto    theFECICmapping = cCic->getMapping();
@@ -120,13 +130,16 @@ void OTCICBX0Alignment::BX0Alignment()
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                auto& cCic          = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                bool  cSuccessAlign = fCicInterface->CheckAutomatedBX0Alignment(cCic);
+                bool cSuccessAlign = false;
+
+                auto& cCic    = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
+                cSuccessAlign = fCicInterface->CheckAutomatedBX0Alignment(cCic);
 
                 auto& theBX0AlignmentValue = theBX0AlignmentDelayContainer.getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getSummary<uint16_t>();
                 theBX0AlignmentValue       = fCicInterface->retrieveExternalBX0AlignmentValue(cCic);
-                ++theBX0AlignmentValue; // increased by one bases on the experience with multuple PS, but root cause not understood
+                ++theBX0AlignmentValue; // increased by one bases on the experience with multiple PS, but root cause not understood
                 cSuccessAlign = cSuccessAlign && fCicInterface->ConfigureExternalBX0Delay(cCic, theBX0AlignmentValue);
+                cSuccessAlign = cSuccessAlign && (theBX0AlignmentValue < 32);
                 if(cSuccessAlign)
                 {
                     LOG(INFO) << BOLDBLUE << "Automated BX0 alignment procedure on " << BOLDMAGENTA << getHybridString(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId()) << BOLDGREEN
@@ -136,8 +149,8 @@ void OTCICBX0Alignment::BX0Alignment()
                 {
                     LOG(INFO) << BOLDRED << "Automated BX0 alignment procedure " << BOLDRED << " FAILED!" << RESET;
                     LOG(INFO) << BOLDRED << "FAILED CIC BX0 alignment word on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id" << +theHybrid->getId()
-                              << " --- Hybrid will be disabled" << RESET;
-                    ExceptionHandler::getInstance()->disableHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId());
+                              << RESET;
+                    allHybridsAligned = false;
                     continue;
                 }
             } // hybrids
@@ -155,6 +168,7 @@ void OTCICBX0Alignment::BX0Alignment()
 #endif
 
     fDetectorContainer->removeReadoutChipQueryFunction(theQueryFunction);
+    return allHybridsAligned;
 }
 
 // FIXME the retime pix scan is temporary, only to verify uniformity across modules

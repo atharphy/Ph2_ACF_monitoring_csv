@@ -37,7 +37,6 @@ const uint8_t NBIT_CCOL   = 6;   // Number of core column bits
 namespace RD53AchargeConvertion
 {
 const float ADCrange = 4096.0; // VCal total range
-const float cap      = 8.5;    // [fF]
 const float ele      = 1.6;    // [e-19]
 const float offset   = 64;     // Due to VCal_High vs VCal_Med offset difference [e-]
 } // namespace RD53AchargeConvertion

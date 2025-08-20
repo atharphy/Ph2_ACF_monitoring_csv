@@ -95,7 +95,7 @@ void OTPSADCCalibration::CalibrateBias()
                     LOG(INFO) << BOLDYELLOW << "Going to calibrate the ADC bias registers..." << RESET;
                     CalibrateChipBias(theChip, theVrefValue);
                     uint32_t theADCBandgapValue = fReadoutChipInterface->readADCBandGap(theChip);
-                    float    theBandgapVoltage  = fReadoutChipInterface->getBandGapExpectedValue(theChip); // FIXME this should be the real bandgap value!!
+                    float    theBandgapVoltage  = fReadoutChipInterface->getBandGapValue(theChip); // FIXME this should be the real bandgap value!! (and it is now for MPA, but not yet for SSA)
                     float    theSlope           = theBandgapVoltage / (theADCBandgapValue - theGroundValue);
                     float    theOffset          = -theGroundValue * theSlope;
 
@@ -107,8 +107,8 @@ void OTPSADCCalibration::CalibrateBias()
                     theADCinformation.fOffset       = theOffset;
 
                     std::map<std::string, float> theADCcalibrationMap;
-                    static_cast<ReadoutChip*>(theChip)->setADCCalibrationValue("ADC_SLOPE", theSlope);
-                    static_cast<ReadoutChip*>(theChip)->setADCCalibrationValue("ADC_OFFSET", theOffset);
+                    static_cast<ReadoutChip*>(theChip)->setADCSlopeCalibrationValue("ADC_SLOPE", theSlope);
+                    static_cast<ReadoutChip*>(theChip)->setADCSlopeCalibrationValue("ADC_OFFSET", theOffset);
                     // make sure test pads output is disabled
                     fReadoutChipInterface->disableTestPadsOutput(theChip);
                 } // chip
@@ -150,7 +150,7 @@ float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip,
     // FIXME At the moment we are setting the exepected values
     //  of bandgap and ADC_VREF to the default nominal value.
     //  This will be updated once we have the real values for each chip
-    float theBandGapExpectedValue = fReadoutChipInterface->getBandGapExpectedValue(theChip);
+    float theBandGapExpectedValue = fReadoutChipInterface->getBandGapValue(theChip);
     float theVrefExpectedValue    = fReadoutChipInterface->getVrefExpectedValue(theChip);
     float theVrefMinValue         = fReadoutChipInterface->getVrefMinValue(theChip);
     float theVrefMaxValue         = fReadoutChipInterface->getVrefMaxValue(theChip);

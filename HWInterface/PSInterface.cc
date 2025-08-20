@@ -153,7 +153,7 @@ const std::map<std::string, std::pair<uint8_t, float>> PSInterface::getBiasStruc
 
 float PSInterface::calculateADCLSB(ReadoutChip* pPS, float theVrefValue) { return getInterface(pPS)->calculateADCLSB(pPS, theVrefValue); }
 
-float PSInterface::getBandGapExpectedValue(ReadoutChip* pPS) { return getInterface(pPS)->getBandGapExpectedValue(pPS); }
+float PSInterface::getBandGapValue(ReadoutChip* pPS) { return getInterface(pPS)->getBandGapValue(pPS); }
 
 float PSInterface::getVrefExpectedValue(ReadoutChip* pPS) { return getInterface(pPS)->getVrefExpectedValue(pPS); }
 
@@ -355,12 +355,18 @@ float PSInterface::readADCVoltage(Ph2_HwDescription::ReadoutChip* pPS, std::stri
     float adcValue            = readADC(pPS, theADCName, 1);
     float theConversionFactor = 1;                                             // without the conversion factor the voltages are not visible
     if(theADCName == "AVDD" || theADCName == "DVDD") theConversionFactor *= 2; // keep into account a voltage divider
-    return (adcValue * pPS->getADCCalibrationValue("ADC_SLOPE") + pPS->getADCCalibrationValue("ADC_OFFSET")) * theConversionFactor;
+    return (adcValue * pPS->getADCSlopeCalibrationValue("ADC_SLOPE") + pPS->getADCSlopeCalibrationValue("ADC_OFFSET")) * theConversionFactor;
 }
 
 float PSInterface::measureTemperature(Ph2_HwDescription::ReadoutChip* pPS)
 {
-    return (readADCVoltage(pPS, "temperature") - pPS->getADCCalibrationValue("TEMP_OFFSET")) / pPS->getADCCalibrationValue("TEMP_SLOPE") + 25;
+    float theOffset = pPS->getADCSlopeCalibrationValue("TEMP_OFFSET");
+    if(pPS->getIsCalibrationDataLoaded())
+    {
+        auto theCalibrationMap = pPS->getADCCalibrationMap();
+        theOffset              = theCalibrationMap["temp"] * pPS->getADCSlopeCalibrationValue("ADC_SLOPE") + pPS->getADCSlopeCalibrationValue("ADC_OFFSET");
+    }
+    return (readADCVoltage(pPS, "temperature") - theOffset) / pPS->getADCSlopeCalibrationValue("TEMP_SLOPE") + 25;
 }
 
 bool PSInterface::MaskAllChannels(Ph2_HwDescription::ReadoutChip* pPS, bool mask, bool pVerifLoop)

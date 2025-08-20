@@ -112,21 +112,11 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
     bool     cConfigureCDCE = false;
     uint32_t cClockRateCDCE = 120;
     for(pugi::xml_node cChild: pBeBordNode.children(BEBOARD_CDCE_NODE_NAME))
-    {
         for(pugi::xml_attribute cAttribute: cChild.attributes())
         {
             if(std::string(cAttribute.name()) == BEBOARD_CDCE_CONFIGURE_ATTRIBUTE_NAME) cConfigureCDCE = cConfigureCDCE | (convertAnyInt(cAttribute.value()) == 1);
-            if(std::string(cAttribute.name()) == BEBOARD_CDCE_CLOCKRATE_ATTRIBUTE_NAME)
-            {
-                if(std::strcmp(cAttribute.value(), "ELE") == 0)
-                    cClockRateCDCE = 160;
-                else if(std::strcmp(cAttribute.value(), "OPT") == 0)
-                    cClockRateCDCE = 320;
-                else
-                    cClockRateCDCE = convertAnyInt(cAttribute.value());
-            }
+            if(std::string(cAttribute.name()) == BEBOARD_CDCE_CLOCKRATE_ATTRIBUTE_NAME) cClockRateCDCE = convertAnyInt(cAttribute.value());
         }
-    }
 
     if(cBoardType == BEBOARD_TYPE_ATTRIBUTE_D19C_VALUE)
     {
@@ -1819,10 +1809,10 @@ void FileParser::parseLpGBTphasesForBypass(pugi::xml_node lpgbtPhasesForBypassNo
 
 void FileParser::setChipADCParameters(pugi::xml_node pChipNode, Ph2_HwDescription::ReadoutChip* cChip)
 {
-    if(pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("ADC_SLOPE", pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME).as_float());
-    if(pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("ADC_OFFSET", pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME).as_float());
-    if(pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("TEMP_SLOPE", pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME).as_float());
-    if(pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME)) cChip->setADCCalibrationValue("TEMP_OFFSET", pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME)) cChip->setADCSlopeCalibrationValue("ADC_SLOPE", pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME)) cChip->setADCSlopeCalibrationValue("ADC_OFFSET", pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME)) cChip->setADCSlopeCalibrationValue("TEMP_SLOPE", pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME).as_float());
+    if(pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME)) cChip->setADCSlopeCalibrationValue("TEMP_OFFSET", pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME).as_float());
 }
 
 } // namespace Ph2_Parser
