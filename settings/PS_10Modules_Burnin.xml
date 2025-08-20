@@ -11,7 +11,7 @@
             <NTCProperties type="VTRx+"  ADC="ADC6" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_PS.txt">
             <Settings/>
             </lpGBT>
             <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
@@ -94,7 +94,7 @@
             <NTCProperties type="VTRx+"  ADC="ADC6" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_PS.txt">
             <Settings/>
             </lpGBT>
             <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
@@ -177,7 +177,7 @@
             <NTCProperties type="VTRx+"  ADC="ADC6" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_PS.txt">
             <Settings/>
             </lpGBT>
             <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
@@ -260,7 +260,7 @@
             <NTCProperties type="VTRx+"  ADC="ADC6" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_PS.txt">
             <Settings/>
             </lpGBT>
             <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
@@ -343,7 +343,7 @@
             <NTCProperties type="VTRx+"  ADC="ADC6" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_PS.txt">
             <Settings/>
             </lpGBT>
             <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
@@ -426,7 +426,7 @@
             <NTCProperties type="VTRx+"  ADC="ADC6" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_PS.txt">
             <Settings/>
             </lpGBT>
             <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
@@ -509,7 +509,7 @@
             <NTCProperties type="VTRx+"  ADC="ADC6" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_PS.txt">
             <Settings/>
             </lpGBT>
             <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
@@ -592,7 +592,7 @@
             <NTCProperties type="VTRx+"  ADC="ADC6" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_PS.txt">
             <Settings/>
             </lpGBT>
             <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
@@ -675,7 +675,7 @@
             <NTCProperties type="VTRx+"  ADC="ADC6" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_PS.txt">
             <Settings/>
             </lpGBT>
             <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
@@ -758,7 +758,7 @@
             <NTCProperties type="VTRx+"  ADC="ADC6" lookUpTable = "${PH2ACF_BASE_DIR}/settings/NTCFiles/vtrx_ntc_1k.csv"/>
             
             <lpGBT_Files path="${PH2ACF_BASE_DIR}/settings/lpGBTFiles/" />
-            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v1_PS.txt">
+            <lpGBT Id="0" version="1" optical="1" configFile="lpGBT_v2_PS.txt">
             <Settings/>
             </lpGBT>
             <VTRx_Files path="${PH2ACF_BASE_DIR}/settings/VTRxFiles/" />
