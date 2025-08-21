@@ -106,6 +106,23 @@ def run_fit_in_place(root_path: str) -> None:
 				print(" chip_dir ",chip_dir)
 				if not isinstance(chip_dir, ROOT.TDirectory):
 					continue
+ 
+ 
+				h_chip_noise_summary = None
+				for key in chip_dir.GetListOfKeys():
+					obj = chip_dir.Get(key.GetName())
+					if isinstance(obj, ROOT.TH1) and "ChannelNoise" in obj.GetName():
+						h_chip_noise_summary = obj
+						break
+				if h_chip_noise_summary is None:
+					print("No summary histogram found in", chip_dir.GetName())
+					continue
+ 
+				h_chip_noise_summary_copy = ROOT.TH1F() 
+				h_chip_noise_summary.Copy(h_chip_noise_summary_copy)
+	
+				h_chip_noise_summary_copy.Reset()
+				# h_chip_noise_summary_copy.SetName(h_chip_noise_summary_copy.GetName()+"copy")
 				# chip_dir.cd()
 				# Inside Channel directory
 				channel_dir = chip_dir.Get("Channel")
@@ -114,11 +131,13 @@ def run_fit_in_place(root_path: str) -> None:
 				# channel_dir.cd()
 				# Loop over histograms in Channel
 				hist_names = [k.GetName() for k in channel_dir.GetListOfKeys() if isinstance(channel_dir.Get(k.GetName()), ROOT.TH1)]
+				channelcounter = 0
 				for name in hist_names:
+					
 					hist = channel_dir.Get(name)
 					if "SCurve" not in name:
 						continue
-
+					
 					print("Processing", name)
 
 					# name = hist.GetName()
@@ -182,8 +201,26 @@ def run_fit_in_place(root_path: str) -> None:
 					channel_dir.cd()  # temporarily move into that directory
 					hist.Write(hist.GetName(), ROOT.TObject.kOverwrite)
 					# hist.Write(hist.GetName(), ROOT.TObject.kOverwrite)
+					
+					# h_chip_noise_summary_copy.SetBinContent(channelcounter + 1, newfit.GetParameter(1))
+					h_chip_noise_summary_copy.SetBinContent(channelcounter + 1, newfit.GetParameter(1))
 
+					channelcounter = channelcounter +1
+				print("Updating chip hists")
 
+				# Write back
+				chip_dir.cd()
+				# name = h_chip_noise_summary.GetName()
+				# print(name)
+				# print(h_chip_noise_summary_copy.GetBinContent(3))
+				# print(h_chip_noise_summary.GetBinContent(3))
+				# h_chip_noise_summary.Delete()
+				# print("delete")
+				# h_chip_noise_summary_copy.SetName(name)
+				# print(name)
+				# print(h_chip_noise_summary_copy.GetBinContent(3))
+				h_chip_noise_summary_copy.Write(h_chip_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+				# h_chip_noise_summary.Write(h_chip_noise_summary.GetName(), ROOT.TObject.kOverwrite)
 	f.Close()
 	print(f"Updated S-curve fits in-place (SSA+MPA) without altering structure: {root_path}")
 	print("  - Updated existing 2D histogram fits")
@@ -198,20 +235,20 @@ def _swap_power_titles(title: str, from_str: str, to_str: str) -> str:
 	return title.replace(from_str, to_str)
 
 def find_hists_with_string(tdir, substring, path=""):
-    """Recursively search for histograms whose names contain substring."""
+	"""Recursively search for histograms whose names contain substring."""
 
-    for key in tdir.GetListOfKeys():
-        obj = key.ReadObj()
-        name = obj.GetName()
-        fullpath = f"{path}/{name}" if path else name
+	for key in tdir.GetListOfKeys():
+		obj = key.ReadObj()
+		name = obj.GetName()
+		fullpath = f"{path}/{name}" if path else name
 
-        if isinstance(obj, ROOT.TDirectory):
-            # Recurse into subdirectory
-            results = find_hists_with_string(obj, substring, fullpath)
-        elif isinstance(obj, ROOT.TH1):
-            if substring in name:
-                results = fullpath, obj, tdir
-    return results
+		if isinstance(obj, ROOT.TDirectory):
+			# Recurse into subdirectory
+			results = find_hists_with_string(obj, substring, fullpath)
+		elif isinstance(obj, ROOT.TH1):
+			if substring in name:
+				results = fullpath, obj, tdir
+	return results
 
 def swap_eyeopening_histograms(root_path: str) -> None:
 	f = ROOT.TFile.Open(root_path, "UPDATE")
@@ -287,6 +324,7 @@ def main() -> None:
 			if base.startswith("PS"):
 				print(f"Updating S-curve fits in-place for: {destination_path}")
 				run_fit_in_place(destination_path)
+				print("done with first file")
 		elif (base.startswith("PS") or base.startswith("2S")) and args.dry_run:
 			print(f"[DRY-RUN] Would swap EyeOpening hist names/titles in: {destination_path}")
 			if base.startswith("PS"):
