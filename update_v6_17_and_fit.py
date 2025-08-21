@@ -27,6 +27,9 @@ except Exception as e:
 	print("Please ensure ROOT with Python bindings is installed and configured (PyROOT).")
 	sys.exit(1)
 
+ROOT.gErrorIgnoreLevel = ROOT.kError 
+
+COLUMNS = 120
 
 # ------------------------ Utilities ------------------------
 
@@ -62,19 +65,42 @@ def MyErf(x, par):
 		return 0.5 + 0.5 * math.erf((x0 - x[0]) / (math.sqrt(2.0) * width))
 
 
-def delete_if_exists(tdir: ROOT.TDirectory, name: str) -> None:
-	obj = tdir.Get(name)
-	if obj:
-		# delete all cycles of this name
-		tdir.Delete(f"{name};*")
+def find_and_copy_hist1D(hist_name, location, hist_type):
+	hist = None
+	for key in location.GetListOfKeys():
+		obj = location.Get(key.GetName())
+		if isinstance(obj, ROOT.TH1) and hist_name in obj.GetName():
+			hist = obj
+			break
+	if hist is None:
+		print("No "+hist_name+" histogram found in", location.GetName())
+		sys.exit()
+ 
+	hist_copy = hist_type 
+	hist.Copy(hist_copy)
+	hist_copy.SetDirectory(0) 
+	hist_copy.Reset()
+	return hist_copy
 
+def find_and_copy_hist2D(hist_name, location, hist_type):
+	hist = None
+	for key in location.GetListOfKeys():
+		obj = location.Get(key.GetName())
+		if isinstance(obj, ROOT.TH2) and hist_name in obj.GetName():
+			hist = obj
+			break
+	if hist is None:
+		print("No "+hist_name+" histogram found in", location.GetName())
+		sys.exit()
+ 
+	hist_copy = hist_type 
+	hist.Copy(hist_copy)
+	hist_copy.SetDirectory(0) 
+	hist_copy.Reset()
+	return hist_copy
 
-def overwrite_canvas(tdir: ROOT.TDirectory, canvas: ROOT.TCanvas, name: str) -> None:
-	# ensure we overwrite the object with the same name (no extra cycles)
-	delete_if_exists(tdir, name)
-	tdir.cd()
-	canvas.Write("", ROOT.TObject.kOverwrite)
-
+def linearizeRowAndColumns(row, col):
+	return col + row * COLUMNS
 
 def run_fit_in_place(root_path: str) -> None:
 	# Open the file
@@ -107,31 +133,22 @@ def run_fit_in_place(root_path: str) -> None:
 				if not isinstance(chip_dir, ROOT.TDirectory):
 					continue
  
- 
-				h_chip_noise_summary = None
-				for key in chip_dir.GetListOfKeys():
-					obj = chip_dir.Get(key.GetName())
-					if isinstance(obj, ROOT.TH1) and "ChannelNoise" in obj.GetName():
-						h_chip_noise_summary = obj
-						break
-				if h_chip_noise_summary is None:
-					print("No summary histogram found in", chip_dir.GetName())
-					continue
- 
-				h_chip_noise_summary_copy = ROOT.TH1F() 
-				h_chip_noise_summary.Copy(h_chip_noise_summary_copy)
-				h_chip_noise_summary_copy.SetDirectory(0) 
-				h_chip_noise_summary_copy.Reset()
-				# h_chip_noise_summary_copy.SetName(h_chip_noise_summary_copy.GetName()+"copy")
-				# chip_dir.cd()
+				h_chip_channel_noise_summary_copy = find_and_copy_hist1D("ChannelNoise", chip_dir, ROOT.TH1F())
+				h_chip_noise_distribution_summary_copy = find_and_copy_hist1D("NoiseDistribution", chip_dir, ROOT.TH1F())
+				if "MPA" in chip_dir.GetName(): h_chip_2D_channel_noise_summary_copy = find_and_copy_hist2D("2DChannelNoise", chip_dir, ROOT.TH2F())
+
+				h_chip_channel_pulsheight_summary_copy = find_and_copy_hist1D("ChannelPulseHeight", chip_dir, ROOT.TH1F())
+				h_chip_pulsheight_distribution_summary_copy = find_and_copy_hist1D("PulseHeightDistribution", chip_dir, ROOT.TH1F())
+
+
 				# Inside Channel directory
 				channel_dir = chip_dir.Get("Channel")
 				if not channel_dir:
 					continue
-				# channel_dir.cd()
+
 				# Loop over histograms in Channel
 				hist_names = [k.GetName() for k in channel_dir.GetListOfKeys() if isinstance(channel_dir.Get(k.GetName()), ROOT.TH1)]
-				channelcounter = 0
+
 				for name in hist_names:
 					
 					hist = channel_dir.Get(name)
@@ -139,13 +156,12 @@ def run_fit_in_place(root_path: str) -> None:
 						continue
 					
 					# print("Processing", name)
+					m = re.search(r"Row\((\d+)\)_Col\((\d+)\)", name)
+					if m:
+						row = int(m.group(1))
+						col = int(m.group(2))
+						# print("Row:", row, "Col:", col)
 
-					# name = hist.GetName()
-					# # Example filter: only SCurve hists
-					# if "SCurve" in name:
-					# 	print("Found:", name)
-						
-	
 
 					# Delete any existing fit objects for this channel
 					fit_name = f"SCurveFit"
@@ -201,26 +217,24 @@ def run_fit_in_place(root_path: str) -> None:
 					channel_dir.cd()  # temporarily move into that directory
 					hist.Write(hist.GetName(), ROOT.TObject.kOverwrite)
 					# hist.Write(hist.GetName(), ROOT.TObject.kOverwrite)
-					
-					# h_chip_noise_summary_copy.SetBinContent(channelcounter + 1, newfit.GetParameter(1))
-					h_chip_noise_summary_copy.SetBinContent(channelcounter + 1, newfit.GetParameter(1))
-
-					channelcounter = channelcounter +1
+					noise = newfit.GetParameter(1)
+					pulseheight = newfit.GetParameter(0)
+					h_chip_channel_noise_summary_copy.SetBinContent(linearizeRowAndColumns(row, col) + 1, noise)
+					h_chip_noise_distribution_summary_copy.Fill(noise)
+					h_chip_channel_pulsheight_summary_copy.SetBinContent(linearizeRowAndColumns(row, col) + 1, pulseheight)
+					h_chip_pulsheight_distribution_summary_copy.Fill(pulseheight)
+					if "MPA" in chip_dir.GetName(): h_chip_2D_channel_noise_summary_copy.SetBinContent(col +1, row + 1, noise)
 				print("Updating chip hists")
 
 				# Write back
 				chip_dir.cd()
-				# name = h_chip_noise_summary.GetName()
-				# print(name)
-				# print(h_chip_noise_summary_copy.GetBinContent(3))
-				# print(h_chip_noise_summary.GetBinContent(3))
-				# h_chip_noise_summary.Delete()
-				# print("delete")
-				# h_chip_noise_summary_copy.SetName(name)
-				# print(name)
-				# print(h_chip_noise_summary_copy.GetBinContent(3))
-				h_chip_noise_summary_copy.Write(h_chip_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
-				# h_chip_noise_summary.Write(h_chip_noise_summary.GetName(), ROOT.TObject.kOverwrite)
+
+				h_chip_channel_noise_summary_copy.Write(h_chip_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+				h_chip_noise_distribution_summary_copy.Write(h_chip_noise_distribution_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+				h_chip_channel_pulsheight_summary_copy.Write(h_chip_channel_pulsheight_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+				h_chip_pulsheight_distribution_summary_copy.Write(h_chip_pulsheight_distribution_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+				if "MPA" in chip_dir.GetName(): h_chip_2D_channel_noise_summary_copy.Write(h_chip_2D_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+
 			print("hybrid loop")
 		print("og loop")
 	print("close all")
