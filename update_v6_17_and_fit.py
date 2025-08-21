@@ -108,24 +108,25 @@ def run_fit_in_place(root_path: str) -> None:
 
 	# Navigate from top directory
 	detector_dir = f.Get("Detector")
-	# detector_dir.cd()
 	board_dir = detector_dir.Get("Board_0")
-	# board_dir.cd()
 
 	# Now loop dynamically over optical groups
 	for og_key in board_dir.GetListOfKeys():
 		og_dir = board_dir.Get(og_key.GetName())  # OpticalGroup_X
-		#print("og_dir ", og_dir)
+
 		if not isinstance(og_dir, ROOT.TDirectory):
 			continue
-		# og_dir.cd()
+
 		# Loop over hybrids
 		for hyb_key in og_dir.GetListOfKeys():
 			hyb_dir = og_dir.Get(hyb_key.GetName())  # Hybrid_X
-			#print(" hyb_dir ",hyb_dir)
+
 			if not isinstance(hyb_dir, ROOT.TDirectory):
 				continue
-			# hyb_dir.cd()
+			
+			h_hybrid_strip_channel_noise_summary_copy = find_and_copy_hist1D("StripChannelNoise", hyb_dir, ROOT.TH1F())
+			h_hybrid_pixel_channel_noise_summary_copy = find_and_copy_hist1D("PixelChannelNoise", hyb_dir, ROOT.TH1F())
+   
 			# Loop over Chips
 			for chip_key in hyb_dir.GetListOfKeys():
 				chip_dir = hyb_dir.Get(chip_key.GetName())  # SSA_X or MPA_X
@@ -219,11 +220,20 @@ def run_fit_in_place(root_path: str) -> None:
 					# hist.Write(hist.GetName(), ROOT.TObject.kOverwrite)
 					noise = newfit.GetParameter(1)
 					pulseheight = newfit.GetParameter(0)
+	 
+					# Chip summary hists
 					h_chip_channel_noise_summary_copy.SetBinContent(linearizeRowAndColumns(row, col) + 1, noise)
 					h_chip_noise_distribution_summary_copy.Fill(noise)
 					h_chip_channel_pulsheight_summary_copy.SetBinContent(linearizeRowAndColumns(row, col) + 1, pulseheight)
-					h_chip_pulsheight_distribution_summary_copy.Fill(pulseheight)
 					if "MPA" in chip_dir.GetName(): h_chip_2D_channel_noise_summary_copy.SetBinContent(col +1, row + 1, noise)
+	 
+					# Hybrid summary hists
+					if "SSA" in chip_dir.GetName():
+						theBin = linearizeRowAndColumns(row, col) + COLUMNS * int(chip_dir.GetName().split("_")[-1])
+						h_hybrid_strip_channel_noise_summary_copy.SetBinContent(theBin, noise)
+					if "MPA" in chip_dir.GetName(): 
+						theBin = linearizeRowAndColumns(row, col) + COLUMNS * 16 * (int(chip_dir.GetName().split("_")[-1]) - 8)
+						h_hybrid_pixel_channel_noise_summary_copy.SetBinContent(theBin, noise)
 				print("Updating chip hists")
 
 				# Write back
@@ -235,15 +245,15 @@ def run_fit_in_place(root_path: str) -> None:
 				h_chip_pulsheight_distribution_summary_copy.Write(h_chip_pulsheight_distribution_summary_copy.GetName(), ROOT.TObject.kOverwrite)
 				if "MPA" in chip_dir.GetName(): h_chip_2D_channel_noise_summary_copy.Write(h_chip_2D_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
 
-			print("hybrid loop")
-		print("og loop")
-	print("close all")
+			hyb_dir.cd()
+			h_hybrid_strip_channel_noise_summary_copy.Write(h_hybrid_strip_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+			h_hybrid_pixel_channel_noise_summary_copy.Write(h_hybrid_pixel_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+
 	f.Close()
-	print(f"Updated S-curve fits in-place (SSA+MPA) without altering structure: {root_path}")
-	print("  - Updated existing 2D histogram fits")
-	print("  - Replaced noise histograms (noiseSSA/noiseMPA)")
-	print("  - Updated per-channel canvases with new fits")
-	print("  - All objects written to existing directories (no new structure)")
+	print(f"Finished with file: "{root_path})
+	print("  - Updated per-channel S-curve fits in-place (SSA+MPA only)")
+	print("  - Replaced noise and noise related histograms")
+	print("  - All objects written to existing directories")
 
 
 def _swap_power_titles(title: str, from_str: str, to_str: str) -> str:
@@ -336,12 +346,11 @@ def main() -> None:
 		base = os.path.basename(destination_path)
 		if (base.startswith("PS") or base.startswith("2S")) and not args.dry_run:
 			# Swap EyeOpening histogram names/titles first
-			# swap_eyeopening_histograms(destination_path)
-			# For PS, also update fits in-place
+			swap_eyeopening_histograms(destination_path)
+			# For PS, also update S-curve fits in-place
 			if base.startswith("PS"):
-				print(f"Updating S-curve fits in-place for: {destination_path}")
+				print(f"Updating S-curve fits for: {destination_path}")
 				run_fit_in_place(destination_path)
-				print("done with first file")
 		elif (base.startswith("PS") or base.startswith("2S")) and args.dry_run:
 			print(f"[DRY-RUN] Would swap EyeOpening hist names/titles in: {destination_path}")
 			if base.startswith("PS"):
