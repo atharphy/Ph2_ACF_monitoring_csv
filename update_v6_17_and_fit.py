@@ -89,21 +89,21 @@ def run_fit_in_place(root_path: str) -> None:
 	# Now loop dynamically over optical groups
 	for og_key in board_dir.GetListOfKeys():
 		og_dir = board_dir.Get(og_key.GetName())  # OpticalGroup_X
-		print("og_dir ", og_dir)
+		#print("og_dir ", og_dir)
 		if not isinstance(og_dir, ROOT.TDirectory):
 			continue
 		# og_dir.cd()
 		# Loop over hybrids
 		for hyb_key in og_dir.GetListOfKeys():
 			hyb_dir = og_dir.Get(hyb_key.GetName())  # Hybrid_X
-			print(" hyb_dir ",hyb_dir)
+			#print(" hyb_dir ",hyb_dir)
 			if not isinstance(hyb_dir, ROOT.TDirectory):
 				continue
 			# hyb_dir.cd()
 			# Loop over Chips
 			for chip_key in hyb_dir.GetListOfKeys():
 				chip_dir = hyb_dir.Get(chip_key.GetName())  # SSA_X or MPA_X
-				print(" chip_dir ",chip_dir)
+				#print(" chip_dir ",chip_dir)
 				if not isinstance(chip_dir, ROOT.TDirectory):
 					continue
  
@@ -120,7 +120,7 @@ def run_fit_in_place(root_path: str) -> None:
  
 				h_chip_noise_summary_copy = ROOT.TH1F() 
 				h_chip_noise_summary.Copy(h_chip_noise_summary_copy)
-	
+				h_chip_noise_summary_copy.SetDirectory(0) 
 				h_chip_noise_summary_copy.Reset()
 				# h_chip_noise_summary_copy.SetName(h_chip_noise_summary_copy.GetName()+"copy")
 				# chip_dir.cd()
@@ -138,7 +138,7 @@ def run_fit_in_place(root_path: str) -> None:
 					if "SCurve" not in name:
 						continue
 					
-					print("Processing", name)
+					# print("Processing", name)
 
 					# name = hist.GetName()
 					# # Example filter: only SCurve hists
@@ -221,6 +221,9 @@ def run_fit_in_place(root_path: str) -> None:
 				# print(h_chip_noise_summary_copy.GetBinContent(3))
 				h_chip_noise_summary_copy.Write(h_chip_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
 				# h_chip_noise_summary.Write(h_chip_noise_summary.GetName(), ROOT.TObject.kOverwrite)
+			print("hybrid loop")
+		print("og loop")
+	print("close all")
 	f.Close()
 	print(f"Updated S-curve fits in-place (SSA+MPA) without altering structure: {root_path}")
 	print("  - Updated existing 2D histogram fits")
