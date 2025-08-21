@@ -80,7 +80,7 @@ def find_and_copy_hist1D(hist_name, location, hist_type):
 	hist.Copy(hist_copy)
 	hist_copy.SetDirectory(0) 
 	hist_copy.Reset()
-	return hist_copy
+	return hist_copy, hist
 
 def find_and_copy_hist2D(hist_name, location, hist_type):
 	hist = None
@@ -123,10 +123,10 @@ def run_fit_in_place(root_path: str) -> None:
 			if not isinstance(hyb_dir, ROOT.TDirectory):
 				continue
 			
-			h_hybrid_strip_channel_noise_summary_copy = find_and_copy_hist1D("StripChannelNoise", hyb_dir, ROOT.TH1F())
-			h_hybrid_pixel_channel_noise_summary_copy = find_and_copy_hist1D("PixelChannelNoise", hyb_dir, ROOT.TH1F())
-			h_hybrid_strip_noise_distribution_summary_copy = find_and_copy_hist1D("StripNoiseDistribution", hyb_dir, ROOT.TH1F())
-			h_hybrid_pixel_noise_distribution_summary_copy = find_and_copy_hist1D("PixelNoiseDistribution", hyb_dir, ROOT.TH1F())
+			h_hybrid_strip_channel_noise_summary_copy, dummy = find_and_copy_hist1D("StripChannelNoise", hyb_dir, ROOT.TH1F())
+			h_hybrid_pixel_channel_noise_summary_copy, dummy = find_and_copy_hist1D("PixelChannelNoise", hyb_dir, ROOT.TH1F())
+			h_hybrid_strip_noise_distribution_summary_copy, dummy = find_and_copy_hist1D("StripNoiseDistribution", hyb_dir, ROOT.TH1F())
+			h_hybrid_pixel_noise_distribution_summary_copy, dummy = find_and_copy_hist1D("PixelNoiseDistribution", hyb_dir, ROOT.TH1F())
 
    
 			# Loop over Chips
@@ -136,12 +136,12 @@ def run_fit_in_place(root_path: str) -> None:
 				if not isinstance(chip_dir, ROOT.TDirectory):
 					continue
  
-				h_chip_channel_noise_summary_copy = find_and_copy_hist1D("ChannelNoise", chip_dir, ROOT.TH1F())
-				h_chip_noise_distribution_summary_copy = find_and_copy_hist1D("NoiseDistribution", chip_dir, ROOT.TH1F())
+				h_chip_channel_noise_summary_copy, h_chip_channel_noise_summary = find_and_copy_hist1D("ChannelNoise", chip_dir, ROOT.TH1F())
+				h_chip_noise_distribution_summary_copy, dummy = find_and_copy_hist1D("NoiseDistribution", chip_dir, ROOT.TH1F())
 				if "MPA" in chip_dir.GetName(): h_chip_2D_channel_noise_summary_copy = find_and_copy_hist2D("2DChannelNoise", chip_dir, ROOT.TH2F())
 
-				h_chip_channel_pulsheight_summary_copy = find_and_copy_hist1D("ChannelPulseHeight", chip_dir, ROOT.TH1F())
-				h_chip_pulsheight_distribution_summary_copy = find_and_copy_hist1D("PulseHeightDistribution", chip_dir, ROOT.TH1F())
+				h_chip_channel_pulseheight_summary_copy, h_chip_channel_pulseheight_summary = find_and_copy_hist1D("ChannelPulseHeight", chip_dir, ROOT.TH1F())
+				h_chip_pulseheight_distribution_summary_copy, dummy = find_and_copy_hist1D("PulseHeightDistribution", chip_dir, ROOT.TH1F())
 
 
 				# Inside Channel directory
@@ -174,6 +174,8 @@ def run_fit_in_place(root_path: str) -> None:
 
 
 					# fit initial parameters
+					# cChannelPedestal = h_chip_channel_pulseheight_summary.GetBinContent(col +1, row + 1)
+					# cChannelNoise = h_chip_channel_noise_summary.GetBinContent(col +1, row + 1)
 					if(chip_dir.GetName().find("SSA")):
 						cChannelPedestal = 30.0
 						cChannelNoise = 3.0
@@ -230,8 +232,8 @@ def run_fit_in_place(root_path: str) -> None:
 	 
 					h_chip_noise_distribution_summary_copy.Fill(noise)
 	 
-					h_chip_channel_pulsheight_summary_copy.SetBinContent(linearizeRowAndColumns(row, col) + 1, pulseheight)
-					h_chip_channel_pulsheight_summary_copy.SetBinError(linearizeRowAndColumns(row, col) + 1, pulseheight_error)
+					h_chip_channel_pulseheight_summary_copy.SetBinContent(linearizeRowAndColumns(row, col) + 1, pulseheight)
+					h_chip_channel_pulseheight_summary_copy.SetBinError(linearizeRowAndColumns(row, col) + 1, pulseheight_error)
 
 					if "MPA" in chip_dir.GetName(): 
 		 				h_chip_2D_channel_noise_summary_copy.SetBinContent(col +1, row + 1, noise)
@@ -254,13 +256,15 @@ def run_fit_in_place(root_path: str) -> None:
 
 				h_chip_channel_noise_summary_copy.Write(h_chip_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
 				h_chip_noise_distribution_summary_copy.Write(h_chip_noise_distribution_summary_copy.GetName(), ROOT.TObject.kOverwrite)
-				h_chip_channel_pulsheight_summary_copy.Write(h_chip_channel_pulsheight_summary_copy.GetName(), ROOT.TObject.kOverwrite)
-				h_chip_pulsheight_distribution_summary_copy.Write(h_chip_pulsheight_distribution_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+				h_chip_channel_pulseheight_summary_copy.Write(h_chip_channel_pulseheight_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+				h_chip_pulseheight_distribution_summary_copy.Write(h_chip_pulseheight_distribution_summary_copy.GetName(), ROOT.TObject.kOverwrite)
 				if "MPA" in chip_dir.GetName(): h_chip_2D_channel_noise_summary_copy.Write(h_chip_2D_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
 
 			hyb_dir.cd()
 			h_hybrid_strip_channel_noise_summary_copy.Write(h_hybrid_strip_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
 			h_hybrid_pixel_channel_noise_summary_copy.Write(h_hybrid_pixel_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+			h_hybrid_strip_noise_distribution_summary_copy.Write(h_hybrid_strip_noise_distribution_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+			h_hybrid_pixel_noise_distribution_summary_copy.Write(h_hybrid_pixel_noise_distribution_summary_copy.GetName(), ROOT.TObject.kOverwrite)
 
 	f.Close()
 	print(f"Finished with file: {root_path}")
