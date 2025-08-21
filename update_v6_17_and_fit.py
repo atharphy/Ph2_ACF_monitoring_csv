@@ -92,8 +92,7 @@ def find_and_copy_hist2D(hist_name, location, hist_type):
 	if hist is None:
 		print("No "+hist_name+" histogram found in", location.GetName())
 		sys.exit()
- 
-	hist_copy = hist_type 
+	hist_copy = hist_type
 	hist.Copy(hist_copy)
 	hist_copy.SetDirectory(0) 
 	hist_copy.Reset()
@@ -234,7 +233,6 @@ def run_fit_in_place(root_path: str) -> None:
 					if "MPA" in chip_dir.GetName(): 
 						theBin = linearizeRowAndColumns(row, col) + COLUMNS * 16 * (int(chip_dir.GetName().split("_")[-1]) - 8)
 						h_hybrid_pixel_channel_noise_summary_copy.SetBinContent(theBin, noise)
-				print("Updating chip hists")
 
 				# Write back
 				chip_dir.cd()
@@ -256,70 +254,57 @@ def run_fit_in_place(root_path: str) -> None:
 	print("  - All objects written to existing directories")
 
 
-def _swap_power_titles(title: str, from_str: str, to_str: str) -> str:
-	if not isinstance(title, str):
-		return to_str
-	return title.replace(from_str, to_str)
-
-def find_hists_with_string(tdir, substring, path=""):
-	"""Recursively search for histograms whose names contain substring."""
-
-	for key in tdir.GetListOfKeys():
-		obj = key.ReadObj()
-		name = obj.GetName()
-		fullpath = f"{path}/{name}" if path else name
-
-		if isinstance(obj, ROOT.TDirectory):
-			# Recurse into subdirectory
-			results = find_hists_with_string(obj, substring, fullpath)
-		elif isinstance(obj, ROOT.TH1):
-			if substring in name:
-				results = fullpath, obj, tdir
-	return results
-
 def swap_eyeopening_histograms(root_path: str) -> None:
 	f = ROOT.TFile.Open(root_path, "UPDATE")
-	if not f or f.IsZombie():
-		raise RuntimeError(f"Cannot open for UPDATE: {root_path}")
-	try:
+	# Navigate from top directory to the board directory where these hists are stored
+	detector_dir = f.Get("Detector")
+	board_dir = detector_dir.Get("Board_0")
+
+	# Now loop dynamically over optical groups
+	for og_key in board_dir.GetListOfKeys():
+		og_dir = board_dir.Get(og_key.GetName())  # OpticalGroup_X
+		if not isinstance(og_dir, ROOT.TDirectory):
+			continue
 		print(f"Swapping EyeOpening histogram names/titles in: {root_path}")
 		"""Within this directory, swap names/titles of LpGBT_EyeOpeningScan_Power_0.333333 and _1.000000 if present."""
 		name_0p33 = "LpGBT_EyeOpeningScan_Power_0.333333"
 		name_1p00 = "LpGBT_EyeOpeningScan_Power_1.000000"
+		hist = None
+		for key in og_dir.GetListOfKeys():
+			obj = og_dir.Get(key.GetName())
+			
+			if isinstance(obj, ROOT.TH2) and name_0p33 in obj.GetName():
+				hist = obj
+				break
+		if hist is None:
+			print("No "+name_0p33+" histogram found in", og_dir.GetName())
+			sys.exit()
 
+		h0p33_copy = hist.Clone(hist.GetName().replace("0.333333", "1.000000"))
 
-		fullpath_0p33, h0p33, parent_dir_0p33 = find_hists_with_string(f, name_0p33)
-		fullpath_1p00, h1p00, parent_dir_1p00 = find_hists_with_string(f, name_1p00)
-		if not h033 and not h100:
-			return
+		for key in og_dir.GetListOfKeys():
+			obj = og_dir.Get(key.GetName())
+   
+			if isinstance(obj, ROOT.TH2) and name_1p00 in obj.GetName():
+				hist = obj
+				break
+		if hist is None:
+			print("No "+name_1p00+" histogram found in", og_dir.GetName())
+			sys.exit()
+   
+		h1p00_copy = hist.Clone(hist.GetName().replace("1.000000", "0.333333"))
 
-		parent_dir_0p33.cd()
-		if h033 and h100:
-			# Clone both, swap names and titles, overwrite
-			tmp0p33 = h0p33.Clone()
-			tmp1p00 = h1p00.Clone()
-		if hasattr(tmp0p33, "SetDirectory"):
-			tmp0p33.SetDirectory(0)
-		if hasattr(tmp1p00, "SetDirectory"):
-			tmp1p00.SetDirectory(0)
+		
+		
+		h0p33_copy.SetTitle(h0p33_copy.GetTitle().replace("0.333333", "1.000000"))
+		
+		h1p00_copy.SetTitle(h1p00_copy.GetTitle().replace("1.000000", "0.333333"))
+		# Write
+		og_dir.cd()
+		h0p33_copy.Write(h0p33_copy.GetName(), ROOT.TObject.kOverwrite)
+		h1p00_copy.Write(h1p00_copy.GetName(), ROOT.TObject.kOverwrite)
 
-		tdir.Delete(f"{name_0p33};*")
-		tdir.Delete(f"{name_1p00};*")
-
-		tmp0p33.SetName(name_1p00)
-		tmp0p33.SetTitle(tmp0p33.GetTitle().replace("0.333333", "1.000000"))
-		tmp1p00.SetName(name_0p33)
-		tmp1p00.SetTitle(tmp1p00.GetTitle().replace("1.000000", "0.333333"))
-
-		# Attach and write
-		if hasattr(tmp0p33, "SetDirectory"):
-			tmp0p33.SetDirectory(tdir)
-		if hasattr(tmp1p00, "SetDirectory"):
-			tmp1p00.SetDirectory(tdir)
-		tmp0p33.Write("", ROOT.TObject.kOverwrite)
-		tmp1p00.Write("", ROOT.TObject.kOverwrite)
-	finally:
-		f.Close()
+	f.Close()
 
 
 
