@@ -250,7 +250,7 @@ def run_fit_in_place(root_path: str) -> None:
 			h_hybrid_pixel_channel_noise_summary_copy.Write(h_hybrid_pixel_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
 
 	f.Close()
-	print(f"Finished with file: "{root_path})
+	print(f"Finished with file: {root_path}")
 	print("  - Updated per-channel S-curve fits in-place (SSA+MPA only)")
 	print("  - Replaced noise and noise related histograms")
 	print("  - All objects written to existing directories")
