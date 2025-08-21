@@ -125,6 +125,9 @@ def run_fit_in_place(root_path: str) -> None:
 			
 			h_hybrid_strip_channel_noise_summary_copy = find_and_copy_hist1D("StripChannelNoise", hyb_dir, ROOT.TH1F())
 			h_hybrid_pixel_channel_noise_summary_copy = find_and_copy_hist1D("PixelChannelNoise", hyb_dir, ROOT.TH1F())
+			h_hybrid_strip_noise_distribution_summary_copy = find_and_copy_hist1D("StripNoiseDistribution", hyb_dir, ROOT.TH1F())
+			h_hybrid_pixel_noise_distribution_summary_copy = find_and_copy_hist1D("PixelNoiseDistribution", hyb_dir, ROOT.TH1F())
+
    
 			# Loop over Chips
 			for chip_key in hyb_dir.GetListOfKeys():
@@ -218,21 +221,33 @@ def run_fit_in_place(root_path: str) -> None:
 					hist.Write(hist.GetName(), ROOT.TObject.kOverwrite)
 					# hist.Write(hist.GetName(), ROOT.TObject.kOverwrite)
 					noise = newfit.GetParameter(1)
+					noise_error = newfit.GetParError(1)
 					pulseheight = newfit.GetParameter(0)
-	 
+					pulseheight_error = newfit.GetParError(0)
 					# Chip summary hists
 					h_chip_channel_noise_summary_copy.SetBinContent(linearizeRowAndColumns(row, col) + 1, noise)
+					h_chip_channel_noise_summary_copy.SetBinError(linearizeRowAndColumns(row, col) + 1, noise_error)
+	 
 					h_chip_noise_distribution_summary_copy.Fill(noise)
+	 
 					h_chip_channel_pulsheight_summary_copy.SetBinContent(linearizeRowAndColumns(row, col) + 1, pulseheight)
-					if "MPA" in chip_dir.GetName(): h_chip_2D_channel_noise_summary_copy.SetBinContent(col +1, row + 1, noise)
+					h_chip_channel_pulsheight_summary_copy.SetBinError(linearizeRowAndColumns(row, col) + 1, pulseheight_error)
+
+					if "MPA" in chip_dir.GetName(): 
+		 				h_chip_2D_channel_noise_summary_copy.SetBinContent(col +1, row + 1, noise)
+		 				h_chip_2D_channel_noise_summary_copy.SetBinError(col +1, row + 1, noise_error)
 	 
 					# Hybrid summary hists
 					if "SSA" in chip_dir.GetName():
 						theBin = linearizeRowAndColumns(row, col) + COLUMNS * int(chip_dir.GetName().split("_")[-1])
 						h_hybrid_strip_channel_noise_summary_copy.SetBinContent(theBin, noise)
+						h_hybrid_strip_channel_noise_summary_copy.SetBinError(theBin, noise_error)
+						h_hybrid_strip_noise_distribution_summary_copy.Fill(noise)
 					if "MPA" in chip_dir.GetName(): 
 						theBin = linearizeRowAndColumns(row, col) + COLUMNS * 16 * (int(chip_dir.GetName().split("_")[-1]) - 8)
 						h_hybrid_pixel_channel_noise_summary_copy.SetBinContent(theBin, noise)
+						h_hybrid_pixel_channel_noise_summary_copy.SetBinError(theBin, noise_error)
+						h_hybrid_pixel_noise_distribution_summary_copy.Fill(noise)
 
 				# Write back
 				chip_dir.cd()
