@@ -34,8 +34,8 @@ COLUMNS = 120
 
 # ------------------------ Utilities ------------------------
 
-def find_candidates(data_dir: str):
-	pattern = re.compile(r"^(?P<stem>.+?)v6-16(?P<ext>\.root)?$")
+def find_version_candidates(data_dir: str, version: str):
+	pattern = re.compile(rf"^(?P<stem>.+?){re.escape(version)}(?P<ext>\.root)?$")
 	for entry in os.scandir(data_dir):
 		if not entry.is_file():
 			continue
@@ -45,14 +45,34 @@ def find_candidates(data_dir: str):
 			yield entry.path, m.group("stem"), (m.group("ext") or "")
 
 
-def copy_to_v6_17(src_path: str, stem: str, ext: str, dry_run: bool = False) -> str:
-	new_name = f"{stem}v6-17{ext}"
+# def copy_to_v6_17(src_path: str, stem: str, ext: str, dry_run: bool = False) -> str:
+# 	new_name = f"{stem}v6-17{ext}"
+# 	destination_path = os.path.join(os.path.dirname(src_path), new_name)
+# 	if dry_run:
+# 		print(f"[DRY-RUN] Would copy: {src_path} -> {destination_path}")
+# 		return destination_path
+# 	print(f"Copy: {src_path} -> {destination_path}")
+# 	shutil.copy2(src_path, destination_path)
+# 	return destination_path
+
+def copy_file_version(src_path: str, stem: str, vupdate: str, ext: str, perdirectory: bool  = False, dry_run: bool = False) -> str:
+	new_name = f"{stem}{vupdate}{ext}"
 	destination_path = os.path.join(os.path.dirname(src_path), new_name)
 	if dry_run:
 		print(f"[DRY-RUN] Would copy: {src_path} -> {destination_path}")
 		return destination_path
 	print(f"Copy: {src_path} -> {destination_path}")
-	shutil.copy2(src_path, destination_path)
+	if not perdirectory: shutil.copy2(src_path, destination_path)
+	else:
+		#FIXMEEEEE
+		f_in = ROOT.TFile.Open(src_path)
+		f_out = ROOT.TFile.Open(destination_path, "RECREATE")
+		for key in f_in.GetListOfKeys():
+			obj = key.ReadObj()
+			obj.Write()
+		f_out.Close()
+		f_in.Close()
+		shutil.os.remove(src_path)
 	return destination_path
 
 # ------------------------ Fitting ------------------------
@@ -82,6 +102,19 @@ def find_and_copy_hist1D(hist_name, location, hist_type):
 	hist_copy.SetDirectory(0) 
 	hist_copy.Reset()
 	return hist_copy, hist
+
+def find_hist1D(hist_name, location):
+	hist = None
+	for key in location.GetListOfKeys():
+		obj = location.Get(key.GetName())
+		if isinstance(obj, ROOT.TH1) and hist_name in obj.GetName():
+			hist = obj
+			break
+	if hist is None:
+		print("No "+hist_name+" histogram found in", location.GetName())
+		sys.exit()
+
+	return  hist
 
 def find_and_copy_hist2D(hist_name, location, hist_type):
 	hist = None
@@ -125,10 +158,11 @@ def run_fit_in_place(root_path: str) -> None:
 				continue
 			
 			h_hybrid_strip_channel_noise_summary_copy, dummy = find_and_copy_hist1D("StripChannelNoise", hyb_dir, ROOT.TH1F())
-			h_hybrid_pixel_channel_noise_summary_copy, dummy = find_and_copy_hist1D("PixelChannelNoise", hyb_dir, ROOT.TH1F())
+			# h_hybrid_pixel_channel_noise_summary_copy, h_hybrid_pixel_channel_noise_summary = find_and_copy_hist1D("PixelChannelNoise", hyb_dir, ROOT.TH1F())
+			h_hybrid_pixel_channel_noise_summary = find_hist1D("PixelChannelNoise", hyb_dir)
 			h_hybrid_strip_noise_distribution_summary_copy, dummy = find_and_copy_hist1D("StripNoiseDistribution", hyb_dir, ROOT.TH1F())
 			h_hybrid_pixel_noise_distribution_summary_copy, dummy = find_and_copy_hist1D("PixelNoiseDistribution", hyb_dir, ROOT.TH1F())
-
+			h_hybrid_pixel_channel_noise_summary.Reset()
    
 			# Loop over Chips
 			for chip_key in hyb_dir.GetListOfKeys():
@@ -172,7 +206,7 @@ def run_fit_in_place(root_path: str) -> None:
 					fit = hist.GetFunction(fit_name)
 					if fit:
 						hist.GetListOfFunctions().Remove(fit)
-
+						fit.Delete()
 
 					# fit initial parameters
 					# cChannelPedestal = h_chip_channel_pulseheight_summary.GetBinContent(col +1, row + 1)
@@ -238,7 +272,7 @@ def run_fit_in_place(root_path: str) -> None:
 					h_chip_channel_pulseheight_summary_copy.SetBinError(linearizeRowAndColumns(row, col) + 1, pulseheight_error)
 
 					h_chip_pulseheight_distribution_summary_copy.Fill(pulseheight)
-     
+	 
 					if "MPA" in chip_dir.GetName(): 
 		 				h_chip_2D_channel_noise_summary_copy.SetBinContent(col +1, row + 1, noise)
 		 				h_chip_2D_channel_noise_summary_copy.SetBinError(col +1, row + 1, noise_error)
@@ -251,8 +285,10 @@ def run_fit_in_place(root_path: str) -> None:
 						h_hybrid_strip_noise_distribution_summary_copy.Fill(noise)
 					if "MPA" in chip_dir.GetName(): 
 						theBin = linearizeRowAndColumns(row, col) + COLUMNS * 16 * (int(chip_dir.GetName().split("_")[-1]) - 8)
-						h_hybrid_pixel_channel_noise_summary_copy.SetBinContent(theBin, noise)
-						h_hybrid_pixel_channel_noise_summary_copy.SetBinError(theBin, noise_error)
+						# h_hybrid_pixel_channel_noise_summary_copy.SetBinContent(theBin, noise)
+						# h_hybrid_pixel_channel_noise_summary_copy.SetBinError(theBin, noise_error)
+						h_hybrid_pixel_channel_noise_summary.SetBinContent(theBin, noise)
+						h_hybrid_pixel_channel_noise_summary.SetBinError(theBin, noise_error)
 						h_hybrid_pixel_noise_distribution_summary_copy.Fill(noise)
 
 				# Write back
@@ -266,7 +302,8 @@ def run_fit_in_place(root_path: str) -> None:
 
 			hyb_dir.cd()
 			h_hybrid_strip_channel_noise_summary_copy.Write(h_hybrid_strip_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
-			h_hybrid_pixel_channel_noise_summary_copy.Write(h_hybrid_pixel_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+			# h_hybrid_pixel_channel_noise_summary_copy.Write(h_hybrid_pixel_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
+			h_hybrid_pixel_channel_noise_summary.Write(h_hybrid_pixel_channel_noise_summary.GetName(), ROOT.TObject.kOverwrite)
 			h_hybrid_strip_noise_distribution_summary_copy.Write(h_hybrid_strip_noise_distribution_summary_copy.GetName(), ROOT.TObject.kOverwrite)
 			h_hybrid_pixel_noise_distribution_summary_copy.Write(h_hybrid_pixel_noise_distribution_summary_copy.GetName(), ROOT.TObject.kOverwrite)
 
@@ -345,10 +382,10 @@ def main() -> None:
 		sys.exit(1)
 
 	found_any = False
-	for src_path, stem, ext in find_candidates(data_dir):
+	for src_path, stem, ext in find_version_candidates(data_dir, "v6-16"):
 		found_any = True
-		# Make the v6-17 copy
-		destination_path = copy_to_v6_17(src_path, stem, ext, dry_run=args.dry_run)
+		# Make the v6-17 temp copy
+		destination_path = copy_file_version(src_path, stem, "v6-17temp", ext, dry_run=args.dry_run)
 
 		# If the file starts with PS or 2S, perform required updates
 		base = os.path.basename(destination_path)
@@ -363,6 +400,14 @@ def main() -> None:
 			print(f"[DRY-RUN] Would swap EyeOpening hist names/titles in: {destination_path}")
 			if base.startswith("PS"):
 				print(f"[DRY-RUN] Would update S-curve fits in-place for: {destination_path} (auto OG={og})")
+
+	for src_path, stem, ext in find_version_candidates(data_dir, "v6-17temp"):
+			found_any = True
+			# Make the v6-17 copy
+			destination_path = copy_file_version(src_path, stem, "v6-17", ext, perdirectory=True, dry_run=args.dry_run)
+
+
+
 
 	if not found_any:
 		print(f"No files ending with 'v6-16' found in {data_dir}")
