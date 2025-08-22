@@ -1042,7 +1042,7 @@ void DQMHistogramPedeNoise::fitSCurves()
                                 cFit->SetNpx(100);
                                 cFit->SetParameter(0, cChannelPedestal);
                                 cFit->SetParameter(1, cChannelNoise);
-
+                                cFit->SetParLimits(1, 1, maxNoise*noiseTolerance);
                                 // Fit
                                 cChannelSCurve->Fit(cFit, "RQM");
                                 cChannelSCurve->Fit(cFit, "RQM");
