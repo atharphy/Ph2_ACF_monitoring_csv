@@ -8,7 +8,7 @@ and results are written back into the existing SSA/MPA directories without
 altering the file's directory structure.
 
 Usage:
-  python3 pythonUtils/converter_v6-16tov6-17.py  --data-dir ./DataDir [--dry-run]
+  python3 update_v6_17_and_fit.py  --data-dir ./DataDir [--dry-run]
 
 """
 
@@ -28,6 +28,7 @@ except Exception as e:
 	sys.exit(1)
 
 ROOT.gErrorIgnoreLevel = ROOT.kError 
+ROOT.gROOT.SetBatch(True)
 
 COLUMNS = 120
 
@@ -214,6 +215,7 @@ def run_fit_in_place(root_path: str) -> None:
 					newfit.SetNpx(100)
 					newfit.SetParameter(0, cChannelPedestal)
 					newfit.SetParameter(1, cChannelNoise)
+					newfit.SetParLimits(1, 1, maxNoise*noiseTolerance)
 					hist.Fit(newfit, "RQ+")
 					hist.Fit(newfit, "RQ+")
 					hist.Fit(newfit, "RQ+")
@@ -235,6 +237,8 @@ def run_fit_in_place(root_path: str) -> None:
 					h_chip_channel_pulseheight_summary_copy.SetBinContent(linearizeRowAndColumns(row, col) + 1, pulseheight)
 					h_chip_channel_pulseheight_summary_copy.SetBinError(linearizeRowAndColumns(row, col) + 1, pulseheight_error)
 
+					h_chip_pulseheight_distribution_summary_copy.Fill(pulseheight)
+     
 					if "MPA" in chip_dir.GetName(): 
 		 				h_chip_2D_channel_noise_summary_copy.SetBinContent(col +1, row + 1, noise)
 		 				h_chip_2D_channel_noise_summary_copy.SetBinError(col +1, row + 1, noise_error)
