@@ -269,8 +269,6 @@ void D19cFWInterface::configureTxRxPolarities(const Ph2_HwDescription::BeBoard* 
         LOG(ERROR) << ERROR_FORMAT << "FW without DIO5 -> OpticalGroup 0 is on the first link of FMC L8" << RESET;
         abort();
     }
-    
-
 
     LOG(INFO) << BOLDBLUE << "FMC-L12 -- Rx Polarity = " << std::bitset<32>(this->ReadReg("fc7_daq_cnfg.optical_block.rx_polarity.l12"))
               << "  -- Tx Polarity = " << std::bitset<32>(this->ReadReg("fc7_daq_cnfg.optical_block.tx_polarity.l12")) << RESET;
