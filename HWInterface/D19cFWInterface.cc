@@ -251,12 +251,26 @@ void D19cFWInterface::configureTxRxPolarities(const Ph2_HwDescription::BeBoard* 
         }
     }
 
-    // L12
-    this->WriteReg("fc7_daq_cnfg.optical_block.tx_polarity.l12", cTxGlobalValueL12);
-    this->WriteReg("fc7_daq_cnfg.optical_block.rx_polarity.l12", cRxGlobalValueL12);
-    // L8
-    this->WriteReg("fc7_daq_cnfg.optical_block.tx_polarity.l8", cTxGlobalValueL8);
-    this->WriteReg("fc7_daq_cnfg.optical_block.rx_polarity.l8", cRxGlobalValueL8);
+    try
+    {
+        // L12
+        this->WriteReg("fc7_daq_cnfg.optical_block.tx_polarity.l12", cTxGlobalValueL12);
+        this->WriteReg("fc7_daq_cnfg.optical_block.rx_polarity.l12", cRxGlobalValueL12);
+        // L8
+        this->WriteReg("fc7_daq_cnfg.optical_block.tx_polarity.l8", cTxGlobalValueL8);
+        this->WriteReg("fc7_daq_cnfg.optical_block.rx_polarity.l8", cRxGlobalValueL8);
+    }
+    catch(const std::exception& e)
+    {
+        LOG(ERROR) << ERROR_FORMAT << e.what() << RESET;
+        LOG(ERROR) << ERROR_FORMAT << "The firmware loaded is not compatible with the xml configuration." << RESET;
+        LOG(ERROR) << ERROR_FORMAT << "Check that the OpticalGroup Id and FMCId are defined properly" << RESET;
+        LOG(ERROR) << ERROR_FORMAT << "FW with DIO5 -> OpticalGroup 0 is on the first link of FMC L12" << RESET;
+        LOG(ERROR) << ERROR_FORMAT << "FW without DIO5 -> OpticalGroup 0 is on the first link of FMC L8" << RESET;
+        abort();
+    }
+    
+
 
     LOG(INFO) << BOLDBLUE << "FMC-L12 -- Rx Polarity = " << std::bitset<32>(this->ReadReg("fc7_daq_cnfg.optical_block.rx_polarity.l12"))
               << "  -- Tx Polarity = " << std::bitset<32>(this->ReadReg("fc7_daq_cnfg.optical_block.tx_polarity.l12")) << RESET;
