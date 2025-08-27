@@ -375,7 +375,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
         // ###########################################
         // # Make sure all interfaces are configured #
         // ###########################################
-        static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard))->ConfigureInterfaces(cBoard);
 
         for(auto cOpticalGroup: *cBoard)
         {
@@ -723,6 +722,8 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
+    static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(pBoard))->ConfigureInterfaces(pBoard);
+
     // Set board sparisification
     // based on what is configured in the fw register
     // read CIC sparsification setting from fW register

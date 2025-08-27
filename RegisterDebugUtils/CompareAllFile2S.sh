@@ -20,7 +20,7 @@ if [ "$#" -eq 1 ]; then
     echo
 
     echo "Comparing LpGBT files"
-    ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesWithDefault.sh ${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpGBT_v1_2S.txt ${run_number} "BE*_OG*_lpGBT*.txt" LpGBT
+    ${PH2ACF_BASE_DIR}/RegisterDebugUtils/CompareFilesWithDefault.sh ${PH2ACF_BASE_DIR}/settings/lpGBTFiles/lpGBT_v2_2S.txt ${run_number} "BE*_OG*_lpGBT*.txt" LpGBT
     echo
     echo
     echo

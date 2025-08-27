@@ -8,7 +8,7 @@ namespace Ph2_HwInterface
 {
 D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface(RegManager* theRegManager) : D19cCommandProcessorInterface(theRegManager)
 {
-    PrintState();
+    // PrintState();
     LOG(INFO) << BOLDYELLOW << "D19clpGBTSlowControlWorkerInterface::D19clpGBTSlowControlWorkerInterface Constructor" << RESET;
 }
 

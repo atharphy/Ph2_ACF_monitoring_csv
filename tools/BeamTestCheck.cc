@@ -1051,6 +1051,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
         do {
             if(cEventIter >= pEvents.end()) break;
 
+            static_cast<D19cCic2Event*>(*cEventIter)->decodeEvent();
+
             uint8_t cTDCVal = (*cEventIter)->GetTDC();
             fTDCContainer.getObject(cBrdIndx)->getSummary<GenericDataArray<uint16_t, TDCBINS>>().at(cTDCVal)++;
 
