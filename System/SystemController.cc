@@ -723,7 +723,6 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
-
     // Set board sparisification
     // based on what is configured in the fw register
     // read CIC sparsification setting from fW register
