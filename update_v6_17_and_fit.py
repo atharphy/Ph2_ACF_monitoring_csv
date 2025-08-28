@@ -224,7 +224,7 @@ def run_fit_in_place(root_path: str) -> None:
 					oneThreshold = 0.9
 					zeroThreshold = 0.1
 					maxNoise = 10.0
-    				noiseTolerance = 2.0
+					noiseTolerance = 2.0
 					bins = hist.GetNbinsX()
 					for l in range(bins):
 						currentbin = l+1
@@ -244,17 +244,33 @@ def run_fit_in_place(root_path: str) -> None:
 							
 							rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
 							rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
-					if lastOneIndex == -1:
+					elif lastOneIndex == -1 and firstZeroIndex != -1:
 						lastOneIndex = hist.GetMaximumBin() # bin with highest content
-						rangeMinus = lastOneIndex
-						FIXMEEEE range 
-					if firstZeroIndex == -1:
-					    firstZeroIndex = hist.GetMinimumBin() # bin with lowest contentfirstZeroIndex == -1:
-						FIXMEEEE range
-
-
-
-		
+						cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
+						cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
+						if cChannelNoise > maxNoise:
+							cChannelNoise = maxNoise
+							
+							rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
+							rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance) 
+					elif firstZeroIndex == -1 and lastOneIndex != -1:
+						firstZeroIndex = hist.GetMinimumBin() # bin with lowest contentfirstZeroIndex == -1:
+						cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
+						cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
+						if cChannelNoise > maxNoise:
+							cChannelNoise = maxNoise
+							rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
+							rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance) 
+					elif firstZeroIndex == -1 and lastOneIndex == -1:
+						firstZeroIndex = hist.GetMinimumBin()
+						lastOneIndex = hist.GetMaximumBin()
+						cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
+						cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
+						if cChannelNoise > maxNoise:
+							cChannelNoise = maxNoise
+							rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
+							rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance) 
+	   
 					# fit.SetRange(rangeMinus, rangePlus)
 					newfit = ROOT.TF1(fit_name, MyErf, rangeMinus, rangePlus, 2)
 					newfit.SetNpx(100)
