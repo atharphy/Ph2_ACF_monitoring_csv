@@ -35,8 +35,8 @@ void OTCICBX0Alignment::Running()
 {
     LOG(INFO) << BOLDMAGENTA << "Starting OTCICBX0Alignment measurement." << RESET;
     Initialise();
-    // FIXME the retime pix scan is temporary, only to verify uniformity across modules
-    if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ScanRetimePixAndBX0Alignment();
+    // // FIXME the retime pix scan is temporary, only to verify uniformity across modules
+    // if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) ScanRetimePixAndBX0Alignment();
     size_t numberOtIterations    = 0;
     size_t maxNumberOfIterations = 1;
     while(numberOtIterations < maxNumberOfIterations)

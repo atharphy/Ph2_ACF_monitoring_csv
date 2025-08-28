@@ -31,16 +31,16 @@ void DQMHistogramOTCICBX0Alignment::book(TFile* theOutputFile, DetectorContainer
     BX0AlignmentDelayHistogram.fTheHistogram->SetStats(false);
     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBX0AlignmentDelayHistogramContainer, BX0AlignmentDelayHistogram);
 
-    if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS)
-    {
-        HistContainer<TH1I> BX0AlignmentDelayVsRetimePixHistogram("CICBX0AlignmentDelayVsRetimePix", "CIC BX0 Alignment Delay Vs RetimePix", 8, -0.5, 7.5);
-        BX0AlignmentDelayVsRetimePixHistogram.fTheHistogram->GetXaxis()->SetTitle("RetimePix");
-        BX0AlignmentDelayVsRetimePixHistogram.fTheHistogram->GetYaxis()->SetTitle("Delay");
-        BX0AlignmentDelayVsRetimePixHistogram.fTheHistogram->SetMinimum(-1);
-        BX0AlignmentDelayVsRetimePixHistogram.fTheHistogram->SetMaximum(32);
-        BX0AlignmentDelayVsRetimePixHistogram.fTheHistogram->SetStats(false);
-        RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBX0AlignmentDelayVsRetimePixHistogramContainer, BX0AlignmentDelayVsRetimePixHistogram);
-    }
+    // if(fDetectorContainer->getFirstObject()->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS)
+    // {
+    //     HistContainer<TH1I> BX0AlignmentDelayVsRetimePixHistogram("CICBX0AlignmentDelayVsRetimePix", "CIC BX0 Alignment Delay Vs RetimePix", 8, -0.5, 7.5);
+    //     BX0AlignmentDelayVsRetimePixHistogram.fTheHistogram->GetXaxis()->SetTitle("RetimePix");
+    //     BX0AlignmentDelayVsRetimePixHistogram.fTheHistogram->GetYaxis()->SetTitle("Delay");
+    //     BX0AlignmentDelayVsRetimePixHistogram.fTheHistogram->SetMinimum(-1);
+    //     BX0AlignmentDelayVsRetimePixHistogram.fTheHistogram->SetMaximum(32);
+    //     BX0AlignmentDelayVsRetimePixHistogram.fTheHistogram->SetStats(false);
+    //     RootContainerFactory::bookHybridHistograms(theOutputFile, theDetectorStructure, fBX0AlignmentDelayVsRetimePixHistogramContainer, BX0AlignmentDelayVsRetimePixHistogram);
+    // }
     // Initialize to -1 to avoid confusing no entry and entry=0;
     for(auto board: fBX0AlignmentDelayHistogramContainer)
     {
