@@ -192,7 +192,8 @@ def run_fit_in_place(root_path: str) -> None:
 					hist = channel_dir.Get(name)
 					if "SCurve" not in name:
 						continue
-					
+					if hist.GetMean() == 0:
+						continue
 					# print("Processing", name)
 					m = re.search(r"Row\((\d+)\)_Col\((\d+)\)", name)
 					if m:
@@ -252,8 +253,13 @@ def run_fit_in_place(root_path: str) -> None:
 							cChannelNoise = maxNoise
 							
 							rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-							rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance) 
+							rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
+						print("firstZeroIndex != -1 and lastOneIndex == -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
+						print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex, " pedestal ", cChannelPedestal, " noise ", cChannelNoise)   
+
 					elif firstZeroIndex == -1 and lastOneIndex != -1:
+						print("firstZeroIndex == -1 and lastOneIndex != -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
+	
 						firstZeroIndex = hist.GetMinimumBin() # bin with lowest contentfirstZeroIndex == -1:
 						cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
 						cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
@@ -261,7 +267,11 @@ def run_fit_in_place(root_path: str) -> None:
 							cChannelNoise = maxNoise
 							rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
 							rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance) 
+						print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex)   
+
 					elif firstZeroIndex == -1 and lastOneIndex == -1:
+						print("firstZeroIndex == -1 and lastOneIndex == -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
+
 						firstZeroIndex = hist.GetMinimumBin()
 						lastOneIndex = hist.GetMaximumBin()
 						cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
@@ -269,8 +279,11 @@ def run_fit_in_place(root_path: str) -> None:
 						if cChannelNoise > maxNoise:
 							cChannelNoise = maxNoise
 							rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-							rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance) 
-	   
+							rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
+						print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex)   
+
+					# print(" hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
+					# print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex)   
 					# fit.SetRange(rangeMinus, rangePlus)
 					newfit = ROOT.TF1(fit_name, MyErf, rangeMinus, rangePlus, 2)
 					newfit.SetNpx(100)
@@ -279,7 +292,13 @@ def run_fit_in_place(root_path: str) -> None:
 					newfit.SetParLimits(1, 1, maxNoise*noiseTolerance)
 					hist.Fit(newfit, "RQ+")
 					hist.Fit(newfit, "RQ+")
-					hist.Fit(newfit, "RQ+")
+					result = hist.Fit(newfit, "RQ+")
+					if int(result) != 0:
+						print("bad fit hybrid ", hyb_dir, " chip ", chip_dir)
+						with open(root_path.replace(".root","_Irene.txt"), "a") as textfile:
+							textfile.write(hist.GetName()+" \n")
+
+     
 					newfit.SetRange(rangeMinus, rangePlus)
 					# channel_dir.WriteTObject(hist, hist.GetName(), ROOT.TObject.kOverwrite)
 					channel_dir.cd()  # temporarily move into that directory
