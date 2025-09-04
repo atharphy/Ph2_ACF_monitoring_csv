@@ -90,7 +90,7 @@ class PSInterface : public ReadoutChipInterface
 
     const std::map<std::string, std::pair<uint8_t, float>> getBiasStructureDefaultTable(Ph2_HwDescription::ReadoutChip* pPS);
 
-    float getBandGapExpectedValue(Ph2_HwDescription::ReadoutChip* pPS);
+    float getBandGapValue(Ph2_HwDescription::ReadoutChip* pPS);
     float getVrefExpectedValue(Ph2_HwDescription::ReadoutChip* pPS);
     float getVrefPrecision(Ph2_HwDescription::ReadoutChip* pPS);
     float getVrefMinValue(Ph2_HwDescription::ReadoutChip* pPS);

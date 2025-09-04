@@ -36,7 +36,7 @@ class OTCICBX0Alignment : public Tool
     static std::string fCalibrationDescription;
 
   private:
-    void BX0Alignment();
+    bool BX0Alignment();
     void ScanRetimePixAndBX0Alignment();
 
 #ifdef __USE_ROOT__
