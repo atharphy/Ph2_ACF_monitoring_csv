@@ -284,6 +284,7 @@ class D19cCic2Event : public Event
     uint16_t decodeHybridL1Event(HybridDataContainer* theHybridL1EventContainer, std::vector<uint32_t>::const_iterator dataStartIterator);
     uint16_t decodeHybridStubEvent(HybridDataContainer* theHybridStubEventContainer, std::vector<uint32_t>::const_iterator dataStartIterator);
 
+  public:
     void print();
 };
 } // namespace Ph2_HwInterface

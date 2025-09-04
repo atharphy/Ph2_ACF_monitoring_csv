@@ -156,9 +156,10 @@ RD53B::RD53B(const FrontEndType& frontEndType,
              uint8_t             pRD53Id,
              uint8_t             pRD53Lane,
              int64_t             pRD53eFuseCode,
+             int64_t             pRD53IrefCode,
              const std::string&  fileName,
              const std::string&  cfgComment)
-    : RD53(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id, pRD53Lane, pRD53eFuseCode, fileName, cfgComment)
+    : RD53(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id, pRD53Lane, pRD53eFuseCode, pRD53IrefCode, fileName, cfgComment)
 {
     ReadoutChip::fChipOriginalMask = std::make_shared<RD53ChannelGroup>(RD53B::NROWS, RD53B::NCOLS, true);
     RD53::loadfRegMap(fileName);

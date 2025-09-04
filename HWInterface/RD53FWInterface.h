@@ -84,7 +84,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void selectLink(const uint8_t pLinkId, uint32_t pWait_ms = 100) override;
     void SetOptoLinkVersion(bool version) override;
     // #############################
-    void  ResetSequence(const Ph2_HwDescription::BeBoard* pBoard);
+    void  ResetSequence(Ph2_HwDescription::BeBoard* pBoard);
     float GetSFPParameter(std::string parameter, int channel);
 
     uint16_t ReadAutoreadReg(const uint8_t hybridId, const uint8_t chipId, const std::string& which);
@@ -237,7 +237,7 @@ class RD53FWInterface : public BeBoardFWInterface
     // ###################
     // # Clock generator #
     // ###################
-    void InitializeClockGenerator(uint32_t refClockRate = 160, bool doStoreInEEPROM = false);
+    void InitializeClockGenerator(uint32_t refClockRate, bool useInternalRef, bool doStoreInEEPROM = false);
     bool ReadClockGenerator(uint32_t reference[] = {}, bool checkMatch = false, bool verbose = true);
 
     FastCommandsConfig localCfgFastCmd;

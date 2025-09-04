@@ -71,6 +71,7 @@ RD53::RD53(uint8_t            pBeId,
            uint8_t            pRD53Id,
            uint8_t            pRD53Lane,
            int64_t            pRD53eFuseCode,
+           int64_t            pRD53IrefCode,
            const std::string& fileName,
            const std::string& cfgComment)
     : ReadoutChip(pBeId, pFMCId, pOpticalGroupId, pHybridId, pRD53Id)
@@ -80,6 +81,7 @@ RD53::RD53(uint8_t            pBeId,
     myComment       = cfgComment;
     myChipLane      = pRD53Lane;
     myeFuseCode     = pRD53eFuseCode;
+    myIrefCode      = pRD53IrefCode;
 }
 
 void RD53::loadfRegMap(const std::string& fileName)
