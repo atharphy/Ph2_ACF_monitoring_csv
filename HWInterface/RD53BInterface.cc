@@ -94,6 +94,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     }
     if(doWriteClkDataDelay == true) RD53BInterface::WriteClockDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
 
+    // ###################################
+    // # Programmig pixel cell registers #
+    // ###################################
+    RD53BInterface::MaskAllChannels(pRD53, true);
+
     // ###############################
     // # Programmig global registers #
     // ###############################
@@ -139,11 +144,6 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
         else if((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) != registerBlackList.end()))
             pChip->getRegItem(cRegItem.first).fValue = cRegItem.second.fDefValue;
 
-    // ###################################
-    // # Programmig pixel cell registers #
-    // ###################################
-    RD53BInterface::WriteRD53Mask(pRD53, false, true);
-
     // #################################################
     // # Important values to be checked before running #
     // #################################################
@@ -173,6 +173,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
 
     if(IrefCode >= 0) LOG(INFO) << BOLDBLUE << "\t--> Wire bonded Iref = " << BOLDYELLOW << static_cast<uint32_t>(IrefCode) << RESET;
     if(IrefCodeCheck == false) throw std::runtime_error("Please set the proper Iref code(s) in the xml file");
+
+    // ###################################
+    // # Programmig pixel cell registers #
+    // ###################################
+    RD53BInterface::WriteRD53Mask(pRD53, false, true);
 
     return true;
 }
