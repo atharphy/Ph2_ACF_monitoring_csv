@@ -199,6 +199,7 @@ class RD53 : public ReadoutChip
     virtual float                    VCal2Charge(float VCal, bool isNoise = false) const                                                                  = 0;
     virtual float                    Charge2VCal(float Charge) const                                                                                      = 0;
     virtual bool                     getUseGainDualSlope() const                                                                                          = 0;
+    virtual uint16_t                 getSYNCword() const                                                                                                  = 0;
 
     // ################
     // # Constructors #

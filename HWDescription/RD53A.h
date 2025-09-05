@@ -84,6 +84,7 @@ class RD53A : public RD53
     float                    VCal2Charge(float VCal, bool isNoise = false) const override;
     float                    Charge2VCal(float Charge) const override;
     bool                     getUseGainDualSlope() const override { return false; }
+    uint16_t                 getSYNCword() const override { return RD53ACmd::RD53ACmdEncoder::SYNC; }
     // #############################
 };
 
