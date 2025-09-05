@@ -94,6 +94,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     }
     if(doWriteClkDataDelay == true) RD53BInterface::WriteClockDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
 
+    // ###################################
+    // # Programmig pixel cell registers #
+    // ###################################
+    RD53BInterface::MaskAllChannels(pRD53, true);
+
     // ###############################
     // # Programmig global registers #
     // ###############################
@@ -139,11 +144,6 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
         else if((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) != registerBlackList.end()))
             pChip->getRegItem(cRegItem.first).fValue = cRegItem.second.fDefValue;
 
-    // ###################################
-    // # Programmig pixel cell registers #
-    // ###################################
-    RD53BInterface::WriteRD53Mask(pRD53, false, true);
-
     // #################################################
     // # Important values to be checked before running #
     // #################################################
@@ -151,7 +151,33 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     LOG(INFO) << BOLDBLUE << "\t--> VOLTAGE_TRIM_DIG = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "VOLTAGE_TRIM_DIG") << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> VOLTAGE_TRIM_ANA = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "VOLTAGE_TRIM_ANA") << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Wire bonded chip ID = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "ChipIdWireBonds") << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> Wire bonded Iref = " << BOLDYELLOW << RD53Interface::ReadChipReg(pChip, "IrefWireBonds") << RESET;
+
+    bool   IrefCodeCheck = true;
+    double IrefCode;
+
+    try
+    {
+        IrefCode = RD53BInterface::ReadChipIref(pChip);
+    }
+    catch(const std::runtime_error& err)
+    {
+        LOG(WARNING) << RED << err.what() << RESET;
+        IrefCode      = -1;
+        IrefCodeCheck = false;
+    }
+    catch(const std::out_of_range& err)
+    {
+        LOG(DEBUG) << GREEN << "Chip Iref code: " << BOLDYELLOW << err.what() << RESET;
+        IrefCode = atoi(err.what());
+    }
+
+    if(IrefCode >= 0) LOG(INFO) << BOLDBLUE << "\t--> Wire bonded Iref = " << BOLDYELLOW << static_cast<uint32_t>(IrefCode) << RESET;
+    if(IrefCodeCheck == false) throw std::runtime_error("Please set the proper Iref code(s) in the xml file");
+
+    // ###################################
+    // # Programmig pixel cell registers #
+    // ###################################
+    RD53BInterface::WriteRD53Mask(pRD53, false, true);
 
     return true;
 }
@@ -648,6 +674,28 @@ uint32_t RD53BInterface::ReadChipFuseID(Chip* pChip, uint8_t version)
     }
 
     return eFuseCode;
+}
+
+uint32_t RD53BInterface::ReadChipIref(Chip* pChip)
+{
+    this->setBoard(pChip->getBeBoardId());
+
+    uint16_t IrefWire = RD53Interface::ReadChipReg(pChip, "IrefWireBonds");
+
+    if(static_cast<RD53*>(pChip)->getIrefCode() < 0)
+    {
+        std::stringstream myString;
+        myString << IrefWire;
+        throw std::out_of_range(myString.str().c_str());
+    }
+    else if(IrefWire != static_cast<RD53*>(pChip)->getIrefCode())
+    {
+        std::stringstream myString;
+        myString << "Readout chip Iref code " << IrefWire << " does not match value in xml file " << +static_cast<RD53*>(pChip)->getIrefCode();
+        throw std::runtime_error(myString.str());
+    }
+
+    return IrefWire;
 }
 
 void RD53BInterface::SendBoardClear(const BeBoard* pBoard)

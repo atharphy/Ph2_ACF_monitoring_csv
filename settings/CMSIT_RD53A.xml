@@ -18,7 +18,10 @@
       <lpGBT Id="0" version="1" configFile="CMSIT_LpGBTv1.txt" ChipAddress="0x70" RxDataRate="1280" RxHSLPolarity="0" TxDataRate="160" TxHSLPolarity="0">
       -->
       <!-- Put here any LpGBT register, if needed
-            EPRX60ChnCntr_phase = "6" -->
+            EPRX00Eq          = "0"
+            EPRXEq10Control   = "0"
+            EPRX00PhaseSelect = "6"
+      -->
       <!--
         <Settings
             />

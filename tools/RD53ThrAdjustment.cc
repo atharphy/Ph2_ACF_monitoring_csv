@@ -420,5 +420,5 @@ void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, 
 void ThrAdjustment::establishStartingPoint(DetectorDataContainer& chargeContainer)
 {
     CalibBase::downloadNewDACvalues(chargeContainer, {"VCAL_HIGH"}, true);
-    PixelAlive::SetInjectionType();
+    CalibBase::SetInjectionType(PixelAlive::injType);
 }

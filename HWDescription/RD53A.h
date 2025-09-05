@@ -65,6 +65,7 @@ class RD53A : public RD53
           uint8_t            pRD53Id,
           uint8_t            pRD53Lane,
           int64_t            pRD53eFuseCode,
+          int64_t            pRD53IrefCode,
           const std::string& fileName,
           const std::string& cfgComment);
     RD53A(const RD53A&) = delete;
@@ -83,6 +84,7 @@ class RD53A : public RD53
     float                    VCal2Charge(float VCal, bool isNoise = false) const override;
     float                    Charge2VCal(float Charge) const override;
     bool                     getUseGainDualSlope() const override { return false; }
+    uint16_t                 getSYNCword() const override { return RD53ACmd::RD53ACmdEncoder::SYNC; }
     // #############################
 };
 
