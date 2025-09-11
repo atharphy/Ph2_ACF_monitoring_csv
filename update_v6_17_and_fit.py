@@ -69,7 +69,10 @@ def copy_file_version(src_path: str, stem: str, vupdate: str, ext: str, perdirec
 		f_out = ROOT.TFile.Open(destination_path, "RECREATE")
 		for key in f_in.GetListOfKeys():
 			obj = key.ReadObj()
-			obj.Write()
+			if obj:
+				f_out.cd()   # ensure writing in root dir
+				obj.Write()
+
 		f_out.Close()
 		f_in.Close()
 		shutil.os.remove(src_path)
@@ -192,8 +195,7 @@ def run_fit_in_place(root_path: str) -> None:
 					hist = channel_dir.Get(name)
 					if "SCurve" not in name:
 						continue
-					if hist.GetMean() == 0:
-						continue
+					
 					# print("Processing", name)
 					m = re.search(r"Row\((\d+)\)_Col\((\d+)\)", name)
 					if m:
@@ -201,6 +203,7 @@ def run_fit_in_place(root_path: str) -> None:
 						col = int(m.group(2))
 						# print("Row:", row, "Col:", col)
 
+					selectPix = (hyb_dir.GetName() == "Hybrid_9" and chip_dir.GetName() == "MPA_8" and  row == 0 and col == 9)
 
 					# Delete any existing fit objects for this channel
 					fit_name = f"SCurveFit"
@@ -224,7 +227,7 @@ def run_fit_in_place(root_path: str) -> None:
 					firstZeroIndex = -1
 					oneThreshold = 0.9
 					zeroThreshold = 0.1
-					maxNoise = 10.0
+					maxNoise = 15.0
 					noiseTolerance = 2.0
 					bins = hist.GetNbinsX()
 					for l in range(bins):
@@ -238,13 +241,15 @@ def run_fit_in_place(root_path: str) -> None:
 							break
 						
 					if firstZeroIndex != -1 and lastOneIndex != -1:
+						if(selectPix): print("firstZeroIndex != -1 and lastOneIndex != -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
+
 						cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
 						cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
 						if cChannelNoise > maxNoise:
 							cChannelNoise = maxNoise
 							
-							rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-							rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
+						rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
+						rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
 					elif lastOneIndex == -1 and firstZeroIndex != -1:
 						lastOneIndex = hist.GetMaximumBin() # bin with highest content
 						cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
@@ -252,25 +257,25 @@ def run_fit_in_place(root_path: str) -> None:
 						if cChannelNoise > maxNoise:
 							cChannelNoise = maxNoise
 							
-							rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-							rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
-						print("firstZeroIndex != -1 and lastOneIndex == -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
-						print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex, " pedestal ", cChannelPedestal, " noise ", cChannelNoise)   
+						rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
+						rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
+						if(selectPix): print("firstZeroIndex != -1 and lastOneIndex == -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
+						if(selectPix): print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex, " pedestal ", cChannelPedestal, " noise ", cChannelNoise)   
 
 					elif firstZeroIndex == -1 and lastOneIndex != -1:
-						print("firstZeroIndex == -1 and lastOneIndex != -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
+						if(selectPix): print("firstZeroIndex == -1 and lastOneIndex != -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
 	
 						firstZeroIndex = hist.GetMinimumBin() # bin with lowest contentfirstZeroIndex == -1:
 						cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
 						cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
 						if cChannelNoise > maxNoise:
 							cChannelNoise = maxNoise
-							rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-							rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance) 
-						print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex)   
+						rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
+						rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance) 
+						if(selectPix): print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex)   
 
 					elif firstZeroIndex == -1 and lastOneIndex == -1:
-						print("firstZeroIndex == -1 and lastOneIndex == -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
+						if(selectPix): print("firstZeroIndex == -1 and lastOneIndex == -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
 
 						firstZeroIndex = hist.GetMinimumBin()
 						lastOneIndex = hist.GetMaximumBin()
@@ -278,31 +283,42 @@ def run_fit_in_place(root_path: str) -> None:
 						cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
 						if cChannelNoise > maxNoise:
 							cChannelNoise = maxNoise
-							rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-							rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
-						print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex)   
+						rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
+						rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
+						if(selectPix):print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex)   
 
-					# print(" hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
-					# print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex)   
+					if(selectPix): print(" hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
+					if(selectPix): print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex)   
 					# fit.SetRange(rangeMinus, rangePlus)
 					newfit = ROOT.TF1(fit_name, MyErf, rangeMinus, rangePlus, 2)
 					newfit.SetNpx(100)
 					newfit.SetParameter(0, cChannelPedestal)
 					newfit.SetParameter(1, cChannelNoise)
 					newfit.SetParLimits(1, 1, maxNoise*noiseTolerance)
-					hist.Fit(newfit, "RQ+")
-					hist.Fit(newfit, "RQ+")
-					result = hist.Fit(newfit, "RQ+")
-					if int(result) != 0:
-						print("bad fit hybrid ", hyb_dir, " chip ", chip_dir)
-						with open(root_path.replace(".root","_Irene.txt"), "a") as textfile:
-							textfile.write(hist.GetName()+" \n")
+     
+					if hist.GetMean() != 0:
 
+						hist.Fit(newfit, "RQ+")
+						hist.Fit(newfit, "RQ+")
+						result = hist.Fit(newfit, "SRQ+")
+						
+						# if not result:
+						# 	print(" not result ", hist.GetName())
+						# 	if(selectPix): print("bad fit hybrid ", hyb_dir, " chip ", chip_dir)
+						# 	with open(root_path.replace(".root","_Irene.txt"), "a") as textfile:
+						# 		textfile.write(hist.GetName()+" \n")
+						# else:
+						if int(result) != 0: # or not result.IsValid():
+							# print("bad fit ", hist.GetName())
+							if(selectPix): print("bad fit hybrid ", hyb_dir, " chip ", chip_dir)
+							with open(root_path.replace(".root","_Irene.txt"), "a") as textfile:
+								textfile.write(hist.GetName()+" \n")
      
 					newfit.SetRange(rangeMinus, rangePlus)
 					# channel_dir.WriteTObject(hist, hist.GetName(), ROOT.TObject.kOverwrite)
 					channel_dir.cd()  # temporarily move into that directory
-					hist.Write(hist.GetName(), ROOT.TObject.kOverwrite)
+					newfit.Write()
+					# hist.Write(hist.GetName(), ROOT.TObject.kOverwrite)
 					# hist.Write(hist.GetName(), ROOT.TObject.kOverwrite)
 					noise = newfit.GetParameter(1)
 					noise_error = newfit.GetParError(1)
@@ -450,7 +466,7 @@ def main() -> None:
 	for src_path, stem, ext in find_version_candidates(data_dir, "v6-17temp"):
 			found_any = True
 			# Make the v6-17 copy
-			destination_path = copy_file_version(src_path, stem, "v6-17", ext, perdirectory=True, dry_run=args.dry_run)
+			destination_path = copy_file_version(src_path, stem, "v6-17", ext, perdirectory=False, dry_run=args.dry_run)
 
 
 
