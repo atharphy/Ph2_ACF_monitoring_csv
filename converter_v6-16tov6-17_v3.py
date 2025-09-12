@@ -35,6 +35,57 @@ ROOT.gROOT.SetBatch(True)
 
 
 # ------------------------ Utilities ------------------------
+def update_hybrid_hist(hyb_hist, hist_name_pattern):
+	hyb_dir = hyb_hist.GetDirectory()
+	hyb_hist.Reset()
+	subdirs = [] # define on which subdirectory to loop to fill the hist
+	if hist_name_pattern == "_StripChannelNoise_":
+		for key in hyb_dir.GetListOfKeys():
+			obj = key.ReadObj()
+			if obj.InheritsFrom("TDirectory") and "SSA" in obj.GetName():
+				subdirs.append(obj)
+
+	# Loop over Chips
+	for chip_key in subdirs:
+		chip_dir = hyb_dir.Get(chip_key.GetName())  # SSA_X or MPA_X
+		print(" chip_dir ",chip_dir)
+		if not isinstance(chip_dir, ROOT.TDirectory):
+			continue
+
+		# Inside Channel directory
+		channel_dir = chip_dir.Get("Channel")
+		if not channel_dir:
+			continue
+
+		# Loop over histograms in Channel
+		hist_names = [k.GetName() for k in channel_dir.GetListOfKeys() if isinstance(channel_dir.Get(k.GetName()), ROOT.TH1)]
+		for name in hist_names:
+				
+			hist = channel_dir.Get(name)
+			if "SCurve" not in name:
+				continue
+
+			print("Processing", name)
+			m = re.search(r"Row\((\d+)\)_Col\((\d+)\)", name)
+			if m:
+				row = int(m.group(1))
+				col = int(m.group(2))
+
+			fit_name = f"SCurveFit"
+			fit = hist.GetFunction(fit_name)
+			if fit:
+				noise = fit.GetParameter(1)
+				noise_error = fit.GetParError(1)
+				print(" noise ", noise)
+
+			if "SSA" in chip_dir.GetName():
+				theBin = linearizeRowAndColumns(row, col) + COLUMNS * int(chip_dir.GetName().split("_")[-1])
+				print(" theBin ", theBin)
+				hyb_hist.SetBinContent(theBin, noise)
+				hyb_hist.SetBinError(theBin, noise_error)
+    
+	hyb_hist.Write()
+ 
 def linearizeRowAndColumns(row, col):
 	return col + row * COLUMNS
 
@@ -218,16 +269,8 @@ def refit_scurves(channel_dir_src, channel_dir_dst, dir_stack):
 	return h_hybrid_strip_channel_noise_summary_copy
 
 
-def refit_scurves_obj(hist, dir_stack):
+def refit_scurves_obj(hist):
 	name = hist.GetName()
-	# print(" dir_stack ", dir_stack)
-	for d in dir_stack:
-		print(d.GetName())
-	parent_dir = dir_stack[-1] if len(dir_stack) >= 1 else None
-	# print(" parent_dir ", parent_dir, " ", parent_dir.GetName())
-
-	hyb_dir = dir_stack[-2] if len(dir_stack) >= 2 else None
-	# print(" hyb_dir ", hyb_dir, " ", hyb_dir.GetName())
 	# Loop over histograms in Channel
 	# h_hybrid_strip_channel_noise_summary_copy, dummy = find_and_copy_hist1D("StripChannelNoise", hyb_dir, ROOT.TH1F())
 	
@@ -241,19 +284,17 @@ def refit_scurves_obj(hist, dir_stack):
 	# Delete any existing fit objects for this channel
 	hist.GetListOfFunctions().Clear()
 	fit_name = f"SCurveFit"
-	# fit = hist.GetFunction(fit_name)
-	# hist.GetListOfFunctions().Clear()
-	# if fit:
-	# 	hist.GetListOfFunctions().Remove(fit)
-		# fit.Delete
+
 	# fit initial parameters
 	# cChannelPedestal = h_chip_channel_pulseheight_summary.GetBinContent(col +1, row + 1)
 	# cChannelNoise = h_chip_channel_noise_summary.GetBinContent(col +1, row + 1)
-	
-	if(parent_dir.GetName().find("SSA")):
+	print(" get hist dir ",hist.GetDirectory())
+	TheDir = hist.GetDirectory()
+	print(" The mother dir ", TheDir.GetMotherDir())
+	if(hist.GetDirectory().GetMotherDir().GetName().find("SSA")):
 		cChannelPedestal = 30.0
 		cChannelNoise = 3.0
-	elif(parent_dir.GetName().find("MPA")):
+	elif(hist.GetDirectory().GetMotherDir().GetName().find("MPA")):
 		cChannelPedestal = 125.0
 		cChannelNoise = 5
 	# Edge search
@@ -356,15 +397,7 @@ def refit_scurves_obj(hist, dir_stack):
 	hist.Write() #hist.GetName(), ROOT.TObject.kOverwrite)
 
 
-def copy_dir(src_dir, dst_dir, original_filename, verbose=True, depth=0, dir_stack=None):
-	
-	h_hybrid_strip_channel_noise_summary_copy = None
-	
-	# print(" copy_dir dir_stack ",dir_stack)
-	if dir_stack is None:
-		dir_stack = []  # initialize only once
-	# Push current directory object onto the stack
-	dir_stack.append(src_dir)
+def copy_dir(src_dir, dst_dir, original_filename, updating, verbose=True, depth=0):	
 	"""Recursively copy all objects from src_dir to dst_dir."""
 	indent = "  " * depth
 	keys = list(src_dir.GetListOfKeys())  # take a snapshot
@@ -393,7 +426,7 @@ def copy_dir(src_dir, dst_dir, original_filename, verbose=True, depth=0, dir_sta
 			# 	h_hybrid_strip_channel_noise_summary_copy = refit_scurves(obj, newdir, dir_stack)
 			# else:
 			# 	copy_dir(obj, newdir, original_filename, verbose=verbose, depth=depth+1, dir_stack=dir_stack)
-			copy_dir(obj, newdir, original_filename, verbose=verbose, depth=depth+1, dir_stack=dir_stack)
+			copy_dir(obj, newdir, original_filename, updating, verbose=verbose, depth=depth+1)
 
 		# Special case: TTree → use CloneTree
 		# elif obj.InheritsFrom("TTree"):
@@ -409,13 +442,7 @@ def copy_dir(src_dir, dst_dir, original_filename, verbose=True, depth=0, dir_sta
 			stringToCopy.Write(key.GetName())
 		else:
 			dst_dir.cd()
-			# detach histograms/graphs/etc. from the input directory
-			if hasattr(obj, "SetDirectory"):
-				try:
-					obj.SetDirectory(0)
-				except Exception:
-					pass
-			if "LpGBT_EyeOpeningScan_Power_0.333333" in name:
+			if updating == "final_hists" and "LpGBT_EyeOpeningScan_Power_0.333333" in name:
 				originalname = obj.GetName()
 				newname = originalname.replace("0.333333", "1.000000")
 				obj.SetName(newname)
@@ -423,7 +450,7 @@ def copy_dir(src_dir, dst_dir, original_filename, verbose=True, depth=0, dir_sta
 				newtitle = originalname.replace("0.333333", "1.000000")
 				obj.SetTitle(newtitle)
 				obj.Write(newname, ROOT.TObject.kOverwrite)
-			elif "LpGBT_EyeOpeningScan_Power_1.000000" in name:
+			elif updating == "final_hists" and "LpGBT_EyeOpeningScan_Power_1.000000" in name:
 				originalname = obj.GetName()
 				newname = originalname.replace("1.000000", "0.333333")
 				obj.SetName(newname)
@@ -431,14 +458,12 @@ def copy_dir(src_dir, dst_dir, original_filename, verbose=True, depth=0, dir_sta
 				newtitle = originalname.replace("0.333333", "1.000000")
 				obj.SetTitle(newtitle)
 				obj.Write(newname, ROOT.TObject.kOverwrite)
-			# elif "StripChannelNoise" in name and h_hybrid_strip_channel_noise_summary_copy:
-			# 	h_hybrid_strip_channel_noise_summary_copy.Write(h_hybrid_strip_channel_noise_summary_copy.GetName(), ROOT.TObject.kOverwrite)
-			elif isinstance(obj, ROOT.TH1) and "SCurve" in obj.GetName() and os.path.basename(original_filename).startswith("PS"):
-				refit_scurves_obj(obj, dir_stack)
+			elif updating == "final_hists" and "_StripChannelNoise_" in name:
+				update_hybrid_hist(obj, "_StripChannelNoise_" )
+			elif updating == "PSscurves_only" and isinstance(obj, ROOT.TH1) and "SCurve" in obj.GetName() and os.path.basename(original_filename).startswith("PS"):
+				refit_scurves_obj(obj)
 			else:
 				obj.Write() #name, ROOT.TObject.kOverwrite)
-	# Pop when leaving the directory
-	dir_stack.pop()
 
 
 def copy_file_version(src_path: str, stem: str, vupdate: str, ext: str, perdirectory: bool  = False, dry_run: bool = False) -> str:
@@ -452,7 +477,10 @@ def copy_file_version(src_path: str, stem: str, vupdate: str, ext: str, perdirec
 	f_in = ROOT.TFile.Open(src_path)
 	f_out = ROOT.TFile.Open(destination_path, "RECREATE") #, " ", 9) # set compression level to 9
 
-	copy_dir(f_in, f_out, destination_path)
+	updating = "final_hists"
+	if "temp" in vupdate:
+		updating = "PSscurves_only"
+	copy_dir(f_in, f_out, destination_path, updating)
 	# f_out.Write("", ROOT.TObject.kOverwrite)
 	f_out.Close()
 	f_in.Close()
@@ -475,8 +503,14 @@ def main() -> None:
 	found_any = False
 	for src_path, stem, ext in find_version_candidates(data_dir, "v6-16"):
 		found_any = True
-		# Make the v6-17 temp copy
-		destination_path = copy_file_version(src_path, stem, "v6-17temp", ext, dry_run=args.dry_run) # update Scurves 
+		# Make the v6-17 temp copy and update Scurves fits for PS modules
+		destination_path = copy_file_version(src_path, stem, "v6-17temp", ext, dry_run=args.dry_run)
+	found_any = False
+	for src_path, stem, ext in find_version_candidates(data_dir, "v6-17temp"):
+		found_any = True
+		# Make the v6-17 copy and update LpGBT eye opening plots for all modules 
+		# and summary plots using Scurves fits for PS modules
+		destination_path = copy_file_version(src_path, stem, "v6-17", ext, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":
