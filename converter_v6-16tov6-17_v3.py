@@ -31,19 +31,22 @@ except Exception as e:
 ROOT.gErrorIgnoreLevel = ROOT.kError 
 ROOT.gROOT.SetBatch(True)
 
-
-
-
 # ------------------------ Utilities ------------------------
 def update_hybrid_hist(hyb_hist, hist_name_pattern):
 	hyb_dir = hyb_hist.GetDirectory()
 	hyb_hist.Reset()
 	subdirs = [] # define on which subdirectory to loop to fill the hist
-	if hist_name_pattern == "_StripChannelNoise_":
+	if hist_name_pattern == "_StripChannelNoise_" or hist_name_pattern == "_StripNoiseDistribution_":
 		for key in hyb_dir.GetListOfKeys():
 			obj = key.ReadObj()
 			if obj.InheritsFrom("TDirectory") and "SSA" in obj.GetName():
 				subdirs.append(obj)
+	elif hist_name_pattern == "_PixelChannelNoise_" or hist_name_pattern == "_PixelNoiseDistribution_":
+		for key in hyb_dir.GetListOfKeys():
+			obj = key.ReadObj()
+			if obj.InheritsFrom("TDirectory") and "MPA" in obj.GetName():
+				subdirs.append(obj)
+
 
 	# Loop over Chips
 	for chip_key in subdirs:
@@ -60,31 +63,99 @@ def update_hybrid_hist(hyb_hist, hist_name_pattern):
 		# Loop over histograms in Channel
 		hist_names = [k.GetName() for k in channel_dir.GetListOfKeys() if isinstance(channel_dir.Get(k.GetName()), ROOT.TH1)]
 		for name in hist_names:
-				
-			hist = channel_dir.Get(name)
-			if "SCurve" not in name:
-				continue
+			row, col, noise, noise_error, pulseheight, pulseheight_error = 	getScurvesFitParameters(channel_dir, name)
 
-			print("Processing", name)
-			m = re.search(r"Row\((\d+)\)_Col\((\d+)\)", name)
-			if m:
-				row = int(m.group(1))
-				col = int(m.group(2))
+			# hist = channel_dir.Get(name)
+			# if "SCurve" not in name:
+			# 	continue
 
-			fit_name = f"SCurveFit"
-			fit = hist.GetFunction(fit_name)
-			if fit:
-				noise = fit.GetParameter(1)
-				noise_error = fit.GetParError(1)
-				print(" noise ", noise)
+			# print("Processing", name)
+			# m = re.search(r"Row\((\d+)\)_Col\((\d+)\)", name)
+			# if m:
+			# 	row = int(m.group(1))
+			# 	col = int(m.group(2))
 
-			if "SSA" in chip_dir.GetName():
-				theBin = linearizeRowAndColumns(row, col) + COLUMNS * int(chip_dir.GetName().split("_")[-1])
+			# fit_name = f"SCurveFit"
+			# fit = hist.GetFunction(fit_name)
+			# if fit:
+			# 	noise = fit.GetParameter(1)
+			# 	noise_error = fit.GetParError(1)
+			# 	print(" noise ", noise)
+
+			if "Channel" in hist_name_pattern:
+				if "SSA" in chip_dir.GetName():
+					theBin = linearizeRowAndColumns(row, col) + COLUMNS * int(chip_dir.GetName().split("_")[-1])
+				if "MPA" in chip_dir.GetName(): 
+					theBin = linearizeRowAndColumns(row, col) + COLUMNS * 16 * (int(chip_dir.GetName().split("_")[-1]) - 8)
 				print(" theBin ", theBin)
 				hyb_hist.SetBinContent(theBin, noise)
 				hyb_hist.SetBinError(theBin, noise_error)
+			else:
+				hyb_hist.Fill(noise)
     
 	hyb_hist.Write()
+ 
+def getScurvesFitParameters(channel_dir, name):	
+	hist = channel_dir.Get(name)
+
+	row = -1
+	col = -1
+	noise = 0
+	noise_error = 0
+	pulseheight = 0
+	pulseheight_error = 0
+
+	print("Processing", name)
+	m = re.search(r"Row\((\d+)\)_Col\((\d+)\)", name)
+	if m:
+		row = int(m.group(1))
+		col = int(m.group(2))
+	fit_name = f"SCurveFit"
+	fit = hist.GetFunction(fit_name)
+	if fit:
+		noise = fit.GetParameter(1)
+		noise_error = fit.GetParError(1)
+		print(" noise ", noise)
+		pulseheight = fit.GetParameter(0)
+		pulseheight_error = fit.GetParError(0)
+	
+	return row, col, noise, noise_error, pulseheight, pulseheight_error
+ 
+ 
+def update_chip_hist(chip_hist, hist_name_pattern):
+	chip_dir = chip_hist.GetDirectory()
+	chip_hist.Reset()
+
+	# Inside Channel directory
+	channel_dir = chip_dir.Get("Channel")
+
+	# Loop over histograms in Channel
+	hist_names = [k.GetName() for k in channel_dir.GetListOfKeys() if isinstance(channel_dir.Get(k.GetName()), ROOT.TH1)]
+	for name in hist_names:
+		row, col, noise, noise_error, pulseheight, pulseheight_error = 	getScurvesFitParameters(channel_dir, name)
+
+		if "Channel" in hist_name_pattern:
+			# if "SSA" in chip_dir.GetName():
+			# 	theBin = linearizeRowAndColumns(row, col) + COLUMNS * int(chip_dir.GetName().split("_")[-1])
+			# if "MPA" in chip_dir.GetName(): 
+			# 	theBin = linearizeRowAndColumns(row, col) + COLUMNS * 16 * (int(chip_dir.GetName().split("_")[-1]) - 8)
+			if "Noise" in hist_name_pattern:
+				if "2D" in hist_name_pattern:
+					chip_hist.SetBinContent(col +1, row + 1, noise)
+					chip_hist.SetBinError(col +1, row + 1, noise_error)
+				else:
+					theBin = linearizeRowAndColumns(row, col)
+					print(" theBin ", theBin)
+					chip_hist.SetBinContent(theBin, noise)
+					chip_hist.SetBinError(theBin, noise_error)
+			else:
+				theBin = linearizeRowAndColumns(row, col)
+				chip_hist.SetBinContent(theBin, pulseheight)
+				chip_hist.SetBinError(theBin, pulseheight_error)
+		else:
+			chip_hist.Fill(noise)
+    
+	chip_hist.Write()
  
 def linearizeRowAndColumns(row, col):
 	return col + row * COLUMNS
@@ -127,150 +198,13 @@ def find_version_candidates(data_dir: str, version: str):
 		if m:
 			yield entry.path, m.group("stem"), (m.group("ext") or "")
 
-
-def refit_scurves(channel_dir_src, channel_dir_dst, dir_stack):
-	# print(" dir_stack ", dir_stack)
-	for d in dir_stack:
-		print(d.GetName())
-	parent_dir = dir_stack[-1] if len(dir_stack) >= 1 else None
-	# print(" parent_dir ", parent_dir, " ", parent_dir.GetName())
-
-	hyb_dir = dir_stack[-2] if len(dir_stack) >= 2 else None
-	# print(" hyb_dir ", hyb_dir, " ", hyb_dir.GetName())
-	# Loop over histograms in Channel
-	h_hybrid_strip_channel_noise_summary_copy, dummy = find_and_copy_hist1D("StripChannelNoise", hyb_dir, ROOT.TH1F())
-	hist_names = [k.GetName() for k in channel_dir_src.GetListOfKeys() if isinstance(channel_dir_src.Get(k.GetName()), ROOT.TH1)]
-	for name in hist_names:
-		
-		hist = channel_dir_src.Get(name)
-		if "SCurve" not in name:
-			continue
-		
-		# print("Processing", name)
-		m = re.search(r"Row\((\d+)\)_Col\((\d+)\)", name)
-		if m:
-			row = int(m.group(1))
-			col = int(m.group(2))
-			# print("Row:", row, "Col:", co
-		# Delete any existing fit objects for this channel
-		fit_name = f"SCurveFit"
-		fit = hist.GetFunction(fit_name)
-		if fit:
-			hist.GetListOfFunctions().Remove(fit)
-			fit.Delete
-		# fit initial parameters
-		# cChannelPedestal = h_chip_channel_pulseheight_summary.GetBinContent(col +1, row + 1)
-		# cChannelNoise = h_chip_channel_noise_summary.GetBinContent(col +1, row + 1)
-		
-		if(parent_dir.GetName().find("SSA")):
-			cChannelPedestal = 30.0
-			cChannelNoise = 3.0
-		elif(parent_dir.GetName().find("MPA")):
-			cChannelPedestal = 125.0
-			cChannelNoise = 5
-		# Edge search
-		lastOneIndex = -1
-		firstZeroIndex = -1
-		oneThreshold = 0.9
-		zeroThreshold = 0.1
-		maxNoise = 15.0
-		noiseTolerance = 2.0
-		bins = hist.GetNbinsX()
-		for l in range(bins):
-			currentbin = l+1
-			if hist.GetBinContent(currentbin) > oneThreshold and hist.GetBinContent(currentbin + 1) < hist.GetBinContent(currentbin):
-				lastOneIndex = l
-				break
-		for l in range(bins+1, 0, -1):
-			if hist.GetBinContent(l) < zeroThreshold and hist.GetBinContent(l - 1) > hist.GetBinContent(l):
-				firstZeroIndex = l
-				break
-			
-		if firstZeroIndex != -1 and lastOneIndex != -1:
-			# print("firstZeroIndex != -1 and lastOneIndex != -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", co
-			cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
-			cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
-			if cChannelNoise > maxNoise:
-				cChannelNoise = maxNoise
-				
-			rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-			rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
-		elif lastOneIndex == -1 and firstZeroIndex != -1:
-			lastOneIndex = hist.GetMaximumBin() # bin with highest content
-			cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
-			cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
-			if cChannelNoise > maxNoise:
-				cChannelNoise = maxNoise
-				
-			rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-			rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
-			# print("firstZeroIndex != -1 and lastOneIndex == -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
-			# print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex, " pedestal ", cChannelPedestal, " noise ", cChannelNoise) 
-		elif firstZeroIndex == -1 and lastOneIndex != -1:
-			# print("firstZeroIndex == -1 and lastOneIndex != -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col
-			firstZeroIndex = hist.GetMinimumBin() # bin with lowest contentfirstZeroIndex == -1:
-			cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
-			cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
-			if cChannelNoise > maxNoise:
-				cChannelNoise = maxNoise
-			rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-			rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance) 
-			# print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex) 
-		elif firstZeroIndex == -1 and lastOneIndex == -1:
-			# print("firstZeroIndex == -1 and lastOneIndex == -1, hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", co
-			firstZeroIndex = hist.GetMinimumBin()
-			lastOneIndex = hist.GetMaximumBin()
-			cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
-			cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
-			if cChannelNoise > maxNoise:
-				cChannelNoise = maxNoise
-			rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-			rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
-			# print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex) 
-		# print(" hybrid ", hyb_dir, " chip ", chip_dir, " row ", row, " col ", col)
-		# print(" range ", rangeMinus, " ", rangePlus, " zero ",firstZeroIndex, " one ",lastOneIndex)   
-		# fit.SetRange(rangeMinus, rangePlus)
-		newfit = ROOT.TF1(fit_name, MyErf, rangeMinus, rangePlus, 2)
-		newfit.SetNpx(100)
-		newfit.SetParameter(0, cChannelPedestal)
-		newfit.SetParameter(1, cChannelNoise)
-		newfit.SetParLimits(1, 1, maxNoise*noiseTolerance)
-		if hist.GetMean() != 0:
-			hist.Fit(newfit, "RQ+")
-			hist.Fit(newfit, "RQ+")
-			result = hist.Fit(newfit, "SRQ+")
-			
-			# if not result:
-			# 	print(" not result ", hist.GetName())
-			# 	# print("bad fit hybrid ", hyb_dir, " chip ", chip_dir)
-			# 	with open(root_path.replace(".root","_Irene.txt"), "a") as textfile:
-			# 		textfile.write(hist.GetName()+" \n")
-			# else:
-			# if int(result) != 0: # or not result.IsValid():
-				# print("bad fit ", hist.GetName())
-				# print("bad fit hybrid ", hyb_dir, " chip ", chip_dir)
-				# with open(root_path.replace(".root","_Irene.txt"), "a") as textfile:
-				# 	textfile.write(hist.GetName()+" \n")
-		newfit.SetRange(rangeMinus, rangePlus)
-		noise = newfit.GetParameter(1)
-		noise_error = newfit.GetParError(1)
-		pulseheight = newfit.GetParameter(0)
-		pulseheight_error = newfit.GetParError(0)
-		# channel_dir.WriteTObject(hist, hist.GetName(), ROOT.TObject.kOverwrite)
-		channel_dir_dst.cd()  # temporarily move into that directory
-		# newfit.Write()
-		# Hybrid summary hists
-		if "SSA" in parent_dir.GetName():
-			theBin = linearizeRowAndColumns(row, col) + COLUMNS * int(parent_dir.GetName().split("_")[-1])
-			h_hybrid_strip_channel_noise_summary_copy.SetBinContent(theBin, noise)
-			h_hybrid_strip_channel_noise_summary_copy.SetBinError(theBin, noise_error)
-  
-		hist.Write() #hist.GetName(), ROOT.TObject.kOverwrite)
-	return h_hybrid_strip_channel_noise_summary_copy
-
-
 def refit_scurves_obj(hist):
 	name = hist.GetName()
+		
+	TheChannelDir = hist.GetDirectory()
+	TheChipDir = hist.GetDirectory().GetMotherDir()
+	root_path = TheChipDir.GetMotherDir().GetMotherDir().GetMotherDir().GetMotherDir().GetMotherDir()
+	print(" root_path name ", root_path.GetName())
 	# Loop over histograms in Channel
 	# h_hybrid_strip_channel_noise_summary_copy, dummy = find_and_copy_hist1D("StripChannelNoise", hyb_dir, ROOT.TH1F())
 	
@@ -288,13 +222,11 @@ def refit_scurves_obj(hist):
 	# fit initial parameters
 	# cChannelPedestal = h_chip_channel_pulseheight_summary.GetBinContent(col +1, row + 1)
 	# cChannelNoise = h_chip_channel_noise_summary.GetBinContent(col +1, row + 1)
-	print(" get hist dir ",hist.GetDirectory())
-	TheDir = hist.GetDirectory()
-	print(" The mother dir ", TheDir.GetMotherDir())
-	if(hist.GetDirectory().GetMotherDir().GetName().find("SSA")):
+
+	if(TheChipDir.GetName().find("SSA")):
 		cChannelPedestal = 30.0
 		cChannelNoise = 3.0
-	elif(hist.GetDirectory().GetMotherDir().GetName().find("MPA")):
+	elif(TheChipDir.GetName().find("MPA")):
 		cChannelPedestal = 125.0
 		cChannelNoise = 5
 	# Edge search
@@ -365,21 +297,20 @@ def refit_scurves_obj(hist):
 	newfit.SetParameter(1, cChannelNoise)
 	newfit.SetParLimits(1, 1, maxNoise*noiseTolerance)
 	if hist.GetMean() != 0:
-		# hist.Fit(newfit, "RQ+")
-		# hist.Fit(newfit, "RQ+")
-		result = hist.Fit(newfit, "SRQ+")
+		hist.Fit(newfit, "RQ+")
+		hist.Fit(newfit, "RQ+")
+		result = hist.Fit(newfit, "SRQ")
 		
 		# if not result:
 		# 	print(" not result ", hist.GetName())
 		# 	# print("bad fit hybrid ", hyb_dir, " chip ", chip_dir)
-		# 	with open(root_path.replace(".root","_Irene.txt"), "a") as textfile:
+		# 	with open(root_path.GetName().replace(".root","_Irene.txt"), "a") as textfile:
 		# 		textfile.write(hist.GetName()+" \n")
 		# else:
-		# if int(result) != 0: # or not result.IsValid():
-			# print("bad fit ", hist.GetName())
-			# print("bad fit hybrid ", hyb_dir, " chip ", chip_dir)
-			# with open(root_path.replace(".root","_Irene.txt"), "a") as textfile:
-			# 	textfile.write(hist.GetName()+" \n")
+		# 	if int(result) != 0: # or not result.IsValid():
+		# 		print("bad fit ", hist.GetName())
+		# 		with open(root_path.GetName().replace(".root","_Irene.txt"), "a") as textfile:
+		# 			textfile.write(hist.GetName()+" \n")
 	newfit.SetRange(rangeMinus, rangePlus)
 	noise = newfit.GetParameter(1)
 	noise_error = newfit.GetParError(1)
@@ -415,27 +346,7 @@ def copy_dir(src_dir, dst_dir, original_filename, updating, verbose=True, depth=
 		if obj.InheritsFrom("TDirectory"):
 			dst_dir.cd()
 			newdir = dst_dir.mkdir(name, obj.GetTitle() if hasattr(obj,"GetTitle") else "")
-			
-			
-			# If this is the "Channel" directory *and* source file starts with "PS" perform Scurves fit again
-			# I also need to know if it is SSA or MPA
-			# Build new path context
-			# mainDir = dir_stack[-6] if len(dir_stack) >= 6 else None
-			# if name == "Channel" and os.path.basename(original_filename).startswith("PS") and mainDir.GetName() != "MonitorDQM":
-			# 	print(f"Editing contents of Channel in {dst_dir}")
-			# 	h_hybrid_strip_channel_noise_summary_copy = refit_scurves(obj, newdir, dir_stack)
-			# else:
-			# 	copy_dir(obj, newdir, original_filename, verbose=verbose, depth=depth+1, dir_stack=dir_stack)
 			copy_dir(obj, newdir, original_filename, updating, verbose=verbose, depth=depth+1)
-
-		# Special case: TTree → use CloneTree
-		# elif obj.InheritsFrom("TTree"):
-		# 	dst_dir.cd()
-		# 	newtree = obj.CloneTree(-1, "fast")
-		# 	newtree.SetName(name)
-		# 	newtree.Write(name, ROOT.TObject.kOverwrite)
-
-		# Everything else: generic TObject
 		elif obj.InheritsFrom("TObjString"):  # Special handling for TObjString
 			dst_dir.cd()  # Move to the current directory in the output file
 			stringToCopy = ROOT.TObjString(obj.GetName())
@@ -458,9 +369,25 @@ def copy_dir(src_dir, dst_dir, original_filename, updating, verbose=True, depth=
 				newtitle = originalname.replace("0.333333", "1.000000")
 				obj.SetTitle(newtitle)
 				obj.Write(newname, ROOT.TObject.kOverwrite)
-			elif updating == "final_hists" and "_StripChannelNoise_" in name:
+			elif updating == "final_hists" and "_StripChannelNoise_" in name and os.path.basename(original_filename).startswith("PS"):
 				update_hybrid_hist(obj, "_StripChannelNoise_" )
-			elif updating == "PSscurves_only" and isinstance(obj, ROOT.TH1) and "SCurve" in obj.GetName() and os.path.basename(original_filename).startswith("PS"):
+			elif updating == "final_hists" and "_StripNoiseDistribution_" in name and os.path.basename(original_filename).startswith("PS"):
+				update_hybrid_hist(obj, "_StripNoiseDistribution_" )
+			elif updating == "final_hists" and "_PixelChannelNoise_" in name and os.path.basename(original_filename).startswith("PS"):
+				update_hybrid_hist(obj, "_PixelChannelNoise_" )
+			elif updating == "final_hists" and "_PixelNoiseDistribution_" in name and os.path.basename(original_filename).startswith("PS"):
+				update_hybrid_hist(obj, "_PixelNoiseDistribution_" )
+			elif updating == "final_hists" and "_ChannelNoise_" in name and os.path.basename(original_filename).startswith("PS"):
+				update_chip_hist(obj, "_ChannelNoise_" )
+			elif updating == "final_hists" and "_2DChannelNoise_" in name and os.path.basename(original_filename).startswith("PS"):
+				update_chip_hist(obj, "_2DChannelNoise_" )
+			elif updating == "final_hists" and "_NoiseDistribution_" in name and os.path.basename(original_filename).startswith("PS"):
+				update_chip_hist(obj, "_NoiseDistribution_" )
+			elif updating == "final_hists" and "_ChannelPulseHeight_" in name and os.path.basename(original_filename).startswith("PS"):
+				update_chip_hist(obj, "_ChannelPulseHeight_" )
+			elif updating == "final_hists" and "_PulseHeightDistribution_" in name and os.path.basename(original_filename).startswith("PS"):
+				update_chip_hist(obj, "_PulseHeightDistribution_" )
+			elif updating == "PSscurves_only" and isinstance(obj, ROOT.TH1) and "SCurve_Row" in obj.GetName() and os.path.basename(original_filename).startswith("PS"):
 				refit_scurves_obj(obj)
 			else:
 				obj.Write() #name, ROOT.TObject.kOverwrite)
