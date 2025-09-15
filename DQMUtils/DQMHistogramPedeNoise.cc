@@ -1007,7 +1007,8 @@ void DQMHistogramPedeNoise::fitSCurves()
                                 // Thresholds to handle floating point comparison
                                 double oneThreshold  = 0.9;
                                 double zeroThreshold = 0.1;
-                                float  maxNoise      = 10;
+                                float  maxNoise      = 15;
+                                float noiseTolerance = 2;
                                 // Find the last "1" before it decreases
                                 for(int l = 0; l < thresholdBins - 1; ++l)
                                 {
@@ -1028,13 +1029,13 @@ void DQMHistogramPedeNoise::fitSCurves()
                                     }
                                 }
 
-                                if(firstZeroIndex != -1 && lastOneIndex != -1) // avoid cases in which these bins are not found (e.g. for an empty channel)
-                                {
-                                    cChannelPedestal = (cChannelSCurve->GetBinCenter(lastOneIndex) + cChannelSCurve->GetBinCenter(firstZeroIndex)) / 2.;
-                                    cChannelNoise    = (cChannelSCurve->GetBinCenter(firstZeroIndex) - cChannelSCurve->GetBinCenter(lastOneIndex)) / 2.;
-                                    if(cChannelNoise > maxNoise) cChannelNoise = maxNoise;
-                                }
-                                float noiseTolerance = 2;
+                                if (lastOneIndex == -1) lastOneIndex = cChannelSCurve->GetMaximumBin(); // bin with highest content
+		                        if (firstZeroIndex == -1) firstZeroIndex = cChannelSCurve->GetMinimumBin(); // bin with lowest contentfirstZeroIndex == -1:
+                    
+                                cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0;
+                        		cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0;
+                                if (cChannelNoise > maxNoise) cChannelNoise = maxNoise;
+
                                 float rangeMinus     = cChannelPedestal - (cChannelNoise * noiseTolerance);
                                 float rangePlus      = cChannelPedestal + (cChannelNoise * noiseTolerance);
 
@@ -1044,11 +1045,13 @@ void DQMHistogramPedeNoise::fitSCurves()
                                 cFit->SetParameter(1, cChannelNoise);
                                 cFit->SetParLimits(1, 1, maxNoise*noiseTolerance);
                                 // Fit
-                                cChannelSCurve->Fit(cFit, "RQM");
-                                cChannelSCurve->Fit(cFit, "RQM");
-                                cChannelSCurve->Fit(cFit, "RQM");
-                                cFit->SetRange(rangeMinus, rangePlus);
-
+                                if (cChannelSCurve->GetMean() != 0)
+                                {
+                                    cChannelSCurve->Fit(cFit, "RQM");
+                                    cChannelSCurve->Fit(cFit, "RQM");
+                                    cChannelSCurve->Fit(cFit, "RQM");
+                                    cFit->SetRange(rangeMinus, rangePlus);
+                                }
                                 theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThreshold      = cFit->GetParameter(0);
                                 theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fNoise          = cFit->GetParameter(1);
                                 theChipThresholdAndNoise->getChannel<ThresholdAndNoise>(row, col).fThresholdError = cFit->GetParError(0);
