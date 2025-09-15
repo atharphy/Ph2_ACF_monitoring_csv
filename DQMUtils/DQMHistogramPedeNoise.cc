@@ -1005,10 +1005,10 @@ void DQMHistogramPedeNoise::fitSCurves()
                                 int     firstZeroIndex = -1;
                                 uint8_t thresholdBins  = cChannelSCurve->GetNbinsX();
                                 // Thresholds to handle floating point comparison
-                                double oneThreshold  = 0.9;
-                                double zeroThreshold = 0.1;
-                                float  maxNoise      = 15;
-                                float noiseTolerance = 2;
+                                double oneThreshold   = 0.9;
+                                double zeroThreshold  = 0.1;
+                                float  maxNoise       = 15;
+                                float  noiseTolerance = 2;
                                 // Find the last "1" before it decreases
                                 for(int l = 0; l < thresholdBins - 1; ++l)
                                 {
@@ -1029,23 +1029,23 @@ void DQMHistogramPedeNoise::fitSCurves()
                                     }
                                 }
 
-                                if (lastOneIndex == -1) lastOneIndex = cChannelSCurve->GetMaximumBin(); // bin with highest content
-		                        if (firstZeroIndex == -1) firstZeroIndex = cChannelSCurve->GetMinimumBin(); // bin with lowest contentfirstZeroIndex == -1:
-                    
-                                cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0;
-                        		cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0;
-                                if (cChannelNoise > maxNoise) cChannelNoise = maxNoise;
+                                if(lastOneIndex == -1) lastOneIndex = cChannelSCurve->GetMaximumBin();     // bin with highest content
+                                if(firstZeroIndex == -1) firstZeroIndex = cChannelSCurve->GetMinimumBin(); // bin with lowest contentfirstZeroIndex == -1:
 
-                                float rangeMinus     = cChannelPedestal - (cChannelNoise * noiseTolerance);
-                                float rangePlus      = cChannelPedestal + (cChannelNoise * noiseTolerance);
+                                cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0;
+                                cChannelNoise    = (firstZeroIndex - lastOneIndex) / 2.0;
+                                if(cChannelNoise > maxNoise) cChannelNoise = maxNoise;
+
+                                float rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance);
+                                float rangePlus  = cChannelPedestal + (cChannelNoise * noiseTolerance);
 
                                 TF1* cFit = new TF1("SCurveFit", MyErfc, rangeMinus, rangePlus, 2);
                                 cFit->SetNpx(100);
                                 cFit->SetParameter(0, cChannelPedestal);
                                 cFit->SetParameter(1, cChannelNoise);
-                                cFit->SetParLimits(1, 1, maxNoise*noiseTolerance);
+                                cFit->SetParLimits(1, 1, maxNoise * noiseTolerance);
                                 // Fit
-                                if (cChannelSCurve->GetMean() != 0)
+                                if(cChannelSCurve->GetMean() != 0)
                                 {
                                     cChannelSCurve->Fit(cFit, "RQM");
                                     cChannelSCurve->Fit(cFit, "RQM");
