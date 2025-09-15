@@ -220,40 +220,18 @@ def refit_scurves_obj(hist):
 			firstZeroIndex = l
 			break
 		
-	if firstZeroIndex != -1 and lastOneIndex != -1:
-		cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
-		cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
-		if cChannelNoise > maxNoise:
-			cChannelNoise = maxNoise
-			
-		rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-		rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
-	elif lastOneIndex == -1 and firstZeroIndex != -1:
+	if lastOneIndex == -1:
 		lastOneIndex = hist.GetMaximumBin() # bin with highest content
-		cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
-		cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
-		if cChannelNoise > maxNoise:
-			cChannelNoise = maxNoise
-			
-		rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-		rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
-	elif firstZeroIndex == -1 and lastOneIndex != -1:
+	if firstZeroIndex == -1:
 		firstZeroIndex = hist.GetMinimumBin() # bin with lowest contentfirstZeroIndex == -1:
-		cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
-		cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
-		if cChannelNoise > maxNoise:
-			cChannelNoise = maxNoise
-		rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-		rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance) 
-	elif firstZeroIndex == -1 and lastOneIndex == -1:
-		firstZeroIndex = hist.GetMinimumBin()
-		lastOneIndex = hist.GetMaximumBin()
-		cChannelPedestal = (lastOneIndex + firstZeroIndex) / 2.0
-		cChannelNoise = (firstZeroIndex - lastOneIndex) / 2.0
-		if cChannelNoise > maxNoise:
-			cChannelNoise = maxNoise
-		rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
-		rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
+
+	cChannelPedestal = (hist.GetBinCenter(lastOneIndex) + hist.GetBinCenter(firstZeroIndex)) / 2.0
+	cChannelNoise = (hist.GetBinCenter(firstZeroIndex) - hist.GetBinCenter(lastOneIndex)) / 2.0
+
+	if cChannelNoise > maxNoise:
+		cChannelNoise = maxNoise
+	rangeMinus = cChannelPedestal - (cChannelNoise * noiseTolerance)
+	rangePlus = cChannelPedestal + (cChannelNoise * noiseTolerance)
 
 	newfit = ROOT.TF1(fit_name, MyErf, rangeMinus, rangePlus, 2)
 	newfit.SetNpx(100)
