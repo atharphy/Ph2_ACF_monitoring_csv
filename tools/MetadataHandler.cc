@@ -114,6 +114,10 @@ void MetadataHandler::fillInitialConditions()
     ContainerFactory::copyAndInitOpticalGroup<std::string>(*fDetectorContainer, theLpGBTConfigurationContainer);
     fillLpGBTConfigurationContainer(theLpGBTConfigurationContainer);
 
+    DetectorDataContainer theLpGBTisCalibratedContainer;
+    ContainerFactory::copyAndInitOpticalGroup<std::string>(*fDetectorContainer, theLpGBTisCalibratedContainer);
+    fillLpGBTisCalibratedContainer(theLpGBTisCalibratedContainer);
+
     DetectorDataContainer theLpGBTFuseIdContainer;
     ContainerFactory::copyAndInitOpticalGroup<std::string>(*fDetectorContainer, theLpGBTFuseIdContainer);
     fillLpGBTFuseIdContainer(theLpGBTFuseIdContainer);
@@ -136,6 +140,7 @@ void MetadataHandler::fillInitialConditions()
     fDQMMetadata->fillBoardConfiguration(theBoardConfigurationContainer, isInitialValue);
     fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isInitialValue);
     fDQMMetadata->fillLpGBTConfiguration(theLpGBTConfigurationContainer, isInitialValue);
+    fDQMMetadata->fillIsLpGBTCalibrated(theLpGBTisCalibratedContainer);
     fDQMMetadata->fillLpGBTFuseId(theLpGBTFuseIdContainer);
     fDQMMetadata->fillVTRxFuseId(theVTRxFuseIdContainer);
 #else
@@ -295,6 +300,23 @@ void MetadataHandler::fillLpGBTConfigurationContainer(DetectorDataContainer& the
             auto theLpGBT = cOpticalGroup->flpGBT;
             if(theLpGBT == nullptr) continue;
             theLpGBTConfigurationContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = theLpGBT->getRegMapStream().str();
+        }
+    }
+}
+
+
+void MetadataHandler::fillLpGBTisCalibratedContainer(DetectorDataContainer& theLpGBTisCalibratedContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            auto theLpGBT = cOpticalGroup->flpGBT;
+            if(theLpGBT == nullptr) continue;
+            bool isCalibrated = theLpGBT->getIsCalibrationDataLoaded();
+            // uint32_t chipFuseId = flpGBTInterface->ReadChipFuseID(theLpGBT);
+
+            theLpGBTisCalibratedContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertToString(isCalibrated);
         }
     }
 }
