@@ -199,7 +199,7 @@ void MetadataHandler::fillInitialConditions()
         theLpGBTConfigurationSerialization.streamByOpticalGroupContainer(fDQMStreamer, theLpGBTConfigurationContainer, isInitialValue);
 
         ContainerSerialization theLpGBTisCalibratedSerialization("MetadataLpGBTisCalibrated");
-        theLpGBTisCalibratedSerialization.streamByBoardContainer(fDQMStreamer, theLpGBTisCalibratedContained);
+        theLpGBTisCalibratedSerialization.streamByBoardContainer(fDQMStreamer, theLpGBTisCalibratedContainer);
 
         ContainerSerialization theLpGBTFuseIdSerialization("MetadataLpGBTFuseId");
         theLpGBTFuseIdSerialization.streamByBoardContainer(fDQMStreamer, theLpGBTFuseIdContainer);
