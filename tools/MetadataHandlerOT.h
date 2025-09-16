@@ -17,7 +17,6 @@ class MetadataHandlerOT : public MetadataHandler
     void fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer);
     void fillCICConfigurationContainer(DetectorDataContainer& theCICConfigurationContainer);
     void fillIsReadoutChipCalibratedContainer(DetectorDataContainer& theReadoutChipIsCalibratedContainer);
-
-  };
+};
 
 #endif
