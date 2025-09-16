@@ -193,7 +193,7 @@ void MetadataHandler::fillInitialConditions()
 
         fDetectorContainer->addReadoutChipQueryFunction(selectMPASSAfunction, selectMPASSAfunctionName);
         ContainerSerialization theReadoutChipIsCalibratedSerialization("MetadataReadoutChipIsCalibrated");
-        theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipIsCalibratedContainer);
+        theReadoutChipIsCalibratedSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipIsCalibratedContainer);
         fDetectorContainer->removeReadoutChipQueryFunction(selectMPASSAfunctionName);
 
         ContainerSerialization theLpGBTConfigurationSerialization("MetadataLpGBTConfiguration");

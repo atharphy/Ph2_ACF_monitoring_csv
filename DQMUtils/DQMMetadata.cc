@@ -473,8 +473,7 @@ bool DQMMetadata::fill(std::string& inputStream)
     if(theLpGBTisCalibratedSerialization.attachDeserializer(inputStream))
     {
         // std::cout << "Matched Metadata LpGBT Calibrated!!!!!\n";
-        DetectorDataContainer theDetectorData = theLpGBTisCalibratedSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
-        ;
+        DetectorDataContainer theDetectorData = theLpGBTisCalibratedSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
         fillIsLpGBTCalibrated(theDetectorData);
         return true;
     }
