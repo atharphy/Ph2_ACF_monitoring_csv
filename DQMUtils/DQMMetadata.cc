@@ -71,8 +71,8 @@ void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStruc
     StringContainer theFinalReadoutChipConfigurationStringContainer("FinalReadoutChipConfiguration");
     RootContainerFactory::bookChipHistograms<StringContainer>(theOutputFile, theDetectorStructure, fFinalReadoutChipConfigurationContainer, theFinalReadoutChipConfigurationStringContainer);
 
-
-    auto        selectMPASSAfunction     = [](const ChipContainer* theChip) { return ((static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2) || (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2)); };
+    auto selectMPASSAfunction = [](const ChipContainer* theChip)
+    { return ((static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2) || (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2)); };
     std::string selectMPASSAfunctionName = "SelectMPASSAfunction";
     fDetectorContainer->addReadoutChipQueryFunction(selectMPASSAfunction, selectMPASSAfunctionName);
     StringContainer theIsReadoutChipCalibratedStringContainer("IsReadoutChipCalibrated");
@@ -473,7 +473,8 @@ bool DQMMetadata::fill(std::string& inputStream)
     if(theLpGBTisCalibratedSerialization.attachDeserializer(inputStream))
     {
         // std::cout << "Matched Metadata LpGBT Calibrated!!!!!\n";
-        DetectorDataContainer theDetectorData = theLpGBTisCalibratedSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);;
+        DetectorDataContainer theDetectorData = theLpGBTisCalibratedSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string>(fDetectorContainer);
+        ;
         fillIsLpGBTCalibrated(theDetectorData);
         return true;
     }

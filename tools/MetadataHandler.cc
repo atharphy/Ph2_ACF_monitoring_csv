@@ -113,7 +113,8 @@ void MetadataHandler::fillInitialConditions()
     ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipConfigurationContainer);
     fillReadoutChipConfigurationContainer(theReadoutChipConfigurationContainer);
 
-    auto        selectMPASSAfunction     = [](const ChipContainer* theChip) { return ((static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2) || (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2)); };
+    auto selectMPASSAfunction = [](const ChipContainer* theChip)
+    { return ((static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2) || (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2)); };
     std::string selectMPASSAfunctionName = "SelectMPASSAfunction";
     fDetectorContainer->addReadoutChipQueryFunction(selectMPASSAfunction, selectMPASSAfunctionName);
     DetectorDataContainer theReadoutChipIsCalibratedContainer;
@@ -323,7 +324,6 @@ void MetadataHandler::fillIsReadoutChipCalibratedContainer(DetectorDataContainer
             {
                 for(auto cChip: *cHybrid)
                 {
-
                     bool isCalibrated = cChip->getIsCalibrationDataLoaded();
                     theReadoutChipIsCalibratedContainer.getObject(cBoard->getId())
                         ->getObject(cOpticalGroup->getId())
@@ -349,7 +349,6 @@ void MetadataHandler::fillLpGBTConfigurationContainer(DetectorDataContainer& the
     }
 }
 
-
 void MetadataHandler::fillLpGBTisCalibratedContainer(DetectorDataContainer& theLpGBTisCalibratedContainer)
 {
     for(auto cBoard: *fDetectorContainer)
@@ -358,7 +357,7 @@ void MetadataHandler::fillLpGBTisCalibratedContainer(DetectorDataContainer& theL
         {
             auto theLpGBT = cOpticalGroup->flpGBT;
             if(theLpGBT == nullptr) continue;
-            bool isCalibrated = theLpGBT->getIsCalibrationDataLoaded();
+            bool isCalibrated                                                                                                                      = theLpGBT->getIsCalibrationDataLoaded();
             theLpGBTisCalibratedContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertToString(isCalibrated);
         }
     }
