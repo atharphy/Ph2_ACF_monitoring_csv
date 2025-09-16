@@ -1,4 +1,5 @@
 #include "tools/MetadataHandler.h"
+#include "HWDescription/ReadoutChip.h"
 #include "HWDescription/VTRx.h"
 #include "HWInterface/VTRxInterface.h"
 #include "Utils/Container.h"
@@ -9,6 +10,8 @@
 #ifdef __USE_ROOT__
 #include "DQMUtils/DQMMetadata.h"
 #endif
+
+using namespace Ph2_HwDescription;
 
 MetadataHandler::MetadataHandler(std::string startOfTestTime) : Tool() { fStartOfTest = startOfTestTime; }
 
@@ -110,6 +113,14 @@ void MetadataHandler::fillInitialConditions()
     ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipConfigurationContainer);
     fillReadoutChipConfigurationContainer(theReadoutChipConfigurationContainer);
 
+    auto        selectMPASSAfunction     = [](const ChipContainer* theChip) { return ((static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2) || (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2)); };
+    std::string selectMPASSAfunctionName = "SelectMPASSAfunction";
+    fDetectorContainer->addReadoutChipQueryFunction(selectMPASSAfunction, selectMPASSAfunctionName);
+    DetectorDataContainer theReadoutChipIsCalibratedContainer;
+    ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipIsCalibratedContainer);
+    fillIsReadoutChipCalibratedContainer(theReadoutChipIsCalibratedContainer);
+    fDetectorContainer->removeReadoutChipQueryFunction(selectMPASSAfunctionName);
+
     DetectorDataContainer theLpGBTConfigurationContainer;
     ContainerFactory::copyAndInitOpticalGroup<std::string>(*fDetectorContainer, theLpGBTConfigurationContainer);
     fillLpGBTConfigurationContainer(theLpGBTConfigurationContainer);
@@ -139,6 +150,9 @@ void MetadataHandler::fillInitialConditions()
     fDQMMetadata->fillRunTimestamp(theCalibrationTimestampContainer, isInitialValue);
     fDQMMetadata->fillBoardConfiguration(theBoardConfigurationContainer, isInitialValue);
     fDQMMetadata->fillReadoutChipConfiguration(theReadoutChipConfigurationContainer, isInitialValue);
+    fDetectorContainer->addReadoutChipQueryFunction(selectMPASSAfunction, selectMPASSAfunctionName);
+    fDQMMetadata->fillIsReadoutChipCalibrated(theReadoutChipIsCalibratedContainer);
+    fDetectorContainer->removeReadoutChipQueryFunction(selectMPASSAfunctionName);
     fDQMMetadata->fillLpGBTConfiguration(theLpGBTConfigurationContainer, isInitialValue);
     fDQMMetadata->fillIsLpGBTCalibrated(theLpGBTisCalibratedContainer);
     fDQMMetadata->fillLpGBTFuseId(theLpGBTFuseIdContainer);
@@ -176,8 +190,16 @@ void MetadataHandler::fillInitialConditions()
         ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
         theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipConfigurationContainer, isInitialValue);
 
+        fDetectorContainer->addReadoutChipQueryFunction(selectMPASSAfunction, selectMPASSAfunctionName);
+        ContainerSerialization theReadoutChipIsCalibratedSerialization("MetadataReadoutChipIsCalibrated");
+        theReadoutChipConfigurationSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipIsCalibratedContainer);
+        fDetectorContainer->removeReadoutChipQueryFunction(selectMPASSAfunctionName);
+
         ContainerSerialization theLpGBTConfigurationSerialization("MetadataLpGBTConfiguration");
         theLpGBTConfigurationSerialization.streamByOpticalGroupContainer(fDQMStreamer, theLpGBTConfigurationContainer, isInitialValue);
+
+        ContainerSerialization theLpGBTisCalibratedSerialization("MetadataLpGBTisCalibrated");
+        theLpGBTisCalibratedSerialization.streamByBoardContainer(fDQMStreamer, theLpGBTisCalibratedContained);
 
         ContainerSerialization theLpGBTFuseIdSerialization("MetadataLpGBTFuseId");
         theLpGBTFuseIdSerialization.streamByBoardContainer(fDQMStreamer, theLpGBTFuseIdContainer);
@@ -291,6 +313,29 @@ void MetadataHandler::fillReadoutChipConfigurationContainer(DetectorDataContaine
     }
 }
 
+void MetadataHandler::fillIsReadoutChipCalibratedContainer(DetectorDataContainer& theReadoutChipIsCalibratedContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+
+                    bool isCalibrated = cChip->getIsCalibrationDataLoaded();
+                    theReadoutChipIsCalibratedContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(cHybrid->getId())
+                        ->getObject(cChip->getId())
+                        ->getSummary<std::string, EmptyContainer>() = convertToString(isCalibrated);
+                }
+            }
+        }
+    }
+}
+
 void MetadataHandler::fillLpGBTConfigurationContainer(DetectorDataContainer& theLpGBTConfigurationContainer)
 {
     for(auto cBoard: *fDetectorContainer)
@@ -314,8 +359,6 @@ void MetadataHandler::fillLpGBTisCalibratedContainer(DetectorDataContainer& theL
             auto theLpGBT = cOpticalGroup->flpGBT;
             if(theLpGBT == nullptr) continue;
             bool isCalibrated = theLpGBT->getIsCalibrationDataLoaded();
-            // uint32_t chipFuseId = flpGBTInterface->ReadChipFuseID(theLpGBT);
-
             theLpGBTisCalibratedContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<std::string, EmptyContainer>() = convertToString(isCalibrated);
         }
     }
