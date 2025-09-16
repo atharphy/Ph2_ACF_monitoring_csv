@@ -97,7 +97,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    RD53BInterface::MaskAllChannels(pRD53, true);
+    MaskAllChannels(pRD53, true);
 
     // ###############################
     // # Programmig global registers #

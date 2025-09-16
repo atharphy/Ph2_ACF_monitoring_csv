@@ -534,7 +534,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
 
                 if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
                 if(resetTDAC >= 0) static_cast<RD53*>(cChip)->resetTDAC(resetTDAC);
-                static_cast<RD53*>(cChip)->copyMaskToDefault();
+                static_cast<RD53*>(cChip)->copyMaskToDefault(); // @TMP@ To be disabled by Wolfram
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
 
                 try
@@ -913,7 +913,10 @@ void SystemController::ConfigureHw(bool pReInitialize)
                 // # Initialize board and frontend #
                 // #################################
                 ConfigureIT(cBoard);
+                // disableAllChannels(true); // @TMP@ Test line for Wolfram
                 ConfigureFrontendIT(cBoard);
+                // disableAllChannels(true); // @TMP@ Test line for Wolfram
+                // ConfigureFrontendIT(cBoard); // @TMP@ Test line for Wolfram
             }
             else
             {
@@ -1257,12 +1260,12 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
         theChannelGroupHandlerPointer;
 }
 
-void SystemController::disableAllChannels()
+void SystemController::disableAllChannels(bool forceDoIt)
 {
     // ###########################################
     // # Disable channels of the entire detector #
     // ###########################################
-    if(SystemController::findValueInSettings<double>("DisableChannelsAtExit", false) == true)
+    if((forceDoIt == true) || (SystemController::findValueInSettings<double>("DisableChannelsAtExit", false) == true))
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
