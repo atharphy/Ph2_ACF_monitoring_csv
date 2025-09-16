@@ -250,10 +250,10 @@ def refit_scurves_obj(hist):
 		# 	with open(root_path.GetName().replace(".root","_updated.txt"), "a") as textfile:
 		# 		textfile.write(hist.GetName()+" \n")
 		# else:
-		if int(result) != 0: # or not result.IsValid():
-			print("bad fit ", hist.GetName())
-			with open(root_path.GetName().replace(".root","_updated.txt"), "a") as textfile:
-				textfile.write(hist.GetName()+" \n")
+		# if int(result) != 0: # or not result.IsValid():
+		# 	print("bad fit ", hist.GetName())
+		# 	with open(root_path.GetName().replace(".root","_updated.txt"), "a") as textfile:
+		# 		textfile.write(hist.GetName()+" \n")
 	newfit.SetRange(rangeMinus, rangePlus)
 	noise = newfit.GetParameter(1)
 	noise_error = newfit.GetParError(1)
@@ -305,31 +305,22 @@ def copy_dir(src_dir, dst_dir, original_filename, updating, verbose=True, depth=
 				obj.SetTitle(newtitle)
 				obj.Write(newname, ROOT.TObject.kOverwrite)
 			elif updating == "final_hists" and "_StripChannelNoise_" in name and os.path.basename(original_filename).startswith("PS"):
-				print("updating _StripChannelNoise_")
 				update_hybrid_hist(obj, "_StripChannelNoise_" )
 			elif updating == "final_hists" and "_StripNoiseDistribution_" in name and os.path.basename(original_filename).startswith("PS"):
-				print("updating _StripChannelNoise_")
 				update_hybrid_hist(obj, "_StripNoiseDistribution_" )
 			elif updating == "final_hists" and "_PixelChannelNoise_" in name and os.path.basename(original_filename).startswith("PS"):
-				print("updating _PixelChannelNoise_")
 				update_hybrid_hist(obj, "_PixelChannelNoise_" )
 			elif updating == "final_hists" and "_PixelNoiseDistribution_" in name and os.path.basename(original_filename).startswith("PS"):
-				print("updating _PixelNoiseDistribution_")
 				update_hybrid_hist(obj, "_PixelNoiseDistribution_" )
 			elif updating == "final_hists" and "_ChannelNoise_" in name and os.path.basename(original_filename).startswith("PS"):
-				print("updating _ChannelNoise_")
 				update_chip_hist(obj, "_ChannelNoise_" )
 			elif updating == "final_hists" and "_2DChannelNoise_" in name and os.path.basename(original_filename).startswith("PS"):
-				print("updating _2DChannelNoise_")
 				update_chip_hist(obj, "_2DChannelNoise_" )
 			elif updating == "final_hists" and "_NoiseDistribution_" in name and os.path.basename(original_filename).startswith("PS"):
-				print("updating _NoiseDistribution_")
 				update_chip_hist(obj, "_NoiseDistribution_" )
 			elif updating == "final_hists" and "_ChannelPulseHeight_" in name and os.path.basename(original_filename).startswith("PS"):
-				print("updating _ChannelPulseHeight_")
 				update_chip_hist(obj, "_ChannelPulseHeight_" )
 			elif updating == "final_hists" and "_PulseHeightDistribution_" in name and os.path.basename(original_filename).startswith("PS"):
-				print("updating _PulseHeightDistribution_")
 				update_chip_hist(obj, "_PulseHeightDistribution_" )
 			elif updating == "PSscurves_only" and isinstance(obj, ROOT.TH1) and "SCurve_Row" in obj.GetName() and os.path.basename(original_filename).startswith("PS"):
 				refit_scurves_obj(obj)
