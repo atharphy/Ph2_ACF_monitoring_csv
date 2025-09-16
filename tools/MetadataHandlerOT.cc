@@ -31,10 +31,24 @@ void MetadataHandlerOT::fillInitialConditionsHardwareSpecific()
     ContainerFactory::copyAndInitHybrid<std::string>(*fDetectorContainer, theCICConfigurationContainer);
     fillCICConfigurationContainer(theCICConfigurationContainer);
 
+    auto selectMPASSAfunction = [](const ChipContainer* theChip)
+    { return ((static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2) || (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2)); };
+    std::string selectMPASSAfunctionName = "SelectMPASSAfunction";
+    fDetectorContainer->addReadoutChipQueryFunction(selectMPASSAfunction, selectMPASSAfunctionName);
+    DetectorDataContainer theReadoutChipIsCalibratedContainer;
+    ContainerFactory::copyAndInitChip<std::string>(*fDetectorContainer, theReadoutChipIsCalibratedContainer);
+    fillIsReadoutChipCalibratedContainer(theReadoutChipIsCalibratedContainer);
+    fDetectorContainer->removeReadoutChipQueryFunction(selectMPASSAfunctionName);
+
+
 #ifdef __USE_ROOT__
     auto* theOTDQMMetadata = static_cast<DQMMetadataOT*>(fDQMMetadata);
     theOTDQMMetadata->fillCICFuseId(theCICFuseIdContainer);
     theOTDQMMetadata->fillCICConfiguration(theCICConfigurationContainer, isInitialValue);
+    fDetectorContainer->addReadoutChipQueryFunction(selectMPASSAfunction, selectMPASSAfunctionName);
+    fDQMMetadata->fillIsReadoutChipCalibrated(theReadoutChipIsCalibratedContainer);
+    fDetectorContainer->removeReadoutChipQueryFunction(selectMPASSAfunctionName);
+    
 #else
     if(fDQMStreamerEnabled)
     {
@@ -43,6 +57,11 @@ void MetadataHandlerOT::fillInitialConditionsHardwareSpecific()
 
         ContainerSerialization theCICConfigurationSerialization("MetadataCICConfiguration");
         theCICConfigurationSerialization.streamByHybridContainer(fDQMStreamer, theCICConfigurationContainer, isInitialValue);
+
+        fDetectorContainer->addReadoutChipQueryFunction(selectMPASSAfunction, selectMPASSAfunctionName);
+        ContainerSerialization theReadoutChipIsCalibratedSerialization("MetadataReadoutChipIsCalibrated");
+        theReadoutChipIsCalibratedSerialization.streamByChipContainer(fDQMStreamer, theReadoutChipIsCalibratedContainer);
+        fDetectorContainer->removeReadoutChipQueryFunction(selectMPASSAfunctionName);
     }
 #endif
 }
@@ -94,6 +113,28 @@ void MetadataHandlerOT::fillCICConfigurationContainer(DetectorDataContainer& the
             {
                 theCICConfigurationContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getSummary<std::string>() =
                     static_cast<OuterTrackerHybrid*>(cHybrid)->fCic->getRegMapStream().str();
+            }
+        }
+    }
+}
+
+void MetadataHandlerOT::fillIsReadoutChipCalibratedContainer(DetectorDataContainer& theReadoutChipIsCalibratedContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        for(auto cOpticalGroup: *cBoard)
+        {
+            for(auto cHybrid: *cOpticalGroup)
+            {
+                for(auto cChip: *cHybrid)
+                {
+                    bool isCalibrated = cChip->getIsCalibrationDataLoaded();
+                    theReadoutChipIsCalibratedContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(cHybrid->getId())
+                        ->getObject(cChip->getId())
+                        ->getSummary<std::string, EmptyContainer>() = convertToString(isCalibrated);
+                }
             }
         }
     }
