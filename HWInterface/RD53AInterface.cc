@@ -41,6 +41,11 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     }
     if(doWriteClkDataDelay == true) RD53AInterface::WriteClockDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
 
+    // ###################################
+    // # Programmig pixel cell registers #
+    // ###################################
+    RD53AInterface::MaskAllChannels(pRD53, true);
+
     // ###############################
     // # Programmig global registers #
     // ###############################

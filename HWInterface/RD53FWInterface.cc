@@ -41,13 +41,20 @@ void RD53FWInterface::setFileHandler(FileHandler* pHandler)
         LOG(ERROR) << BOLDRED << "NULL FileHandler" << RESET;
 }
 
-void RD53FWInterface::ResetSequence(const BeBoard* pBoard)
+void RD53FWInterface::ResetSequence(BeBoard* pBoard)
 {
     LOG(INFO) << BOLDMAGENTA << "Resetting the backend board... it may take a while" << RESET;
 
     RD53FWInterface::TurnOffFMC();
     RD53FWInterface::TurnOnFMC();
     RD53FWInterface::ResetBoard();
+
+    // #################################
+    // # Check if using external clock #
+    // #################################
+    bool useInternalRef = true;
+    for(const auto& it: pBoard->getBeBoardRegMap())
+        if((it.second.fPrmptCfg == true) && (it.first.find("ext_clk_en") != std::string::npos) && (it.second.fValue == 1)) useInternalRef = false;
 
     // ##############################
     // # Initialize clock generator #
@@ -63,7 +70,8 @@ void RD53FWInterface::ResetSequence(const BeBoard* pBoard)
         else
             CDCEconfig.second = RD53FWconstants::CLK_OPT;
 
-        RD53FWInterface::InitializeClockGenerator(CDCEconfig.second);
+        pBoard->setCDCEconfiguration(CDCEconfig.first, CDCEconfig.second);
+        RD53FWInterface::InitializeClockGenerator(CDCEconfig.second, useInternalRef);
     }
 
     // ###################################
@@ -358,7 +366,7 @@ void RD53FWInterface::ComposeAndPackChipCommands(const std::vector<uint16_t>& da
     for(auto i = 1u; i < data.size(); i += 2) commandList.emplace_back(bits::pack<16, 16>(data[i - 1], data[i]));
 
     // If data.size() is not even, add a SYNC command
-    if(data.size() % 2 != 0) commandList.emplace_back(bits::pack<16, 16>(data.back(), RD53ACmd::RD53ACmdEncoder::SYNC));
+    if(data.size() % 2 != 0) commandList.emplace_back(bits::pack<16, 16>(data.back(), RD53Shared::firstChip->getSYNCword()));
 }
 
 bool RD53FWInterface::SendChipCommands(const std::vector<uint32_t>& commandList)
@@ -1433,7 +1441,7 @@ void RD53FWInterface::WriteArbitraryRegister(const std::string& regName, const u
 // # Clock generator #
 // ###################
 
-void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doStoreInEEPROM)
+void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool useInternalRef, bool doStoreInEEPROM)
 // ############################
 // # refClockRate = 160 [MHz] #
 // # refClockRate = 320 [MHz] #
@@ -1453,6 +1461,7 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool doSto
         0xBD800DF7, // RC network parameters: C2 = 473.5 pF, R2 = 98.6 kOhm, C1 = 0 pF, C3 = 0 pF, R3 = 5 kOhm etc, SEL_DEL1 = 1, SEL_DEL2 = 1
         0x80001808  // SYNC command configuration
     };
+    if(useInternalRef == false) SPIregSettings[5] = 0x10000E75;
 
     // 0xyy8403yy --> 240 MHz, LVDS, phase shift   0 deg
     // 0xyy8407yy --> 240 MHz, LVDS, phase shift  90 deg

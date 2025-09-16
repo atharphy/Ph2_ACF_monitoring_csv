@@ -40,7 +40,7 @@ void PixelAlive::ConfigureCalibration()
     // ######################
     // # Set injection type #
     // ######################
-    PixelAlive::SetInjectionType();
+    CalibBase::SetInjectionType(injType);
 
     // #######################
     // # Initialize progress #
@@ -526,5 +526,3 @@ void PixelAlive::fillHisto()
     histos->fillTrgID(theTrgIDContainer);
 #endif
 }
-
-void PixelAlive::SetInjectionType() { CalibBase::WriteBroadcastChipReg("DIGITAL_INJ_EN", ((injType == RD53Shared::INJtype::Digital) || (injType == RD53Shared::INJtype::SelfTrigger))); }

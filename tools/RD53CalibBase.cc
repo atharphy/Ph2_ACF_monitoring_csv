@@ -31,6 +31,9 @@ void CalibBase::ConfigureCalibration()
 
 void CalibBase::Stop()
 {
+    // ########################
+    // # Stop the data taking #
+    // ########################
     Tool::Stop();
 
 #ifdef __USE_ROOT__
@@ -344,6 +347,11 @@ void CalibBase::SilentRunning(bool doSilentRunning)
         static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->silentRunning = doSilentRunning;
         static_cast<RD53Interface*>(this->fReadoutChipInterface)->silentRunning            = doSilentRunning;
     }
+}
+
+void CalibBase::SetInjectionType(RD53Shared::INJtype injType)
+{
+    CalibBase::WriteBroadcastChipReg("DIGITAL_INJ_EN", ((injType == RD53Shared::INJtype::Digital) || (injType == RD53Shared::INJtype::SelfTrigger)));
 }
 
 void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)

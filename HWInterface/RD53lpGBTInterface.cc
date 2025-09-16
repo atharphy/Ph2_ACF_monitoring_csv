@@ -194,9 +194,9 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
         this->ConfigureTxChannel(pChip, TxProperty.Group, TxProperty.Channel, 3, 3, 0, 0, TxProperty.Polarity);
     }
 
-    // ####################################################
-    // # Programming registers as from configuration file #
-    // ####################################################
+    // ##########################################
+    // # Programming registers as from xml file #
+    // ##########################################
     LOG(INFO) << GREEN << "Initializing registers of LpGBT: " << BOLDYELLOW << pChip->getId() << RESET;
     const auto& lpGBTRegMap = pChip->getRegMap();
     for(const auto& cRegItem: lpGBTRegMap)
@@ -204,14 +204,17 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
         {
             LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << cRegItem.first << BOLDBLUE << " = " << BOLDYELLOW << cRegItem.second.fValue << RESET;
 
-            if(cRegItem.first.find("_phase") != std::string::npos)
+            if(cRegItem.first.find("PhaseSelect") != std::string::npos)
             {
                 lpGBTInterface::ConfigureRxPhase(
                     pChip, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(4, 1)))}, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(5, 1)))}, cRegItem.second.fValue);
                 static_cast<lpGBT*>(pChip)->setPhaseRxAligned({static_cast<uint8_t>(std::stoi(cRegItem.first.substr(4, 1)))}, true);
             }
             else
-                RD53lpGBTInterface::WriteReg(pChip, cRegItem.second.fAddress, cRegItem.second.fValue);
+            {
+                auto nameAndValue(RD53lpGBTInterface::SetSpecialRegister(cRegItem.first, cRegItem.second.fDefValue, pChip->getRegMap()));
+                RD53lpGBTInterface::WriteChipReg(pChip, nameAndValue.first, nameAndValue.second);
+            }
         }
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
@@ -296,7 +299,7 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const 
         // ###################################
         if(static_cast<lpGBT*>(pChip)->getPhaseRxAligned(RxProperty.Group) == true)
         {
-            LOG(INFO) << BOLDBLUE << "\t--> The phase for this LpGBT Rx Group: " << BOLDYELLOW << +RxProperty.Group << BOLDBLUE << " was already aligned (maybe from configuration file)" << RESET;
+            LOG(INFO) << BOLDBLUE << "\t--> The phase for this LpGBT Rx Group: " << BOLDYELLOW << +RxProperty.Group << BOLDBLUE << " was already aligned (maybe from xml file)" << RESET;
             continue;
         }
 
@@ -326,6 +329,33 @@ void RD53lpGBTInterface::PhaseAlignRx(Chip* pChip, const BeBoard* pBoard, const 
     }
 
     static_cast<RD53Interface*>(pReadoutChipInterface)->StopPRBSpattern(pBoard);
+}
+
+std::pair<std::string, uint16_t> RD53lpGBTInterface::SetSpecialRegister(std::string regName, uint16_t value, ChipRegMap& pChipRegMap)
+{
+    auto it = lpGBT::specialRegMap.find(regName);
+    if(it == lpGBT::specialRegMap.end())
+        return {regName, value};
+    else
+    {
+        try
+        {
+            pChipRegMap.at(regName);
+        }
+        catch(const std::out_of_range& error)
+        {
+            throw std::out_of_range("Register " + regName + " not found in LpGBT register-map file. I can not proceed. Please verify that you are using the latest LpGBT registre-map.");
+        }
+        ChipRegItem& specialReg = pChipRegMap.at(regName);
+        ChipRegItem& Reg        = pChipRegMap.at(it->second.regName);
+        return {it->second.regName, RD53lpGBTInterface::SetFieldValue(Reg.fValue, value, it->second.start, specialReg.fBitSize)};
+    }
+}
+
+uint16_t RD53lpGBTInterface::SetFieldValue(uint16_t regValue, uint16_t fieldValue, uint8_t start, uint8_t size)
+{
+    uint16_t mask = ((1 << size) - 1) << start;
+    return regValue ^ ((regValue ^ (fieldValue << start)) & mask);
 }
 
 } // namespace Ph2_HwInterface

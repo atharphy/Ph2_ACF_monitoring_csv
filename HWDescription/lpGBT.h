@@ -36,6 +36,13 @@ class lpGBT : public Chip
         bool    isPhaseAligned;
     };
 
+    struct SpecialRegInfo
+    {
+        std::string regName;
+        uint8_t     start; // Bit index at which the special register, i.e. field, starts
+    };
+    static std::map<std::string, lpGBT::SpecialRegInfo> specialRegMap;
+
     lpGBT(uint8_t pBeBoardId, uint8_t FMCId, uint8_t pOpticalGroupId, uint8_t pChipId, const std::string& fileName, const std::string& configFilePath);
 
     lpGBT(const lpGBT&) = delete;

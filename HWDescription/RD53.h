@@ -199,6 +199,7 @@ class RD53 : public ReadoutChip
     virtual float                    VCal2Charge(float VCal, bool isNoise = false) const                                                                  = 0;
     virtual float                    Charge2VCal(float Charge) const                                                                                      = 0;
     virtual bool                     getUseGainDualSlope() const                                                                                          = 0;
+    virtual uint16_t                 getSYNCword() const                                                                                                  = 0;
 
     // ################
     // # Constructors #
@@ -211,6 +212,7 @@ class RD53 : public ReadoutChip
          uint8_t            pRD53Id,
          uint8_t            pRD53Lane,
          int64_t            pRD53eFuseCode,
+         int64_t            pRD53eIrefCode,
          const std::string& fileName,
          const std::string& cfgComment);
     RD53(const RD53&) = delete;
@@ -242,6 +244,7 @@ class RD53 : public ReadoutChip
     uint8_t     getTDAC(unsigned int row, unsigned int col);
     uint8_t     getChipLane() const { return myChipLane; }
     int64_t     geteFuseCode() const { return myeFuseCode; }
+    int64_t     getIrefCode() const { return myIrefCode; }
     std::string getComment() const { return myComment; }
 
     // #################
@@ -287,6 +290,7 @@ class RD53 : public ReadoutChip
     std::string myComment;
     uint8_t     myChipLane;
     int64_t     myeFuseCode;
+    int64_t     myIrefCode;
 };
 
 } // namespace Ph2_HwDescription
