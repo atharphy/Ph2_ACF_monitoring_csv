@@ -45,7 +45,7 @@ void MetadataHandlerOT::fillInitialConditionsHardwareSpecific()
     theOTDQMMetadata->fillCICFuseId(theCICFuseIdContainer);
     theOTDQMMetadata->fillCICConfiguration(theCICConfigurationContainer, isInitialValue);
     fDetectorContainer->addReadoutChipQueryFunction(selectMPASSAfunction, selectMPASSAfunctionName);
-    fDQMMetadata->fillIsReadoutChipCalibrated(theReadoutChipIsCalibratedContainer);
+    theOTDQMMetadata->fillIsReadoutChipCalibrated(theReadoutChipIsCalibratedContainer);
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPASSAfunctionName);
 
 #else
