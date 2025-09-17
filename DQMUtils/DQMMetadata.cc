@@ -8,13 +8,10 @@
 */
 
 #include "DQMUtils/DQMMetadata.h"
-#include "HWDescription/ReadoutChip.h"
 #include "RootUtils/StringContainer.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/EmptyContainer.h"
-
-using namespace Ph2_HwDescription;
 
 DQMMetadata::DQMMetadata() : DQMHistogramBase() {}
 
@@ -70,14 +67,6 @@ void DQMMetadata::book(TFile* theOutputFile, DetectorContainer& theDetectorStruc
 
     StringContainer theFinalReadoutChipConfigurationStringContainer("FinalReadoutChipConfiguration");
     RootContainerFactory::bookChipHistograms<StringContainer>(theOutputFile, theDetectorStructure, fFinalReadoutChipConfigurationContainer, theFinalReadoutChipConfigurationStringContainer);
-
-    auto selectMPASSAfunction = [](const ChipContainer* theChip)
-    { return ((static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2) || (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2)); };
-    std::string selectMPASSAfunctionName = "SelectMPASSAfunction";
-    fDetectorContainer->addReadoutChipQueryFunction(selectMPASSAfunction, selectMPASSAfunctionName);
-    StringContainer theIsReadoutChipCalibratedStringContainer("IsReadoutChipCalibrated");
-    RootContainerFactory::bookChipHistograms<StringContainer>(theOutputFile, theDetectorStructure, fIsReadoutChipCalibratedContainer, theIsReadoutChipCalibratedStringContainer);
-    fDetectorContainer->removeReadoutChipQueryFunction(selectMPASSAfunctionName);
 
     StringContainer theInitialLpGBTConfigurationStringContainer("InitialLpGBTConfiguration");
     RootContainerFactory::bookOpticalGroupHistograms<StringContainer>(theOutputFile, theDetectorStructure, fInitialLpGBTConfigurationContainer, theInitialLpGBTConfigurationStringContainer);
@@ -241,31 +230,6 @@ void DQMMetadata::fillReadoutChipConfiguration(const DetectorDataContainer& theR
     }
 }
 
-void DQMMetadata::fillIsReadoutChipCalibrated(const DetectorDataContainer& theReadoutChipIsCalibratedContainer)
-{
-    for(const auto board: theReadoutChipIsCalibratedContainer)
-    {
-        BoardDataContainer* theTreeContainerBoard = fIsReadoutChipCalibratedContainer.getObject(board->getId());
-
-        for(const auto opticalGroup: *board)
-        {
-            auto* theTreeContainerOpticalGroup = theTreeContainerBoard->getObject(opticalGroup->getId());
-
-            for(const auto hybrid: *opticalGroup)
-            {
-                auto* theTreeContainerHybrid = theTreeContainerOpticalGroup->getObject(hybrid->getId());
-
-                for(const auto chip: *hybrid)
-                {
-                    if(!chip->hasSummary()) continue;
-                    auto* theTreeContainerChip = theTreeContainerHybrid->getObject(chip->getId());
-                    theTreeContainerChip->getSummary<StringContainer>().saveString(chip->getSummary<std::string>().c_str());
-                }
-            }
-        }
-    }
-}
-
 void DQMMetadata::fillLpGBTConfiguration(const DetectorDataContainer& theLpGBTConfigurationContainer, bool initialValue)
 {
     for(const auto board: theLpGBTConfigurationContainer)
@@ -351,7 +315,6 @@ bool DQMMetadata::fill(std::string& inputStream)
     ContainerSerialization theCalibrationTimestampSerialization("MetadataCalibrationTimestamp");
     ContainerSerialization theBoardConfigurationSerialization("MetadataBoardConfiguration");
     ContainerSerialization theReadoutChipConfigurationSerialization("MetadataReadoutChipConfiguration");
-    ContainerSerialization theReadoutChipIsCalibratedSerialization("MetadataReadoutChipIsCalibrated");
     ContainerSerialization theLpGBTConfigurationSerialization("MetadataLpGBTConfiguration");
     ContainerSerialization theLpGBTisCalibratedSerialization("MetadataLpGBTisCalibrated");
     ContainerSerialization theLpGBTFuseIdSerialization("MetadataLpGBTFuseId");
@@ -452,13 +415,6 @@ bool DQMMetadata::fill(std::string& inputStream)
         bool                  isInitial;
         DetectorDataContainer theDetectorData = theReadoutChipConfigurationSerialization.deserializeChipContainer<EmptyContainer, std::string>(fDetectorContainer, isInitial);
         fillReadoutChipConfiguration(theDetectorData, isInitial);
-        return true;
-    }
-    if(theReadoutChipIsCalibratedSerialization.attachDeserializer(inputStream))
-    {
-        // std::cout << "Matched Metadata ReadoutChipConfiguration!!!!!\n";
-        DetectorDataContainer theDetectorData = theReadoutChipIsCalibratedSerialization.deserializeChipContainer<EmptyContainer, std::string>(fDetectorContainer);
-        fillIsReadoutChipCalibrated(theDetectorData);
         return true;
     }
     if(theLpGBTConfigurationSerialization.attachDeserializer(inputStream))
