@@ -32,6 +32,7 @@ class MetadataHandler : public Tool
     void fillNameContainerWithChipIDs();
     void fillReadoutChipConfigurationContainer(DetectorDataContainer& theReadoutChipConfigurationContainer);
     void fillLpGBTConfigurationContainer(DetectorDataContainer& theLpGBTConfigurationContainer);
+    void fillLpGBTisCalibratedContainer(DetectorDataContainer& theLpGBTisCalibratedContainer);
     void fillLpGBTFuseIdContainer(DetectorDataContainer& theLpGBTFuseIdContainer);
     void fillVTRxFuseIdContainer(DetectorDataContainer& theVTRxFuseIdContainer);
     void fillBoardConfigurationContainer(DetectorDataContainer& theBoardConfigurationContainer);

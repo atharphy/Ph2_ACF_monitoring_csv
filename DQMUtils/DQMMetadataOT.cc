@@ -1,8 +1,11 @@
 #include "DQMUtils/DQMMetadataOT.h"
+#include "HWDescription/ReadoutChip.h"
 #include "RootUtils/StringContainer.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/EmptyContainer.h"
+
+using namespace Ph2_HwDescription;
 
 DQMMetadataOT::DQMMetadataOT() : DQMMetadata() {}
 
@@ -21,6 +24,14 @@ void DQMMetadataOT::book(TFile* theOutputFile, DetectorContainer& theDetectorStr
 
     StringContainer theFinalCICConfigurationStringContainer("FinalCICConfiguration");
     RootContainerFactory::bookHybridHistograms<StringContainer>(theOutputFile, theDetectorStructure, fFinalCICConfigurationContainer, theFinalCICConfigurationStringContainer);
+
+    auto selectMPASSAfunction = [](const ChipContainer* theChip)
+    { return ((static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2) || (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2)); };
+    std::string selectMPASSAfunctionName = "SelectMPASSAfunction";
+    fDetectorContainer->addReadoutChipQueryFunction(selectMPASSAfunction, selectMPASSAfunctionName);
+    StringContainer theIsReadoutChipCalibratedStringContainer("IsReadoutChipCalibrated");
+    RootContainerFactory::bookChipHistograms<StringContainer>(theOutputFile, theDetectorStructure, fIsReadoutChipCalibratedContainer, theIsReadoutChipCalibratedStringContainer);
+    fDetectorContainer->removeReadoutChipQueryFunction(selectMPASSAfunctionName);
 }
 
 void DQMMetadataOT::fillCICFuseId(const DetectorDataContainer& theCICFuseIdContainer)
@@ -67,6 +78,31 @@ void DQMMetadataOT::fillCICConfiguration(const DetectorDataContainer& theCICConf
     }
 }
 
+void DQMMetadataOT::fillIsReadoutChipCalibrated(const DetectorDataContainer& theReadoutChipIsCalibratedContainer)
+{
+    for(const auto board: theReadoutChipIsCalibratedContainer)
+    {
+        BoardDataContainer* theTreeContainerBoard = fIsReadoutChipCalibratedContainer.getObject(board->getId());
+
+        for(const auto opticalGroup: *board)
+        {
+            auto* theTreeContainerOpticalGroup = theTreeContainerBoard->getObject(opticalGroup->getId());
+
+            for(const auto hybrid: *opticalGroup)
+            {
+                auto* theTreeContainerHybrid = theTreeContainerOpticalGroup->getObject(hybrid->getId());
+
+                for(const auto chip: *hybrid)
+                {
+                    if(!chip->hasSummary()) continue;
+                    auto* theTreeContainerChip = theTreeContainerHybrid->getObject(chip->getId());
+                    theTreeContainerChip->getSummary<StringContainer>().saveString(chip->getSummary<std::string>().c_str());
+                }
+            }
+        }
+    }
+}
+
 bool DQMMetadataOT::fill(std::string& inputStream)
 {
     bool motherClassFillResult = DQMMetadata::fill(inputStream);
@@ -77,6 +113,7 @@ bool DQMMetadataOT::fill(std::string& inputStream)
 
         ContainerSerialization theCICFuseIdSerialization("MetadataCICFuseId");
         ContainerSerialization theCICConfigurationSerialization("MetadataCICConfiguration");
+        ContainerSerialization theReadoutChipIsCalibratedSerialization("MetadataReadoutChipIsCalibrated");
 
         if(theCICFuseIdSerialization.attachDeserializer(inputStream))
         {
@@ -92,6 +129,13 @@ bool DQMMetadataOT::fill(std::string& inputStream)
             bool                  isInitial;
             DetectorDataContainer theDetectorData = theCICConfigurationSerialization.deserializeHybridContainer<EmptyContainer, EmptyContainer, std::string>(fDetectorContainer, isInitial);
             fillCICConfiguration(theDetectorData, isInitial);
+            return true;
+        }
+        if(theReadoutChipIsCalibratedSerialization.attachDeserializer(inputStream))
+        {
+            // std::cout << "Matched Metadata ReadoutChipConfiguration!!!!!\n";
+            DetectorDataContainer theDetectorData = theReadoutChipIsCalibratedSerialization.deserializeChipContainer<EmptyContainer, std::string>(fDetectorContainer);
+            fillIsReadoutChipCalibrated(theDetectorData);
             return true;
         }
     }
