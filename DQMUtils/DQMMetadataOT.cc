@@ -32,7 +32,6 @@ void DQMMetadataOT::book(TFile* theOutputFile, DetectorContainer& theDetectorStr
     StringContainer theIsReadoutChipCalibratedStringContainer("IsReadoutChipCalibrated");
     RootContainerFactory::bookChipHistograms<StringContainer>(theOutputFile, theDetectorStructure, fIsReadoutChipCalibratedContainer, theIsReadoutChipCalibratedStringContainer);
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPASSAfunctionName);
-
 }
 
 void DQMMetadataOT::fillCICFuseId(const DetectorDataContainer& theCICFuseIdContainer)

@@ -14,7 +14,7 @@ class DQMMetadataOT : public DQMMetadata
     void fillCICFuseId(const DetectorDataContainer& theCICFuseIdContainer);
     void fillCICConfiguration(const DetectorDataContainer& theCICConfigurationContainer, bool initialValue);
     void fillIsReadoutChipCalibrated(const DetectorDataContainer& theReadoutChipIsCalibratedContainer);
-  
+
     bool fill(std::string& inputStream) override;
     void process() override;
     void reset(void) override;
@@ -24,7 +24,6 @@ class DQMMetadataOT : public DQMMetadata
     DetectorDataContainer fInitialCICConfigurationContainer;
     DetectorDataContainer fFinalCICConfigurationContainer;
     DetectorDataContainer fIsReadoutChipCalibratedContainer;
-
 };
 
 #endif
