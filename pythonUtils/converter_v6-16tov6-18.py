@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Scan a directory for files ending with 'v6-16' (optionally followed by .root).
-Create an intermediate v6-17temp files where, for PS modules, the Scurves fits are updates.
-Then it creates the final v6-17 where, for PS modules, the histograms using the results
+Create an intermediate v6-18temp files where, for PS modules, the Scurves fits are updates.
+Then it creates the final v6-18 where, for PS modules, the histograms using the results
 of the Scurves fits are updated. 
 For all modules, it swaps the LpGBT eye opening hists with 0.33 and 1.00 power 
 given the different default velues for LpGBT v1 and v2.
@@ -11,7 +11,7 @@ It is necessary to do multiple steps to preserve the original
 file structure and avoid increase in file size.
 
 Usage:
-  python3 pythonUtils/converter_v6-16tov6-17.py  --data-dir PATH_TO_ROOTFILES [--dry-run]
+  python3 pythonUtils/converter_v6-16tov6-18.py  --data-dir PATH_TO_ROOTFILES [--dry-run]
 
 """
 
@@ -352,7 +352,7 @@ def copy_file_version(src_path: str, stem: str, vupdate: str, ext: str, perdirec
 # ------------------------ Main ------------------------
 
 def main() -> None:
-	parser = argparse.ArgumentParser(description="Copy v6-16 files to v6-17 and update S-curve fits in-place for PS files (SSA + MPA), without altering file structure.")
+	parser = argparse.ArgumentParser(description="Copy v6-16 files to v6-18 and update S-curve fits in-place for PS files (SSA + MPA), without altering file structure.")
 	parser.add_argument("--data-dir", required=True, help="Directory to scan for files")
 	parser.add_argument("--dry-run", action="store_true", help="Only print actions without performing them")
 	args = parser.parse_args()
@@ -365,15 +365,15 @@ def main() -> None:
 	found_any = False
 	for src_path, stem, ext in find_version_candidates(data_dir, "v6-16"):
 		found_any = True
-		# Make the v6-17 temp copy and update Scurves fits for PS modules
-		destination_path = copy_file_version(src_path, stem, "v6-17temp", ext, dry_run=args.dry_run)
+		# Make the v6-18 temp copy and update Scurves fits for PS modules
+		destination_path = copy_file_version(src_path, stem, "v6-18temp", ext, dry_run=args.dry_run)
 	found_any = False
-	for src_path, stem, ext in find_version_candidates(data_dir, "v6-17temp"):
+	for src_path, stem, ext in find_version_candidates(data_dir, "v6-18temp"):
 		found_any = True
-		# Make the v6-17 copy and update LpGBT eye opening plots for all modules 
+		# Make the v6-18 copy and update LpGBT eye opening plots for all modules 
 		# and summary plots using Scurves fits for PS modules
-		destination_path = copy_file_version(src_path, stem, "v6-17", ext, dry_run=args.dry_run)
-		file_to_delete = f"{stem}{'v6-17temp'}{ext}"
+		destination_path = copy_file_version(src_path, stem, "v6-18", ext, dry_run=args.dry_run)
+		file_to_delete = f"{stem}{'v6-18temp'}{ext}"
 		file_to_delete_path = os.path.join(os.path.dirname(src_path), file_to_delete)
 		os.remove(file_to_delete_path)
 
