@@ -534,7 +534,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
 
                 if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
                 if(resetTDAC >= 0) static_cast<RD53*>(cChip)->resetTDAC(resetTDAC);
-                static_cast<RD53*>(cChip)->copyMaskToDefault(); // @TMP@ To be disabled by Wolfram
+                static_cast<RD53*>(cChip)->copyMaskToDefault();
                 static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
 
                 try
@@ -913,10 +913,8 @@ void SystemController::ConfigureHw(bool pReInitialize)
                 // # Initialize board and frontend #
                 // #################################
                 ConfigureIT(cBoard);
-                // disableAllChannels(true); // @TMP@ Test line for Wolfram
+                // for(const auto& regName: RD53Shared::firstChip->getFEtype()->CoreColRegs) fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, 0); // @TMP@ Test line for Wolfram
                 ConfigureFrontendIT(cBoard);
-                // disableAllChannels(true); // @TMP@ Test line for Wolfram
-                // ConfigureFrontendIT(cBoard); // @TMP@ Test line for Wolfram
             }
             else
             {
