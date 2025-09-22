@@ -62,6 +62,9 @@ void PixelAliveHistograms::book(TFile* theOutputFile, DetectorContainer& theDete
     auto hMasked2D = CanvasContainer<TH2F>("Masked2D", "Masked pixels", nCols, 0, nCols, nRows, 0, nRows);
     bookChipImplementer(theOutputFile, theDetectorStructure, Masked2D, hMasked2D, "Columns", "Rows");
 
+    auto hDisabled2D = CanvasContainer<TH2F>("Disabled2D", "Previously disabled pixels", nCols, 0, nCols, nRows, 0, nRows);
+    bookChipImplementer(theOutputFile, theDetectorStructure, Disabled2D, hDisabled2D, "Columns", "Rows");
+
     AreHistoBooked = true;
 }
 
@@ -144,6 +147,13 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                                              ->getSummary<CanvasContainer<TH2F>>()
                                              .fTheHistogram;
 
+                    auto* Disabled2DHist = Disabled2D.getObject(cBoard->getId())
+                                               ->getObject(cOpticalGroup->getId())
+                                               ->getObject(cHybrid->getId())
+                                               ->getObject(cChip->getId())
+                                               ->getSummary<CanvasContainer<TH2F>>()
+                                               .fTheHistogram;
+
                     for(auto row = 0u; row < nRows; row++)
                         for(auto col = 0u; col < nCols; col++)
                         {
@@ -164,6 +174,8 @@ void PixelAliveHistograms::fill(const DetectorDataContainer& DataContainer)
                                 Mask1DrowHist->Fill(row);
                                 Masked2DHist->Fill(col, row);
                             }
+
+                            if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISDISABLED) Disabled2DHist->Fill(col, row);
 
                             if(cChip->getChannel<OccupancyAndPh>(row, col).readoutError == true) ErrorReadOut2DHist->Fill(col, row);
                         }
