@@ -913,7 +913,6 @@ void SystemController::ConfigureHw(bool pReInitialize)
                 // # Initialize board and frontend #
                 // #################################
                 ConfigureIT(cBoard);
-                // for(const auto& regName: RD53Shared::firstChip->getFEtype()->CoreColRegs) fReadoutChipInterface->WriteBoardBroadcastChipReg(cBoard, regName, 0); // @TMP@ Test line for Wolfram
                 ConfigureFrontendIT(cBoard);
             }
             else
