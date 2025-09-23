@@ -268,18 +268,37 @@ def analyze_PS_file(root_path):
                 strip_mean, strip_sigma, strip_data = compute_hist_stats(strip_noise_hist)
                 pixel_mean, pixel_sigma, pixel_data = compute_hist_stats(pixel_noise_hist)
 
+                #PS Header Full summary
                 write_lines(
                     [full_handle],
                     ["",
                      f"{(' Hybrid: ' + hybrid_name + ' '):-^{HEADER_WIDTH}}",
-                     "",
-                     f"Average PS-Strip Noise: {strip_mean:.3f}",
-                     f"Average PS-Pixel Noise: {pixel_mean:.3f}",
-                     f"Hybrid {hybrid_index} Noise Deviations (±{SIGMA_THRESHOLD}σ):",
                      ""]
                 )
+                
+                # PS Strips Full
+                write_lines(
+                    [full_handle],
+                    [f"PS Strips: avg={strip_mean:.3f}, σ={strip_sigma:.3f}",
+                     "  chan   noise    err"]
+                )
+                for idx, (val, err) in enumerate(strip_data, 1):
+                    chan = int(strip_noise_hist.GetXaxis().GetBinCenter(idx))
+                    write_lines([full_handle], [f"  {chan:5d}  {val:7.3f}  {err:7.3f}"])
+                write_lines([full_handle], [""])
+                
+                # PS Pixels Full
+                write_lines(
+                    [full_handle],
+                    [f"PS Pixels: avg={pixel_mean:.3f}, σ={pixel_sigma:.3f}",
+                     "  chan   noise    err"]
+                )
+                for idx, (val, err) in enumerate(pixel_data, 1):
+                    chan = int(pixel_noise_hist.GetXaxis().GetBinCenter(idx))
+                    write_lines([full_handle], [f"  {chan:5d}  {val:7.3f}  {err:7.3f}"])
+                write_lines([full_handle], [""])
 
-                # Problem summary header for PS
+   
                 write_lines(
                     [problem_handle],
                     ["",
@@ -400,11 +419,11 @@ def main():
         description="Analyze the newest 2S/PS ROOT file under a directory, or use the one you pass explicitly."
     )
     parser.add_argument(
-        "rootfile", nargs="?",
+        "-file", "--rootfile", nargs="?",
         help="Path to a .root file (if you want to override auto-detection)."
     )
     parser.add_argument(
-        "-s", "--search-dir", default=".",
+        "-s", "-dir","-search","--search-dir", default=".",
         help="Directory to search for 2S/PS ROOT files when none is given. (default: current directory)"
     )
     args = parser.parse_args()
