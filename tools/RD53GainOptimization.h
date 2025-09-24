@@ -56,7 +56,7 @@ class GainOptimization : public Gain
   private:
     void fillHisto() override;
 
-    void bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::string& regName, uint16_t startValue, uint16_t stopValue);
 
     DetectorDataContainer theKrumCurrContainer;
 

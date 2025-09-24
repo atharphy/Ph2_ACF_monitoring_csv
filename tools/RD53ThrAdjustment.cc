@@ -210,7 +210,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, 
                     // # Find VCAL_HIGH to get target threshold #
                     // ##########################################
                     uint16_t vcal_med_setting  = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
-                    uint16_t vcal_high_setting = round(RD53Shared::firstChip->Charge2VCal(targetThreshold)) + vcal_med_setting;
+                    uint16_t vcal_high_setting = round(static_cast<RD53*>(cChip)->Charge2VCal(targetThreshold)) + vcal_med_setting;
                     chargeContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = vcal_high_setting;
 
                     LOG(INFO) << GREEN << "The target threshold for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()

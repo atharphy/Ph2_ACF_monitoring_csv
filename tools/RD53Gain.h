@@ -76,7 +76,6 @@ class Gain : public CalibBase
     RD53Shared::INJtype injType;
     size_t              startValue;
     size_t              stopValue;
-    float               targetCharge;
     float               nSteps;
     size_t              offset;
     size_t              nHITxCol;
