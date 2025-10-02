@@ -118,4 +118,4 @@ For any support/suggestions, send an email to fabio.raveraSPAMNOT@cern.ch, mauro
 
 Firmware tag: v3-03
 
-Ph2_ACF tag: v6-16
+Ph2_ACF tag: v6-18
