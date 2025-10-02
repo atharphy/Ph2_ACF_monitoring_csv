@@ -351,7 +351,7 @@ class SystemController
     }
 
     void setInterfaceInitialization(uint8_t pCnfg) { fInitializeInterfaces = pCnfg; }
-    void disableAllChannels();
+    void disableAllChannels(bool forceDoIt = false);
     void DumpRegisters();
 
   private:

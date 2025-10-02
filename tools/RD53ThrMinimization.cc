@@ -28,8 +28,8 @@ void ThrMinimization::ConfigureCalibration()
     // #######################
     targetOccupancy = this->findValueInSettings<double>("TargetOcc");
     maxMaskedPixels = this->findValueInSettings<double>("MaxMaskedPixels");
-    startValue      = this->findValueInSettings<double>("ThrStart");
-    stopValue       = this->findValueInSettings<double>("ThrStop");
+    relStartValue   = this->findValueInSettings<double>("ThrRelStart");
+    amplitudeValue  = this->findValueInSettings<double>("ThrAmplitude");
     doDisplay       = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip    = this->findValueInSettings<double>("UpdateChipCfg");
 
@@ -115,7 +115,7 @@ void ThrMinimization::localConfigure(const std::string& histoFileName, int curre
 
 void ThrMinimization::run()
 {
-    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdRegs, targetOccupancy, maxMaskedPixels, startValue, stopValue);
+    ThrMinimization::bitWiseScanGlobal(frontEnd->thresholdRegs, targetOccupancy, maxMaskedPixels, relStartValue, amplitudeValue);
 
     // ############################
     // # Fill threshold container #
@@ -170,12 +170,12 @@ void ThrMinimization::fillHisto()
 #endif
 }
 
-void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames, float target, float threshold, uint16_t startValue, uint16_t stopValue)
+void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames, float target, float threshold, int16_t relStartValue, uint16_t amplitudeValue)
 {
     float          tmp = 0;
     uint16_t       init;
     const size_t   totalPixels  = RD53Shared::firstChip->getNRows() * RD53Shared::firstChip->getNCols();
-    const uint16_t numberOfBits = floor(log2(stopValue - startValue + 1) + 1);
+    const uint16_t numberOfBits = floor(log2(amplitudeValue + 1) + 1);
 
     DetectorDataContainer minDACcontainer;
     DetectorDataContainer midDACcontainer;
@@ -184,12 +184,28 @@ void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames
     DetectorDataContainer bestDACcontainer;
     DetectorDataContainer bestContainer;
 
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, minDACcontainer, init = startValue);
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, minDACcontainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midDACcontainer);
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer);
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
     ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp);
+
+    // ####################################
+    // # Compute startValue and stopValue #
+    // ####################################
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                    for(const auto& regName: regNames)
+                    {
+                        minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                            static_cast<RD53*>(cChip)->getReg(regName) + relStartValue;
+                        maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                            minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
+                            amplitudeValue + 1;
+                    }
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {

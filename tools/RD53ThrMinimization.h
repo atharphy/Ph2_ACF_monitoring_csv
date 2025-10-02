@@ -39,7 +39,7 @@ class ThrMinimization : public PixelAlive
     void   draw(bool saveData = true) override;
     size_t getNumberIterations() override
     {
-        const uint16_t nIterationsThr = floor(log2(stopValue - startValue + 1) + 2);
+        const uint16_t nIterationsThr = floor(log2(amplitudeValue + 1) + 2);
         const uint16_t moreIterations = 1;
         return PixelAlive::getNumberIterations() * (nIterationsThr + moreIterations);
     }
@@ -51,7 +51,7 @@ class ThrMinimization : public PixelAlive
   private:
     void fillHisto() override;
 
-    void bitWiseScanGlobal(const std::vector<const char*>& regNames, float target, float threshold, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::vector<const char*>& regNames, float target, float threshold, int16_t relStartValue, uint16_t amplitudeValue);
 
     DetectorDataContainer theThrContainer;
 
@@ -59,12 +59,12 @@ class ThrMinimization : public PixelAlive
     // ######################################
     // # Parameters from configuration file #
     // ######################################
-    float  targetOccupancy;
-    float  maxMaskedPixels;
-    size_t startValue;
-    size_t stopValue;
-    bool   doDisplay;
-    bool   doUpdateChip;
+    float    targetOccupancy;
+    float    maxMaskedPixels;
+    int16_t  relStartValue;
+    uint16_t amplitudeValue;
+    bool     doDisplay;
+    bool     doUpdateChip;
 };
 
 #endif

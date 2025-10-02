@@ -1257,12 +1257,12 @@ void SystemController::setChannelGroupHandler(std::shared_ptr<ChannelGroupHandle
         theChannelGroupHandlerPointer;
 }
 
-void SystemController::disableAllChannels()
+void SystemController::disableAllChannels(bool forceDoIt)
 {
     // ###########################################
     // # Disable channels of the entire detector #
     // ###########################################
-    if(SystemController::findValueInSettings<double>("DisableChannelsAtExit", false) == true)
+    if((forceDoIt == true) || (SystemController::findValueInSettings<double>("DisableChannelsAtExit", false) == true))
         for(const auto cBoard: *fDetectorContainer)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)

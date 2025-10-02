@@ -97,7 +97,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    RD53BInterface::MaskAllChannels(pRD53, true);
+    MaskAllChannels(pRD53, true);
 
     // ###############################
     // # Programmig global registers #
@@ -465,8 +465,12 @@ void RD53BInterface::ResetCoreColumns(RD53* pRD53)
         RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, 0, false);
     }
 
-    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0x3F, false);
-    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0x3F, false);
+    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0x2A, false);
+    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0x2A, false);
+    RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
+
+    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0x15, false);
+    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0x15, false);
     RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
 
     RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0, false);

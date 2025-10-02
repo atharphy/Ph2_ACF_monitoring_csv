@@ -44,6 +44,7 @@ class PixelAliveHistograms : public DQMHistogramBase
     DetectorDataContainer BCID;
     DetectorDataContainer TriggerID;
     DetectorDataContainer Masked2D;
+    DetectorDataContainer Disabled2D;
 
     size_t nEvents;
     size_t nRows;
