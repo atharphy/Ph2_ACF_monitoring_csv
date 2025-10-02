@@ -242,4 +242,5 @@ void PixelAliveHistograms::process()
     drawChip<TH1F>(BCID);
     drawChip<TH1F>(TriggerID);
     drawChip<TH2F>(Masked2D, "gcolz");
+    drawChip<TH2F>(Disabled2D, "gcolz");
 }
