@@ -49,7 +49,7 @@ class ThrAdjustment : public PixelAlive
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     if(cHybrid->fullSize() > nIterationsChip) nIterationsChip = cHybrid->fullSize();
-        const uint16_t nIterationsThrZero = floor(log2(stopValue - startValue + 1) + 3);
+        const uint16_t nIterationsThrZero = floor(log2(amplitudeValue + 1) + 3);
         const uint16_t moreIterations     = 1;
         return PixelAlive::getNumberIterations() * (nIterationsThrZero * nIterationsChip + moreIterations);
     }
@@ -62,7 +62,7 @@ class ThrAdjustment : public PixelAlive
     void fillHisto() override;
     void establishStartingPoint(DetectorDataContainer& chargeContainer);
 
-    void bitWiseScanGlobal(const std::vector<const char*>& regNames, float targetThreshold, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::vector<const char*>& regNames, float targetThreshold, int16_t relStartValue, uint16_t amplitudeValue);
 
     DetectorDataContainer theThrContainer;
 
@@ -70,11 +70,11 @@ class ThrAdjustment : public PixelAlive
     // ######################################
     // # Parameters from configuration file #
     // ######################################
-    float  targetThreshold;
-    size_t startValue;
-    size_t stopValue;
-    bool   doUpdateChip;
-    bool   doDisplay;
+    float    targetThreshold;
+    int16_t  relStartValue;
+    uint16_t amplitudeValue;
+    bool     doDisplay;
+    bool     doUpdateChip;
 };
 
 #endif

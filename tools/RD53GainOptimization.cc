@@ -113,7 +113,7 @@ void GainOptimization::localConfigure(const std::string& histoFileName, int curr
 
 void GainOptimization::run()
 {
-    GainOptimization::bitWiseScanGlobal(frontEnd->gainReg, Gain::targetCharge, KrumCurrStart, KrumCurrStop);
+    GainOptimization::bitWiseScanGlobal(frontEnd->gainReg, KrumCurrStart, KrumCurrStop);
 
     // #######################################
     // # Fill Krummenacher Current container #
@@ -168,7 +168,7 @@ void GainOptimization::fillHisto()
 #endif
 }
 
-void GainOptimization::bitWiseScanGlobal(const std::string& regName, float target, uint16_t startValue, uint16_t stopValue)
+void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t startValue, uint16_t stopValue)
 {
     float          tmp = 0;
     uint16_t       init;
@@ -222,6 +222,8 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, float targe
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
+                        auto pRD53 = static_cast<RD53*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
+
                         // #######################
                         // # Build discriminator #
                         // #######################
@@ -236,7 +238,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, float targe
                                                                            cChip->getChannel<GainFit>(row, col).fSlopeLowQ,
                                                                            cChip->getChannel<GainFit>(row, col).fInterceptHighQ,
                                                                            cChip->getChannel<GainFit>(row, col).fSlopeHighQ},
-                                                                          target,
+                                                                          pRD53->Charge2VCal(this->findValueInSettings<double>("TargetCharge")),
                                                                           frontEnd);
                                     avg += ToTatTarget;
                                     stdDev += ToTatTarget * ToTatTarget;

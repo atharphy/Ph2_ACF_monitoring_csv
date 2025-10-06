@@ -1504,7 +1504,7 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
                     break;
                 }
             }
-            if(isStringSetting)
+            if(isStringSetting == true)
             {
                 std::string value(nSetting.first_child().value());
                 value.erase(std::remove(value.begin(), value.end(), ' '), value.end());
@@ -1712,7 +1712,6 @@ void FileParser::parseRD53Settings(pugi::xml_node theChipNode, ReadoutChip* theC
         }
     }
 }
-// ########################
 
 void FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfig& theDetectorMonitorConfig, std::ostream& os)
 {

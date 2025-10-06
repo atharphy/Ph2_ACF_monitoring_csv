@@ -26,7 +26,6 @@ void Gain::ConfigureCalibration()
     injType        = static_cast<RD53Shared::INJtype>(this->findValueInSettings<double>("INJtype"));
     startValue     = this->findValueInSettings<double>("VCalHstart");
     stopValue      = this->findValueInSettings<double>("VCalHstop");
-    targetCharge   = RD53Shared::firstChip->Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
     nSteps         = this->findValueInSettings<double>("VCalHnsteps", 1);
     offset         = this->findValueInSettings<double>("VCalMED");
     nHITxCol       = this->findValueInSettings<double>("nHITxCol");
@@ -374,23 +373,26 @@ std::shared_ptr<DetectorDataContainer> Gain::analyze()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    float ToTatTarget = Gain::gainFunction({cChip->getSummary<GainFit, GainFit>().fInterceptLowQ,
-                                                            cChip->getSummary<GainFit, GainFit>().fSlopeLowQ,
-                                                            cChip->getSummary<GainFit, GainFit>().fInterceptHighQ,
-                                                            cChip->getSummary<GainFit, GainFit>().fSlopeHighQ},
+                    auto pRD53 = static_cast<RD53*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
+
+                    float targetCharge = pRD53->Charge2VCal(this->findValueInSettings<double>("TargetCharge"));
+                    float ToTatTarget  = Gain::gainFunction({cChip->getSummary<GainFit, GainFit>().fInterceptLowQ,
+                                                             cChip->getSummary<GainFit, GainFit>().fSlopeLowQ,
+                                                             cChip->getSummary<GainFit, GainFit>().fInterceptHighQ,
+                                                             cChip->getSummary<GainFit, GainFit>().fSlopeHighQ},
                                                            targetCharge,
                                                            frontEnd);
 
                     if(ToTatTarget > frontEnd->maxToTvalue)
                         LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "] at VCal = " << BOLDYELLOW << std::fixed << std::setprecision(2) << targetCharge << RESET << GREEN << " (" << BOLDYELLOW
-                                  << RD53Shared::firstChip->VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is greater than " << BOLDYELLOW << frontEnd->maxToTvalue << RESET << GREEN
-                                  << " (ToT)" << std::setprecision(-1) << RESET;
+                                  << pRD53->VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is greater than " << BOLDYELLOW << frontEnd->maxToTvalue << RESET << GREEN << " (ToT)"
+                                  << std::setprecision(-1) << RESET;
                     else
                         LOG(INFO) << GREEN << "Average ToT for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "] at VCal = " << BOLDYELLOW << std::fixed << std::setprecision(2) << targetCharge << RESET << GREEN << " (" << BOLDYELLOW
-                                  << RD53Shared::firstChip->VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is " << BOLDYELLOW << ToTatTarget << RESET << GREEN << " (ToT)"
-                                  << std::setprecision(-1) << RESET;
+                                  << pRD53->VCal2Charge(targetCharge) << RESET << GREEN << " electrons) is " << BOLDYELLOW << ToTatTarget << RESET << GREEN << " (ToT)" << std::setprecision(-1)
+                                  << RESET;
 
                     RD53Shared::resetDefaultFloat();
                 }
