@@ -267,6 +267,23 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTBitErrorRateTest,
              OTRegisterTester>("2S Module", "2SfullTest");
 
+    Register<TuneLpGBTVref,
+             OTVTRxLightYieldScan,
+             OTLpGBTEyeOpeningTest,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
+             OTverifyCICdataWord,
+             PedestalEqualization,
+             PedeNoise,
+             OTinjectionDelayOptimization,
+             OTinjectionOccupancyScan,
+             OTCMNoise>("2S Module", "2SnoiseTests");
+
     Register<Physics2S>("2S Module", "physics2s");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTalignLpGBTinputsForBypass, OTChipToCICecv>("2S Module", "2Secv");
@@ -326,6 +343,24 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTChipToCICecv,
              OTBitErrorRateTest,
              OTRegisterTester>("PS Module", "PSfullTest");
+
+    Register<TuneLpGBTVref,
+             OTVTRxLightYieldScan,
+             OTLpGBTEyeOpeningTest,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTverifyBoardDataWord,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
+             OTverifyCICdataWord,
+             OTverifyMPASSAdataWord,
+             PedestalEqualizationPSAtPedestal,
+             PedeNoisePSLowInjection,
+             OTinjectionDelayOptimization,
+             OTinjectionOccupancyScan,
+             OTPScommonNoise>("PS Module", "PSnoiseTests");
 
     Register<TuneLpGBTVref,
              OTPSADCCalibration,
