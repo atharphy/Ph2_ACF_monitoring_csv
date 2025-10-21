@@ -38,10 +38,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     {
         const auto& theMap = pRD53->getFEtype()->GlobalPulseConfMap;
         RD53BInterface::SendGlobalPulse(
-            pChip,
-            (theMap.find("RstAuroraV1") != theMap.end() ? theMap.find("RstAuroraV1")->second : 0) | (theMap.find("RstSerializerV1") != theMap.end() ? theMap.find("RstSerializerV1")->second : 0) |
-                (theMap.find("RstAuroraV2") != theMap.end() ? theMap.find("RstAuroraV2")->second : 0) | (theMap.find("RstSerializerV2") != theMap.end() ? theMap.find("RstSerializerV2")->second : 0),
-            10);
+            pChip, (theMap.find("RstAuroraV1") != theMap.end() ? theMap.find("RstAuroraV1")->second : 0) | (theMap.find("RstAuroraV2") != theMap.end() ? theMap.find("RstAuroraV2")->second : 0), 10);
+        RD53BInterface::SendGlobalPulse(pChip,
+                                        (theMap.find("RstSerializerV1") != theMap.end() ? theMap.find("RstSerializerV1")->second : 0) |
+                                            (theMap.find("RstSerializerV2") != theMap.end() ? theMap.find("RstSerializerV2")->second : 0),
+                                        10);
         std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::AURORASLEEP));
     }
     // # bit 12:   EnCRC         --> Map in FormatOptions: enableCRC
@@ -247,10 +248,11 @@ void RD53BInterface::InitRD53Uplinks(Chip* pChip)
     // # Reset communication #
     // #######################
     RD53BInterface::SendGlobalPulse(
-        pChip,
-        (theMap.find("RstAuroraV1") != theMap.end() ? theMap.find("RstAuroraV1")->second : 0) | (theMap.find("RstSerializerV1") != theMap.end() ? theMap.find("RstSerializerV1")->second : 0) |
-            (theMap.find("RstAuroraV2") != theMap.end() ? theMap.find("RstAuroraV2")->second : 0) | (theMap.find("RstSerializerV2") != theMap.end() ? theMap.find("RstSerializerV2")->second : 0),
-        10);
+        pChip, (theMap.find("RstAuroraV1") != theMap.end() ? theMap.find("RstAuroraV1")->second : 0) | (theMap.find("RstAuroraV2") != theMap.end() ? theMap.find("RstAuroraV2")->second : 0), 10);
+    RD53BInterface::SendGlobalPulse(pChip,
+                                    (theMap.find("RstSerializerV1") != theMap.end() ? theMap.find("RstSerializerV1")->second : 0) |
+                                        (theMap.find("RstSerializerV2") != theMap.end() ? theMap.find("RstSerializerV2")->second : 0),
+                                    10);
     std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::AURORASLEEP));
 
     // ################
@@ -709,7 +711,9 @@ void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
     if(RD53Shared::firstChip->getFrontEndType() == FrontEndType::RD53Bv1)
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(serialize(RD53BCmd::Clear{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
     else
-        RD53BInterface::SendGlobalPulseBroadcast(pBoard);
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(serialize(RD53BCmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
+
+    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
 
 void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulseDuration)
@@ -732,15 +736,6 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdStream, pChip->getHybridId());
 
     std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
-}
-
-void RD53BInterface::SendGlobalPulseBroadcast(const BeBoard* pBoard)
-{
-    this->setBoard(pBoard->getId());
-
-    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(serialize(RD53BCmd::GlobalPulse{RD53Shared::firstChip->getFEtype()->broadcastChipId}), -1);
-
-    std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
 
 // ###########################
