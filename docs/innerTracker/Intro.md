@@ -31,6 +31,7 @@ or TUI, you should get the requisite packages when you install GUI or TUI itself
 There’s nothing you need to install separately. For bug report use: <https://gitlab.cern.ch/sdemares/panthera/>,
 while for Felis use <https://gitlab.cern.ch/sdemares/felis/>.
 - Submodule providing common (TUI/GUI) calibration settings: <https://gitlab.cern.ch/cms_tk_ph2/inner-tracker-tests/>
+- Module Quality Control: https://cms-it-modules-qc.docs.cern.ch
 
 ### Miscellanea
 
