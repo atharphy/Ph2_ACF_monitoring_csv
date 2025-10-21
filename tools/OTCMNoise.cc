@@ -177,7 +177,7 @@ void OTCMNoise::TakeData(float fThreshold)
                             uint32_t cEventHitsOdd     = 0;
                             for(auto hit: hit_vec)
                             {
-                                if(hit.second % 2)
+                                if((hit.second % 2) == 0)
                                     cEventHitsEven++;
                                 else
                                     cEventHitsOdd++;
