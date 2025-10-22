@@ -1,0 +1,4611 @@
+/opt/homebrew/Cellar/openai-whisper/20250625/libexec/lib/python3.13/site-packages/whisper/transcribe.py:132: UserWarning: FP16 is not supported on CPU; using FP32 instead
+  warnings.warn("FP16 is not supported on CPU; using FP32 instead")
+Detecting language using up to the first 30 seconds. Use `--language` to specify the language
+Detected language: English
+[00:00.000 --> 00:05.000]  I'm also record.
+[00:09.000 --> 00:12.000]  Thank you, Johnny.
+[00:12.000 --> 00:18.000]  Okay, I think
+[00:18.000 --> 00:23.000]  we can probably start.
+[00:23.000 --> 00:28.000]  Yeah, so the plan is
+[00:28.000 --> 00:34.000]  this one. So I'm going to open
+[00:34.000 --> 00:37.000]  a result file for the
+[00:37.000 --> 00:41.000]  actually let me share a result file from
+[00:41.000 --> 00:43.000]  one full test.
+[00:43.000 --> 00:45.000]  Today's going to be the
+[00:45.000 --> 00:47.000]  the day of the 2S.
+[00:47.000 --> 00:51.000]  I'm going to go through
+[00:51.000 --> 00:55.000]  all the steps and the plot that are produced
+[00:55.000 --> 00:58.000]  and explain
+[00:58.000 --> 01:01.000]  in a simplified manner how these are produced
+[01:01.000 --> 01:04.000]  just such that you can understand what information
+[01:04.000 --> 01:07.000]  I use and what do I understand
+[01:07.000 --> 01:10.000]  from the model behavior from that
+[01:10.000 --> 01:13.000]  and then what the plot represents.
+[01:13.000 --> 01:18.000]  So here I'm just pointing
+[01:18.000 --> 01:21.000]  one
+[01:21.000 --> 01:26.000]  one tweaky
+[01:26.000 --> 01:29.000]  that is doing a great job in maintaining it
+[01:29.000 --> 01:31.000]  for the Firmware Auto Tracker.
+[01:31.000 --> 01:34.000]  I'm honestly not sure if there is something central
+[01:34.000 --> 01:37.000]  but of course everybody can look into that.
+[01:37.000 --> 01:39.000]  There are a bunch of information
+[01:39.000 --> 01:42.000]  among which all the relevant manuals
+[01:42.000 --> 01:45.000]  so you can if you need to look
+[01:45.000 --> 01:47.000]  something more in details with respect
+[01:47.000 --> 01:49.000]  to what we're going to discuss today
+[01:49.000 --> 01:52.000]  you can find it
+[01:52.000 --> 01:54.000]  in this tweaky
+[01:54.000 --> 01:56.000]  probably the information also
+[01:56.000 --> 01:59.000]  some other document collection
+[01:59.000 --> 02:01.000]  this is the one that I use
+[02:01.000 --> 02:04.000]  was just simple for me just to point this.
+[02:04.000 --> 02:07.000]  So just a reminder
+[02:07.000 --> 02:10.000]  for the commands to run the
+[02:10.000 --> 02:13.000]  two test sequences
+[02:13.000 --> 02:16.000]  so you use the run calibration command
+[02:16.000 --> 02:18.000]  is basically the same command
+[02:18.000 --> 02:20.000]  that is run by a gift
+[02:20.000 --> 02:22.000]  and then you have to provide the XML
+[02:22.000 --> 02:25.000]  file that contains the information about
+[02:25.000 --> 02:27.000]  your setup basically
+[02:27.000 --> 02:30.000]  and some information about the
+[02:30.000 --> 02:33.000]  testing parameters
+[02:33.000 --> 02:36.000]  and then the two
+[02:36.000 --> 02:38.000]  calibration sequences, the quick test
+[02:38.000 --> 02:40.000]  and the full test.
+[02:40.000 --> 02:42.000]  So today I'm going to cover the full test
+[02:42.000 --> 02:44.000]  because simply the quick test
+[02:44.000 --> 02:46.000]  is a subset of the test
+[02:46.000 --> 02:48.000]  that is done during the quick test
+[02:48.000 --> 02:50.000]  and
+[02:50.000 --> 02:52.000]  so just
+[02:52.000 --> 02:54.000]  a reminder of
+[02:54.000 --> 02:56.000]  the sequence of
+[02:56.000 --> 02:58.000]  tests that we do
+[02:58.000 --> 03:00.000]  so here is the full list
+[03:00.000 --> 03:02.000]  I'm going to go through each one of them
+[03:02.000 --> 03:04.000]  while
+[03:04.000 --> 03:06.000]  while
+[03:06.000 --> 03:08.000]  discussing the
+[03:08.000 --> 03:10.000]  result plots
+[03:10.000 --> 03:12.000]  and two files are created
+[03:12.000 --> 03:14.000]  one is the result file
+[03:14.000 --> 03:16.000]  that contains all the
+[03:16.000 --> 03:18.000]  calibration results and the metadata
+[03:18.000 --> 03:20.000]  and I'm going to also
+[03:20.000 --> 03:22.000]  quickly explain what are these metadata
+[03:22.000 --> 03:24.000]  and then one
+[03:24.000 --> 03:26.000]  monitoring the QM file
+[03:26.000 --> 03:28.000]  that monitors some
+[03:28.000 --> 03:30.000]  of the
+[03:30.000 --> 03:32.000]  variables that we
+[03:32.000 --> 03:34.000]  would like to monitor from the model
+[03:34.000 --> 03:36.000]  for example temperature
+[03:36.000 --> 03:38.000]  voltages in some
+[03:38.000 --> 03:40.000]  cases also currents.
+[03:40.000 --> 03:42.000]  So I'm going to go through both
+[03:42.000 --> 03:44.000]  of these two
+[03:44.000 --> 03:46.000]  and I'm going to
+[03:46.000 --> 03:48.000]  that's all, yeah
+[03:48.000 --> 03:50.000]  I'm going to start from the
+[03:50.000 --> 03:52.000]  metadata
+[03:52.000 --> 03:54.000]  so I'm opening
+[03:54.000 --> 03:56.000]  a root file
+[03:58.000 --> 04:00.000]  I'm open to major studio code
+[04:00.000 --> 04:02.000]  but simply because of my computer
+[04:02.000 --> 04:04.000]  I don't have a root
+[04:04.000 --> 04:06.000]  working at the moment
+[04:06.000 --> 04:08.000]  but you can open it also
+[04:08.000 --> 04:10.000]  in your browser
+[04:10.000 --> 04:12.000]  so the
+[04:12.000 --> 04:14.000]  main
+[04:14.000 --> 04:16.000]  when you open a file the main folder
+[04:16.000 --> 04:18.000]  inside
+[04:18.000 --> 04:20.000]  is the detector folder
+[04:20.000 --> 04:22.000]  and at the first level you already
+[04:22.000 --> 04:24.000]  get some metadata
+[04:24.000 --> 04:26.000]  so these metadata
+[04:26.000 --> 04:28.000]  are storing
+[04:28.000 --> 04:30.000]  what in root is called the object string
+[04:30.000 --> 04:32.000]  and the reason
+[04:32.000 --> 04:34.000]  for that is that
+[04:34.000 --> 04:36.000]  if you store anything else that is not an object
+[04:36.000 --> 04:38.000]  you need to create a dictionary
+[04:38.000 --> 04:40.000]  and a root file so it is
+[04:40.000 --> 04:42.000]  a bit more painful one
+[04:42.000 --> 04:44.000]  instead of string we can basically store
+[04:44.000 --> 04:46.000]  everything that we need
+[04:46.000 --> 04:48.000]  so there are a few information
+[04:48.000 --> 04:50.000]  to store here I'm going to go through them
+[04:50.000 --> 04:52.000]  but very likely you don't need
+[04:52.000 --> 04:54.000]  to go into such detail
+[04:54.000 --> 04:56.000]  I can zoom in a little bit better
+[05:02.000 --> 05:04.000]  and
+[05:04.000 --> 05:06.000]  so this one contains
+[05:06.000 --> 05:08.000]  the user name of
+[05:12.000 --> 05:14.000]  the computer
+[05:14.000 --> 05:16.000]  which you are testing it
+[05:16.000 --> 05:18.000]  the host name
+[05:18.000 --> 05:20.000]  is
+[05:20.000 --> 05:22.000]  the name of the computer
+[05:24.000 --> 05:26.000]  the
+[05:26.000 --> 05:28.000]  github doesn't just tell you
+[05:28.000 --> 05:30.000]  if you are in the head or not
+[05:30.000 --> 05:32.000]  the important part
+[05:32.000 --> 05:34.000]  is the commit hash
+[05:34.000 --> 05:36.000]  this one is going to tell you if you are
+[05:36.000 --> 05:38.000]  in the right commit
+[05:38.000 --> 05:40.000]  so when you are going to
+[05:40.000 --> 05:42.000]  start testing data
+[05:42.000 --> 05:44.000]  we don't want to have a computer
+[05:44.000 --> 05:46.000]  a testing module so we don't want
+[05:46.000 --> 05:48.000]  to have computers that are not updated
+[05:48.000 --> 05:50.000]  so we can use this one in potato
+[05:50.000 --> 05:52.000]  to check if you are correctly using
+[05:52.000 --> 05:54.000]  the expected version
+[05:54.000 --> 05:56.000]  then
+[05:56.000 --> 05:58.000]  the calibration names
+[05:58.000 --> 06:00.000]  is simply the name that
+[06:00.000 --> 06:02.000]  you provide so we can track
+[06:02.000 --> 06:04.000]  which type of test you run
+[06:04.000 --> 06:06.000]  as I was saying today I'm going to
+[06:06.000 --> 06:08.000]  do a full test
+[06:08.000 --> 06:10.000]  then
+[06:10.000 --> 06:12.000]  initial detector configuration
+[06:12.000 --> 06:14.000]  we don't really have anything
+[06:16.000 --> 06:18.000]  and then you have information about
+[06:18.000 --> 06:20.000]  the
+[06:20.000 --> 06:22.000]  time of
+[06:22.000 --> 06:24.000]  each calibration so this one
+[06:24.000 --> 06:26.000]  is the calibration start time
+[06:26.000 --> 06:28.000]  timestamp so
+[06:28.000 --> 06:30.000]  basically as soon as
+[06:30.000 --> 06:32.000]  you start configuring it's going to store
+[06:32.000 --> 06:34.000]  this information
+[06:34.000 --> 06:36.000]  and then since you do multiple
+[06:36.000 --> 06:38.000]  steps you have
+[06:38.000 --> 06:40.000]  the different start
+[06:40.000 --> 06:42.000]  or the steps that are run so
+[06:42.000 --> 06:44.000]  you might recognize the name
+[06:44.000 --> 06:46.000]  of this table
+[06:46.000 --> 06:48.000]  and then
+[06:48.000 --> 06:50.000]  near each one of them there is the
+[06:50.000 --> 06:52.000]  timestamp so this is not
+[06:52.000 --> 06:54.000]  really needed for
+[06:54.000 --> 06:56.000]  any particular information
+[06:56.000 --> 06:58.000]  for the QA
+[06:58.000 --> 07:00.000]  it's really to keep track of
+[07:00.000 --> 07:02.000]  the time and try to understand if
+[07:02.000 --> 07:04.000]  for any reason your testing setup is
+[07:04.000 --> 07:06.000]  lower to see if there is one in particular
+[07:06.000 --> 07:08.000]  that is presentation try to crack it down
+[07:08.000 --> 07:10.000]  it's mainly for the developers
+[07:10.000 --> 07:12.000]  and then I'm going to
+[07:12.000 --> 07:14.000]  briefly jump over here
+[07:14.000 --> 07:16.000]  since the final detector configuration
+[07:16.000 --> 07:18.000]  also in this case we don't store
+[07:18.000 --> 07:20.000]  anything at the moment is the stop
+[07:20.000 --> 07:22.000]  so
+[07:22.000 --> 07:24.000]  this is the timestamp when your calibration
+[07:24.000 --> 07:26.000]  sequence is finished so basically
+[07:26.000 --> 07:28.000]  if you want to see how long it took
+[07:28.000 --> 07:30.000]  you can take
+[07:30.000 --> 07:32.000]  these two as a reference
+[07:32.000 --> 07:34.000]  there is a minor difference
+[07:34.000 --> 07:36.000]  in a few seconds
+[07:36.000 --> 07:38.000]  from these and what
+[07:38.000 --> 07:40.000]  you see into the
+[07:40.000 --> 07:42.000]  into
+[07:42.000 --> 07:44.000]  the printout at the end because
+[07:44.000 --> 07:46.000]  this is basically cutting
+[07:46.000 --> 07:48.000]  off a little bit at the beginning where
+[07:48.000 --> 07:50.000]  you are reading information from next
+[07:50.000 --> 07:52.000]  time and this kind of things but it should be in a few seconds
+[07:52.000 --> 07:54.000]  so this should give you
+[07:54.000 --> 07:56.000]  a good idea how long it took
+[07:58.000 --> 08:00.000]  then if I start going a bit more
+[08:00.000 --> 08:02.000]  down we have
+[08:02.000 --> 08:04.000]  we go into the board
+[08:04.000 --> 08:06.000]  and inside the board
+[08:06.000 --> 08:08.000]  we have other three metadata
+[08:08.000 --> 08:10.000]  the name of the board in this case
+[08:10.000 --> 08:12.000]  is the IP address
+[08:12.000 --> 08:14.000]  oops
+[08:14.000 --> 08:16.000]  then we have the initial
+[08:16.000 --> 08:18.000]  board configuration so
+[08:18.000 --> 08:20.000]  this is a little bit
+[08:20.000 --> 08:22.000]  weird because it contains
+[08:22.000 --> 08:24.000]  the XML that
+[08:24.000 --> 08:26.000]  you are basically
+[08:26.000 --> 08:28.000]  loading
+[08:28.000 --> 08:30.000]  but
+[08:30.000 --> 08:32.000]  the root
+[08:32.000 --> 08:34.000]  for your studio called tries
+[08:34.000 --> 08:36.000]  to format in a weird way
+[08:36.000 --> 08:38.000]  but if in a normal browser
+[08:38.000 --> 08:40.000]  you right click
+[08:40.000 --> 08:42.000]  on this one does it really work and you do dump
+[08:42.000 --> 08:44.000]  you are going to see the full
+[08:44.000 --> 08:46.000]  the full
+[08:46.000 --> 08:48.000]  XML that you
+[08:48.000 --> 08:50.000]  use so basically
+[08:50.000 --> 08:52.000]  it is
+[08:52.000 --> 08:54.000]  oops
+[08:54.000 --> 08:56.000]  here it is
+[08:58.000 --> 09:00.000]  so if I take
+[09:00.000 --> 09:02.000]  the for example the two words
+[09:02.000 --> 09:04.000]  module you have the configuration
+[09:04.000 --> 09:06.000]  above that is
+[09:06.000 --> 09:08.000]  pointed here so you are going
+[09:08.000 --> 09:10.000]  to see basically
+[09:14.000 --> 09:16.000]  so these actually are the
+[09:16.000 --> 09:18.000]  numbers that you are seeing
+[09:18.000 --> 09:20.000]  inside
+[09:20.000 --> 09:22.000]  for some reason
+[09:22.000 --> 09:24.000]  when I show it like this
+[09:24.000 --> 09:26.000]  it is going to disappear but they are actually inside
+[09:26.000 --> 09:28.000]  and this is told twice
+[09:28.000 --> 09:30.000]  because we start the beginning
+[09:30.000 --> 09:32.000]  of the test and the end of the test
+[09:32.000 --> 09:34.000]  because some of these value might change
+[09:34.000 --> 09:36.000]  depending on the calibration that you do
+[09:36.000 --> 09:38.000]  and so we want to keep track
+[09:38.000 --> 09:40.000]  of what is changed
+[09:40.000 --> 09:42.000]  so this is mainly for debugging
+[09:42.000 --> 09:44.000]  you shouldn't
+[09:44.000 --> 09:46.000]  need to do that for
+[09:46.000 --> 09:48.000]  any particular
+[09:48.000 --> 09:50.000]  qualification of the module
+[09:50.000 --> 09:52.000]  but if something looks
+[09:52.000 --> 09:54.000]  weird then we can always go back
+[09:54.000 --> 09:56.000]  just based on a root file to understand
+[09:56.000 --> 09:58.000]  what is up
+[09:58.000 --> 10:00.000]  then going more deep
+[10:00.000 --> 10:02.000]  we have the optical group
+[10:02.000 --> 10:04.000]  for the timing I am just going to do the
+[10:04.000 --> 10:06.000]  metadata so don't worry about all the other plots
+[10:08.000 --> 10:10.000]  can I ask
+[10:10.000 --> 10:12.000]  how do you like the questions to be asked
+[10:12.000 --> 10:14.000]  wherever you have some questions
+[10:14.000 --> 10:16.000]  just
+[10:16.000 --> 10:18.000]  about the XML files
+[10:18.000 --> 10:20.000]  and the registers
+[10:20.000 --> 10:22.000]  so
+[10:22.000 --> 10:24.000]  the first one you said
+[10:24.000 --> 10:26.000]  is just what is stored in the XML
+[10:26.000 --> 10:28.000]  right
+[10:28.000 --> 10:30.000]  so the next one is that
+[10:30.000 --> 10:32.000]  you go through the same
+[10:32.000 --> 10:34.000]  registers that are mentioned
+[10:34.000 --> 10:36.000]  in the XML
+[10:36.000 --> 10:38.000]  and bring their value
+[10:40.000 --> 10:42.000]  no actually
+[10:42.000 --> 10:44.000]  they are all XML
+[10:44.000 --> 10:46.000]  really the full copy of the XML
+[10:46.000 --> 10:48.000]  basically
+[10:48.000 --> 10:50.000]  if I would have opened a root and do dump
+[10:50.000 --> 10:52.000]  you see literally this thing
+[10:52.000 --> 10:54.000]  sure but
+[10:54.000 --> 10:56.000]  I guess I am asking
+[10:56.000 --> 10:58.000]  you said that you are printing things
+[10:58.000 --> 11:00.000]  before and after
+[11:00.000 --> 11:02.000]  right so
+[11:02.000 --> 11:04.000]  the XML file clearly stays the same
+[11:04.000 --> 11:06.000]  right so
+[11:06.000 --> 11:08.000]  you
+[11:08.000 --> 11:10.000]  go through the same
+[11:10.000 --> 11:12.000]  variables that are mentioned in the XML
+[11:12.000 --> 11:14.000]  and print them out
+[11:14.000 --> 11:16.000]  so this one is the XML
+[11:16.000 --> 11:18.000]  that contains basically
+[11:18.000 --> 11:20.000]  the configuration of the board
+[11:20.000 --> 11:22.000]  so this might change
+[11:22.000 --> 11:24.000]  because for example let's say
+[11:24.000 --> 11:26.000]  the big sleep alignment
+[11:26.000 --> 11:28.000]  so the big sleep alignment
+[11:28.000 --> 11:30.000]  no no no
+[11:30.000 --> 11:32.000]  so you go through the same
+[11:32.000 --> 11:34.000]  variables that are mentioned here
+[11:34.000 --> 11:36.000]  yes
+[11:36.000 --> 11:38.000]  I guess I am just asking
+[11:38.000 --> 11:40.000]  because not all the registers
+[11:40.000 --> 11:42.000]  of
+[11:42.000 --> 11:44.000]  all the chips are mentioned in the XML
+[11:44.000 --> 11:46.000]  no they are
+[11:46.000 --> 11:48.000]  to another level
+[11:48.000 --> 11:50.000]  I am going to go through them
+[11:50.000 --> 11:52.000]  so they are going to be in their specific level
+[11:52.000 --> 11:54.000]  they are going to be at the chip level
+[12:00.000 --> 12:02.000]  going on
+[12:02.000 --> 12:04.000]  so I am going to be at the optical group level
+[12:04.000 --> 12:06.000]  so at the optical group
+[12:06.000 --> 12:08.000]  we don't really
+[12:08.000 --> 12:10.000]  have a name for the optical group at the moment
+[12:10.000 --> 12:12.000]  or okay
+[12:12.000 --> 12:14.000]  this one I am running manually
+[12:14.000 --> 12:16.000]  if you run it with gift
+[12:16.000 --> 12:18.000]  gift will store the
+[12:18.000 --> 12:20.000]  module ID
+[12:20.000 --> 12:22.000]  manually we don't provide any information
+[12:22.000 --> 12:24.000]  and that's why you should run manually
+[12:24.000 --> 12:26.000]  the PIX2SF
+[12:26.000 --> 12:28.000]  you should always run with the gift
+[12:28.000 --> 12:30.000]  or with the
+[12:30.000 --> 12:32.000]  the burning box controller
+[12:32.000 --> 12:34.000]  and this will automatically
+[12:34.000 --> 12:36.000]  fill with
+[12:36.000 --> 12:38.000]  with the name
+[12:38.000 --> 12:40.000]  of the module
+[12:40.000 --> 12:42.000]  then basically to reply to your question
+[12:42.000 --> 12:44.000]  Yuri
+[12:44.000 --> 12:46.000]  so for the chip so at the optical group
+[12:46.000 --> 12:48.000]  we have already two chips
+[12:48.000 --> 12:50.000]  the LPGVT and the VTRX
+[12:50.000 --> 12:52.000]  so here are the
+[12:52.000 --> 12:54.000]  registers for the LPGVT
+[12:54.000 --> 12:56.000]  before the calibration so the starting
+[12:56.000 --> 12:58.000]  point
+[12:58.000 --> 13:00.000]  and
+[13:00.000 --> 13:02.000]  after we have
+[13:02.000 --> 13:04.000]  completed
+[13:04.000 --> 13:06.000]  so it's the final one
+[13:06.000 --> 13:08.000]  and since they are basically identical
+[13:08.000 --> 13:10.000]  for quite some bit
+[13:10.000 --> 13:12.000]  I think when I move from one to another
+[13:12.000 --> 13:14.000]  you don't really see anything
+[13:16.000 --> 13:18.000]  I think it's actually moving somewhere
+[13:24.000 --> 13:26.000]  okay it's going to be more clear
+[13:26.000 --> 13:28.000]  with the other chip
+[13:28.000 --> 13:30.000]  this one basically the first
+[13:30.000 --> 13:32.000]  hundreds of
+[13:34.000 --> 13:36.000]  I believe it's happening they don't change
+[13:36.000 --> 13:38.000]  basically you might see something already over here
+[13:38.000 --> 13:40.000]  yeah you see that
+[13:40.000 --> 13:42.000]  here we have different values for
+[13:42.000 --> 13:44.000]  the different phases so 0A
+[13:44.000 --> 13:46.000]  0B
+[13:46.000 --> 13:48.000]  0A 0B
+[13:48.000 --> 13:50.000]  and instead I think if I take at the beginning
+[13:50.000 --> 13:52.000]  you might not see
+[13:58.000 --> 14:00.000]  yeah you see that here all is 0
+[14:00.000 --> 14:02.000]  well instead if I move here
+[14:06.000 --> 14:08.000]  so we scroll up again
+[14:12.000 --> 14:14.000]  you see that here
+[14:14.000 --> 14:16.000]  instead of values that are different from Z
+[14:18.000 --> 14:20.000]  and then we also store the
+[14:20.000 --> 14:22.000]  ID so the fuse ID
+[14:22.000 --> 14:24.000]  these are the ID that we store inside the chip
+[14:24.000 --> 14:26.000]  and this is for the LPGVT
+[14:26.000 --> 14:28.000]  and this is for the VTRS
+[14:28.000 --> 14:30.000]  so we can always
+[14:30.000 --> 14:32.000]  go back to the ID
+[14:36.000 --> 14:38.000]  then at the level of the hybrid
+[14:46.000 --> 14:48.000]  at the level of the hybrid
+[14:48.000 --> 14:50.000]  we have the ID of the hybrid
+[14:50.000 --> 14:52.000]  so since the
+[14:52.000 --> 14:54.000]  PH3CF doesn't
+[14:54.000 --> 14:56.000]  interact with the database to make sure
+[14:56.000 --> 14:58.000]  that we don't have any
+[14:58.000 --> 15:00.000]  no stopper with the hybrid ID
+[15:00.000 --> 15:02.000]  so this is basically
+[15:02.000 --> 15:04.000]  the space where you can actually put
+[15:04.000 --> 15:06.000]  the hybrid ID once
+[15:06.000 --> 15:08.000]  you run
+[15:08.000 --> 15:10.000]  it with the potato
+[15:10.000 --> 15:12.000]  we give that actually does an interaction
+[15:12.000 --> 15:14.000]  with the database but here the moment is empty
+[15:14.000 --> 15:16.000]  so if you run it
+[15:16.000 --> 15:18.000]  just manually you don't see it
+[15:18.000 --> 15:20.000]  then we have the chip
+[15:20.000 --> 15:22.000]  fuse ID
+[15:22.000 --> 15:24.000]  so same and then
+[15:24.000 --> 15:26.000]  initial and final configuration
+[15:26.000 --> 15:28.000]  of the CLC
+[15:30.000 --> 15:32.000]  and then if we go even deeper
+[15:32.000 --> 15:34.000]  at the level of the chip
+[15:34.000 --> 15:36.000]  so
+[15:36.000 --> 15:38.000]  the store is always the same, we're going to make it better
+[15:38.000 --> 15:40.000]  repeated
+[15:40.000 --> 15:42.000]  the chip ID
+[15:42.000 --> 15:44.000]  for the CBC, the initial register
+[15:44.000 --> 15:46.000]  and the final registers
+[15:48.000 --> 15:50.000]  and those are all the metadata that we store
+[15:52.000 --> 15:54.000]  before we move to the actual test
+[15:54.000 --> 15:56.000]  do you
+[15:56.000 --> 15:58.000]  have any question for this
+[15:58.000 --> 16:00.000]  information
+[16:04.000 --> 16:06.000]  so every
+[16:06.000 --> 16:08.000]  CBC register
+[16:08.000 --> 16:10.000]  appears in this file
+[16:10.000 --> 16:12.000]  correct, okay
+[16:18.000 --> 16:20.000]  so these are sort of a repetition
+[16:20.000 --> 16:22.000]  because in the root file
+[16:22.000 --> 16:24.000]  you also have
+[16:24.000 --> 16:26.000]  all the chip output
+[16:26.000 --> 16:28.000]  that are produced at the end
+[16:28.000 --> 16:30.000]  but since then
+[16:30.000 --> 16:32.000]  it's a little bit more tricky to end the whole folder
+[16:32.000 --> 16:34.000]  we decided to put everything into the root file
+[16:34.000 --> 16:36.000]  so just by looking at the root file
+[16:36.000 --> 16:38.000]  we get the footage
+[16:42.000 --> 16:44.000]  okay, then I'm going to start
+[16:44.000 --> 16:46.000]  moving with the various steps
+[16:46.000 --> 16:48.000]  so
+[16:48.000 --> 16:50.000]  the configuration
+[16:50.000 --> 16:52.000]  so here well
+[16:52.000 --> 16:54.000]  we just load all the register
+[16:54.000 --> 16:56.000]  into the niche register
+[16:56.000 --> 16:58.000]  into the
+[16:58.000 --> 17:00.000]  various chips
+[17:00.000 --> 17:02.000]  so basically we just take the information
+[17:02.000 --> 17:04.000]  that are stored in the values
+[17:04.000 --> 17:06.000]  configuration file
+[17:06.000 --> 17:08.000]  and we just load them into the chip
+[17:08.000 --> 17:10.000]  then
+[17:10.000 --> 17:12.000]  tune Vref
+[17:12.000 --> 17:14.000]  so the Vref is basically
+[17:14.000 --> 17:16.000]  the
+[17:16.000 --> 17:18.000]  the reference for the
+[17:18.000 --> 17:20.000]  VTRX
+[17:20.000 --> 17:22.000]  SR for the APGBT
+[17:24.000 --> 17:26.000]  ADC
+[17:26.000 --> 17:28.000]  converter so it's needed for
+[17:28.000 --> 17:30.000]  converting into
+[17:30.000 --> 17:32.000]  basically meaningful values
+[17:32.000 --> 17:34.000]  the ADC
+[17:34.000 --> 17:36.000]  that are read by the
+[17:36.000 --> 17:38.000]  APGBT
+[17:38.000 --> 17:40.000]  and these are coming from some
+[17:42.000 --> 17:44.000]  these rather than a tune
+[17:44.000 --> 17:46.000]  it's basically a loading of a value
+[17:46.000 --> 17:48.000]  so the APGBT group
+[17:48.000 --> 17:50.000]  gave us
+[17:52.000 --> 17:54.000]  gave us
+[17:54.000 --> 17:56.000]  a big file that contains all the information
+[17:56.000 --> 17:58.000]  from the whole APGBT
+[17:58.000 --> 18:00.000]  that we used
+[18:00.000 --> 18:02.000]  and
+[18:02.000 --> 18:04.000]  those information are stored
+[18:04.000 --> 18:06.000]  by the
+[18:06.000 --> 18:08.000]  are addressed by the fuse ID
+[18:08.000 --> 18:10.000]  so by that what we do
+[18:10.000 --> 18:12.000]  is that we take
+[18:12.000 --> 18:14.000]  the ID from the APGBT
+[18:14.000 --> 18:16.000]  we look into this file
+[18:16.000 --> 18:18.000]  we collect the information
+[18:18.000 --> 18:20.000]  among which Calibration ADC
+[18:20.000 --> 18:22.000]  and the Vref and then we store
+[18:22.000 --> 18:24.000]  into the
+[18:24.000 --> 18:26.000]  APGBT for the measurements
+[18:26.000 --> 18:28.000]  so here basically there are no plots
+[18:28.000 --> 18:30.000]  just the steps that allow us to have
+[18:30.000 --> 18:32.000]  meaningful ADC
+[18:32.000 --> 18:34.000]  with that
+[18:34.000 --> 18:36.000]  I'm just gonna go through all of them
+[18:36.000 --> 18:38.000]  so just stop me whenever you have
+[18:38.000 --> 18:40.000]  some questions
+[18:40.000 --> 18:42.000]  so before we
+[18:42.000 --> 18:44.000]  I see that
+[18:44.000 --> 18:46.000]  the configuration takes different
+[18:46.000 --> 18:48.000]  times between full and quick
+[18:48.000 --> 18:50.000]  test is this just
+[18:50.000 --> 18:52.000]  the accuracy or is there anything
+[18:52.000 --> 18:54.000]  in addition done
+[18:54.000 --> 18:56.000]  it's simply because the configuration
+[18:56.000 --> 18:58.000]  time takes also the time
+[18:58.000 --> 19:00.000]  that takes for
+[19:00.000 --> 19:02.000]  the APGBT to lock
+[19:02.000 --> 19:04.000]  and sometimes it simply doesn't lock
+[19:04.000 --> 19:06.000]  and there is a few seconds
+[19:06.000 --> 19:08.000]  between one time and another
+[19:08.000 --> 19:10.000]  it just
+[19:10.000 --> 19:12.000]  it just makes
+[19:16.000 --> 19:18.000]  okay
+[19:18.000 --> 19:20.000]  then the
+[19:20.000 --> 19:22.000]  VTRX light
+[19:22.000 --> 19:24.000]  so for this I have
+[19:24.000 --> 19:26.000]  plot so the idea here
+[19:26.000 --> 19:28.000]  is that we want to
+[19:30.000 --> 19:32.000]  be sure that
+[19:34.000 --> 19:36.000]  we are able to change the
+[19:36.000 --> 19:38.000]  VTRX settings
+[19:38.000 --> 19:40.000]  in order to
+[19:40.000 --> 19:42.000]  be able to increase or decrease
+[19:42.000 --> 19:44.000]  the optical power that is
+[19:44.000 --> 19:46.000]  emitted
+[19:46.000 --> 19:48.000]  and this is the plot
+[19:48.000 --> 19:50.000]  so
+[19:52.000 --> 19:54.000]  okay
+[19:54.000 --> 19:56.000]  so
+[19:56.000 --> 19:58.000]  it's a
+[19:58.000 --> 20:00.000]  2D plot on the X axis we have
+[20:00.000 --> 20:02.000]  the bias
+[20:02.000 --> 20:04.000]  on the Y axis we have the
+[20:04.000 --> 20:06.000]  modulation and these are
+[20:06.000 --> 20:08.000]  two registers that are set into
+[20:08.000 --> 20:10.000]  the chip of the VTRX that
+[20:10.000 --> 20:12.000]  controls the laser driver
+[20:12.000 --> 20:14.000]  and on the Z axis we have
+[20:14.000 --> 20:16.000]  the power
+[20:16.000 --> 20:18.000]  in micro watt that is measured
+[20:18.000 --> 20:20.000]  by the
+[20:20.000 --> 20:22.000]  the SFP
+[20:22.000 --> 20:24.000]  so basically the receiver
+[20:24.000 --> 20:26.000]  that you have on the X axis
+[20:26.000 --> 20:28.000]  what we do is that we change
+[20:28.000 --> 20:30.000]  the two parameter and we get
+[20:30.000 --> 20:32.000]  these distributions
+[20:32.000 --> 20:34.000]  so
+[20:34.000 --> 20:36.000]  so I think it's quite obvious
+[20:36.000 --> 20:38.000]  moving to the left to the right
+[20:38.000 --> 20:40.000]  that if you increase the bias
+[20:40.000 --> 20:42.000]  you increase
+[20:42.000 --> 20:44.000]  the power
+[20:44.000 --> 20:46.000]  is a little bit less obvious
+[20:46.000 --> 20:48.000]  instead of the modulation
+[20:48.000 --> 20:50.000]  when you increase it
+[20:50.000 --> 20:52.000]  you decrease
+[20:54.000 --> 20:56.000]  the power
+[20:56.000 --> 20:58.000]  the reason is that basically the bias
+[20:58.000 --> 21:00.000]  is the high level of the
+[21:00.000 --> 21:02.000]  it is making a clock
+[21:02.000 --> 21:04.000]  the bias sets the high level
+[21:04.000 --> 21:06.000]  and instead the modulation sets
+[21:06.000 --> 21:08.000]  the swing down so if you increase
+[21:08.000 --> 21:10.000]  the modulation
+[21:10.000 --> 21:12.000]  basically the swing will
+[21:12.000 --> 21:14.000]  go over and in the average
+[21:14.000 --> 21:16.000]  of the light yield that is
+[21:16.000 --> 21:18.000]  what we are measuring it decreases
+[21:18.000 --> 21:20.000]  so that's why in this
+[21:20.000 --> 21:22.000]  direction decreases
+[21:22.000 --> 21:24.000]  and in this direction increases
+[21:24.000 --> 21:26.000]  so it's a little bit less intuitive
+[21:26.000 --> 21:28.000]  but
+[21:28.000 --> 21:30.000]  the reason is simply that the modulation
+[21:30.000 --> 21:32.000]  controls the swing down
+[21:32.000 --> 21:34.000]  of the optical power
+[21:34.000 --> 21:36.000]  and that's why it's inverted
+[21:36.000 --> 21:38.000]  so from this
+[21:38.000 --> 21:40.000]  the only thing you can
+[21:40.000 --> 21:42.000]  understand about your module
+[21:42.000 --> 21:44.000]  is that if this one
+[21:44.000 --> 21:46.000]  two direction doesn't change at all
+[21:46.000 --> 21:48.000]  it means that something is going
+[21:48.000 --> 21:50.000]  with the
+[21:50.000 --> 21:52.000]  with the
+[21:52.000 --> 21:54.000]  with the X
+[21:54.000 --> 21:56.000]  driver controller
+[21:56.000 --> 21:58.000]  the other thing
+[21:58.000 --> 22:00.000]  is that
+[22:00.000 --> 22:02.000]  this is a little bit less obvious and this will be
+[22:02.000 --> 22:04.000]  ended by potato
+[22:04.000 --> 22:06.000]  the optical power that you receive
+[22:06.000 --> 22:08.000]  might be lower
+[22:08.000 --> 22:10.000]  in case you have some damage
+[22:10.000 --> 22:12.000]  on the
+[22:12.000 --> 22:14.000]  on the fibers
+[22:14.000 --> 22:16.000]  I would say very likely you will see other
+[22:16.000 --> 22:18.000]  problems so
+[22:18.000 --> 22:20.000]  if we see later problem later
+[22:20.000 --> 22:22.000]  with locking or this kind of things
+[22:22.000 --> 22:24.000]  well
+[22:24.000 --> 22:26.000]  you might look at this
+[22:26.000 --> 22:28.000]  compare with other plot and see if you have
+[22:28.000 --> 22:30.000]  a drastic decrease
+[22:30.000 --> 22:32.000]  of the light to you that is
+[22:32.000 --> 22:34.000]  seen by the
+[22:34.000 --> 22:36.000]  SFP
+[22:36.000 --> 22:38.000]  ok
+[22:38.000 --> 22:40.000]  so
+[22:40.000 --> 22:42.000]  this is for this step and of course
+[22:42.000 --> 22:44.000]  just stormy I'm going to go
+[22:44.000 --> 22:46.000]  at speaking but just
+[22:46.000 --> 22:48.000]  make sure of course this
+[22:48.000 --> 22:50.000]  ok
+[22:50.000 --> 22:52.000]  so LPGVT
+[22:52.000 --> 22:54.000]  so I think this is
+[22:54.000 --> 22:56.000]  pretty famous
+[22:56.000 --> 22:58.000]  due to the
+[22:58.000 --> 23:00.000]  recent
+[23:00.000 --> 23:02.000]  issues with LPGVT
+[23:02.000 --> 23:04.000]  so
+[23:04.000 --> 23:06.000]  I can't forget
+[23:08.000 --> 23:10.000]  ok so
+[23:10.000 --> 23:12.000]  we here we have
+[23:12.000 --> 23:14.000]  three plots in reality we have
+[23:14.000 --> 23:16.000]  because we can set
+[23:16.000 --> 23:18.000]  the optical
+[23:18.000 --> 23:20.000]  attenuation
+[23:20.000 --> 23:22.000]  sorry no the electrical
+[23:22.000 --> 23:24.000]  attenuation so basically
+[23:24.000 --> 23:26.000]  the VTRX assigns you
+[23:28.000 --> 23:30.000]  an electrical signal
+[23:30.000 --> 23:32.000]  you can imagine it proportional to the
+[23:32.000 --> 23:34.000]  optical power that is received
+[23:34.000 --> 23:36.000]  and then
+[23:36.000 --> 23:38.000]  the LPGVT can
+[23:38.000 --> 23:40.000]  attenuate the signal
+[23:40.000 --> 23:42.000]  by three different value
+[23:42.000 --> 23:44.000]  sorry it cannot attenuate it to one
+[23:44.000 --> 23:46.000]  third
+[23:46.000 --> 23:48.000]  two third or does not attenuate it at all
+[23:48.000 --> 23:50.000]  so for the time being
+[23:50.000 --> 23:52.000]  we are doing the measurement
+[23:52.000 --> 23:54.000]  for all the three values
+[23:54.000 --> 23:56.000]  of that attenuation
+[23:56.000 --> 23:58.000]  and
+[23:58.000 --> 24:00.000]  so we can just focus on
+[24:00.000 --> 24:02.000]  one of them since the other three
+[24:02.000 --> 24:04.000]  you see from the title that's
+[24:04.000 --> 24:06.000]  the only difference
+[24:06.000 --> 24:08.000]  so what we measure here
+[24:08.000 --> 24:10.000]  is a high
+[24:10.000 --> 24:12.000]  opening so
+[24:12.000 --> 24:14.000]  this is a capability
+[24:14.000 --> 24:16.000]  of the
+[24:16.000 --> 24:18.000]  LPGVT basically you can see
+[24:18.000 --> 24:20.000]  a little bit more details into the manual
+[24:20.000 --> 24:22.000]  but basically if you have a
+[24:22.000 --> 24:24.000]  high count rate it means that
+[24:24.000 --> 24:26.000]  you are in the center of the eye so
+[24:26.000 --> 24:28.000]  above
+[24:28.000 --> 24:30.000]  the lower part of the signal
+[24:30.000 --> 24:32.000]  but below the high part of the signal
+[24:32.000 --> 24:34.000]  and if you are
+[24:34.000 --> 24:36.000]  outside of that area you get
+[24:36.000 --> 24:38.000]  a low count and
+[24:38.000 --> 24:40.000]  is
+[24:40.000 --> 24:42.000]  not
+[24:42.000 --> 24:44.000]  super super obvious
+[24:44.000 --> 24:46.000]  how to interpret these numbers
+[24:46.000 --> 24:48.000]  because they are partially synchronized
+[24:48.000 --> 24:50.000]  so
+[24:50.000 --> 24:52.000]  you don't really get
+[24:52.000 --> 24:54.000]  these numbers doesn't really
+[24:54.000 --> 24:56.000]  tell you if
+[24:56.000 --> 24:58.000]  something is good or wrong but what is
+[24:58.000 --> 25:00.000]  important is this transition
+[25:00.000 --> 25:02.000]  so
+[25:02.000 --> 25:04.000]  the known problem of LPGVT is that
+[25:04.000 --> 25:06.000]  the center of the eye so basically
+[25:06.000 --> 25:08.000]  the part where the two shapes
+[25:08.000 --> 25:10.000]  are coming
+[25:10.000 --> 25:12.000]  closest
+[25:12.000 --> 25:14.000]  moving I think all the way up
+[25:14.000 --> 25:16.000]  or also all the way down
+[25:16.000 --> 25:18.000]  and that is
+[25:18.000 --> 25:20.000]  these LPGVT
+[25:20.000 --> 25:22.000]  one high opening
+[25:22.000 --> 25:24.000]  issues
+[25:24.000 --> 25:26.000]  and the thing that I noticed so far
+[25:26.000 --> 25:28.000]  I don't really have an expert
+[25:28.000 --> 25:30.000]  for that but changing the optical
+[25:30.000 --> 25:32.000]  information this I
+[25:32.000 --> 25:34.000]  tend to go a little bit more centered
+[25:34.000 --> 25:36.000]  I think the main
+[25:36.000 --> 25:38.000]  problem of the eye open is that
+[25:38.000 --> 25:40.000]  at the power up
+[25:40.000 --> 25:42.000]  the attenuation that is set is to
+[25:44.000 --> 25:46.000]  one third of the original signal
+[25:46.000 --> 25:48.000]  and that's
+[25:48.000 --> 25:50.000]  why it's a bit of a problem
+[25:50.000 --> 25:52.000]  okay
+[25:54.000 --> 25:56.000]  okay I'm gonna move forward
+[25:56.000 --> 25:58.000]  and
+[25:58.000 --> 26:00.000]  go to the
+[26:02.000 --> 26:04.000]  here the
+[26:04.000 --> 26:06.000]  OT align LPGVT inputs
+[26:06.000 --> 26:08.000]  so
+[26:10.000 --> 26:12.000]  these
+[26:14.000 --> 26:16.000]  blocks
+[26:16.000 --> 26:18.000]  yes sure
+[26:18.000 --> 26:20.000]  I am from IPSC Strasbourg I have a very small
+[26:20.000 --> 26:22.000]  question and basic question from the LPGVT
+[26:22.000 --> 26:24.000]  eye opening test so
+[26:24.000 --> 26:26.000]  just for my understanding so
+[26:26.000 --> 26:28.000]  how do you understand that if there is
+[26:28.000 --> 26:30.000]  any problem so if I understood
+[26:30.000 --> 26:32.000]  correctly that this
+[26:32.000 --> 26:34.000]  connection between these two high count
+[26:34.000 --> 26:36.000]  region so this won't
+[26:36.000 --> 26:38.000]  be in a single line that's what you
+[26:38.000 --> 26:40.000]  meant by this
+[26:40.000 --> 26:42.000]  actually
+[26:42.000 --> 26:44.000]  so
+[26:44.000 --> 26:46.000]  let me try
+[26:46.000 --> 26:48.000]  to
+[26:50.000 --> 26:52.000]  think there was a blackboard feature
+[26:56.000 --> 26:58.000]  so much that I never use
+[26:58.000 --> 27:00.000]  or it's unparalleled
+[27:00.000 --> 27:02.000]  not the ringing
+[27:04.000 --> 27:06.000]  mm-hmm
+[27:09.000 --> 27:11.000]  was there a way to
+[27:11.000 --> 27:13.000]  the blackboard feature probably
+[27:13.000 --> 27:15.000]  I don't know if it's visible
+[27:15.000 --> 27:17.000]  if you share your screen or not
+[27:17.000 --> 27:19.000]  there is a matter
+[27:19.000 --> 27:21.000]  it's maybe at the bottom
+[27:23.000 --> 27:25.000]  don't tell me anything at the bottom
+[27:25.000 --> 27:27.000]  just have you
+[27:27.000 --> 27:29.000]  okay
+[27:29.000 --> 27:31.000]  it doesn't matter let me
+[27:31.000 --> 27:33.000]  try to
+[27:33.000 --> 27:35.000]  use the annotate feature
+[27:35.000 --> 27:37.000]  and we go
+[27:41.000 --> 27:43.000]  it doesn't let me scroll anymore
+[27:48.000 --> 27:50.000]  here since there is no
+[27:50.000 --> 27:52.000]  mm-hmm
+[27:52.000 --> 27:54.000]  okay so
+[27:54.000 --> 27:56.000]  imagine you have
+[27:58.000 --> 28:00.000]  a signal that it
+[28:00.000 --> 28:02.000]  looks like
+[28:02.000 --> 28:04.000]  that okay
+[28:04.000 --> 28:06.000]  okay so what the eye-opening
+[28:06.000 --> 28:08.000]  does is that
+[28:08.000 --> 28:10.000]  basically plot this one
+[28:10.000 --> 28:12.000]  on top of the inverted one
+[28:12.000 --> 28:14.000]  mm-hmm
+[28:16.000 --> 28:18.000]  that is gonna be look like that
+[28:18.000 --> 28:20.000]  okay
+[28:20.000 --> 28:22.000]  so this is the eye-opening
+[28:22.000 --> 28:24.000]  so basically if you set
+[28:26.000 --> 28:28.000]  a point in time here
+[28:28.000 --> 28:30.000]  and a threshold here
+[28:30.000 --> 28:32.000]  if you take
+[28:32.000 --> 28:34.000]  the bar if you check
+[28:34.000 --> 28:36.000]  the value of the voltage that you receive
+[28:36.000 --> 28:38.000]  is above the threshold
+[28:38.000 --> 28:40.000]  below the threshold
+[28:40.000 --> 28:42.000]  you will be able to distinguish
+[28:42.000 --> 28:44.000]  the ones
+[28:44.000 --> 28:46.000]  from the zeros
+[28:46.000 --> 28:48.000]  okay
+[28:48.000 --> 28:50.000]  so one of the problem the LPGT
+[28:50.000 --> 28:52.000]  is that
+[28:52.000 --> 28:54.000]  sometimes
+[28:55.000 --> 28:57.000]  you get
+[28:58.000 --> 29:00.000]  something that
+[29:00.000 --> 29:02.000]  it looks like this
+[29:03.000 --> 29:05.000]  so you add the up one
+[29:05.000 --> 29:07.000]  that is still fine
+[29:07.000 --> 29:09.000]  but the
+[29:09.000 --> 29:11.000]  mm-hmm
+[29:11.000 --> 29:13.000]  how can I go with
+[29:15.000 --> 29:17.000]  the bottom one
+[29:17.000 --> 29:19.000]  that I
+[29:19.000 --> 29:21.000]  would say basically look like this
+[29:21.000 --> 29:23.000]  so that this transition
+[29:23.000 --> 29:25.000]  is all the way up here
+[29:25.000 --> 29:27.000]  okay
+[29:29.000 --> 29:31.000]  where is the problem now
+[29:31.000 --> 29:33.000]  so
+[29:35.000 --> 29:37.000]  then you probably don't have the transition
+[29:37.000 --> 29:39.000]  at the same voltage
+[29:39.000 --> 29:41.000]  they are too different
+[29:43.000 --> 29:45.000]  I
+[29:45.000 --> 29:47.000]  start to have some doubt of what I was saying
+[29:47.000 --> 29:49.000]  this is not something that we like
+[29:49.000 --> 29:51.000]  too much I guess the main problem
+[29:51.000 --> 29:53.000]  is that you have this lowest loop
+[29:53.000 --> 29:55.000]  and
+[29:55.000 --> 29:57.000]  then since the slope
+[29:57.000 --> 29:59.000]  is lower
+[29:59.000 --> 30:01.000]  then you have a smaller
+[30:01.000 --> 30:03.000]  phase
+[30:03.000 --> 30:05.000]  a long slope
+[30:05.000 --> 30:07.000]  you have a smaller phase in which you can find
+[30:07.000 --> 30:09.000]  the alignment
+[30:09.000 --> 30:11.000]  so I think in reality it is actually like this
+[30:13.000 --> 30:15.000]  so they cross like that
+[30:15.000 --> 30:17.000]  so you have a less room
+[30:17.000 --> 30:19.000]  to identify the one
+[30:19.000 --> 30:21.000]  from the zeros and that is the main problem
+[30:21.000 --> 30:23.000]  and there is where
+[30:23.000 --> 30:25.000]  you may have communication issues
+[30:27.000 --> 30:29.000]  okay
+[30:29.000 --> 30:31.000]  no competition
+[30:31.000 --> 30:33.000]  why is so bad
+[30:33.000 --> 30:35.000]  but they so
+[30:35.000 --> 30:37.000]  what they did is that they kind of correlate
+[30:37.000 --> 30:39.000]  so
+[30:39.000 --> 30:41.000]  the packet of the
+[30:41.000 --> 30:43.000]  LPGBT comes with an error correction
+[30:43.000 --> 30:45.000]  in our case
+[30:45.000 --> 30:47.000]  we use the effect 5 which means that
+[30:47.000 --> 30:49.000]  up to 5 errors we can
+[30:49.000 --> 30:51.000]  correct the effect states for
+[30:51.000 --> 30:53.000]  forward error corrections
+[30:53.000 --> 30:55.000]  so I think what Atlas found out
+[30:55.000 --> 30:57.000]  was that
+[30:57.000 --> 30:59.000]  you get
+[30:59.000 --> 31:01.000]  for some LPGBT
+[31:01.000 --> 31:03.000]  you are getting quite large number of
+[31:03.000 --> 31:05.000]  forward error correction
+[31:05.000 --> 31:07.000]  meaning that you can still recover them
+[31:07.000 --> 31:09.000]  but something is going wrong
+[31:09.000 --> 31:11.000]  and then
+[31:11.000 --> 31:13.000]  they kind of correlated this
+[31:13.000 --> 31:15.000]  high number of effect error correction
+[31:15.000 --> 31:17.000]  with some problem with the eye opening
+[31:17.000 --> 31:19.000]  so that is basically the symptom
+[31:19.000 --> 31:21.000]  that is telling you that when you place it
+[31:21.000 --> 31:23.000]  into a real module
+[31:23.000 --> 31:25.000]  you may have errors
+[31:25.000 --> 31:27.000]  in the communication
+[31:27.000 --> 31:29.000]  and
+[31:29.000 --> 31:31.000]  it is good that you are able to correct them
+[31:31.000 --> 31:33.000]  but if you already start with a baseline
+[31:33.000 --> 31:35.000]  that you have a lot of
+[31:35.000 --> 31:37.000]  error that you can correct
+[31:37.000 --> 31:39.000]  if you get more than 5 bits
+[31:39.000 --> 31:41.000]  that are flipped into the same packet
+[31:41.000 --> 31:43.000]  you cannot correct anymore
+[31:43.000 --> 31:45.000]  and this is unrecoverable anymore
+[31:47.000 --> 31:49.000]  thanks
+[31:55.000 --> 31:57.000]  and
+[31:57.000 --> 31:59.000]  let's go ahead
+[31:59.000 --> 32:01.000]  so the next step is the LPGBT
+[32:01.000 --> 32:03.000]  align the LPGBT input
+[32:05.000 --> 32:07.000]  so
+[32:07.000 --> 32:09.000]  let me
+[32:09.000 --> 32:11.000]  add some other
+[32:13.000 --> 32:15.000]  so this is the module
+[32:15.000 --> 32:17.000]  just for
+[32:17.000 --> 32:19.000]  very simplified, so we have ATCBC
+[32:19.000 --> 32:21.000]  they communicate with one CAC
+[32:21.000 --> 32:23.000]  and then
+[32:23.000 --> 32:25.000]  the two CAC and the two high
+[32:25.000 --> 32:27.000]  they communicate with the LPGBT
+[32:27.000 --> 32:29.000]  and then this is sent to the FPGA
+[32:29.000 --> 32:31.000]  then for reason
+[32:31.000 --> 32:33.000]  that is due to the
+[32:33.000 --> 32:35.000]  the deteriorate that can be handled
+[32:35.000 --> 32:37.000]  in the FPGA
+[32:37.000 --> 32:39.000]  this signal is then split into
+[32:39.000 --> 32:41.000]  separate the component back
+[32:41.000 --> 32:43.000]  so these lines correspond to
+[32:43.000 --> 32:45.000]  these lines
+[32:45.000 --> 32:47.000]  now what we need to do
+[32:47.000 --> 32:49.000]  is that we want to make sure
+[32:49.000 --> 32:51.000]  that the CAC understands
+[32:51.000 --> 32:53.000]  what the LPGBT
+[32:53.000 --> 32:55.000]  understand what the CAC
+[32:55.000 --> 32:57.000]  does
+[32:57.000 --> 32:59.000]  so there was sense
+[32:59.000 --> 33:01.000]  so basically the LPGBT
+[33:01.000 --> 33:03.000]  samples the data
+[33:03.000 --> 33:05.000]  that are being received and therefore
+[33:05.000 --> 33:07.000]  you have to find the correct
+[33:07.000 --> 33:09.000]  sampling phase
+[33:09.000 --> 33:11.000]  if the phase is not correct
+[33:11.000 --> 33:13.000]  sometimes a one
+[33:13.000 --> 33:15.000]  can be interpreted as a zero
+[33:15.000 --> 33:17.000]  vice versa
+[33:17.000 --> 33:19.000]  and therefore the communication
+[33:19.000 --> 33:21.000]  will not work
+[33:21.000 --> 33:23.000]  so this is an automatic procedure
+[33:23.000 --> 33:25.000]  done by the LPGBT
+[33:25.000 --> 33:27.000]  that has this automatic phase alignment
+[33:27.000 --> 33:29.000]  so we set the CAC
+[33:29.000 --> 33:31.000]  in order to send
+[33:31.000 --> 33:33.000]  a pattern
+[33:33.000 --> 33:35.000]  and then we ask the LPGBT
+[33:35.000 --> 33:37.000]  to align from that
+[33:37.000 --> 33:39.000]  basically
+[33:39.000 --> 33:41.000]  and in a short of automatic way
+[33:41.000 --> 33:43.000]  we'll find the best phase
+[33:43.000 --> 33:45.000]  that
+[33:45.000 --> 33:47.000]  that allow to propose a sample the incoming data
+[33:47.000 --> 33:49.000]  from the CAC
+[33:49.000 --> 33:51.000]  so
+[33:51.000 --> 33:53.000]  there are three plots
+[33:53.000 --> 33:55.000]  associated to that
+[33:55.000 --> 33:57.000]  I wrote this CAC with LPGBT
+[33:57.000 --> 33:59.000]  so let's start
+[33:59.000 --> 34:01.000]  from these
+[34:01.000 --> 34:03.000]  so since we want to understand
+[34:03.000 --> 34:05.000]  it's not really needed but we want to
+[34:05.000 --> 34:07.000]  understand how well this works because
+[34:07.000 --> 34:09.000]  if you install into the detector
+[34:09.000 --> 34:11.000]  then you start having troubles
+[34:11.000 --> 34:13.000]  you don't want to
+[34:13.000 --> 34:15.000]  you don't want to be scored that your model
+[34:15.000 --> 34:17.000]  always have troubles
+[34:17.000 --> 34:19.000]  so what we do is that we
+[34:19.000 --> 34:21.000]  try
+[34:21.000 --> 34:23.000]  100 times
+[34:23.000 --> 34:25.000]  so these numbers that I'm going to say
+[34:25.000 --> 34:27.000]  just stored into the XML
+[34:27.000 --> 34:29.000]  we can change in the future
+[34:29.000 --> 34:31.000]  but these are the numbers that we use
+[34:31.000 --> 34:33.000]  for production
+[34:33.000 --> 34:35.000]  for production at the moment
+[34:35.000 --> 34:37.000]  and
+[34:37.000 --> 34:39.000]  how many times the alignment
+[34:39.000 --> 34:41.000]  succeeded
+[34:41.000 --> 34:43.000]  and here if you have any troubles
+[34:43.000 --> 34:45.000]  you should see that
+[34:45.000 --> 34:47.000]  less than 100% efficiency
+[34:47.000 --> 34:49.000]  occurs so
+[34:49.000 --> 34:51.000]  this is really a test on how well
+[34:51.000 --> 34:53.000]  the automatic procedure on the LPGBT works
+[34:55.000 --> 34:57.000]  and then we want also to extract
+[34:57.000 --> 34:59.000]  the best phase that allow the LPGBT
+[34:59.000 --> 35:01.000]  to properly sample the data
+[35:01.000 --> 35:03.000]  and
+[35:03.000 --> 35:05.000]  this is done based on these plots
+[35:05.000 --> 35:07.000]  so
+[35:07.000 --> 35:09.000]  on the X axis
+[35:09.000 --> 35:11.000]  you have
+[35:11.000 --> 35:13.000]  so let me
+[35:13.000 --> 35:15.000]  start again
+[35:23.000 --> 35:25.000]  so on the X axis
+[35:25.000 --> 35:27.000]  you have the values lines
+[35:27.000 --> 35:29.000]  so
+[35:29.000 --> 35:31.000]  both FEHS
+[35:31.000 --> 35:33.000]  are on the same line
+[35:33.000 --> 35:35.000]  and then you have the lines for the level 1
+[35:35.000 --> 35:37.000]  the lines for the stubs
+[35:37.000 --> 35:39.000]  and on the Y axis
+[35:39.000 --> 35:41.000]  you have
+[35:41.000 --> 35:43.000]  the phase so
+[35:43.000 --> 35:45.000]  we are scanning from a phase that goes from 0 to
+[35:45.000 --> 35:47.000]  14
+[35:47.000 --> 35:49.000]  and 15 is
+[35:49.000 --> 35:51.000]  a raw code that is used by the LPGBT
+[35:51.000 --> 35:53.000]  and
+[35:53.000 --> 35:55.000]  since we are repeating the measurement 100
+[35:55.000 --> 35:57.000]  time
+[35:57.000 --> 35:59.000]  we store basically the frequency for which
+[35:59.000 --> 36:01.000]  one phase is chosen
+[36:01.000 --> 36:03.000]  so at the end of the alignment
+[36:03.000 --> 36:05.000]  you ask the LPGBT if it align
+[36:05.000 --> 36:07.000]  and which phase it chose
+[36:07.000 --> 36:09.000]  and then we just plot it over here
+[36:09.000 --> 36:11.000]  for the 100 times
+[36:11.000 --> 36:13.000]  so here very likely you should see something
+[36:13.000 --> 36:15.000]  like these
+[36:15.000 --> 36:17.000]  with some cases
+[36:17.000 --> 36:19.000]  in which you see that sometimes
+[36:19.000 --> 36:21.000]  two phases are reasonable
+[36:21.000 --> 36:23.000]  but these are the same phases
+[36:23.000 --> 36:25.000]  so
+[36:25.000 --> 36:27.000]  nothing really concerning
+[36:27.000 --> 36:29.000]  so if you see
+[36:29.000 --> 36:31.000]  basically a vertical line
+[36:31.000 --> 36:33.000]  so in this plot it means that LPGBT
+[36:33.000 --> 36:35.000]  was not able to choose any particular phase
+[36:35.000 --> 36:37.000]  and so it means that something is going on
+[36:37.000 --> 36:39.000]  with that particular line
+[36:39.000 --> 36:41.000]  so
+[36:41.000 --> 36:43.000]  since this line goes to the
+[36:43.000 --> 36:45.000]  connector between
+[36:45.000 --> 36:47.000]  the
+[36:47.000 --> 36:49.000]  service hybrid
+[36:49.000 --> 36:51.000]  and the
+[36:51.000 --> 36:53.000]  front end hybrid
+[36:53.000 --> 36:55.000]  I will say that that is an indication
+[36:55.000 --> 36:57.000]  that something is going wrong with that connector
+[36:59.000 --> 37:01.000]  the modules
+[37:01.000 --> 37:03.000]  the hybrid were already tested
+[37:03.000 --> 37:05.000]  so it is quite unlikely that
+[37:05.000 --> 37:07.000]  LPGBT or the CAC are the problem
+[37:07.000 --> 37:09.000]  or their connection with the hybrid
+[37:09.000 --> 37:11.000]  is the problem
+[37:11.000 --> 37:13.000]  but the connector
+[37:13.000 --> 37:15.000]  is the first time you are connecting your
+[37:15.000 --> 37:17.000]  FEH with your series
+[37:17.000 --> 37:19.000]  so that might be something that might occur
+[37:21.000 --> 37:23.000]  and then out of these
+[37:23.000 --> 37:25.000]  the one that was selected
+[37:25.000 --> 37:27.000]  the monster to be the best phase
+[37:27.000 --> 37:29.000]  to be used by the LPGBT
+[37:29.000 --> 37:31.000]  and this is stored
+[37:31.000 --> 37:33.000]  into this plot
+[37:33.000 --> 37:35.000]  so basically these numbers
+[37:35.000 --> 37:37.000]  correspond just to the final
+[37:37.000 --> 37:39.000]  best phase that was the series to be used
+[37:39.000 --> 37:41.000]  for the
+[37:41.000 --> 37:43.000]  for the module
+[37:47.000 --> 37:49.000]  keep moving forward
+[37:53.000 --> 37:55.000]  I must see
+[37:55.000 --> 37:57.000]  so there is this artistic picture
+[37:57.000 --> 37:59.000]  if someone you want to do something
+[37:59.000 --> 38:01.000]  better just for reference left and right
+[38:01.000 --> 38:03.000]  where the SEH is
+[38:03.000 --> 38:05.000]  where the CBC
+[38:05.000 --> 38:07.000]  0 to 7 are
+[38:07.000 --> 38:09.000]  the two hybrid attention that are reverted
+[38:09.000 --> 38:11.000]  and where the corresponding
+[38:11.000 --> 38:13.000]  strips on the
+[38:17.000 --> 38:19.000]  that are using the page to
+[38:19.000 --> 38:21.000]  SEFR in the position
+[38:21.000 --> 38:23.000]  of the object
+[38:25.000 --> 38:27.000]  going back
+[38:27.000 --> 38:29.000]  to these
+[38:29.000 --> 38:31.000]  so after we have done
+[38:31.000 --> 38:33.000]  the alignment of the LPGBT
+[38:33.000 --> 38:35.000]  now we can align
+[38:37.000 --> 38:39.000]  the data world
+[38:39.000 --> 38:41.000]  into the
+[38:41.000 --> 38:43.000]  FC7
+[38:43.000 --> 38:45.000]  so if I go back here
+[38:45.000 --> 38:47.000]  so basically we know now
+[38:47.000 --> 38:49.000]  that between the CAC and LPGBT
+[38:49.000 --> 38:51.000]  there is a good communication
+[38:51.000 --> 38:53.000]  so now what we do
+[38:53.000 --> 38:55.000]  since these lines are the same
+[38:55.000 --> 38:57.000]  that are used into the
+[38:57.000 --> 38:59.000]  FPGA
+[38:59.000 --> 39:01.000]  we set the CAC such that
+[39:01.000 --> 39:03.000]  it keeps sending data
+[39:03.000 --> 39:05.000]  through these lines
+[39:05.000 --> 39:07.000]  and then we want to
+[39:07.000 --> 39:09.000]  correctly identify those same data
+[39:09.000 --> 39:11.000]  into the FPGA
+[39:11.000 --> 39:13.000]  so what is
+[39:13.000 --> 39:15.000]  the
+[39:15.000 --> 39:17.000]  reason why we need to do that
+[39:17.000 --> 39:19.000]  the CAC sends a packet
+[39:19.000 --> 39:21.000]  of
+[39:21.000 --> 39:23.000]  8 bits basically
+[39:23.000 --> 39:25.000]  and then you want to
+[39:25.000 --> 39:27.000]  make sure that you properly identify
+[39:27.000 --> 39:29.000]  those 8 bits into the FPGA
+[39:29.000 --> 39:31.000]  by identifying the first
+[39:31.000 --> 39:33.000]  of the 8 bits
+[39:33.000 --> 39:35.000]  if I send a
+[39:35.000 --> 39:37.000]  sequence of
+[39:37.000 --> 39:39.000]  101010
+[39:39.000 --> 39:41.000]  then you need to know
+[39:41.000 --> 39:43.000]  that the first one has to be a 1
+[39:43.000 --> 39:45.000]  and then the second one has to be a 0
+[39:45.000 --> 39:47.000]  because we need to identify
+[39:47.000 --> 39:49.000]  the first of 8 bits
+[39:49.000 --> 39:51.000]  not just the first of 2 bits
+[39:51.000 --> 39:53.000]  but the idea is the same
+[39:55.000 --> 39:57.000]  so basically
+[39:57.000 --> 39:59.000]  after setting the CAC to send a pattern
+[40:01.000 --> 40:03.000]  then we ask the
+[40:03.000 --> 40:05.000]  FPGA to align telling the
+[40:05.000 --> 40:07.000]  FPGA which pattern is expecting
+[40:11.000 --> 40:13.000]  and these plots
+[40:13.000 --> 40:15.000]  are stored at the level of the hybrid
+[40:15.000 --> 40:17.000]  so I'm just going to show you one
+[40:17.000 --> 40:19.000]  of the 2 hybrids
+[40:19.000 --> 40:21.000]  and then the other one is basically the same idea
+[40:29.000 --> 40:31.000]  ok, both world alignment
+[40:35.000 --> 40:37.000]  I was telling you you need to identify
+[40:37.000 --> 40:39.000]  the first of the 8 bits
+[40:39.000 --> 40:41.000]  and therefore
+[40:41.000 --> 40:43.000]  once the FPGA receives a packet
+[40:43.000 --> 40:45.000]  you need to know that you need to delay
+[40:45.000 --> 40:47.000]  the packet by a certain amount
+[40:47.000 --> 40:49.000]  of bits such that
+[40:49.000 --> 40:51.000]  after this delay the first bit
+[40:51.000 --> 40:53.000]  is actually going to be the real first bit
+[40:55.000 --> 40:57.000]  so these are calling to the FPGA bitslips
+[40:57.000 --> 40:59.000]  and I'll show them
+[40:59.000 --> 41:01.000]  into this plot
+[41:01.000 --> 41:03.000]  so the bitslip that was chosen
+[41:03.000 --> 41:05.000]  as a function of the different lines
+[41:05.000 --> 41:07.000]  and since if I go back
+[41:07.000 --> 41:09.000]  you see that the FPGA is handling
+[41:09.000 --> 41:11.000]  2 hybrids separately
+[41:11.000 --> 41:13.000]  you have one plot
+[41:13.000 --> 41:15.000]  for every hybrid
+[41:17.000 --> 41:19.000]  ok, so here
+[41:19.000 --> 41:21.000]  is not really something that you can see
+[41:21.000 --> 41:23.000]  if something goes wrong
+[41:23.000 --> 41:25.000]  because this is what the FPGA chooses
+[41:25.000 --> 41:27.000]  so
+[41:27.000 --> 41:29.000]  it's more to store the information
+[41:29.000 --> 41:31.000]  that was
+[41:31.000 --> 41:33.000]  identified by the
+[41:33.000 --> 41:35.000]  the FPGA
+[41:35.000 --> 41:37.000]  but if something goes wrong
+[41:37.000 --> 41:39.000]  it's called into the next plot
+[41:39.000 --> 41:41.000]  into the next step
+[41:41.000 --> 41:43.000]  together with this plot
+[41:43.000 --> 41:45.000]  we also store
+[41:45.000 --> 41:47.000]  this one
+[41:47.000 --> 41:49.000]  that is the number of retries
+[41:49.000 --> 41:51.000]  so
+[41:51.000 --> 41:53.000]  if for any reason
+[41:53.000 --> 41:55.000]  the
+[41:55.000 --> 41:57.000]  the alignment procedure
+[41:59.000 --> 42:01.000]  fails
+[42:01.000 --> 42:03.000]  the FPGA retries
+[42:03.000 --> 42:05.000]  up to 10 times
+[42:05.000 --> 42:07.000]  and so
+[42:07.000 --> 42:09.000]  since this
+[42:09.000 --> 42:11.000]  indicates some instabilities
+[42:11.000 --> 42:13.000]  we also store the number of retries
+[42:13.000 --> 42:15.000]  and since each line is angled separately
+[42:15.000 --> 42:17.000]  we have one number for every line
+[42:17.000 --> 42:19.000]  these
+[42:19.000 --> 42:21.000]  is not uncommon that you have
+[42:21.000 --> 42:23.000]  one or two retries
+[42:23.000 --> 42:25.000]  we found that
+[42:25.000 --> 42:27.000]  there are some instabilities
+[42:27.000 --> 42:29.000]  when writing some registers
+[42:29.000 --> 42:31.000]  some particular register
+[42:31.000 --> 42:33.000]  into the board
+[42:33.000 --> 42:35.000]  and that's why we do the retry
+[42:35.000 --> 42:37.000]  so
+[42:37.000 --> 42:39.000]  also in this case if you see one or two retries
+[42:39.000 --> 42:41.000]  I will not worry as long as
+[42:41.000 --> 42:43.000]  you don't have troubles later on
+[42:43.000 --> 42:45.000]  if you retry 10 times
+[42:45.000 --> 42:47.000]  very likely means that you never manage to align
+[42:49.000 --> 42:51.000]  and again
+[42:51.000 --> 42:53.000]  since this goes to
+[42:53.000 --> 42:55.000]  the connector between the CAC and the FPGVT
+[42:55.000 --> 42:57.000]  I will check that connector
+[42:57.000 --> 42:59.000]  if something
+[42:59.000 --> 43:01.000]  gets wrong
+[43:01.000 --> 43:03.000]  if you spot into the previous tab
+[43:03.000 --> 43:05.000]  this one is really
+[43:05.000 --> 43:07.000]  a pattern identification
+[43:11.000 --> 43:13.000]  I go back here
+[43:13.000 --> 43:15.000]  now
+[43:15.000 --> 43:17.000]  we align both
+[43:17.000 --> 43:19.000]  the CAC to the FPGVT
+[43:19.000 --> 43:21.000]  and basically the CAC to the board
+[43:21.000 --> 43:23.000]  now we can verify
+[43:23.000 --> 43:25.000]  that the alignment
+[43:25.000 --> 43:27.000]  properly succeeded
+[43:27.000 --> 43:29.000]  so when you send a pattern
+[43:29.000 --> 43:31.000]  that expect a pattern
+[43:31.000 --> 43:33.000]  into the
+[43:33.000 --> 43:35.000]  into the board
+[43:35.000 --> 43:37.000]  so if I go back here
+[43:37.000 --> 43:39.000]  what
+[43:39.000 --> 43:41.000]  we do is that
+[43:41.000 --> 43:43.000]  as for the alignment
+[43:43.000 --> 43:45.000]  the word alignment
+[43:45.000 --> 43:47.000]  we send the CAC
+[43:47.000 --> 43:49.000]  in the same configuration to send pattern
+[43:49.000 --> 43:51.000]  to this line
+[43:51.000 --> 43:53.000]  and then we start
+[43:53.000 --> 43:55.000]  checking
+[43:55.000 --> 43:57.000]  if the pattern that we send from the CAC
+[43:57.000 --> 43:59.000]  actually matches the pattern
+[43:59.000 --> 44:01.000]  that we receive in the FPGVT
+[44:01.000 --> 44:03.000]  so
+[44:11.000 --> 44:13.000]  so there are two plots
+[44:13.000 --> 44:15.000]  for these
+[44:15.000 --> 44:17.000]  each hybrid has its own two plots
+[44:17.000 --> 44:19.000]  and we have basically
+[44:19.000 --> 44:21.000]  the first one
+[44:21.000 --> 44:23.000]  I'm going to start from the second one
+[44:23.000 --> 44:25.000]  is the number of bits that we are
+[44:25.000 --> 44:27.000]  testing so for every line
+[44:27.000 --> 44:29.000]  we show how many bits
+[44:29.000 --> 44:31.000]  we tested
+[44:31.000 --> 44:33.000]  and you see that there is a difference
+[44:33.000 --> 44:35.000]  between the number of bits that we are testing
+[44:35.000 --> 44:37.000]  between the stubs and the level one
+[44:37.000 --> 44:39.000]  and this is the reason it is only for
+[44:39.000 --> 44:41.000]  timing purposes
+[44:41.000 --> 44:43.000]  because the stub line
+[44:43.000 --> 44:45.000]  can be done
+[44:45.000 --> 44:47.000]  into the firmware
+[44:47.000 --> 44:49.000]  we just
+[44:49.000 --> 44:51.000]  included in the
+[44:51.000 --> 44:53.000]  new release of the PH2SF
+[44:53.000 --> 44:55.000]  in the firmware
+[44:55.000 --> 44:57.000]  that is much faster
+[44:57.000 --> 44:59.000]  the level one will require
+[44:59.000 --> 45:01.000]  a major work
+[45:01.000 --> 45:03.000]  in the firmware that we don't really have the resources for
+[45:03.000 --> 45:05.000]  and that's why
+[45:05.000 --> 45:07.000]  you get less
+[45:07.000 --> 45:09.000]  but if you look it still 10 to the 6 bits
+[45:09.000 --> 45:11.000]  so it's not a super small number
+[45:11.000 --> 45:13.000]  but it's lower than the number of stubs
+[45:13.000 --> 45:15.000]  so this is the number of tester bits
+[45:15.000 --> 45:17.000]  and together with this
+[45:17.000 --> 45:19.000]  we also have the number of ferro rate
+[45:19.000 --> 45:21.000]  so
+[45:21.000 --> 45:23.000]  this one is a number
+[45:23.000 --> 45:25.000]  that can go from 0 to 1
+[45:25.000 --> 45:27.000]  so 1 means 100%
+[45:27.000 --> 45:29.000]  errors
+[45:29.000 --> 45:31.000]  and 0 means no error
+[45:31.000 --> 45:33.000]  so here
+[45:33.000 --> 45:35.000]  as for before
+[45:35.000 --> 45:37.000]  if you see any number of errors
+[45:37.000 --> 45:39.000]  and
+[45:39.000 --> 45:41.000]  I will check the connect
+[45:41.000 --> 45:43.000]  so for what we saw so far
+[45:43.000 --> 45:45.000]  this part of the test
+[45:45.000 --> 45:47.000]  is very stable
+[45:47.000 --> 45:49.000]  so
+[45:49.000 --> 45:51.000]  an error rate that is above
+[45:51.000 --> 45:53.000]  then 1
+[45:57.000 --> 45:59.000]  10 to the minus
+[45:59.000 --> 46:01.000]  6 or 7
+[46:01.000 --> 46:03.000]  might be just a glitch
+[46:03.000 --> 46:05.000]  if this is something higher
+[46:05.000 --> 46:07.000]  check the connection between the hybrids
+[46:07.000 --> 46:09.000]  and between
+[46:09.000 --> 46:11.000]  containers with hybrids because that might be
+[46:11.000 --> 46:13.000]  the causation
+[46:17.000 --> 46:19.000]  as usual any question just
+[46:21.000 --> 46:23.000]  Fabio
+[46:23.000 --> 46:25.000]  may I ask
+[46:25.000 --> 46:27.000]  a question
+[46:27.000 --> 46:29.000]  what exactly the stop here means
+[46:29.000 --> 46:31.000]  because we don't have the real
+[46:31.000 --> 46:33.000]  data yet
+[46:33.000 --> 46:35.000]  it's just the communication between
+[46:35.000 --> 46:37.000]  the CSE
+[46:37.000 --> 46:39.000]  and the
+[46:39.000 --> 46:41.000]  the IPGPT to the IPGA or
+[46:43.000 --> 46:45.000]  so
+[46:45.000 --> 46:47.000]  the fact that you have
+[46:47.000 --> 46:49.000]  different lines
+[46:49.000 --> 46:51.000]  so we have one line
+[46:51.000 --> 46:53.000]  for the level 1
+[46:53.000 --> 46:55.000]  and 5 lines for the stops
+[46:55.000 --> 46:57.000]  and so this just indicates which line
+[46:57.000 --> 46:59.000]  is affected
+[46:59.000 --> 47:01.000]  so it's literally
+[47:01.000 --> 47:03.000]  this is
+[47:03.000 --> 47:05.000]  stop 0 line
+[47:05.000 --> 47:07.000]  stop 1 line
+[47:07.000 --> 47:09.000]  stop 3 line and so on
+[47:09.000 --> 47:11.000]  so actually the
+[47:11.000 --> 47:13.000]  number of the line that
+[47:13.000 --> 47:15.000]  is between the CSE and IPGA
+[47:25.000 --> 47:27.000]  okay now
+[47:27.000 --> 47:29.000]  we are sure
+[47:29.000 --> 47:31.000]  there are no errors
+[47:31.000 --> 47:33.000]  we are sure that the communication
+[47:33.000 --> 47:35.000]  basically between the CSE
+[47:35.000 --> 47:37.000]  and the board works fine
+[47:37.000 --> 47:39.000]  so from the CSE to the board
+[47:39.000 --> 47:41.000]  everything is aligned
+[47:41.000 --> 47:43.000]  and so the next step
+[47:43.000 --> 47:45.000]  is that we can align
+[47:45.000 --> 47:47.000]  the stop package so this
+[47:47.000 --> 47:49.000]  becomes a little bit more complicated
+[47:49.000 --> 47:51.000]  so I'm gonna add
+[47:51.000 --> 47:53.000]  the next slide
+[47:53.000 --> 47:55.000]  okay so
+[47:57.000 --> 47:59.000]  before
+[47:59.000 --> 48:01.000]  I told you that there are 5 lines
+[48:01.000 --> 48:03.000]  between the
+[48:03.000 --> 48:05.000]  the CSE
+[48:05.000 --> 48:07.000]  and the
+[48:07.000 --> 48:09.000]  the IPGPT
+[48:09.000 --> 48:11.000]  and this is the pattern
+[48:11.000 --> 48:13.000]  that is being sent
+[48:13.000 --> 48:15.000]  so we have
+[48:15.000 --> 48:17.000]  a
+[48:17.000 --> 48:19.000]  bit that indicates if the pattern is coming
+[48:19.000 --> 48:21.000]  from the CBC or the NPA
+[48:21.000 --> 48:23.000]  in this case it's just gonna be a CBC
+[48:23.000 --> 48:25.000]  then we have status
+[48:25.000 --> 48:27.000]  bits that indicate errors
+[48:27.000 --> 48:29.000]  then we have a bunch forcing
+[48:29.000 --> 48:31.000]  IDs
+[48:31.000 --> 48:33.000]  that basically
+[48:33.000 --> 48:35.000]  is telling you which is
+[48:35.000 --> 48:37.000]  the bunch forcing
+[48:37.000 --> 48:39.000]  at which this pattern
+[48:39.000 --> 48:41.000]  this packet was sent
+[48:41.000 --> 48:43.000]  and then with the number of stops
+[48:43.000 --> 48:45.000]  so how many stops the packet
+[48:45.000 --> 48:47.000]  contains and then you have all the stops
+[48:47.000 --> 48:49.000]  so forget for the time being
+[48:49.000 --> 48:51.000]  all the stops because we don't have
+[48:51.000 --> 48:53.000]  any alignment between the CBC
+[48:53.000 --> 48:55.000]  and the CSE
+[48:55.000 --> 48:57.000]  but the CSE still send this packet
+[48:59.000 --> 49:01.000]  everything that is afterward is gonna be meaningless
+[49:01.000 --> 49:03.000]  but the beginning of the pattern
+[49:03.000 --> 49:05.000]  is gonna make complete sense of this point
+[49:05.000 --> 49:07.000]  because we know that these lines are properly aligned
+[49:07.000 --> 49:09.000]  so
+[49:09.000 --> 49:11.000]  what is the
+[49:11.000 --> 49:13.000]  the important part to be done here
+[49:13.000 --> 49:15.000]  is that this packet
+[49:15.000 --> 49:17.000]  goes to the FPGA
+[49:17.000 --> 49:19.000]  but and we know that
+[49:19.000 --> 49:21.000]  we align properly
+[49:21.000 --> 49:23.000]  we know which is the first bit
+[49:23.000 --> 49:25.000]  of the 8th one
+[49:25.000 --> 49:27.000]  that are contained in each one of these
+[49:27.000 --> 49:29.000]  sub-packages but we
+[49:29.000 --> 49:31.000]  still need to know which
+[49:31.000 --> 49:33.000]  of these 8 packages
+[49:33.000 --> 49:35.000]  so you see one here
+[49:35.000 --> 49:37.000]  there are 6 here and there is the 7 here
+[49:37.000 --> 49:39.000]  we need to know which one is the first
+[49:39.000 --> 49:41.000]  because you need to understand
+[49:41.000 --> 49:43.000]  where to start
+[49:43.000 --> 49:45.000]  understanding what the data are
+[49:45.000 --> 49:47.000]  there is no header so you cannot align on a header
+[49:47.000 --> 49:49.000]  but you need to know
+[49:49.000 --> 49:51.000]  which is the first one
+[49:51.000 --> 49:53.000]  and to do that what we do is that
+[49:53.000 --> 49:55.000]  we look at the bunch forcing ID
+[49:55.000 --> 49:57.000]  because we know that between
+[49:57.000 --> 49:59.000]  2 consecutive packets
+[49:59.000 --> 50:01.000]  or N consecutive packets
+[50:01.000 --> 50:03.000]  we know that the bunch forcing ID
+[50:03.000 --> 50:05.000]  need to be changed by a certain
+[50:05.000 --> 50:07.000]  month or value that depends on
+[50:07.000 --> 50:09.000]  how much time you wait
+[50:09.000 --> 50:11.000]  between one and another
+[50:11.000 --> 50:13.000]  so
+[50:13.000 --> 50:15.000]  it becomes
+[50:15.000 --> 50:17.000]  a little bit more complicated
+[50:17.000 --> 50:19.000]  than that but
+[50:19.000 --> 50:21.000]  the concept is that
+[50:21.000 --> 50:23.000]  basically we collect
+[50:23.000 --> 50:25.000]  successive stub events
+[50:25.000 --> 50:27.000]  knowing
+[50:27.000 --> 50:29.000]  certainly what is the
+[50:29.000 --> 50:31.000]  time between the 2 consecutive
+[50:31.000 --> 50:33.000]  events and then
+[50:33.000 --> 50:35.000]  we change
+[50:35.000 --> 50:37.000]  in the firmware
+[50:37.000 --> 50:39.000]  which is the
+[50:39.000 --> 50:41.000]  first the delay
+[50:41.000 --> 50:43.000]  that will apply on this packet
+[50:43.000 --> 50:45.000]  and we see if
+[50:45.000 --> 50:47.000]  consecutive packets
+[50:47.000 --> 50:49.000]  increase by the expected number
+[50:49.000 --> 50:51.000]  of bunch forcing ID
+[50:51.000 --> 50:53.000]  so what we do is that we basically have to scan
+[50:53.000 --> 50:55.000]  a number that goes from
+[50:55.000 --> 50:57.000]  0 to
+[50:57.000 --> 50:59.000]  7
+[50:59.000 --> 51:01.000]  and then we try to understand which is
+[51:01.000 --> 51:03.000]  the
+[51:03.000 --> 51:05.000]  core at the beginning of
+[51:05.000 --> 51:07.000]  which is the core delay that we need to apply
+[51:07.000 --> 51:09.000]  such that the first packet
+[51:09.000 --> 51:11.000]  that we're going to interpret
+[51:11.000 --> 51:13.000]  is this one
+[51:13.000 --> 51:15.000]  so
+[51:15.000 --> 51:17.000]  I hope I was clear and know that is
+[51:17.000 --> 51:19.000]  quite a complicated manner
+[51:19.000 --> 51:21.000]  but the whole goal is really
+[51:21.000 --> 51:23.000]  we need to know which one is the first packet
+[51:23.000 --> 51:25.000]  and after we
+[51:25.000 --> 51:27.000]  done that then we can interpret the results
+[51:27.000 --> 51:29.000]  if we don't do that and by mistake
+[51:29.000 --> 51:31.000]  we start from this one you don't understand anything
+[51:31.000 --> 51:33.000]  because then we'll try to
+[51:33.000 --> 51:35.000]  decode the number stop packet
+[51:35.000 --> 51:37.000]  over here and that will not make sense
+[51:37.000 --> 51:39.000]  so this plot
+[51:39.000 --> 51:41.000]  is stored
+[51:41.000 --> 51:43.000]  into the optical
+[51:43.000 --> 51:45.000]  group and it is
+[51:45.000 --> 51:47.000]  this one best stop
+[51:47.000 --> 51:49.000]  package delay
+[51:49.000 --> 51:51.000]  and so we show
+[51:51.000 --> 51:53.000]  in the
+[51:53.000 --> 51:55.000]  y-axis
+[51:55.000 --> 51:57.000]  the stop package delay
+[51:57.000 --> 51:59.000]  so these are the delays that we
+[51:59.000 --> 52:01.000]  need to apply to these big packages
+[52:03.000 --> 52:05.000]  and on the y-axis we show
+[52:05.000 --> 52:07.000]  the right hybrid
+[52:07.000 --> 52:09.000]  and the left hybrid
+[52:09.000 --> 52:11.000]  and here just a number
+[52:11.000 --> 52:13.000]  just one
+[52:13.000 --> 52:15.000]  that indicates which was
+[52:15.000 --> 52:17.000]  the stop package delay that was chosen
+[52:19.000 --> 52:21.000]  the only thing
+[52:21.000 --> 52:23.000]  I mean you don't need to check anything
+[52:23.000 --> 52:25.000]  I would say
+[52:25.000 --> 52:27.000]  the reason why we put this at the
+[52:27.000 --> 52:29.000]  level of the optical group is that
+[52:29.000 --> 52:31.000]  in this moment the
+[52:31.000 --> 52:33.000]  firmware doesn't allow to have
+[52:33.000 --> 52:35.000]  two stop packages differently
+[52:35.000 --> 52:37.000]  between the two hybrids
+[52:37.000 --> 52:39.000]  by construction we just want to register
+[52:39.000 --> 52:41.000]  for both hybrids
+[52:41.000 --> 52:43.000]  is
+[52:43.000 --> 52:45.000]  reasonable enough I would say
+[52:45.000 --> 52:47.000]  because we
+[52:47.000 --> 52:49.000]  the length of the
+[52:49.000 --> 52:51.000]  the lines between
+[52:51.000 --> 52:53.000]  the two hybrids and the PGBT
+[52:53.000 --> 52:55.000]  are so small that we shouldn't have
+[52:55.000 --> 52:57.000]  a big difference but we need
+[52:57.000 --> 52:59.000]  to put it on the same plot just to make sure
+[52:59.000 --> 53:01.000]  that we never run into
+[53:01.000 --> 53:03.000]  modules that have different packages
+[53:03.000 --> 53:05.000]  and that requires a modification
+[53:05.000 --> 53:07.000]  to the field
+[53:07.000 --> 53:09.000]  so I would say from
+[53:09.000 --> 53:11.000]  the point of view
+[53:11.000 --> 53:13.000]  of the
+[53:15.000 --> 53:17.000]  of the module
+[53:17.000 --> 53:19.000]  QA
+[53:19.000 --> 53:21.000]  not too much that you need to look into that
+[53:21.000 --> 53:23.000]  very likely if you have travels into this plot
+[53:23.000 --> 53:25.000]  it means that you have travels somewhere else
+[53:25.000 --> 53:27.000]  so this one is just a nice
+[53:27.000 --> 53:29.000]  first shot
+[53:29.000 --> 53:31.000]  but here I have a question
+[53:31.000 --> 53:33.000]  so I think
+[53:33.000 --> 53:35.000]  currently as you said we have the same
+[53:35.000 --> 53:37.000]  stop package delay for both
+[53:37.000 --> 53:39.000]  hybrids how would one then
+[53:39.000 --> 53:41.000]  currently see
+[53:41.000 --> 53:43.000]  if another would be
+[53:43.000 --> 53:45.000]  needed
+[53:45.000 --> 53:47.000]  one of the hybrids
+[53:47.000 --> 53:49.000]  the two certain points are not aligned
+[53:49.000 --> 53:51.000]  so we still scan everything
+[53:51.000 --> 53:53.000]  I think there will be
+[53:53.000 --> 53:55.000]  also an intersection at the stone
+[53:55.000 --> 53:57.000]  but these two points
+[53:57.000 --> 53:59.000]  will not be aligned so you are going to
+[53:59.000 --> 54:01.000]  buy one here and one here
+[54:01.000 --> 54:03.000]  okay
+[54:03.000 --> 54:05.000]  so it's mainly for
+[54:05.000 --> 54:07.000]  basically
+[54:07.000 --> 54:09.000]  as the developers to understand
+[54:09.000 --> 54:11.000]  if there are modules that require
+[54:11.000 --> 54:13.000]  that and then we need to intervene so far
+[54:13.000 --> 54:15.000]  we will never see something like that
+[54:15.000 --> 54:17.000]  so we think it's good enough
+[54:19.000 --> 54:21.000]  okay
+[54:25.000 --> 54:27.000]  back here
+[54:27.000 --> 54:29.000]  okay
+[54:29.000 --> 54:31.000]  now
+[54:31.000 --> 54:33.000]  we can finally start
+[54:33.000 --> 54:35.000]  aligning
+[54:35.000 --> 54:37.000]  the
+[54:37.000 --> 54:39.000]  cbc to the cac
+[54:39.000 --> 54:41.000]  so
+[54:41.000 --> 54:43.000]  in this part
+[54:43.000 --> 54:45.000]  it's kind of what we did already
+[54:45.000 --> 54:47.000]  between the
+[54:47.000 --> 54:49.000]  cac and the pgbt
+[54:49.000 --> 54:51.000]  so we set the cbc to send
+[54:51.000 --> 54:53.000]  a pattern
+[54:53.000 --> 54:55.000]  unfortunately it's a bit more complicated
+[54:55.000 --> 54:57.000]  because you need
+[54:57.000 --> 54:59.000]  really to inject channels
+[54:59.000 --> 55:01.000]  because the cbc
+[55:01.000 --> 55:03.000]  is not able to
+[55:03.000 --> 55:05.000]  inject a particular pattern
+[55:05.000 --> 55:07.000]  so when it's done with a few
+[55:07.000 --> 55:09.000]  strips that are being injected
+[55:09.000 --> 55:11.000]  such that we get
+[55:11.000 --> 55:13.000]  a pattern on these lines
+[55:13.000 --> 55:15.000]  and then we ask the cac to align
+[55:15.000 --> 55:17.000]  on that pattern
+[55:17.000 --> 55:19.000]  and basically the alignment
+[55:19.000 --> 55:21.000]  of
+[55:21.000 --> 55:23.000]  the phase
+[55:23.000 --> 55:25.000]  is a simplified version of
+[55:25.000 --> 55:27.000]  what the pgbt does
+[55:27.000 --> 55:29.000]  they basically copy the same block
+[55:29.000 --> 55:31.000]  into the cac so the idea is the same
+[55:31.000 --> 55:33.000]  send a pattern and the cbc
+[55:33.000 --> 55:35.000]  try to find the best phase
+[55:35.000 --> 55:37.000]  to decode the pattern
+[55:37.000 --> 55:39.000]  and so the plots
+[55:39.000 --> 55:41.000]  are going to kind of resemble
+[55:41.000 --> 55:43.000]  the one that I was showing you
+[55:43.000 --> 55:45.000]  for the
+[55:45.000 --> 55:47.000]  cbc
+[55:47.000 --> 55:49.000]  phase alignment
+[55:49.000 --> 55:51.000]  let me go
+[55:51.000 --> 55:53.000]  these are the level of the hybrid
+[55:53.000 --> 55:55.000]  and
+[55:55.000 --> 55:57.000]  are here
+[55:59.000 --> 56:01.000]  just open them all
+[56:01.000 --> 56:03.000]  okay
+[56:03.000 --> 56:05.000]  so
+[56:07.000 --> 56:09.000]  as for
+[56:11.000 --> 56:13.000]  the pgbt
+[56:13.000 --> 56:15.000]  we ask the cac
+[56:15.000 --> 56:17.000]  to align a hundred times
+[56:17.000 --> 56:19.000]  again we want to
+[56:19.000 --> 56:21.000]  make sure that they are not
+[56:21.000 --> 56:23.000]  instability into the alignment procedures
+[56:23.000 --> 56:25.000]  of the cac
+[56:25.000 --> 56:27.000]  and so that it works every time
+[56:27.000 --> 56:29.000]  so at the end of every
+[56:29.000 --> 56:31.000]  let me go over here
+[56:31.000 --> 56:33.000]  to forget to plot
+[56:33.000 --> 56:35.000]  the pgbt
+[56:37.000 --> 56:39.000]  so
+[56:43.000 --> 56:45.000]  we ask
+[56:45.000 --> 56:47.000]  the
+[56:47.000 --> 56:49.000]  cac to align 100 times
+[56:49.000 --> 56:51.000]  and at the end of each alignment
+[56:51.000 --> 56:53.000]  you can ask if the
+[56:53.000 --> 56:55.000]  alignment worked or not
+[56:55.000 --> 56:57.000]  and then we can plot the
+[56:57.000 --> 56:59.000]  efficiency of alignment so here
+[56:59.000 --> 57:01.000]  you have the various lines
+[57:01.000 --> 57:03.000]  so you have one line
+[57:03.000 --> 57:05.000]  for the level one
+[57:05.000 --> 57:07.000]  lines for the stops
+[57:07.000 --> 57:09.000]  which are these lines
+[57:09.000 --> 57:11.000]  and then we have one
+[57:11.000 --> 57:13.000]  for every cbc
+[57:13.000 --> 57:15.000]  so here shown the cbcd
+[57:15.000 --> 57:17.000]  and on the z-axis
+[57:17.000 --> 57:19.000]  we have the efficiency
+[57:19.000 --> 57:21.000]  so from 0 to 1
+[57:21.000 --> 57:23.000]  and here if you see any troubles
+[57:23.000 --> 57:25.000]  you will see something that is
+[57:25.000 --> 57:27.000]  quite a lot below the 1
+[57:27.000 --> 57:29.000]  so far we have an audio that
+[57:29.000 --> 57:31.000]  doesn't have 100% efficiency
+[57:31.000 --> 57:33.000]  but
+[57:33.000 --> 57:35.000]  I would say if you have troubles
+[57:35.000 --> 57:37.000]  you will have problems
+[57:37.000 --> 57:39.000]  you have
+[57:39.000 --> 57:41.000]  a large number of errors
+[57:41.000 --> 57:43.000]  a large number of failing
+[57:43.000 --> 57:45.000]  locking
+[57:45.000 --> 57:47.000]  into this plot
+[57:47.000 --> 57:49.000]  and as for the pgbt
+[57:49.000 --> 57:51.000]  we also plot
+[57:51.000 --> 57:53.000]  for every of the lines
+[57:53.000 --> 57:55.000]  the phase
+[57:55.000 --> 57:57.000]  and the frequency
+[57:57.000 --> 57:59.000]  for which each phase was chosen
+[57:59.000 --> 58:01.000]  that you may be zooming
+[58:01.000 --> 58:03.000]  so if you zoom in
+[58:03.000 --> 58:05.000]  you see that you have the
+[58:05.000 --> 58:07.000]  for every cbc
+[58:07.000 --> 58:09.000]  the stub lines
+[58:09.000 --> 58:11.000]  and the level one lines
+[58:11.000 --> 58:13.000]  so they are all in the same plot
+[58:13.000 --> 58:15.000]  because we didn't want to make too many plots
+[58:15.000 --> 58:17.000]  and as for the pgbt
+[58:17.000 --> 58:19.000]  you see that quite often you can get
+[58:19.000 --> 58:21.000]  something like that so it means that
+[58:21.000 --> 58:23.000]  these two phases are basically
+[58:23.000 --> 58:25.000]  equivalent and we just choose
+[58:25.000 --> 58:27.000]  the one with the highest probability
+[58:27.000 --> 58:29.000]  and then again
+[58:29.000 --> 58:31.000]  from the cbc
+[58:31.000 --> 58:33.000]  we are showing here
+[58:33.000 --> 58:35.000]  the best input phase
+[58:35.000 --> 58:37.000]  so
+[58:37.000 --> 58:39.000]  this is a 2d plot
+[58:39.000 --> 58:41.000]  so we have
+[58:41.000 --> 58:43.000]  here on the y-axis
+[58:43.000 --> 58:45.000]  the different
+[58:45.000 --> 58:47.000]  lines
+[58:47.000 --> 58:49.000]  and on the
+[58:49.000 --> 58:51.000]  x-axis the different cbc
+[58:51.000 --> 58:53.000]  and on the z-axis
+[58:53.000 --> 58:55.000]  we are the best phase
+[58:55.000 --> 58:57.000]  so basically the most probable
+[58:57.000 --> 58:59.000]  one of these plots
+[59:05.000 --> 59:07.000]  okay now
+[59:07.000 --> 59:09.000]  as usual stop me for any
+[59:09.000 --> 59:11.000]  question
+[59:11.000 --> 59:13.000]  okay now
+[59:13.000 --> 59:15.000]  yes
+[59:15.000 --> 59:17.000]  one small question
+[59:17.000 --> 59:19.000]  so the last two dimensional histogram
+[59:19.000 --> 59:21.000]  that you showed is the best input
+[59:21.000 --> 59:23.000]  phases
+[59:23.000 --> 59:25.000]  so I mean
+[59:25.000 --> 59:27.000]  can one notice some problem
+[59:27.000 --> 59:29.000]  by looking only at this plot?
+[59:29.000 --> 59:31.000]  no I was saying
+[59:31.000 --> 59:33.000]  okay so
+[59:33.000 --> 59:35.000]  I will not
+[59:35.000 --> 59:37.000]  okay you might see something
+[59:37.000 --> 59:39.000]  I will not use this plot
+[59:39.000 --> 59:41.000]  as
+[59:41.000 --> 59:43.000]  as the way to look for
+[59:43.000 --> 59:45.000]  problems
+[59:45.000 --> 59:47.000]  if I had to guess
+[59:47.000 --> 59:49.000]  I will say that so all these lines
+[59:49.000 --> 59:51.000]  are
+[59:51.000 --> 59:53.000]  kind of similar length
+[59:53.000 --> 59:55.000]  but I expect that these phases
+[59:55.000 --> 59:57.000]  are kind of similar
+[59:57.000 --> 59:59.000]  for the various lines
+[59:59.000 --> 01:00:01.000]  so if you see something that really
+[01:00:01.000 --> 01:00:03.000]  is quite different from all the others
+[01:00:03.000 --> 01:00:05.000]  this might indicate an issue
+[01:00:05.000 --> 01:00:07.000]  but it's not even so simple
+[01:00:07.000 --> 01:00:09.000]  because this phase scan
+[01:00:09.000 --> 01:00:11.000]  is done basically on
+[01:00:11.000 --> 01:00:13.000]  two clock cycles
+[01:00:13.000 --> 01:00:15.000]  so let's say
+[01:00:15.000 --> 01:00:17.000]  you have this one that
+[01:00:17.000 --> 01:00:19.000]  for example this one is like lower
+[01:00:19.000 --> 01:00:21.000]  and you see that it's around 5
+[01:00:21.000 --> 01:00:23.000]  this phase would be equivalent
+[01:00:23.000 --> 01:00:25.000]  to basically 5
+[01:00:25.000 --> 01:00:27.000]  plus 8 so 13
+[01:00:27.000 --> 01:00:29.000]  so
+[01:00:29.000 --> 01:00:31.000]  because you are scanning two clock cycles
+[01:00:31.000 --> 01:00:33.000]  so there are basically two working points
+[01:00:33.000 --> 01:00:35.000]  and then it says you're going to just pick up
+[01:00:35.000 --> 01:00:37.000]  one or the two
+[01:00:37.000 --> 01:00:39.000]  so also that looking at five phases
+[01:00:39.000 --> 01:00:41.000]  particularly different might be
+[01:00:41.000 --> 01:00:43.000]  a little bit misleading
+[01:00:43.000 --> 01:00:45.000]  the one that is actually
+[01:00:45.000 --> 01:00:47.000]  an error code is the number 15
+[01:00:47.000 --> 01:00:49.000]  so 15 is a number so if you see
+[01:00:49.000 --> 01:00:51.000]  something that here that is a 15
+[01:00:51.000 --> 01:00:53.000]  it means that the alignment failed
+[01:00:53.000 --> 01:00:55.000]  but I don't recall
+[01:00:55.000 --> 01:00:57.000]  ever seen something but
+[01:00:57.000 --> 01:00:59.000]  like that because
+[01:00:59.000 --> 01:01:01.000]  the modules that the hybrid that we
+[01:01:01.000 --> 01:01:03.000]  receive are good and
+[01:01:03.000 --> 01:01:05.000]  the cbSense they see already
+[01:01:05.000 --> 01:01:07.000]  into the same hybrid
+[01:01:07.000 --> 01:01:09.000]  so this connection was already tested
+[01:01:09.000 --> 01:01:11.000]  but if for any
+[01:01:11.000 --> 01:01:13.000]  reason something happened I will imagine
+[01:01:13.000 --> 01:01:15.000]  that the lock efficiency will show you
+[01:01:15.000 --> 01:01:17.000]  something because I will guess
+[01:01:17.000 --> 01:01:19.000]  that if you get a 15
+[01:01:19.000 --> 01:01:21.000]  you will also see that the lock
+[01:01:21.000 --> 01:01:23.000]  efficiency is not that we don't work
+[01:01:23.000 --> 01:01:25.000]  okay thank you
+[01:01:25.000 --> 01:01:27.000]  no problem
+[01:01:29.000 --> 01:01:31.000]  okay
+[01:01:31.000 --> 01:01:33.000]  and then
+[01:01:33.000 --> 01:01:35.000]  there is one last step
+[01:01:35.000 --> 01:01:37.000]  that it needed to be
+[01:01:37.000 --> 01:01:39.000]  addressed because
+[01:01:39.000 --> 01:01:41.000]  between so now we know
+[01:01:41.000 --> 01:01:43.000]  that the cbC can
+[01:01:43.000 --> 01:01:45.000]  properly identify the one and the zero
+[01:01:45.000 --> 01:01:47.000]  coming from the cbC
+[01:01:47.000 --> 01:01:49.000]  but then it's a bit more complicated
+[01:01:49.000 --> 01:01:51.000]  because then the
+[01:01:51.000 --> 01:01:53.000]  cbC
+[01:01:53.000 --> 01:01:55.000]  need also to
+[01:01:55.000 --> 01:01:57.000]  elaborate the information from the
+[01:01:57.000 --> 01:01:59.000]  stubs so the stubs
+[01:01:59.000 --> 01:02:01.000]  from the
+[01:02:03.000 --> 01:02:05.000]  cbC comes
+[01:02:05.000 --> 01:02:07.000]  to these formats
+[01:02:07.000 --> 01:02:09.000]  so I have four lines
+[01:02:09.000 --> 01:02:11.000]  sorry three lines
+[01:02:11.000 --> 01:02:13.000]  for the
+[01:02:13.000 --> 01:02:15.000]  the strap address
+[01:02:15.000 --> 01:02:17.000]  and then basically
+[01:02:17.000 --> 01:02:19.000]  one line and a half of the bending
+[01:02:19.000 --> 01:02:21.000]  and then the last part is for the
+[01:02:21.000 --> 01:02:23.000]  error code but then
+[01:02:23.000 --> 01:02:25.000]  the cbC
+[01:02:25.000 --> 01:02:27.000]  sorry the cbC
+[01:02:27.000 --> 01:02:29.000]  need to
+[01:02:29.000 --> 01:02:31.000]  understand these numbers
+[01:02:31.000 --> 01:02:33.000]  and then identify
+[01:02:33.000 --> 01:02:35.000]  the one to actually send out
+[01:02:35.000 --> 01:02:37.000]  because you cannot send
+[01:02:37.000 --> 01:02:39.000]  all the stubs, all the cbC
+[01:02:39.000 --> 01:02:41.000]  all the cbC sends
+[01:02:41.000 --> 01:02:43.000]  each one of them three stubs
+[01:02:43.000 --> 01:02:45.000]  then you run out of a number
+[01:02:45.000 --> 01:02:47.000]  of stubs that the cbC can handle
+[01:02:47.000 --> 01:02:49.000]  so
+[01:02:49.000 --> 01:02:51.000]  all these just to say that
+[01:02:51.000 --> 01:02:53.000]  the cbC
+[01:02:53.000 --> 01:02:55.000]  need to understand what is
+[01:02:55.000 --> 01:02:57.000]  the first of these bits
+[01:02:57.000 --> 01:02:59.000]  coming from the cbC
+[01:02:59.000 --> 01:03:01.000]  and therefore
+[01:03:01.000 --> 01:03:03.000]  what you have to do is more or less
+[01:03:03.000 --> 01:03:05.000]  what is done in the
+[01:03:05.000 --> 01:03:07.000]  fc7 where we do
+[01:03:07.000 --> 01:03:09.000]  the
+[01:03:09.000 --> 01:03:11.000]  the identification
+[01:03:11.000 --> 01:03:13.000]  the first of this bit
+[01:03:13.000 --> 01:03:15.000]  and this is called the world alignment
+[01:03:15.000 --> 01:03:17.000]  because you need to understand not only the bit
+[01:03:17.000 --> 01:03:19.000]  but also the world
+[01:03:21.000 --> 01:03:23.000]  and these
+[01:03:23.000 --> 01:03:25.000]  corresponds to
+[01:03:25.000 --> 01:03:27.000]  this step
+[01:03:27.000 --> 01:03:29.000]  or this is the world alignment
+[01:03:29.000 --> 01:03:31.000]  so as for
+[01:03:31.000 --> 01:03:33.000]  before
+[01:03:33.000 --> 01:03:35.000]  we send, we set
+[01:03:35.000 --> 01:03:37.000]  the cbC to send
+[01:03:37.000 --> 01:03:39.000]  a specific pattern
+[01:03:39.000 --> 01:03:41.000]  but this time we also tell to the cbC
+[01:03:41.000 --> 01:03:43.000]  what they need to expect
+[01:03:43.000 --> 01:03:45.000]  it's basically identical to the procedure
+[01:03:45.000 --> 01:03:47.000]  that was done between the
+[01:03:47.000 --> 01:03:49.000]  FPGA and the cbC
+[01:03:49.000 --> 01:03:51.000]  so
+[01:03:53.000 --> 01:03:55.000]  these
+[01:03:55.000 --> 01:03:57.000]  creates one single plot
+[01:03:57.000 --> 01:03:59.000]  that
+[01:03:59.000 --> 01:04:01.000]  keep forgetting
+[01:04:01.000 --> 01:04:03.000]  that just
+[01:04:03.000 --> 01:04:05.000]  show you what is the delay
+[01:04:05.000 --> 01:04:07.000]  that is applied
+[01:04:07.000 --> 01:04:09.000]  on the
+[01:04:09.000 --> 01:04:11.000]  on the
+[01:04:11.000 --> 01:04:13.000]  cbC
+[01:04:13.000 --> 01:04:15.000]  on
+[01:04:15.000 --> 01:04:17.000]  each one of
+[01:04:17.000 --> 01:04:19.000]  this line over here
+[01:04:19.000 --> 01:04:21.000]  because each one of these
+[01:04:21.000 --> 01:04:23.000]  might be slightly different
+[01:04:23.000 --> 01:04:25.000]  so as you see
+[01:04:25.000 --> 01:04:27.000]  each one of these
+[01:04:27.000 --> 01:04:29.000]  show a value of 6
+[01:04:29.000 --> 01:04:31.000]  and
+[01:04:31.000 --> 01:04:33.000]  here I don't think you can see
+[01:04:33.000 --> 01:04:35.000]  actually anything particular
+[01:04:35.000 --> 01:04:37.000]  again
+[01:04:37.000 --> 01:04:39.000]  in this case actually a little bit better
+[01:04:39.000 --> 01:04:41.000]  what I was
+[01:04:41.000 --> 01:04:43.000]  saying before
+[01:04:43.000 --> 01:04:45.000]  because this line are
+[01:04:45.000 --> 01:04:47.000]  identical
+[01:04:47.000 --> 01:04:49.000]  very similar in length
+[01:04:49.000 --> 01:04:51.000]  so if you see some of this line
+[01:04:51.000 --> 01:04:53.000]  that are
+[01:04:53.000 --> 01:04:55.000]  drastically different from the average
+[01:04:55.000 --> 01:04:57.000]  that might indicate something
+[01:04:57.000 --> 01:04:59.000]  that is going wrong
+[01:04:59.000 --> 01:05:01.000]  again I will not use these particular plots
+[01:05:01.000 --> 01:05:03.000]  for debugging this is a minute to understand
+[01:05:03.000 --> 01:05:05.000]  what was the value
+[01:05:05.000 --> 01:05:07.000]  in fact I don't think in potato we do anything
+[01:05:07.000 --> 01:05:09.000]  with this plot
+[01:05:09.000 --> 01:05:11.000]  we just need to store them because we want
+[01:05:11.000 --> 01:05:13.000]  to know what was the value
+[01:05:13.000 --> 01:05:15.000]  that was chosen
+[01:05:15.000 --> 01:05:17.000]  but you cannot really
+[01:05:17.000 --> 01:05:19.000]  grasp any particular information about the quality
+[01:05:19.000 --> 01:05:21.000]  of your model
+[01:05:21.000 --> 01:05:23.000]  ok
+[01:05:23.000 --> 01:05:25.000]  and here there is no
+[01:05:25.000 --> 01:05:27.000]  so the different from what was
+[01:05:27.000 --> 01:05:29.000]  before is not scanning
+[01:05:29.000 --> 01:05:31.000]  two phases just scan one
+[01:05:31.000 --> 01:05:33.000]  so that cannot be
+[01:05:33.000 --> 01:05:35.000]  there is just one working point
+[01:05:35.000 --> 01:05:37.000]  that can work
+[01:05:37.000 --> 01:05:39.000]  ok
+[01:05:39.000 --> 01:05:41.000]  so we have almost
+[01:05:41.000 --> 01:05:43.000]  done with the alignment part
+[01:05:43.000 --> 01:05:45.000]  these honestly have been more complicated
+[01:05:45.000 --> 01:05:47.000]  part because actually
+[01:05:47.000 --> 01:05:49.000]  about the intercommunication between
+[01:05:49.000 --> 01:05:51.000]  chips
+[01:05:51.000 --> 01:05:53.000]  the most complicated until
+[01:05:53.000 --> 01:05:55.000]  we go to the electric chain validation
+[01:05:55.000 --> 01:05:57.000]  that is going to be
+[01:05:57.000 --> 01:05:59.000]  something a bit more complicated
+[01:05:59.000 --> 01:06:01.000]  but I think if you understand
+[01:06:01.000 --> 01:06:03.000]  all the idea of the phase alignment
+[01:06:03.000 --> 01:06:05.000]  the electric chain validation is going to be
+[01:06:05.000 --> 01:06:07.000]  slightly simpler because
+[01:06:07.000 --> 01:06:09.000]  basically
+[01:06:09.000 --> 01:06:11.000]  extended version
+[01:06:11.000 --> 01:06:13.000]  of the alignment procedure
+[01:06:13.000 --> 01:06:15.000]  this
+[01:06:15.000 --> 01:06:17.000]  ok
+[01:06:17.000 --> 01:06:19.000]  at this point
+[01:06:19.000 --> 01:06:21.000]  we have everything aligned
+[01:06:21.000 --> 01:06:23.000]  so the CRC is aligned to the LPGT
+[01:06:23.000 --> 01:06:25.000]  the CRC data
+[01:06:25.000 --> 01:06:27.000]  are properly decoded by the FPGA
+[01:06:27.000 --> 01:06:29.000]  and the CBC
+[01:06:29.000 --> 01:06:31.000]  data are properly
+[01:06:31.000 --> 01:06:33.000]  decoded by the CRC
+[01:06:33.000 --> 01:06:35.000]  so now all the chips are communicating
+[01:06:35.000 --> 01:06:37.000]  and the last step that we want to do
+[01:06:37.000 --> 01:06:39.000]  is basically to check
+[01:06:39.000 --> 01:06:41.000]  what is the quality of the connection between the CBC
+[01:06:41.000 --> 01:06:43.000]  and the CRC
+[01:06:43.000 --> 01:06:45.000]  so we set again the CBC
+[01:06:45.000 --> 01:06:47.000]  into sending a specific pattern
+[01:06:47.000 --> 01:06:49.000]  through these lines
+[01:06:49.000 --> 01:06:51.000]  and then we want to see in the
+[01:06:51.000 --> 01:06:53.000]  way if the data that was
+[01:06:53.000 --> 01:06:55.000]  sending from the CBC are actually the one
+[01:06:55.000 --> 01:06:57.000]  that we are receiving the FPGA
+[01:06:59.000 --> 01:07:01.000]  now so these plots
+[01:07:01.000 --> 01:07:03.000]  are saved
+[01:07:03.000 --> 01:07:05.000]  at the level of the
+[01:07:05.000 --> 01:07:07.000]  hybrids again I just showing you one
+[01:07:07.000 --> 01:07:09.000]  hybrid because
+[01:07:09.000 --> 01:07:11.000]  the other one is going to be identical
+[01:07:13.000 --> 01:07:15.000]  and we have two plots
+[01:07:17.000 --> 01:07:19.000]  ok
+[01:07:19.000 --> 01:07:21.000]  so this one
+[01:07:21.000 --> 01:07:23.000]  it shows you
+[01:07:23.000 --> 01:07:25.000]  the number of bits
+[01:07:25.000 --> 01:07:27.000]  that are tested
+[01:07:27.000 --> 01:07:29.000]  and it shows you
+[01:07:29.000 --> 01:07:31.000]  for the
+[01:07:31.000 --> 01:07:33.000]  level one
+[01:07:33.000 --> 01:07:35.000]  and for the stubs and these stubs
+[01:07:35.000 --> 01:07:37.000]  are cumulative
+[01:07:37.000 --> 01:07:39.000]  so basically we look at
+[01:07:39.000 --> 01:07:41.000]  the combination
+[01:07:41.000 --> 01:07:43.000]  of all these
+[01:07:43.000 --> 01:07:45.000]  three lines
+[01:07:45.000 --> 01:07:47.000]  the reason for that
+[01:07:47.000 --> 01:07:49.000]  is that the CBC then digest
+[01:07:49.000 --> 01:07:51.000]  this information
+[01:07:51.000 --> 01:07:53.000]  so
+[01:07:53.000 --> 01:07:55.000]  in this particular configuration
+[01:07:55.000 --> 01:07:57.000]  without
+[01:07:57.000 --> 01:07:59.000]  doing any extra trick that I'm going to cover later
+[01:07:59.000 --> 01:08:01.000]  you don't really understand
+[01:08:01.000 --> 01:08:03.000]  if one of these lines
+[01:08:03.000 --> 01:08:05.000]  is creating a problem
+[01:08:05.000 --> 01:08:07.000]  you just know that
+[01:08:07.000 --> 01:08:09.000]  at least one of these lines is a problem
+[01:08:09.000 --> 01:08:11.000]  and then
+[01:08:11.000 --> 01:08:13.000]  and then down the road
+[01:08:13.000 --> 01:08:15.000]  something is happening
+[01:08:15.000 --> 01:08:17.000]  so
+[01:08:17.000 --> 01:08:19.000]  that's why you have one single
+[01:08:19.000 --> 01:08:21.000]  value for all the stubs lines
+[01:08:21.000 --> 01:08:23.000]  at this level later I'm going to show you
+[01:08:23.000 --> 01:08:25.000]  how we distinguish them
+[01:08:25.000 --> 01:08:27.000]  require extra steps that are quite time-consuming
+[01:08:27.000 --> 01:08:29.000]  and since these steps are done
+[01:08:29.000 --> 01:08:31.000]  also into the quick test
+[01:08:31.000 --> 01:08:33.000]  we don't do the
+[01:08:33.000 --> 01:08:35.000]  separation at this level
+[01:08:35.000 --> 01:08:37.000]  and as for before you see then the number of bits
+[01:08:37.000 --> 01:08:39.000]  that are tested for the stubs
+[01:08:39.000 --> 01:08:41.000]  is quite higher than the
+[01:08:41.000 --> 01:08:43.000]  level ones
+[01:08:43.000 --> 01:08:45.000]  which still it is
+[01:08:45.000 --> 01:08:47.000]  10 to 5
+[01:08:47.000 --> 01:08:49.000]  which is not really super small number
+[01:08:49.000 --> 01:08:51.000]  and the reason is
+[01:08:51.000 --> 01:08:53.000]  the usual
+[01:08:53.000 --> 01:08:55.000]  is that the pattern matching
+[01:08:55.000 --> 01:08:57.000]  in the stubs
+[01:08:57.000 --> 01:08:59.000]  for the stubs is done in the firmware
+[01:08:59.000 --> 01:09:01.000]  and for the level one is tested
+[01:09:01.000 --> 01:09:03.000]  with the software that takes longer
+[01:09:03.000 --> 01:09:05.000]  process in time
+[01:09:05.000 --> 01:09:07.000]  so this is based on the denominator
+[01:09:07.000 --> 01:09:09.000]  and as for
+[01:09:09.000 --> 01:09:11.000]  before
+[01:09:11.000 --> 01:09:13.000]  is the numerator
+[01:09:13.000 --> 01:09:15.000]  so there is actually
+[01:09:15.000 --> 01:09:17.000]  error rate so it's already divided
+[01:09:17.000 --> 01:09:19.000]  by the denominator
+[01:09:19.000 --> 01:09:21.000]  so number of errors
+[01:09:21.000 --> 01:09:23.000]  per
+[01:09:23.000 --> 01:09:25.000]  per
+[01:09:25.000 --> 01:09:27.000]  level one line
+[01:09:27.000 --> 01:09:29.000]  or stubs lines
+[01:09:29.000 --> 01:09:31.000]  for every cbc
+[01:09:31.000 --> 01:09:33.000]  so
+[01:09:33.000 --> 01:09:35.000]  few comments over here
+[01:09:35.000 --> 01:09:37.000]  you see that here we have
+[01:09:37.000 --> 01:09:39.000]  a two per mil error rate
+[01:09:39.000 --> 01:09:41.000]  so
+[01:09:41.000 --> 01:09:43.000]  there are still some
+[01:09:43.000 --> 01:09:45.000]  instabilities in this test
+[01:09:45.000 --> 01:09:47.000]  that I didn't experience
+[01:09:47.000 --> 01:09:49.000]  with the modules
+[01:09:49.000 --> 01:09:51.000]  that I was developing from
+[01:09:51.000 --> 01:09:53.000]  on and this is one of the
+[01:09:53.000 --> 01:09:55.000]  new modules that was assembled in production
+[01:09:55.000 --> 01:09:57.000]  and I will start seeing this
+[01:09:57.000 --> 01:09:59.000]  the module doesn't have any trouble
+[01:09:59.000 --> 01:10:01.000]  so if you see numbers
+[01:10:01.000 --> 01:10:03.000]  that are not exactly zero
+[01:10:03.000 --> 01:10:05.000]  for the stubs lines don't
+[01:10:05.000 --> 01:10:07.000]  worry too much
+[01:10:07.000 --> 01:10:09.000]  I'm going to try to address them
+[01:10:09.000 --> 01:10:11.000]  that this just came with the most
+[01:10:11.000 --> 01:10:13.000]  statistic and this was one of the kind
+[01:10:13.000 --> 01:10:15.000]  of aspect
+[01:10:15.000 --> 01:10:17.000]  for the level one
+[01:10:17.000 --> 01:10:19.000]  also you may see some
+[01:10:23.000 --> 01:10:25.000]  error rate that is not exactly zero
+[01:10:25.000 --> 01:10:27.000]  let me try to see if
+[01:10:27.000 --> 01:10:29.000]  by chance
+[01:10:29.000 --> 01:10:31.000]  the other eye
+[01:10:31.000 --> 01:10:33.000]  slightly has also some error
+[01:10:33.000 --> 01:10:35.000]  on the
+[01:10:35.000 --> 01:10:37.000]  not this one is perfect
+[01:10:37.000 --> 01:10:39.000]  also here
+[01:10:39.000 --> 01:10:41.000]  if you see very small error is
+[01:10:41.000 --> 01:10:43.000]  because this procedure
+[01:10:43.000 --> 01:10:45.000]  doing a pattern matching the software is not
+[01:10:45.000 --> 01:10:47.000]  perfect
+[01:10:47.000 --> 01:10:49.000]  and you might get
+[01:10:49.000 --> 01:10:51.000]  10-4, 10-5 error rate
+[01:10:51.000 --> 01:10:53.000]  also
+[01:10:53.000 --> 01:10:55.000]  in this case I will not worry too much
+[01:10:55.000 --> 01:10:57.000]  we are trying to address that
+[01:10:57.000 --> 01:10:59.000]  I don't know how much it's going to be go away
+[01:10:59.000 --> 01:11:01.000]  just metal the pressure that we set
+[01:11:01.000 --> 01:11:03.000]  so if you see basically
+[01:11:03.000 --> 01:11:05.000]  small number below the
+[01:11:05.000 --> 01:11:07.000]  percent level
+[01:11:07.000 --> 01:11:09.000]  I will not worry
+[01:11:09.000 --> 01:11:11.000]  at the moment
+[01:11:11.000 --> 01:11:13.000]  if you have bigger problems you will see
+[01:11:13.000 --> 01:11:15.000]  quite a large error
+[01:11:15.000 --> 01:11:17.000]  so very likely you will see
+[01:11:17.000 --> 01:11:19.000]  an order of 20%
+[01:11:19.000 --> 01:11:21.000]  something like that
+[01:11:21.000 --> 01:11:23.000]  okay
+[01:11:23.000 --> 01:11:25.000]  so
+[01:11:25.000 --> 01:11:27.000]  for the future we are going to try to fix this plot
+[01:11:27.000 --> 01:11:29.000]  for the
+[01:11:31.000 --> 01:11:33.000]  so
+[01:11:33.000 --> 01:11:35.000]  yeah
+[01:11:35.000 --> 01:11:37.000]  okay
+[01:11:41.000 --> 01:11:43.000]  so this part
+[01:11:43.000 --> 01:11:45.000]  conclude all the
+[01:11:45.000 --> 01:11:47.000]  part related
+[01:11:47.000 --> 01:11:49.000]  to the alignment
+[01:11:49.000 --> 01:11:51.000]  so
+[01:11:51.000 --> 01:11:53.000]  do you have any
+[01:11:53.000 --> 01:11:55.000]  further question in this part you can ask
+[01:11:55.000 --> 01:11:57.000]  of course anytime but since we are going to
+[01:11:57.000 --> 01:11:59.000]  move on
+[01:11:59.000 --> 01:12:01.000]  from the alignment part
+[01:12:01.000 --> 01:12:03.000]  that is honestly quite lengthy
+[01:12:03.000 --> 01:12:05.000]  and tough
+[01:12:05.000 --> 01:12:07.000]  just please ask
+[01:12:11.000 --> 01:12:13.000]  the other question
+[01:12:13.000 --> 01:12:15.000]  why do some of the steps of OT and some of them don't
+[01:12:17.000 --> 01:12:19.000]  is simply for
+[01:12:19.000 --> 01:12:21.000]  a historical reason
+[01:12:21.000 --> 01:12:23.000]  the newer steps that we had
+[01:12:23.000 --> 01:12:25.000]  recently just
+[01:12:25.000 --> 01:12:27.000]  to be a bit more consistent
+[01:12:27.000 --> 01:12:29.000]  I just put OT in front of them
+[01:12:29.000 --> 01:12:31.000]  this one was the
+[01:12:31.000 --> 01:12:33.000]  developer
+[01:12:33.000 --> 01:12:35.000]  way before
+[01:12:35.000 --> 01:12:37.000]  the inner trackers
+[01:12:37.000 --> 01:12:39.000]  started joining the group
+[01:12:39.000 --> 01:12:41.000]  and that's why they were
+[01:12:41.000 --> 01:12:43.000]  they didn't have OT
+[01:12:43.000 --> 01:12:45.000]  I just didn't want to change names everywhere
+[01:12:45.000 --> 01:12:47.000]  and this one I think is the only one
+[01:12:47.000 --> 01:12:49.000]  legit
+[01:12:49.000 --> 01:12:51.000]  because it is the same procedure
+[01:12:51.000 --> 01:12:53.000]  for the inner trackers
+[01:12:53.000 --> 01:12:55.000]  okay thanks
+[01:12:55.000 --> 01:12:57.000]  no problem
+[01:13:01.000 --> 01:13:03.000]  okay
+[01:13:03.000 --> 01:13:05.000]  and go on yes
+[01:13:05.000 --> 01:13:07.000]  when we are
+[01:13:07.000 --> 01:13:09.000]  performing this test
+[01:13:09.000 --> 01:13:11.000]  there are some messages during
+[01:13:11.000 --> 01:13:13.000]  running of the test
+[01:13:13.000 --> 01:13:15.000]  so can you point
+[01:13:15.000 --> 01:13:17.000]  out some important messages
+[01:13:17.000 --> 01:13:19.000]  which we take care when we are
+[01:13:19.000 --> 01:13:21.000]  doing the test
+[01:13:21.000 --> 01:13:23.000]  so
+[01:13:23.000 --> 01:13:25.000]  um
+[01:13:27.000 --> 01:13:29.000]  so unfortunately I don't have
+[01:13:29.000 --> 01:13:31.000]  a log I think
+[01:13:31.000 --> 01:13:33.000]  with me
+[01:13:33.000 --> 01:13:35.000]  I don't so to be honest
+[01:13:35.000 --> 01:13:37.000]  I'm trying not to use
+[01:13:37.000 --> 01:13:39.000]  too much the
+[01:13:39.000 --> 01:13:41.000]  so any important message
+[01:13:41.000 --> 01:13:43.000]  that is happening over there
+[01:13:43.000 --> 01:13:45.000]  it will reflect into
+[01:13:45.000 --> 01:13:47.000]  um
+[01:13:47.000 --> 01:13:49.000]  something that you can see directly from the plots
+[01:13:49.000 --> 01:13:51.000]  so
+[01:13:51.000 --> 01:13:53.000]  the reason why I'm not
+[01:13:53.000 --> 01:13:55.000]  I prefer not to use the log file
+[01:13:57.000 --> 01:13:59.000]  the debug file it might be useful
+[01:13:59.000 --> 01:14:01.000]  mainly is for me to understand
+[01:14:01.000 --> 01:14:03.000]  what is going on
+[01:14:03.000 --> 01:14:05.000]  try to understand
+[01:14:05.000 --> 01:14:07.000]  where the problem is occurring
+[01:14:09.000 --> 01:14:11.000]  the reason why I don't like it too much
+[01:14:11.000 --> 01:14:13.000]  is that
+[01:14:15.000 --> 01:14:17.000]  the log file are gonna disappear
+[01:14:17.000 --> 01:14:19.000]  after some time
+[01:14:19.000 --> 01:14:21.000]  there is a limit on how much
+[01:14:21.000 --> 01:14:23.000]  you can store into a log file
+[01:14:23.000 --> 01:14:25.000]  so I will really just use the plots
+[01:14:25.000 --> 01:14:27.000]  all the plots contains
+[01:14:27.000 --> 01:14:29.000]  all the information that
+[01:14:29.000 --> 01:14:31.000]  you need
+[01:14:31.000 --> 01:14:33.000]  you need to use for understanding
+[01:14:33.000 --> 01:14:35.000]  how the modules are running
+[01:14:35.000 --> 01:14:37.000]  so
+[01:14:37.000 --> 01:14:39.000]  I don't have any particular
+[01:14:39.000 --> 01:14:41.000]  message that will not shown
+[01:14:41.000 --> 01:14:43.000]  in any of these plots
+[01:14:43.000 --> 01:14:45.000]  I
+[01:14:47.000 --> 01:14:49.000]  I'm asking only in a sense that
+[01:14:49.000 --> 01:14:51.000]  when you start the test of course
+[01:14:51.000 --> 01:14:53.000]  it takes some time to finish the test
+[01:14:53.000 --> 01:14:55.000]  but
+[01:14:55.000 --> 01:14:57.000]  you know
+[01:14:57.000 --> 01:14:59.000]  suppose in the start you feel there is
+[01:14:59.000 --> 01:15:01.000]  something very problematic
+[01:15:01.000 --> 01:15:03.000]  then you stop the run and then you
+[01:15:03.000 --> 01:15:05.000]  try to fix it
+[01:15:05.000 --> 01:15:07.000]  so
+[01:15:07.000 --> 01:15:09.000]  the
+[01:15:09.000 --> 01:15:11.000]  uh
+[01:15:11.000 --> 01:15:13.000]  so if there is something very problematic
+[01:15:15.000 --> 01:15:17.000]  the module will be
+[01:15:17.000 --> 01:15:19.000]  will be disabled
+[01:15:19.000 --> 01:15:21.000]  and once you don't have any module to run
+[01:15:21.000 --> 01:15:23.000]  on the program will stop
+[01:15:23.000 --> 01:15:25.000]  so it's
+[01:15:25.000 --> 01:15:27.000]  something this bad is
+[01:15:27.000 --> 01:15:29.000]  something that makes the module
+[01:15:29.000 --> 01:15:31.000]  inoperable
+[01:15:31.000 --> 01:15:33.000]  the program will
+[01:15:33.000 --> 01:15:35.000]  disable and stop it
+[01:15:37.000 --> 01:15:39.000]  so
+[01:15:41.000 --> 01:15:43.000]  my suggestion and also shouldn't take
+[01:15:43.000 --> 01:15:45.000]  too much to run
+[01:15:45.000 --> 01:15:47.000]  it's only 14 minutes
+[01:15:47.000 --> 01:15:49.000]  if you have any troubles
+[01:15:49.000 --> 01:15:51.000]  just run the quick test
+[01:15:51.000 --> 01:15:53.000]  so the quick test is going to tell you
+[01:15:53.000 --> 01:15:55.000]  basically
+[01:15:55.000 --> 01:15:57.000]  all the major problems that you can address
+[01:15:57.000 --> 01:15:59.000]  the full test
+[01:15:59.000 --> 01:16:01.000]  it gives you a full idea of the module
+[01:16:01.000 --> 01:16:03.000]  it doesn't mean that
+[01:16:03.000 --> 01:16:05.000]  so if there is anything
+[01:16:05.000 --> 01:16:07.000]  as problematic that the module doesn't work
+[01:16:07.000 --> 01:16:09.000]  is the quick test
+[01:16:09.000 --> 01:16:11.000]  it gives you immediate feedback and goes very fast
+[01:16:13.000 --> 01:16:15.000]  the full test it looks
+[01:16:15.000 --> 01:16:17.000]  to a wider perspective
+[01:16:17.000 --> 01:16:19.000]  on how well the module works
+[01:16:19.000 --> 01:16:21.000]  and basically
+[01:16:21.000 --> 01:16:23.000]  whatever is after
+[01:16:23.000 --> 01:16:25.000]  what the quick test does
+[01:16:25.000 --> 01:16:27.000]  is not really something
+[01:16:27.000 --> 01:16:29.000]  that you can easily fix
+[01:16:31.000 --> 01:16:33.000]  it's basically
+[01:16:33.000 --> 01:16:35.000]  so
+[01:16:35.000 --> 01:16:37.000]  it's basically telling you that
+[01:16:37.000 --> 01:16:39.000]  your module is not 100%
+[01:16:39.000 --> 01:16:41.000]  but it's something that you have to
+[01:16:41.000 --> 01:16:43.000]  live with
+[01:16:43.000 --> 01:16:45.000]  so
+[01:16:45.000 --> 01:16:47.000]  that's why we run the quick test
+[01:16:47.000 --> 01:16:49.000]  in particular that's why we run it
+[01:16:49.000 --> 01:16:51.000]  after
+[01:16:51.000 --> 01:16:53.000]  before encapsulation
+[01:16:53.000 --> 01:16:55.000]  because this is going to tell you
+[01:16:55.000 --> 01:16:57.000]  the module has
+[01:16:57.000 --> 01:16:59.000]  some major issues that you can
+[01:16:59.000 --> 01:17:01.000]  still address
+[01:17:01.000 --> 01:17:03.000]  the full test
+[01:17:03.000 --> 01:17:05.000]  is just going to tell you the same
+[01:17:05.000 --> 01:17:07.000]  because you can answer the same steps
+[01:17:07.000 --> 01:17:09.000]  but it tells you more
+[01:17:09.000 --> 01:17:11.000]  and what is more
+[01:17:11.000 --> 01:17:13.000]  basically it will not
+[01:17:13.000 --> 01:17:15.000]  tell you anything that you can fix
+[01:17:15.000 --> 01:17:17.000]  okay
+[01:17:17.000 --> 01:17:19.000]  thank you
+[01:17:23.000 --> 01:17:25.000]  okay in general
+[01:17:25.000 --> 01:17:27.000]  so we are trying to use a little bit more
+[01:17:27.000 --> 01:17:29.000]  a consistent format
+[01:17:29.000 --> 01:17:31.000]  so the error messages
+[01:17:31.000 --> 01:17:33.000]  are going to have a background
+[01:17:33.000 --> 01:17:35.000]  and the warning
+[01:17:35.000 --> 01:17:37.000]  message are going to have a background
+[01:17:37.000 --> 01:17:39.000]  in yellow so that might give you some
+[01:17:39.000 --> 01:17:41.000]  I mean those are the messages
+[01:17:41.000 --> 01:17:43.000]  that you might look for
+[01:17:43.000 --> 01:17:45.000]  if you feel that there is
+[01:17:45.000 --> 01:17:47.000]  any problem but it will just
+[01:17:47.000 --> 01:17:49.000]  let you run because otherwise you don't
+[01:17:49.000 --> 01:17:51.000]  really get the full picture so it might be
+[01:17:51.000 --> 01:17:53.000]  a little bit misleading just to
+[01:17:53.000 --> 01:17:55.000]  rely on an error message
+[01:17:55.000 --> 01:17:57.000]  or on something else
+[01:17:59.000 --> 01:18:01.000]  okay
+[01:18:03.000 --> 01:18:05.000]  hi Fabio
+[01:18:05.000 --> 01:18:07.000]  so regarding this
+[01:18:07.000 --> 01:18:09.000]  color coding for like red
+[01:18:09.000 --> 01:18:11.000]  or yellow so I
+[01:18:11.000 --> 01:18:13.000]  was running a full test
+[01:18:13.000 --> 01:18:15.000]  and I saw why it was trying
+[01:18:15.000 --> 01:18:17.000]  to do the alignment probably
+[01:18:17.000 --> 01:18:19.000]  and then I tried several times
+[01:18:19.000 --> 01:18:21.000]  alignment on line 5
+[01:18:21.000 --> 01:18:23.000]  failed it trying 9 more times before giving up
+[01:18:23.000 --> 01:18:25.000]  and then there was a red line that
+[01:18:25.000 --> 01:18:27.000]  failed to align optical group 0
+[01:18:27.000 --> 01:18:29.000]  I did 1 line
+[01:18:29.000 --> 01:18:31.000]  5 0 something 5.00
+[01:18:31.000 --> 01:18:33.000]  and then finally it got succeeded
+[01:18:33.000 --> 01:18:35.000]  but there were plenty of time
+[01:18:35.000 --> 01:18:37.000]  that I got this red
+[01:18:37.000 --> 01:18:39.000]  errors probably failed to align optical
+[01:18:39.000 --> 01:18:41.000]  group 0 so is there something
+[01:18:41.000 --> 01:18:43.000]  going on?
+[01:18:43.000 --> 01:18:45.000]  so I think I guess probably
+[01:18:45.000 --> 01:18:47.000]  what you are referring
+[01:18:47.000 --> 01:18:49.000]  is
+[01:18:49.000 --> 01:18:51.000]  happening during
+[01:18:51.000 --> 01:18:53.000]  other steps that are in the electric
+[01:18:53.000 --> 01:18:55.000]  chain validation
+[01:18:55.000 --> 01:18:57.000]  so
+[01:18:57.000 --> 01:18:59.000]  this is something that I realized and fixed
+[01:18:59.000 --> 01:19:01.000]  in the newer version
+[01:19:01.000 --> 01:19:03.000]  so because
+[01:19:03.000 --> 01:19:05.000]  what
+[01:19:05.000 --> 01:19:07.000]  so after we move
+[01:19:07.000 --> 01:19:09.000]  the pattern matching to the
+[01:19:09.000 --> 01:19:11.000]  into the
+[01:19:11.000 --> 01:19:13.000]  firmware then
+[01:19:13.000 --> 01:19:15.000]  we needed to do extra alignment steps
+[01:19:15.000 --> 01:19:17.000]  in order to make the pattern matching work
+[01:19:17.000 --> 01:19:19.000]  especially when you do face
+[01:19:19.000 --> 01:19:21.000]  scan where things are moving around
+[01:19:21.000 --> 01:19:23.000]  so you need to do them again
+[01:19:23.000 --> 01:19:25.000]  and the same procedure
+[01:19:25.000 --> 01:19:27.000]  is the procedure that
+[01:19:27.000 --> 01:19:29.000]  is run is the same procedure
+[01:19:29.000 --> 01:19:31.000]  that is run into align B
+[01:19:31.000 --> 01:19:33.000]  bolder data
+[01:19:33.000 --> 01:19:35.000]  and
+[01:19:35.000 --> 01:19:37.000]  here at this step you want to see if there are
+[01:19:37.000 --> 01:19:39.000]  errors and later we
+[01:19:39.000 --> 01:19:41.000]  expect that for some phases there is going to be
+[01:19:41.000 --> 01:19:43.000]  an error and I didn't realize
+[01:19:43.000 --> 01:19:45.000]  that this might have been a little
+[01:19:45.000 --> 01:19:47.000]  misleading so if you take
+[01:19:47.000 --> 01:19:49.000]  the newer version
+[01:19:49.000 --> 01:19:51.000]  the target
+[01:19:51.000 --> 01:19:53.000]  I think now is B6.9
+[01:19:53.000 --> 01:19:55.000]  I suppress
+[01:19:55.000 --> 01:19:57.000]  all the error messages
+[01:19:57.000 --> 01:19:59.000]  into the second part
+[01:19:59.000 --> 01:20:01.000]  where you expect that some of the
+[01:20:01.000 --> 01:20:03.000]  some of the phases that you're using will not
+[01:20:03.000 --> 01:20:05.000]  align so now it should be
+[01:20:05.000 --> 01:20:07.000]  much more consistent
+[01:20:07.000 --> 01:20:09.000]  and get all the
+[01:20:09.000 --> 01:20:11.000]  that you get yet and sorry that was
+[01:20:11.000 --> 01:20:13.000]  my mistake I just didn't realize
+[01:20:13.000 --> 01:20:15.000]  that was misleading
+[01:20:15.000 --> 01:20:17.000]  and this error is after this
+[01:20:17.000 --> 01:20:19.000]  OT chip to CIC
+[01:20:19.000 --> 01:20:21.000]  ECV after that step I
+[01:20:21.000 --> 01:20:23.000]  was getting that red errors
+[01:20:23.000 --> 01:20:25.000]  but it's okay as you mentioned
+[01:20:25.000 --> 01:20:27.000]  the color coding so I thought that
+[01:20:27.000 --> 01:20:29.000]  it's better to
+[01:20:29.000 --> 01:20:31.000]  you were absolutely right
+[01:20:31.000 --> 01:20:33.000]  it was just misleading that
+[01:20:33.000 --> 01:20:35.000]  I didn't suppress the message
+[01:20:35.000 --> 01:20:37.000]  you were not the only one
+[01:20:37.000 --> 01:20:39.000]  and a few people asked me
+[01:20:39.000 --> 01:20:41.000]  the same question I realized that
+[01:20:41.000 --> 01:20:43.000]  was not a great idea just to leave it
+[01:20:43.000 --> 01:20:45.000]  out
+[01:20:49.000 --> 01:20:51.000]  okay
+[01:20:51.000 --> 01:20:53.000]  I'm going to move on
+[01:20:53.000 --> 01:20:55.000]  to the
+[01:20:55.000 --> 01:20:57.000]  probably the two most known
+[01:20:57.000 --> 01:20:59.000]  calibration so
+[01:20:59.000 --> 01:21:01.000]  I think you know very well
+[01:21:01.000 --> 01:21:03.000]  so
+[01:21:03.000 --> 01:21:05.000]  it is telequalization so
+[01:21:05.000 --> 01:21:07.000]  by construction
+[01:21:07.000 --> 01:21:09.000]  the comparator that are
+[01:21:09.000 --> 01:21:11.000]  setting the threshold
+[01:21:11.000 --> 01:21:13.000]  for every channel
+[01:21:13.000 --> 01:21:15.000]  are subjected
+[01:21:15.000 --> 01:21:17.000]  to
+[01:21:17.000 --> 01:21:19.000]  production variation
+[01:21:19.000 --> 01:21:21.000]  cannot be done better than that
+[01:21:21.000 --> 01:21:23.000]  and so basically
+[01:21:23.000 --> 01:21:25.000]  every chip, every doubt chip
+[01:21:25.000 --> 01:21:27.000]  that you're going to find out
+[01:21:27.000 --> 01:21:29.000]  on the market not only on the tracker
+[01:21:29.000 --> 01:21:31.000]  have some
+[01:21:31.000 --> 01:21:33.000]  functionality that allow to compensate
+[01:21:33.000 --> 01:21:35.000]  for that and in this case
+[01:21:35.000 --> 01:21:37.000]  for the CBC
+[01:21:37.000 --> 01:21:39.000]  is an offset
+[01:21:39.000 --> 01:21:41.000]  that you can apply basically
+[01:21:41.000 --> 01:21:43.000]  to the signal that comes from the amplifier
+[01:21:45.000 --> 01:21:47.000]  that allow to raise a little bit
+[01:21:47.000 --> 01:21:49.000]  lower a little bit
+[01:21:49.000 --> 01:21:51.000]  the signal, the pedestal of the signal
+[01:21:51.000 --> 01:21:53.000]  such that
+[01:21:53.000 --> 01:21:55.000]  the threshold that you
+[01:21:55.000 --> 01:21:57.000]  apply is actually uniform
+[01:21:57.000 --> 01:21:59.000]  across every channel
+[01:21:59.000 --> 01:22:01.000]  so
+[01:22:01.000 --> 01:22:03.000]  during the pedestal equalization
+[01:22:03.000 --> 01:22:05.000]  what we do is that
+[01:22:05.000 --> 01:22:07.000]  we
+[01:22:07.000 --> 01:22:09.000]  set these values
+[01:22:09.000 --> 01:22:11.000]  channel by channel such that
+[01:22:11.000 --> 01:22:13.000]  we can even equalize
+[01:22:13.000 --> 01:22:15.000]  the threshold
+[01:22:15.000 --> 01:22:17.000]  so
+[01:22:17.000 --> 01:22:19.000]  for this
+[01:22:19.000 --> 01:22:21.000]  for this
+[01:22:23.000 --> 01:22:25.000]  calibration
+[01:22:25.000 --> 01:22:27.000]  the plots are stored
+[01:22:27.000 --> 01:22:29.000]  at the level of the chip
+[01:22:29.000 --> 01:22:31.000]  just go from one
+[01:22:31.000 --> 01:22:33.000]  and are the
+[01:22:33.000 --> 01:22:35.000]  two first plots
+[01:22:35.000 --> 01:22:37.000]  they are not
+[01:22:37.000 --> 01:22:39.000]  they are not going to tell you too much
+[01:22:39.000 --> 01:22:41.000]  because
+[01:22:41.000 --> 01:22:43.000]  most of the understanding will come from
+[01:22:43.000 --> 01:22:45.000]  the later step that is
+[01:22:45.000 --> 01:22:47.000]  the noise step
+[01:22:47.000 --> 01:22:49.000]  but at the end of the callization
+[01:22:49.000 --> 01:22:51.000]  you get this plot that shows
+[01:22:51.000 --> 01:22:53.000]  forever the channel
+[01:22:53.000 --> 01:22:55.000]  in the CBC
+[01:22:55.000 --> 01:22:57.000]  the offset that was chosen
+[01:22:57.000 --> 01:22:59.000]  I would say the only thing
+[01:22:59.000 --> 01:23:01.000]  here
+[01:23:01.000 --> 01:23:03.000]  if you see something weird later
+[01:23:03.000 --> 01:23:05.000]  you can come back and see
+[01:23:05.000 --> 01:23:07.000]  if any of the offset for some reason
+[01:23:07.000 --> 01:23:09.000]  went all the way to
+[01:23:09.000 --> 01:23:11.000]  255 which is the maximum
+[01:23:11.000 --> 01:23:13.000]  they were down to 0
+[01:23:13.000 --> 01:23:15.000]  this might mean that something failed
+[01:23:15.000 --> 01:23:17.000]  so far I think
+[01:23:17.000 --> 01:23:19.000]  for the CBC is very stable
+[01:23:19.000 --> 01:23:21.000]  so I don't recall seeing anything like that
+[01:23:21.000 --> 01:23:23.000]  and another
+[01:23:23.000 --> 01:23:25.000]  information that you can see
+[01:23:25.000 --> 01:23:27.000]  is that
+[01:23:27.000 --> 01:23:29.000]  might also help you if something wrong
+[01:23:29.000 --> 01:23:31.000]  happen
+[01:23:31.000 --> 01:23:33.000]  by the way I just realized
+[01:23:33.000 --> 01:23:35.000]  preparing this slide that there was a mistake
+[01:23:35.000 --> 01:23:37.000]  in this label that I corrected
+[01:23:37.000 --> 01:23:39.000]  here you have the channel
+[01:23:39.000 --> 01:23:41.000]  on the x-axis
+[01:23:41.000 --> 01:23:43.000]  and the y-channel is not the offset
+[01:23:43.000 --> 01:23:45.000]  it's actually the occupancy
+[01:23:45.000 --> 01:23:47.000]  because the idea is that we want to
+[01:23:47.000 --> 01:23:49.000]  get to around 50%
+[01:23:49.000 --> 01:23:51.000]  occupancy it's like higher for
+[01:23:51.000 --> 01:23:53.000]  technical reason
+[01:23:55.000 --> 01:23:57.000]  so it means that basically
+[01:23:57.000 --> 01:23:59.000]  even that particular offset
+[01:23:59.000 --> 01:24:01.000]  you get an occupancy
+[01:24:01.000 --> 01:24:03.000]  that is around 50%
+[01:24:03.000 --> 01:24:05.000]  that should be the occupancy that you get
+[01:24:05.000 --> 01:24:07.000]  after they pay the staff
+[01:24:07.000 --> 01:24:09.000]  so here again something
+[01:24:09.000 --> 01:24:11.000]  weird happens
+[01:24:11.000 --> 01:24:13.000]  to the
+[01:24:13.000 --> 01:24:15.000]  two S steps
+[01:24:15.000 --> 01:24:17.000]  you can come back here and see for any reason
+[01:24:17.000 --> 01:24:19.000]  some channel have a super high occupancy
+[01:24:19.000 --> 01:24:21.000]  super low occupancy
+[01:24:21.000 --> 01:24:23.000]  this might indicate that something didn't work perfectly
+[01:24:23.000 --> 01:24:25.000]  but the idea should be that you have something
+[01:24:25.000 --> 01:24:27.000]  kind of uniform
+[01:24:27.000 --> 01:24:29.000]  it's not gonna be super uniform
+[01:24:29.000 --> 01:24:31.000]  because you still
+[01:24:31.000 --> 01:24:33.000]  you still have a
+[01:24:33.000 --> 01:24:35.000]  duck that you have to play with
+[01:24:35.000 --> 01:24:37.000]  the discrete step that you
+[01:24:37.000 --> 01:24:39.000]  can apply but something
+[01:24:39.000 --> 01:24:41.000]  like this should be
+[01:24:41.000 --> 01:24:43.000]  reasonable
+[01:24:51.000 --> 01:24:53.000]  sorry I can't hear you
+[01:24:53.000 --> 01:24:55.000]  very well, can you try to
+[01:24:55.000 --> 01:24:57.000]  speak closer to the mic
+[01:25:05.000 --> 01:25:07.000]  yeah so
+[01:25:07.000 --> 01:25:09.000]  as I was saying these steps
+[01:25:09.000 --> 01:25:11.000]  the plot is but this step doesn't tell
+[01:25:11.000 --> 01:25:13.000]  you too much because right after
+[01:25:13.000 --> 01:25:15.000]  we get the
+[01:25:15.000 --> 01:25:17.000]  pay the noise so
+[01:25:17.000 --> 01:25:19.000]  here we do a scan
+[01:25:19.000 --> 01:25:21.000]  okay we know very well but
+[01:25:21.000 --> 01:25:23.000]  very briefly we do a scan
+[01:25:23.000 --> 01:25:25.000]  of the threshold that we apply
+[01:25:25.000 --> 01:25:27.000]  and we measure the occupancy
+[01:25:27.000 --> 01:25:29.000]  and in an ideal case
+[01:25:29.000 --> 01:25:31.000]  you would expect a step function
+[01:25:31.000 --> 01:25:33.000]  but in reality
+[01:25:33.000 --> 01:25:35.000]  you have the noises so this is
+[01:25:35.000 --> 01:25:37.000]  basically a step function
+[01:25:37.000 --> 01:25:39.000]  convoluted with a Gaussian and the Gaussian
+[01:25:39.000 --> 01:25:41.000]  is the
+[01:25:41.000 --> 01:25:43.000]  the noise that you have so it becomes
+[01:25:43.000 --> 01:25:45.000]  an S shape
+[01:25:45.000 --> 01:25:47.000]  and that's what I call S curves
+[01:25:47.000 --> 01:25:49.000]  so
+[01:25:49.000 --> 01:25:51.000]  there are a few plots over here
+[01:25:51.000 --> 01:25:53.000]  hopefully I'm gonna
+[01:25:53.000 --> 01:25:55.000]  remember them all
+[01:25:55.000 --> 01:25:57.000]  so
+[01:25:57.000 --> 01:25:59.000]  we have at the level of the chip
+[01:25:59.000 --> 01:26:01.000]  well this one I think you
+[01:26:01.000 --> 01:26:03.000]  saw it one billion times
+[01:26:03.000 --> 01:26:05.000]  is the
+[01:26:05.000 --> 01:26:07.000]  is the
+[01:26:07.000 --> 01:26:09.000]  the noise
+[01:26:09.000 --> 01:26:11.000]  here for the channel on the y-axis
+[01:26:11.000 --> 01:26:13.000]  on the x-axis you have the
+[01:26:13.000 --> 01:26:15.000]  sorry on the x-axis of the channel
+[01:26:15.000 --> 01:26:17.000]  on the y-axis you have the threshold
+[01:26:17.000 --> 01:26:19.000]  in the CTH and
+[01:26:19.000 --> 01:26:21.000]  this number you can find in the tweak
+[01:26:21.000 --> 01:26:23.000]  at the beginning but one step
+[01:26:23.000 --> 01:26:25.000]  is 156
+[01:26:25.000 --> 01:26:27.000]  electrons
+[01:26:27.000 --> 01:26:29.000]  and on the z-axis
+[01:26:29.000 --> 01:26:31.000]  you have the occupancy
+[01:26:31.000 --> 01:26:33.000]  and each one of these
+[01:26:33.000 --> 01:26:35.000]  lines
+[01:26:37.000 --> 01:26:39.000]  actually I can show it to you
+[01:26:39.000 --> 01:26:41.000]  each one of these
+[01:26:41.000 --> 01:26:43.000]  vertical lines is
+[01:26:43.000 --> 01:26:45.000]  nascar
+[01:26:47.000 --> 01:26:49.000]  I should then close it
+[01:26:51.000 --> 01:26:53.000]  okay
+[01:26:53.000 --> 01:26:55.000]  so
+[01:26:55.000 --> 01:26:57.000]  then each one of these
+[01:26:57.000 --> 01:26:59.000]  S curve is fitted
+[01:26:59.000 --> 01:27:01.000]  you can actually look into the fit
+[01:27:01.000 --> 01:27:03.000]  that you get for everyone
+[01:27:03.000 --> 01:27:05.000]  of these channels
+[01:27:05.000 --> 01:27:07.000]  into the channel folder
+[01:27:07.000 --> 01:27:09.000]  I'm gonna pick one random
+[01:27:09.000 --> 01:27:11.000]  and
+[01:27:11.000 --> 01:27:13.000]  if you zoom in it's basically the projection
+[01:27:13.000 --> 01:27:15.000]  that I was showing you before
+[01:27:15.000 --> 01:27:17.000]  with the shape
+[01:27:17.000 --> 01:27:19.000]  the point that I collected
+[01:27:19.000 --> 01:27:21.000]  the fit
+[01:27:21.000 --> 01:27:23.000]  I think I was quite lucky because the fit
+[01:27:23.000 --> 01:27:25.000]  was very good
+[01:27:25.000 --> 01:27:27.000]  on this fit
+[01:27:27.000 --> 01:27:29.000]  then we are able to extract from
+[01:27:29.000 --> 01:27:31.000]  the convoluting
+[01:27:31.000 --> 01:27:33.000]  the Gaussian
+[01:27:33.000 --> 01:27:35.000]  we can extract the noise that is the width of the Gaussian
+[01:27:35.000 --> 01:27:37.000]  and by the convoluting
+[01:27:37.000 --> 01:27:39.000]  the Gaussian we get the step function
+[01:27:39.000 --> 01:27:41.000]  and the step
+[01:27:41.000 --> 01:27:43.000]  the step is the pedestal
+[01:27:43.000 --> 01:27:45.000]  here is a little bit more clear because
+[01:27:45.000 --> 01:27:47.000]  it is at 50%
+[01:27:47.000 --> 01:27:49.000]  I forgot to mention this is done without injection
+[01:27:49.000 --> 01:27:51.000]  so this is
+[01:27:51.000 --> 01:27:53.000]  really the pedestal that we are measuring
+[01:27:55.000 --> 01:27:57.000]  then we add
+[01:27:57.000 --> 01:27:59.000]  a few more plots
+[01:27:59.000 --> 01:28:01.000]  here you get one for every channel
+[01:28:01.000 --> 01:28:03.000]  a few more plots
+[01:28:05.000 --> 01:28:07.000]  so from this car we can extract
+[01:28:07.000 --> 01:28:09.000]  the pedestal distribution
+[01:28:09.000 --> 01:28:11.000]  so this is simply
+[01:28:11.000 --> 01:28:13.000]  for the convoluting distribution
+[01:28:13.000 --> 01:28:15.000]  of the pedestal for every channel
+[01:28:15.000 --> 01:28:17.000]  this should be very sharp
+[01:28:17.000 --> 01:28:19.000]  so if something fails you will start
+[01:28:19.000 --> 01:28:21.000]  seeing into this plot
+[01:28:21.000 --> 01:28:23.000]  with some long tail
+[01:28:23.000 --> 01:28:25.000]  and all simply
+[01:28:25.000 --> 01:28:27.000]  out layers
+[01:28:27.000 --> 01:28:29.000]  and
+[01:28:29.000 --> 01:28:31.000]  to get the distribution of the pedestal across
+[01:28:31.000 --> 01:28:33.000]  the
+[01:28:33.000 --> 01:28:35.000]  all the channel
+[01:28:35.000 --> 01:28:37.000]  we have also the channel pedestal plot
+[01:28:37.000 --> 01:28:39.000]  let's show you for every channel
+[01:28:39.000 --> 01:28:41.000]  the threshold
+[01:28:41.000 --> 01:28:43.000]  at which you have the pedestal
+[01:28:43.000 --> 01:28:45.000]  and you see at the scale
+[01:28:45.000 --> 01:28:47.000]  it's very very uniform
+[01:28:47.000 --> 01:28:49.000]  within a few BCTH
+[01:28:49.000 --> 01:28:51.000]  again this is
+[01:28:51.000 --> 01:28:53.000]  156 electrons
+[01:28:53.000 --> 01:28:55.000]  so we speak about
+[01:28:55.000 --> 01:28:57.000]  a few hundred of electrons
+[01:28:57.000 --> 01:28:59.000]  of distribution width
+[01:29:01.000 --> 01:29:03.000]  then in the same
+[01:29:03.000 --> 01:29:05.000]  from the same plot
+[01:29:05.000 --> 01:29:07.000]  we also get
+[01:29:07.000 --> 01:29:09.000]  the noise distribution
+[01:29:09.000 --> 01:29:11.000]  for all the
+[01:29:11.000 --> 01:29:13.000]  so this is the convoluting distribution
+[01:29:13.000 --> 01:29:15.000]  for all the channels
+[01:29:15.000 --> 01:29:17.000]  and as for the pedestal you get
+[01:29:17.000 --> 01:29:19.000]  the channel noise distribution
+[01:29:19.000 --> 01:29:21.000]  of the noise
+[01:29:21.000 --> 01:29:23.000]  for every channel
+[01:29:23.000 --> 01:29:25.000]  and
+[01:29:25.000 --> 01:29:27.000]  these are all the plots at the level of
+[01:29:27.000 --> 01:29:29.000]  the CBC
+[01:29:29.000 --> 01:29:31.000]  then there are more cumulative plots
+[01:29:31.000 --> 01:29:33.000]  at the level of the
+[01:29:33.000 --> 01:29:35.000]  hybrid
+[01:29:35.000 --> 01:29:37.000]  to show you the behavior of all the hybrid
+[01:29:37.000 --> 01:29:39.000]  so here is the noise distribution
+[01:29:39.000 --> 01:29:41.000]  for all the channels
+[01:29:43.000 --> 01:29:45.000]  for every so for every strips on the hybrid
+[01:29:45.000 --> 01:29:47.000]  these include
+[01:29:47.000 --> 01:29:49.000]  both top and bottom
+[01:29:49.000 --> 01:29:51.000]  so we usually look
+[01:29:51.000 --> 01:29:53.000]  separately
+[01:29:53.000 --> 01:29:55.000]  the bottom
+[01:29:55.000 --> 01:29:57.000]  that is slightly higher because
+[01:29:57.000 --> 01:29:59.000]  we have the fold over so the lines
+[01:29:59.000 --> 01:30:01.000]  that allow us to
+[01:30:01.000 --> 01:30:03.000]  while going to the
+[01:30:03.000 --> 01:30:05.000]  ship
+[01:30:05.000 --> 01:30:07.000]  had to go down to the hybrid
+[01:30:07.000 --> 01:30:09.000]  so a bit longer and that's probably a bit of extra noise
+[01:30:09.000 --> 01:30:11.000]  due to the extra capacitance
+[01:30:11.000 --> 01:30:13.000]  of these lines
+[01:30:13.000 --> 01:30:15.000]  and the same from the top
+[01:30:15.000 --> 01:30:17.000]  that if I move back and forth
+[01:30:17.000 --> 01:30:19.000]  the top is a little bit lower
+[01:30:19.000 --> 01:30:21.000]  but I guess everybody knows
+[01:30:21.000 --> 01:30:23.000]  at this point
+[01:30:23.000 --> 01:30:25.000]  and finally
+[01:30:25.000 --> 01:30:27.000]  the last one is the cumulative
+[01:30:27.000 --> 01:30:29.000]  noise distribution for the hybrid
+[01:30:33.000 --> 01:30:35.000]  and these are all the plots
+[01:30:35.000 --> 01:30:37.000]  for the noise
+[01:30:37.000 --> 01:30:39.000]  so I need
+[01:30:39.000 --> 01:30:41.000]  I'm just going to go ahead but stop me
+[01:30:41.000 --> 01:30:43.000]  if you have any questions
+[01:30:43.000 --> 01:30:45.000]  okay so
+[01:30:45.000 --> 01:30:47.000]  I think basically
+[01:30:47.000 --> 01:30:49.000]  up to now we cover
+[01:30:49.000 --> 01:30:51.000]  all the steps
+[01:30:51.000 --> 01:30:53.000]  done also by the quick test
+[01:30:53.000 --> 01:30:55.000]  there were some extra steps that in quick test
+[01:30:55.000 --> 01:30:57.000]  are not done like
+[01:30:57.000 --> 01:30:59.000]  no I'm joking
+[01:30:59.000 --> 01:31:01.000]  there is nothing that is not done
+[01:31:01.000 --> 01:31:03.000]  for the quick test so far
+[01:31:03.000 --> 01:31:05.000]  so
+[01:31:05.000 --> 01:31:07.000]  so from now on we are going to move
+[01:31:07.000 --> 01:31:09.000]  just to the
+[01:31:09.000 --> 01:31:11.000]  test
+[01:31:11.000 --> 01:31:13.000]  that are done
+[01:31:13.000 --> 01:31:15.000]  for
+[01:31:15.000 --> 01:31:17.000]  the full test
+[01:31:17.000 --> 01:31:19.000]  I'm going to start
+[01:31:19.000 --> 01:31:21.000]  from the injection delay
+[01:31:21.000 --> 01:31:23.000]  optimization
+[01:31:23.000 --> 01:31:25.000]  so yes
+[01:31:25.000 --> 01:31:27.000]  sorry I want to ask
+[01:31:27.000 --> 01:31:29.000]  one more question if I may
+[01:31:29.000 --> 01:31:31.000]  I saw
+[01:31:31.000 --> 01:31:33.000]  for some module
+[01:31:33.000 --> 01:31:35.000]  I saw that noise distribution
+[01:31:35.000 --> 01:31:37.000]  maybe in the cumulative one
+[01:31:37.000 --> 01:31:39.000]  or maybe in the cheap way
+[01:31:39.000 --> 01:31:41.000]  yeah
+[01:31:41.000 --> 01:31:43.000]  maybe per cheap so I saw
+[01:31:43.000 --> 01:31:45.000]  two distinct peak
+[01:31:45.000 --> 01:31:47.000]  in the noise distribution
+[01:31:47.000 --> 01:31:49.000]  so
+[01:31:49.000 --> 01:31:51.000]  and it was not very old quite recently
+[01:31:51.000 --> 01:31:53.000]  so I was trying to think that
+[01:31:53.000 --> 01:31:55.000]  yeah
+[01:31:55.000 --> 01:31:57.000]  whatever thank you for asking me
+[01:31:57.000 --> 01:31:59.000]  because I actually
+[01:31:59.000 --> 01:32:01.000]  I forgot two plots so the
+[01:32:01.000 --> 01:32:03.000]  channel noise distribution was also
+[01:32:03.000 --> 01:32:05.000]  the level of the
+[01:32:05.000 --> 01:32:07.000]  of the
+[01:32:07.000 --> 01:32:09.000]  chip so I think
+[01:32:09.000 --> 01:32:11.000]  so if I move back
+[01:32:11.000 --> 01:32:13.000]  actually
+[01:32:13.000 --> 01:32:15.000]  can I do the same with this thing
+[01:32:15.000 --> 01:32:17.000]  impose
+[01:32:19.000 --> 01:32:21.000]  before
+[01:32:21.000 --> 01:32:23.000]  okay so if I
+[01:32:23.000 --> 01:32:25.000]  go together
+[01:32:25.000 --> 01:32:27.000]  the top and the bottom
+[01:32:27.000 --> 01:32:29.000]  the level of the chip but also the high
+[01:32:29.000 --> 01:32:31.000]  but you see that the bottom is slightly higher
+[01:32:31.000 --> 01:32:33.000]  and this is because
+[01:32:33.000 --> 01:32:35.000]  what I was saying that you have
+[01:32:35.000 --> 01:32:37.000]  you have these
+[01:32:37.000 --> 01:32:39.000]  fold over that increase
+[01:32:39.000 --> 01:32:41.000]  the length of the lines that are going
+[01:32:41.000 --> 01:32:43.000]  to the wall bond pad for the bottom
+[01:32:43.000 --> 01:32:45.000]  one and
+[01:32:45.000 --> 01:32:47.000]  and this is
+[01:32:47.000 --> 01:32:49.000]  why sometimes when
+[01:32:49.000 --> 01:32:51.000]  these
+[01:32:51.000 --> 01:32:53.000]  differences lightly more pronounced which I think
+[01:32:53.000 --> 01:32:55.000]  was the case in the pasta and also
+[01:32:55.000 --> 01:32:57.000]  is the case I think
+[01:32:57.000 --> 01:32:59.000]  if you don't apply any
+[01:32:59.000 --> 01:33:01.000]  voltage maybe or lower
+[01:33:01.000 --> 01:33:03.000]  voltage when you look at
+[01:33:03.000 --> 01:33:05.000]  these actually you can see
+[01:33:05.000 --> 01:33:06.000]  there are
+[01:33:06.000 --> 01:33:08.000]  and these two peaks are simply
+[01:33:08.000 --> 01:33:10.000]  due to the fact that the top and the bottom
+[01:33:11.000 --> 01:33:13.000]  channels have
+[01:33:13.000 --> 01:33:15.000]  a slightly different noise
+[01:33:15.000 --> 01:33:17.000]  I asked because
+[01:33:17.000 --> 01:33:19.000]  the noise distribution plot
+[01:33:19.000 --> 01:33:21.000]  you showed before probably it had one
+[01:33:21.000 --> 01:33:23.000]  peak so I thought but your this noise
+[01:33:23.000 --> 01:33:25.000]  levels have different have
+[01:33:25.000 --> 01:33:27.000]  had difference for bottom
+[01:33:27.000 --> 01:33:29.000]  and top so I thought okay
+[01:33:29.000 --> 01:33:31.000]  maybe there is some other reasons but thanks
+[01:33:31.000 --> 01:33:33.000]  no I simply that it seems
+[01:33:33.000 --> 01:33:35.000]  that the resolution this bit is not
+[01:33:35.000 --> 01:33:37.000]  super high when you look at all the
+[01:33:37.000 --> 01:33:39.000]  plot all the chip together
+[01:33:39.000 --> 01:33:41.000]  then these get
+[01:33:41.000 --> 01:33:43.000]  smooth and a little bit
+[01:33:43.000 --> 01:33:45.000]  because
+[01:33:45.000 --> 01:33:47.000]  let me see so
+[01:33:47.000 --> 01:33:49.000]  for example
+[01:33:51.000 --> 01:33:53.000]  let's see
+[01:33:57.000 --> 01:33:59.000]  you see that the lines
+[01:33:59.000 --> 01:34:01.000]  between the two start to be a little bit
+[01:34:01.000 --> 01:34:03.000]  more less pronounced
+[01:34:03.000 --> 01:34:05.000]  because for example this chip is likely
+[01:34:05.000 --> 01:34:07.000]  higher noise
+[01:34:07.000 --> 01:34:09.000]  and that is kind of the same
+[01:34:09.000 --> 01:34:11.000]  the top becomes
+[01:34:11.000 --> 01:34:13.000]  kind of the same top over here so
+[01:34:13.000 --> 01:34:15.000]  when you put everything together
+[01:34:15.000 --> 01:34:17.000]  basically the double peak structure
+[01:34:17.000 --> 01:34:19.000]  kind of disappear
+[01:34:19.000 --> 01:34:21.000]  so for the single chip
+[01:34:21.000 --> 01:34:23.000]  is a little bit more
+[01:34:25.000 --> 01:34:27.000]  clear let me go back
+[01:34:27.000 --> 01:34:29.000]  yeah
+[01:34:29.000 --> 01:34:31.000]  I can
+[01:34:31.000 --> 01:34:33.000]  find a complete
+[01:34:33.000 --> 01:34:35.000]  wrong spot
+[01:34:35.000 --> 01:34:37.000]  yeah here it basically gets
+[01:34:37.000 --> 01:34:39.000]  smooth and out
+[01:34:39.000 --> 01:34:41.000]  okay
+[01:34:45.000 --> 01:34:47.000]  okay
+[01:34:47.000 --> 01:34:49.000]  let me just close
+[01:34:49.000 --> 01:34:51.000]  a few blocks it becomes
+[01:34:51.000 --> 01:34:53.000]  less crowded
+[01:34:53.000 --> 01:34:55.000]  so injection delay
+[01:34:55.000 --> 01:34:57.000]  optimization so
+[01:34:59.000 --> 01:35:01.000]  so after this test
+[01:35:01.000 --> 01:35:03.000]  we will need to do some
+[01:35:03.000 --> 01:35:05.000]  test with injection
+[01:35:05.000 --> 01:35:07.000]  the problem when you
+[01:35:07.000 --> 01:35:09.000]  start injecting is that
+[01:35:09.000 --> 01:35:11.000]  you also need to find
+[01:35:11.000 --> 01:35:13.000]  the proper timer which inject
+[01:35:13.000 --> 01:35:15.000]  because as long as you work only
+[01:35:15.000 --> 01:35:17.000]  with the
+[01:35:17.000 --> 01:35:19.000]  pedestal then the pedestal
+[01:35:19.000 --> 01:35:21.000]  is going to be the same every time
+[01:35:21.000 --> 01:35:23.000]  point in time
+[01:35:23.000 --> 01:35:25.000]  when you start injecting
+[01:35:25.000 --> 01:35:27.000]  then you have to make sure that
+[01:35:27.000 --> 01:35:29.000]  you are reading
+[01:35:29.000 --> 01:35:31.000]  the heat at the correct time
+[01:35:31.000 --> 01:35:33.000]  otherwise you might read it too early
+[01:35:33.000 --> 01:35:35.000]  or too late
+[01:35:39.000 --> 01:35:41.000]  so for doing this
+[01:35:41.000 --> 01:35:43.000]  what we do is that we do a scan
+[01:35:43.000 --> 01:35:45.000]  of
+[01:35:45.000 --> 01:35:47.000]  the
+[01:35:47.000 --> 01:35:49.000]  threshold
+[01:35:49.000 --> 01:35:51.000]  of the injection
+[01:35:51.000 --> 01:35:53.000]  delay
+[01:35:53.000 --> 01:35:55.000]  that you see on the y-axis and for each
+[01:35:55.000 --> 01:35:57.000]  of this point we measure
+[01:35:57.000 --> 01:35:59.000]  the threshold
+[01:35:59.000 --> 01:36:01.000]  at which the occupancy
+[01:36:01.000 --> 01:36:03.000]  50% so basically
+[01:36:03.000 --> 01:36:05.000]  this means that at this
+[01:36:05.000 --> 01:36:07.000]  point
+[01:36:07.000 --> 01:36:09.000]  50% of the time
+[01:36:09.000 --> 01:36:11.000]  the
+[01:36:11.000 --> 01:36:13.000]  signal at the input comparator
+[01:36:13.000 --> 01:36:15.000]  is above the
+[01:36:15.000 --> 01:36:17.000]  threshold and 50% of the time
+[01:36:17.000 --> 01:36:19.000]  is below the threshold which means basically
+[01:36:19.000 --> 01:36:21.000]  you are setting the comparator
+[01:36:21.000 --> 01:36:23.000]  exactly the same at the value
+[01:36:23.000 --> 01:36:25.000]  which the signal is
+[01:36:25.000 --> 01:36:27.000]  and therefore by changing
+[01:36:27.000 --> 01:36:29.000]  the delay
+[01:36:29.000 --> 01:36:31.000]  with given a certain amount of
+[01:36:31.000 --> 01:36:33.000]  injecting charge you can
+[01:36:33.000 --> 01:36:35.000]  reconstruct the full
+[01:36:35.000 --> 01:36:37.000]  distribution of the signal
+[01:36:39.000 --> 01:36:41.000]  at this point
+[01:36:41.000 --> 01:36:43.000]  you can identify the working point
+[01:36:43.000 --> 01:36:45.000]  and the working point
+[01:36:45.000 --> 01:36:47.000]  for the
+[01:36:47.000 --> 01:36:49.000]  the
+[01:36:49.000 --> 01:36:51.000]  time is quite easy
+[01:36:51.000 --> 01:36:53.000]  to be identified because
+[01:36:53.000 --> 01:36:55.000]  we just set up the peak
+[01:36:55.000 --> 01:36:57.000]  the peak in time and first
+[01:36:57.000 --> 01:36:59.000]  approximation is independent from the amount of charge
+[01:36:59.000 --> 01:37:01.000]  so if you set up the peak
+[01:37:01.000 --> 01:37:03.000]  the injection delay
+[01:37:03.000 --> 01:37:05.000]  with this point
+[01:37:05.000 --> 01:37:07.000]  the sampling time
+[01:37:07.000 --> 01:37:09.000]  you know that even if you inject
+[01:37:09.000 --> 01:37:11.000]  less the peak is going to be
+[01:37:11.000 --> 01:37:13.000]  always the same so it will always
+[01:37:13.000 --> 01:37:15.000]  pass the threshold at that instant
+[01:37:15.000 --> 01:37:17.000]  time and the other thing
+[01:37:17.000 --> 01:37:19.000]  that you need to set
+[01:37:19.000 --> 01:37:21.000]  is the distance from the pedestal
+[01:37:21.000 --> 01:37:23.000]  in order to remove the noise
+[01:37:23.000 --> 01:37:25.000]  that is coming from
+[01:37:25.000 --> 01:37:27.000]  the pedestal so
+[01:37:27.000 --> 01:37:29.000]  at the moment what we are in
+[01:37:29.000 --> 01:37:31.000]  the configuration file is that
+[01:37:31.000 --> 01:37:33.000]  set at
+[01:37:33.000 --> 01:37:35.000]  5
+[01:37:35.000 --> 01:37:37.000]  time the noise from this pedestal
+[01:37:37.000 --> 01:37:39.000]  and since the noise was just
+[01:37:39.000 --> 01:37:41.000]  measure the previous calibration
+[01:37:41.000 --> 01:37:43.000]  during the discards
+[01:37:43.000 --> 01:37:45.000]  we already know how much
+[01:37:45.000 --> 01:37:47.000]  we need to move away from this value
+[01:37:47.000 --> 01:37:49.000]  and therefore we can
+[01:37:49.000 --> 01:37:51.000]  identify this point
+[01:37:51.000 --> 01:37:53.000]  in
+[01:37:53.000 --> 01:37:55.000]  no I wanted to put the same one
+[01:37:55.000 --> 01:37:57.000]  so
+[01:37:57.000 --> 01:37:59.000]  superimpose
+[01:37:59.000 --> 01:38:01.000]  we can identify the working point
+[01:38:01.000 --> 01:38:03.000]  so here correspond to the
+[01:38:03.000 --> 01:38:05.000]  peak
+[01:38:05.000 --> 01:38:07.000]  and the distance between
+[01:38:07.000 --> 01:38:09.000]  these correspond to 5 times
+[01:38:09.000 --> 01:38:11.000]  the noise
+[01:38:11.000 --> 01:38:13.000]  at this point onwards
+[01:38:13.000 --> 01:38:15.000]  anytime we are going to have to inject
+[01:38:15.000 --> 01:38:17.000]  we know that we need to set
+[01:38:17.000 --> 01:38:19.000]  this injection delay
+[01:38:19.000 --> 01:38:21.000]  and this threshold
+[01:38:21.000 --> 01:38:23.000]  in order to do the following measurement
+[01:38:23.000 --> 01:38:25.000]  ok
+[01:38:31.000 --> 01:38:33.000]  technical thing
+[01:38:33.000 --> 01:38:35.000]  Irina can you lower a little bit the volume
+[01:38:35.000 --> 01:38:37.000]  sorry Irina is better
+[01:38:37.000 --> 01:38:39.000]  sorry
+[01:38:39.000 --> 01:38:41.000]  Amid
+[01:38:41.000 --> 01:38:43.000]  oopsie
+[01:38:43.000 --> 01:38:45.000]  I can hear myself in the nearby
+[01:38:45.000 --> 01:38:47.000]  ok thank you
+[01:38:49.000 --> 01:38:51.000]  ok then at this point
+[01:38:51.000 --> 01:38:53.000]  we know that the following test
+[01:38:53.000 --> 01:38:55.000]  the one at the current injection will be done
+[01:38:55.000 --> 01:38:57.000]  in the proper way because at this point
+[01:38:57.000 --> 01:38:59.000]  we know that whatever charge
+[01:38:59.000 --> 01:39:01.000]  we inject we are going to be at the current value
+[01:39:01.000 --> 01:39:03.000]  so
+[01:39:03.000 --> 01:39:05.000]  the next steps
+[01:39:05.000 --> 01:39:07.000]  are different
+[01:39:07.000 --> 01:39:09.000]  the occupancy measurement
+[01:39:09.000 --> 01:39:11.000]  a different injection
+[01:39:11.000 --> 01:39:13.000]  and the reason why we want to do that
+[01:39:13.000 --> 01:39:15.000]  is because we want to have first of all
+[01:39:15.000 --> 01:39:17.000]  a reference which we know
+[01:39:17.000 --> 01:39:19.000]  what is going to be the occupancy for every channel
+[01:39:19.000 --> 01:39:21.000]  with
+[01:39:21.000 --> 01:39:23.000]  without injection
+[01:39:23.000 --> 01:39:25.000]  so basically the occupancy
+[01:39:25.000 --> 01:39:27.000]  just due to the noise
+[01:39:27.000 --> 01:39:29.000]  and then the occupancy
+[01:39:29.000 --> 01:39:31.000]  the deficiency in
+[01:39:31.000 --> 01:39:33.000]  measuring
+[01:39:33.000 --> 01:39:35.000]  events
+[01:39:35.000 --> 01:39:37.000]  with a given amount of charge
+[01:39:37.000 --> 01:39:39.000]  released by the particle
+[01:39:39.000 --> 01:39:41.000]  in this case not a particle it's just
+[01:39:41.000 --> 01:39:43.000]  an injection but we know
+[01:39:43.000 --> 01:39:45.000]  how much we need to inject
+[01:39:45.000 --> 01:39:47.000]  for a producer a certain amount of charge
+[01:39:47.000 --> 01:39:49.000]  and for these
+[01:39:49.000 --> 01:39:51.000]  we have three different
+[01:39:51.000 --> 01:39:53.000]  no sorry five different plots
+[01:39:53.000 --> 01:39:55.000]  that go now
+[01:39:55.000 --> 01:39:57.000]  and so the really first one
+[01:39:57.000 --> 01:39:59.000]  is occupancy
+[01:39:59.000 --> 01:40:01.000]  with
+[01:40:01.000 --> 01:40:03.000]  out injection
+[01:40:03.000 --> 01:40:05.000]  is
+[01:40:05.000 --> 01:40:07.000]  is done
+[01:40:07.000 --> 01:40:09.000]  without an injection
+[01:40:09.000 --> 01:40:11.000]  set the threshold in this case
+[01:40:11.000 --> 01:40:13.000]  also the injection delay but it doesn't matter
+[01:40:13.000 --> 01:40:15.000]  since we are not injecting
+[01:40:15.000 --> 01:40:17.000]  and we read
+[01:40:17.000 --> 01:40:19.000]  the occupancy
+[01:40:19.000 --> 01:40:21.000]  and
+[01:40:21.000 --> 01:40:23.000]  we are one for every chip
+[01:40:23.000 --> 01:40:25.000]  so there might be some that you can actually
+[01:40:25.000 --> 01:40:27.000]  see something
+[01:40:27.000 --> 01:40:29.000]  but in general
+[01:40:29.000 --> 01:40:31.000]  since we are five times the noise
+[01:40:31.000 --> 01:40:33.000]  I don't see anything else here
+[01:40:33.000 --> 01:40:35.000]  you shouldn't see
+[01:40:35.000 --> 01:40:37.000]  basically anything
+[01:40:37.000 --> 01:40:39.000]  or just a little
+[01:40:39.000 --> 01:40:41.000]  very small amount
+[01:40:41.000 --> 01:40:43.000]  of injected
+[01:40:43.000 --> 01:40:45.000]  of
+[01:40:49.000 --> 01:40:51.000]  and then
+[01:40:51.000 --> 01:40:53.000]  after that we also
+[01:40:53.000 --> 01:40:55.000]  inject
+[01:40:55.000 --> 01:40:57.000]  close to much
+[01:40:57.000 --> 01:40:59.000]  okay
+[01:40:59.000 --> 01:41:01.000]  we inject
+[01:41:01.000 --> 01:41:03.000]  a quarter of a meep
+[01:41:03.000 --> 01:41:05.000]  and roughly a quarter of a meep
+[01:41:05.000 --> 01:41:07.000]  correspond to the sigma
+[01:41:07.000 --> 01:41:09.000]  that you set
+[01:41:09.000 --> 01:41:11.000]  at
+[01:41:11.000 --> 01:41:13.000]  when you use
+[01:41:13.000 --> 01:41:15.000]  a pressure that is
+[01:41:15.000 --> 01:41:17.000]  a five times the noise so that's why you get around
+[01:41:17.000 --> 01:41:19.000]  50%
+[01:41:19.000 --> 01:41:21.000]  so it means that if you have
+[01:41:21.000 --> 01:41:23.000]  a quarter of a meep
+[01:41:23.000 --> 01:41:25.000]  in your sensor you are going to have
+[01:41:25.000 --> 01:41:27.000]  an efficiency of 50%
+[01:41:27.000 --> 01:41:29.000]  it's important to
+[01:41:29.000 --> 01:41:31.000]  also check smaller quantities
+[01:41:31.000 --> 01:41:33.000]  than a meep
+[01:41:33.000 --> 01:41:35.000]  of course because you
+[01:41:35.000 --> 01:41:37.000]  just giving you the most probable value
+[01:41:37.000 --> 01:41:39.000]  but you have lower value
+[01:41:39.000 --> 01:41:41.000]  but even more important is that
+[01:41:41.000 --> 01:41:43.000]  you need to
+[01:41:43.000 --> 01:41:45.000]  you need to have
+[01:41:45.000 --> 01:41:47.000]  good efficiency
+[01:41:47.000 --> 01:41:49.000]  a lower amount of charge in order to increase the cluster size
+[01:41:49.000 --> 01:41:51.000]  that's important for the resolution
+[01:41:51.000 --> 01:41:53.000]  then
+[01:41:53.000 --> 01:41:55.000]  we have other plots and it should be
+[01:41:55.000 --> 01:41:57.000]  hopefully 100%
+[01:41:57.000 --> 01:41:59.000]  so every time
+[01:41:59.000 --> 01:42:01.000]  so this is the occupancy for every channel
+[01:42:01.000 --> 01:42:03.000]  for
+[01:42:03.000 --> 01:42:05.000]  a half a meep
+[01:42:05.000 --> 01:42:07.000]  one meep and I close it
+[01:42:07.000 --> 01:42:09.000]  too early and at two minutes
+[01:42:09.000 --> 01:42:11.000]  so
+[01:42:11.000 --> 01:42:13.000]  here
+[01:42:13.000 --> 01:42:15.000]  in order to see
+[01:42:15.000 --> 01:42:17.000]  if you have any troubles
+[01:42:17.000 --> 01:42:19.000]  so okay just saying
+[01:42:19.000 --> 01:42:21.000]  everything
+[01:42:21.000 --> 01:42:23.000]  will be handled by potato
+[01:42:23.000 --> 01:42:25.000]  so
+[01:42:25.000 --> 01:42:27.000]  because there are tons of plot to be checked
+[01:42:27.000 --> 01:42:29.000]  so I have to do it for a thousand of modules
+[01:42:29.000 --> 01:42:31.000]  it's going to be really pain
+[01:42:31.000 --> 01:42:33.000]  but I would say if you have any
+[01:42:33.000 --> 01:42:35.000]  modules that are
+[01:42:35.000 --> 01:42:37.000]  flagged as bad by potato
+[01:42:37.000 --> 01:42:39.000]  then you can start looking to these plots
+[01:42:39.000 --> 01:42:41.000]  and try to understand better what it is
+[01:42:41.000 --> 01:42:43.000]  so you don't maybe at the beginning
+[01:42:43.000 --> 01:42:45.000]  check them all but slowly
+[01:42:45.000 --> 01:42:47.000]  with time you should rely more on potato
+[01:42:47.000 --> 01:42:49.000]  and then just check the bad ones
+[01:42:49.000 --> 01:42:51.000]  okay
+[01:42:51.000 --> 01:42:53.000]  and you have one for every CBC
+[01:42:53.000 --> 01:42:55.000]  so every CBC is going to be
+[01:42:55.000 --> 01:42:57.000]  slightly different so you have this information
+[01:42:57.000 --> 01:42:59.000]  for every CBC and every channel
+[01:42:59.000 --> 01:43:01.000]  so this will allow you to
+[01:43:01.000 --> 01:43:03.000]  inspect both
+[01:43:03.000 --> 01:43:05.000]  channels with
+[01:43:05.000 --> 01:43:07.000]  high noise because we'll stick out
+[01:43:07.000 --> 01:43:09.000]  into these plots
+[01:43:09.000 --> 01:43:11.000]  the new modules are pretty good so we really
+[01:43:11.000 --> 01:43:13.000]  see something and you will also see
+[01:43:13.000 --> 01:43:15.000]  channels with
+[01:43:15.000 --> 01:43:17.000]  for any reason low efficiency because
+[01:43:17.000 --> 01:43:19.000]  the comparator got damaged
+[01:43:19.000 --> 01:43:21.000]  or something like that
+[01:43:21.000 --> 01:43:23.000]  and we will spot them
+[01:43:23.000 --> 01:43:25.000]  into these plots
+[01:43:29.000 --> 01:43:31.000]  okay
+[01:43:31.000 --> 01:43:33.000]  then
+[01:43:33.000 --> 01:43:35.000]  common more noise
+[01:43:35.000 --> 01:43:37.000]  so
+[01:43:37.000 --> 01:43:39.000]  these are
+[01:43:39.000 --> 01:43:41.000]  quite a lot of plots
+[01:43:41.000 --> 01:43:43.000]  and I will for sure
+[01:43:43.000 --> 01:43:45.000]  forget
+[01:43:45.000 --> 01:43:47.000]  some of them
+[01:43:47.000 --> 01:43:49.000]  so there is this one you want to
+[01:43:51.000 --> 01:43:53.000]  to check
+[01:43:53.000 --> 01:43:55.000]  if you have
+[01:43:55.000 --> 01:43:57.000]  some
+[01:43:57.000 --> 01:43:59.000]  basically
+[01:43:59.000 --> 01:44:01.000]  cross interaction across
+[01:44:01.000 --> 01:44:03.000]  channels so in theory
+[01:44:03.000 --> 01:44:05.000]  on a perfect example you're going to have
+[01:44:05.000 --> 01:44:07.000]  that every channel is perfectly independent
+[01:44:07.000 --> 01:44:09.000]  from the others
+[01:44:09.000 --> 01:44:11.000]  and therefore
+[01:44:11.000 --> 01:44:13.000]  the noise
+[01:44:17.000 --> 01:44:19.000]  the distribution
+[01:44:19.000 --> 01:44:21.000]  of the
+[01:44:23.000 --> 01:44:25.000]  of the number of hits
+[01:44:25.000 --> 01:44:27.000]  that you record in every channel
+[01:44:27.000 --> 01:44:29.000]  would be I think a portion
+[01:44:29.000 --> 01:44:31.000]  in reality
+[01:44:31.000 --> 01:44:33.000]  is not like that because
+[01:44:33.000 --> 01:44:35.000]  the channels are belonging to the same chip
+[01:44:35.000 --> 01:44:37.000]  so they share the same ground
+[01:44:37.000 --> 01:44:39.000]  they share the same voltage
+[01:44:39.000 --> 01:44:41.000]  and
+[01:44:41.000 --> 01:44:43.000]  and physically the same
+[01:44:43.000 --> 01:44:45.000]  they share the same
+[01:44:45.000 --> 01:44:47.000]  piece of silicon if you speak about the same
+[01:44:47.000 --> 01:44:49.000]  channel the channels are the same
+[01:44:49.000 --> 01:44:51.000]  so
+[01:44:51.000 --> 01:44:53.000]  here during this test
+[01:44:53.000 --> 01:44:55.000]  we want to see if there is any correlation
+[01:44:57.000 --> 01:44:59.000]  is honestly a little bit more
+[01:44:59.000 --> 01:45:01.000]  tricky
+[01:45:01.000 --> 01:45:03.000]  to look at them
+[01:45:03.000 --> 01:45:05.000]  all the way through
+[01:45:05.000 --> 01:45:07.000]  but
+[01:45:07.000 --> 01:45:09.000]  I will say this
+[01:45:09.000 --> 01:45:11.000]  will be end or mainly
+[01:45:11.000 --> 01:45:13.000]  by potato but you can always check this
+[01:45:13.000 --> 01:45:15.000]  if you see something that is standing up
+[01:45:15.000 --> 01:45:17.000]  so
+[01:45:17.000 --> 01:45:19.000]  these
+[01:45:19.000 --> 01:45:21.000]  is the
+[01:45:21.000 --> 01:45:23.000]  so we do actually two
+[01:45:23.000 --> 01:45:25.000]  measurement of the common mode noise
+[01:45:25.000 --> 01:45:27.000]  one that is
+[01:45:27.000 --> 01:45:29.000]  called occupancy driven
+[01:45:29.000 --> 01:45:31.000]  and these in the case
+[01:45:31.000 --> 01:45:33.000]  of the twist is such that
+[01:45:33.000 --> 01:45:35.000]  the occupancy expected occupancy
+[01:45:35.000 --> 01:45:37.000]  is 50%
+[01:45:37.000 --> 01:45:39.000]  we can do that because
+[01:45:39.000 --> 01:45:41.000]  we already
+[01:45:41.000 --> 01:45:43.000]  tuned
+[01:45:43.000 --> 01:45:45.000]  the pedestal and therefore we know
+[01:45:45.000 --> 01:45:47.000]  that
+[01:45:47.000 --> 01:45:49.000]  once we set a threshold all the channels should be
+[01:45:49.000 --> 01:45:51.000]  more or less to the same occupancy
+[01:45:51.000 --> 01:45:53.000]  and in this particular case the target
+[01:45:53.000 --> 01:45:55.000]  occupancy is 50%
+[01:45:55.000 --> 01:45:57.000]  what you would expect in reality
+[01:45:57.000 --> 01:45:59.000]  in any ideal case
+[01:45:59.000 --> 01:46:01.000]  if you have a perfect distribution
+[01:46:01.000 --> 01:46:03.000]  a perfect
+[01:46:03.000 --> 01:46:05.000]  uncorrelated hips
+[01:46:05.000 --> 01:46:07.000]  you will expect that
+[01:46:07.000 --> 01:46:09.000]  you are a perfect person in distribution
+[01:46:09.000 --> 01:46:11.000]  centered in
+[01:46:11.000 --> 01:46:13.000]  half of the
+[01:46:13.000 --> 01:46:15.000]  number of hits that you are
+[01:46:15.000 --> 01:46:17.000]  the maximum number of hits that you are getting
+[01:46:17.000 --> 01:46:19.000]  so you have a 256 channel
+[01:46:19.000 --> 01:46:21.000]  set to
+[01:46:21.000 --> 01:46:23.000]  S or 54 channels
+[01:46:23.000 --> 01:46:25.000]  set to a threshold of
+[01:46:25.000 --> 01:46:27.000]  such that every channel is 50%
+[01:46:27.000 --> 01:46:29.000]  you expect the average
+[01:46:29.000 --> 01:46:31.000]  number of hits in every event is
+[01:46:31.000 --> 01:46:33.000]  half of the number of channels
+[01:46:33.000 --> 01:46:35.000]  then in reality
+[01:46:35.000 --> 01:46:37.000]  since you have
+[01:46:37.000 --> 01:46:39.000]  the situation is a little bit more complex
+[01:46:39.000 --> 01:46:41.000]  you have tail on the left
+[01:46:41.000 --> 01:46:43.000]  and on the right
+[01:46:43.000 --> 01:46:45.000]  and based on the width
+[01:46:45.000 --> 01:46:47.000]  of how much events you have
+[01:46:47.000 --> 01:46:49.000]  with
+[01:46:49.000 --> 01:46:51.000]  low number of hits or high number of hits
+[01:46:51.000 --> 01:46:53.000]  you can basically determine
+[01:46:53.000 --> 01:46:55.000]  what is the rate of the common
+[01:46:55.000 --> 01:46:57.000]  noise
+[01:46:57.000 --> 01:46:59.000]  I would say just ignore the fit
+[01:46:59.000 --> 01:47:01.000]  because we saw so far that the fit
+[01:47:01.000 --> 01:47:03.000]  is a 2 and ideal case
+[01:47:03.000 --> 01:47:05.000]  and we will probably remove it in the next version
+[01:47:05.000 --> 01:47:07.000]  what we are actually
+[01:47:07.000 --> 01:47:09.000]  doing in potatoes just we count
+[01:47:09.000 --> 01:47:11.000]  many events we have
+[01:47:11.000 --> 01:47:13.000]  in the tails and this will give us a good idea
+[01:47:13.000 --> 01:47:15.000]  what is the amount
+[01:47:15.000 --> 01:47:17.000]  of common noise
+[01:47:17.000 --> 01:47:19.000]  and this was done at the level of the chip
+[01:47:19.000 --> 01:47:21.000]  so common noise within the same chip
+[01:47:21.000 --> 01:47:23.000]  then
+[01:47:23.000 --> 01:47:25.000]  you also have
+[01:47:25.000 --> 01:47:27.000]  a similar plot but just separated
+[01:47:27.000 --> 01:47:29.000]  from the top and from the bottom
+[01:47:29.000 --> 01:47:31.000]  because
+[01:47:31.000 --> 01:47:33.000]  you can imagine that since
+[01:47:33.000 --> 01:47:35.000]  these channels
+[01:47:35.000 --> 01:47:37.000]  are all connected to the same sensor
+[01:47:37.000 --> 01:47:39.000]  you might expect to have
+[01:47:39.000 --> 01:47:41.000]  slightly different behavior from
+[01:47:41.000 --> 01:47:43.000]  the top and the bottom
+[01:47:43.000 --> 01:47:45.000]  sounds
+[01:47:51.000 --> 01:47:53.000]  so if
+[01:47:53.000 --> 01:47:55.000]  we should have also
+[01:47:55.000 --> 01:47:57.000]  top-bottom correlation
+[01:47:57.000 --> 01:47:59.000]  so basically this is the same plot
+[01:47:59.000 --> 01:48:01.000]  the same two plots that are shown here
+[01:48:01.000 --> 01:48:03.000]  but instead just showing the
+[01:48:03.000 --> 01:48:05.000]  two plots
+[01:48:05.000 --> 01:48:07.000]  separately now we
+[01:48:07.000 --> 01:48:09.000]  show them also in
+[01:48:09.000 --> 01:48:11.000]  a correlation plot
+[01:48:11.000 --> 01:48:13.000]  so you see that actually there is
+[01:48:13.000 --> 01:48:15.000]  correlation because there is
+[01:48:15.000 --> 01:48:17.000]  a diagonal
+[01:48:17.000 --> 01:48:19.000]  you don't have a perfect center
+[01:48:19.000 --> 01:48:21.000]  honestly
+[01:48:21.000 --> 01:48:23.000]  nothing really concerning for what we see
+[01:48:23.000 --> 01:48:25.000]  just that there are
+[01:48:25.000 --> 01:48:27.000]  everything these objects are on the same chip
+[01:48:27.000 --> 01:48:29.000]  so you kind of expect
+[01:48:29.000 --> 01:48:31.000]  a sort of a bit of correlation
+[01:48:31.000 --> 01:48:33.000]  but nothing really
+[01:48:33.000 --> 01:48:35.000]  too serious
+[01:48:35.000 --> 01:48:37.000]  and then
+[01:48:37.000 --> 01:48:39.000]  nothing
+[01:48:39.000 --> 01:48:41.000]  no sorry
+[01:48:41.000 --> 01:48:43.000]  I went too far
+[01:48:47.000 --> 01:48:49.000]  okay yeah I went too far
+[01:48:49.000 --> 01:48:51.000]  and this was
+[01:48:51.000 --> 01:48:53.000]  at the level of
+[01:48:53.000 --> 01:48:55.000]  the
+[01:48:55.000 --> 01:48:57.000]  chip
+[01:48:57.000 --> 01:48:59.000]  then we had the same
+[01:48:59.000 --> 01:49:01.000]  information on the level of the hybrid
+[01:49:03.000 --> 01:49:05.000]  and as before
+[01:49:05.000 --> 01:49:07.000]  we have the distribution
+[01:49:07.000 --> 01:49:09.000]  of
+[01:49:09.000 --> 01:49:11.000]  number of hits per event
+[01:49:11.000 --> 01:49:13.000]  in
+[01:49:15.000 --> 01:49:17.000]  the overall hybrid so in this case
+[01:49:17.000 --> 01:49:19.000]  it can go from 0 to
+[01:49:19.000 --> 01:49:21.000]  2096
+[01:49:23.000 --> 01:49:25.000]  maybe
+[01:49:25.000 --> 01:49:27.000]  I'll remember
+[01:49:27.000 --> 01:49:29.000]  is the 224 by 8
+[01:49:33.000 --> 01:49:35.000]  and
+[01:49:35.000 --> 01:49:37.000]  as for before we have
+[01:49:37.000 --> 01:49:39.000]  them separated from the top sensor
+[01:49:39.000 --> 01:49:41.000]  and the bottom sensor
+[01:49:41.000 --> 01:49:43.000]  and as for before we have the correlation
+[01:49:43.000 --> 01:49:45.000]  between the top
+[01:49:45.000 --> 01:49:47.000]  strips and the bottom strips
+[01:49:47.000 --> 01:49:49.000]  and also see
+[01:49:49.000 --> 01:49:51.000]  there is quite a big correlation
+[01:49:51.000 --> 01:49:53.000]  again this is the reality
+[01:49:53.000 --> 01:49:55.000]  and I don't think there is
+[01:49:55.000 --> 01:49:57.000]  too much to do
+[01:49:57.000 --> 01:49:59.000]  so
+[01:49:59.000 --> 01:50:01.000]  I will not worry about too much
+[01:50:01.000 --> 01:50:03.000]  about this
+[01:50:03.000 --> 01:50:05.000]  and
+[01:50:05.000 --> 01:50:07.000]  I think that's all of the level of the hybrid
+[01:50:07.000 --> 01:50:09.000]  and we have also
+[01:50:09.000 --> 01:50:11.000]  something on the level of the
+[01:50:13.000 --> 01:50:15.000]  module
+[01:50:15.000 --> 01:50:17.000]  let me close that
+[01:50:21.000 --> 01:50:23.000]  sorry
+[01:50:23.000 --> 01:50:25.000]  common noise
+[01:50:25.000 --> 01:50:27.000]  at the level of the module
+[01:50:29.000 --> 01:50:31.000]  as before here you have
+[01:50:31.000 --> 01:50:33.000]  more than 4000 strips
+[01:50:33.000 --> 01:50:35.000]  and as before
+[01:50:35.000 --> 01:50:37.000]  we have the
+[01:50:37.000 --> 01:50:39.000]  separated in top and bottom
+[01:50:39.000 --> 01:50:41.000]  and we have
+[01:50:41.000 --> 01:50:43.000]  the correlation
+[01:50:45.000 --> 01:50:47.000]  between
+[01:50:47.000 --> 01:50:49.000]  top and bottom
+[01:50:49.000 --> 01:50:51.000]  and
+[01:50:51.000 --> 01:50:53.000]  you see that here is a little bit less
+[01:50:53.000 --> 01:50:55.000]  correlated because I put in two
+[01:50:55.000 --> 01:50:57.000]  hybrids and the two hybrids
+[01:50:57.000 --> 01:50:59.000]  should be a bit less correlated
+[01:50:59.000 --> 01:51:01.000]  and
+[01:51:01.000 --> 01:51:03.000]  they are actually
+[01:51:03.000 --> 01:51:05.000]  uncorrelated
+[01:51:05.000 --> 01:51:07.000]  between left and right side
+[01:51:07.000 --> 01:51:09.000]  so
+[01:51:09.000 --> 01:51:11.000]  I honestly struggle a little bit more
+[01:51:11.000 --> 01:51:13.000]  to interpret these results
+[01:51:13.000 --> 01:51:15.000]  because this is
+[01:51:15.000 --> 01:51:17.000]  the reality of the module works
+[01:51:17.000 --> 01:51:19.000]  so
+[01:51:19.000 --> 01:51:21.000]  I will just say if you see
+[01:51:21.000 --> 01:51:23.000]  some particular
+[01:51:23.000 --> 01:51:25.000]  tail on some particular
+[01:51:25.000 --> 01:51:27.000]  weird noise into the
+[01:51:27.000 --> 01:51:29.000]  results from the pedenoise
+[01:51:29.000 --> 01:51:31.000]  I would suggest
+[01:51:31.000 --> 01:51:33.000]  to check these plots
+[01:51:33.000 --> 01:51:35.000]  to see if
+[01:51:35.000 --> 01:51:37.000]  for any reason these plots are
+[01:51:37.000 --> 01:51:39.000]  starting out particularly
+[01:51:39.000 --> 01:51:41.000]  if you have any particular
+[01:51:41.000 --> 01:51:43.000]  with the distribution
+[01:51:43.000 --> 01:51:45.000]  into these and I will take
+[01:51:45.000 --> 01:51:47.000]  as a reference
+[01:51:47.000 --> 01:51:49.000]  other
+[01:51:49.000 --> 01:51:51.000]  common noise plots
+[01:51:51.000 --> 01:51:53.000]  from the
+[01:51:53.000 --> 01:51:55.000]  module that
+[01:51:55.000 --> 01:51:57.000]  we can see that the
+[01:51:57.000 --> 01:51:59.000]  noise distribution
+[01:51:59.000 --> 01:52:01.000]  from the pedenoise results
+[01:52:01.000 --> 01:52:03.000]  are the expected one
+[01:52:03.000 --> 01:52:05.000]  with form moving on
+[01:52:05.000 --> 01:52:07.000]  I just
+[01:52:07.000 --> 01:52:09.000]  skip
+[01:52:09.000 --> 01:52:11.000]  completely the other
+[01:52:11.000 --> 01:52:13.000]  common more noise that are done
+[01:52:13.000 --> 01:52:15.000]  so if I enlarge
+[01:52:15.000 --> 01:52:17.000]  a little bit you see
+[01:52:17.000 --> 01:52:19.000]  that all these common more noise
+[01:52:19.000 --> 01:52:21.000]  that I show you so far have these occupancy
+[01:52:21.000 --> 01:52:23.000]  driven
+[01:52:23.000 --> 01:52:25.000]  but then after
+[01:52:25.000 --> 01:52:27.000]  Giovanni suggested
+[01:52:27.000 --> 01:52:29.000]  we also included another
+[01:52:29.000 --> 01:52:31.000]  measurement that is
+[01:52:31.000 --> 01:52:33.000]  measured except the same
+[01:52:33.000 --> 01:52:35.000]  plot but at three
+[01:52:35.000 --> 01:52:37.000]  sigma
+[01:52:37.000 --> 01:52:39.000]  and the reason
+[01:52:39.000 --> 01:52:41.000]  for that
+[01:52:41.000 --> 01:52:43.000]  is that is also another way
+[01:52:43.000 --> 01:52:45.000]  to better visualize
+[01:52:45.000 --> 01:52:47.000]  the effect of the noise so when you
+[01:52:47.000 --> 01:52:49.000]  look at the
+[01:52:49.000 --> 01:52:51.000]  zero sigma
+[01:52:51.000 --> 01:52:53.000]  occupancy that
+[01:52:53.000 --> 01:52:55.000]  is expected to be a 50%
+[01:52:55.000 --> 01:52:57.000]  you can look both
+[01:52:57.000 --> 01:52:59.000]  the left
+[01:52:59.000 --> 01:53:01.000]  tail and the right
+[01:53:01.000 --> 01:53:03.000]  tail because you don't expect
+[01:53:03.000 --> 01:53:05.000]  that all the channel fire at the same time
+[01:53:05.000 --> 01:53:07.000]  instead for the three sigma
+[01:53:07.000 --> 01:53:09.000]  you can focus just
+[01:53:09.000 --> 01:53:11.000]  on the right tail
+[01:53:11.000 --> 01:53:13.000]  and so if I zoom in you see that
+[01:53:13.000 --> 01:53:15.000]  it's basically the same idea
+[01:53:15.000 --> 01:53:17.000]  but focusing mainly
+[01:53:17.000 --> 01:53:19.000]  to the right tail so
+[01:53:19.000 --> 01:53:21.000]  I will say this is just another way
+[01:53:21.000 --> 01:53:23.000]  to see exactly the same results
+[01:53:23.000 --> 01:53:25.000]  but for much like a different perspective
+[01:53:25.000 --> 01:53:27.000]  so focusing just on the right
+[01:53:27.000 --> 01:53:29.000]  tail and
+[01:53:29.000 --> 01:53:31.000]  not on the left
+[01:53:31.000 --> 01:53:33.000]  and the right tail
+[01:53:33.000 --> 01:53:35.000]  so
+[01:53:35.000 --> 01:53:37.000]  given the amount of data
+[01:53:37.000 --> 01:53:39.000]  we collected so far we don't see
+[01:53:39.000 --> 01:53:41.000]  much of
+[01:53:41.000 --> 01:53:43.000]  a reason to choose
+[01:53:43.000 --> 01:53:45.000]  to do the QA on one or the two
+[01:53:45.000 --> 01:53:47.000]  so since we're at the beginning
+[01:53:47.000 --> 01:53:49.000]  we decided to include both of them
+[01:53:49.000 --> 01:53:51.000]  the time required to
+[01:53:51.000 --> 01:53:53.000]  collect this data is very short
+[01:53:53.000 --> 01:53:55.000]  so there was basically no
+[01:53:55.000 --> 01:53:57.000]  go back and
+[01:53:57.000 --> 01:53:59.000]  we now have available both
+[01:53:59.000 --> 01:54:01.000]  so I would say
+[01:54:01.000 --> 01:54:03.000]  basically
+[01:54:03.000 --> 01:54:05.000]  the reference of the user
+[01:54:05.000 --> 01:54:07.000]  you can focus more on this
+[01:54:07.000 --> 01:54:09.000]  this one is lightly more obvious
+[01:54:09.000 --> 01:54:11.000]  because you just see the tail
+[01:54:11.000 --> 01:54:13.000]  on one side the other one
+[01:54:13.000 --> 01:54:15.000]  might be slightly more
+[01:54:15.000 --> 01:54:17.000]  tricky because you have to consider both
+[01:54:17.000 --> 01:54:19.000]  that you said
+[01:54:21.000 --> 01:54:23.000]  okay so
+[01:54:23.000 --> 01:54:25.000]  for the
+[01:54:25.000 --> 01:54:27.000]  occupancy driven that is zero
+[01:54:27.000 --> 01:54:29.000]  sigma and the three sigma
+[01:54:29.000 --> 01:54:31.000]  plots are identical so I'm
+[01:54:31.000 --> 01:54:33.000]  just not going to go through all of them
+[01:54:33.000 --> 01:54:35.000]  the information that we
+[01:54:35.000 --> 01:54:37.000]  do is exactly the same
+[01:54:37.000 --> 01:54:39.000]  the only difference is that now
+[01:54:39.000 --> 01:54:41.000]  the plots are all shifted to the left
+[01:54:41.000 --> 01:54:43.000]  because we expect
+[01:54:43.000 --> 01:54:45.000]  low average occupancy
+[01:54:51.000 --> 01:54:53.000]  zero as well
+[01:54:53.000 --> 01:54:55.000]  when the person just told me
+[01:54:55.000 --> 01:54:57.000]  sorry
+[01:54:57.000 --> 01:54:59.000]  so we covered this
+[01:54:59.000 --> 01:55:01.000]  okay
+[01:55:01.000 --> 01:55:03.000]  now
+[01:55:03.000 --> 01:55:05.000]  we go
+[01:55:05.000 --> 01:55:07.000]  add
+[01:55:07.000 --> 01:55:09.000]  to the
+[01:55:09.000 --> 01:55:11.000]  electric chain validation
+[01:55:11.000 --> 01:55:13.000]  so this is going to be
+[01:55:13.000 --> 01:55:15.000]  a bit complicated
+[01:55:15.000 --> 01:55:17.000]  and there are really
+[01:55:17.000 --> 01:55:19.000]  a lot of plots
+[01:55:19.000 --> 01:55:21.000]  but I think the main concept
+[01:55:21.000 --> 01:55:23.000]  is that if you
+[01:55:23.000 --> 01:55:25.000]  understood
+[01:55:25.000 --> 01:55:27.000]  how these
+[01:55:27.000 --> 01:55:29.000]  verify steps work
+[01:55:31.000 --> 01:55:33.000]  then at this point
+[01:55:33.000 --> 01:55:35.000]  you understood
+[01:55:37.000 --> 01:55:39.000]  you understand
+[01:55:39.000 --> 01:55:41.000]  what the electric chain validation does
+[01:55:41.000 --> 01:55:43.000]  because the only difference with respect to the electric chain
+[01:55:43.000 --> 01:55:45.000]  to the verified plot
+[01:55:45.000 --> 01:55:47.000]  is that during the electric chain validation
+[01:55:47.000 --> 01:55:49.000]  we don't choose
+[01:55:49.000 --> 01:55:51.000]  only the phase
+[01:55:51.000 --> 01:55:53.000]  that is identified by
+[01:55:53.000 --> 01:55:55.000]  either the CAC
+[01:55:55.000 --> 01:55:57.000]  or the LPGVT to be the best one
+[01:55:57.000 --> 01:55:59.000]  we change them manually
+[01:55:59.000 --> 01:56:01.000]  because we want to see how wide
+[01:56:01.000 --> 01:56:03.000]  is the work in area
+[01:56:03.000 --> 01:56:05.000]  you don't want to have
+[01:56:05.000 --> 01:56:07.000]  a single phase that works
+[01:56:07.000 --> 01:56:09.000]  because it means that
+[01:56:09.000 --> 01:56:11.000]  you are a little bit at the edge
+[01:56:11.000 --> 01:56:13.000]  as you might have that
+[01:56:13.000 --> 01:56:15.000]  things might be working now
+[01:56:15.000 --> 01:56:17.000]  and after installing to the detector
+[01:56:17.000 --> 01:56:19.000]  and that single phase is not anymore
+[01:56:19.000 --> 01:56:21.000]  so the whole idea
+[01:56:21.000 --> 01:56:23.000]  of the electric chain validation
+[01:56:23.000 --> 01:56:25.000]  is how wide is the work in area
+[01:56:25.000 --> 01:56:27.000]  so
+[01:56:27.000 --> 01:56:29.000]  I'm going to start
+[01:56:29.000 --> 01:56:31.000]  from the
+[01:56:31.000 --> 01:56:33.000]  CAC to LPGVT validation
+[01:56:33.000 --> 01:56:35.000]  so we are basically
+[01:56:35.000 --> 01:56:37.000]  looking at this phase
+[01:56:37.000 --> 01:56:39.000]  these lines over here
+[01:56:39.000 --> 01:56:41.000]  so we change
+[01:56:41.000 --> 01:56:43.000]  the sampling phase of the LPGVT
+[01:56:43.000 --> 01:56:45.000]  and we see if
+[01:56:45.000 --> 01:56:47.000]  the signal
+[01:56:47.000 --> 01:56:49.000]  the
+[01:56:49.000 --> 01:56:51.000]  pattern that are sent by the CAC
+[01:56:51.000 --> 01:56:53.000]  are properly
+[01:56:53.000 --> 01:56:55.000]  reconstructed into the SPGA
+[01:56:57.000 --> 01:56:59.000]  for each of these phase
+[01:56:59.000 --> 01:57:01.000]  so the plots
+[01:57:01.000 --> 01:57:03.000]  are saved
+[01:57:03.000 --> 01:57:05.000]  at the high B level
+[01:57:05.000 --> 01:57:07.000]  and
+[01:57:07.000 --> 01:57:09.000]  all the plots are
+[01:57:09.000 --> 01:57:11.000]  CAC to LPGVT
+[01:57:11.000 --> 01:57:13.000]  pattern matching
+[01:57:13.000 --> 01:57:15.000]  and for each one of these
+[01:57:15.000 --> 01:57:17.000]  there is the error rate
+[01:57:17.000 --> 01:57:19.000]  and the tested bits
+[01:57:19.000 --> 01:57:21.000]  as before, let's open one quickly
+[01:57:21.000 --> 01:57:23.000]  here is the number of bits
+[01:57:23.000 --> 01:57:25.000]  that we
+[01:57:25.000 --> 01:57:27.000]  tested for every one of these lines
+[01:57:27.000 --> 01:57:29.000]  and
+[01:57:29.000 --> 01:57:31.000]  these
+[01:57:31.000 --> 01:57:33.000]  are the number of
+[01:57:33.000 --> 01:57:35.000]  error that we measure
+[01:57:35.000 --> 01:57:37.000]  for every line. I'm going to
+[01:57:37.000 --> 01:57:39.000]  go more into details, no more about it
+[01:57:39.000 --> 01:57:41.000]  then
+[01:57:41.000 --> 01:57:43.000]  so
+[01:57:43.000 --> 01:57:45.000]  what we can also change
+[01:57:45.000 --> 01:57:47.000]  is
+[01:57:47.000 --> 01:57:49.000]  the
+[01:57:49.000 --> 01:57:51.000]  strength
+[01:57:51.000 --> 01:57:53.000]  of the current used
+[01:57:53.000 --> 01:57:55.000]  to drive the lines
+[01:57:55.000 --> 01:57:57.000]  by the CAC
+[01:57:57.000 --> 01:57:59.000]  so the CAC is sending data
+[01:57:59.000 --> 01:58:01.000]  to these and you can set
+[01:58:01.000 --> 01:58:03.000]  how much current is used
+[01:58:03.000 --> 01:58:05.000]  to drive the lines
+[01:58:05.000 --> 01:58:07.000]  and
+[01:58:07.000 --> 01:58:09.000]  you can expect that by changing these
+[01:58:09.000 --> 01:58:11.000]  you can, sorry
+[01:58:11.000 --> 01:58:13.000]  to change these current
+[01:58:13.000 --> 01:58:15.000]  you might have different
+[01:58:15.000 --> 01:58:17.000]  behavior in the LPGVT
+[01:58:17.000 --> 01:58:19.000]  reconstructing them
+[01:58:19.000 --> 01:58:21.000]  then we have the
+[01:58:21.000 --> 01:58:23.000]  LPGVT clock polarity
+[01:58:23.000 --> 01:58:25.000]  so the LPGVT sends
+[01:58:25.000 --> 01:58:27.000]  the
+[01:58:27.000 --> 01:58:29.000]  provides the clock
+[01:58:29.000 --> 01:58:31.000]  to the
+[01:58:31.000 --> 01:58:33.000]  hybrid so
+[01:58:33.000 --> 01:58:35.000]  you reconstruct the clock from the incoming data
+[01:58:35.000 --> 01:58:37.000]  and provides it to the hybrid
+[01:58:37.000 --> 01:58:39.000]  and you can set the polarity of the clock so
+[01:58:39.000 --> 01:58:41.000]  you can basically change its phase
+[01:58:41.000 --> 01:58:43.000]  by 50%
+[01:58:43.000 --> 01:58:45.000]  and these are
+[01:58:45.000 --> 01:58:47.000]  see that we do both of them
+[01:58:47.000 --> 01:58:49.000]  and finally
+[01:58:49.000 --> 01:58:51.000]  the CAC clock strength
+[01:58:51.000 --> 01:58:53.000]  as for these lines
+[01:58:53.000 --> 01:58:55.000]  the LPGVT sends the clock
+[01:58:55.000 --> 01:58:57.000]  and you can change the current
+[01:58:57.000 --> 01:58:59.000]  that is used to drive the line of the clock
+[01:58:59.000 --> 01:59:01.000]  so I have to
+[01:59:01.000 --> 01:59:03.000]  set this by an overkill but this was
+[01:59:03.000 --> 01:59:05.000]  at the beginning so we were not sure
+[01:59:05.000 --> 01:59:07.000]  how much we need to test so
+[01:59:07.000 --> 01:59:09.000]  we can imagine that in the future we can
+[01:59:09.000 --> 01:59:11.000]  drop some of these
+[01:59:11.000 --> 01:59:13.000]  so I'm just going to focus
+[01:59:13.000 --> 01:59:15.000]  probably on one of them
+[01:59:27.000 --> 01:59:29.000]  let me try to see if there is some
+[01:59:29.000 --> 01:59:31.000]  a little bit more
+[01:59:31.000 --> 01:59:33.000]  representative so maybe
+[01:59:33.000 --> 01:59:35.000]  so it will be clear
+[01:59:35.000 --> 01:59:37.000]  because
+[01:59:37.000 --> 01:59:39.000]  these phases are usually
+[01:59:39.000 --> 01:59:41.000]  pretty good
+[01:59:41.000 --> 01:59:43.000]  so you don't see too much
+[01:59:43.000 --> 01:59:45.000]  which is good which means that
+[01:59:45.000 --> 01:59:47.000]  basically
+[01:59:47.000 --> 01:59:49.000]  several of these phases
+[01:59:49.000 --> 01:59:51.000]  keep open the problem
+[01:59:51.000 --> 01:59:53.000]  several of the phases
+[01:59:53.000 --> 01:59:55.000]  are going to be
+[01:59:55.000 --> 01:59:57.000]  good for working
+[01:59:57.000 --> 01:59:59.000]  maybe this one is better
+[01:59:59.000 --> 02:00:01.000]  ok
+[02:00:03.000 --> 02:00:05.000]  let's take this
+[02:00:05.000 --> 02:00:07.000]  so in this plot
+[02:00:07.000 --> 02:00:09.000]  what we show is that
+[02:00:09.000 --> 02:00:11.000]  for each on the Y axis
+[02:00:11.000 --> 02:00:13.000]  we show the line
+[02:00:13.000 --> 02:00:15.000]  ID so these
+[02:00:15.000 --> 02:00:17.000]  are the lines
+[02:00:19.000 --> 02:00:21.000]  and on the X axis
+[02:00:21.000 --> 02:00:23.000]  we show the
+[02:00:23.000 --> 02:00:25.000]  phase that is selected
+[02:00:25.000 --> 02:00:27.000]  so the phase can go from 0 to
+[02:00:27.000 --> 02:00:29.000]  14 so we change it manually
+[02:00:29.000 --> 02:00:31.000]  the LPGPT phase
+[02:00:31.000 --> 02:00:33.000]  we don't let the LPGPT adjust
+[02:00:33.000 --> 02:00:35.000]  we change it manually because we also want
+[02:00:35.000 --> 02:00:37.000]  to work in the area where the LPGPT doesn't
+[02:00:37.000 --> 02:00:39.000]  see anything
+[02:00:39.000 --> 02:00:41.000]  and then on the Y axis
+[02:00:41.000 --> 02:00:43.000]  the Z axis
+[02:00:43.000 --> 02:00:45.000]  we add a number of test bits
+[02:00:45.000 --> 02:00:47.000]  and as before
+[02:00:47.000 --> 02:00:49.000]  the stop pattern matches down the firmware
+[02:00:49.000 --> 02:00:51.000]  to be faster while the level 1
+[02:00:51.000 --> 02:00:53.000]  pattern matches down on the
+[02:00:53.000 --> 02:00:55.000]  VR software and that's why it takes
+[02:00:55.000 --> 02:00:57.000]  longer time
+[02:00:57.000 --> 02:00:59.000]  and therefore
+[02:00:59.000 --> 02:01:01.000]  we don't scan as many bits
+[02:01:01.000 --> 02:01:03.000]  as for the stops
+[02:01:03.000 --> 02:01:05.000]  and then for each one of these
+[02:01:05.000 --> 02:01:07.000]  we get a plot like this
+[02:01:07.000 --> 02:01:09.000]  where X and Y axes are the same
+[02:01:09.000 --> 02:01:11.000]  so the lines
+[02:01:11.000 --> 02:01:13.000]  and the phases
+[02:01:13.000 --> 02:01:15.000]  why the Z axis
+[02:01:15.000 --> 02:01:17.000]  is the number
+[02:01:17.000 --> 02:01:19.000]  there already
+[02:01:19.000 --> 02:01:21.000]  it's written a bit small
+[02:01:21.000 --> 02:01:23.000]  but it's written the time
+[02:01:23.000 --> 02:01:25.000]  so
+[02:01:25.000 --> 02:01:27.000]  you can expect that some
+[02:01:27.000 --> 02:01:29.000]  of the lines will not work
+[02:01:29.000 --> 02:01:31.000]  because you are sampling
+[02:01:31.000 --> 02:01:33.000]  the incoming data from the SSC
+[02:01:33.000 --> 02:01:35.000]  when the incoming data are transitioning
+[02:01:35.000 --> 02:01:37.000]  and this is definitely not a good place
+[02:01:37.000 --> 02:01:39.000]  because you are misinterpreting
+[02:01:39.000 --> 02:01:41.000]  the Z on Y
+[02:01:41.000 --> 02:01:43.000]  so
+[02:01:43.000 --> 02:01:45.000]  how we identify a good module
+[02:01:45.000 --> 02:01:47.000]  is basically
+[02:01:47.000 --> 02:01:49.000]  how wide is the area
+[02:01:49.000 --> 02:01:51.000]  in which you can find a good phase
+[02:01:51.000 --> 02:01:53.000]  so for example here
+[02:01:53.000 --> 02:01:55.000]  the
+[02:01:55.000 --> 02:01:57.000]  the width of the phase actually
+[02:01:57.000 --> 02:01:59.000]  the one on the left but just
+[02:01:59.000 --> 02:02:01.000]  let's pretend that something here is bad
+[02:02:01.000 --> 02:02:03.000]  the width of
+[02:02:03.000 --> 02:02:05.000]  the phase in which you can work
+[02:02:05.000 --> 02:02:07.000]  is this amount
+[02:02:07.000 --> 02:02:09.000]  imagine you have
+[02:02:09.000 --> 02:02:11.000]  a really bad scenario in which
+[02:02:11.000 --> 02:02:13.000]  you have
+[02:02:13.000 --> 02:02:15.000]  several values
+[02:02:15.000 --> 02:02:17.000]  which you don't have a good phase
+[02:02:17.000 --> 02:02:19.000]  and maybe I think I spot one before
+[02:02:21.000 --> 02:02:23.000]  yes
+[02:02:23.000 --> 02:02:25.000]  so
+[02:02:29.000 --> 02:02:31.000]  yes
+[02:02:31.000 --> 02:02:33.000]  so
+[02:02:33.000 --> 02:02:35.000]  this one is a really bad scenario
+[02:02:35.000 --> 02:02:37.000]  because you see that basically
+[02:02:37.000 --> 02:02:39.000]  there is no phase in which
+[02:02:39.000 --> 02:02:41.000]  things are working fine
+[02:02:41.000 --> 02:02:43.000]  why that?
+[02:02:43.000 --> 02:02:45.000]  because we are very likely using
+[02:02:45.000 --> 02:02:47.000]  a combination clock polarity
+[02:02:47.000 --> 02:02:49.000]  and to abstract that are not
+[02:02:49.000 --> 02:02:51.000]  as obvious current is the minimum
+[02:02:51.000 --> 02:02:53.000]  and basically you cannot
+[02:02:53.000 --> 02:02:55.000]  find any phases in which things are working
+[02:02:55.000 --> 02:02:57.000]  you can imagine also that
+[02:02:57.000 --> 02:02:59.000]  you have something in between in which
+[02:02:59.000 --> 02:03:01.000]  for example this one is a zero
+[02:03:01.000 --> 02:03:03.000]  and you have just one phase that works
+[02:03:03.000 --> 02:03:05.000]  and this would be a bad mortgage because
+[02:03:05.000 --> 02:03:07.000]  you are really relying on this phase
+[02:03:07.000 --> 02:03:09.000]  and never ever being
+[02:03:09.000 --> 02:03:11.000]  always being good and which is unsafe
+[02:03:11.000 --> 02:03:13.000]  so basically the distance between
+[02:03:13.000 --> 02:03:15.000]  at the length
+[02:03:15.000 --> 02:03:17.000]  of which you get zero error
+[02:03:17.000 --> 02:03:19.000]  indicates you how wide is
+[02:03:19.000 --> 02:03:21.000]  the working area
+[02:03:21.000 --> 02:03:23.000]  and how well your module
+[02:03:23.000 --> 02:03:25.000]  can absorb
+[02:03:25.000 --> 02:03:27.000]  variation in that
+[02:03:27.000 --> 02:03:29.000]  standard condition that may change
+[02:03:29.000 --> 02:03:31.000]  the width of the phase
+[02:03:31.000 --> 02:03:33.000]  so as I was saying you have really a lot of them
+[02:03:33.000 --> 02:03:35.000]  because it's a
+[02:03:35.000 --> 02:03:37.000]  scanner multi-parameters so we are changing
+[02:03:37.000 --> 02:03:39.000]  the
+[02:03:39.000 --> 02:03:41.000]  C-C clock
+[02:03:41.000 --> 02:03:43.000]  SLBS current, the LPGVT clock polarity
+[02:03:43.000 --> 02:03:45.000]  and the LPGVT clock strength
+[02:03:45.000 --> 02:03:47.000]  so you have really a lot of them
+[02:03:47.000 --> 02:03:49.000]  you don't need to look
+[02:03:49.000 --> 02:03:51.000]  all of them
+[02:03:51.000 --> 02:03:53.000]  potato will do the job
+[02:03:53.000 --> 02:03:55.000]  but this is the typical plot that you
+[02:03:55.000 --> 02:03:57.000]  want to do
+[02:03:57.000 --> 02:03:59.000]  once you see that
+[02:03:59.000 --> 02:04:01.000]  you have problem with alignment
+[02:04:01.000 --> 02:04:03.000]  of these kind of things that
+[02:04:03.000 --> 02:04:05.000]  it prevents you to have a stable communication
+[02:04:05.000 --> 02:04:07.000]  a lot of errors in communicating
+[02:04:07.000 --> 02:04:09.000]  in a
+[02:04:09.000 --> 02:04:11.000]  decoding the events
+[02:04:11.000 --> 02:04:13.000]  these kind of things may indicate
+[02:04:13.000 --> 02:04:15.000]  that your working range is
+[02:04:15.000 --> 02:04:17.000]  small and
+[02:04:17.000 --> 02:04:19.000]  even if the LPGVT can align
+[02:04:19.000 --> 02:04:21.000]  the C-C
+[02:04:21.000 --> 02:04:23.000]  it might not be a good alignment
+[02:04:23.000 --> 02:04:25.000]  you just found a phase but then
+[02:04:25.000 --> 02:04:27.000]  that phase is not really stable
+[02:04:29.000 --> 02:04:31.000]  so
+[02:04:31.000 --> 02:04:33.000]  let me open just another one
+[02:04:33.000 --> 02:04:35.000]  so for example this one is a pretty good one
+[02:04:35.000 --> 02:04:37.000]  you see that you have a wide range
+[02:04:37.000 --> 02:04:39.000]  of areas in which things are working fine
+[02:04:43.000 --> 02:04:45.000]  any question on this
+[02:04:45.000 --> 02:04:47.000]  because basically all the electric chain validation
+[02:04:47.000 --> 02:04:49.000]  will look like these
+[02:04:49.000 --> 02:04:51.000]  so you see
+[02:04:51.000 --> 02:04:53.000]  how we are plotting this
+[02:04:53.000 --> 02:04:55.000]  basically you understand how we are plotting all the electric chain validation
+[02:05:07.000 --> 02:05:09.000]  then next step
+[02:05:09.000 --> 02:05:11.000]  of the electric chain validation
+[02:05:11.000 --> 02:05:13.000]  is actually an auxiliary step
+[02:05:15.000 --> 02:05:17.000]  you kind of remember before
+[02:05:17.000 --> 02:05:19.000]  I mentioned briefly
+[02:05:19.000 --> 02:05:21.000]  in the plots
+[02:05:21.000 --> 02:05:23.000]  at the beginning
+[02:05:23.000 --> 02:05:25.000]  let me open one again
+[02:05:31.000 --> 02:05:33.000]  yes, okay in this one
+[02:05:33.000 --> 02:05:35.000]  you kind of remember
+[02:05:35.000 --> 02:05:37.000]  I was telling you so here
+[02:05:37.000 --> 02:05:39.000]  despite the fact that we have five lines
+[02:05:39.000 --> 02:05:41.000]  we are just going to show one of them
+[02:05:41.000 --> 02:05:43.000]  because we cannot really distinguish
+[02:05:43.000 --> 02:05:45.000]  since the C-C does a risk rambling
+[02:05:45.000 --> 02:05:47.000]  we cannot really distinguish
+[02:05:47.000 --> 02:05:49.000]  between
+[02:05:49.000 --> 02:05:51.000]  in which line an error occurs
+[02:05:53.000 --> 02:05:55.000]  this is
+[02:05:55.000 --> 02:05:57.000]  partially true
+[02:05:57.000 --> 02:05:59.000]  we can actually set the C-C
+[02:05:59.000 --> 02:06:01.000]  in bypass mode
+[02:06:01.000 --> 02:06:03.000]  so basically you can
+[02:06:03.000 --> 02:06:05.000]  ask the C-C
+[02:06:05.000 --> 02:06:07.000]  just to forward the incoming
+[02:06:07.000 --> 02:06:09.000]  data
+[02:06:09.000 --> 02:06:11.000]  to the LPGVT
+[02:06:11.000 --> 02:06:13.000]  without any processing
+[02:06:13.000 --> 02:06:15.000]  this is
+[02:06:15.000 --> 02:06:17.000]  a bit more complicated
+[02:06:17.000 --> 02:06:19.000]  for a few reasons
+[02:06:19.000 --> 02:06:21.000]  the first one is that
+[02:06:21.000 --> 02:06:23.000]  each CBC has
+[02:06:23.000 --> 02:06:25.000]  five lines
+[02:06:25.000 --> 02:06:27.000]  actually six lines
+[02:06:27.000 --> 02:06:29.000]  in input to the C-C
+[02:06:29.000 --> 02:06:31.000]  so there are six times eight
+[02:06:31.000 --> 02:06:33.000]  so 48 lines going to the C-C
+[02:06:33.000 --> 02:06:35.000]  but only
+[02:06:35.000 --> 02:06:37.000]  six coming out from the C-C
+[02:06:37.000 --> 02:06:39.000]  to LPGVT
+[02:06:39.000 --> 02:06:41.000]  so you cannot forward all of them in one shot
+[02:06:41.000 --> 02:06:43.000]  so you have to choose what you
+[02:06:43.000 --> 02:06:45.000]  want to forward
+[02:06:45.000 --> 02:06:47.000]  and then on top of that
+[02:06:49.000 --> 02:06:51.000]  you cannot forward
+[02:06:51.000 --> 02:06:53.000]  out by construction
+[02:06:53.000 --> 02:06:55.000]  all the lines
+[02:06:55.000 --> 02:06:57.000]  for the one CBC
+[02:06:57.000 --> 02:06:59.000]  but you can forward only
+[02:06:59.000 --> 02:07:01.000]  four
+[02:07:01.000 --> 02:07:03.000]  and these four
+[02:07:03.000 --> 02:07:05.000]  are
+[02:07:05.000 --> 02:07:07.000]  what is called a
+[02:07:07.000 --> 02:07:09.000]  five port
+[02:07:09.000 --> 02:07:11.000]  and here in the stable you see the grouping
+[02:07:11.000 --> 02:07:13.000]  so
+[02:07:13.000 --> 02:07:15.000]  there are 12 five ports
+[02:07:15.000 --> 02:07:17.000]  and each one of these have four lines
+[02:07:17.000 --> 02:07:19.000]  and these four lines
+[02:07:19.000 --> 02:07:21.000]  are basically
+[02:07:21.000 --> 02:07:23.000]  values information that are coming
+[02:07:23.000 --> 02:07:25.000]  from the various chips
+[02:07:25.000 --> 02:07:27.000]  so basically the first ten five port
+[02:07:27.000 --> 02:07:29.000]  are only the
+[02:07:29.000 --> 02:07:31.000]  trigger information
+[02:07:31.000 --> 02:07:33.000]  and then the last two are
+[02:07:33.000 --> 02:07:35.000]  for the level ones
+[02:07:35.000 --> 02:07:37.000]  and
+[02:07:37.000 --> 02:07:39.000]  to do the mapping
+[02:07:39.000 --> 02:07:41.000]  is even more complicated
+[02:07:41.000 --> 02:07:43.000]  because
+[02:07:43.000 --> 02:07:45.000]  the C-I-C
+[02:07:45.000 --> 02:07:47.000]  has
+[02:07:47.000 --> 02:07:49.000]  used a front-end ID
+[02:07:49.000 --> 02:07:51.000]  that is the one
+[02:07:51.000 --> 02:07:53.000]  indicating the second column
+[02:07:53.000 --> 02:07:55.000]  that actually doesn't match
+[02:07:55.000 --> 02:07:57.000]  the one that is used
+[02:07:57.000 --> 02:07:59.000]  in the I-Sql-C
+[02:07:59.000 --> 02:08:01.000]  that is also the one
+[02:08:01.000 --> 02:08:03.000]  that we used for indicating the modules
+[02:08:03.000 --> 02:08:05.000]  in the
+[02:08:05.000 --> 02:08:07.000]  chips into PH2-ACF
+[02:08:07.000 --> 02:08:09.000]  so there are basically two IDs
+[02:08:09.000 --> 02:08:11.000]  one that is used for the I-Sql-C
+[02:08:11.000 --> 02:08:13.000]  and one is used for the C-I-C
+[02:08:13.000 --> 02:08:15.000]  to identify which system is connected
+[02:08:15.000 --> 02:08:17.000]  they don't match
+[02:08:17.000 --> 02:08:19.000]  and for historical reason
+[02:08:19.000 --> 02:08:21.000]  it was chosen to PH2-ACF to use
+[02:08:21.000 --> 02:08:23.000]  the I-Sql-C1
+[02:08:23.000 --> 02:08:25.000]  so these are the numbers that you see in the PH2-ACF
+[02:08:25.000 --> 02:08:27.000]  but then there is a bit of mapping
+[02:08:27.000 --> 02:08:29.000]  so all the way down to the port
+[02:08:29.000 --> 02:08:31.000]  the five port and the port line
+[02:08:31.000 --> 02:08:33.000]  to actually understand which
+[02:08:33.000 --> 02:08:35.000]  lines you are
+[02:08:35.000 --> 02:08:37.000]  you are expecting
+[02:08:37.000 --> 02:08:39.000]  so you see is a bit complicated
+[02:08:41.000 --> 02:08:43.000]  but this is how we need to do it
+[02:08:43.000 --> 02:08:45.000]  in the PH2-ACF
+[02:08:45.000 --> 02:08:47.000]  I don't think you need to understand really the details
+[02:08:47.000 --> 02:08:49.000]  because the PH2-ACF then does
+[02:08:49.000 --> 02:08:51.000]  a little bit of
+[02:08:51.000 --> 02:08:53.000]  remapping
+[02:08:53.000 --> 02:08:55.000]  for you
+[02:08:55.000 --> 02:08:57.000]  I don't worry too much about what is happening
+[02:08:57.000 --> 02:08:59.000]  into this step
+[02:08:59.000 --> 02:09:01.000]  ok so
+[02:09:01.000 --> 02:09:03.000]  for the
+[02:09:03.000 --> 02:09:05.000]  the second problem
+[02:09:05.000 --> 02:09:07.000]  that I will mention is that
+[02:09:07.000 --> 02:09:09.000]  once running by pass mode
+[02:09:09.000 --> 02:09:11.000]  the LPGVT
+[02:09:11.000 --> 02:09:13.000]  so
+[02:09:13.000 --> 02:09:15.000]  the data that are coming out from the C-I-C
+[02:09:15.000 --> 02:09:17.000]  are not any more clock
+[02:09:17.000 --> 02:09:19.000]  to the usual clock in which we
+[02:09:19.000 --> 02:09:21.000]  did the phase alignment and so on
+[02:09:21.000 --> 02:09:23.000]  so we need
+[02:09:23.000 --> 02:09:25.000]  to re-align the LPGVT
+[02:09:25.000 --> 02:09:27.000]  but by construction
+[02:09:27.000 --> 02:09:29.000]  this cannot be done automatically
+[02:09:29.000 --> 02:09:31.000]  it needs to be done
+[02:09:31.000 --> 02:09:33.000]  manually
+[02:09:33.000 --> 02:09:35.000]  so we need to do a manual strain of the LPGVT phases
+[02:09:35.000 --> 02:09:37.000]  in order to align
+[02:09:37.000 --> 02:09:39.000]  the data
+[02:09:39.000 --> 02:09:41.000]  coming from the C-I-C when the C-I-C
+[02:09:41.000 --> 02:09:43.000]  is in bypass mode
+[02:09:43.000 --> 02:09:45.000]  so it's an extra complication
+[02:09:45.000 --> 02:09:47.000]  so
+[02:09:47.000 --> 02:09:49.000]  that's why we need to do
+[02:09:49.000 --> 02:09:51.000]  one five port at a time
+[02:09:51.000 --> 02:09:53.000]  to scan the LPGVT phase
+[02:09:53.000 --> 02:09:55.000]  and find the best phase
+[02:09:55.000 --> 02:09:57.000]  and this is what is happening
+[02:09:57.000 --> 02:09:59.000]  into all these plots
+[02:09:59.000 --> 02:10:01.000]  that I'm showing you here
+[02:10:01.000 --> 02:10:03.000]  that has this
+[02:10:03.000 --> 02:10:05.000]  LPGVT for C-I-C by pass
+[02:10:05.000 --> 02:10:07.000]  and there are
+[02:10:07.000 --> 02:10:09.000]  for each of the
+[02:10:09.000 --> 02:10:11.000]  five port
+[02:10:11.000 --> 02:10:13.000]  four plots
+[02:10:13.000 --> 02:10:15.000]  so let's start
+[02:10:15.000 --> 02:10:17.000]  from
+[02:10:17.000 --> 02:10:19.000]  the
+[02:10:19.000 --> 02:10:21.000]  from the
+[02:10:21.000 --> 02:10:23.000]  test base
+[02:10:25.000 --> 02:10:27.000]  okay
+[02:10:27.000 --> 02:10:29.000]  so here you kind of recognize the same idea
+[02:10:29.000 --> 02:10:31.000]  so
+[02:10:31.000 --> 02:10:33.000]  you have the phase on the x-axis
+[02:10:33.000 --> 02:10:35.000]  and the line on the y-axis
+[02:10:35.000 --> 02:10:37.000]  and you are going to see this
+[02:10:37.000 --> 02:10:39.000]  always stop one, stop two, stop three
+[02:10:39.000 --> 02:10:41.000]  and stop four
+[02:10:41.000 --> 02:10:43.000]  because
+[02:10:43.000 --> 02:10:45.000]  the forwarding
+[02:10:45.000 --> 02:10:47.000]  always goes through these four lines
+[02:10:47.000 --> 02:10:49.000]  every time
+[02:10:49.000 --> 02:10:51.000]  so we just need to provide a name
+[02:10:51.000 --> 02:10:53.000]  there is no correlation
+[02:10:53.000 --> 02:10:55.000]  between these and what's
+[02:10:55.000 --> 02:10:57.000]  happening to the CBC
+[02:10:57.000 --> 02:10:59.000]  so
+[02:10:59.000 --> 02:11:01.000]  it's a bit annoying but
+[02:11:01.000 --> 02:11:03.000]  this is how we do it
+[02:11:03.000 --> 02:11:05.000]  and then for the same plot
+[02:11:05.000 --> 02:11:07.000]  we have the
+[02:11:09.000 --> 02:11:11.000]  it is
+[02:11:11.000 --> 02:11:13.000]  the error rate
+[02:11:17.000 --> 02:11:19.000]  here you cannot see slightly better
+[02:11:19.000 --> 02:11:21.000]  so yeah
+[02:11:21.000 --> 02:11:23.000]  the phase scan again
+[02:11:23.000 --> 02:11:25.000]  the line
+[02:11:25.000 --> 02:11:27.000]  and then
+[02:11:27.000 --> 02:11:29.000]  the error rate
+[02:11:29.000 --> 02:11:31.000]  in percentage, in percentage from zero to one
+[02:11:31.000 --> 02:11:33.000]  and we need to identify
+[02:11:33.000 --> 02:11:35.000]  the working area so you see that
+[02:11:35.000 --> 02:11:37.000]  there is a nice area in which we don't have any error
+[02:11:37.000 --> 02:11:39.000]  so we set
+[02:11:39.000 --> 02:11:41.000]  our working point
+[02:11:41.000 --> 02:11:43.000]  in the middle of the widest
+[02:11:43.000 --> 02:11:45.000]  area and we know from that point
+[02:11:45.000 --> 02:11:47.000]  onward is that very likely
+[02:11:49.000 --> 02:11:51.000]  the data that from the CAC
+[02:11:51.000 --> 02:11:53.000]  sorry from the CBC
+[02:11:53.000 --> 02:11:55.000]  are bypassed by the CAC
+[02:11:55.000 --> 02:11:57.000]  goes to the lpgbt and arrive to the board
+[02:11:57.000 --> 02:11:59.000]  are properly identified
+[02:11:59.000 --> 02:12:01.000]  so it is important to align
+[02:12:01.000 --> 02:12:03.000]  properly the lpgbt
+[02:12:03.000 --> 02:12:05.000]  and unfortunately we need to repeat this for every
+[02:12:05.000 --> 02:12:07.000]  five-port
+[02:12:07.000 --> 02:12:09.000]  because these every five-port
+[02:12:09.000 --> 02:12:11.000]  are different
+[02:12:11.000 --> 02:12:13.000]  are different working points
+[02:12:13.000 --> 02:12:15.000]  so from one to another you see that there are variations
+[02:12:15.000 --> 02:12:17.000]  so we need to repeat it all
+[02:12:17.000 --> 02:12:19.000]  so all these steps
+[02:12:19.000 --> 02:12:21.000]  I think you can safely ignore all these
+[02:12:21.000 --> 02:12:23.000]  plots
+[02:12:23.000 --> 02:12:25.000]  as long as everything works
+[02:12:25.000 --> 02:12:27.000]  because it is pure auxiliary calibration
+[02:12:27.000 --> 02:12:29.000]  to make the next trans-tap
+[02:12:29.000 --> 02:12:31.000]  which is the electric chain validation
+[02:12:31.000 --> 02:12:33.000]  between in this case the CBC
+[02:12:33.000 --> 02:12:35.000]  and the CAC to work
+[02:12:35.000 --> 02:12:37.000]  so all of these
+[02:12:37.000 --> 02:12:39.000]  it just made that identify
+[02:12:39.000 --> 02:12:41.000]  the best phase which is also
+[02:12:41.000 --> 02:12:43.000]  included
+[02:12:47.000 --> 02:12:49.000]  somewhere
+[02:12:49.000 --> 02:12:51.000]  best phase
+[02:12:51.000 --> 02:12:53.000]  so here I am telling you that
+[02:12:53.000 --> 02:12:55.000]  the five-port is the best
+[02:12:55.000 --> 02:12:57.000]  the five-port is over here
+[02:12:57.000 --> 02:12:59.000]  so you see that it is in the wide
+[02:12:59.000 --> 02:13:01.000]  area
+[02:13:01.000 --> 02:13:03.000]  and it is kind of in the center
+[02:13:03.000 --> 02:13:05.000]  the next one is a sixth
+[02:13:05.000 --> 02:13:07.000]  which is over here
+[02:13:07.000 --> 02:13:09.000]  that is between these two points
+[02:13:09.000 --> 02:13:11.000]  and so
+[02:13:13.000 --> 02:13:15.000]  after we have done all these
+[02:13:15.000 --> 02:13:17.000]  then we can actually set this phase
+[02:13:17.000 --> 02:13:19.000]  and run
+[02:13:21.000 --> 02:13:23.000]  the electric chain validation
+[02:13:23.000 --> 02:13:25.000]  between the CBC
+[02:13:25.000 --> 02:13:27.000]  and the CAC
+[02:13:27.000 --> 02:13:29.000]  which is basically our last
+[02:13:29.000 --> 02:13:31.000]  step of the electric chain validation
+[02:13:33.000 --> 02:13:35.000]  so for these
+[02:13:35.000 --> 02:13:37.000]  we have plot all the way down
+[02:13:37.000 --> 02:13:39.000]  here
+[02:13:39.000 --> 02:13:41.000]  and
+[02:13:41.000 --> 02:13:43.000]  as for
+[02:13:43.000 --> 02:13:45.000]  before
+[02:13:45.000 --> 02:13:47.000]  we have two plots
+[02:13:47.000 --> 02:13:49.000]  for each one of the points
+[02:13:49.000 --> 02:13:51.000]  and again is
+[02:13:51.000 --> 02:13:53.000]  we are going to guess it now
+[02:13:53.000 --> 02:13:55.000]  is error rate
+[02:13:55.000 --> 02:13:57.000]  and
+[02:13:57.000 --> 02:13:59.000]  number of tests
+[02:13:59.000 --> 02:14:01.000]  and
+[02:14:01.000 --> 02:14:03.000]  more or less as for the
+[02:14:03.000 --> 02:14:05.000]  electric chain validation
+[02:14:05.000 --> 02:14:07.000]  we set three different
+[02:14:07.000 --> 02:14:09.000]  values in the current
+[02:14:09.000 --> 02:14:11.000]  of the CBC
+[02:14:11.000 --> 02:14:13.000]  used for driving the lines
+[02:14:13.000 --> 02:14:15.000]  between the CBC
+[02:14:15.000 --> 02:14:17.000]  and
+[02:14:17.000 --> 02:14:19.000]  CAC
+[02:14:19.000 --> 02:14:21.000]  so you can set the current use here
+[02:14:21.000 --> 02:14:23.000]  and you can imagine a bit more current
+[02:14:23.000 --> 02:14:25.000]  actually rather than taking
+[02:14:25.000 --> 02:14:27.000]  current zero
+[02:14:27.000 --> 02:14:29.000]  sorry
+[02:14:29.000 --> 02:14:31.000]  the other way around 14 is the lowest
+[02:14:31.000 --> 02:14:33.000]  current
+[02:14:33.000 --> 02:14:35.000]  zero
+[02:14:35.000 --> 02:14:37.000]  is the highest
+[02:14:37.000 --> 02:14:39.000]  and
+[02:14:39.000 --> 02:14:41.000]  eight is coming
+[02:14:41.000 --> 02:14:43.000]  okay
+[02:14:43.000 --> 02:14:45.000]  so you can recognize
+[02:14:45.000 --> 02:14:47.000]  the same plot as before
+[02:14:47.000 --> 02:14:49.000]  so here we have the phases
+[02:14:49.000 --> 02:14:51.000]  and the x axis
+[02:14:51.000 --> 02:14:53.000]  and the y axis you have the various lines
+[02:14:53.000 --> 02:14:55.000]  you see that there are all the CBCs connected
+[02:14:55.000 --> 02:14:57.000]  for each one you have all the lines
+[02:14:57.000 --> 02:14:59.000]  of the CBC
+[02:14:59.000 --> 02:15:01.000]  line you see that
+[02:15:01.000 --> 02:15:03.000]  there is no phase two and three
+[02:15:03.000 --> 02:15:05.000]  because these phases do not work
+[02:15:05.000 --> 02:15:07.000]  on the CAC
+[02:15:07.000 --> 02:15:09.000]  so we simply skip that
+[02:15:09.000 --> 02:15:11.000]  and as usual
+[02:15:11.000 --> 02:15:13.000]  you see the number of tests
+[02:15:13.000 --> 02:15:15.000]  for the level one is lower
+[02:15:15.000 --> 02:15:17.000]  because they need to be done on the software
+[02:15:17.000 --> 02:15:19.000]  it's still 10 to the 5 so it's not super low
+[02:15:19.000 --> 02:15:21.000]  but
+[02:15:21.000 --> 02:15:23.000]  it's a bit lower in order to
+[02:15:23.000 --> 02:15:25.000]  not take too much time
+[02:15:25.000 --> 02:15:27.000]  and here is
+[02:15:27.000 --> 02:15:29.000]  what we get for
+[02:15:29.000 --> 02:15:31.000]  the
+[02:15:31.000 --> 02:15:33.000]  for the error rate test
+[02:15:33.000 --> 02:15:35.000]  so you see that most
+[02:15:35.000 --> 02:15:37.000]  of the phases
+[02:15:37.000 --> 02:15:39.000]  most of the area have a wide phase
+[02:15:39.000 --> 02:15:41.000]  so let's say for example this one
+[02:15:41.000 --> 02:15:43.000]  you see there is a wide area
+[02:15:43.000 --> 02:15:45.000]  in which any of these phases
+[02:15:45.000 --> 02:15:47.000]  should work
+[02:15:47.000 --> 02:15:49.000]  and means that is pretty good
+[02:15:49.000 --> 02:15:51.000]  level ones are the ones that
+[02:15:51.000 --> 02:15:53.000]  sometimes are affected by some
+[02:15:53.000 --> 02:15:55.000]  issues in the pattern matching
+[02:15:55.000 --> 02:15:57.000]  and this is something that is happening
+[02:15:57.000 --> 02:15:59.000]  where not always the data
+[02:15:59.000 --> 02:16:01.000]  are properly sampled
+[02:16:01.000 --> 02:16:03.000]  and then we do the matching
+[02:16:03.000 --> 02:16:05.000]  via software by reading those data
+[02:16:05.000 --> 02:16:07.000]  and sometimes we get some
+[02:16:07.000 --> 02:16:09.000]  where we don't get 100%
+[02:16:09.000 --> 02:16:11.000]  because some of it are misread
+[02:16:11.000 --> 02:16:13.000]  not really something concerning
+[02:16:13.000 --> 02:16:15.000]  we are trying to
+[02:16:15.000 --> 02:16:17.000]  improve it but it's going to be a little bit more challenging
+[02:16:17.000 --> 02:16:19.000]  because it's really the mechanism
+[02:16:19.000 --> 02:16:21.000]  for how these data are sampled
+[02:16:21.000 --> 02:16:23.000]  and so we are going to probably leave
+[02:16:23.000 --> 02:16:25.000]  with that but you clearly see
+[02:16:25.000 --> 02:16:27.000]  phases which they don't work there
+[02:16:27.000 --> 02:16:29.000]  the error rate are much much much higher
+[02:16:29.000 --> 02:16:31.000]  so this is 45%
+[02:16:31.000 --> 02:16:33.000]  compared to
+[02:16:33.000 --> 02:16:35.000]  two per mil even less than two per mil
+[02:16:35.000 --> 02:16:37.000]  okay
+[02:16:37.000 --> 02:16:39.000]  and as for before we had the four different
+[02:16:39.000 --> 02:16:41.000]  currents but
+[02:16:41.000 --> 02:16:43.000]  the amount
+[02:16:43.000 --> 02:16:45.000]  the plots are always the same
+[02:16:49.000 --> 02:16:51.000]  okay
+[02:16:51.000 --> 02:16:53.000]  so we are at the end
+[02:16:53.000 --> 02:16:55.000]  of the electric chain validation
+[02:16:57.000 --> 02:16:59.000]  before moving on
+[02:16:59.000 --> 02:17:01.000]  do you have any questions
+[02:17:01.000 --> 02:17:03.000]  for this?
+[02:17:11.000 --> 02:17:13.000]  okay and now
+[02:17:13.000 --> 02:17:15.000]  the last
+[02:17:15.000 --> 02:17:17.000]  two tests
+[02:17:17.000 --> 02:17:19.000]  so a bit error rate
+[02:17:19.000 --> 02:17:21.000]  this one is the newest one
+[02:17:21.000 --> 02:17:23.000]  so the idea
+[02:17:23.000 --> 02:17:25.000]  here
+[02:17:25.000 --> 02:17:27.000]  is that we want to
+[02:17:27.000 --> 02:17:29.000]  check
+[02:17:29.000 --> 02:17:31.000]  the stability of the link between the
+[02:17:31.000 --> 02:17:33.000]  basically the LPGPT
+[02:17:33.000 --> 02:17:35.000]  and FPGA going through
+[02:17:35.000 --> 02:17:37.000]  the VTRX
+[02:17:37.000 --> 02:17:39.000]  so this will allow you to check
+[02:17:39.000 --> 02:17:41.000]  if there are problems between
+[02:17:41.000 --> 02:17:43.000]  the LPGPT and VTRX
+[02:17:43.000 --> 02:17:45.000]  or between the VTRX
+[02:17:45.000 --> 02:17:47.000]  and the board
+[02:17:47.000 --> 02:17:49.000]  and
+[02:17:49.000 --> 02:17:51.000]  so
+[02:17:51.000 --> 02:17:53.000]  the LPGPT has some functionality
+[02:17:53.000 --> 02:17:55.000]  to create a PRBS
+[02:17:55.000 --> 02:17:57.000]  which is
+[02:17:57.000 --> 02:17:59.000]  a pseudo random
+[02:17:59.000 --> 02:18:01.000]  bit
+[02:18:01.000 --> 02:18:03.000]  something
+[02:18:03.000 --> 02:18:05.000]  I don't know exactly but it generates
+[02:18:05.000 --> 02:18:07.000]  pseudo random bits
+[02:18:07.000 --> 02:18:09.000]  in a precise
+[02:18:09.000 --> 02:18:11.000]  pattern that
+[02:18:11.000 --> 02:18:13.000]  is known and
+[02:18:13.000 --> 02:18:15.000]  we can set the
+[02:18:15.000 --> 02:18:17.000]  same generator into the firmware
+[02:18:17.000 --> 02:18:19.000]  and then at that point
+[02:18:19.000 --> 02:18:21.000]  we can see
+[02:18:21.000 --> 02:18:23.000]  if every pattern matching the expected pattern
+[02:18:23.000 --> 02:18:25.000]  sent by the LPGPT
+[02:18:25.000 --> 02:18:27.000]  matches the expected pattern
+[02:18:27.000 --> 02:18:29.000]  received by the FC7
+[02:18:29.000 --> 02:18:31.000]  and this will allow us to
+[02:18:31.000 --> 02:18:33.000]  determine if there were any bits
+[02:18:33.000 --> 02:18:35.000]  that got corrupted
+[02:18:35.000 --> 02:18:37.000]  during the transmission
+[02:18:37.000 --> 02:18:39.000]  so
+[02:18:43.000 --> 02:18:45.000]  so the
+[02:18:45.000 --> 02:18:47.000]  LPGPT has different
+[02:18:47.000 --> 02:18:49.000]  procedure that can be used
+[02:18:49.000 --> 02:18:51.000]  for generating this pattern
+[02:18:51.000 --> 02:18:53.000]  you can check them into the
+[02:18:53.000 --> 02:18:55.000]  LPGPT manual
+[02:18:55.000 --> 02:18:57.000]  the one that we are using
+[02:18:57.000 --> 02:18:59.000]  basically emulates one PLBS
+[02:18:59.000 --> 02:19:01.000]  for every one of these lines
+[02:19:01.000 --> 02:19:03.000]  it's just a technicality
+[02:19:03.000 --> 02:19:05.000]  because then we can still
+[02:19:05.000 --> 02:19:07.000]  split them
+[02:19:07.000 --> 02:19:09.000]  at the level of the
+[02:19:09.000 --> 02:19:11.000]  of the firmware
+[02:19:11.000 --> 02:19:13.000]  and then handle them
+[02:19:13.000 --> 02:19:15.000]  as we handle normally the lines
+[02:19:15.000 --> 02:19:17.000]  that are
+[02:19:17.000 --> 02:19:19.000]  encoded by the LPGPT
+[02:19:19.000 --> 02:19:21.000]  and then decoded back
+[02:19:21.000 --> 02:19:23.000]  so you're gonna see even if the lines
+[02:19:23.000 --> 02:19:25.000]  between the LPGPT and VTRX
+[02:19:25.000 --> 02:19:27.000]  and between the VTRX
+[02:19:27.000 --> 02:19:29.000]  and the FGA
+[02:19:29.000 --> 02:19:31.000]  is a single line
+[02:19:31.000 --> 02:19:33.000]  you're gonna see
+[02:19:33.000 --> 02:19:35.000]  results split by the various lines
+[02:19:35.000 --> 02:19:37.000]  and the reason for that
+[02:19:37.000 --> 02:19:39.000]  is
+[02:19:41.000 --> 02:19:43.000]  is that
+[02:19:43.000 --> 02:19:45.000]  we don't have enough
+[02:19:45.000 --> 02:19:47.000]  resources to do all of this in parallel
+[02:19:47.000 --> 02:19:49.000]  so each of the lines
+[02:19:49.000 --> 02:19:51.000]  is done one at a time
+[02:19:51.000 --> 02:19:53.000]  and just because it's quite
+[02:19:53.000 --> 02:19:55.000]  a new
+[02:19:55.000 --> 02:19:57.000]  a new test
+[02:19:57.000 --> 02:19:59.000]  we keep also the results
+[02:19:59.000 --> 02:20:01.000]  separated for each line
+[02:20:01.000 --> 02:20:03.000]  if we have
+[02:20:03.000 --> 02:20:05.000]  we see any issues popping up
+[02:20:05.000 --> 02:20:07.000]  we can understand where it's coming from
+[02:20:07.000 --> 02:20:09.000]  and do some debugging
+[02:20:09.000 --> 02:20:11.000]  but basically you are just testing
+[02:20:11.000 --> 02:20:13.000]  one single line
+[02:20:13.000 --> 02:20:15.000]  okay so all the results
+[02:20:15.000 --> 02:20:17.000]  since it's done at the level of the LPGPT
+[02:20:17.000 --> 02:20:19.000]  are stored
+[02:20:19.000 --> 02:20:21.000]  in the optical view
+[02:20:21.000 --> 02:20:23.000]  and
+[02:20:23.000 --> 02:20:25.000]  we have a few plots
+[02:20:25.000 --> 02:20:27.000]  okay so the really first one
+[02:20:27.000 --> 02:20:29.000]  is
+[02:20:29.000 --> 02:20:31.000]  a bit error rate
+[02:20:31.000 --> 02:20:33.000]  phase scan
+[02:20:33.000 --> 02:20:35.000]  because
+[02:20:35.000 --> 02:20:37.000]  so this is basically a technicality
+[02:20:37.000 --> 02:20:39.000]  but
+[02:20:41.000 --> 02:20:43.000]  the LPGPT
+[02:20:43.000 --> 02:20:45.000]  generates this bit error rate
+[02:20:45.000 --> 02:20:47.000]  pattern
+[02:20:47.000 --> 02:20:49.000]  from
+[02:20:49.000 --> 02:20:51.000]  clock source
+[02:20:51.000 --> 02:20:53.000]  that you can change the phase
+[02:20:53.000 --> 02:20:55.000]  and there are some phases in which the LPGPT
+[02:20:55.000 --> 02:20:57.000]  will not work because it will not
+[02:20:57.000 --> 02:20:59.000]  understand its own pattern
+[02:20:59.000 --> 02:21:01.000]  so we need to do a quick scan
+[02:21:01.000 --> 02:21:03.000]  to understand what are the working phases
+[02:21:03.000 --> 02:21:05.000]  we see that there is plenty of space
+[02:21:05.000 --> 02:21:07.000]  we just need to identify one
+[02:21:07.000 --> 02:21:09.000]  and basically the outcome phase
+[02:21:09.000 --> 02:21:11.000]  is stored
+[02:21:11.000 --> 02:21:13.000]  here into the best phase
+[02:21:15.000 --> 02:21:17.000]  these are basically a technicality
+[02:21:17.000 --> 02:21:19.000]  so I just wanted to mention it for completeness
+[02:21:21.000 --> 02:21:23.000]  but I don't think
+[02:21:23.000 --> 02:21:25.000]  I mean it doesn't tell you anything
+[02:21:25.000 --> 02:21:27.000]  about the code in order to
+[02:21:27.000 --> 02:21:29.000]  avoid generating bits
+[02:21:29.000 --> 02:21:31.000]  where the LPGPT
+[02:21:31.000 --> 02:21:33.000]  is in a condition that is not ready to transmit
+[02:21:33.000 --> 02:21:35.000]  and create a fake
+[02:21:35.000 --> 02:21:37.000]  bit error rate that has nothing to do
+[02:21:37.000 --> 02:21:39.000]  with the link
+[02:21:39.000 --> 02:21:41.000]  between your module
+[02:21:41.000 --> 02:21:43.000]  and the FCSL
+[02:21:43.000 --> 02:21:45.000]  then once this is fixed
+[02:21:45.000 --> 02:21:47.000]  we can really do
+[02:21:47.000 --> 02:21:49.000]  the real bit error rate test
+[02:21:49.000 --> 02:21:51.000]  and as
+[02:21:51.000 --> 02:21:53.000]  for all the other plots
+[02:21:53.000 --> 02:21:55.000]  we have two level
+[02:21:55.000 --> 02:21:57.000]  two plots
+[02:21:57.000 --> 02:21:59.000]  one that contains the number of tested bits
+[02:22:01.000 --> 02:22:03.000]  and you see that we do
+[02:22:03.000 --> 02:22:05.000]  10 to the
+[02:22:05.000 --> 02:22:07.000]  10 bit
+[02:22:07.000 --> 02:22:09.000]  is kind of uniform
+[02:22:09.000 --> 02:22:11.000]  you are going to notice that
+[02:22:11.000 --> 02:22:13.000]  it's kind of symmetric because
+[02:22:13.000 --> 02:22:15.000]  the two hybrids are done in parallel
+[02:22:15.000 --> 02:22:17.000]  so once
+[02:22:17.000 --> 02:22:19.000]  we do the star number two or the right hybrid
+[02:22:19.000 --> 02:22:21.000]  we also do the star number two
+[02:22:21.000 --> 02:22:23.000]  the left hybrid and this will
+[02:22:23.000 --> 02:22:25.000]  call out the same amount
+[02:22:25.000 --> 02:22:27.000]  it's not going to be super precise
+[02:22:27.000 --> 02:22:29.000]  as all the bits
+[02:22:29.000 --> 02:22:31.000]  number of bits that I test
+[02:22:31.000 --> 02:22:33.000]  that I showed you before
+[02:22:33.000 --> 02:22:35.000]  because we just
+[02:22:35.000 --> 02:22:37.000]  set at least a certain number of bits
+[02:22:37.000 --> 02:22:39.000]  and then we have to wait and there is no way
+[02:22:39.000 --> 02:22:41.000]  we can really control exactly how many
+[02:22:41.000 --> 02:22:43.000]  we just control that we get
+[02:22:43.000 --> 02:22:45.000]  at least the amount that we request
+[02:22:45.000 --> 02:22:47.000]  so nothing to worry about that
+[02:22:47.000 --> 02:22:49.000]  but you see that it's kind of more or less the same
+[02:22:49.000 --> 02:22:51.000]  or different of you
+[02:22:51.000 --> 02:22:53.000]  less than upon me
+[02:22:53.000 --> 02:22:55.000]  and then
+[02:22:55.000 --> 02:22:57.000]  the real important one is the
+[02:22:57.000 --> 02:22:59.000]  bit error rate
+[02:22:59.000 --> 02:23:01.000]  that as I was mentioning
+[02:23:01.000 --> 02:23:03.000]  is the measurement of just
+[02:23:03.000 --> 02:23:05.000]  the link stability but it's still split
+[02:23:05.000 --> 02:23:07.000]  for every
+[02:23:07.000 --> 02:23:09.000]  for every line and here
+[02:23:09.000 --> 02:23:11.000]  for what I see so far
+[02:23:11.000 --> 02:23:13.000]  you should expect always
+[02:23:13.000 --> 02:23:15.000]  a zero bit error rate
+[02:23:15.000 --> 02:23:17.000]  so
+[02:23:17.000 --> 02:23:19.000]  if you sum all of these
+[02:23:19.000 --> 02:23:21.000]  you get 10 to the
+[02:23:23.000 --> 02:23:25.000]  12
+[02:23:25.000 --> 02:23:27.000]  10 to the 11
+[02:23:29.000 --> 02:23:31.000]  which is a lot of bits
+[02:23:31.000 --> 02:23:33.000]  and we expect less than
+[02:23:33.000 --> 02:23:35.000]  10 to the 13
+[02:23:35.000 --> 02:23:37.000]  10 to the 12, 10 to the 13
+[02:23:37.000 --> 02:23:39.000]  that's why your show always gets zero
+[02:23:39.000 --> 02:23:41.000]  why we don't do 10 to the 13
+[02:23:41.000 --> 02:23:43.000]  is simply because
+[02:23:43.000 --> 02:23:45.000]  this it's really
+[02:23:45.000 --> 02:23:47.000]  all the time that is needed
+[02:23:47.000 --> 02:23:49.000]  for doing this test is waiting to
+[02:23:49.000 --> 02:23:51.000]  collect enough bits and 10 to the
+[02:23:51.000 --> 02:23:53.000]  13 are a few hours
+[02:23:53.000 --> 02:23:55.000]  of testing which we cannot
+[02:23:55.000 --> 02:23:57.000]  really afford
+[02:23:57.000 --> 02:23:59.000]  we did it with a couple models here while
+[02:23:59.000 --> 02:24:01.000]  developing and we didn't see any
+[02:24:01.000 --> 02:24:03.000]  error with the 10 to the 13
+[02:24:03.000 --> 02:24:05.000]  we needed to set a reasonable
+[02:24:05.000 --> 02:24:07.000]  number for the testing procedure
+[02:24:07.000 --> 02:24:09.000]  and that's why we stick to
+[02:24:09.000 --> 02:24:11.000]  the 10 to the
+[02:24:11.000 --> 02:24:13.000]  12 I think
+[02:24:13.000 --> 02:24:15.000]  10 to the 11
+[02:24:15.000 --> 02:24:17.000]  10,000
+[02:24:17.000 --> 02:24:19.000]  now it's 10 to the 12
+[02:24:19.000 --> 02:24:21.000]  sorry 10 to the 11
+[02:24:23.000 --> 02:24:25.000]  because you can
+[02:24:25.000 --> 02:24:27.000]  imagine some of these bits you have
+[02:24:27.000 --> 02:24:29.000]  for 12
+[02:24:29.000 --> 02:24:31.000]  even if you collect for each one of these
+[02:24:31.000 --> 02:24:33.000]  10 to the 10 then the total one
+[02:24:33.000 --> 02:24:35.000]  is going to be 10 to the 11 because
+[02:24:35.000 --> 02:24:37.000]  it's a factor of 12
+[02:24:37.000 --> 02:24:39.000]  and this
+[02:24:39.000 --> 02:24:41.000]  is honestly
+[02:24:41.000 --> 02:24:43.000]  just one part of the bit error rate test
+[02:24:43.000 --> 02:24:45.000]  because the
+[02:24:45.000 --> 02:24:47.000]  other important part
+[02:24:47.000 --> 02:24:49.000]  is the
+[02:24:49.000 --> 02:24:51.000]  factor counter so I think
+[02:24:51.000 --> 02:24:53.000]  I mentioned before
+[02:24:53.000 --> 02:24:55.000]  this modular operator with the
+[02:24:55.000 --> 02:24:57.000]  factor 5 which means that
+[02:24:57.000 --> 02:24:59.000]  we can correct up to 5 bits
+[02:24:59.000 --> 02:25:01.000]  that were flipped
+[02:25:01.000 --> 02:25:03.000]  in the communication
+[02:25:03.000 --> 02:25:05.000]  so that
+[02:25:05.000 --> 02:25:07.000]  it might happen that you don't see
+[02:25:07.000 --> 02:25:09.000]  any error rate here
+[02:25:09.000 --> 02:25:11.000]  but you still have bits that are flipped
+[02:25:11.000 --> 02:25:13.000]  in the communication
+[02:25:13.000 --> 02:25:15.000]  but they were automatically corrected
+[02:25:15.000 --> 02:25:17.000]  which is good but at the same time
+[02:25:17.000 --> 02:25:19.000]  it means that you might have some
+[02:25:19.000 --> 02:25:21.000]  instabilities because you shouldn't
+[02:25:21.000 --> 02:25:23.000]  have bits that are flipped
+[02:25:23.000 --> 02:25:25.000]  so
+[02:25:25.000 --> 02:25:27.000]  for doing this the
+[02:25:27.000 --> 02:25:29.000]  firmware is able to count
+[02:25:29.000 --> 02:25:31.000]  many bits and corrected and we store
+[02:25:31.000 --> 02:25:33.000]  that information in the factor count
+[02:25:33.000 --> 02:25:35.000]  so
+[02:25:35.000 --> 02:25:37.000]  the difference between the other products
+[02:25:37.000 --> 02:25:39.000]  here was divided by left and right hybrid
+[02:25:39.000 --> 02:25:41.000]  because here we are
+[02:25:41.000 --> 02:25:43.000]  injecting really lines
+[02:25:43.000 --> 02:25:45.000]  or pretending to inject lines
+[02:25:45.000 --> 02:25:47.000]  both in the left and right hybrid
+[02:25:47.000 --> 02:25:49.000]  when instead the fact
+[02:25:49.000 --> 02:25:51.000]  is a cumulative
+[02:25:51.000 --> 02:25:53.000]  information for the overall package
+[02:25:53.000 --> 02:25:55.000]  so the all information
+[02:25:55.000 --> 02:25:57.000]  from that is received by
+[02:25:57.000 --> 02:25:59.000]  the LPGVT
+[02:25:59.000 --> 02:26:01.000]  and that's why we have a single number
+[02:26:01.000 --> 02:26:03.000]  for the two hybrids
+[02:26:03.000 --> 02:26:05.000]  you still have separated by lines
+[02:26:05.000 --> 02:26:07.000]  because again here we are doing
+[02:26:07.000 --> 02:26:09.000]  one line at a time
+[02:26:09.000 --> 02:26:11.000]  because of resource in the firmware
+[02:26:11.000 --> 02:26:13.000]  that's why you have different
+[02:26:17.000 --> 02:26:19.000]  bins for each one of the lines
+[02:26:19.000 --> 02:26:21.000]  but again you can imagine
+[02:26:21.000 --> 02:26:23.000]  to sum them all together
+[02:26:23.000 --> 02:26:25.000]  again this is just for us to understand
+[02:26:25.000 --> 02:26:27.000]  if there was a failure, if the failure is coming
+[02:26:27.000 --> 02:26:29.000]  is more
+[02:26:29.000 --> 02:26:31.000]  or less uniform is that it's
+[02:26:31.000 --> 02:26:33.000]  modulated just one
+[02:26:33.000 --> 02:26:35.000]  bit suspicious
+[02:26:35.000 --> 02:26:37.000]  we add a bug in the field
+[02:26:39.000 --> 02:26:41.000]  and in this case it's not really a percentage
+[02:26:41.000 --> 02:26:43.000]  but it's rather
+[02:26:43.000 --> 02:26:45.000]  really an encounter
+[02:26:45.000 --> 02:26:47.000]  because we don't really have
+[02:26:47.000 --> 02:26:49.000]  a way to completely
+[02:26:49.000 --> 02:26:51.000]  read how many
+[02:26:51.000 --> 02:26:53.000]  packages were read
+[02:26:53.000 --> 02:26:55.000]  we just
+[02:26:55.000 --> 02:26:57.000]  read at the end of the bit error rate test
+[02:26:57.000 --> 02:26:59.000]  but it's done via software
+[02:26:59.000 --> 02:27:01.000]  so we don't really have a perfect denominator
+[02:27:01.000 --> 02:27:03.000]  but in first
+[02:27:03.000 --> 02:27:05.000]  we can assume that the denominator
+[02:27:05.000 --> 02:27:07.000]  is the same
+[02:27:07.000 --> 02:27:09.000]  we're collecting a lot of bits
+[02:27:09.000 --> 02:27:11.000]  even if
+[02:27:11.000 --> 02:27:13.000]  a millisecond later
+[02:27:13.000 --> 02:27:15.000]  we read that the
+[02:27:15.000 --> 02:27:17.000]  number of encounters is still
+[02:27:17.000 --> 02:27:19.000]  more or less the same amount
+[02:27:19.000 --> 02:27:21.000]  of bits we read before
+[02:27:25.000 --> 02:27:27.000]  so this is for the bit error rate test
+[02:27:27.000 --> 02:27:29.000]  and
+[02:27:29.000 --> 02:27:31.000]  as you just told me
+[02:27:31.000 --> 02:27:33.000]  if you have any questions
+[02:27:33.000 --> 02:27:35.000]  and then the
+[02:27:35.000 --> 02:27:37.000]  OT register tester
+[02:27:37.000 --> 02:27:39.000]  so this is really the last one
+[02:27:39.000 --> 02:27:41.000]  and here we want to test
+[02:27:41.000 --> 02:27:43.000]  the stability of the S4C
+[02:27:43.000 --> 02:27:45.000]  so here
+[02:27:45.000 --> 02:27:47.000]  we are
+[02:27:47.000 --> 02:27:49.000]  writing and reading registers
+[02:27:49.000 --> 02:27:51.000]  into both the CBCs
+[02:27:51.000 --> 02:27:53.000]  and the CACs
+[02:27:53.000 --> 02:27:55.000]  we select a few registers
+[02:27:55.000 --> 02:27:57.000]  we're actually writing
+[02:27:57.000 --> 02:27:59.000]  the pattern and reading it back
+[02:27:59.000 --> 02:28:01.000]  and then writing the inverse pattern
+[02:28:01.000 --> 02:28:03.000]  and reading it back and so on and forth
+[02:28:03.000 --> 02:28:05.000]  for
+[02:28:05.000 --> 02:28:07.000]  1,000 times or something like that
+[02:28:07.000 --> 02:28:09.000]  and then we store everything
+[02:28:09.000 --> 02:28:11.000]  into a single
+[02:28:11.000 --> 02:28:13.000]  register
+[02:28:13.000 --> 02:28:15.000]  into a single plot
+[02:28:15.000 --> 02:28:17.000]  where for every of these
+[02:28:17.000 --> 02:28:19.000]  of the chip
+[02:28:19.000 --> 02:28:21.000]  so the HCBC and the CAC
+[02:28:21.000 --> 02:28:23.000]  and you have one plot for each one of the hybrid
+[02:28:23.000 --> 02:28:25.000]  we store
+[02:28:25.000 --> 02:28:27.000]  the efficiency in reading and writing
+[02:28:27.000 --> 02:28:29.000]  and here you should
+[02:28:29.000 --> 02:28:31.000]  see always 100%
+[02:28:31.000 --> 02:28:33.000]  because so far
+[02:28:33.000 --> 02:28:35.000]  so CAC
+[02:28:35.000 --> 02:28:37.000]  S4C is very stable
+[02:28:37.000 --> 02:28:39.000]  for the CBC
+[02:28:39.000 --> 02:28:41.000]  we avoid using
+[02:28:41.000 --> 02:28:43.000]  a change of the page that can
+[02:28:43.000 --> 02:28:45.000]  create some stability because we don't
+[02:28:45.000 --> 02:28:47.000]  exist so we don't want to
+[02:28:47.000 --> 02:28:49.000]  create
+[02:28:49.000 --> 02:28:51.000]  so here we want really to see
+[02:28:51.000 --> 02:28:53.000]  not really the overall behavior of the chip
+[02:28:53.000 --> 02:28:55.000]  but the particular behavior
+[02:28:55.000 --> 02:28:57.000]  of the chip on your module
+[02:28:57.000 --> 02:28:59.000]  if there is any stability on the S4C lines
+[02:28:59.000 --> 02:29:01.000]  since the S4C line goes
+[02:29:01.000 --> 02:29:03.000]  through the
+[02:29:03.000 --> 02:29:05.000]  through the
+[02:29:05.000 --> 02:29:07.000]  connectors between the
+[02:29:07.000 --> 02:29:09.000]  FEH and SEH
+[02:29:09.000 --> 02:29:11.000]  you, if you see some stability
+[02:29:11.000 --> 02:29:13.000]  you might check that
+[02:29:13.000 --> 02:29:15.000]  and
+[02:29:15.000 --> 02:29:17.000]  okay so
+[02:29:17.000 --> 02:29:19.000]  these are
+[02:29:19.000 --> 02:29:21.000]  all the tests
+[02:29:21.000 --> 02:29:23.000]  and all the plots that
+[02:29:23.000 --> 02:29:25.000]  we run from the result
+[02:29:25.000 --> 02:29:27.000]  file
+[02:29:27.000 --> 02:29:29.000]  and after this I will move to
+[02:29:29.000 --> 02:29:31.000]  the monitor
+[02:29:31.000 --> 02:29:33.000]  the QM file
+[02:29:33.000 --> 02:29:35.000]  but I think we should stop
+[02:29:35.000 --> 02:29:37.000]  a bit to see if you
+[02:29:37.000 --> 02:29:39.000]  have any question or comments
+[02:29:41.000 --> 02:29:43.000]  on what was discussed
+[02:29:49.000 --> 02:29:51.000]  okay
+[02:29:53.000 --> 02:29:55.000]  okay
+[02:29:57.000 --> 02:29:59.000]  can you just
+[02:29:59.000 --> 02:30:01.000]  confirm you can still hear me
+[02:30:01.000 --> 02:30:03.000]  just to be sure
+[02:30:03.000 --> 02:30:05.000]  yes
+[02:30:05.000 --> 02:30:07.000]  okay one yes
+[02:30:07.000 --> 02:30:09.000]  go ahead
+[02:30:09.000 --> 02:30:11.000]  I just have a doubt that I was speaking
+[02:30:11.000 --> 02:30:13.000]  to myself because it was not the
+[02:30:13.000 --> 02:30:15.000]  first time it happened
+[02:30:15.000 --> 02:30:17.000]  okay
+[02:30:17.000 --> 02:30:19.000]  so moving on
+[02:30:19.000 --> 02:30:21.000]  to the monitor
+[02:30:21.000 --> 02:30:23.000]  so the monitor is a separate file
+[02:30:23.000 --> 02:30:25.000]  it's gonna
+[02:30:25.000 --> 02:30:27.000]  store it into
+[02:30:27.000 --> 02:30:29.000]  the
+[02:30:29.000 --> 02:30:31.000]  into a separate folder
+[02:30:31.000 --> 02:30:33.000]  for most of the cases
+[02:30:33.000 --> 02:30:35.000]  when you're running manually it's all of the case
+[02:30:35.000 --> 02:30:37.000]  GIFT actually moved it already into
+[02:30:37.000 --> 02:30:39.000]  result file folder
+[02:30:39.000 --> 02:30:41.000]  and the reason why it's a separate file
+[02:30:41.000 --> 02:30:43.000]  because the result
+[02:30:43.000 --> 02:30:45.000]  they go from the start to the stop
+[02:30:45.000 --> 02:30:47.000]  when you start the monitor
+[02:30:47.000 --> 02:30:49.000]  it goes from the configure to the
+[02:30:49.000 --> 02:30:51.000]  halt or the destroy
+[02:30:51.000 --> 02:30:53.000]  the reason is that for example in the Balmina
+[02:30:53.000 --> 02:30:55.000]  we do start and stop during
+[02:30:55.000 --> 02:30:57.000]  the test that is usually one
+[02:30:57.000 --> 02:30:59.000]  of the plateau of the temperature
+[02:30:59.000 --> 02:31:01.000]  but then
+[02:31:01.000 --> 02:31:03.000]  we are into a stop
+[02:31:03.000 --> 02:31:05.000]  state
+[02:31:05.000 --> 02:31:07.000]  during the changing current
+[02:31:07.000 --> 02:31:09.000]  and we want to keep monitoring even
+[02:31:09.000 --> 02:31:11.000]  if you don't do any run and that's why
+[02:31:11.000 --> 02:31:13.000]  you have two separate files because
+[02:31:13.000 --> 02:31:15.000]  there are different times
+[02:31:17.000 --> 02:31:19.000]  then
+[02:31:21.000 --> 02:31:23.000]  people are working on
+[02:31:23.000 --> 02:31:25.000]  creating
+[02:31:25.000 --> 02:31:27.000]  a business script that merge
+[02:31:27.000 --> 02:31:29.000]  all the information together also including
+[02:31:29.000 --> 02:31:31.000]  an information like power supply and so on
+[02:31:31.000 --> 02:31:33.000]  so what actually potato receives
+[02:31:33.000 --> 02:31:35.000]  is a combination of the two
+[02:31:35.000 --> 02:31:37.000]  files together
+[02:31:37.000 --> 02:31:39.000]  this is still
+[02:31:39.000 --> 02:31:41.000]  being developed
+[02:31:41.000 --> 02:31:43.000]  so I just wanted to show you
+[02:31:43.000 --> 02:31:45.000]  exactly what
+[02:31:47.000 --> 02:31:49.000]  all this information will be used
+[02:31:49.000 --> 02:31:51.000]  for
+[02:31:51.000 --> 02:31:53.000]  the
+[02:31:53.000 --> 02:31:55.000]  qualification
+[02:31:55.000 --> 02:31:57.000]  so the monitor
+[02:31:57.000 --> 02:31:59.000]  is also set into the XML
+[02:31:59.000 --> 02:32:01.000]  file
+[02:32:01.000 --> 02:32:03.000]  and there is a list of the parameter
+[02:32:03.000 --> 02:32:05.000]  that we are testing and for each one of these
+[02:32:05.000 --> 02:32:07.000]  there is a plot as a function
+[02:32:07.000 --> 02:32:09.000]  of time or the values that we are monitoring
+[02:32:09.000 --> 02:32:11.000]  so the first
+[02:32:11.000 --> 02:32:13.000]  leveler which we start monitoring
+[02:32:13.000 --> 02:32:15.000]  is at the level of the optical group
+[02:32:15.000 --> 02:32:17.000]  and all the information
+[02:32:17.000 --> 02:32:19.000]  that are extracted from the
+[02:32:19.000 --> 02:32:21.000]  LPGVT which has an ADC
+[02:32:21.000 --> 02:32:23.000]  and the ADC
+[02:32:23.000 --> 02:32:25.000]  is both connected to values
+[02:32:25.000 --> 02:32:27.000]  that are inside the chip
+[02:32:27.000 --> 02:32:29.000]  or
+[02:32:29.000 --> 02:32:31.000]  are coming from the lines
+[02:32:31.000 --> 02:32:33.000]  that are connected to the chip
+[02:32:33.000 --> 02:32:35.000]  and there are all listed here
+[02:32:35.000 --> 02:32:37.000]  so here are the full list of values
+[02:32:37.000 --> 02:32:39.000]  that we register
+[02:32:39.000 --> 02:32:41.000]  and the name of the value is always
+[02:32:41.000 --> 02:32:43.000]  stored into the name or the plot
+[02:32:43.000 --> 02:32:45.000]  as well as
+[02:32:45.000 --> 02:32:47.000]  into
+[02:32:47.000 --> 02:32:49.000]  the plot
+[02:32:49.000 --> 02:32:51.000]  title itself
+[02:32:51.000 --> 02:32:53.000]  so the first one
+[02:32:53.000 --> 02:32:55.000]  it is
+[02:32:55.000 --> 02:32:57.000]  the
+[02:32:57.000 --> 02:32:59.000]  VDD
+[02:32:59.000 --> 02:33:01.000]  so
+[02:33:01.000 --> 02:33:03.000]  the LPGVT
+[02:33:03.000 --> 02:33:05.000]  uses a few
+[02:33:05.000 --> 02:33:07.000]  digital voltages
+[02:33:07.000 --> 02:33:09.000]  that are used to make it work
+[02:33:09.000 --> 02:33:11.000]  and these allow you to
+[02:33:11.000 --> 02:33:13.000]  monitor their values
+[02:33:13.000 --> 02:33:15.000]  in particular they should be around 1.2
+[02:33:15.000 --> 02:33:17.000]  and you see that this table over
+[02:33:17.000 --> 02:33:19.000]  the run
+[02:33:19.000 --> 02:33:21.000]  these were taken
+[02:33:21.000 --> 02:33:23.000]  at the same time of the result file
+[02:33:23.000 --> 02:33:25.000]  I will show you before
+[02:33:25.000 --> 02:33:27.000]  not that it matters too much
+[02:33:27.000 --> 02:33:29.000]  but just to show you that even if you run
+[02:33:29.000 --> 02:33:31.000]  you don't see too many instabilities
+[02:33:31.000 --> 02:33:33.000]  okay
+[02:33:33.000 --> 02:33:35.000]  so this is one
+[02:33:35.000 --> 02:33:37.000]  I'm just going to open the mall
+[02:33:37.000 --> 02:33:39.000]  I will say in most of the cases
+[02:33:39.000 --> 02:33:41.000]  these
+[02:33:41.000 --> 02:33:43.000]  should give you a bit more
+[02:33:43.000 --> 02:33:45.000]  immediate feedback if something
+[02:33:45.000 --> 02:33:47.000]  structurally bad
+[02:33:47.000 --> 02:33:49.000]  is happening to your module
+[02:33:49.000 --> 02:33:51.000]  so these should be around
+[02:33:51.000 --> 02:33:53.000]  1.2
+[02:33:53.000 --> 02:33:55.000]  so if you see something really
+[02:33:55.000 --> 02:33:57.000]  low, really high
+[02:33:57.000 --> 02:33:59.000]  mind the case some major issues
+[02:33:59.000 --> 02:34:01.000]  don't worry too much about
+[02:34:01.000 --> 02:34:03.000]  these wings because the ADC
+[02:34:03.000 --> 02:34:05.000]  is not perfect sometimes has a
+[02:34:05.000 --> 02:34:07.000]  longer
+[02:34:07.000 --> 02:34:09.000]  readout and
+[02:34:09.000 --> 02:34:11.000]  we don't really have feedback when something is wrong
+[02:34:11.000 --> 02:34:13.000]  you just have a real number so you can
+[02:34:13.000 --> 02:34:15.000]  just ignore the smallest wings
+[02:34:15.000 --> 02:34:17.000]  if the thing stays
+[02:34:17.000 --> 02:34:19.000]  up or down for quite a long time
+[02:34:19.000 --> 02:34:21.000]  then it might indicate something
+[02:34:21.000 --> 02:34:23.000]  a single point is never an issue
+[02:34:23.000 --> 02:34:25.000]  okay
+[02:34:25.000 --> 02:34:27.000]  then
+[02:34:27.000 --> 02:34:29.000]  the other
+[02:34:29.000 --> 02:34:31.000]  another voltage that we are monitoring
+[02:34:31.000 --> 02:34:33.000]  is this one
+[02:34:33.000 --> 02:34:35.000]  this is basically the same voltage
+[02:34:35.000 --> 02:34:37.000]  so I'm not really completely sure
+[02:34:37.000 --> 02:34:39.000]  what is the difference between these two
+[02:34:39.000 --> 02:34:41.000]  I will just guess there are two different
+[02:34:41.000 --> 02:34:43.000]  blocks of the
+[02:34:43.000 --> 02:34:45.000]  of the activity that takes that
+[02:34:45.000 --> 02:34:47.000]  two different voltages
+[02:34:47.000 --> 02:34:49.000]  in order to work
+[02:34:49.000 --> 02:34:51.000]  different instances of two
+[02:34:51.000 --> 02:34:53.000]  different voltage in order to work
+[02:34:53.000 --> 02:34:55.000]  and then we have the temperature
+[02:34:55.000 --> 02:34:57.000]  measurement
+[02:34:57.000 --> 02:34:59.000]  so this
+[02:34:59.000 --> 02:35:01.000]  really the measurement
+[02:35:01.000 --> 02:35:03.000]  of the temperature sensor
+[02:35:03.000 --> 02:35:05.000]  inside the HPT
+[02:35:05.000 --> 02:35:07.000]  you see that it's largely
+[02:35:07.000 --> 02:35:09.000]  warm up this was done into the KT
+[02:35:09.000 --> 02:35:11.000]  box probably we don't tell you
+[02:35:11.000 --> 02:35:13.000]  too much of a control of a temperature
+[02:35:13.000 --> 02:35:15.000]  here
+[02:35:15.000 --> 02:35:17.000]  these temperature are already
+[02:35:17.000 --> 02:35:19.000]  calibrated they come
+[02:35:19.000 --> 02:35:21.000]  the information
+[02:35:21.000 --> 02:35:23.000]  comes from this big file
+[02:35:23.000 --> 02:35:25.000]  that I've also mentioned
+[02:35:25.000 --> 02:35:27.000]  at the beginning and the LPGVT group
+[02:35:27.000 --> 02:35:29.000]  is providing to us
+[02:35:29.000 --> 02:35:31.000]  and contains
+[02:35:31.000 --> 02:35:33.000]  a few information
+[02:35:33.000 --> 02:35:35.000]  which also the calibration
+[02:35:35.000 --> 02:35:37.000]  calibration for the
+[02:35:37.000 --> 02:35:39.000]  internal temperature sensor
+[02:35:39.000 --> 02:35:41.000]  the LPGVT so this should be quite
+[02:35:41.000 --> 02:35:43.000]  reliable
+[02:35:43.000 --> 02:35:45.000]  then there are a few extra
+[02:35:45.000 --> 02:35:47.000]  that
+[02:35:47.000 --> 02:35:49.000]  at the moment we are not using them
+[02:35:49.000 --> 02:35:51.000]  and we are just keeping them
+[02:35:51.000 --> 02:35:53.000]  available
+[02:35:53.000 --> 02:35:55.000]  let me just open
+[02:35:55.000 --> 02:35:57.000]  both of them ADC0 and AC3
+[02:35:57.000 --> 02:35:59.000]  these are inputs into
+[02:35:59.000 --> 02:36:01.000]  the
+[02:36:01.000 --> 02:36:03.000]  LPGVT that are coming
+[02:36:03.000 --> 02:36:05.000]  from
+[02:36:05.000 --> 02:36:07.000]  I think the two hybrids 0 and 3
+[02:36:07.000 --> 02:36:09.000]  I think are the two different hybrids
+[02:36:09.000 --> 02:36:11.000]  and these are values that
+[02:36:11.000 --> 02:36:13.000]  are being
+[02:36:13.000 --> 02:36:15.000]  controlled
+[02:36:15.000 --> 02:36:17.000]  by the
+[02:36:17.000 --> 02:36:19.000]  the CAC so the CAC has the possibility
+[02:36:19.000 --> 02:36:21.000]  to output
+[02:36:21.000 --> 02:36:23.000]  an analog value that
+[02:36:23.000 --> 02:36:25.000]  can monitor
+[02:36:25.000 --> 02:36:27.000]  some information internal
+[02:36:27.000 --> 02:36:29.000]  to the
+[02:36:29.000 --> 02:36:31.000]  CBC
+[02:36:31.000 --> 02:36:33.000]  we are not really setting anything
+[02:36:33.000 --> 02:36:35.000]  in particular also because it's a little
+[02:36:35.000 --> 02:36:37.000]  more complicated because it's the same
+[02:36:37.000 --> 02:36:39.000]  line for all the CBC so you
+[02:36:39.000 --> 02:36:41.000]  need to enable one CBC at a time
+[02:36:41.000 --> 02:36:43.000]  so we just
+[02:36:43.000 --> 02:36:45.000]  include them here
+[02:36:45.000 --> 02:36:47.000]  just for completeness
+[02:36:47.000 --> 02:36:49.000]  but you can safely
+[02:36:49.000 --> 02:36:51.000]  ignore them and we can use them
+[02:36:51.000 --> 02:36:53.000]  in the future if something comes up
+[02:36:53.000 --> 02:36:55.000]  that we need to monitor
+[02:36:55.000 --> 02:36:57.000]  for the time being we don't
+[02:36:57.000 --> 02:36:59.000]  think there was anything particular
+[02:36:59.000 --> 02:37:01.000]  so we just keep them and in this moment
+[02:37:01.000 --> 02:37:03.000]  they attach us to something that I
+[02:37:03.000 --> 02:37:05.000]  don't even know so
+[02:37:05.000 --> 02:37:07.000]  they look cool because they change
+[02:37:07.000 --> 02:37:09.000]  but we don't really use them
+[02:37:09.000 --> 02:37:11.000]  okay
+[02:37:11.000 --> 02:37:13.000]  then
+[02:37:13.000 --> 02:37:15.000]  so we have
+[02:37:15.000 --> 02:37:17.000]  another
+[02:37:17.000 --> 02:37:19.000]  plot so
+[02:37:19.000 --> 02:37:21.000]  these
+[02:37:21.000 --> 02:37:23.000]  is the monitor on the left
+[02:37:25.000 --> 02:37:27.000]  voltage that goes
+[02:37:27.000 --> 02:37:29.000]  on the left hybrid is 1.25 volts
+[02:37:29.000 --> 02:37:31.000]  I don't think we have
+[02:37:31.000 --> 02:37:33.000]  anything about the right hybrid
+[02:37:33.000 --> 02:37:35.000]  we are limited input so we are just
+[02:37:35.000 --> 02:37:37.000]  one I guess the assumption is that
+[02:37:37.000 --> 02:37:39.000]  since everything comes from the DC-DC converter
+[02:37:39.000 --> 02:37:41.000]  there is no particular reason
+[02:37:41.000 --> 02:37:43.000]  why the left hybrid and the right hybrid
+[02:37:43.000 --> 02:37:45.000]  should save a different voltage
+[02:37:45.000 --> 02:37:47.000]  and this should be around 1.25
+[02:37:47.000 --> 02:37:49.000]  in reality it's like lower
+[02:37:49.000 --> 02:37:51.000]  so far I saw this
+[02:37:51.000 --> 02:37:53.000]  for every single module we
+[02:37:53.000 --> 02:37:55.000]  tested so I think
+[02:37:55.000 --> 02:37:57.000]  is as good
+[02:37:57.000 --> 02:37:59.000]  as one can expect
+[02:37:59.000 --> 02:38:01.000]  as usual quick swing
+[02:38:01.000 --> 02:38:03.000]  you can just simply ignore
+[02:38:03.000 --> 02:38:05.000]  then
+[02:38:05.000 --> 02:38:07.000]  this is the input voltage
+[02:38:07.000 --> 02:38:09.000]  that you are providing from the power supply
+[02:38:09.000 --> 02:38:11.000]  you usually use
+[02:38:11.000 --> 02:38:13.000]  10.5
+[02:38:13.000 --> 02:38:15.000]  slightly lower
+[02:38:15.000 --> 02:38:17.000]  I'm not sure if this due to some
+[02:38:17.000 --> 02:38:19.000]  dropping the cable
+[02:38:19.000 --> 02:38:21.000]  or is really that in reality
+[02:38:21.000 --> 02:38:23.000]  you have some
+[02:38:23.000 --> 02:38:25.000]  some filter on something that's slightly lower
+[02:38:25.000 --> 02:38:27.000]  on it is
+[02:38:27.000 --> 02:38:29.000]  not super well calibrated
+[02:38:29.000 --> 02:38:31.000]  because this goes through a voltage divider
+[02:38:31.000 --> 02:38:33.000]  so there might be uncertainty
+[02:38:33.000 --> 02:38:35.000]  in the car
+[02:38:35.000 --> 02:38:37.000]  in the resistors
+[02:38:37.000 --> 02:38:39.000]  that are used in the voltage
+[02:38:39.000 --> 02:38:41.000]  divider in my previous
+[02:38:41.000 --> 02:38:43.000]  life-different value from that
+[02:38:43.000 --> 02:38:45.000]  again the module is very
+[02:38:45.000 --> 02:38:47.000]  resilient so
+[02:38:47.000 --> 02:38:49.000]  here you will really see something
+[02:38:49.000 --> 02:38:51.000]  when you have something
+[02:38:51.000 --> 02:38:53.000]  quite big
+[02:38:53.000 --> 02:38:55.000]  I think the module can be powerful
+[02:38:55.000 --> 02:38:57.000]  8 volts or even something like that
+[02:38:57.000 --> 02:38:59.000]  so it is quite resilient
+[02:38:59.000 --> 02:39:01.000]  resilient
+[02:39:01.000 --> 02:39:03.000]  ADC I already mentioned it
+[02:39:03.000 --> 02:39:05.000]  and then sensor
+[02:39:05.000 --> 02:39:07.000]  temperature
+[02:39:07.000 --> 02:39:09.000]  so this is the temperature
+[02:39:09.000 --> 02:39:11.000]  without on the sensor
+[02:39:11.000 --> 02:39:13.000]  there is an NTC
+[02:39:13.000 --> 02:39:15.000]  negative
+[02:39:15.000 --> 02:39:17.000]  power and
+[02:39:17.000 --> 02:39:19.000]  negative temperature
+[02:39:19.000 --> 02:39:21.000]  for efficient resistor
+[02:39:21.000 --> 02:39:23.000]  so it means that
+[02:39:23.000 --> 02:39:25.000]  higher is the
+[02:39:25.000 --> 02:39:27.000]  lower is the voltage
+[02:39:27.000 --> 02:39:29.000]  lower is the
+[02:39:29.000 --> 02:39:31.000]  lower is the temperature
+[02:39:31.000 --> 02:39:33.000]  lower is the resistance
+[02:39:33.000 --> 02:39:35.000]  I think it works like that
+[02:39:35.000 --> 02:39:37.000]  but anyway what we do
+[02:39:37.000 --> 02:39:39.000]  is that we inject a certain amount of current
+[02:39:39.000 --> 02:39:41.000]  and we
+[02:39:41.000 --> 02:39:43.000]  in that resistor we read
+[02:39:43.000 --> 02:39:45.000]  the voltage
+[02:39:45.000 --> 02:39:47.000]  and here is this resistor is the one
+[02:39:47.000 --> 02:39:49.000]  that is on the top sensor
+[02:39:49.000 --> 02:39:51.000]  in the peak
+[02:39:51.000 --> 02:39:53.000]  the high voltage state that has two connections
+[02:39:53.000 --> 02:39:55.000]  one of the two is the temperature sensor
+[02:39:55.000 --> 02:39:57.000]  and this is the one that we are reading
+[02:39:57.000 --> 02:39:59.000]  and this therefore is the temperature of the top sensor
+[02:40:03.000 --> 02:40:05.000]  then leakage current
+[02:40:05.000 --> 02:40:07.000]  so this is the measurement
+[02:40:07.000 --> 02:40:09.000]  of the current
+[02:40:09.000 --> 02:40:11.000]  that
+[02:40:11.000 --> 02:40:13.000]  the
+[02:40:13.000 --> 02:40:15.000]  the VTRX needs to be called incoming
+[02:40:19.000 --> 02:40:21.000]  light
+[02:40:21.000 --> 02:40:23.000]  and therefore there is a diode that
+[02:40:23.000 --> 02:40:25.000]  connects
+[02:40:25.000 --> 02:40:27.000]  to the fiber
+[02:40:27.000 --> 02:40:29.000]  and the diode transforms
+[02:40:29.000 --> 02:40:31.000]  the signal
+[02:40:31.000 --> 02:40:33.000]  in the optical signal to a current
+[02:40:33.000 --> 02:40:35.000]  that is used for
+[02:40:35.000 --> 02:40:37.000]  the data
+[02:40:37.000 --> 02:40:39.000]  transfer and then
+[02:40:39.000 --> 02:40:41.000]  you can measure the leakage current
+[02:40:41.000 --> 02:40:43.000]  of these
+[02:40:43.000 --> 02:40:45.000]  of these
+[02:40:45.000 --> 02:40:47.000]  diodes
+[02:40:47.000 --> 02:40:49.000]  so I think we have a quick discussion
+[02:40:49.000 --> 02:40:51.000]  few weeks ago
+[02:40:51.000 --> 02:40:53.000]  with Dana
+[02:40:53.000 --> 02:40:55.000]  I
+[02:40:55.000 --> 02:40:57.000]  understood the first time
+[02:40:57.000 --> 02:40:59.000]  I think this indicates really the average light
+[02:40:59.000 --> 02:41:01.000]  that is collected
+[02:41:01.000 --> 02:41:03.000]  by this diode
+[02:41:03.000 --> 02:41:05.000]  for the time being
+[02:41:05.000 --> 02:41:07.000]  I don't think it's going to tell us too much
+[02:41:07.000 --> 02:41:09.000]  but in the future with the radiation
+[02:41:09.000 --> 02:41:11.000]  this will probably go
+[02:41:11.000 --> 02:41:13.000]  down I guess
+[02:41:13.000 --> 02:41:15.000]  because the conversion factor
+[02:41:15.000 --> 02:41:17.000]  from a photon collector will go down
+[02:41:17.000 --> 02:41:19.000]  so this can be used for monitoring
+[02:41:19.000 --> 02:41:21.000]  radiation damage
+[02:41:21.000 --> 02:41:23.000]  of course we are not
+[02:41:23.000 --> 02:41:25.000]  in this case for production
+[02:41:25.000 --> 02:41:27.000]  really the
+[02:41:27.000 --> 02:41:29.000]  last two
+[02:41:29.000 --> 02:41:31.000]  so these are two
+[02:41:31.000 --> 02:41:33.000]  temperature sensor
+[02:41:33.000 --> 02:41:35.000]  I'm going to open them both
+[02:41:35.000 --> 02:41:37.000]  let's close a few things
+[02:41:37.000 --> 02:41:39.000]  zoom
+[02:41:39.000 --> 02:41:41.000]  zoom
+[02:41:41.000 --> 02:41:43.000]  zoom
+[02:41:43.000 --> 02:41:45.000]  zoom
+[02:41:45.000 --> 02:41:47.000]  zoom
+[02:41:47.000 --> 02:41:49.000]  so the B pole
+[02:41:49.000 --> 02:41:51.000]  is the
+[02:41:51.000 --> 02:41:53.000]  the
+[02:41:53.000 --> 02:41:55.000]  chip
+[02:41:55.000 --> 02:41:57.000]  that allow you to convert
+[02:41:57.000 --> 02:41:59.000]  the
+[02:41:59.000 --> 02:42:01.000]  in the
+[02:42:01.000 --> 02:42:03.000]  in the
+[02:42:03.000 --> 02:42:05.000]  DC DC convert
+[02:42:05.000 --> 02:42:07.000]  convert the
+[02:42:07.000 --> 02:42:09.000]  voltage
+[02:42:09.000 --> 02:42:11.000]  that you are providing to the module
+[02:42:11.000 --> 02:42:13.000]  to the needed voltages for the chip
+[02:42:13.000 --> 02:42:15.000]  for the chips into the module
+[02:42:15.000 --> 02:42:17.000]  and there are two
+[02:42:17.000 --> 02:42:19.000]  the B pole 12
+[02:42:19.000 --> 02:42:21.000]  that can convert
+[02:42:21.000 --> 02:42:23.000]  12 because it can convert 12 volts
+[02:42:23.000 --> 02:42:25.000]  in reality we use only 10.5 volts
+[02:42:25.000 --> 02:42:27.000]  into
+[02:42:27.000 --> 02:42:29.000]  2.5 volts
+[02:42:29.000 --> 02:42:31.000]  and then a second stage
+[02:42:31.000 --> 02:42:33.000]  that converts from 12
+[02:42:33.000 --> 02:42:35.000]  so is the B pole
+[02:42:35.000 --> 02:42:37.000]  2B5
+[02:42:37.000 --> 02:42:39.000]  from
+[02:42:39.000 --> 02:42:41.000]  2.5 to 1.2 volts
+[02:42:41.000 --> 02:42:43.000]  something like that
+[02:42:43.000 --> 02:42:45.000]  we have two stages because
+[02:42:45.000 --> 02:42:47.000]  the VTRAX needs 2.5 volts
+[02:42:47.000 --> 02:42:49.000]  so that's why we need
+[02:42:49.000 --> 02:42:51.000]  2
+[02:42:51.000 --> 02:42:53.000]  and that's why
+[02:42:53.000 --> 02:42:55.000]  there are these two steps
+[02:42:55.000 --> 02:42:57.000]  so each one of these
+[02:42:57.000 --> 02:42:59.000]  they have
+[02:42:59.000 --> 02:43:01.000]  temperature sensor
+[02:43:01.000 --> 02:43:03.000]  that we that are connected also
+[02:43:03.000 --> 02:43:05.000]  to the
+[02:43:05.000 --> 02:43:07.000]  VT
+[02:43:07.000 --> 02:43:09.000]  however
+[02:43:09.000 --> 02:43:11.000]  these two sensor
+[02:43:11.000 --> 02:43:13.000]  temperature sensor are not calibrated
+[02:43:13.000 --> 02:43:15.000]  in particular is not calibrated
+[02:43:15.000 --> 02:43:17.000]  the offset
+[02:43:17.000 --> 02:43:19.000]  the
+[02:43:19.000 --> 02:43:21.000]  the slope is quite
+[02:43:21.000 --> 02:43:23.000]  precise as for all the
+[02:43:23.000 --> 02:43:25.000]  temperature sensor we have available
+[02:43:25.000 --> 02:43:27.000]  in the chips in this example
+[02:43:27.000 --> 02:43:29.000]  but the offset is not calibrated
+[02:43:29.000 --> 02:43:31.000]  I don't think we have anything to correct
+[02:43:31.000 --> 02:43:33.000]  for that
+[02:43:33.000 --> 02:43:35.000]  so don't use to match the absolute value
+[02:43:35.000 --> 02:43:37.000]  but you can use the variations to see
+[02:43:37.000 --> 02:43:39.000]  for example if it's not well connected
+[02:43:39.000 --> 02:43:41.000]  you must see that this value might go
+[02:43:41.000 --> 02:43:43.000]  much higher than the other one
+[02:43:43.000 --> 02:43:45.000]  in the offset
+[02:43:45.000 --> 02:43:47.000]  I just took the more or less the
+[02:43:47.000 --> 02:43:49.000]  average that I see in the model
+[02:43:49.000 --> 02:43:51.000]  they had a bit of a study
+[02:43:51.000 --> 02:43:53.000]  what is the offset variation to the center point
+[02:43:53.000 --> 02:43:55.000]  just to have something reasonable
+[02:43:55.000 --> 02:43:57.000]  but again the absolute
+[02:43:57.000 --> 02:43:59.000]  value is not really
+[02:43:59.000 --> 02:44:01.000]  alive
+[02:44:01.000 --> 02:44:03.000]  and I think if I'm not mistaken
+[02:44:03.000 --> 02:44:05.000]  that's all because at the other level
+[02:44:05.000 --> 02:44:07.000]  we don't have any other
+[02:44:07.000 --> 02:44:09.000]  monitoring capabilities
+[02:44:09.000 --> 02:44:11.000]  for the 2S
+[02:44:11.000 --> 02:44:13.000]  or at least we don't
+[02:44:13.000 --> 02:44:15.000]  monitor anything else
+[02:44:15.000 --> 02:44:17.000]  so
+[02:44:17.000 --> 02:44:19.000]  this is all for the monitoring part
+[02:44:19.000 --> 02:44:21.000]  for the 2S
+[02:44:21.000 --> 02:44:23.000]  any
+[02:44:23.000 --> 02:44:25.000]  questions comments
+[02:44:25.000 --> 02:44:27.000]  on this
+[02:44:35.000 --> 02:44:37.000]  anything
+[02:44:37.000 --> 02:44:39.000]  you would like to ask
+[02:44:39.000 --> 02:44:41.000]  discuss
+[02:44:43.000 --> 02:44:45.000]  sorry for
+[02:44:45.000 --> 02:44:47.000]  you
+[02:44:47.000 --> 02:44:49.000]  I just have one question
+[02:44:49.000 --> 02:44:51.000]  the leakage current of the
+[02:44:51.000 --> 02:44:53.000]  VTRX plus
+[02:44:53.000 --> 02:44:55.000]  the RSSI signal
+[02:44:55.000 --> 02:44:57.000]  for its
+[02:44:59.000 --> 02:45:01.000]  it is exactly that one
+[02:45:01.000 --> 02:45:03.000]  and I just
+[02:45:03.000 --> 02:45:05.000]  use this one because
+[02:45:05.000 --> 02:45:07.000]  okay
+[02:45:07.000 --> 02:45:09.000]  not that I understand much better
+[02:45:09.000 --> 02:45:11.000]  this leakage current but I thought was
+[02:45:11.000 --> 02:45:13.000]  slightly more
+[02:45:13.000 --> 02:45:15.000]  comprehensible than the RSSI
+[02:45:15.000 --> 02:45:17.000]  it is exactly that thing
+[02:45:17.000 --> 02:45:19.000]  thank you
+[02:45:23.000 --> 02:45:25.000]  okay
+[02:45:25.000 --> 02:45:27.000]  okay
+[02:45:27.000 --> 02:45:29.000]  I'm gonna
+[02:45:29.000 --> 02:45:31.000]  stop
+[02:45:31.000 --> 02:45:33.000]  sharing
+[02:45:35.000 --> 02:45:37.000]  I'm gonna also
+[02:45:37.000 --> 02:45:39.000]  stop recording
