@@ -51,6 +51,7 @@ class BERtest : public CalibBase
     size_t chain2test;
     bool   given_time;
     double frames_or_time;
+    bool   frames_or_bits;
     bool   doDisplay;
 
     DetectorDataContainer theBERtestContainer;

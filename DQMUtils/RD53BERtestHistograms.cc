@@ -16,8 +16,8 @@ void BERtestHistograms::book(TFile* theOutputFile, DetectorContainer& theDetecto
 {
     RD53Shared::setFirstChip(theDetectorStructure);
 
-    auto hBERtest = CanvasContainer<TH1F>("BERtest", "Bit Error Rate Test", 1, 0, 1);
-    bookChipImplementer(theOutputFile, theDetectorStructure, BERtest, hBERtest, "N.A.", "Bit Error Rate value");
+    auto hBERtest = CanvasContainer<TH1F>("BERtest", "Error Rate Test", 1, 0, 1);
+    bookChipImplementer(theOutputFile, theDetectorStructure, BERtest, hBERtest, "N.A.", "Error Rate value");
 
     AreHistoBooked = true;
 }

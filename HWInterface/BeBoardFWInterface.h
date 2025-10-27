@@ -103,7 +103,8 @@ class BeBoardFWInterface : public RegManager
     virtual void SetOptoLinkVersion(bool version) = 0;
 
     /*! \brief Run Bit Error Rate test */
-    virtual std::vector<double> RunBERtest(bool given_time, double frames_or_time, const std::map<uint32_t, std::vector<uint8_t>>& hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed) = 0;
+    virtual std::vector<double>
+    RunBERtest(bool given_time, double frames_or_time, bool frames_or_bits, const std::map<uint32_t, std::vector<uint8_t>>& hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed) = 0;
 
     /*!
      * \brief Configure the board with its Config File
