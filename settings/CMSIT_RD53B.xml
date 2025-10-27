@@ -246,6 +246,7 @@
          chain2Test      (bertest,datarbopt) = 0: BE-FE; chain2Test = 1: BE-LPGBT; chain2Test = 2: LPGBT-FE
          byTime          (bertest,datarbopt) = 0: give n. frames; byTime = 1: give time in [s]
          framesORtime    (bertest,datarbopt):time in [s] or number of frames
+         framesORbits    (bertest,datarbopt) = 0: count frames; framesORbits = 1: count bits (only valid if chain2Test = 0 or 1)
     -->
     <Setting name="nEvents">             100 </Setting>
     <Setting name="nEvtsBurst">          100 </Setting>
