@@ -1686,20 +1686,25 @@ float RD53FWInterface::calcVoltage(uint32_t senseVDD, uint32_t senseGND)
 // # Bit Error Rate test #
 // #######################
 
-std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_or_time, const std::map<uint32_t, std::vector<uint8_t>>& optgroup_id_hybrid_id_chip_id_chip_lanes, uint8_t frontendSpeed)
+std::vector<double> RD53FWInterface::RunBERtest(bool                                            given_time,
+                                                double                                          frames_or_time,
+                                                bool                                            frames_or_bits,
+                                                const std::map<uint32_t, std::vector<uint8_t>>& optgroup_id_hybrid_id_chip_id_chip_lanes,
+                                                uint8_t                                         frontendSpeed)
 // ####################
 // # frontendSpeed    #
 // # 1.28 Gbit/s  = 0 #
 // # 640 Mbit/s   = 1 #
 // # 320 Mbit/s   = 2 #
 // ####################
+//"user.ctrl_regs.PRBS_checker.error_cntr_sel"
 {
     const double bitPerFrame      = 32. * std::pow(2, frontendSpeed); // Bits per frame
     const double fps              = 1.28e9 / bitPerFrame;             // Frames per second: 32-bit frame @ 1.28 Gbit/s, 64-bit frame @ 640 Mbit/s, 128-bit frame @ 320 Mbit/s
     const int    nPrints          = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
     const double scaleByAuroraClk = 37.5 / 40;                        // @CONST@
-    double       frames2run;
     double       time2run;
+    double       frames2run;
     uint32_t     cntr_lo;
     uint32_t     cntr_hi;
     uint64_t     nErrors;
@@ -1731,6 +1736,7 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
     // ##########################
     uint32_t lowFrames, highFrames;
     std::tie(highFrames, lowFrames) = bits::unpack<32, 32>(static_cast<long long>(frames2run));
+    RegManager::WriteReg("user.ctrl_regs.PRBS_checker.error_cntr_sel", frames_or_bits);
     RegManager::WriteStackReg({{"user.ctrl_regs.prbs_frames_to_run_low", lowFrames}, {"user.ctrl_regs.prbs_frames_to_run_high", highFrames}});
     RD53FWInterface::ToggleRegister("user.ctrl_regs.PRBS_checker.load_config");
 
@@ -1826,14 +1832,23 @@ std::vector<double> RD53FWInterface::RunBERtest(bool given_time, double frames_o
             cntr_lo      = RegManager::ReadReg("user.stat_regs.prbs_frame_cntr_low");
             frameCounter = bits::pack<32, 32>(cntr_hi, cntr_lo);
             nErrors      = RegManager::ReadReg("user.stat_regs.prbs_ber_cntr");
-            results.push_back(nErrors / frames2run);
+            results.push_back(nErrors / (frames_or_bits == 0 ? 1 : bitPerFrame) / frames2run);
 
             LOG(INFO) << BOLDGREEN << "Hybrid Id " << BOLDYELLOW << +hybrid_id << BOLDGREEN << " Chip internal Id " << BOLDYELLOW << +chip_id << BOLDGREEN << " Chip Lane " << BOLDYELLOW << +lane
                       << RESET;
             LOG(INFO) << GREEN << "Number of PRBS frames sent: " << BOLDYELLOW << frameCounter << RESET;
-            LOG(INFO) << GREEN << "Frames with error(s): " << BOLDYELLOW << nErrors << RESET;
-            LOG(INFO) << GREEN << "Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << std::fixed << std::setprecision(3)
-                      << results.back() * 100 << RESET << GREEN << "%)" << std::setprecision(-1) << RESET;
+            if(frames_or_bits == false)
+            {
+                LOG(INFO) << GREEN << "Frames with error(s): " << BOLDYELLOW << nErrors << RESET;
+                LOG(INFO) << GREEN << "Frame Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " frames/s (" << BOLDYELLOW << std::fixed << std::setprecision(3)
+                          << results.back() * 100 << RESET << GREEN << "%)" << std::setprecision(-1) << RESET;
+            }
+            else
+            {
+                LOG(INFO) << GREEN << "Frames with error(s): " << BOLDYELLOW << nErrors / bitPerFrame << RESET << GREEN << ", i.e. bits with errors: " << BOLDYELLOW << nErrors << RESET;
+                LOG(INFO) << GREEN << "Bit Error Rate: " << BOLDYELLOW << nErrors / time2run << RESET << GREEN << " bits/s (" << BOLDYELLOW << std::fixed << std::setprecision(3)
+                          << results.back() * 100 << RESET << GREEN << "%)" << std::setprecision(-1) << RESET;
+            }
             LOG(INFO) << GREEN << "BER test result: " << (nErrors == 0 ? BOLDYELLOW : BOLDRED) << (nErrors == 0 ? "PASSED" : "NOT PASSED") << RESET;
         }
     }
