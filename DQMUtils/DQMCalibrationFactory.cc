@@ -285,6 +285,23 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTBitErrorRateTest,
              DQMHistogramOTRegisterTester>("2SfullTest");
 
+    Register<DQMMetadataOT,
+             DQMHistogramOTVTRxLightYieldScan,
+             DQMHistogramOTLpGBTEyeOpeningTest,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTCICBX0Alignment,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTverifyCICdataWord,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramPedeNoise,
+             DQMHistogramOTinjectionDelayOptimization,
+             DQMHistogramOTinjectionOccupancyScan,
+             DQMHistogramOTCMNoise>("2SnoiseTests");
+
     Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
 
     Register<DQMMetadataOT,
@@ -351,6 +368,24 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTChipToCICecv,
              DQMHistogramOTBitErrorRateTest,
              DQMHistogramOTRegisterTester>("PSfullTest");
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTVTRxLightYieldScan,
+             DQMHistogramOTLpGBTEyeOpeningTest,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTverifyBoardDataWord,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTCICBX0Alignment,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTverifyCICdataWord,
+             DQMHistogramOTverifyMPASSAdataWord,
+             DQMHistogramPedestalEqualizationPSAtPedestal,
+             DQMHistogramPedeNoise,
+             DQMHistogramOTinjectionDelayOptimization,
+             DQMHistogramOTinjectionOccupancyScan,
+             DQMHistogramOTPScommonNoise>("PSnoiseTests");
 
     Register<DQMMetadataOT,
              DQMHistogramOTPSADCCalibration,
