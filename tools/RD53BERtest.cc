@@ -22,6 +22,7 @@ void BERtest::ConfigureCalibration()
     chain2test     = this->findValueInSettings<double>("chain2Test");
     given_time     = this->findValueInSettings<double>("byTime");
     frames_or_time = this->findValueInSettings<double>("framesORtime");
+    frames_or_bits = this->findValueInSettings<double>("framesORbits");
     doDisplay      = this->findValueInSettings<double>("DisplayHisto");
 
     // ##########################################################################################
@@ -103,7 +104,7 @@ void BERtest::run()
                             if(lane < static_cast<RD53*>(cChip)->laneConfig.nOutputLanes)
                                 optogroup_id_hybrid_id_chip_id_chip_lanes[cOpticalGroup->getId() << 16 | cHybrid->getId() << 8 | static_cast<RD53*>(cChip)->getChipLane()].push_back(lane);
 
-            const auto results = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, optogroup_id_hybrid_id_chip_id_chip_lanes, frontendSpeed);
+            const auto results = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, frames_or_bits, optogroup_id_hybrid_id_chip_id_chip_lanes, frontendSpeed);
 
             auto it = results.begin();
             for(const auto cOpticalGroup: *cBoard)
@@ -141,7 +142,7 @@ void BERtest::run()
                                 optogroup_id_hybrid_id_chip_id_chip_lanes[cOpticalGroup->getId() << 16 | cHybrid->getId() << 8 | static_cast<RD53*>(cChip)->getChipLane()].push_back(lane);
 
                 static_cast<lpGBTInterface*>(flpGBTInterface)->StartPRBSpattern(cOpticalGroup->flpGBT);
-                const auto results = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, optogroup_id_hybrid_id_chip_id_chip_lanes, frontendSpeed);
+                const auto results = fBeBoardFWMap[cBoard->getId()]->RunBERtest(given_time, frames_or_time, frames_or_bits, optogroup_id_hybrid_id_chip_id_chip_lanes, frontendSpeed);
 
                 auto it = results.begin();
                 for(const auto cHybrid: *cOpticalGroup)
@@ -179,8 +180,8 @@ void BERtest::run()
                         const uint8_t cChannel = static_cast<RD53*>(cChip)->getRxChannel();
                         const auto    cGroups  = static_cast<RD53*>(cChip)->getRxGroups();
 
-                        const auto value = flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, cGroups, cChannel, given_time, frames_or_time, frontendSpeed);
-                        theBERtestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<double>() = value;
+                        const auto results = flpGBTInterface->RunBERtest(cOpticalGroup->flpGBT, cGroups, cChannel, given_time, frames_or_time, frontendSpeed);
+                        theBERtestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<double>() = results;
                     }
             }
 

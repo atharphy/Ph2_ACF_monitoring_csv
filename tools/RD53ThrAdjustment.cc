@@ -290,12 +290,6 @@ void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, 
             // # Reset sequence #
             // ##################
             CalibBase::copyMaskFromDefault("en in");
-            // ##############
-            // # Full reset # // @TMP@
-            // ##############
-            // LOG(INFO) << BOLDMAGENTA << ">>> Resetting the system in case it got stuck due to high noise <<<" << RESET;
-            // CalibBase::setChipEnDis(true);
-            // CalibBase::ResetBoards();
             CalibBase::setChipEnDis(false);
             CalibBase::shiftEnable(indx);
 

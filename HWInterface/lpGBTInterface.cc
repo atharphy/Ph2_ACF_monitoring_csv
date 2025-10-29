@@ -1178,15 +1178,17 @@ double lpGBTInterface::RunBERtest(Chip* pChip, const std::vector<uint8_t>& pGrou
     const double bitPerFrame = 32. * std::pow(2, frontendSpeed); // Bits per frame
     const double fps         = 1.28e9 / bitPerFrame;             // Frames per second: 32-bit frame @ 1.28 Gbit/s, 64-bit frame @ 640 Mbit/s, 128-bit frame @ 320 Mbit/s
     const int    nPrints     = 10;                               // Only an indication, the real number of printouts will be driven by the length of the time steps @CONST@
-    double       frames2run;
     double       time2run;
+    double       frames2run;
+    double       clk2run;
 
     if(given_time == true)
         time2run = frames_or_time;
     else
         time2run = frames_or_time / fps;
     size_t BERTMeasTime = (log2(time2run * lpGBTconstants::ACCELERATOR_CLK) - 5) / 2.;
-    frames2run          = fBERTMeasTimeMap[BERTMeasTime];
+    clk2run             = fBERTMeasTimeMap[BERTMeasTime];
+    frames2run          = clk2run * fps / lpGBTconstants::ACCELERATOR_CLK;
 
     // ##########################################################################
     // # Configure number of printouts and calculate the frequency of printouts #
@@ -1239,12 +1241,12 @@ double lpGBTInterface::RunBERtest(Chip* pChip, const std::vector<uint8_t>& pGrou
     LOG(INFO) << BOLDGREEN << "===== BER test summary =====" << RESET;
     LOG(INFO) << GREEN << "Number of PRBS frames sent: " << BOLDYELLOW << frames2run << RESET;
     LOG(INFO) << GREEN << "Frames with error(s): " << BOLDYELLOW << nErrors / bitPerFrame << RESET << GREEN << ", i.e. bits with errors: " << BOLDYELLOW << nErrors << RESET;
-    LOG(INFO) << GREEN << "Frame Error Rate: " << BOLDYELLOW << nErrors / frames2run << RESET << GREEN << " bits/clk (" << BOLDYELLOW << nErrors / bitPerFrame / frames2run * 100 << RESET << GREEN
-              << "%)" << RESET;
+    LOG(INFO) << GREEN << "Bit Error Rate: " << BOLDYELLOW << nErrors / clk2run * lpGBTconstants::ACCELERATOR_CLK << RESET << GREEN << " bits/s (" << BOLDYELLOW << std::fixed << std::setprecision(3)
+              << nErrors / bitPerFrame / frames2run * 100 << RESET << GREEN << "%)" << std::setprecision(-1) << RESET;
     LOG(INFO) << GREEN << "BER test result: " << (nErrors == 0 ? BOLDYELLOW : BOLDRED) << (nErrors == 0 ? "PASSED" : "NOT PASSED") << RESET;
     LOG(INFO) << BOLDGREEN << "====== End of summary ======" << RESET;
 
-    return nErrors / frames2run;
+    return nErrors / bitPerFrame / frames2run;
 }
 
 // ####################################
