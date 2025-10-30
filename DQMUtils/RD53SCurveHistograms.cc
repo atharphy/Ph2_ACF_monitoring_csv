@@ -86,6 +86,7 @@ bool SCurveHistograms::fill(std::string& inputStream)
 
 void SCurveHistograms::fillOccupancy(const DetectorDataContainer& OccupancyContainer, uint16_t DELTA_VCAL)
 {
+    TEfficiency effFunc;
     for(const auto cBoard: OccupancyContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -120,9 +121,11 @@ void SCurveHistograms::fillOccupancy(const DetectorDataContainer& OccupancyConta
                         {
                             if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISGOOD)
                             {
-                                hOcc2D->Fill(DELTA_VCAL, cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy + hOcc2D->GetYaxis()->GetBinWidth(1) / 2.);
-                                hOcc3D->SetBinContent(col + 1, row + 1, hOcc3D->GetZaxis()->FindBin(DELTA_VCAL), cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy);
-                                hOcc3D->SetBinError(col + 1, row + 1, hOcc3D->GetZaxis()->FindBin(DELTA_VCAL), cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy / sqrt(nEvents));
+                                double occupancy = cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy;
+                                double error     = fabs(occupancy - effFunc.ClopperPearson(nEvents, occupancy * nEvents, ERROR_CL, (occupancy < 0.5 ? true : false)));
+                                hOcc2D->Fill(DELTA_VCAL, occupancy + hOcc2D->GetYaxis()->GetBinWidth(1) / 2.);
+                                hOcc3D->SetBinContent(col + 1, row + 1, hOcc3D->GetZaxis()->FindBin(DELTA_VCAL), occupancy);
+                                hOcc3D->SetBinError(col + 1, row + 1, hOcc3D->GetZaxis()->FindBin(DELTA_VCAL), error);
                                 ToT2DHist->SetBinContent(col + 1, row + 1, ToT2DHist->GetBinContent(col + 1, row + 1) + cChip->getChannel<OccupancyAndPh>(row, col).fPh);
                                 ToT2DHist->SetBinError(col + 1,
                                                        row + 1,
