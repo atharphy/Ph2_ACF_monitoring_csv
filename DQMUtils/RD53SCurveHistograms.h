@@ -16,6 +16,7 @@
 #include "Utils/RD53Shared.h"
 #include "Utils/ThresholdAndNoise.h"
 
+#include <TEfficiency.h>
 #include <TH1F.h>
 #include <TH2F.h>
 #include <TH3F.h>
@@ -25,6 +26,7 @@
 // #############
 #define NBINS_THR 1000
 #define NBINS_NOISE 200
+#define ERROR_CL 0.68
 
 class SCurveHistograms : public DQMHistogramBase
 {
