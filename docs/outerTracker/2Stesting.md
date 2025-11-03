@@ -1,433 +1,108 @@
-/opt/homebrew/Cellar/openai-whisper/20250625/libexec/lib/python3.13/site-packages/whisper/transcribe.py:132: UserWarning: FP16 is not supported on CPU; using FP32 instead
-  warnings.warn("FP16 is not supported on CPU; using FP32 instead")
-Detecting language using up to the first 30 seconds. Use `--language` to specify the language
-Detected language: English
-[00:00.000 --> 00:05.000]  I'm also record.
-[00:09.000 --> 00:12.000]  Thank you, Johnny.
-[00:12.000 --> 00:18.000]  Okay, I think
-[00:18.000 --> 00:23.000]  we can probably start.
-[00:23.000 --> 00:28.000]  Yeah, so the plan is
-[00:28.000 --> 00:34.000]  this one. So I'm going to open
-[00:34.000 --> 00:37.000]  a result file for the
-[00:37.000 --> 00:41.000]  actually let me share a result file from
-[00:41.000 --> 00:43.000]  one full test.
-[00:43.000 --> 00:45.000]  Today's going to be the
-[00:45.000 --> 00:47.000]  the day of the 2S.
-[00:47.000 --> 00:51.000]  I'm going to go through
-[00:51.000 --> 00:55.000]  all the steps and the plot that are produced
-[00:55.000 --> 00:58.000]  and explain
-[00:58.000 --> 01:01.000]  in a simplified manner how these are produced
-[01:01.000 --> 01:04.000]  just such that you can understand what information
-[01:04.000 --> 01:07.000]  I use and what do I understand
-[01:07.000 --> 01:10.000]  from the model behavior from that
-[01:10.000 --> 01:13.000]  and then what the plot represents.
-[01:13.000 --> 01:18.000]  So here I'm just pointing
-[01:18.000 --> 01:21.000]  one
-[01:21.000 --> 01:26.000]  one tweaky
-[01:26.000 --> 01:29.000]  that is doing a great job in maintaining it
-[01:29.000 --> 01:31.000]  for the Firmware Auto Tracker.
-[01:31.000 --> 01:34.000]  I'm honestly not sure if there is something central
-[01:34.000 --> 01:37.000]  but of course everybody can look into that.
-[01:37.000 --> 01:39.000]  There are a bunch of information
-[01:39.000 --> 01:42.000]  among which all the relevant manuals
-[01:42.000 --> 01:45.000]  so you can if you need to look
-[01:45.000 --> 01:47.000]  something more in details with respect
-[01:47.000 --> 01:49.000]  to what we're going to discuss today
-[01:49.000 --> 01:52.000]  you can find it
-[01:52.000 --> 01:54.000]  in this tweaky
-[01:54.000 --> 01:56.000]  probably the information also
-[01:56.000 --> 01:59.000]  some other document collection
-[01:59.000 --> 02:01.000]  this is the one that I use
-[02:01.000 --> 02:04.000]  was just simple for me just to point this.
-[02:04.000 --> 02:07.000]  So just a reminder
-[02:07.000 --> 02:10.000]  for the commands to run the
-[02:10.000 --> 02:13.000]  two test sequences
-[02:13.000 --> 02:16.000]  so you use the run calibration command
-[02:16.000 --> 02:18.000]  is basically the same command
-[02:18.000 --> 02:20.000]  that is run by a gift
-[02:20.000 --> 02:22.000]  and then you have to provide the XML
-[02:22.000 --> 02:25.000]  file that contains the information about
-[02:25.000 --> 02:27.000]  your setup basically
-[02:27.000 --> 02:30.000]  and some information about the
-[02:30.000 --> 02:33.000]  testing parameters
-[02:33.000 --> 02:36.000]  and then the two
-[02:36.000 --> 02:38.000]  calibration sequences, the quick test
-[02:38.000 --> 02:40.000]  and the full test.
-[02:40.000 --> 02:42.000]  So today I'm going to cover the full test
-[02:42.000 --> 02:44.000]  because simply the quick test
-[02:44.000 --> 02:46.000]  is a subset of the test
-[02:46.000 --> 02:48.000]  that is done during the quick test
-[02:48.000 --> 02:50.000]  and
-[02:50.000 --> 02:52.000]  so just
-[02:52.000 --> 02:54.000]  a reminder of
-[02:54.000 --> 02:56.000]  the sequence of
-[02:56.000 --> 02:58.000]  tests that we do
-[02:58.000 --> 03:00.000]  so here is the full list
-[03:00.000 --> 03:02.000]  I'm going to go through each one of them
-[03:02.000 --> 03:04.000]  while
-[03:04.000 --> 03:06.000]  while
-[03:06.000 --> 03:08.000]  discussing the
-[03:08.000 --> 03:10.000]  result plots
-[03:10.000 --> 03:12.000]  and two files are created
-[03:12.000 --> 03:14.000]  one is the result file
-[03:14.000 --> 03:16.000]  that contains all the
-[03:16.000 --> 03:18.000]  calibration results and the metadata
-[03:18.000 --> 03:20.000]  and I'm going to also
-[03:20.000 --> 03:22.000]  quickly explain what are these metadata
-[03:22.000 --> 03:24.000]  and then one
-[03:24.000 --> 03:26.000]  monitoring the QM file
-[03:26.000 --> 03:28.000]  that monitors some
-[03:28.000 --> 03:30.000]  of the
-[03:30.000 --> 03:32.000]  variables that we
-[03:32.000 --> 03:34.000]  would like to monitor from the model
-[03:34.000 --> 03:36.000]  for example temperature
-[03:36.000 --> 03:38.000]  voltages in some
-[03:38.000 --> 03:40.000]  cases also currents.
-[03:40.000 --> 03:42.000]  So I'm going to go through both
-[03:42.000 --> 03:44.000]  of these two
-[03:44.000 --> 03:46.000]  and I'm going to
-[03:46.000 --> 03:48.000]  that's all, yeah
-[03:48.000 --> 03:50.000]  I'm going to start from the
-[03:50.000 --> 03:52.000]  metadata
-[03:52.000 --> 03:54.000]  so I'm opening
-[03:54.000 --> 03:56.000]  a root file
-[03:58.000 --> 04:00.000]  I'm open to major studio code
-[04:00.000 --> 04:02.000]  but simply because of my computer
-[04:02.000 --> 04:04.000]  I don't have a root
-[04:04.000 --> 04:06.000]  working at the moment
-[04:06.000 --> 04:08.000]  but you can open it also
-[04:08.000 --> 04:10.000]  in your browser
-[04:10.000 --> 04:12.000]  so the
-[04:12.000 --> 04:14.000]  main
-[04:14.000 --> 04:16.000]  when you open a file the main folder
-[04:16.000 --> 04:18.000]  inside
-[04:18.000 --> 04:20.000]  is the detector folder
-[04:20.000 --> 04:22.000]  and at the first level you already
-[04:22.000 --> 04:24.000]  get some metadata
-[04:24.000 --> 04:26.000]  so these metadata
-[04:26.000 --> 04:28.000]  are storing
-[04:28.000 --> 04:30.000]  what in root is called the object string
-[04:30.000 --> 04:32.000]  and the reason
-[04:32.000 --> 04:34.000]  for that is that
-[04:34.000 --> 04:36.000]  if you store anything else that is not an object
-[04:36.000 --> 04:38.000]  you need to create a dictionary
-[04:38.000 --> 04:40.000]  and a root file so it is
-[04:40.000 --> 04:42.000]  a bit more painful one
-[04:42.000 --> 04:44.000]  instead of string we can basically store
-[04:44.000 --> 04:46.000]  everything that we need
-[04:46.000 --> 04:48.000]  so there are a few information
-[04:48.000 --> 04:50.000]  to store here I'm going to go through them
-[04:50.000 --> 04:52.000]  but very likely you don't need
-[04:52.000 --> 04:54.000]  to go into such detail
-[04:54.000 --> 04:56.000]  I can zoom in a little bit better
-[05:02.000 --> 05:04.000]  and
-[05:04.000 --> 05:06.000]  so this one contains
-[05:06.000 --> 05:08.000]  the user name of
-[05:12.000 --> 05:14.000]  the computer
-[05:14.000 --> 05:16.000]  which you are testing it
-[05:16.000 --> 05:18.000]  the host name
-[05:18.000 --> 05:20.000]  is
-[05:20.000 --> 05:22.000]  the name of the computer
-[05:24.000 --> 05:26.000]  the
-[05:26.000 --> 05:28.000]  github doesn't just tell you
-[05:28.000 --> 05:30.000]  if you are in the head or not
-[05:30.000 --> 05:32.000]  the important part
-[05:32.000 --> 05:34.000]  is the commit hash
-[05:34.000 --> 05:36.000]  this one is going to tell you if you are
-[05:36.000 --> 05:38.000]  in the right commit
-[05:38.000 --> 05:40.000]  so when you are going to
-[05:40.000 --> 05:42.000]  start testing data
-[05:42.000 --> 05:44.000]  we don't want to have a computer
-[05:44.000 --> 05:46.000]  a testing module so we don't want
-[05:46.000 --> 05:48.000]  to have computers that are not updated
-[05:48.000 --> 05:50.000]  so we can use this one in potato
-[05:50.000 --> 05:52.000]  to check if you are correctly using
-[05:52.000 --> 05:54.000]  the expected version
-[05:54.000 --> 05:56.000]  then
-[05:56.000 --> 05:58.000]  the calibration names
-[05:58.000 --> 06:00.000]  is simply the name that
-[06:00.000 --> 06:02.000]  you provide so we can track
-[06:02.000 --> 06:04.000]  which type of test you run
-[06:04.000 --> 06:06.000]  as I was saying today I'm going to
-[06:06.000 --> 06:08.000]  do a full test
-[06:08.000 --> 06:10.000]  then
-[06:10.000 --> 06:12.000]  initial detector configuration
-[06:12.000 --> 06:14.000]  we don't really have anything
-[06:16.000 --> 06:18.000]  and then you have information about
-[06:18.000 --> 06:20.000]  the
-[06:20.000 --> 06:22.000]  time of
-[06:22.000 --> 06:24.000]  each calibration so this one
-[06:24.000 --> 06:26.000]  is the calibration start time
-[06:26.000 --> 06:28.000]  timestamp so
-[06:28.000 --> 06:30.000]  basically as soon as
-[06:30.000 --> 06:32.000]  you start configuring it's going to store
-[06:32.000 --> 06:34.000]  this information
-[06:34.000 --> 06:36.000]  and then since you do multiple
-[06:36.000 --> 06:38.000]  steps you have
-[06:38.000 --> 06:40.000]  the different start
-[06:40.000 --> 06:42.000]  or the steps that are run so
-[06:42.000 --> 06:44.000]  you might recognize the name
-[06:44.000 --> 06:46.000]  of this table
-[06:46.000 --> 06:48.000]  and then
-[06:48.000 --> 06:50.000]  near each one of them there is the
-[06:50.000 --> 06:52.000]  timestamp so this is not
-[06:52.000 --> 06:54.000]  really needed for
-[06:54.000 --> 06:56.000]  any particular information
-[06:56.000 --> 06:58.000]  for the QA
-[06:58.000 --> 07:00.000]  it's really to keep track of
-[07:00.000 --> 07:02.000]  the time and try to understand if
-[07:02.000 --> 07:04.000]  for any reason your testing setup is
-[07:04.000 --> 07:06.000]  lower to see if there is one in particular
-[07:06.000 --> 07:08.000]  that is presentation try to crack it down
-[07:08.000 --> 07:10.000]  it's mainly for the developers
-[07:10.000 --> 07:12.000]  and then I'm going to
-[07:12.000 --> 07:14.000]  briefly jump over here
-[07:14.000 --> 07:16.000]  since the final detector configuration
-[07:16.000 --> 07:18.000]  also in this case we don't store
-[07:18.000 --> 07:20.000]  anything at the moment is the stop
-[07:20.000 --> 07:22.000]  so
-[07:22.000 --> 07:24.000]  this is the timestamp when your calibration
-[07:24.000 --> 07:26.000]  sequence is finished so basically
-[07:26.000 --> 07:28.000]  if you want to see how long it took
-[07:28.000 --> 07:30.000]  you can take
-[07:30.000 --> 07:32.000]  these two as a reference
-[07:32.000 --> 07:34.000]  there is a minor difference
-[07:34.000 --> 07:36.000]  in a few seconds
-[07:36.000 --> 07:38.000]  from these and what
-[07:38.000 --> 07:40.000]  you see into the
-[07:40.000 --> 07:42.000]  into
-[07:42.000 --> 07:44.000]  the printout at the end because
-[07:44.000 --> 07:46.000]  this is basically cutting
-[07:46.000 --> 07:48.000]  off a little bit at the beginning where
-[07:48.000 --> 07:50.000]  you are reading information from next
-[07:50.000 --> 07:52.000]  time and this kind of things but it should be in a few seconds
-[07:52.000 --> 07:54.000]  so this should give you
-[07:54.000 --> 07:56.000]  a good idea how long it took
-[07:58.000 --> 08:00.000]  then if I start going a bit more
-[08:00.000 --> 08:02.000]  down we have
-[08:02.000 --> 08:04.000]  we go into the board
-[08:04.000 --> 08:06.000]  and inside the board
-[08:06.000 --> 08:08.000]  we have other three metadata
-[08:08.000 --> 08:10.000]  the name of the board in this case
-[08:10.000 --> 08:12.000]  is the IP address
-[08:12.000 --> 08:14.000]  oops
-[08:14.000 --> 08:16.000]  then we have the initial
-[08:16.000 --> 08:18.000]  board configuration so
-[08:18.000 --> 08:20.000]  this is a little bit
-[08:20.000 --> 08:22.000]  weird because it contains
-[08:22.000 --> 08:24.000]  the XML that
-[08:24.000 --> 08:26.000]  you are basically
-[08:26.000 --> 08:28.000]  loading
-[08:28.000 --> 08:30.000]  but
-[08:30.000 --> 08:32.000]  the root
-[08:32.000 --> 08:34.000]  for your studio called tries
-[08:34.000 --> 08:36.000]  to format in a weird way
-[08:36.000 --> 08:38.000]  but if in a normal browser
-[08:38.000 --> 08:40.000]  you right click
-[08:40.000 --> 08:42.000]  on this one does it really work and you do dump
-[08:42.000 --> 08:44.000]  you are going to see the full
-[08:44.000 --> 08:46.000]  the full
-[08:46.000 --> 08:48.000]  XML that you
-[08:48.000 --> 08:50.000]  use so basically
-[08:50.000 --> 08:52.000]  it is
-[08:52.000 --> 08:54.000]  oops
-[08:54.000 --> 08:56.000]  here it is
-[08:58.000 --> 09:00.000]  so if I take
-[09:00.000 --> 09:02.000]  the for example the two words
-[09:02.000 --> 09:04.000]  module you have the configuration
-[09:04.000 --> 09:06.000]  above that is
-[09:06.000 --> 09:08.000]  pointed here so you are going
-[09:08.000 --> 09:10.000]  to see basically
-[09:14.000 --> 09:16.000]  so these actually are the
-[09:16.000 --> 09:18.000]  numbers that you are seeing
-[09:18.000 --> 09:20.000]  inside
-[09:20.000 --> 09:22.000]  for some reason
-[09:22.000 --> 09:24.000]  when I show it like this
-[09:24.000 --> 09:26.000]  it is going to disappear but they are actually inside
-[09:26.000 --> 09:28.000]  and this is told twice
-[09:28.000 --> 09:30.000]  because we start the beginning
-[09:30.000 --> 09:32.000]  of the test and the end of the test
-[09:32.000 --> 09:34.000]  because some of these value might change
-[09:34.000 --> 09:36.000]  depending on the calibration that you do
-[09:36.000 --> 09:38.000]  and so we want to keep track
-[09:38.000 --> 09:40.000]  of what is changed
-[09:40.000 --> 09:42.000]  so this is mainly for debugging
-[09:42.000 --> 09:44.000]  you shouldn't
-[09:44.000 --> 09:46.000]  need to do that for
-[09:46.000 --> 09:48.000]  any particular
-[09:48.000 --> 09:50.000]  qualification of the module
-[09:50.000 --> 09:52.000]  but if something looks
-[09:52.000 --> 09:54.000]  weird then we can always go back
-[09:54.000 --> 09:56.000]  just based on a root file to understand
-[09:56.000 --> 09:58.000]  what is up
-[09:58.000 --> 10:00.000]  then going more deep
-[10:00.000 --> 10:02.000]  we have the optical group
-[10:02.000 --> 10:04.000]  for the timing I am just going to do the
-[10:04.000 --> 10:06.000]  metadata so don't worry about all the other plots
-[10:08.000 --> 10:10.000]  can I ask
-[10:10.000 --> 10:12.000]  how do you like the questions to be asked
-[10:12.000 --> 10:14.000]  wherever you have some questions
-[10:14.000 --> 10:16.000]  just
-[10:16.000 --> 10:18.000]  about the XML files
-[10:18.000 --> 10:20.000]  and the registers
-[10:20.000 --> 10:22.000]  so
-[10:22.000 --> 10:24.000]  the first one you said
-[10:24.000 --> 10:26.000]  is just what is stored in the XML
-[10:26.000 --> 10:28.000]  right
-[10:28.000 --> 10:30.000]  so the next one is that
-[10:30.000 --> 10:32.000]  you go through the same
-[10:32.000 --> 10:34.000]  registers that are mentioned
-[10:34.000 --> 10:36.000]  in the XML
-[10:36.000 --> 10:38.000]  and bring their value
-[10:40.000 --> 10:42.000]  no actually
-[10:42.000 --> 10:44.000]  they are all XML
-[10:44.000 --> 10:46.000]  really the full copy of the XML
-[10:46.000 --> 10:48.000]  basically
-[10:48.000 --> 10:50.000]  if I would have opened a root and do dump
-[10:50.000 --> 10:52.000]  you see literally this thing
-[10:52.000 --> 10:54.000]  sure but
-[10:54.000 --> 10:56.000]  I guess I am asking
-[10:56.000 --> 10:58.000]  you said that you are printing things
-[10:58.000 --> 11:00.000]  before and after
-[11:00.000 --> 11:02.000]  right so
-[11:02.000 --> 11:04.000]  the XML file clearly stays the same
-[11:04.000 --> 11:06.000]  right so
-[11:06.000 --> 11:08.000]  you
-[11:08.000 --> 11:10.000]  go through the same
-[11:10.000 --> 11:12.000]  variables that are mentioned in the XML
-[11:12.000 --> 11:14.000]  and print them out
-[11:14.000 --> 11:16.000]  so this one is the XML
-[11:16.000 --> 11:18.000]  that contains basically
-[11:18.000 --> 11:20.000]  the configuration of the board
-[11:20.000 --> 11:22.000]  so this might change
-[11:22.000 --> 11:24.000]  because for example let's say
-[11:24.000 --> 11:26.000]  the big sleep alignment
-[11:26.000 --> 11:28.000]  so the big sleep alignment
-[11:28.000 --> 11:30.000]  no no no
-[11:30.000 --> 11:32.000]  so you go through the same
-[11:32.000 --> 11:34.000]  variables that are mentioned here
-[11:34.000 --> 11:36.000]  yes
-[11:36.000 --> 11:38.000]  I guess I am just asking
-[11:38.000 --> 11:40.000]  because not all the registers
-[11:40.000 --> 11:42.000]  of
-[11:42.000 --> 11:44.000]  all the chips are mentioned in the XML
-[11:44.000 --> 11:46.000]  no they are
-[11:46.000 --> 11:48.000]  to another level
-[11:48.000 --> 11:50.000]  I am going to go through them
-[11:50.000 --> 11:52.000]  so they are going to be in their specific level
-[11:52.000 --> 11:54.000]  they are going to be at the chip level
-[12:00.000 --> 12:02.000]  going on
-[12:02.000 --> 12:04.000]  so I am going to be at the optical group level
-[12:04.000 --> 12:06.000]  so at the optical group
-[12:06.000 --> 12:08.000]  we don't really
-[12:08.000 --> 12:10.000]  have a name for the optical group at the moment
-[12:10.000 --> 12:12.000]  or okay
-[12:12.000 --> 12:14.000]  this one I am running manually
-[12:14.000 --> 12:16.000]  if you run it with gift
-[12:16.000 --> 12:18.000]  gift will store the
-[12:18.000 --> 12:20.000]  module ID
-[12:20.000 --> 12:22.000]  manually we don't provide any information
-[12:22.000 --> 12:24.000]  and that's why you should run manually
-[12:24.000 --> 12:26.000]  the PIX2SF
-[12:26.000 --> 12:28.000]  you should always run with the gift
-[12:28.000 --> 12:30.000]  or with the
-[12:30.000 --> 12:32.000]  the burning box controller
-[12:32.000 --> 12:34.000]  and this will automatically
-[12:34.000 --> 12:36.000]  fill with
-[12:36.000 --> 12:38.000]  with the name
-[12:38.000 --> 12:40.000]  of the module
-[12:40.000 --> 12:42.000]  then basically to reply to your question
-[12:42.000 --> 12:44.000]  Yuri
-[12:44.000 --> 12:46.000]  so for the chip so at the optical group
-[12:46.000 --> 12:48.000]  we have already two chips
-[12:48.000 --> 12:50.000]  the LPGVT and the VTRX
-[12:50.000 --> 12:52.000]  so here are the
-[12:52.000 --> 12:54.000]  registers for the LPGVT
-[12:54.000 --> 12:56.000]  before the calibration so the starting
-[12:56.000 --> 12:58.000]  point
-[12:58.000 --> 13:00.000]  and
-[13:00.000 --> 13:02.000]  after we have
-[13:02.000 --> 13:04.000]  completed
-[13:04.000 --> 13:06.000]  so it's the final one
-[13:06.000 --> 13:08.000]  and since they are basically identical
-[13:08.000 --> 13:10.000]  for quite some bit
-[13:10.000 --> 13:12.000]  I think when I move from one to another
-[13:12.000 --> 13:14.000]  you don't really see anything
-[13:16.000 --> 13:18.000]  I think it's actually moving somewhere
-[13:24.000 --> 13:26.000]  okay it's going to be more clear
-[13:26.000 --> 13:28.000]  with the other chip
-[13:28.000 --> 13:30.000]  this one basically the first
-[13:30.000 --> 13:32.000]  hundreds of
-[13:34.000 --> 13:36.000]  I believe it's happening they don't change
-[13:36.000 --> 13:38.000]  basically you might see something already over here
-[13:38.000 --> 13:40.000]  yeah you see that
-[13:40.000 --> 13:42.000]  here we have different values for
-[13:42.000 --> 13:44.000]  the different phases so 0A
-[13:44.000 --> 13:46.000]  0B
-[13:46.000 --> 13:48.000]  0A 0B
-[13:48.000 --> 13:50.000]  and instead I think if I take at the beginning
-[13:50.000 --> 13:52.000]  you might not see
-[13:58.000 --> 14:00.000]  yeah you see that here all is 0
-[14:00.000 --> 14:02.000]  well instead if I move here
-[14:06.000 --> 14:08.000]  so we scroll up again
-[14:12.000 --> 14:14.000]  you see that here
-[14:14.000 --> 14:16.000]  instead of values that are different from Z
-[14:18.000 --> 14:20.000]  and then we also store the
-[14:20.000 --> 14:22.000]  ID so the fuse ID
-[14:22.000 --> 14:24.000]  these are the ID that we store inside the chip
-[14:24.000 --> 14:26.000]  and this is for the LPGVT
-[14:26.000 --> 14:28.000]  and this is for the VTRS
-[14:28.000 --> 14:30.000]  so we can always
-[14:30.000 --> 14:32.000]  go back to the ID
-[14:36.000 --> 14:38.000]  then at the level of the hybrid
-[14:46.000 --> 14:48.000]  at the level of the hybrid
-[14:48.000 --> 14:50.000]  we have the ID of the hybrid
-[14:50.000 --> 14:52.000]  so since the
-[14:52.000 --> 14:54.000]  PH3CF doesn't
-[14:54.000 --> 14:56.000]  interact with the database to make sure
-[14:56.000 --> 14:58.000]  that we don't have any
-[14:58.000 --> 15:00.000]  no stopper with the hybrid ID
-[15:00.000 --> 15:02.000]  so this is basically
-[15:02.000 --> 15:04.000]  the space where you can actually put
-[15:04.000 --> 15:06.000]  the hybrid ID once
-[15:06.000 --> 15:08.000]  you run
-[15:08.000 --> 15:10.000]  it with the potato
-[15:10.000 --> 15:12.000]  we give that actually does an interaction
-[15:12.000 --> 15:14.000]  with the database but here the moment is empty
-[15:14.000 --> 15:16.000]  so if you run it
-[15:16.000 --> 15:18.000]  just manually you don't see it
-[15:18.000 --> 15:20.000]  then we have the chip
-[15:20.000 --> 15:22.000]  fuse ID
-[15:22.000 --> 15:24.000]  so same and then
-[15:24.000 --> 15:26.000]  initial and final configuration
-[15:26.000 --> 15:28.000]  of the CLC
-[15:30.000 --> 15:32.000]  and then if we go even deeper
-[15:32.000 --> 15:34.000]  at the level of the chip
-[15:34.000 --> 15:36.000]  so
-[15:36.000 --> 15:38.000]  the store is always the same, we're going to make it better
-[15:38.000 --> 15:40.000]  repeated
-[15:40.000 --> 15:42.000]  the chip ID
-[15:42.000 --> 15:44.000]  for the CBC, the initial register
-[15:44.000 --> 15:46.000]  and the final registers
-[15:48.000 --> 15:50.000]  and those are all the metadata that we store
-[15:52.000 --> 15:54.000]  before we move to the actual test
-[15:54.000 --> 15:56.000]  do you
-[15:56.000 --> 15:58.000]  have any question for this
-[15:58.000 --> 16:00.000]  information
-[16:04.000 --> 16:06.000]  so every
-[16:06.000 --> 16:08.000]  CBC register
-[16:08.000 --> 16:10.000]  appears in this file
-[16:10.000 --> 16:12.000]  correct, okay
-[16:18.000 --> 16:20.000]  so these are sort of a repetition
-[16:20.000 --> 16:22.000]  because in the root file
-[16:22.000 --> 16:24.000]  you also have
-[16:24.000 --> 16:26.000]  all the chip output
-[16:26.000 --> 16:28.000]  that are produced at the end
-[16:28.000 --> 16:30.000]  but since then
-[16:30.000 --> 16:32.000]  it's a little bit more tricky to end the whole folder
-[16:32.000 --> 16:34.000]  we decided to put everything into the root file
-[16:34.000 --> 16:36.000]  so just by looking at the root file
-[16:36.000 --> 16:38.000]  we get the footage
+# Description of 2S test results
+
+This documentation is adapted from the [2S testing with Ph2_ACF tutorial](https://indico.cern.ch/event/1540157/). This focuses on the tests performed during module production with the goal of qualify the modules.
+
+**For production testing, official releases and tools as GIPHT should be used.**
+
+For other testing the main commands after installing the software are:
+
+```
+cd Ph2_ACF  # change the directory accordingly
+source setup.sh 
+```
+
+If not already done, insert the correct machine and IP address in the
+xml file located in the settings directory that you are going to use. The recommended XML is [settings/2S_Module.xml](../../settings/2S_Module.xml)
+
+```
+<connection id="board" uri="localhost://192.168.0.12:50001" address_table="<file://settings/address_tables/uDTC_OT_address_table.xml>"
+```
+
+List firmwares on SD card:
+
+``` fpgaconfig -c settings/MyXML.xml -l ```
+
+To load a new firmware: The firmware are stored in
+<https://udtc-ot-firmware.web.cern.ch/>. Be sure the version you are
+downloading is compatible with the code version you are using, the
+module type, the CIC version etc.
+
+```
+fpgaconfig -c settings/MyXML.xml -f PATH_TO_FILE -i FW_NICKNAME
+fpgaconfig -c settings/MyXML.xml -i FW_NICKNAME
+```
+
+To load an existing firmware just use the second line above.
+
+Blue light on FC7 blinks at 1Hz if firmware loaded properly.
+
+To run a test
+
+```
+runCalibration -f settings/MyXML.xml   -c CALIBRATION_NAME
+```
+
+To list the availaible calibrations
+
+```
+runCalibration -h
+```
+
+## Test result description
+The description below is for the standard `2SfullTest` that is a very comprehensive set of measurements. The `2SquickTest` is a subset of that.
+
+When running, two files are created:
+- The `Results.root` that contains all the calibration results and the metadata
+- The monitoring that contains the variables that we  would like to monitor, for example temperatures, voltages, in some cases also currents
+
+### Results description
+
+#### Metadata
+When you open the file, the main folder inside is the `Detector` folder, containing metadata.
+
+Metadata are storing what in root is called the object string and the reason for that is that if you store anything else that is not an object you need to create a dictionary. With a string we can basically store everything that we need.
+
+
+For instance, `Username_Detector` contains the user name of the computer where the tests is carried out and `HostName_Detector` is the name of the computer.
+
+`GitCommitHash_Detector` and `GitTag_Detector` are used verify that the user is in the right tag and commit for production. These fields will be used by the Potato grading software.
+
+The `CalibrationName_Detector` is the name of the calibration, for instance `2SfullTest` to track which type of test you run.
+
+The `InitialDetectorConfiguration_Detector` is basically a copy of the `HWDescription` section of the ` settings/MyXML.xml` used to run the test. The `FinalDetectorConfiguration_Detector` is similar to the `Initial` one with possible updated values due to the performed calibrations.
+
+In the `CalibrationStartTimestamp_Detector` and `SubCalibrationNameAndType_Detecor` there is information about the time of each calibration. The calibration start time timestamp is stored as soon as you start configuring the module. Then since multiple steps are done, the different start of the steps (SubCalibration) are listed next to the steps. This is not really needed for any particular information for the QA but   it's really to keep track of the time for developers. The `CalibrationStopTimeStamp_Detector` is the time stamp for when the calibration is finished.
+
+#FIXME minute 7:40 and following  
+There is a minor difference of a few seconds i what you see in the metadata and in the printout on the terminal because this is basically cutting off a little bit at the beginning where you are reading information from next time and this kind of things
+
+After the `Detector` folder we have the `Board`. Here we have three metadata:
+- `D_NameID_Board` is the IP address
+- `D_InitialBoardConfiguration_Board` is the XML for the board configuration, typically what you have in [settings/BeBoardFiles/uDTC_registers_2S.xml](../../settings/BeBoardFiles/uDTC_registers_2S.xml)
+- `D_FinalBoardConfiguration_Board` is the same as above with possible updated values depending on the performed calibration
+
+This is mainly for debugging.
+
+After the `Board`, there is the `OpticalGroup`.
+The `NameId` is empty if you run manually while if you run with `GIPHT` the module ID will be stored. Calibrations should always be performed with `GIPHT` or the Burnin box controller.
+
+At the optical group level we have two chips, the LpGBT and the VTRX.
+In the `InitialLpGBTConfiguration` (`FinalLpGBTConfiguration`) the starting (final) values of all the registers are stored. 
+The `LpGBTFuseId` and `VTRxFuseId` are the IDs stored in the chip. 
+
+The `IsLpGBTCalibrated` is set to 1 if the calibration data is found in [the calibration file](../../settings/lpGBTFiles/lpgbt_calibration.csv) and used for that LpGBT.
+
+After the `OpticalGroup`, we move to the `Hybrid` level. A fully working module has two hybrids.
+The `NameId` is used to store the Hybrid ID. Similar to the optical group, there is no direct interaction with the DB in Ph2_ACF and it will be filled at a later stage in the analysis and grading procedure. 
+
+Each hybrid has a CIC chip for which three metadata are stored: `CICFuseId` and the `InitialCICConfiguration` and `FinalCICConfiguration` with the starting and final 
+values of all chip registers.
+
+Every hybrid contains 8 CBC chips. There is a directory for each of them containg the same metadata `NameId` with the fuse ID, `InitialReadoutChipConfiguration` and `FinalReadoutChipConfiguration` with the registers.
+
+#### Calibrations 
+
+
 [16:42.000 --> 16:44.000]  okay, then I'm going to start
 [16:44.000 --> 16:46.000]  moving with the various steps
 [16:46.000 --> 16:48.000]  so
@@ -603,12 +278,12 @@ Detected language: English
 [22:44.000 --> 22:46.000]  at speaking but just
 [22:46.000 --> 22:48.000]  make sure of course this
 [22:48.000 --> 22:50.000]  ok
-[22:50.000 --> 22:52.000]  so LPGVT
+[22:50.000 --> 22:52.000]  so LpGBT
 [22:52.000 --> 22:54.000]  so I think this is
 [22:54.000 --> 22:56.000]  pretty famous
 [22:56.000 --> 22:58.000]  due to the
 [22:58.000 --> 23:00.000]  recent
-[23:00.000 --> 23:02.000]  issues with LPGVT
+[23:00.000 --> 23:02.000]  issues with LpGBT
 [23:02.000 --> 23:04.000]  so
 [23:04.000 --> 23:06.000]  I can't forget
 [23:08.000 --> 23:10.000]  ok so
@@ -624,7 +299,7 @@ Detected language: English
 [23:30.000 --> 23:32.000]  you can imagine it proportional to the
 [23:32.000 --> 23:34.000]  optical power that is received
 [23:34.000 --> 23:36.000]  and then
-[23:36.000 --> 23:38.000]  the LPGVT can
+[23:36.000 --> 23:38.000]  the LpGBT can
 [23:38.000 --> 23:40.000]  attenuate the signal
 [23:40.000 --> 23:42.000]  by three different value
 [23:42.000 --> 23:44.000]  sorry it cannot attenuate it to one
@@ -644,7 +319,7 @@ Detected language: English
 [24:10.000 --> 24:12.000]  opening so
 [24:12.000 --> 24:14.000]  this is a capability
 [24:14.000 --> 24:16.000]  of the
-[24:16.000 --> 24:18.000]  LPGVT basically you can see
+[24:16.000 --> 24:18.000]  LpGBT basically you can see
 [24:18.000 --> 24:20.000]  a little bit more details into the manual
 [24:20.000 --> 24:22.000]  but basically if you have a
 [24:22.000 --> 24:24.000]  high count rate it means that
@@ -667,7 +342,7 @@ Detected language: English
 [24:56.000 --> 24:58.000]  something is good or wrong but what is
 [24:58.000 --> 25:00.000]  important is this transition
 [25:00.000 --> 25:02.000]  so
-[25:02.000 --> 25:04.000]  the known problem of LPGVT is that
+[25:02.000 --> 25:04.000]  the known problem of LpGBT is that
 [25:04.000 --> 25:06.000]  the center of the eye so basically
 [25:06.000 --> 25:08.000]  the part where the two shapes
 [25:08.000 --> 25:10.000]  are coming
@@ -675,7 +350,7 @@ Detected language: English
 [25:12.000 --> 25:14.000]  moving I think all the way up
 [25:14.000 --> 25:16.000]  or also all the way down
 [25:16.000 --> 25:18.000]  and that is
-[25:18.000 --> 25:20.000]  these LPGVT
+[25:18.000 --> 25:20.000]  these LpGBT
 [25:20.000 --> 25:22.000]  one high opening
 [25:22.000 --> 25:24.000]  issues
 [25:24.000 --> 25:26.000]  and the thing that I noticed so far
@@ -695,13 +370,13 @@ Detected language: English
 [25:56.000 --> 25:58.000]  and
 [25:58.000 --> 26:00.000]  go to the
 [26:02.000 --> 26:04.000]  here the
-[26:04.000 --> 26:06.000]  OT align LPGVT inputs
+[26:04.000 --> 26:06.000]  OT align LpGBT inputs
 [26:06.000 --> 26:08.000]  so
 [26:10.000 --> 26:12.000]  these
 [26:14.000 --> 26:16.000]  blocks
 [26:16.000 --> 26:18.000]  yes sure
 [26:18.000 --> 26:20.000]  I am from IPSC Strasbourg I have a very small
-[26:20.000 --> 26:22.000]  question and basic question from the LPGVT
+[26:20.000 --> 26:22.000]  question and basic question from the LpGBT
 [26:22.000 --> 26:24.000]  eye opening test so
 [26:24.000 --> 26:26.000]  just for my understanding so
 [26:26.000 --> 26:28.000]  how do you understand that if there is
@@ -3200,7 +2875,7 @@ Detected language: English
 [01:55:49.000 --> 01:55:51.000]  only the phase
 [01:55:51.000 --> 01:55:53.000]  that is identified by
 [01:55:53.000 --> 01:55:55.000]  either the CAC
-[01:55:55.000 --> 01:55:57.000]  or the LPGVT to be the best one
+[01:55:55.000 --> 01:55:57.000]  or the LpGBT to be the best one
 [01:55:57.000 --> 01:55:59.000]  we change them manually
 [01:55:59.000 --> 01:56:01.000]  because we want to see how wide
 [01:56:01.000 --> 01:56:03.000]  is the work in area
@@ -3218,12 +2893,12 @@ Detected language: English
 [01:56:25.000 --> 01:56:27.000]  so
 [01:56:27.000 --> 01:56:29.000]  I'm going to start
 [01:56:29.000 --> 01:56:31.000]  from the
-[01:56:31.000 --> 01:56:33.000]  CAC to LPGVT validation
+[01:56:31.000 --> 01:56:33.000]  CAC to LpGBT validation
 [01:56:33.000 --> 01:56:35.000]  so we are basically
 [01:56:35.000 --> 01:56:37.000]  looking at this phase
 [01:56:37.000 --> 01:56:39.000]  these lines over here
 [01:56:39.000 --> 01:56:41.000]  so we change
-[01:56:41.000 --> 01:56:43.000]  the sampling phase of the LPGVT
+[01:56:41.000 --> 01:56:43.000]  the sampling phase of the LpGBT
 [01:56:43.000 --> 01:56:45.000]  and we see if
 [01:56:45.000 --> 01:56:47.000]  the signal
 [01:56:47.000 --> 01:56:49.000]  the
@@ -3236,7 +2911,7 @@ Detected language: English
 [01:57:03.000 --> 01:57:05.000]  at the high B level
 [01:57:05.000 --> 01:57:07.000]  and
 [01:57:07.000 --> 01:57:09.000]  all the plots are
-[01:57:09.000 --> 01:57:11.000]  CAC to LPGVT
+[01:57:09.000 --> 01:57:11.000]  CAC to LpGBT
 [01:57:11.000 --> 01:57:13.000]  pattern matching
 [01:57:13.000 --> 01:57:15.000]  and for each one of these
 [01:57:15.000 --> 01:57:17.000]  there is the error rate
@@ -3269,11 +2944,11 @@ Detected language: English
 [01:58:09.000 --> 01:58:11.000]  you can, sorry
 [01:58:11.000 --> 01:58:13.000]  to change these current
 [01:58:13.000 --> 01:58:15.000]  you might have different
-[01:58:15.000 --> 01:58:17.000]  behavior in the LPGVT
+[01:58:15.000 --> 01:58:17.000]  behavior in the LpGBT
 [01:58:17.000 --> 01:58:19.000]  reconstructing them
 [01:58:19.000 --> 01:58:21.000]  then we have the
-[01:58:21.000 --> 01:58:23.000]  LPGVT clock polarity
-[01:58:23.000 --> 01:58:25.000]  so the LPGVT sends
+[01:58:21.000 --> 01:58:23.000]  LpGBT clock polarity
+[01:58:23.000 --> 01:58:25.000]  so the LpGBT sends
 [01:58:25.000 --> 01:58:27.000]  the
 [01:58:27.000 --> 01:58:29.000]  provides the clock
 [01:58:29.000 --> 01:58:31.000]  to the
@@ -3288,7 +2963,7 @@ Detected language: English
 [01:58:47.000 --> 01:58:49.000]  and finally
 [01:58:49.000 --> 01:58:51.000]  the CAC clock strength
 [01:58:51.000 --> 01:58:53.000]  as for these lines
-[01:58:53.000 --> 01:58:55.000]  the LPGVT sends the clock
+[01:58:53.000 --> 01:58:55.000]  the LpGBT sends the clock
 [01:58:55.000 --> 01:58:57.000]  and you can change the current
 [01:58:57.000 --> 01:58:59.000]  that is used to drive the line of the clock
 [01:58:59.000 --> 01:59:01.000]  so I have to
@@ -3421,8 +3096,8 @@ Detected language: English
 [02:03:35.000 --> 02:03:37.000]  scanner multi-parameters so we are changing
 [02:03:37.000 --> 02:03:39.000]  the
 [02:03:39.000 --> 02:03:41.000]  C-C clock
-[02:03:41.000 --> 02:03:43.000]  SLBS current, the LPGVT clock polarity
-[02:03:43.000 --> 02:03:45.000]  and the LPGVT clock strength
+[02:03:41.000 --> 02:03:43.000]  SLBS current, the LpGBT clock polarity
+[02:03:43.000 --> 02:03:45.000]  and the LpGBT clock strength
 [02:03:45.000 --> 02:03:47.000]  so you have really a lot of them
 [02:03:47.000 --> 02:03:49.000]  you don't need to look
 [02:03:49.000 --> 02:03:51.000]  all of them
@@ -3439,7 +3114,7 @@ Detected language: English
 [02:04:11.000 --> 02:04:13.000]  these kind of things may indicate
 [02:04:13.000 --> 02:04:15.000]  that your working range is
 [02:04:15.000 --> 02:04:17.000]  small and
-[02:04:17.000 --> 02:04:19.000]  even if the LPGVT can align
+[02:04:17.000 --> 02:04:19.000]  even if the LpGBT can align
 [02:04:19.000 --> 02:04:21.000]  the C-C
 [02:04:21.000 --> 02:04:23.000]  it might not be a good alignment
 [02:04:23.000 --> 02:04:25.000]  you just found a phase but then
@@ -3481,7 +3156,7 @@ Detected language: English
 [02:06:03.000 --> 02:06:05.000]  ask the C-C
 [02:06:05.000 --> 02:06:07.000]  just to forward the incoming
 [02:06:07.000 --> 02:06:09.000]  data
-[02:06:09.000 --> 02:06:11.000]  to the LPGVT
+[02:06:09.000 --> 02:06:11.000]  to the LpGBT
 [02:06:11.000 --> 02:06:13.000]  without any processing
 [02:06:13.000 --> 02:06:15.000]  this is
 [02:06:15.000 --> 02:06:17.000]  a bit more complicated
@@ -3495,7 +3170,7 @@ Detected language: English
 [02:06:31.000 --> 02:06:33.000]  so 48 lines going to the C-C
 [02:06:33.000 --> 02:06:35.000]  but only
 [02:06:35.000 --> 02:06:37.000]  six coming out from the C-C
-[02:06:37.000 --> 02:06:39.000]  to LPGVT
+[02:06:37.000 --> 02:06:39.000]  to LpGBT
 [02:06:39.000 --> 02:06:41.000]  so you cannot forward all of them in one shot
 [02:06:41.000 --> 02:06:43.000]  so you have to choose what you
 [02:06:43.000 --> 02:06:45.000]  want to forward
@@ -3569,19 +3244,19 @@ Detected language: English
 [02:09:03.000 --> 02:09:05.000]  the second problem
 [02:09:05.000 --> 02:09:07.000]  that I will mention is that
 [02:09:07.000 --> 02:09:09.000]  once running by pass mode
-[02:09:09.000 --> 02:09:11.000]  the LPGVT
+[02:09:09.000 --> 02:09:11.000]  the LpGBT
 [02:09:11.000 --> 02:09:13.000]  so
 [02:09:13.000 --> 02:09:15.000]  the data that are coming out from the C-I-C
 [02:09:15.000 --> 02:09:17.000]  are not any more clock
 [02:09:17.000 --> 02:09:19.000]  to the usual clock in which we
 [02:09:19.000 --> 02:09:21.000]  did the phase alignment and so on
 [02:09:21.000 --> 02:09:23.000]  so we need
-[02:09:23.000 --> 02:09:25.000]  to re-align the LPGVT
+[02:09:23.000 --> 02:09:25.000]  to re-align the LpGBT
 [02:09:25.000 --> 02:09:27.000]  but by construction
 [02:09:27.000 --> 02:09:29.000]  this cannot be done automatically
 [02:09:29.000 --> 02:09:31.000]  it needs to be done
 [02:09:31.000 --> 02:09:33.000]  manually
-[02:09:33.000 --> 02:09:35.000]  so we need to do a manual strain of the LPGVT phases
+[02:09:33.000 --> 02:09:35.000]  so we need to do a manual strain of the LpGBT phases
 [02:09:35.000 --> 02:09:37.000]  in order to align
 [02:09:37.000 --> 02:09:39.000]  the data
 [02:09:39.000 --> 02:09:41.000]  coming from the C-I-C when the C-I-C
@@ -3590,13 +3265,13 @@ Detected language: English
 [02:09:45.000 --> 02:09:47.000]  so
 [02:09:47.000 --> 02:09:49.000]  that's why we need to do
 [02:09:49.000 --> 02:09:51.000]  one five port at a time
-[02:09:51.000 --> 02:09:53.000]  to scan the LPGVT phase
+[02:09:51.000 --> 02:09:53.000]  to scan the LpGBT phase
 [02:09:53.000 --> 02:09:55.000]  and find the best phase
 [02:09:55.000 --> 02:09:57.000]  and this is what is happening
 [02:09:57.000 --> 02:09:59.000]  into all these plots
 [02:09:59.000 --> 02:10:01.000]  that I'm showing you here
 [02:10:01.000 --> 02:10:03.000]  that has this
-[02:10:03.000 --> 02:10:05.000]  LPGVT for C-I-C by pass
+[02:10:03.000 --> 02:10:05.000]  LpGBT for C-I-C by pass
 [02:10:05.000 --> 02:10:07.000]  and there are
 [02:10:07.000 --> 02:10:09.000]  for each of the
 [02:10:09.000 --> 02:10:11.000]  five port
@@ -4046,7 +3721,7 @@ Detected language: English
 [02:25:51.000 --> 02:25:53.000]  information for the overall package
 [02:25:53.000 --> 02:25:55.000]  so the all information
 [02:25:55.000 --> 02:25:57.000]  from that is received by
-[02:25:57.000 --> 02:25:59.000]  the LPGVT
+[02:25:57.000 --> 02:25:59.000]  the LpGBT
 [02:25:59.000 --> 02:26:01.000]  and that's why we have a single number
 [02:26:01.000 --> 02:26:03.000]  for the two hybrids
 [02:26:03.000 --> 02:26:05.000]  you still have separated by lines
@@ -4223,7 +3898,7 @@ Detected language: English
 [02:32:13.000 --> 02:32:15.000]  is at the level of the optical group
 [02:32:15.000 --> 02:32:17.000]  and all the information
 [02:32:17.000 --> 02:32:19.000]  that are extracted from the
-[02:32:19.000 --> 02:32:21.000]  LPGVT which has an ADC
+[02:32:19.000 --> 02:32:21.000]  LpGBT which has an ADC
 [02:32:21.000 --> 02:32:23.000]  and the ADC
 [02:32:23.000 --> 02:32:25.000]  is both connected to values
 [02:32:25.000 --> 02:32:27.000]  that are inside the chip
@@ -4244,7 +3919,7 @@ Detected language: English
 [02:32:55.000 --> 02:32:57.000]  the
 [02:32:57.000 --> 02:32:59.000]  VDD
 [02:32:59.000 --> 02:33:01.000]  so
-[02:33:01.000 --> 02:33:03.000]  the LPGVT
+[02:33:01.000 --> 02:33:03.000]  the LpGBT
 [02:33:03.000 --> 02:33:05.000]  uses a few
 [02:33:05.000 --> 02:33:07.000]  digital voltages
 [02:33:07.000 --> 02:33:09.000]  that are used to make it work
@@ -4316,14 +3991,14 @@ Detected language: English
 [02:35:19.000 --> 02:35:21.000]  the information
 [02:35:21.000 --> 02:35:23.000]  comes from this big file
 [02:35:23.000 --> 02:35:25.000]  that I've also mentioned
-[02:35:25.000 --> 02:35:27.000]  at the beginning and the LPGVT group
+[02:35:25.000 --> 02:35:27.000]  at the beginning and the LpGBT group
 [02:35:27.000 --> 02:35:29.000]  is providing to us
 [02:35:29.000 --> 02:35:31.000]  and contains
 [02:35:31.000 --> 02:35:33.000]  a few information
 [02:35:33.000 --> 02:35:35.000]  which also the calibration
 [02:35:35.000 --> 02:35:37.000]  calibration for the
 [02:35:37.000 --> 02:35:39.000]  internal temperature sensor
-[02:35:39.000 --> 02:35:41.000]  the LPGVT so this should be quite
+[02:35:39.000 --> 02:35:41.000]  the LpGBT so this should be quite
 [02:35:41.000 --> 02:35:43.000]  reliable
 [02:35:43.000 --> 02:35:45.000]  then there are a few extra
 [02:35:45.000 --> 02:35:47.000]  that
@@ -4334,7 +4009,7 @@ Detected language: English
 [02:35:55.000 --> 02:35:57.000]  both of them ADC0 and AC3
 [02:35:57.000 --> 02:35:59.000]  these are inputs into
 [02:35:59.000 --> 02:36:01.000]  the
-[02:36:01.000 --> 02:36:03.000]  LPGVT that are coming
+[02:36:01.000 --> 02:36:03.000]  LpGBT that are coming
 [02:36:03.000 --> 02:36:05.000]  from
 [02:36:05.000 --> 02:36:07.000]  I think the two hybrids 0 and 3
 [02:36:07.000 --> 02:36:09.000]  I think are the two different hybrids
