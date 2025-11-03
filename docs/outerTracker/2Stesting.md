@@ -73,8 +73,8 @@ The `InitialDetectorConfiguration_Detector` is basically a copy of the `HWDescri
 
 In the `CalibrationStartTimestamp_Detector` and `SubCalibrationNameAndType_Detecor` there is information about the time of each calibration. The calibration start time timestamp is stored as soon as you start configuring the module. Then since multiple steps are done, the different start of the steps (SubCalibration) are listed next to the steps. This is not really needed for any particular information for the QA but   it's really to keep track of the time for developers. The `CalibrationStopTimeStamp_Detector` is the time stamp for when the calibration is finished.
 
-#FIXME minute 7:40 and following  
-There is a minor difference of a few seconds i what you see in the metadata and in the printout on the terminal because this is basically cutting off a little bit at the beginning where you are reading information from next time and this kind of things
+ 
+There is a minor difference of a few seconds in what you see in the metadata and in the printout on the terminal because in the beginning time stamp in the metadata the time used to read the configurations is not considered.
 
 After the `Detector` folder we have the `Board`. Here we have three metadata:
 - `D_NameID_Board` is the IP address
@@ -108,9 +108,7 @@ The other steps are more elaborate and produce result plots described below.
 
 ##### TuneLpGBTVref - OpticalGroup
 
-#FIXME minute 17, need to check
-
-Vref is basically the reference voltage for the LpGBT ADC converter. It's needed for converting into meaningful values the ADC that are read by the LpGBT. This step is  basically the loading of a value that the LpGBT group gave us and is stored in [the calibration file](../../settings/lpGBTFiles/lpgbt_calibration.csv). The information for a specific LpGBT can be found by the fuse ID. In this step we retrieve the value from the file and we store it in the chip. No plots are produced.
+Vref is basically the reference voltage for the LpGBT ADC converter. It's needed for converting into meaningful values the ADC that are read by the LpGBT. This step is  basically the loading (not really a tuning) of a value that the LpGBT group gave us and is stored in [the calibration file](../../settings/lpGBTFiles/lpgbt_calibration.csv). The information for a specific LpGBT can be found by the fuse ID. In this step we retrieve the value from the file and we store it in the chip. No plots are produced.
 
 ##### OTVTRxLightYieldScan - OpticalGroup
 
@@ -118,16 +116,11 @@ This test is performed to verify that we are able to change the VTRX settings to
 
 ![VTRx_LightYieldScan](../images/OTtesting/common/VTRx_LightYieldScan.png)
 
-The bias and modulation shown on the x and y axes of the plot are two registers of the VTRX that control the laser driver. On the Z axis we have the power in microWatt that is measured by the the SFP connector on the FC7.
-
-#FIXME - check this
-[20:22.000 --> 20:24.000]  so basically the receiver
-[20:24.000 --> 20:26.000]  that you have on the X axis
+The bias and modulation, shown on the x and y axes of the plot, are two registers of the VTRX that control the laser driver. On the Z axis we have the power in microWatt that is measured by the the SFP connector, the receiver on the FC7.
 
 We obtain the distribution measuring the power varying the bias and modulation.
 Moving from the left to the right, the power increases.
-For the modulation, when you increase it, you decrease the power. The reason is that basically the bias sets the high level of a clock and instead the modulation controls the swing down. (#FIXME check here minute 21)
-
+For the modulation, when you increase it, you decrease the power. The reason is that basically the bias sets the high level and instead the modulation controls the swing down.
 
 If the power in the x and y direction is not changing, something is going on with the driver controller. Moreover, the optical power that you receive might be lower in case you have some damage on the fibers - less obvious and this will be handled by potato. Very likely you will see other problems.
 
@@ -142,15 +135,12 @@ A distribution like the one below may be due to a problematic SFP connector on t
 
 ##### OTLpGBTEyeOpeningTest - OpticalGroup
 
-The calibration is performed for three different values of the electrical attenuation that the LpGBT applies to the VTRx signal. The signal can be attenuated to 1/3, 2/3 or not attenuated. Here we show and explain the result for one of the attenuations.
+The calibration is performed for three different values of the electrical attenuation that the LpGBT applies to the VTRx signal that is proportional to the optical power that is received. The signal can be attenuated to 1/3, 2/3 or not attenuated. Here we show and explain the result for one of the attenuations.
 
 ![LpGBT_EyeOpeningScan](../images/OTtesting/common/LpGBT_EyeOpeningScan.png)
 
-
-#FIXME double check at minute 24 and 25 
-
-The eye opening is a capability of the LpGBT and more info can be found in the manual. A high count rate (z-axis) corresponds to the center of the eye, above the lower part of the signal (voltage) but below the high part of the signal (voltage). Outside this range of the signal there is a lower count. The absolute numbers are not easy to interpret. The relevant part is the transition region. 
-This plot was especially relevant for LpGBT v1 that had known issues.
+The eye opening is a capability of the LpGBT and more info can be found in the manual. A high count rate (z-axis) corresponds to the center of the eye, above the lower part of the signal (voltage) but below the high part of the signal (voltage) - the large yellow area. Outside this range of the signal there is a lower count. The absolute numbers are not easy to interpret. The relevant part is the transition region between the two yellow areas. 
+This plot was especially relevant for LpGBT v1 that had known issues with the transistion part moving up and down with the power.
 
 ##### OTalignLpGBTinputs  - OpticalGroup
 [26:06.000 --> 26:08.000]  so
