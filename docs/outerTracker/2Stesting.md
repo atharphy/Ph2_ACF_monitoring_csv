@@ -102,182 +102,45 @@ Every hybrid contains 8 CBC chips. There is a directory for each of them contain
 
 #### Calibrations 
 
+The first step is the configuration where we just load all the registers into the various chips. Basically we just take the information that are stored in the values configuration file and we just load them into the chips.
 
-[16:42.000 --> 16:44.000]  okay, then I'm going to start
-[16:44.000 --> 16:46.000]  moving with the various steps
-[16:46.000 --> 16:48.000]  so
-[16:48.000 --> 16:50.000]  the configuration
-[16:50.000 --> 16:52.000]  so here well
-[16:52.000 --> 16:54.000]  we just load all the register
-[16:54.000 --> 16:56.000]  into the niche register
-[16:56.000 --> 16:58.000]  into the
-[16:58.000 --> 17:00.000]  various chips
-[17:00.000 --> 17:02.000]  so basically we just take the information
-[17:02.000 --> 17:04.000]  that are stored in the values
-[17:04.000 --> 17:06.000]  configuration file
-[17:06.000 --> 17:08.000]  and we just load them into the chip
-[17:08.000 --> 17:10.000]  then
-[17:10.000 --> 17:12.000]  tune Vref
-[17:12.000 --> 17:14.000]  so the Vref is basically
-[17:14.000 --> 17:16.000]  the
-[17:16.000 --> 17:18.000]  the reference for the
-[17:18.000 --> 17:20.000]  VTRX
-[17:20.000 --> 17:22.000]  SR for the APGBT
-[17:24.000 --> 17:26.000]  ADC
-[17:26.000 --> 17:28.000]  converter so it's needed for
-[17:28.000 --> 17:30.000]  converting into
-[17:30.000 --> 17:32.000]  basically meaningful values
-[17:32.000 --> 17:34.000]  the ADC
-[17:34.000 --> 17:36.000]  that are read by the
-[17:36.000 --> 17:38.000]  APGBT
-[17:38.000 --> 17:40.000]  and these are coming from some
-[17:42.000 --> 17:44.000]  these rather than a tune
-[17:44.000 --> 17:46.000]  it's basically a loading of a value
-[17:46.000 --> 17:48.000]  so the APGBT group
-[17:48.000 --> 17:50.000]  gave us
-[17:52.000 --> 17:54.000]  gave us
-[17:54.000 --> 17:56.000]  a big file that contains all the information
-[17:56.000 --> 17:58.000]  from the whole APGBT
-[17:58.000 --> 18:00.000]  that we used
-[18:00.000 --> 18:02.000]  and
-[18:02.000 --> 18:04.000]  those information are stored
-[18:04.000 --> 18:06.000]  by the
-[18:06.000 --> 18:08.000]  are addressed by the fuse ID
-[18:08.000 --> 18:10.000]  so by that what we do
-[18:10.000 --> 18:12.000]  is that we take
-[18:12.000 --> 18:14.000]  the ID from the APGBT
-[18:14.000 --> 18:16.000]  we look into this file
-[18:16.000 --> 18:18.000]  we collect the information
-[18:18.000 --> 18:20.000]  among which Calibration ADC
-[18:20.000 --> 18:22.000]  and the Vref and then we store
-[18:22.000 --> 18:24.000]  into the
-[18:24.000 --> 18:26.000]  APGBT for the measurements
-[18:26.000 --> 18:28.000]  so here basically there are no plots
-[18:28.000 --> 18:30.000]  just the steps that allow us to have
-[18:30.000 --> 18:32.000]  meaningful ADC
-[18:32.000 --> 18:34.000]  with that
-[18:34.000 --> 18:36.000]  I'm just gonna go through all of them
-[18:36.000 --> 18:38.000]  so just stop me whenever you have
-[18:38.000 --> 18:40.000]  some questions
-[18:40.000 --> 18:42.000]  so before we
-[18:42.000 --> 18:44.000]  I see that
-[18:44.000 --> 18:46.000]  the configuration takes different
-[18:46.000 --> 18:48.000]  times between full and quick
-[18:48.000 --> 18:50.000]  test is this just
-[18:50.000 --> 18:52.000]  the accuracy or is there anything
-[18:52.000 --> 18:54.000]  in addition done
-[18:54.000 --> 18:56.000]  it's simply because the configuration
-[18:56.000 --> 18:58.000]  time takes also the time
-[18:58.000 --> 19:00.000]  that takes for
-[19:00.000 --> 19:02.000]  the APGBT to lock
-[19:02.000 --> 19:04.000]  and sometimes it simply doesn't lock
-[19:04.000 --> 19:06.000]  and there is a few seconds
-[19:06.000 --> 19:08.000]  between one time and another
-[19:08.000 --> 19:10.000]  it just
-[19:10.000 --> 19:12.000]  it just makes
-[19:16.000 --> 19:18.000]  okay
-[19:18.000 --> 19:20.000]  then the
-[19:20.000 --> 19:22.000]  VTRX light
-[19:22.000 --> 19:24.000]  so for this I have
-[19:24.000 --> 19:26.000]  plot so the idea here
-[19:26.000 --> 19:28.000]  is that we want to
-[19:30.000 --> 19:32.000]  be sure that
-[19:34.000 --> 19:36.000]  we are able to change the
-[19:36.000 --> 19:38.000]  VTRX settings
-[19:38.000 --> 19:40.000]  in order to
-[19:40.000 --> 19:42.000]  be able to increase or decrease
-[19:42.000 --> 19:44.000]  the optical power that is
-[19:44.000 --> 19:46.000]  emitted
-[19:46.000 --> 19:48.000]  and this is the plot
-[19:48.000 --> 19:50.000]  so
-[19:52.000 --> 19:54.000]  okay
-[19:54.000 --> 19:56.000]  so
-[19:56.000 --> 19:58.000]  it's a
-[19:58.000 --> 20:00.000]  2D plot on the X axis we have
-[20:00.000 --> 20:02.000]  the bias
-[20:02.000 --> 20:04.000]  on the Y axis we have the
-[20:04.000 --> 20:06.000]  modulation and these are
-[20:06.000 --> 20:08.000]  two registers that are set into
-[20:08.000 --> 20:10.000]  the chip of the VTRX that
-[20:10.000 --> 20:12.000]  controls the laser driver
-[20:12.000 --> 20:14.000]  and on the Z axis we have
-[20:14.000 --> 20:16.000]  the power
-[20:16.000 --> 20:18.000]  in micro watt that is measured
-[20:18.000 --> 20:20.000]  by the
-[20:20.000 --> 20:22.000]  the SFP
+The other steps are more elaborate and produce result plots described below.
+
+##### TuneLpGBTVref - OpticalGroup
+
+#FIXME minute 17, need to check
+
+Vref is basically the reference voltage for the LpGBT ADC converter. It's needed for converting into meaningful values the ADC that are read by the LpGBT. This step is  basically the loading of a value that the LpGBT group gave us and is stored in [the calibration file](../../settings/lpGBTFiles/lpgbt_calibration.csv). The information for a specific LpGBT can be found by the fuse ID. In this step we retrieve the value from the file and we store it in the chip. No plots are produced.
+
+##### OTVTRxLightYieldScan - OpticalGroup
+
+This test is performed to verify that we are able to change the VTRX settings to increase or decrease the optical power that is emitted.
+
+![VTRx_LightYieldScan](../images/OTtesting/common/VTRx_LightYieldScan.png)
+
+The bias and modulation shown on the x and y axes of the plot are two registers of the VTRX that control the laser driver. On the Z axis we have the power in microWatt that is measured by the the SFP connector on the FC7.
+
+#FIXME - check this
 [20:22.000 --> 20:24.000]  so basically the receiver
 [20:24.000 --> 20:26.000]  that you have on the X axis
-[20:26.000 --> 20:28.000]  what we do is that we change
-[20:28.000 --> 20:30.000]  the two parameter and we get
-[20:30.000 --> 20:32.000]  these distributions
-[20:32.000 --> 20:34.000]  so
-[20:34.000 --> 20:36.000]  so I think it's quite obvious
-[20:36.000 --> 20:38.000]  moving to the left to the right
-[20:38.000 --> 20:40.000]  that if you increase the bias
-[20:40.000 --> 20:42.000]  you increase
-[20:42.000 --> 20:44.000]  the power
-[20:44.000 --> 20:46.000]  is a little bit less obvious
-[20:46.000 --> 20:48.000]  instead of the modulation
-[20:48.000 --> 20:50.000]  when you increase it
-[20:50.000 --> 20:52.000]  you decrease
-[20:54.000 --> 20:56.000]  the power
-[20:56.000 --> 20:58.000]  the reason is that basically the bias
-[20:58.000 --> 21:00.000]  is the high level of the
-[21:00.000 --> 21:02.000]  it is making a clock
-[21:02.000 --> 21:04.000]  the bias sets the high level
-[21:04.000 --> 21:06.000]  and instead the modulation sets
-[21:06.000 --> 21:08.000]  the swing down so if you increase
-[21:08.000 --> 21:10.000]  the modulation
-[21:10.000 --> 21:12.000]  basically the swing will
-[21:12.000 --> 21:14.000]  go over and in the average
-[21:14.000 --> 21:16.000]  of the light yield that is
-[21:16.000 --> 21:18.000]  what we are measuring it decreases
-[21:18.000 --> 21:20.000]  so that's why in this
-[21:20.000 --> 21:22.000]  direction decreases
-[21:22.000 --> 21:24.000]  and in this direction increases
-[21:24.000 --> 21:26.000]  so it's a little bit less intuitive
-[21:26.000 --> 21:28.000]  but
-[21:28.000 --> 21:30.000]  the reason is simply that the modulation
-[21:30.000 --> 21:32.000]  controls the swing down
-[21:32.000 --> 21:34.000]  of the optical power
-[21:34.000 --> 21:36.000]  and that's why it's inverted
-[21:36.000 --> 21:38.000]  so from this
-[21:38.000 --> 21:40.000]  the only thing you can
-[21:40.000 --> 21:42.000]  understand about your module
-[21:42.000 --> 21:44.000]  is that if this one
-[21:44.000 --> 21:46.000]  two direction doesn't change at all
-[21:46.000 --> 21:48.000]  it means that something is going
-[21:48.000 --> 21:50.000]  with the
-[21:50.000 --> 21:52.000]  with the
-[21:52.000 --> 21:54.000]  with the X
-[21:54.000 --> 21:56.000]  driver controller
-[21:56.000 --> 21:58.000]  the other thing
-[21:58.000 --> 22:00.000]  is that
-[22:00.000 --> 22:02.000]  this is a little bit less obvious and this will be
-[22:02.000 --> 22:04.000]  ended by potato
-[22:04.000 --> 22:06.000]  the optical power that you receive
-[22:06.000 --> 22:08.000]  might be lower
-[22:08.000 --> 22:10.000]  in case you have some damage
-[22:10.000 --> 22:12.000]  on the
-[22:12.000 --> 22:14.000]  on the fibers
-[22:14.000 --> 22:16.000]  I would say very likely you will see other
-[22:16.000 --> 22:18.000]  problems so
-[22:18.000 --> 22:20.000]  if we see later problem later
-[22:20.000 --> 22:22.000]  with locking or this kind of things
-[22:22.000 --> 22:24.000]  well
-[22:24.000 --> 22:26.000]  you might look at this
-[22:26.000 --> 22:28.000]  compare with other plot and see if you have
-[22:28.000 --> 22:30.000]  a drastic decrease
-[22:30.000 --> 22:32.000]  of the light to you that is
-[22:32.000 --> 22:34.000]  seen by the
-[22:34.000 --> 22:36.000]  SFP
-[22:36.000 --> 22:38.000]  ok
-[22:38.000 --> 22:40.000]  so
-[22:40.000 --> 22:42.000]  this is for this step and of course
-[22:42.000 --> 22:44.000]  just stormy I'm going to go
-[22:44.000 --> 22:46.000]  at speaking but just
-[22:46.000 --> 22:48.000]  make sure of course this
-[22:48.000 --> 22:50.000]  ok
+
+We obtain the distribution measuring the power varying the bias and modulation.
+Moving from the left to the right, the power increases.
+For the modulation, when you increase it, you decrease the power. The reason is that basically the bias sets the high level of a clock and instead the modulation controls the swing down. (#FIXME check here minute 21)
+
+
+If the power in the x and y direction is not changing, something is going on with the driver controller. Moreover, the optical power that you receive might be lower in case you have some damage on the fibers - less obvious and this will be handled by potato. Very likely you will see other problems.
+
+<details>
+  <summary>Known issues</summary>
+
+A distribution like the one below may be due to a problematic SFP connector on the FC7 or dirt in the fibers.
+
+![VTRx_LightYieldScan_buggy](../images/OTtesting/common/VTRx_LightYieldScan_buggy.png)
+</details>
+
+
+##### OTLpGBTEyeOpeningTest
 [22:50.000 --> 22:52.000]  so LpGBT
 [22:52.000 --> 22:54.000]  so I think this is
 [22:54.000 --> 22:56.000]  pretty famous
@@ -436,7 +299,7 @@ Every hybrid contains 8 CBC chips. There is a directory for each of them contain
 [28:42.000 --> 28:44.000]  the ones
 [28:44.000 --> 28:46.000]  from the zeros
 [28:46.000 --> 28:48.000]  okay
-[28:48.000 --> 28:50.000]  so one of the problem the LPGT
+[28:48.000 --> 28:50.000]  so one of the problem the LpGBT
 [28:50.000 --> 28:52.000]  is that
 [28:52.000 --> 28:54.000]  sometimes
 [28:55.000 --> 28:57.000]  you get
@@ -1482,7 +1345,7 @@ Every hybrid contains 8 CBC chips. There is a directory for each of them contain
 [01:06:15.000 --> 01:06:17.000]  ok
 [01:06:17.000 --> 01:06:19.000]  at this point
 [01:06:19.000 --> 01:06:21.000]  we have everything aligned
-[01:06:21.000 --> 01:06:23.000]  so the CRC is aligned to the LPGT
+[01:06:21.000 --> 01:06:23.000]  so the CRC is aligned to the LpGBT
 [01:06:23.000 --> 01:06:25.000]  the CRC data
 [01:06:25.000 --> 01:06:27.000]  are properly decoded by the FPGA
 [01:06:27.000 --> 01:06:29.000]  and the CBC
