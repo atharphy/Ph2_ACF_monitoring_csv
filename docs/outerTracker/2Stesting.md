@@ -140,100 +140,19 @@ A distribution like the one below may be due to a problematic SFP connector on t
 </details>
 
 
-##### OTLpGBTEyeOpeningTest
-[22:50.000 --> 22:52.000]  so LpGBT
-[22:52.000 --> 22:54.000]  so I think this is
-[22:54.000 --> 22:56.000]  pretty famous
-[22:56.000 --> 22:58.000]  due to the
-[22:58.000 --> 23:00.000]  recent
-[23:00.000 --> 23:02.000]  issues with LpGBT
-[23:02.000 --> 23:04.000]  so
-[23:04.000 --> 23:06.000]  I can't forget
-[23:08.000 --> 23:10.000]  ok so
-[23:10.000 --> 23:12.000]  we here we have
-[23:12.000 --> 23:14.000]  three plots in reality we have
-[23:14.000 --> 23:16.000]  because we can set
-[23:16.000 --> 23:18.000]  the optical
-[23:18.000 --> 23:20.000]  attenuation
-[23:20.000 --> 23:22.000]  sorry no the electrical
-[23:22.000 --> 23:24.000]  attenuation so basically
-[23:24.000 --> 23:26.000]  the VTRX assigns you
-[23:28.000 --> 23:30.000]  an electrical signal
-[23:30.000 --> 23:32.000]  you can imagine it proportional to the
-[23:32.000 --> 23:34.000]  optical power that is received
-[23:34.000 --> 23:36.000]  and then
-[23:36.000 --> 23:38.000]  the LpGBT can
-[23:38.000 --> 23:40.000]  attenuate the signal
-[23:40.000 --> 23:42.000]  by three different value
-[23:42.000 --> 23:44.000]  sorry it cannot attenuate it to one
-[23:44.000 --> 23:46.000]  third
-[23:46.000 --> 23:48.000]  two third or does not attenuate it at all
-[23:48.000 --> 23:50.000]  so for the time being
-[23:50.000 --> 23:52.000]  we are doing the measurement
-[23:52.000 --> 23:54.000]  for all the three values
-[23:54.000 --> 23:56.000]  of that attenuation
-[23:56.000 --> 23:58.000]  and
-[23:58.000 --> 24:00.000]  so we can just focus on
-[24:00.000 --> 24:02.000]  one of them since the other three
-[24:02.000 --> 24:04.000]  you see from the title that's
-[24:04.000 --> 24:06.000]  the only difference
-[24:06.000 --> 24:08.000]  so what we measure here
-[24:08.000 --> 24:10.000]  is a high
-[24:10.000 --> 24:12.000]  opening so
-[24:12.000 --> 24:14.000]  this is a capability
-[24:14.000 --> 24:16.000]  of the
-[24:16.000 --> 24:18.000]  LpGBT basically you can see
-[24:18.000 --> 24:20.000]  a little bit more details into the manual
-[24:20.000 --> 24:22.000]  but basically if you have a
-[24:22.000 --> 24:24.000]  high count rate it means that
-[24:24.000 --> 24:26.000]  you are in the center of the eye so
-[24:26.000 --> 24:28.000]  above
-[24:28.000 --> 24:30.000]  the lower part of the signal
-[24:30.000 --> 24:32.000]  but below the high part of the signal
-[24:32.000 --> 24:34.000]  and if you are
-[24:34.000 --> 24:36.000]  outside of that area you get
-[24:36.000 --> 24:38.000]  a low count and
-[24:38.000 --> 24:40.000]  is
-[24:40.000 --> 24:42.000]  not
-[24:42.000 --> 24:44.000]  super super obvious
-[24:44.000 --> 24:46.000]  how to interpret these numbers
-[24:46.000 --> 24:48.000]  because they are partially synchronized
-[24:48.000 --> 24:50.000]  so
-[24:50.000 --> 24:52.000]  you don't really get
-[24:52.000 --> 24:54.000]  these numbers doesn't really
-[24:54.000 --> 24:56.000]  tell you if
-[24:56.000 --> 24:58.000]  something is good or wrong but what is
-[24:58.000 --> 25:00.000]  important is this transition
-[25:00.000 --> 25:02.000]  so
-[25:02.000 --> 25:04.000]  the known problem of LpGBT is that
-[25:04.000 --> 25:06.000]  the center of the eye so basically
-[25:06.000 --> 25:08.000]  the part where the two shapes
-[25:08.000 --> 25:10.000]  are coming
-[25:10.000 --> 25:12.000]  closest
-[25:12.000 --> 25:14.000]  moving I think all the way up
-[25:14.000 --> 25:16.000]  or also all the way down
-[25:16.000 --> 25:18.000]  and that is
-[25:18.000 --> 25:20.000]  these LpGBT
-[25:20.000 --> 25:22.000]  one high opening
-[25:22.000 --> 25:24.000]  issues
-[25:24.000 --> 25:26.000]  and the thing that I noticed so far
-[25:26.000 --> 25:28.000]  I don't really have an expert
-[25:28.000 --> 25:30.000]  for that but changing the optical
-[25:30.000 --> 25:32.000]  information this I
-[25:32.000 --> 25:34.000]  tend to go a little bit more centered
-[25:34.000 --> 25:36.000]  I think the main
-[25:36.000 --> 25:38.000]  problem of the eye open is that
-[25:38.000 --> 25:40.000]  at the power up
-[25:40.000 --> 25:42.000]  the attenuation that is set is to
-[25:44.000 --> 25:46.000]  one third of the original signal
-[25:46.000 --> 25:48.000]  and that's
-[25:48.000 --> 25:50.000]  why it's a bit of a problem
-[25:50.000 --> 25:52.000]  okay
-[25:54.000 --> 25:56.000]  okay I'm gonna move forward
-[25:56.000 --> 25:58.000]  and
-[25:58.000 --> 26:00.000]  go to the
-[26:02.000 --> 26:04.000]  here the
-[26:04.000 --> 26:06.000]  OT align LpGBT inputs
+##### OTLpGBTEyeOpeningTest - OpticalGroup
+
+The calibration is performed for three different values of the electrical attenuation that the LpGBT applies to the VTRx signal. The signal can be attenuated to 1/3, 2/3 or not attenuated. Here we show and explain the result for one of the attenuations.
+
+![LpGBT_EyeOpeningScan](../images/OTtesting/common/LpGBT_EyeOpeningScan.png)
+
+
+#FIXME double check at minute 24 and 25 
+
+The eye opening is a capability of the LpGBT and more info can be found in the manual. A high count rate (z-axis) corresponds to the center of the eye, above the lower part of the signal (voltage) but below the high part of the signal (voltage). Outside this range of the signal there is a lower count. The absolute numbers are not easy to interpret. The relevant part is the transition region. 
+This plot was especially relevant for LpGBT v1 that had known issues.
+
+##### OTalignLpGBTinputs  - OpticalGroup
 [26:06.000 --> 26:08.000]  so
 [26:10.000 --> 26:12.000]  these
 [26:14.000 --> 26:16.000]  blocks
