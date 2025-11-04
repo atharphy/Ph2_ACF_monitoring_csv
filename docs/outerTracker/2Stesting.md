@@ -142,48 +142,7 @@ The calibration is performed for three different values of the electrical attenu
 The eye opening is a capability of the LpGBT and more info can be found in the manual. A high count rate (z-axis) corresponds to the center of the eye, above the lower part of the signal (voltage) but below the high part of the signal (voltage) - the large yellow area. Outside this range of the signal there is a lower count. The absolute numbers are not easy to interpret. The relevant part is the transition region between the two yellow areas. 
 This plot was especially relevant for LpGBT v1 that had known issues with the transistion part moving up and down with the power.
 
-##### OTalignLpGBTinputs  - OpticalGroup
-[26:06.000 --> 26:08.000]  so
-[26:10.000 --> 26:12.000]  these
-[26:14.000 --> 26:16.000]  blocks
-[26:16.000 --> 26:18.000]  yes sure
-[26:18.000 --> 26:20.000]  I am from IPSC Strasbourg I have a very small
-[26:20.000 --> 26:22.000]  question and basic question from the LpGBT
-[26:22.000 --> 26:24.000]  eye opening test so
-[26:24.000 --> 26:26.000]  just for my understanding so
-[26:26.000 --> 26:28.000]  how do you understand that if there is
-[26:28.000 --> 26:30.000]  any problem so if I understood
-[26:30.000 --> 26:32.000]  correctly that this
-[26:32.000 --> 26:34.000]  connection between these two high count
-[26:34.000 --> 26:36.000]  region so this won't
-[26:36.000 --> 26:38.000]  be in a single line that's what you
-[26:38.000 --> 26:40.000]  meant by this
-[26:40.000 --> 26:42.000]  actually
-[26:42.000 --> 26:44.000]  so
-[26:44.000 --> 26:46.000]  let me try
-[26:46.000 --> 26:48.000]  to
-[26:50.000 --> 26:52.000]  think there was a blackboard feature
-[26:56.000 --> 26:58.000]  so much that I never use
-[26:58.000 --> 27:00.000]  or it's unparalleled
-[27:00.000 --> 27:02.000]  not the ringing
-[27:04.000 --> 27:06.000]  mm-hmm
-[27:09.000 --> 27:11.000]  was there a way to
-[27:11.000 --> 27:13.000]  the blackboard feature probably
-[27:13.000 --> 27:15.000]  I don't know if it's visible
-[27:15.000 --> 27:17.000]  if you share your screen or not
-[27:17.000 --> 27:19.000]  there is a matter
-[27:19.000 --> 27:21.000]  it's maybe at the bottom
-[27:23.000 --> 27:25.000]  don't tell me anything at the bottom
-[27:25.000 --> 27:27.000]  just have you
-[27:27.000 --> 27:29.000]  okay
-[27:29.000 --> 27:31.000]  it doesn't matter let me
-[27:31.000 --> 27:33.000]  try to
-[27:33.000 --> 27:35.000]  use the annotate feature
-[27:35.000 --> 27:37.000]  and we go
-[27:41.000 --> 27:43.000]  it doesn't let me scroll anymore
-[27:48.000 --> 27:50.000]  here since there is no
-[27:50.000 --> 27:52.000]  mm-hmm
-[27:52.000 --> 27:54.000]  okay so
+#FIXME - check this part for clarity on the above
 [27:54.000 --> 27:56.000]  imagine you have
 [27:58.000 --> 28:00.000]  a signal that it
 [28:00.000 --> 28:02.000]  looks like
@@ -257,7 +216,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [30:35.000 --> 30:37.000]  what they did is that they kind of correlate
 [30:37.000 --> 30:39.000]  so
 [30:39.000 --> 30:41.000]  the packet of the
-[30:41.000 --> 30:43.000]  LPGBT comes with an error correction
+[30:41.000 --> 30:43.000]  LpGBT comes with an error correction
 [30:43.000 --> 30:45.000]  in our case
 [30:45.000 --> 30:47.000]  we use the effect 5 which means that
 [30:47.000 --> 30:49.000]  up to 5 errors we can
@@ -266,7 +225,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [30:53.000 --> 30:55.000]  so I think what Atlas found out
 [30:55.000 --> 30:57.000]  was that
 [30:57.000 --> 30:59.000]  you get
-[30:59.000 --> 31:01.000]  for some LPGBT
+[30:59.000 --> 31:01.000]  for some LpGBT
 [31:01.000 --> 31:03.000]  you are getting quite large number of
 [31:03.000 --> 31:05.000]  forward error correction
 [31:05.000 --> 31:07.000]  meaning that you can still recover them
@@ -291,171 +250,40 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [31:43.000 --> 31:45.000]  and this is unrecoverable anymore
 [31:47.000 --> 31:49.000]  thanks
 [31:55.000 --> 31:57.000]  and
-[31:57.000 --> 31:59.000]  let's go ahead
-[31:59.000 --> 32:01.000]  so the next step is the LPGBT
-[32:01.000 --> 32:03.000]  align the LPGBT input
-[32:05.000 --> 32:07.000]  so
-[32:07.000 --> 32:09.000]  let me
-[32:09.000 --> 32:11.000]  add some other
-[32:13.000 --> 32:15.000]  so this is the module
-[32:15.000 --> 32:17.000]  just for
-[32:17.000 --> 32:19.000]  very simplified, so we have ATCBC
-[32:19.000 --> 32:21.000]  they communicate with one CAC
-[32:21.000 --> 32:23.000]  and then
-[32:23.000 --> 32:25.000]  the two CAC and the two high
-[32:25.000 --> 32:27.000]  they communicate with the LPGBT
-[32:27.000 --> 32:29.000]  and then this is sent to the FPGA
-[32:29.000 --> 32:31.000]  then for reason
-[32:31.000 --> 32:33.000]  that is due to the
-[32:33.000 --> 32:35.000]  the deteriorate that can be handled
-[32:35.000 --> 32:37.000]  in the FPGA
-[32:37.000 --> 32:39.000]  this signal is then split into
-[32:39.000 --> 32:41.000]  separate the component back
-[32:41.000 --> 32:43.000]  so these lines correspond to
-[32:43.000 --> 32:45.000]  these lines
-[32:45.000 --> 32:47.000]  now what we need to do
-[32:47.000 --> 32:49.000]  is that we want to make sure
-[32:49.000 --> 32:51.000]  that the CAC understands
-[32:51.000 --> 32:53.000]  what the LPGBT
-[32:53.000 --> 32:55.000]  understand what the CAC
-[32:55.000 --> 32:57.000]  does
-[32:57.000 --> 32:59.000]  so there was sense
-[32:59.000 --> 33:01.000]  so basically the LPGBT
-[33:01.000 --> 33:03.000]  samples the data
-[33:03.000 --> 33:05.000]  that are being received and therefore
-[33:05.000 --> 33:07.000]  you have to find the correct
-[33:07.000 --> 33:09.000]  sampling phase
-[33:09.000 --> 33:11.000]  if the phase is not correct
-[33:11.000 --> 33:13.000]  sometimes a one
-[33:13.000 --> 33:15.000]  can be interpreted as a zero
-[33:15.000 --> 33:17.000]  vice versa
-[33:17.000 --> 33:19.000]  and therefore the communication
-[33:19.000 --> 33:21.000]  will not work
-[33:21.000 --> 33:23.000]  so this is an automatic procedure
-[33:23.000 --> 33:25.000]  done by the LPGBT
-[33:25.000 --> 33:27.000]  that has this automatic phase alignment
-[33:27.000 --> 33:29.000]  so we set the CAC
-[33:29.000 --> 33:31.000]  in order to send
-[33:31.000 --> 33:33.000]  a pattern
-[33:33.000 --> 33:35.000]  and then we ask the LPGBT
-[33:35.000 --> 33:37.000]  to align from that
-[33:37.000 --> 33:39.000]  basically
-[33:39.000 --> 33:41.000]  and in a short of automatic way
-[33:41.000 --> 33:43.000]  we'll find the best phase
-[33:43.000 --> 33:45.000]  that
-[33:45.000 --> 33:47.000]  that allow to propose a sample the incoming data
-[33:47.000 --> 33:49.000]  from the CAC
-[33:49.000 --> 33:51.000]  so
-[33:51.000 --> 33:53.000]  there are three plots
-[33:53.000 --> 33:55.000]  associated to that
-[33:55.000 --> 33:57.000]  I wrote this CAC with LPGBT
-[33:57.000 --> 33:59.000]  so let's start
-[33:59.000 --> 34:01.000]  from these
-[34:01.000 --> 34:03.000]  so since we want to understand
-[34:03.000 --> 34:05.000]  it's not really needed but we want to
-[34:05.000 --> 34:07.000]  understand how well this works because
-[34:07.000 --> 34:09.000]  if you install into the detector
-[34:09.000 --> 34:11.000]  then you start having troubles
-[34:11.000 --> 34:13.000]  you don't want to
-[34:13.000 --> 34:15.000]  you don't want to be scored that your model
-[34:15.000 --> 34:17.000]  always have troubles
-[34:17.000 --> 34:19.000]  so what we do is that we
-[34:19.000 --> 34:21.000]  try
-[34:21.000 --> 34:23.000]  100 times
-[34:23.000 --> 34:25.000]  so these numbers that I'm going to say
-[34:25.000 --> 34:27.000]  just stored into the XML
-[34:27.000 --> 34:29.000]  we can change in the future
-[34:29.000 --> 34:31.000]  but these are the numbers that we use
-[34:31.000 --> 34:33.000]  for production
-[34:33.000 --> 34:35.000]  for production at the moment
-[34:35.000 --> 34:37.000]  and
-[34:37.000 --> 34:39.000]  how many times the alignment
-[34:39.000 --> 34:41.000]  succeeded
-[34:41.000 --> 34:43.000]  and here if you have any troubles
-[34:43.000 --> 34:45.000]  you should see that
-[34:45.000 --> 34:47.000]  less than 100% efficiency
-[34:47.000 --> 34:49.000]  occurs so
-[34:49.000 --> 34:51.000]  this is really a test on how well
-[34:51.000 --> 34:53.000]  the automatic procedure on the LPGBT works
-[34:55.000 --> 34:57.000]  and then we want also to extract
-[34:57.000 --> 34:59.000]  the best phase that allow the LPGBT
-[34:59.000 --> 35:01.000]  to properly sample the data
-[35:01.000 --> 35:03.000]  and
-[35:03.000 --> 35:05.000]  this is done based on these plots
-[35:05.000 --> 35:07.000]  so
-[35:07.000 --> 35:09.000]  on the X axis
-[35:09.000 --> 35:11.000]  you have
-[35:11.000 --> 35:13.000]  so let me
-[35:13.000 --> 35:15.000]  start again
-[35:23.000 --> 35:25.000]  so on the X axis
-[35:25.000 --> 35:27.000]  you have the values lines
-[35:27.000 --> 35:29.000]  so
-[35:29.000 --> 35:31.000]  both FEHS
-[35:31.000 --> 35:33.000]  are on the same line
-[35:33.000 --> 35:35.000]  and then you have the lines for the level 1
-[35:35.000 --> 35:37.000]  the lines for the stubs
-[35:37.000 --> 35:39.000]  and on the Y axis
-[35:39.000 --> 35:41.000]  you have
-[35:41.000 --> 35:43.000]  the phase so
-[35:43.000 --> 35:45.000]  we are scanning from a phase that goes from 0 to
-[35:45.000 --> 35:47.000]  14
-[35:47.000 --> 35:49.000]  and 15 is
-[35:49.000 --> 35:51.000]  a raw code that is used by the LPGBT
-[35:51.000 --> 35:53.000]  and
-[35:53.000 --> 35:55.000]  since we are repeating the measurement 100
-[35:55.000 --> 35:57.000]  time
-[35:57.000 --> 35:59.000]  we store basically the frequency for which
-[35:59.000 --> 36:01.000]  one phase is chosen
-[36:01.000 --> 36:03.000]  so at the end of the alignment
-[36:03.000 --> 36:05.000]  you ask the LPGBT if it align
-[36:05.000 --> 36:07.000]  and which phase it chose
-[36:07.000 --> 36:09.000]  and then we just plot it over here
-[36:09.000 --> 36:11.000]  for the 100 times
-[36:11.000 --> 36:13.000]  so here very likely you should see something
-[36:13.000 --> 36:15.000]  like these
-[36:15.000 --> 36:17.000]  with some cases
-[36:17.000 --> 36:19.000]  in which you see that sometimes
-[36:19.000 --> 36:21.000]  two phases are reasonable
-[36:21.000 --> 36:23.000]  but these are the same phases
-[36:23.000 --> 36:25.000]  so
-[36:25.000 --> 36:27.000]  nothing really concerning
-[36:27.000 --> 36:29.000]  so if you see
-[36:29.000 --> 36:31.000]  basically a vertical line
-[36:31.000 --> 36:33.000]  so in this plot it means that LPGBT
-[36:33.000 --> 36:35.000]  was not able to choose any particular phase
-[36:35.000 --> 36:37.000]  and so it means that something is going on
-[36:37.000 --> 36:39.000]  with that particular line
-[36:39.000 --> 36:41.000]  so
-[36:41.000 --> 36:43.000]  since this line goes to the
-[36:43.000 --> 36:45.000]  connector between
-[36:45.000 --> 36:47.000]  the
-[36:47.000 --> 36:49.000]  service hybrid
-[36:49.000 --> 36:51.000]  and the
-[36:51.000 --> 36:53.000]  front end hybrid
-[36:53.000 --> 36:55.000]  I will say that that is an indication
-[36:55.000 --> 36:57.000]  that something is going wrong with that connector
-[36:59.000 --> 37:01.000]  the modules
-[37:01.000 --> 37:03.000]  the hybrid were already tested
-[37:03.000 --> 37:05.000]  so it is quite unlikely that
-[37:05.000 --> 37:07.000]  LPGBT or the CAC are the problem
-[37:07.000 --> 37:09.000]  or their connection with the hybrid
-[37:09.000 --> 37:11.000]  is the problem
-[37:11.000 --> 37:13.000]  but the connector
-[37:13.000 --> 37:15.000]  is the first time you are connecting your
-[37:15.000 --> 37:17.000]  FEH with your series
-[37:17.000 --> 37:19.000]  so that might be something that might occur
-[37:21.000 --> 37:23.000]  and then out of these
-[37:23.000 --> 37:25.000]  the one that was selected
-[37:25.000 --> 37:27.000]  the monster to be the best phase
-[37:27.000 --> 37:29.000]  to be used by the LPGBT
-[37:29.000 --> 37:31.000]  and this is stored
-[37:31.000 --> 37:33.000]  into this plot
-[37:33.000 --> 37:35.000]  so basically these numbers
-[37:35.000 --> 37:37.000]  correspond just to the final
-[37:37.000 --> 37:39.000]  best phase that was the series to be used
-[37:39.000 --> 37:41.000]  for the
-[37:41.000 --> 37:43.000]  for the module
-[37:47.000 --> 37:49.000]  keep moving forward
+
+
+##### OTalignLpGBTinputs - OpticalGroup
+
+To better understand the alignment steps, please refer to the [2S module communication scheme on slide 5](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf) where we see the 8 CBCs per side that communicate with one CIC. The CIC (one per side) communicate with the LpGBT and the LpGBT with the FPGA.
+
+#FIXME - minutes 32 - 33 
+For the data rate that can be handled in the FPGA, the signal coming from the module is then split in separate components for the two FEH and in L1 (red line) and stub data (blue lines).
+
+This test is used to make sure that the LpGBT understands what the CIC sends.
+Basically the LpGBT samples the data received and this test finds the correct sampling phase. If the phase is not correct, sometimes a one can be interpreted as a zero, or vice versa, and therefore the communication will not work. 
+
+This is an automatic procedure done by the LpGBT that has this automatic phase alignment. The test sets the CIC in a state that sends a specific pattern and ask the LpGBT to align, ie to find the best phase for sampling the incoming data from the CIC.
+
+There are three plots associated with this test, identified with `CICtoLpGBT` string. 
+
+
+![CICtoLpGBT_PhaseAlignmentEfficiency](../images/OTtesting/common/CICtoLpGBT_PhaseAlignmentEfficiency.png)
+
+The *Phase Alignment Efficiency* is obtained repeting the automic phase alignment 100 times (default value that can be configured in the XML) and counting how many times the alignment succeeded. If there are no troubles you should see 100% efficiency. This is telling us how well the automatic procedure on the LpGBT works.
+
+Then we want also to extract the best phase that allow the LpGBT to properly sample the data. This is shown in the next two plots.
+
+![CICtoLpGBT_FoundPhaseDistribution](../images/OTtesting/common/CICtoLpGBT_FoundPhaseDistribution.png)
+
+On the X axis the various lines between CIC and LpGBT are shown: 1 L1, 5 stub lines for the right (R) and left (L) FEHs. On the Y axis the phase. The LpGBT scans phases between 0 to 14, covering two clock cycles. The 15 is an error code that is used by the LpGBT. When repeating the measurement 100 times, we store basically the frequency for which one phase is chosen and this is shown on the Z-axis.
+
+Usually you see bins with roughly 1 (yellow) on one phase and in some cases two phases are picked with a similar frequency. 
+If a vertical line of bins with some frequency  is seen, it means that LpGBT was not able to choose any particular phase and that something is going on  with that particular line. The line goes to the connector between the service hybrid and the front end hybrid so something may be wrong with that connector, since the hybrids were already tested and it would be quite unlikely that LpGBT or the CIC are the problem or their connection with the hybrid is the problem.
+
+The best phase (the one with the highest frequency) is chosen from the previous plot, used by the LpGBT and shown in the plot below, one for each line.
+![CICtoLpGBT_BestPhase](../images/OTtesting/common/CICtoLpGBT_BestPhase.png)
+
+##### OTalignBoardDataWord  - OpticalGroup
 [37:53.000 --> 37:55.000]  I must see
 [37:55.000 --> 37:57.000]  so there is this artistic picture
 [37:57.000 --> 37:59.000]  if someone you want to do something
@@ -472,20 +300,20 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [38:25.000 --> 38:27.000]  going back
 [38:27.000 --> 38:29.000]  to these
 [38:29.000 --> 38:31.000]  so after we have done
-[38:31.000 --> 38:33.000]  the alignment of the LPGBT
+[38:31.000 --> 38:33.000]  the alignment of the LpGBT
 [38:33.000 --> 38:35.000]  now we can align
 [38:37.000 --> 38:39.000]  the data world
 [38:39.000 --> 38:41.000]  into the
 [38:41.000 --> 38:43.000]  FC7
 [38:43.000 --> 38:45.000]  so if I go back here
 [38:45.000 --> 38:47.000]  so basically we know now
-[38:47.000 --> 38:49.000]  that between the CAC and LPGBT
+[38:47.000 --> 38:49.000]  that between the CIC and LpGBT
 [38:49.000 --> 38:51.000]  there is a good communication
 [38:51.000 --> 38:53.000]  so now what we do
 [38:53.000 --> 38:55.000]  since these lines are the same
 [38:55.000 --> 38:57.000]  that are used into the
 [38:57.000 --> 38:59.000]  FPGA
-[38:59.000 --> 39:01.000]  we set the CAC such that
+[38:59.000 --> 39:01.000]  we set the CIC such that
 [39:01.000 --> 39:03.000]  it keeps sending data
 [39:03.000 --> 39:05.000]  through these lines
 [39:05.000 --> 39:07.000]  and then we want to
@@ -494,7 +322,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [39:11.000 --> 39:13.000]  so what is
 [39:13.000 --> 39:15.000]  the
 [39:15.000 --> 39:17.000]  reason why we need to do that
-[39:17.000 --> 39:19.000]  the CAC sends a packet
+[39:17.000 --> 39:19.000]  the CIC sends a packet
 [39:19.000 --> 39:21.000]  of
 [39:21.000 --> 39:23.000]  8 bits basically
 [39:23.000 --> 39:25.000]  and then you want to
@@ -513,7 +341,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [39:49.000 --> 39:51.000]  not just the first of 2 bits
 [39:51.000 --> 39:53.000]  but the idea is the same
 [39:55.000 --> 39:57.000]  so basically
-[39:57.000 --> 39:59.000]  after setting the CAC to send a pattern
+[39:57.000 --> 39:59.000]  after setting the CIC to send a pattern
 [40:01.000 --> 40:03.000]  then we ask the
 [40:03.000 --> 40:05.000]  FPGA to align telling the
 [40:05.000 --> 40:07.000]  FPGA which pattern is expecting
@@ -588,7 +416,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [42:45.000 --> 42:47.000]  very likely means that you never manage to align
 [42:49.000 --> 42:51.000]  and again
 [42:51.000 --> 42:53.000]  since this goes to
-[42:53.000 --> 42:55.000]  the connector between the CAC and the FPGVT
+[42:53.000 --> 42:55.000]  the connector between the CIC and the FPGVT
 [42:55.000 --> 42:57.000]  I will check that connector
 [42:57.000 --> 42:59.000]  if something
 [42:59.000 --> 43:01.000]  gets wrong
@@ -598,8 +426,8 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [43:11.000 --> 43:13.000]  I go back here
 [43:13.000 --> 43:15.000]  now
 [43:15.000 --> 43:17.000]  we align both
-[43:17.000 --> 43:19.000]  the CAC to the FPGVT
-[43:19.000 --> 43:21.000]  and basically the CAC to the board
+[43:17.000 --> 43:19.000]  the CIC to the FPGVT
+[43:19.000 --> 43:21.000]  and basically the CIC to the board
 [43:21.000 --> 43:23.000]  now we can verify
 [43:23.000 --> 43:25.000]  that the alignment
 [43:25.000 --> 43:27.000]  properly succeeded
@@ -612,12 +440,12 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [43:39.000 --> 43:41.000]  we do is that
 [43:41.000 --> 43:43.000]  as for the alignment
 [43:43.000 --> 43:45.000]  the word alignment
-[43:45.000 --> 43:47.000]  we send the CAC
+[43:45.000 --> 43:47.000]  we send the CIC
 [43:47.000 --> 43:49.000]  in the same configuration to send pattern
 [43:49.000 --> 43:51.000]  to this line
 [43:51.000 --> 43:53.000]  and then we start
 [43:53.000 --> 43:55.000]  checking
-[43:55.000 --> 43:57.000]  if the pattern that we send from the CAC
+[43:55.000 --> 43:57.000]  if the pattern that we send from the CIC
 [43:57.000 --> 43:59.000]  actually matches the pattern
 [43:59.000 --> 44:01.000]  that we receive in the FPGVT
 [44:01.000 --> 44:03.000]  so
@@ -915,12 +743,12 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [54:31.000 --> 54:33.000]  we can finally start
 [54:33.000 --> 54:35.000]  aligning
 [54:35.000 --> 54:37.000]  the
-[54:37.000 --> 54:39.000]  cbc to the cac
+[54:37.000 --> 54:39.000]  cbc to the CIC
 [54:39.000 --> 54:41.000]  so
 [54:41.000 --> 54:43.000]  in this part
 [54:43.000 --> 54:45.000]  it's kind of what we did already
 [54:45.000 --> 54:47.000]  between the
-[54:47.000 --> 54:49.000]  cac and the pgbt
+[54:47.000 --> 54:49.000]  CIC and the pgbt
 [54:49.000 --> 54:51.000]  so we set the cbc to send
 [54:51.000 --> 54:53.000]  a pattern
 [54:53.000 --> 54:55.000]  unfortunately it's a bit more complicated
@@ -933,7 +761,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [55:07.000 --> 55:09.000]  strips that are being injected
 [55:09.000 --> 55:11.000]  such that we get
 [55:11.000 --> 55:13.000]  a pattern on these lines
-[55:13.000 --> 55:15.000]  and then we ask the cac to align
+[55:13.000 --> 55:15.000]  and then we ask the CIC to align
 [55:15.000 --> 55:17.000]  on that pattern
 [55:17.000 --> 55:19.000]  and basically the alignment
 [55:19.000 --> 55:21.000]  of
@@ -941,7 +769,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [55:23.000 --> 55:25.000]  is a simplified version of
 [55:25.000 --> 55:27.000]  what the pgbt does
 [55:27.000 --> 55:29.000]  they basically copy the same block
-[55:29.000 --> 55:31.000]  into the cac so the idea is the same
+[55:29.000 --> 55:31.000]  into the CIC so the idea is the same
 [55:31.000 --> 55:33.000]  send a pattern and the cbc
 [55:33.000 --> 55:35.000]  try to find the best phase
 [55:35.000 --> 55:37.000]  to decode the pattern
@@ -960,12 +788,12 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [56:03.000 --> 56:05.000]  so
 [56:07.000 --> 56:09.000]  as for
 [56:11.000 --> 56:13.000]  the pgbt
-[56:13.000 --> 56:15.000]  we ask the cac
+[56:13.000 --> 56:15.000]  we ask the CIC
 [56:15.000 --> 56:17.000]  to align a hundred times
 [56:17.000 --> 56:19.000]  again we want to
 [56:19.000 --> 56:21.000]  make sure that they are not
 [56:21.000 --> 56:23.000]  instability into the alignment procedures
-[56:23.000 --> 56:25.000]  of the cac
+[56:23.000 --> 56:25.000]  of the CIC
 [56:25.000 --> 56:27.000]  and so that it works every time
 [56:27.000 --> 56:29.000]  so at the end of every
 [56:29.000 --> 56:31.000]  let me go over here
@@ -974,7 +802,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [56:37.000 --> 56:39.000]  so
 [56:43.000 --> 56:45.000]  we ask
 [56:45.000 --> 56:47.000]  the
-[56:47.000 --> 56:49.000]  cac to align 100 times
+[56:47.000 --> 56:49.000]  CIC to align 100 times
 [56:49.000 --> 56:51.000]  and at the end of each alignment
 [56:51.000 --> 56:53.000]  you can ask if the
 [56:53.000 --> 56:55.000]  alignment worked or not
@@ -2646,7 +2474,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [01:55:47.000 --> 01:55:49.000]  we don't choose
 [01:55:49.000 --> 01:55:51.000]  only the phase
 [01:55:51.000 --> 01:55:53.000]  that is identified by
-[01:55:53.000 --> 01:55:55.000]  either the CAC
+[01:55:53.000 --> 01:55:55.000]  either the CIC
 [01:55:55.000 --> 01:55:57.000]  or the LpGBT to be the best one
 [01:55:57.000 --> 01:55:59.000]  we change them manually
 [01:55:59.000 --> 01:56:01.000]  because we want to see how wide
@@ -2665,7 +2493,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [01:56:25.000 --> 01:56:27.000]  so
 [01:56:27.000 --> 01:56:29.000]  I'm going to start
 [01:56:29.000 --> 01:56:31.000]  from the
-[01:56:31.000 --> 01:56:33.000]  CAC to LpGBT validation
+[01:56:31.000 --> 01:56:33.000]  CIC to LpGBT validation
 [01:56:33.000 --> 01:56:35.000]  so we are basically
 [01:56:35.000 --> 01:56:37.000]  looking at this phase
 [01:56:37.000 --> 01:56:39.000]  these lines over here
@@ -2674,7 +2502,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [01:56:43.000 --> 01:56:45.000]  and we see if
 [01:56:45.000 --> 01:56:47.000]  the signal
 [01:56:47.000 --> 01:56:49.000]  the
-[01:56:49.000 --> 01:56:51.000]  pattern that are sent by the CAC
+[01:56:49.000 --> 01:56:51.000]  pattern that are sent by the CIC
 [01:56:51.000 --> 01:56:53.000]  are properly
 [01:56:53.000 --> 01:56:55.000]  reconstructed into the SPGA
 [01:56:57.000 --> 01:56:59.000]  for each of these phase
@@ -2683,7 +2511,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [01:57:03.000 --> 01:57:05.000]  at the high B level
 [01:57:05.000 --> 01:57:07.000]  and
 [01:57:07.000 --> 01:57:09.000]  all the plots are
-[01:57:09.000 --> 01:57:11.000]  CAC to LpGBT
+[01:57:09.000 --> 01:57:11.000]  CIC to LpGBT
 [01:57:11.000 --> 01:57:13.000]  pattern matching
 [01:57:13.000 --> 01:57:15.000]  and for each one of these
 [01:57:15.000 --> 01:57:17.000]  there is the error rate
@@ -2706,8 +2534,8 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [01:57:49.000 --> 01:57:51.000]  strength
 [01:57:51.000 --> 01:57:53.000]  of the current used
 [01:57:53.000 --> 01:57:55.000]  to drive the lines
-[01:57:55.000 --> 01:57:57.000]  by the CAC
-[01:57:57.000 --> 01:57:59.000]  so the CAC is sending data
+[01:57:55.000 --> 01:57:57.000]  by the CIC
+[01:57:57.000 --> 01:57:59.000]  so the CIC is sending data
 [01:57:59.000 --> 01:58:01.000]  to these and you can set
 [01:58:01.000 --> 01:58:03.000]  how much current is used
 [01:58:03.000 --> 01:58:05.000]  to drive the lines
@@ -2733,7 +2561,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [01:58:43.000 --> 01:58:45.000]  and these are
 [01:58:45.000 --> 01:58:47.000]  see that we do both of them
 [01:58:47.000 --> 01:58:49.000]  and finally
-[01:58:49.000 --> 01:58:51.000]  the CAC clock strength
+[01:58:49.000 --> 01:58:51.000]  the CIC clock strength
 [01:58:51.000 --> 01:58:53.000]  as for these lines
 [01:58:53.000 --> 01:58:55.000]  the LpGBT sends the clock
 [01:58:55.000 --> 01:58:57.000]  and you can change the current
@@ -3091,13 +2919,13 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [02:11:41.000 --> 02:11:43.000]  in the middle of the widest
 [02:11:43.000 --> 02:11:45.000]  area and we know from that point
 [02:11:45.000 --> 02:11:47.000]  onward is that very likely
-[02:11:49.000 --> 02:11:51.000]  the data that from the CAC
+[02:11:49.000 --> 02:11:51.000]  the data that from the CIC
 [02:11:51.000 --> 02:11:53.000]  sorry from the CBC
-[02:11:53.000 --> 02:11:55.000]  are bypassed by the CAC
-[02:11:55.000 --> 02:11:57.000]  goes to the lpgbt and arrive to the board
+[02:11:53.000 --> 02:11:55.000]  are bypassed by the CIC
+[02:11:55.000 --> 02:11:57.000]  goes to the LpGBT and arrive to the board
 [02:11:57.000 --> 02:11:59.000]  are properly identified
 [02:11:59.000 --> 02:12:01.000]  so it is important to align
-[02:12:01.000 --> 02:12:03.000]  properly the lpgbt
+[02:12:01.000 --> 02:12:03.000]  properly the LpGBT
 [02:12:03.000 --> 02:12:05.000]  and unfortunately we need to repeat this for every
 [02:12:05.000 --> 02:12:07.000]  five-port
 [02:12:07.000 --> 02:12:09.000]  because these every five-port
@@ -3113,7 +2941,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [02:12:27.000 --> 02:12:29.000]  to make the next trans-tap
 [02:12:29.000 --> 02:12:31.000]  which is the electric chain validation
 [02:12:31.000 --> 02:12:33.000]  between in this case the CBC
-[02:12:33.000 --> 02:12:35.000]  and the CAC to work
+[02:12:33.000 --> 02:12:35.000]  and the CIC to work
 [02:12:35.000 --> 02:12:37.000]  so all of these
 [02:12:37.000 --> 02:12:39.000]  it just made that identify
 [02:12:39.000 --> 02:12:41.000]  the best phase which is also
@@ -3135,7 +2963,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [02:13:17.000 --> 02:13:19.000]  and run
 [02:13:21.000 --> 02:13:23.000]  the electric chain validation
 [02:13:23.000 --> 02:13:25.000]  between the CBC
-[02:13:25.000 --> 02:13:27.000]  and the CAC
+[02:13:25.000 --> 02:13:27.000]  and the CIC
 [02:13:27.000 --> 02:13:29.000]  which is basically our last
 [02:13:29.000 --> 02:13:31.000]  step of the electric chain validation
 [02:13:33.000 --> 02:13:35.000]  so for these
@@ -3160,7 +2988,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [02:14:11.000 --> 02:14:13.000]  used for driving the lines
 [02:14:13.000 --> 02:14:15.000]  between the CBC
 [02:14:15.000 --> 02:14:17.000]  and
-[02:14:17.000 --> 02:14:19.000]  CAC
+[02:14:17.000 --> 02:14:19.000]  CIC
 [02:14:19.000 --> 02:14:21.000]  so you can set the current use here
 [02:14:21.000 --> 02:14:23.000]  and you can imagine a bit more current
 [02:14:23.000 --> 02:14:25.000]  actually rather than taking
@@ -3184,7 +3012,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [02:14:59.000 --> 02:15:01.000]  line you see that
 [02:15:01.000 --> 02:15:03.000]  there is no phase two and three
 [02:15:03.000 --> 02:15:05.000]  because these phases do not work
-[02:15:05.000 --> 02:15:07.000]  on the CAC
+[02:15:05.000 --> 02:15:07.000]  on the CIC
 [02:15:07.000 --> 02:15:09.000]  so we simply skip that
 [02:15:09.000 --> 02:15:11.000]  and as usual
 [02:15:11.000 --> 02:15:13.000]  you see the number of tests
@@ -3545,7 +3373,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [02:27:45.000 --> 02:27:47.000]  we are
 [02:27:47.000 --> 02:27:49.000]  writing and reading registers
 [02:27:49.000 --> 02:27:51.000]  into both the CBCs
-[02:27:51.000 --> 02:27:53.000]  and the CACs
+[02:27:51.000 --> 02:27:53.000]  and the CICs
 [02:27:53.000 --> 02:27:55.000]  we select a few registers
 [02:27:55.000 --> 02:27:57.000]  we're actually writing
 [02:27:57.000 --> 02:27:59.000]  the pattern and reading it back
@@ -3559,14 +3387,14 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [02:28:13.000 --> 02:28:15.000]  into a single plot
 [02:28:15.000 --> 02:28:17.000]  where for every of these
 [02:28:17.000 --> 02:28:19.000]  of the chip
-[02:28:19.000 --> 02:28:21.000]  so the HCBC and the CAC
+[02:28:19.000 --> 02:28:21.000]  so the HCBC and the CIC
 [02:28:21.000 --> 02:28:23.000]  and you have one plot for each one of the hybrid
 [02:28:23.000 --> 02:28:25.000]  we store
 [02:28:25.000 --> 02:28:27.000]  the efficiency in reading and writing
 [02:28:27.000 --> 02:28:29.000]  and here you should
 [02:28:29.000 --> 02:28:31.000]  see always 100%
 [02:28:31.000 --> 02:28:33.000]  because so far
-[02:28:33.000 --> 02:28:35.000]  so CAC
+[02:28:33.000 --> 02:28:35.000]  so CIC
 [02:28:35.000 --> 02:28:37.000]  S4C is very stable
 [02:28:37.000 --> 02:28:39.000]  for the CBC
 [02:28:39.000 --> 02:28:41.000]  we avoid using
@@ -3789,7 +3617,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [02:36:11.000 --> 02:36:13.000]  are being
 [02:36:13.000 --> 02:36:15.000]  controlled
 [02:36:15.000 --> 02:36:17.000]  by the
-[02:36:17.000 --> 02:36:19.000]  the CAC so the CAC has the possibility
+[02:36:17.000 --> 02:36:19.000]  the CIC so the CIC has the possibility
 [02:36:19.000 --> 02:36:21.000]  to output
 [02:36:21.000 --> 02:36:23.000]  an analog value that
 [02:36:23.000 --> 02:36:25.000]  can monitor
