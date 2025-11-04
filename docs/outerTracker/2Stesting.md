@@ -283,151 +283,28 @@ If a vertical line of bins with some frequency  is seen, it means that LpGBT was
 The best phase (the one with the highest frequency) is chosen from the previous plot, used by the LpGBT and shown in the plot below, one for each line.
 ![CICtoLpGBT_BestPhase](../images/OTtesting/common/CICtoLpGBT_BestPhase.png)
 
-##### OTalignBoardDataWord  - OpticalGroup
-[37:53.000 --> 37:55.000]  I must see
-[37:55.000 --> 37:57.000]  so there is this artistic picture
-[37:57.000 --> 37:59.000]  if someone you want to do something
-[37:59.000 --> 38:01.000]  better just for reference left and right
-[38:01.000 --> 38:03.000]  where the SEH is
-[38:03.000 --> 38:05.000]  where the CBC
-[38:05.000 --> 38:07.000]  0 to 7 are
-[38:07.000 --> 38:09.000]  the two hybrid attention that are reverted
-[38:09.000 --> 38:11.000]  and where the corresponding
-[38:11.000 --> 38:13.000]  strips on the
-[38:17.000 --> 38:19.000]  that are using the page to
-[38:19.000 --> 38:21.000]  SEFR in the position
-[38:21.000 --> 38:23.000]  of the object
-[38:25.000 --> 38:27.000]  going back
-[38:27.000 --> 38:29.000]  to these
-[38:29.000 --> 38:31.000]  so after we have done
-[38:31.000 --> 38:33.000]  the alignment of the LpGBT
-[38:33.000 --> 38:35.000]  now we can align
-[38:37.000 --> 38:39.000]  the data world
-[38:39.000 --> 38:41.000]  into the
-[38:41.000 --> 38:43.000]  FC7
-[38:43.000 --> 38:45.000]  so if I go back here
-[38:45.000 --> 38:47.000]  so basically we know now
-[38:47.000 --> 38:49.000]  that between the CIC and LpGBT
-[38:49.000 --> 38:51.000]  there is a good communication
-[38:51.000 --> 38:53.000]  so now what we do
-[38:53.000 --> 38:55.000]  since these lines are the same
-[38:55.000 --> 38:57.000]  that are used into the
-[38:57.000 --> 38:59.000]  FPGA
-[38:59.000 --> 39:01.000]  we set the CIC such that
-[39:01.000 --> 39:03.000]  it keeps sending data
-[39:03.000 --> 39:05.000]  through these lines
-[39:05.000 --> 39:07.000]  and then we want to
-[39:07.000 --> 39:09.000]  correctly identify those same data
-[39:09.000 --> 39:11.000]  into the FPGA
-[39:11.000 --> 39:13.000]  so what is
-[39:13.000 --> 39:15.000]  the
-[39:15.000 --> 39:17.000]  reason why we need to do that
-[39:17.000 --> 39:19.000]  the CIC sends a packet
-[39:19.000 --> 39:21.000]  of
-[39:21.000 --> 39:23.000]  8 bits basically
-[39:23.000 --> 39:25.000]  and then you want to
-[39:25.000 --> 39:27.000]  make sure that you properly identify
-[39:27.000 --> 39:29.000]  those 8 bits into the FPGA
-[39:29.000 --> 39:31.000]  by identifying the first
-[39:31.000 --> 39:33.000]  of the 8 bits
-[39:33.000 --> 39:35.000]  if I send a
-[39:35.000 --> 39:37.000]  sequence of
-[39:37.000 --> 39:39.000]  101010
-[39:39.000 --> 39:41.000]  then you need to know
-[39:41.000 --> 39:43.000]  that the first one has to be a 1
-[39:43.000 --> 39:45.000]  and then the second one has to be a 0
-[39:45.000 --> 39:47.000]  because we need to identify
-[39:47.000 --> 39:49.000]  the first of 8 bits
-[39:49.000 --> 39:51.000]  not just the first of 2 bits
-[39:51.000 --> 39:53.000]  but the idea is the same
-[39:55.000 --> 39:57.000]  so basically
-[39:57.000 --> 39:59.000]  after setting the CIC to send a pattern
-[40:01.000 --> 40:03.000]  then we ask the
-[40:03.000 --> 40:05.000]  FPGA to align telling the
-[40:05.000 --> 40:07.000]  FPGA which pattern is expecting
-[40:11.000 --> 40:13.000]  and these plots
-[40:13.000 --> 40:15.000]  are stored at the level of the hybrid
-[40:15.000 --> 40:17.000]  so I'm just going to show you one
-[40:17.000 --> 40:19.000]  of the 2 hybrids
-[40:19.000 --> 40:21.000]  and then the other one is basically the same idea
-[40:29.000 --> 40:31.000]  ok, both world alignment
-[40:35.000 --> 40:37.000]  I was telling you you need to identify
-[40:37.000 --> 40:39.000]  the first of the 8 bits
-[40:39.000 --> 40:41.000]  and therefore
-[40:41.000 --> 40:43.000]  once the FPGA receives a packet
-[40:43.000 --> 40:45.000]  you need to know that you need to delay
-[40:45.000 --> 40:47.000]  the packet by a certain amount
-[40:47.000 --> 40:49.000]  of bits such that
-[40:49.000 --> 40:51.000]  after this delay the first bit
-[40:51.000 --> 40:53.000]  is actually going to be the real first bit
-[40:55.000 --> 40:57.000]  so these are calling to the FPGA bitslips
-[40:57.000 --> 40:59.000]  and I'll show them
-[40:59.000 --> 41:01.000]  into this plot
-[41:01.000 --> 41:03.000]  so the bitslip that was chosen
-[41:03.000 --> 41:05.000]  as a function of the different lines
-[41:05.000 --> 41:07.000]  and since if I go back
-[41:07.000 --> 41:09.000]  you see that the FPGA is handling
-[41:09.000 --> 41:11.000]  2 hybrids separately
-[41:11.000 --> 41:13.000]  you have one plot
-[41:13.000 --> 41:15.000]  for every hybrid
-[41:17.000 --> 41:19.000]  ok, so here
-[41:19.000 --> 41:21.000]  is not really something that you can see
-[41:21.000 --> 41:23.000]  if something goes wrong
-[41:23.000 --> 41:25.000]  because this is what the FPGA chooses
-[41:25.000 --> 41:27.000]  so
-[41:27.000 --> 41:29.000]  it's more to store the information
-[41:29.000 --> 41:31.000]  that was
-[41:31.000 --> 41:33.000]  identified by the
-[41:33.000 --> 41:35.000]  the FPGA
-[41:35.000 --> 41:37.000]  but if something goes wrong
-[41:37.000 --> 41:39.000]  it's called into the next plot
-[41:39.000 --> 41:41.000]  into the next step
-[41:41.000 --> 41:43.000]  together with this plot
-[41:43.000 --> 41:45.000]  we also store
-[41:45.000 --> 41:47.000]  this one
-[41:47.000 --> 41:49.000]  that is the number of retries
-[41:49.000 --> 41:51.000]  so
-[41:51.000 --> 41:53.000]  if for any reason
-[41:53.000 --> 41:55.000]  the
-[41:55.000 --> 41:57.000]  the alignment procedure
-[41:59.000 --> 42:01.000]  fails
-[42:01.000 --> 42:03.000]  the FPGA retries
-[42:03.000 --> 42:05.000]  up to 10 times
-[42:05.000 --> 42:07.000]  and so
-[42:07.000 --> 42:09.000]  since this
-[42:09.000 --> 42:11.000]  indicates some instabilities
-[42:11.000 --> 42:13.000]  we also store the number of retries
-[42:13.000 --> 42:15.000]  and since each line is angled separately
-[42:15.000 --> 42:17.000]  we have one number for every line
-[42:17.000 --> 42:19.000]  these
-[42:19.000 --> 42:21.000]  is not uncommon that you have
-[42:21.000 --> 42:23.000]  one or two retries
-[42:23.000 --> 42:25.000]  we found that
-[42:25.000 --> 42:27.000]  there are some instabilities
-[42:27.000 --> 42:29.000]  when writing some registers
-[42:29.000 --> 42:31.000]  some particular register
-[42:31.000 --> 42:33.000]  into the board
-[42:33.000 --> 42:35.000]  and that's why we do the retry
-[42:35.000 --> 42:37.000]  so
-[42:37.000 --> 42:39.000]  also in this case if you see one or two retries
-[42:39.000 --> 42:41.000]  I will not worry as long as
-[42:41.000 --> 42:43.000]  you don't have troubles later on
-[42:43.000 --> 42:45.000]  if you retry 10 times
-[42:45.000 --> 42:47.000]  very likely means that you never manage to align
-[42:49.000 --> 42:51.000]  and again
-[42:51.000 --> 42:53.000]  since this goes to
-[42:53.000 --> 42:55.000]  the connector between the CIC and the FPGVT
-[42:55.000 --> 42:57.000]  I will check that connector
-[42:57.000 --> 42:59.000]  if something
-[42:59.000 --> 43:01.000]  gets wrong
-[43:01.000 --> 43:03.000]  if you spot into the previous tab
-[43:03.000 --> 43:05.000]  this one is really
-[43:05.000 --> 43:07.000]  a pattern identification
-[43:11.000 --> 43:13.000]  I go back here
-[43:13.000 --> 43:15.000]  now
-[43:15.000 --> 43:17.000]  we align both
-[43:17.000 --> 43:19.000]  the CIC to the FPGVT
-[43:19.000 --> 43:21.000]  and basically the CIC to the board
+##### OTalignBoardDataWord - Hybrid
+After we have done the alignment of the LpGBT, we align the data word into the FC7. 
+Once more, we set the CIC such that it keeps sending data through the lines described in the [OTalignLpGBTinputs - OpticalGroup](#otalignlpgbtinputs---opticalgroup). This time we want to identify the data in the FPGA.
+
+The CIC sends a packet of 8 bits and we need to verify that the 8 bits are properly identified into the FPGA, by identifying the first of the 8 bits.
+For instance, if the CIC sends a sequence of 101010 then you need to know that the first one has to be a 1 and then the second one has to be a 0.
+
+To do the alignment, the test tells the FPGA which is the expected pattern.
+
+Once the FPGA receives a packet, it is checked the delay that is needed  such that the first bit of the packet is the first bit of the expected pattern. The delay is called FPGA *bitslips*. The chosen bitslip for each line is shown in the plot below. There is one plot per hybrid. This plots have the purpose to store the found value.
+
+![Board_WordAlignmentBitSlipValues_Hybrid](../images/OTtesting/common/Board_WordAlignmentBitSlipValues_Hybrid.png)
+
+The plot below stores the number of retries. The alignment procedure is tried for a maximum of 10 times in case of failures. Retries can indicate instabilities. The retry number is stored per each line since each line is handled separately.
+
+![Board_WordAlignmentRetryNumbers_Hybrid](../images/OTtesting/common/Board_WordAlignmentRetryNumbers_Hybrid.png)
+
+
+It is not uncommon to have one or two retries as there are some instabilities when writing some particular registers into the board. That's why we try multiple times. If the test retries 10 times, very likely means that it never manages to align and it would be good to check the connections between the CIC and the LpGBT.
+
+
+
 [43:21.000 --> 43:23.000]  now we can verify
 [43:23.000 --> 43:25.000]  that the alignment
 [43:25.000 --> 43:27.000]  properly succeeded
@@ -447,7 +324,7 @@ The best phase (the one with the highest frequency) is chosen from the previous 
 [43:53.000 --> 43:55.000]  checking
 [43:55.000 --> 43:57.000]  if the pattern that we send from the CIC
 [43:57.000 --> 43:59.000]  actually matches the pattern
-[43:59.000 --> 44:01.000]  that we receive in the FPGVT
+[43:59.000 --> 44:01.000]  that we receive in the LpGBT
 [44:01.000 --> 44:03.000]  so
 [44:11.000 --> 44:13.000]  so there are two plots
 [44:13.000 --> 44:15.000]  for these
