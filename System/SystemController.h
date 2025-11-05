@@ -357,7 +357,6 @@ class SystemController
   private:
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
-    std::vector<Ph2_HwInterface::Event*> fEventList;
     std::future<void>                    fFuture;
     uint32_t                             fEventSize;
     uint32_t                             fNCbc;
@@ -366,6 +365,7 @@ class SystemController
     DetectorDataContainer* fChannelGroupHandlerContainer;
 
   protected:
+    std::vector<Ph2_HwInterface::Event*> fEventList;
     DetectorDataContainer*      fNameContainer;
     bool                        fSameChannelGroupForAllChannels{true};
     uint8_t                     fInitializeInterfaces{1};
