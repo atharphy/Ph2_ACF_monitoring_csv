@@ -335,7 +335,7 @@ Now, we are sure that the communication between the CIC and the board works fine
 
 ##### OTCICphaseAlignment - Hybrid
 Now, we can begin aligning the CBC with the CIC.  
-This step is conceptually similar to the alignment between the CIC and the LpGBT, but it’s a bit more complicated.
+This step is conceptually similar to the alignment between the CIC and the LpGBT, but it’s a bit more complicated. The goal is to synchronize all the lines between CIC and CBC.
 
 Since the CBC cannot generate an arbitrary test pattern, we inject a few strips to produce a recognizable pattern on the data lines.  
 The CIC then uses this pattern to adjust its phase and achieve proper alignment.
@@ -366,6 +366,18 @@ As for the LpGBT, you will often see cases where two phases are essentially equi
 
 ![CBCtoCIC_InputPhaseDistribution_Hybrid](../images/OTtesting/2S/CBCtoCIC_InputPhaseDistribution_Hybrid.png)
 
+This phase scan above is performed over two clock cycles.  
+For example, if one phase is around 5, the equivalent phase on the next cycle would be 5 + 8 = 13.  
+So effectively, there are two working points for each line, and the system will pick one of the two.  
+
+Looking at five phases individually might be misleading, since some of them are equivalent due to the two-cycle scan.  
+
+The error code is represented by the number 15.  
+If a value of 15 appears, it means the alignment failed.  
+However, we rarely see this because the hybrids and modules we receive are generally good, and the CBCs within the same hybrid have already been tested.  
+
+If an issue does occur, the lock efficiency should reflect it — for example, a 15 in the phase scan would likely correspond to a low or failing lock efficiency.
+
 Then we show the best input phase in a 2D plot.  
 On the y-axis, we have the different lines, and on the x-axis, the different CBCs.  
 The z-axis represents the best phase — basically the most probable phase for each line and CBC combination.
@@ -374,14 +386,36 @@ The z-axis represents the best phase — basically the most probable phase for e
 
 
 ##### OTCICwordAlignment - Hybrid
-##### OTCICBX0Alignment - Hybrid
+The next step to be addressed is the CBC's processing of stubs. The goal is to align all lines with the 40MHz clock. 
 
+Now, the CIC can correctly identify ones and zeros coming from the CBC, but the CIC also needs to process the stub information.  
+Each CBC sends stubs in a specific format: three lines for the stub address, one and a half lines for the bending, and one line for the error code [(See slide 8)](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf).  
+
+The CIC must understand these bits and decide which stubs to actually send, because it cannot send all stubs at once. Each CIC can handle only a limited number of stubs.  
+
+This step is called word alignment because the CIC needs to identify not only the first bit but also its position in the full data stream.  
+The procedure is similar to what is done in the FC7 for bit identification. The CBC is set to send a specific pattern and we tell the CIC what to expect. 
+
+This creates a single plot showing the delay applied on each line of the CBC.  
+Since the lines are very similar in length, values should be roughly identical.  
+If any line shows a value drastically different from the average, it may indicate a problem.  
+![CBCtoCIC_WordAlignmentDelay_Hybrid](../images/OTtesting/2S/CBCtoCIC_WordAlignmentDelay_Hybrid.png)
+
+These plots are not used for debugging or QA; they are mainly to store the values chosen. Unlike previous scans, this one only scans a single phase, so there is just one working point for each line.
+
+
+##### OTCICBX0Alignment - Hybrid
+This is the last step of the CBC-CIC alignment. It is more relevant for PS modules where the stub info is sent over 2words but it is performed also for 2S ones even if the stub info is sent into a single word.
+
+Since all CBCs and lines are synchronized, only one of the chip and lines is set to send a pattern and used for the measurement of the BX0 delay. The BX0 delay is measured between a Resync and the reception of the pattern in the CIC.
+
+![CICBX0AlignmentDelay_Hybrid](../images/OTtesting/2S/CICBX0AlignmentDelay_Hybrid.png)
+
+An empty plot shows that the alignment fails. This could be due to a problem on the CBC/CBC line chosen for the alignment or on a problem in the CIC.
 
 ##### OTalignStubPackage - OpticalGroup
 
-The next step consists in the alignment between the CIC and the CBCs.
-
-We start with the alignment of the stub package. There are 5 stub lines between the CIC and the LpGBT and the stub info is sent following [the scheme on slide 10](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf).
+This is the last alignment step of the stub package. There are 5 stub lines between the CIC and the LpGBT and the stub info is sent following [the scheme on slide 10](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf).
 
 There is 1 bit that indicates if the pattern is coming from the CBC or the MPA.
 We consider the CBC case. Then we have status bits that indicate errors.  
@@ -419,381 +453,21 @@ You generally don’t need to check anything specific here.
 From the module QA point of view, there isn’t much to check here.  
 If you do see an issue in this plot, it most likely indicates a problem elsewhere in the setup, for instance a failed BXO alignment.
 
+##### OTverifyCICdataWord - Hybrid
 
 
+At this point, all chips are aligned: the CIC is synced with the LpGBT, the CBC data are correctly decoded by both the FPGA and the CIC, and all chips are communicating. The final step is to check the connection quality between the CBC and CIC.
+We set the CBC to send a specific pattern and check if the received data matches. The resulting plots show cumulative errors for all stub lines and Level-1 lines together. At this stage, we cannot pinpoint which line caused an issue without additional, more time-consuming steps, so we just look at a combined value.
 
 
-[59:05.000 --> 59:07.000]  okay now
-[59:07.000 --> 59:09.000]  as usual stub me for any
-[59:09.000 --> 59:11.000]  question
-[59:11.000 --> 59:13.000]  okay now
-[59:13.000 --> 59:15.000]  yes
-[59:15.000 --> 59:17.000]  one small question
-[59:17.000 --> 59:19.000]  so the last two dimensional histogram
-[59:19.000 --> 59:21.000]  that you showed is the best input
-[59:21.000 --> 59:23.000]  phases
-[59:23.000 --> 59:25.000]  so I mean
-[59:25.000 --> 59:27.000]  can one notice some problem
-[59:27.000 --> 59:29.000]  by looking only at this plot?
-[59:29.000 --> 59:31.000]  no I was saying
-[59:31.000 --> 59:33.000]  okay so
-[59:33.000 --> 59:35.000]  I will not
-[59:35.000 --> 59:37.000]  okay you might see something
-[59:37.000 --> 59:39.000]  I will not use this plot
-[59:39.000 --> 59:41.000]  as
-[59:41.000 --> 59:43.000]  as the way to look for
-[59:43.000 --> 59:45.000]  problems
-[59:45.000 --> 59:47.000]  if I had to guess
-[59:47.000 --> 59:49.000]  I will say that so all these lines
-[59:49.000 --> 59:51.000]  are
-[59:51.000 --> 59:53.000]  kind of similar length
-[59:53.000 --> 59:55.000]  but I expect that these phases
-[59:55.000 --> 59:57.000]  are kind of similar
-[59:57.000 --> 59:59.000]  for the various lines
-[59:59.000 --> 01:00:01.000]  so if you see something that really
-[01:00:01.000 --> 01:00:03.000]  is quite different from all the others
-[01:00:03.000 --> 01:00:05.000]  this might indicate an issue
-[01:00:05.000 --> 01:00:07.000]  but it's not even so simple
-[01:00:07.000 --> 01:00:09.000]  because this phase scan
-[01:00:09.000 --> 01:00:11.000]  is done basically on
-[01:00:11.000 --> 01:00:13.000]  two clock cycles
-[01:00:13.000 --> 01:00:15.000]  so let's say
-[01:00:15.000 --> 01:00:17.000]  you have this one that
-[01:00:17.000 --> 01:00:19.000]  for example this one is like lower
-[01:00:19.000 --> 01:00:21.000]  and you see that it's around 5
-[01:00:21.000 --> 01:00:23.000]  this phase would be equivalent
-[01:00:23.000 --> 01:00:25.000]  to basically 5
-[01:00:25.000 --> 01:00:27.000]  plus 8 so 13
-[01:00:27.000 --> 01:00:29.000]  so
-[01:00:29.000 --> 01:00:31.000]  because you are scanning two clock cycles
-[01:00:31.000 --> 01:00:33.000]  so there are basically two working points
-[01:00:33.000 --> 01:00:35.000]  and then it says you're going to just pick up
-[01:00:35.000 --> 01:00:37.000]  one or the two
-[01:00:37.000 --> 01:00:39.000]  so also that looking at five phases
-[01:00:39.000 --> 01:00:41.000]  particularly different might be
-[01:00:41.000 --> 01:00:43.000]  a little bit misleading
-[01:00:43.000 --> 01:00:45.000]  the one that is actually
-[01:00:45.000 --> 01:00:47.000]  an error code is the number 15
-[01:00:47.000 --> 01:00:49.000]  so 15 is a number so if you see
-[01:00:49.000 --> 01:00:51.000]  something that here that is a 15
-[01:00:51.000 --> 01:00:53.000]  it means that the alignment failed
-[01:00:53.000 --> 01:00:55.000]  but I don't recall
-[01:00:55.000 --> 01:00:57.000]  ever seen something but
-[01:00:57.000 --> 01:00:59.000]  like that because
-[01:00:59.000 --> 01:01:01.000]  the modules that the hybrid that we
-[01:01:01.000 --> 01:01:03.000]  receive are good and
-[01:01:03.000 --> 01:01:05.000]  the cbSense they see already
-[01:01:05.000 --> 01:01:07.000]  into the same hybrid
-[01:01:07.000 --> 01:01:09.000]  so this connection was already tested
-[01:01:09.000 --> 01:01:11.000]  but if for any
-[01:01:11.000 --> 01:01:13.000]  reason something happened I will imagine
-[01:01:13.000 --> 01:01:15.000]  that the lock efficiency will show you
-[01:01:15.000 --> 01:01:17.000]  something because I will guess
-[01:01:17.000 --> 01:01:19.000]  that if you get a 15
-[01:01:19.000 --> 01:01:21.000]  you will also see that the lock
-[01:01:21.000 --> 01:01:23.000]  efficiency is not that we don't work
-[01:01:23.000 --> 01:01:25.000]  okay thank you
-[01:01:25.000 --> 01:01:27.000]  no problem
-[01:01:29.000 --> 01:01:31.000]  okay
-[01:01:31.000 --> 01:01:33.000]  and then
-[01:01:33.000 --> 01:01:35.000]  there is one last step
-[01:01:35.000 --> 01:01:37.000]  that it needed to be
-[01:01:37.000 --> 01:01:39.000]  addressed because
-[01:01:39.000 --> 01:01:41.000]  between so now we know
-[01:01:41.000 --> 01:01:43.000]  that the cbC can
-[01:01:43.000 --> 01:01:45.000]  properly identify the one and the zero
-[01:01:45.000 --> 01:01:47.000]  coming from the cbC
-[01:01:47.000 --> 01:01:49.000]  but then it's a bit more complicated
-[01:01:49.000 --> 01:01:51.000]  because then the
-[01:01:51.000 --> 01:01:53.000]  cbC
-[01:01:53.000 --> 01:01:55.000]  need also to
-[01:01:55.000 --> 01:01:57.000]  elaborate the information from the
-[01:01:57.000 --> 01:01:59.000]  stubs so the stubs
-[01:01:59.000 --> 01:02:01.000]  from the
-[01:02:03.000 --> 01:02:05.000]  cbC comes
-[01:02:05.000 --> 01:02:07.000]  to these formats
-[01:02:07.000 --> 01:02:09.000]  so I have four lines
-[01:02:09.000 --> 01:02:11.000]  sorry three lines
-[01:02:11.000 --> 01:02:13.000]  for the
-[01:02:13.000 --> 01:02:15.000]  the strap address
-[01:02:15.000 --> 01:02:17.000]  and then basically
-[01:02:17.000 --> 01:02:19.000]  one line and a half of the bending
-[01:02:19.000 --> 01:02:21.000]  and then the last part is for the
-[01:02:21.000 --> 01:02:23.000]  error code but then
-[01:02:23.000 --> 01:02:25.000]  the cbC
-[01:02:25.000 --> 01:02:27.000]  sorry the cbC
-[01:02:27.000 --> 01:02:29.000]  need to
-[01:02:29.000 --> 01:02:31.000]  understand these numbers
-[01:02:31.000 --> 01:02:33.000]  and then identify
-[01:02:33.000 --> 01:02:35.000]  the one to actually send out
-[01:02:35.000 --> 01:02:37.000]  because you cannot send
-[01:02:37.000 --> 01:02:39.000]  all the stubs, all the cbC
-[01:02:39.000 --> 01:02:41.000]  all the cbC sends
-[01:02:41.000 --> 01:02:43.000]  each one of them three stubs
-[01:02:43.000 --> 01:02:45.000]  then you run out of a number
-[01:02:45.000 --> 01:02:47.000]  of stubs that the cbC can handle
-[01:02:47.000 --> 01:02:49.000]  so
-[01:02:49.000 --> 01:02:51.000]  all these just to say that
-[01:02:51.000 --> 01:02:53.000]  the cbC
-[01:02:53.000 --> 01:02:55.000]  need to understand what is
-[01:02:55.000 --> 01:02:57.000]  the first of these bits
-[01:02:57.000 --> 01:02:59.000]  coming from the cbC
-[01:02:59.000 --> 01:03:01.000]  and therefore
-[01:03:01.000 --> 01:03:03.000]  what you have to do is more or less
-[01:03:03.000 --> 01:03:05.000]  what is done in the
-[01:03:05.000 --> 01:03:07.000]  fc7 where we do
-[01:03:07.000 --> 01:03:09.000]  the
-[01:03:09.000 --> 01:03:11.000]  the identification
-[01:03:11.000 --> 01:03:13.000]  the first of this bit
-[01:03:13.000 --> 01:03:15.000]  and this is called the world alignment
-[01:03:15.000 --> 01:03:17.000]  because you need to understand not only the bit
-[01:03:17.000 --> 01:03:19.000]  but also the world
-[01:03:21.000 --> 01:03:23.000]  and these
-[01:03:23.000 --> 01:03:25.000]  corresponds to
-[01:03:25.000 --> 01:03:27.000]  this step
-[01:03:27.000 --> 01:03:29.000]  or this is the world alignment
-[01:03:29.000 --> 01:03:31.000]  so as for
-[01:03:31.000 --> 01:03:33.000]  before
-[01:03:33.000 --> 01:03:35.000]  we send, we set
-[01:03:35.000 --> 01:03:37.000]  the cbC to send
-[01:03:37.000 --> 01:03:39.000]  a specific pattern
-[01:03:39.000 --> 01:03:41.000]  but this time we also tell to the cbC
-[01:03:41.000 --> 01:03:43.000]  what they need to expect
-[01:03:43.000 --> 01:03:45.000]  it's basically identical to the procedure
-[01:03:45.000 --> 01:03:47.000]  that was done between the
-[01:03:47.000 --> 01:03:49.000]  FPGA and the cbC
-[01:03:49.000 --> 01:03:51.000]  so
-[01:03:53.000 --> 01:03:55.000]  these
-[01:03:55.000 --> 01:03:57.000]  creates one single plot
-[01:03:57.000 --> 01:03:59.000]  that
-[01:03:59.000 --> 01:04:01.000]  keep forgetting
-[01:04:01.000 --> 01:04:03.000]  that just
-[01:04:03.000 --> 01:04:05.000]  show you what is the delay
-[01:04:05.000 --> 01:04:07.000]  that is applied
-[01:04:07.000 --> 01:04:09.000]  on the
-[01:04:09.000 --> 01:04:11.000]  on the
-[01:04:11.000 --> 01:04:13.000]  cbC
-[01:04:13.000 --> 01:04:15.000]  on
-[01:04:15.000 --> 01:04:17.000]  each one of
-[01:04:17.000 --> 01:04:19.000]  this line over here
-[01:04:19.000 --> 01:04:21.000]  because each one of these
-[01:04:21.000 --> 01:04:23.000]  might be slightly different
-[01:04:23.000 --> 01:04:25.000]  so as you see
-[01:04:25.000 --> 01:04:27.000]  each one of these
-[01:04:27.000 --> 01:04:29.000]  show a value of 6
-[01:04:29.000 --> 01:04:31.000]  and
-[01:04:31.000 --> 01:04:33.000]  here I don't think you can see
-[01:04:33.000 --> 01:04:35.000]  actually anything particular
-[01:04:35.000 --> 01:04:37.000]  again
-[01:04:37.000 --> 01:04:39.000]  in this case actually a little bit better
-[01:04:39.000 --> 01:04:41.000]  what I was
-[01:04:41.000 --> 01:04:43.000]  saying before
-[01:04:43.000 --> 01:04:45.000]  because this line are
-[01:04:45.000 --> 01:04:47.000]  identical
-[01:04:47.000 --> 01:04:49.000]  very similar in length
-[01:04:49.000 --> 01:04:51.000]  so if you see some of this line
-[01:04:51.000 --> 01:04:53.000]  that are
-[01:04:53.000 --> 01:04:55.000]  drastically different from the average
-[01:04:55.000 --> 01:04:57.000]  that might indicate something
-[01:04:57.000 --> 01:04:59.000]  that is going wrong
-[01:04:59.000 --> 01:05:01.000]  again I will not use these particular plots
-[01:05:01.000 --> 01:05:03.000]  for debugging this is a minute to understand
-[01:05:03.000 --> 01:05:05.000]  what was the value
-[01:05:05.000 --> 01:05:07.000]  in fact I don't think in potato we do anything
-[01:05:07.000 --> 01:05:09.000]  with this plot
-[01:05:09.000 --> 01:05:11.000]  we just need to store them because we want
-[01:05:11.000 --> 01:05:13.000]  to know what was the value
-[01:05:13.000 --> 01:05:15.000]  that was chosen
-[01:05:15.000 --> 01:05:17.000]  but you cannot really
-[01:05:17.000 --> 01:05:19.000]  grasp any particular information about the quality
-[01:05:19.000 --> 01:05:21.000]  of your model
-[01:05:21.000 --> 01:05:23.000]  ok
-[01:05:23.000 --> 01:05:25.000]  and here there is no
-[01:05:25.000 --> 01:05:27.000]  so the different from what was
-[01:05:27.000 --> 01:05:29.000]  before is not scanning
-[01:05:29.000 --> 01:05:31.000]  two phases just scan one
-[01:05:31.000 --> 01:05:33.000]  so that cannot be
-[01:05:33.000 --> 01:05:35.000]  there is just one working point
-[01:05:35.000 --> 01:05:37.000]  that can work
-[01:05:37.000 --> 01:05:39.000]  ok
-[01:05:39.000 --> 01:05:41.000]  so we have almost
-[01:05:41.000 --> 01:05:43.000]  done with the alignment part
-[01:05:43.000 --> 01:05:45.000]  these honestly have been more complicated
-[01:05:45.000 --> 01:05:47.000]  part because actually
-[01:05:47.000 --> 01:05:49.000]  about the intercommunication between
-[01:05:49.000 --> 01:05:51.000]  chips
-[01:05:51.000 --> 01:05:53.000]  the most complicated until
-[01:05:53.000 --> 01:05:55.000]  we go to the electric chain validation
-[01:05:55.000 --> 01:05:57.000]  that is going to be
-[01:05:57.000 --> 01:05:59.000]  something a bit more complicated
-[01:05:59.000 --> 01:06:01.000]  but I think if you understand
-[01:06:01.000 --> 01:06:03.000]  all the idea of the phase alignment
-[01:06:03.000 --> 01:06:05.000]  the electric chain validation is going to be
-[01:06:05.000 --> 01:06:07.000]  slightly simpler because
-[01:06:07.000 --> 01:06:09.000]  basically
-[01:06:09.000 --> 01:06:11.000]  extended version
-[01:06:11.000 --> 01:06:13.000]  of the alignment procedure
-[01:06:13.000 --> 01:06:15.000]  this
-[01:06:15.000 --> 01:06:17.000]  ok
-[01:06:17.000 --> 01:06:19.000]  at this point
-[01:06:19.000 --> 01:06:21.000]  we have everything aligned
-[01:06:21.000 --> 01:06:23.000]  so the CRC is aligned to the LpGBT
-[01:06:23.000 --> 01:06:25.000]  the CRC data
-[01:06:25.000 --> 01:06:27.000]  are properly decoded by the FPGA
-[01:06:27.000 --> 01:06:29.000]  and the CBC
-[01:06:29.000 --> 01:06:31.000]  data are properly
-[01:06:31.000 --> 01:06:33.000]  decoded by the CRC
-[01:06:33.000 --> 01:06:35.000]  so now all the chips are communicating
-[01:06:35.000 --> 01:06:37.000]  and the last step that we want to do
-[01:06:37.000 --> 01:06:39.000]  is basically to check
-[01:06:39.000 --> 01:06:41.000]  what is the quality of the connection between the CBC
-[01:06:41.000 --> 01:06:43.000]  and the CRC
-[01:06:43.000 --> 01:06:45.000]  so we set again the CBC
-[01:06:45.000 --> 01:06:47.000]  into sending a specific pattern
-[01:06:47.000 --> 01:06:49.000]  through these lines
-[01:06:49.000 --> 01:06:51.000]  and then we want to see in the
-[01:06:51.000 --> 01:06:53.000]  way if the data that was
-[01:06:53.000 --> 01:06:55.000]  sending from the CBC are actually the one
-[01:06:55.000 --> 01:06:57.000]  that we are receiving the FPGA
-[01:06:59.000 --> 01:07:01.000]  now so these plots
-[01:07:01.000 --> 01:07:03.000]  are saved
-[01:07:03.000 --> 01:07:05.000]  at the level of the
-[01:07:05.000 --> 01:07:07.000]  hybrids again I just showing you one
-[01:07:07.000 --> 01:07:09.000]  hybrid because
-[01:07:09.000 --> 01:07:11.000]  the other one is going to be identical
-[01:07:13.000 --> 01:07:15.000]  and we have two plots
-[01:07:17.000 --> 01:07:19.000]  ok
-[01:07:19.000 --> 01:07:21.000]  so this one
-[01:07:21.000 --> 01:07:23.000]  it shows you
-[01:07:23.000 --> 01:07:25.000]  the number of bits
-[01:07:25.000 --> 01:07:27.000]  that are tested
-[01:07:27.000 --> 01:07:29.000]  and it shows you
-[01:07:29.000 --> 01:07:31.000]  for the
-[01:07:31.000 --> 01:07:33.000]  level one
-[01:07:33.000 --> 01:07:35.000]  and for the stubs and these stubs
-[01:07:35.000 --> 01:07:37.000]  are cumulative
-[01:07:37.000 --> 01:07:39.000]  so basically we look at
-[01:07:39.000 --> 01:07:41.000]  the combination
-[01:07:41.000 --> 01:07:43.000]  of all these
-[01:07:43.000 --> 01:07:45.000]  three lines
-[01:07:45.000 --> 01:07:47.000]  the reason for that
-[01:07:47.000 --> 01:07:49.000]  is that the CBC then digest
-[01:07:49.000 --> 01:07:51.000]  this information
-[01:07:51.000 --> 01:07:53.000]  so
-[01:07:53.000 --> 01:07:55.000]  in this particular configuration
-[01:07:55.000 --> 01:07:57.000]  without
-[01:07:57.000 --> 01:07:59.000]  doing any extra trick that I'm going to cover later
-[01:07:59.000 --> 01:08:01.000]  you don't really understand
-[01:08:01.000 --> 01:08:03.000]  if one of these lines
-[01:08:03.000 --> 01:08:05.000]  is creating a problem
-[01:08:05.000 --> 01:08:07.000]  you just know that
-[01:08:07.000 --> 01:08:09.000]  at least one of these lines is a problem
-[01:08:09.000 --> 01:08:11.000]  and then
-[01:08:11.000 --> 01:08:13.000]  and then down the road
-[01:08:13.000 --> 01:08:15.000]  something is happening
-[01:08:15.000 --> 01:08:17.000]  so
-[01:08:17.000 --> 01:08:19.000]  that's why you have one single
-[01:08:19.000 --> 01:08:21.000]  value for all the stubs lines
-[01:08:21.000 --> 01:08:23.000]  at this level later I'm going to show you
-[01:08:23.000 --> 01:08:25.000]  how we distinguish them
-[01:08:25.000 --> 01:08:27.000]  require extra steps that are quite time-consuming
-[01:08:27.000 --> 01:08:29.000]  and since these steps are done
-[01:08:29.000 --> 01:08:31.000]  also into the quick test
-[01:08:31.000 --> 01:08:33.000]  we don't do the
-[01:08:33.000 --> 01:08:35.000]  separation at this level
-[01:08:35.000 --> 01:08:37.000]  and as for before you see then the number of bits
-[01:08:37.000 --> 01:08:39.000]  that are tested for the stubs
-[01:08:39.000 --> 01:08:41.000]  is quite higher than the
-[01:08:41.000 --> 01:08:43.000]  level ones
-[01:08:43.000 --> 01:08:45.000]  which still it is
-[01:08:45.000 --> 01:08:47.000]  10 to 5
-[01:08:47.000 --> 01:08:49.000]  which is not really super small number
-[01:08:49.000 --> 01:08:51.000]  and the reason is
-[01:08:51.000 --> 01:08:53.000]  the usual
-[01:08:53.000 --> 01:08:55.000]  is that the pattern matching
-[01:08:55.000 --> 01:08:57.000]  in the stubs
-[01:08:57.000 --> 01:08:59.000]  for the stubs is done in the firmware
-[01:08:59.000 --> 01:09:01.000]  and for the level one is tested
-[01:09:01.000 --> 01:09:03.000]  with the software that takes longer
-[01:09:03.000 --> 01:09:05.000]  process in time
-[01:09:05.000 --> 01:09:07.000]  so this is based on the denominator
-[01:09:07.000 --> 01:09:09.000]  and as for
-[01:09:09.000 --> 01:09:11.000]  before
-[01:09:11.000 --> 01:09:13.000]  is the numerator
-[01:09:13.000 --> 01:09:15.000]  so there is actually
-[01:09:15.000 --> 01:09:17.000]  error rate so it's already divided
-[01:09:17.000 --> 01:09:19.000]  by the denominator
-[01:09:19.000 --> 01:09:21.000]  so number of errors
-[01:09:21.000 --> 01:09:23.000]  per
-[01:09:23.000 --> 01:09:25.000]  per
-[01:09:25.000 --> 01:09:27.000]  level one line
-[01:09:27.000 --> 01:09:29.000]  or stubs lines
-[01:09:29.000 --> 01:09:31.000]  for every cbc
-[01:09:31.000 --> 01:09:33.000]  so
-[01:09:33.000 --> 01:09:35.000]  few comments over here
-[01:09:35.000 --> 01:09:37.000]  you see that here we have
-[01:09:37.000 --> 01:09:39.000]  a two per mil error rate
-[01:09:39.000 --> 01:09:41.000]  so
-[01:09:41.000 --> 01:09:43.000]  there are still some
-[01:09:43.000 --> 01:09:45.000]  instabilities in this test
-[01:09:45.000 --> 01:09:47.000]  that I didn't experience
-[01:09:47.000 --> 01:09:49.000]  with the modules
-[01:09:49.000 --> 01:09:51.000]  that I was developing from
-[01:09:51.000 --> 01:09:53.000]  on and this is one of the
-[01:09:53.000 --> 01:09:55.000]  new modules that was assembled in production
-[01:09:55.000 --> 01:09:57.000]  and I will start seeing this
-[01:09:57.000 --> 01:09:59.000]  the module doesn't have any trouble
-[01:09:59.000 --> 01:10:01.000]  so if you see numbers
-[01:10:01.000 --> 01:10:03.000]  that are not exactly zero
-[01:10:03.000 --> 01:10:05.000]  for the stubs lines don't
-[01:10:05.000 --> 01:10:07.000]  worry too much
-[01:10:07.000 --> 01:10:09.000]  I'm going to try to address them
-[01:10:09.000 --> 01:10:11.000]  that this just came with the most
-[01:10:11.000 --> 01:10:13.000]  statistic and this was one of the kind
-[01:10:13.000 --> 01:10:15.000]  of aspect
-[01:10:15.000 --> 01:10:17.000]  for the level one
-[01:10:17.000 --> 01:10:19.000]  also you may see some
-[01:10:23.000 --> 01:10:25.000]  error rate that is not exactly zero
-[01:10:25.000 --> 01:10:27.000]  let me try to see if
-[01:10:27.000 --> 01:10:29.000]  by chance
-[01:10:29.000 --> 01:10:31.000]  the other eye
-[01:10:31.000 --> 01:10:33.000]  slightly has also some error
-[01:10:33.000 --> 01:10:35.000]  on the
-[01:10:35.000 --> 01:10:37.000]  not this one is perfect
-[01:10:37.000 --> 01:10:39.000]  also here
-[01:10:39.000 --> 01:10:41.000]  if you see very small error is
-[01:10:41.000 --> 01:10:43.000]  because this procedure
-[01:10:43.000 --> 01:10:45.000]  doing a pattern matching the software is not
-[01:10:45.000 --> 01:10:47.000]  perfect
-[01:10:47.000 --> 01:10:49.000]  and you might get
-[01:10:49.000 --> 01:10:51.000]  10-4, 10-5 error rate
-[01:10:51.000 --> 01:10:53.000]  also
-[01:10:53.000 --> 01:10:55.000]  in this case I will not worry too much
-[01:10:55.000 --> 01:10:57.000]  we are trying to address that
-[01:10:57.000 --> 01:10:59.000]  I don't know how much it's going to be go away
-[01:10:59.000 --> 01:11:01.000]  just metal the pressure that we set
-[01:11:01.000 --> 01:11:03.000]  so if you see basically
-[01:11:03.000 --> 01:11:05.000]  small number below the
-[01:11:05.000 --> 01:11:07.000]  percent level
-[01:11:07.000 --> 01:11:09.000]  I will not worry
-[01:11:09.000 --> 01:11:11.000]  at the moment
-[01:11:11.000 --> 01:11:13.000]  if you have bigger problems you will see
-[01:11:13.000 --> 01:11:15.000]  quite a large error
-[01:11:15.000 --> 01:11:17.000]  so very likely you will see
-[01:11:17.000 --> 01:11:19.000]  an order of 20%
-[01:11:19.000 --> 01:11:21.000]  something like that
-[01:11:21.000 --> 01:11:23.000]  okay
-[01:11:23.000 --> 01:11:25.000]  so
-[01:11:25.000 --> 01:11:27.000]  for the future we are going to try to fix this plot
-[01:11:27.000 --> 01:11:29.000]  for the
-[01:11:31.000 --> 01:11:33.000]  so
-[01:11:33.000 --> 01:11:35.000]  yeah
-[01:11:35.000 --> 01:11:37.000]  okay
-[01:11:41.000 --> 01:11:43.000]  so this part
-[01:11:43.000 --> 01:11:45.000]  conclude all the
-[01:11:45.000 --> 01:11:47.000]  part related
-[01:11:47.000 --> 01:11:49.000]  to the alignment
-[01:11:49.000 --> 01:11:51.000]  so
+Stub tested bits, showed below, are higher because their pattern matching is done in firmware, while Level-1 errors are computed in software, which takes longer. 
+![CBCtoCIC_PatternMatchingTestedBits_Hybrid](../images/OTtesting/2S/CBCtoCIC_PatternMatchingTestedBits_Hybrid.png)
+
+Small error rates (around 0.01–0.1%) are normal and not a concern. Large errors, e.g., 20%, would indicate a real problem.
+This concludes the alignment section.
+
+![CBCtoCIC_PatternMatchingErrorRate_Hybrid](../images/OTtesting/2S/CBCtoCIC_PatternMatchingErrorRate_Hybrid.png)
+
 [01:11:51.000 --> 01:11:53.000]  do you have any
 [01:11:53.000 --> 01:11:55.000]  further question in this part you can ask
 [01:11:55.000 --> 01:11:57.000]  of course anytime but since we are going to
