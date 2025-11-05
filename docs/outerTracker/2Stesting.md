@@ -464,553 +464,91 @@ Stub tested bits, showed below, are higher because their pattern matching is don
 ![CBCtoCIC_PatternMatchingTestedBits_Hybrid](../images/OTtesting/2S/CBCtoCIC_PatternMatchingTestedBits_Hybrid.png)
 
 Small error rates (around 0.01–0.1%) are normal and not a concern. Large errors, e.g., 20%, would indicate a real problem.
-This concludes the alignment section.
+
 
 ![CBCtoCIC_PatternMatchingErrorRate_Hybrid](../images/OTtesting/2S/CBCtoCIC_PatternMatchingErrorRate_Hybrid.png)
 
-[01:11:51.000 --> 01:11:53.000]  do you have any
-[01:11:53.000 --> 01:11:55.000]  further question in this part you can ask
-[01:11:55.000 --> 01:11:57.000]  of course anytime but since we are going to
-[01:11:57.000 --> 01:11:59.000]  move on
-[01:11:59.000 --> 01:12:01.000]  from the alignment part
-[01:12:01.000 --> 01:12:03.000]  that is honestly quite lengthy
-[01:12:03.000 --> 01:12:05.000]  and tough
-[01:12:05.000 --> 01:12:07.000]  just please ask
-[01:12:11.000 --> 01:12:13.000]  the other question
-[01:12:13.000 --> 01:12:15.000]  why do some of the steps of OT and some of them don't
-[01:12:17.000 --> 01:12:19.000]  is simply for
-[01:12:19.000 --> 01:12:21.000]  a historical reason
-[01:12:21.000 --> 01:12:23.000]  the newer steps that we had
-[01:12:23.000 --> 01:12:25.000]  recently just
-[01:12:25.000 --> 01:12:27.000]  to be a bit more consistent
-[01:12:27.000 --> 01:12:29.000]  I just put OT in front of them
-[01:12:29.000 --> 01:12:31.000]  this one was the
-[01:12:31.000 --> 01:12:33.000]  developer
-[01:12:33.000 --> 01:12:35.000]  way before
-[01:12:35.000 --> 01:12:37.000]  the inner trackers
-[01:12:37.000 --> 01:12:39.000]  started joining the group
-[01:12:39.000 --> 01:12:41.000]  and that's why they were
-[01:12:41.000 --> 01:12:43.000]  they didn't have OT
-[01:12:43.000 --> 01:12:45.000]  I just didn't want to change names everywhere
-[01:12:45.000 --> 01:12:47.000]  and this one I think is the only one
-[01:12:47.000 --> 01:12:49.000]  legit
-[01:12:49.000 --> 01:12:51.000]  because it is the same procedure
-[01:12:51.000 --> 01:12:53.000]  for the inner trackers
-[01:12:53.000 --> 01:12:55.000]  okay thanks
-[01:12:55.000 --> 01:12:57.000]  no problem
-[01:13:01.000 --> 01:13:03.000]  okay
-[01:13:03.000 --> 01:13:05.000]  and go on yes
-[01:13:05.000 --> 01:13:07.000]  when we are
-[01:13:07.000 --> 01:13:09.000]  performing this test
-[01:13:09.000 --> 01:13:11.000]  there are some messages during
-[01:13:11.000 --> 01:13:13.000]  running of the test
-[01:13:13.000 --> 01:13:15.000]  so can you point
-[01:13:15.000 --> 01:13:17.000]  out some important messages
-[01:13:17.000 --> 01:13:19.000]  which we take care when we are
-[01:13:19.000 --> 01:13:21.000]  doing the test
-[01:13:21.000 --> 01:13:23.000]  so
-[01:13:23.000 --> 01:13:25.000]  um
-[01:13:27.000 --> 01:13:29.000]  so unfortunately I don't have
-[01:13:29.000 --> 01:13:31.000]  a log I think
-[01:13:31.000 --> 01:13:33.000]  with me
-[01:13:33.000 --> 01:13:35.000]  I don't so to be honest
-[01:13:35.000 --> 01:13:37.000]  I'm trying not to use
-[01:13:37.000 --> 01:13:39.000]  too much the
-[01:13:39.000 --> 01:13:41.000]  so any important message
-[01:13:41.000 --> 01:13:43.000]  that is happening over there
-[01:13:43.000 --> 01:13:45.000]  it will reflect into
-[01:13:45.000 --> 01:13:47.000]  um
-[01:13:47.000 --> 01:13:49.000]  something that you can see directly from the plots
-[01:13:49.000 --> 01:13:51.000]  so
-[01:13:51.000 --> 01:13:53.000]  the reason why I'm not
-[01:13:53.000 --> 01:13:55.000]  I prefer not to use the log file
-[01:13:57.000 --> 01:13:59.000]  the debug file it might be useful
-[01:13:59.000 --> 01:14:01.000]  mainly is for me to understand
-[01:14:01.000 --> 01:14:03.000]  what is going on
-[01:14:03.000 --> 01:14:05.000]  try to understand
-[01:14:05.000 --> 01:14:07.000]  where the problem is occurring
-[01:14:09.000 --> 01:14:11.000]  the reason why I don't like it too much
-[01:14:11.000 --> 01:14:13.000]  is that
-[01:14:15.000 --> 01:14:17.000]  the log file are gonna disappear
-[01:14:17.000 --> 01:14:19.000]  after some time
-[01:14:19.000 --> 01:14:21.000]  there is a limit on how much
-[01:14:21.000 --> 01:14:23.000]  you can store into a log file
-[01:14:23.000 --> 01:14:25.000]  so I will really just use the plots
-[01:14:25.000 --> 01:14:27.000]  all the plots contains
-[01:14:27.000 --> 01:14:29.000]  all the information that
-[01:14:29.000 --> 01:14:31.000]  you need
-[01:14:31.000 --> 01:14:33.000]  you need to use for understanding
-[01:14:33.000 --> 01:14:35.000]  how the modules are running
-[01:14:35.000 --> 01:14:37.000]  so
-[01:14:37.000 --> 01:14:39.000]  I don't have any particular
-[01:14:39.000 --> 01:14:41.000]  message that will not shown
-[01:14:41.000 --> 01:14:43.000]  in any of these plots
-[01:14:43.000 --> 01:14:45.000]  I
-[01:14:47.000 --> 01:14:49.000]  I'm asking only in a sense that
-[01:14:49.000 --> 01:14:51.000]  when you start the test of course
-[01:14:51.000 --> 01:14:53.000]  it takes some time to finish the test
-[01:14:53.000 --> 01:14:55.000]  but
-[01:14:55.000 --> 01:14:57.000]  you know
-[01:14:57.000 --> 01:14:59.000]  suppose in the start you feel there is
-[01:14:59.000 --> 01:15:01.000]  something very problematic
-[01:15:01.000 --> 01:15:03.000]  then you stub the run and then you
-[01:15:03.000 --> 01:15:05.000]  try to fix it
-[01:15:05.000 --> 01:15:07.000]  so
-[01:15:07.000 --> 01:15:09.000]  the
-[01:15:09.000 --> 01:15:11.000]  uh
-[01:15:11.000 --> 01:15:13.000]  so if there is something very problematic
-[01:15:15.000 --> 01:15:17.000]  the module will be
-[01:15:17.000 --> 01:15:19.000]  will be disabled
-[01:15:19.000 --> 01:15:21.000]  and once you don't have any module to run
-[01:15:21.000 --> 01:15:23.000]  on the program will stub
-[01:15:23.000 --> 01:15:25.000]  so it's
-[01:15:25.000 --> 01:15:27.000]  something this bad is
-[01:15:27.000 --> 01:15:29.000]  something that makes the module
-[01:15:29.000 --> 01:15:31.000]  inoperable
-[01:15:31.000 --> 01:15:33.000]  the program will
-[01:15:33.000 --> 01:15:35.000]  disable and stub it
-[01:15:37.000 --> 01:15:39.000]  so
-[01:15:41.000 --> 01:15:43.000]  my suggestion and also shouldn't take
-[01:15:43.000 --> 01:15:45.000]  too much to run
-[01:15:45.000 --> 01:15:47.000]  it's only 14 minutes
-[01:15:47.000 --> 01:15:49.000]  if you have any troubles
-[01:15:49.000 --> 01:15:51.000]  just run the quick test
-[01:15:51.000 --> 01:15:53.000]  so the quick test is going to tell you
-[01:15:53.000 --> 01:15:55.000]  basically
-[01:15:55.000 --> 01:15:57.000]  all the major problems that you can address
-[01:15:57.000 --> 01:15:59.000]  the full test
-[01:15:59.000 --> 01:16:01.000]  it gives you a full idea of the module
-[01:16:01.000 --> 01:16:03.000]  it doesn't mean that
-[01:16:03.000 --> 01:16:05.000]  so if there is anything
-[01:16:05.000 --> 01:16:07.000]  as problematic that the module doesn't work
-[01:16:07.000 --> 01:16:09.000]  is the quick test
-[01:16:09.000 --> 01:16:11.000]  it gives you immediate feedback and goes very fast
-[01:16:13.000 --> 01:16:15.000]  the full test it looks
-[01:16:15.000 --> 01:16:17.000]  to a wider perspective
-[01:16:17.000 --> 01:16:19.000]  on how well the module works
-[01:16:19.000 --> 01:16:21.000]  and basically
-[01:16:21.000 --> 01:16:23.000]  whatever is after
-[01:16:23.000 --> 01:16:25.000]  what the quick test does
-[01:16:25.000 --> 01:16:27.000]  is not really something
-[01:16:27.000 --> 01:16:29.000]  that you can easily fix
-[01:16:31.000 --> 01:16:33.000]  it's basically
-[01:16:33.000 --> 01:16:35.000]  so
-[01:16:35.000 --> 01:16:37.000]  it's basically telling you that
-[01:16:37.000 --> 01:16:39.000]  your module is not 100%
-[01:16:39.000 --> 01:16:41.000]  but it's something that you have to
-[01:16:41.000 --> 01:16:43.000]  live with
-[01:16:43.000 --> 01:16:45.000]  so
-[01:16:45.000 --> 01:16:47.000]  that's why we run the quick test
-[01:16:47.000 --> 01:16:49.000]  in particular that's why we run it
-[01:16:49.000 --> 01:16:51.000]  after
-[01:16:51.000 --> 01:16:53.000]  before encapsulation
-[01:16:53.000 --> 01:16:55.000]  because this is going to tell you
-[01:16:55.000 --> 01:16:57.000]  the module has
-[01:16:57.000 --> 01:16:59.000]  some major issues that you can
-[01:16:59.000 --> 01:17:01.000]  still address
-[01:17:01.000 --> 01:17:03.000]  the full test
-[01:17:03.000 --> 01:17:05.000]  is just going to tell you the same
-[01:17:05.000 --> 01:17:07.000]  because you can answer the same steps
-[01:17:07.000 --> 01:17:09.000]  but it tells you more
-[01:17:09.000 --> 01:17:11.000]  and what is more
-[01:17:11.000 --> 01:17:13.000]  basically it will not
-[01:17:13.000 --> 01:17:15.000]  tell you anything that you can fix
-[01:17:15.000 --> 01:17:17.000]  okay
-[01:17:17.000 --> 01:17:19.000]  thank you
-[01:17:23.000 --> 01:17:25.000]  okay in general
-[01:17:25.000 --> 01:17:27.000]  so we are trying to use a little bit more
-[01:17:27.000 --> 01:17:29.000]  a consistent format
-[01:17:29.000 --> 01:17:31.000]  so the error messages
-[01:17:31.000 --> 01:17:33.000]  are going to have a background
-[01:17:33.000 --> 01:17:35.000]  and the warning
-[01:17:35.000 --> 01:17:37.000]  message are going to have a background
-[01:17:37.000 --> 01:17:39.000]  in yellow so that might give you some
-[01:17:39.000 --> 01:17:41.000]  I mean those are the messages
-[01:17:41.000 --> 01:17:43.000]  that you might look for
-[01:17:43.000 --> 01:17:45.000]  if you feel that there is
-[01:17:45.000 --> 01:17:47.000]  any problem but it will just
-[01:17:47.000 --> 01:17:49.000]  let you run because otherwise you don't
-[01:17:49.000 --> 01:17:51.000]  really get the full picture so it might be
-[01:17:51.000 --> 01:17:53.000]  a little bit misleading just to
-[01:17:53.000 --> 01:17:55.000]  rely on an error message
-[01:17:55.000 --> 01:17:57.000]  or on something else
-[01:17:59.000 --> 01:18:01.000]  okay
-[01:18:03.000 --> 01:18:05.000]  hi Fabio
-[01:18:05.000 --> 01:18:07.000]  so regarding this
-[01:18:07.000 --> 01:18:09.000]  color coding for like red
-[01:18:09.000 --> 01:18:11.000]  or yellow so I
-[01:18:11.000 --> 01:18:13.000]  was running a full test
-[01:18:13.000 --> 01:18:15.000]  and I saw why it was trying
-[01:18:15.000 --> 01:18:17.000]  to do the alignment probably
-[01:18:17.000 --> 01:18:19.000]  and then I tried several times
-[01:18:19.000 --> 01:18:21.000]  alignment on line 5
-[01:18:21.000 --> 01:18:23.000]  failed it trying 9 more times before giving up
-[01:18:23.000 --> 01:18:25.000]  and then there was a red line that
-[01:18:25.000 --> 01:18:27.000]  failed to align optical group 0
-[01:18:27.000 --> 01:18:29.000]  I did 1 line
-[01:18:29.000 --> 01:18:31.000]  5 0 something 5.00
-[01:18:31.000 --> 01:18:33.000]  and then finally it got succeeded
-[01:18:33.000 --> 01:18:35.000]  but there were plenty of time
-[01:18:35.000 --> 01:18:37.000]  that I got this red
-[01:18:37.000 --> 01:18:39.000]  errors probably failed to align optical
-[01:18:39.000 --> 01:18:41.000]  group 0 so is there something
-[01:18:41.000 --> 01:18:43.000]  going on?
-[01:18:43.000 --> 01:18:45.000]  so I think I guess probably
-[01:18:45.000 --> 01:18:47.000]  what you are referring
-[01:18:47.000 --> 01:18:49.000]  is
-[01:18:49.000 --> 01:18:51.000]  happening during
-[01:18:51.000 --> 01:18:53.000]  other steps that are in the electric
-[01:18:53.000 --> 01:18:55.000]  chain validation
-[01:18:55.000 --> 01:18:57.000]  so
-[01:18:57.000 --> 01:18:59.000]  this is something that I realized and fixed
-[01:18:59.000 --> 01:19:01.000]  in the newer version
-[01:19:01.000 --> 01:19:03.000]  so because
-[01:19:03.000 --> 01:19:05.000]  what
-[01:19:05.000 --> 01:19:07.000]  so after we move
-[01:19:07.000 --> 01:19:09.000]  the pattern matching to the
-[01:19:09.000 --> 01:19:11.000]  into the
-[01:19:11.000 --> 01:19:13.000]  firmware then
-[01:19:13.000 --> 01:19:15.000]  we needed to do extra alignment steps
-[01:19:15.000 --> 01:19:17.000]  in order to make the pattern matching work
-[01:19:17.000 --> 01:19:19.000]  especially when you do face
-[01:19:19.000 --> 01:19:21.000]  scan where things are moving around
-[01:19:21.000 --> 01:19:23.000]  so you need to do them again
-[01:19:23.000 --> 01:19:25.000]  and the same procedure
-[01:19:25.000 --> 01:19:27.000]  is the procedure that
-[01:19:27.000 --> 01:19:29.000]  is run is the same procedure
-[01:19:29.000 --> 01:19:31.000]  that is run into align B
-[01:19:31.000 --> 01:19:33.000]  bolder data
-[01:19:33.000 --> 01:19:35.000]  and
-[01:19:35.000 --> 01:19:37.000]  here at this step you want to see if there are
-[01:19:37.000 --> 01:19:39.000]  errors and later we
-[01:19:39.000 --> 01:19:41.000]  expect that for some phases there is going to be
-[01:19:41.000 --> 01:19:43.000]  an error and I didn't realize
-[01:19:43.000 --> 01:19:45.000]  that this might have been a little
-[01:19:45.000 --> 01:19:47.000]  misleading so if you take
-[01:19:47.000 --> 01:19:49.000]  the newer version
-[01:19:49.000 --> 01:19:51.000]  the target
-[01:19:51.000 --> 01:19:53.000]  I think now is B6.9
-[01:19:53.000 --> 01:19:55.000]  I suppress
-[01:19:55.000 --> 01:19:57.000]  all the error messages
-[01:19:57.000 --> 01:19:59.000]  into the second part
-[01:19:59.000 --> 01:20:01.000]  where you expect that some of the
-[01:20:01.000 --> 01:20:03.000]  some of the phases that you're using will not
-[01:20:03.000 --> 01:20:05.000]  align so now it should be
-[01:20:05.000 --> 01:20:07.000]  much more consistent
-[01:20:07.000 --> 01:20:09.000]  and get all the
-[01:20:09.000 --> 01:20:11.000]  that you get yet and sorry that was
-[01:20:11.000 --> 01:20:13.000]  my mistake I just didn't realize
-[01:20:13.000 --> 01:20:15.000]  that was misleading
-[01:20:15.000 --> 01:20:17.000]  and this error is after this
-[01:20:17.000 --> 01:20:19.000]  OT chip to CIC
-[01:20:19.000 --> 01:20:21.000]  ECV after that step I
-[01:20:21.000 --> 01:20:23.000]  was getting that red errors
-[01:20:23.000 --> 01:20:25.000]  but it's okay as you mentioned
-[01:20:25.000 --> 01:20:27.000]  the color coding so I thought that
-[01:20:27.000 --> 01:20:29.000]  it's better to
-[01:20:29.000 --> 01:20:31.000]  you were absolutely right
-[01:20:31.000 --> 01:20:33.000]  it was just misleading that
-[01:20:33.000 --> 01:20:35.000]  I didn't suppress the message
-[01:20:35.000 --> 01:20:37.000]  you were not the only one
-[01:20:37.000 --> 01:20:39.000]  and a few people asked me
-[01:20:39.000 --> 01:20:41.000]  the same question I realized that
-[01:20:41.000 --> 01:20:43.000]  was not a great idea just to leave it
-[01:20:43.000 --> 01:20:45.000]  out
-[01:20:49.000 --> 01:20:51.000]  okay
-[01:20:51.000 --> 01:20:53.000]  I'm going to move on
-[01:20:53.000 --> 01:20:55.000]  to the
-[01:20:55.000 --> 01:20:57.000]  probably the two most known
-[01:20:57.000 --> 01:20:59.000]  calibration so
-[01:20:59.000 --> 01:21:01.000]  I think you know very well
-[01:21:01.000 --> 01:21:03.000]  so
-[01:21:03.000 --> 01:21:05.000]  it is telequalization so
-[01:21:05.000 --> 01:21:07.000]  by construction
-[01:21:07.000 --> 01:21:09.000]  the comparator that are
-[01:21:09.000 --> 01:21:11.000]  setting the threshold
-[01:21:11.000 --> 01:21:13.000]  for every channel
-[01:21:13.000 --> 01:21:15.000]  are subjected
-[01:21:15.000 --> 01:21:17.000]  to
-[01:21:17.000 --> 01:21:19.000]  production variation
-[01:21:19.000 --> 01:21:21.000]  cannot be done better than that
-[01:21:21.000 --> 01:21:23.000]  and so basically
-[01:21:23.000 --> 01:21:25.000]  every chip, every doubt chip
-[01:21:25.000 --> 01:21:27.000]  that you're going to find out
-[01:21:27.000 --> 01:21:29.000]  on the market not only on the tracker
-[01:21:29.000 --> 01:21:31.000]  have some
-[01:21:31.000 --> 01:21:33.000]  functionality that allow to compensate
-[01:21:33.000 --> 01:21:35.000]  for that and in this case
-[01:21:35.000 --> 01:21:37.000]  for the CBC
-[01:21:37.000 --> 01:21:39.000]  is an offset
-[01:21:39.000 --> 01:21:41.000]  that you can apply basically
-[01:21:41.000 --> 01:21:43.000]  to the signal that comes from the amplifier
-[01:21:45.000 --> 01:21:47.000]  that allow to raise a little bit
-[01:21:47.000 --> 01:21:49.000]  lower a little bit
-[01:21:49.000 --> 01:21:51.000]  the signal, the pedestal of the signal
-[01:21:51.000 --> 01:21:53.000]  such that
-[01:21:53.000 --> 01:21:55.000]  the threshold that you
-[01:21:55.000 --> 01:21:57.000]  apply is actually uniform
-[01:21:57.000 --> 01:21:59.000]  across every channel
-[01:21:59.000 --> 01:22:01.000]  so
-[01:22:01.000 --> 01:22:03.000]  during the pedestal equalization
-[01:22:03.000 --> 01:22:05.000]  what we do is that
-[01:22:05.000 --> 01:22:07.000]  we
-[01:22:07.000 --> 01:22:09.000]  set these values
-[01:22:09.000 --> 01:22:11.000]  channel by channel such that
-[01:22:11.000 --> 01:22:13.000]  we can even equalize
-[01:22:13.000 --> 01:22:15.000]  the threshold
-[01:22:15.000 --> 01:22:17.000]  so
-[01:22:17.000 --> 01:22:19.000]  for this
-[01:22:19.000 --> 01:22:21.000]  for this
-[01:22:23.000 --> 01:22:25.000]  calibration
-[01:22:25.000 --> 01:22:27.000]  the plots are stored
-[01:22:27.000 --> 01:22:29.000]  at the level of the chip
-[01:22:29.000 --> 01:22:31.000]  just go from one
-[01:22:31.000 --> 01:22:33.000]  and are the
-[01:22:33.000 --> 01:22:35.000]  two first plots
-[01:22:35.000 --> 01:22:37.000]  they are not
-[01:22:37.000 --> 01:22:39.000]  they are not going to tell you too much
-[01:22:39.000 --> 01:22:41.000]  because
-[01:22:41.000 --> 01:22:43.000]  most of the understanding will come from
-[01:22:43.000 --> 01:22:45.000]  the later step that is
-[01:22:45.000 --> 01:22:47.000]  the noise step
-[01:22:47.000 --> 01:22:49.000]  but at the end of the callization
-[01:22:49.000 --> 01:22:51.000]  you get this plot that shows
-[01:22:51.000 --> 01:22:53.000]  forever the channel
-[01:22:53.000 --> 01:22:55.000]  in the CBC
-[01:22:55.000 --> 01:22:57.000]  the offset that was chosen
-[01:22:57.000 --> 01:22:59.000]  I would say the only thing
-[01:22:59.000 --> 01:23:01.000]  here
-[01:23:01.000 --> 01:23:03.000]  if you see something weird later
-[01:23:03.000 --> 01:23:05.000]  you can come back and see
-[01:23:05.000 --> 01:23:07.000]  if any of the offset for some reason
-[01:23:07.000 --> 01:23:09.000]  went all the way to
-[01:23:09.000 --> 01:23:11.000]  255 which is the maximum
-[01:23:11.000 --> 01:23:13.000]  they were down to 0
-[01:23:13.000 --> 01:23:15.000]  this might mean that something failed
-[01:23:15.000 --> 01:23:17.000]  so far I think
-[01:23:17.000 --> 01:23:19.000]  for the CBC is very stable
-[01:23:19.000 --> 01:23:21.000]  so I don't recall seeing anything like that
-[01:23:21.000 --> 01:23:23.000]  and another
-[01:23:23.000 --> 01:23:25.000]  information that you can see
-[01:23:25.000 --> 01:23:27.000]  is that
-[01:23:27.000 --> 01:23:29.000]  might also help you if something wrong
-[01:23:29.000 --> 01:23:31.000]  happen
-[01:23:31.000 --> 01:23:33.000]  by the way I just realized
-[01:23:33.000 --> 01:23:35.000]  preparing this slide that there was a mistake
-[01:23:35.000 --> 01:23:37.000]  in this label that I corrected
-[01:23:37.000 --> 01:23:39.000]  here you have the channel
-[01:23:39.000 --> 01:23:41.000]  on the x-axis
-[01:23:41.000 --> 01:23:43.000]  and the y-channel is not the offset
-[01:23:43.000 --> 01:23:45.000]  it's actually the occupancy
-[01:23:45.000 --> 01:23:47.000]  because the idea is that we want to
-[01:23:47.000 --> 01:23:49.000]  get to around 50%
-[01:23:49.000 --> 01:23:51.000]  occupancy it's like higher for
-[01:23:51.000 --> 01:23:53.000]  technical reason
-[01:23:55.000 --> 01:23:57.000]  so it means that basically
-[01:23:57.000 --> 01:23:59.000]  even that particular offset
-[01:23:59.000 --> 01:24:01.000]  you get an occupancy
-[01:24:01.000 --> 01:24:03.000]  that is around 50%
-[01:24:03.000 --> 01:24:05.000]  that should be the occupancy that you get
-[01:24:05.000 --> 01:24:07.000]  after they pay the staff
-[01:24:07.000 --> 01:24:09.000]  so here again something
-[01:24:09.000 --> 01:24:11.000]  weird happens
-[01:24:11.000 --> 01:24:13.000]  to the
-[01:24:13.000 --> 01:24:15.000]  two S steps
-[01:24:15.000 --> 01:24:17.000]  you can come back here and see for any reason
-[01:24:17.000 --> 01:24:19.000]  some channel have a super high occupancy
-[01:24:19.000 --> 01:24:21.000]  super low occupancy
-[01:24:21.000 --> 01:24:23.000]  this might indicate that something didn't work perfectly
-[01:24:23.000 --> 01:24:25.000]  but the idea should be that you have something
-[01:24:25.000 --> 01:24:27.000]  kind of uniform
-[01:24:27.000 --> 01:24:29.000]  it's not gonna be super uniform
-[01:24:29.000 --> 01:24:31.000]  because you still
-[01:24:31.000 --> 01:24:33.000]  you still have a
-[01:24:33.000 --> 01:24:35.000]  duck that you have to play with
-[01:24:35.000 --> 01:24:37.000]  the discrete step that you
-[01:24:37.000 --> 01:24:39.000]  can apply but something
-[01:24:39.000 --> 01:24:41.000]  like this should be
-[01:24:41.000 --> 01:24:43.000]  reasonable
-[01:24:51.000 --> 01:24:53.000]  sorry I can't hear you
-[01:24:53.000 --> 01:24:55.000]  very well, can you try to
-[01:24:55.000 --> 01:24:57.000]  speak closer to the mic
-[01:25:05.000 --> 01:25:07.000]  yeah so
-[01:25:07.000 --> 01:25:09.000]  as I was saying these steps
-[01:25:09.000 --> 01:25:11.000]  the plot is but this step doesn't tell
-[01:25:11.000 --> 01:25:13.000]  you too much because right after
-[01:25:13.000 --> 01:25:15.000]  we get the
-[01:25:15.000 --> 01:25:17.000]  pay the noise so
-[01:25:17.000 --> 01:25:19.000]  here we do a scan
-[01:25:19.000 --> 01:25:21.000]  okay we know very well but
-[01:25:21.000 --> 01:25:23.000]  very briefly we do a scan
-[01:25:23.000 --> 01:25:25.000]  of the threshold that we apply
-[01:25:25.000 --> 01:25:27.000]  and we measure the occupancy
-[01:25:27.000 --> 01:25:29.000]  and in an ideal case
-[01:25:29.000 --> 01:25:31.000]  you would expect a step function
-[01:25:31.000 --> 01:25:33.000]  but in reality
-[01:25:33.000 --> 01:25:35.000]  you have the noises so this is
-[01:25:35.000 --> 01:25:37.000]  basically a step function
-[01:25:37.000 --> 01:25:39.000]  convoluted with a Gaussian and the Gaussian
-[01:25:39.000 --> 01:25:41.000]  is the
-[01:25:41.000 --> 01:25:43.000]  the noise that you have so it becomes
-[01:25:43.000 --> 01:25:45.000]  an S shape
-[01:25:45.000 --> 01:25:47.000]  and that's what I call S curves
-[01:25:47.000 --> 01:25:49.000]  so
-[01:25:49.000 --> 01:25:51.000]  there are a few plots over here
-[01:25:51.000 --> 01:25:53.000]  hopefully I'm gonna
-[01:25:53.000 --> 01:25:55.000]  remember them all
-[01:25:55.000 --> 01:25:57.000]  so
-[01:25:57.000 --> 01:25:59.000]  we have at the level of the chip
-[01:25:59.000 --> 01:26:01.000]  well this one I think you
-[01:26:01.000 --> 01:26:03.000]  saw it one billion times
-[01:26:03.000 --> 01:26:05.000]  is the
-[01:26:05.000 --> 01:26:07.000]  is the
-[01:26:07.000 --> 01:26:09.000]  the noise
-[01:26:09.000 --> 01:26:11.000]  here for the channel on the y-axis
-[01:26:11.000 --> 01:26:13.000]  on the x-axis you have the
-[01:26:13.000 --> 01:26:15.000]  sorry on the x-axis of the channel
-[01:26:15.000 --> 01:26:17.000]  on the y-axis you have the threshold
-[01:26:17.000 --> 01:26:19.000]  in the CTH and
-[01:26:19.000 --> 01:26:21.000]  this number you can find in the tweak
-[01:26:21.000 --> 01:26:23.000]  at the beginning but one step
-[01:26:23.000 --> 01:26:25.000]  is 156
-[01:26:25.000 --> 01:26:27.000]  electrons
-[01:26:27.000 --> 01:26:29.000]  and on the z-axis
-[01:26:29.000 --> 01:26:31.000]  you have the occupancy
-[01:26:31.000 --> 01:26:33.000]  and each one of these
-[01:26:33.000 --> 01:26:35.000]  lines
-[01:26:37.000 --> 01:26:39.000]  actually I can show it to you
-[01:26:39.000 --> 01:26:41.000]  each one of these
-[01:26:41.000 --> 01:26:43.000]  vertical lines is
-[01:26:43.000 --> 01:26:45.000]  nascar
-[01:26:47.000 --> 01:26:49.000]  I should then close it
-[01:26:51.000 --> 01:26:53.000]  okay
-[01:26:53.000 --> 01:26:55.000]  so
-[01:26:55.000 --> 01:26:57.000]  then each one of these
-[01:26:57.000 --> 01:26:59.000]  S curve is fitted
-[01:26:59.000 --> 01:27:01.000]  you can actually look into the fit
-[01:27:01.000 --> 01:27:03.000]  that you get for everyone
-[01:27:03.000 --> 01:27:05.000]  of these channels
-[01:27:05.000 --> 01:27:07.000]  into the channel folder
-[01:27:07.000 --> 01:27:09.000]  I'm gonna pick one random
-[01:27:09.000 --> 01:27:11.000]  and
-[01:27:11.000 --> 01:27:13.000]  if you zoom in it's basically the projection
-[01:27:13.000 --> 01:27:15.000]  that I was showing you before
-[01:27:15.000 --> 01:27:17.000]  with the shape
-[01:27:17.000 --> 01:27:19.000]  the point that I collected
-[01:27:19.000 --> 01:27:21.000]  the fit
-[01:27:21.000 --> 01:27:23.000]  I think I was quite lucky because the fit
-[01:27:23.000 --> 01:27:25.000]  was very good
-[01:27:25.000 --> 01:27:27.000]  on this fit
-[01:27:27.000 --> 01:27:29.000]  then we are able to extract from
-[01:27:29.000 --> 01:27:31.000]  the convoluting
-[01:27:31.000 --> 01:27:33.000]  the Gaussian
-[01:27:33.000 --> 01:27:35.000]  we can extract the noise that is the width of the Gaussian
-[01:27:35.000 --> 01:27:37.000]  and by the convoluting
-[01:27:37.000 --> 01:27:39.000]  the Gaussian we get the step function
-[01:27:39.000 --> 01:27:41.000]  and the step
-[01:27:41.000 --> 01:27:43.000]  the step is the pedestal
-[01:27:43.000 --> 01:27:45.000]  here is a little bit more clear because
-[01:27:45.000 --> 01:27:47.000]  it is at 50%
-[01:27:47.000 --> 01:27:49.000]  I forgot to mention this is done without injection
-[01:27:49.000 --> 01:27:51.000]  so this is
-[01:27:51.000 --> 01:27:53.000]  really the pedestal that we are measuring
-[01:27:55.000 --> 01:27:57.000]  then we add
-[01:27:57.000 --> 01:27:59.000]  a few more plots
-[01:27:59.000 --> 01:28:01.000]  here you get one for every channel
-[01:28:01.000 --> 01:28:03.000]  a few more plots
-[01:28:05.000 --> 01:28:07.000]  so from this car we can extract
-[01:28:07.000 --> 01:28:09.000]  the pedestal distribution
-[01:28:09.000 --> 01:28:11.000]  so this is simply
-[01:28:11.000 --> 01:28:13.000]  for the convoluting distribution
-[01:28:13.000 --> 01:28:15.000]  of the pedestal for every channel
-[01:28:15.000 --> 01:28:17.000]  this should be very sharp
-[01:28:17.000 --> 01:28:19.000]  so if something fails you will start
-[01:28:19.000 --> 01:28:21.000]  seeing into this plot
-[01:28:21.000 --> 01:28:23.000]  with some long tail
-[01:28:23.000 --> 01:28:25.000]  and all simply
-[01:28:25.000 --> 01:28:27.000]  out layers
-[01:28:27.000 --> 01:28:29.000]  and
-[01:28:29.000 --> 01:28:31.000]  to get the distribution of the pedestal across
-[01:28:31.000 --> 01:28:33.000]  the
-[01:28:33.000 --> 01:28:35.000]  all the channel
-[01:28:35.000 --> 01:28:37.000]  we have also the channel pedestal plot
-[01:28:37.000 --> 01:28:39.000]  let's show you for every channel
-[01:28:39.000 --> 01:28:41.000]  the threshold
-[01:28:41.000 --> 01:28:43.000]  at which you have the pedestal
-[01:28:43.000 --> 01:28:45.000]  and you see at the scale
-[01:28:45.000 --> 01:28:47.000]  it's very very uniform
-[01:28:47.000 --> 01:28:49.000]  within a few BCTH
-[01:28:49.000 --> 01:28:51.000]  again this is
-[01:28:51.000 --> 01:28:53.000]  156 electrons
-[01:28:53.000 --> 01:28:55.000]  so we speak about
-[01:28:55.000 --> 01:28:57.000]  a few hundred of electrons
-[01:28:57.000 --> 01:28:59.000]  of distribution width
-[01:29:01.000 --> 01:29:03.000]  then in the same
-[01:29:03.000 --> 01:29:05.000]  from the same plot
-[01:29:05.000 --> 01:29:07.000]  we also get
-[01:29:07.000 --> 01:29:09.000]  the noise distribution
-[01:29:09.000 --> 01:29:11.000]  for all the
-[01:29:11.000 --> 01:29:13.000]  so this is the convoluting distribution
-[01:29:13.000 --> 01:29:15.000]  for all the channels
-[01:29:15.000 --> 01:29:17.000]  and as for the pedestal you get
-[01:29:17.000 --> 01:29:19.000]  the channel noise distribution
-[01:29:19.000 --> 01:29:21.000]  of the noise
-[01:29:21.000 --> 01:29:23.000]  for every channel
-[01:29:23.000 --> 01:29:25.000]  and
-[01:29:25.000 --> 01:29:27.000]  these are all the plots at the level of
-[01:29:27.000 --> 01:29:29.000]  the CBC
-[01:29:29.000 --> 01:29:31.000]  then there are more cumulative plots
-[01:29:31.000 --> 01:29:33.000]  at the level of the
-[01:29:33.000 --> 01:29:35.000]  hybrid
-[01:29:35.000 --> 01:29:37.000]  to show you the behavior of all the hybrid
-[01:29:37.000 --> 01:29:39.000]  so here is the noise distribution
-[01:29:39.000 --> 01:29:41.000]  for all the channels
-[01:29:43.000 --> 01:29:45.000]  for every so for every strips on the hybrid
-[01:29:45.000 --> 01:29:47.000]  these include
-[01:29:47.000 --> 01:29:49.000]  both top and bottom
-[01:29:49.000 --> 01:29:51.000]  so we usually look
-[01:29:51.000 --> 01:29:53.000]  separately
-[01:29:53.000 --> 01:29:55.000]  the bottom
-[01:29:55.000 --> 01:29:57.000]  that is slightly higher because
-[01:29:57.000 --> 01:29:59.000]  we have the fold over so the lines
-[01:29:59.000 --> 01:30:01.000]  that allow us to
-[01:30:01.000 --> 01:30:03.000]  while going to the
-[01:30:03.000 --> 01:30:05.000]  ship
-[01:30:05.000 --> 01:30:07.000]  had to go down to the hybrid
-[01:30:07.000 --> 01:30:09.000]  so a bit longer and that's probably a bit of extra noise
-[01:30:09.000 --> 01:30:11.000]  due to the extra capacitance
-[01:30:11.000 --> 01:30:13.000]  of these lines
-[01:30:13.000 --> 01:30:15.000]  and the same from the top
-[01:30:15.000 --> 01:30:17.000]  that if I move back and forth
-[01:30:17.000 --> 01:30:19.000]  the top is a little bit lower
-[01:30:19.000 --> 01:30:21.000]  but I guess everybody knows
-[01:30:21.000 --> 01:30:23.000]  at this point
-[01:30:23.000 --> 01:30:25.000]  and finally
-[01:30:25.000 --> 01:30:27.000]  the last one is the cumulative
-[01:30:27.000 --> 01:30:29.000]  noise distribution for the hybrid
-[01:30:33.000 --> 01:30:35.000]  and these are all the plots
-[01:30:35.000 --> 01:30:37.000]  for the noise
-[01:30:37.000 --> 01:30:39.000]  so I need
-[01:30:39.000 --> 01:30:41.000]  I'm just going to go ahead but stub me
-[01:30:41.000 --> 01:30:43.000]  if you have any questions
-[01:30:43.000 --> 01:30:45.000]  okay so
-[01:30:45.000 --> 01:30:47.000]  I think basically
-[01:30:47.000 --> 01:30:49.000]  up to now we cover
-[01:30:49.000 --> 01:30:51.000]  all the steps
-[01:30:51.000 --> 01:30:53.000]  done also by the quick test
-[01:30:53.000 --> 01:30:55.000]  there were some extra steps that in quick test
-[01:30:55.000 --> 01:30:57.000]  are not done like
-[01:30:57.000 --> 01:30:59.000]  no I'm joking
-[01:30:59.000 --> 01:31:01.000]  there is nothing that is not done
-[01:31:01.000 --> 01:31:03.000]  for the quick test so far
-[01:31:03.000 --> 01:31:05.000]  so
-[01:31:05.000 --> 01:31:07.000]  so from now on we are going to move
-[01:31:07.000 --> 01:31:09.000]  just to the
-[01:31:09.000 --> 01:31:11.000]  test
-[01:31:11.000 --> 01:31:13.000]  that are done
-[01:31:13.000 --> 01:31:15.000]  for
-[01:31:15.000 --> 01:31:17.000]  the full test
-[01:31:17.000 --> 01:31:19.000]  I'm going to start
+This concludes the alignment section.
+
+##### PedestalEqualization (also known as Trimming) - Chip
+By design, the comparators that set the threshold for each channel have some unavoidable production variations. To compensate, each CBC chip allows an offset to be applied to the amplifier signal. This adjusts the pedestal up or down so that the threshold is uniform across all channels.
+During pedestal equalization, these offsets are set channel by channel to ensure consistent thresholds. 
+
+The results of this calibration are stored at the chip level.
+
+The first plot shows for every channel in the CBC the offset that was chosen.
+If something unusual appears later, it is possible to check whether any channel offsets have reached their extremes—0 or 255—which could indicate a failure. The CBC has so far demonstrated very stable behavior, with no occurrences of this issue.
+![ChannelOffsetValues_Chip](../images/OTtesting/2S/ChannelOffsetValues_Chip.png)
+
+
+In the plot below, the x-axis represents the channel, while the y-axis shows occupancy. The goal is to achieve approximately 50% occupancy, which corresponds to the expected value after calibration. If any channel shows unusually high or low occupancy, it may indicate an issue with that channel. Some variation is expected due to the discrete adjustment steps, but overall the distribution should be roughly uniform.
+![ChannelOccupancyAfterOffsetEqualization_Chip](../images/OTtesting/2S/ChannelOccupancyAfterOffsetEqualization_Chip.png)
+
+##### PedeNoise - Hybrid, Chip, Channel
+
+A scan of the applied threshold is performed, measuring the occupancy (without injection) for each threshold value. Ideally, this would produce a perfect step function. In reality, the presence of noise modifies the response, effectively convoluting the step function with a Gaussian. The Gaussian represents the noise in the system, and the resulting curve takes an S shape. This S-shaped curve is referred to as the “S curve.”
+
+For this test, many plots are saved at different levels.
+
+The S-Curve distribution is saved for each channel and shown below for one example channel.
+On the X-axis there is the applied threshold in VcTh units (1 VcTh unit =  156 electrons). Higher VcTh correspond to lower thresholds. On the Y-axis there is the occpuncy. Each S-curve is fitted individually. From this fit, the Gaussian component of the convolution allows extraction of the noise, represented by the width of the Gaussian. The underlying step function from the convolution corresponds to the pedestal, which is measured at around 50% occupancy. This measurement is performed without injection, so the pedestal obtained reflects the actual baseline of the system.
+![SCurve_1channel](../images/OTtesting/2S/SCurve_1channel.png)
+
+At the chip level, a 2D summary plot is stored summarizing the S-curve of all channels. Each plot shows channels on the x-axis, thresholds on the y-axis, and occupancy on the z-axis, with each line representing a single channel.
+
+![SCurve_Chip](../images/OTtesting/2S/SCurve_Chip.png)
+
+<details>
+  <summary>Known issues</summary>
+
+Broken wirebond or disconnected bump bond can show up as a compressed S-curve for a specific channel. If the issues appears in cold and disappears at room temperature it may be the CBC known issue of the corrupted offset register.
+
+![SCurve_Chip_buggy](../images/OTtesting/2S/SCurve_Chip_buggy.png)
+
+Another know issues is when horizontal stripes are present. This is a communication issue affecting the whole module. Example will be added when found again.
+
+
+</details>
+
+
+From the S-Curve, the pedestal for every channel can be extracted. The cumulative distribution of the pedestal should appear very sharp, while failures would show as long tails or outliers.
+![PedestalDistribution_Chip](../images/OTtesting/2S/PedestalDistribution_Chip.png)
+
+The channel pedestal plot shows the pedestal for each channel, revealing a very uniform distribution across all channels within a few VcTh, corresponding to a width of a few hundred electrons.
+![ChannelPedestal_Chip](../images/OTtesting/2S/ChannelPedestal_Chip.png)
+
+Similar distribution are also shown for the noise.
+![NoiseDistribution_Chip](../images/OTtesting/2S/NoiseDistribution_Chip.png)
+![ChannelNoise_Chip](../images/OTtesting/2S/ChannelNoise_Chip.png)
+
+The bottom sensor has a higher noise compared to the top because of longer traces in the foldover hybrid.
+![ChannelNoiseTop_Chip](../images/OTtesting/2S/ChannelNoiseTop_Chip.png)
+![ChannelNoiseBottom_Chip](../images/OTtesting/2S/ChannelNoiseBottom_Chip.png)
+
+There are there very similar distributions summarizing the performance at the hybrid level.
+
+![NoiseDistribution](../images/OTtesting/2S/NoiseDistribution.png)
+![StripChannelNoise](../images/OTtesting/2S/StripChannelNoise.png)
+
+The bottom sensor has a higher noise compared to the top because of longer traces (extra capacitance) in the foldover hybrid.
+![StripChannelNoiseTop](../images/OTtesting/2S/StripChannelNoiseTop.png)
+![StripChannelNoiseBottom](../images/OTtesting/2S/StripChannelNoiseBottom.png)
+
+<details>
+  <summary>Known issues</summary>
+
+A group of channel with high noise may indicate a scratch on the sensor.
+![StripChannelNoise_Scratch](../images/OTtesting/2S/StripChannelNoise_Scratch.png)
+
+A channel with low noise could indicate a broken wirebond. Below 2 a broken bumpbond.
+![StripChannelNoise_brokenBons](../images/OTtesting/2S/StripChannelNoise_brokenBonds.png)
+
+Groups of broken channels in the center of CBC can indicate that sparking occurred.
+![StripChannelNoise_Sparking](../images/OTtesting/2S/StripChannelNoise_Sparking.png)
+
+</details>
+
+
 [01:31:19.000 --> 01:31:21.000]  from the injection delay
 [01:31:21.000 --> 01:31:23.000]  optimization
 [01:31:23.000 --> 01:31:25.000]  so yes
