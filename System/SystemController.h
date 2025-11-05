@@ -357,25 +357,25 @@ class SystemController
   private:
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);
 
-    std::vector<Ph2_HwInterface::Event*> fEventList;
-    std::future<void>                    fFuture;
-    uint32_t                             fEventSize;
-    uint32_t                             fNCbc;
-    Ph2_Parser::FileParser               fParser;
+    std::future<void>      fFuture;
+    uint32_t               fEventSize;
+    uint32_t               fNCbc;
+    Ph2_Parser::FileParser fParser;
 
     DetectorDataContainer* fChannelGroupHandlerContainer;
 
   protected:
-    DetectorDataContainer*      fNameContainer;
-    bool                        fSameChannelGroupForAllChannels{true};
-    uint8_t                     fInitializeInterfaces{1};
-    std::string                 fConfigurationFileName{""};
-    std::string                 fSettingsFileName{""};
-    std::string                 fCalibrationName{""};
-    std::string                 fInitialConfigurationFileContent{""};
-    BoardType                   fBoardType{BoardType::UNDEFINED};
-    CommunicationSettingConfig* fCommunicationSettingConfig{nullptr};
-    DetectorMonitorConfig*      fDetectorMonitorConfig{nullptr};
+    std::vector<Ph2_HwInterface::Event*> fEventList;
+    DetectorDataContainer*               fNameContainer;
+    bool                                 fSameChannelGroupForAllChannels{true};
+    uint8_t                              fInitializeInterfaces{1};
+    std::string                          fConfigurationFileName{""};
+    std::string                          fSettingsFileName{""};
+    std::string                          fCalibrationName{""};
+    std::string                          fInitialConfigurationFileContent{""};
+    BoardType                            fBoardType{BoardType::UNDEFINED};
+    CommunicationSettingConfig*          fCommunicationSettingConfig{nullptr};
+    DetectorMonitorConfig*               fDetectorMonitorConfig{nullptr};
 };
 
 } // namespace Ph2_System

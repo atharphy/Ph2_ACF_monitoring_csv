@@ -229,6 +229,8 @@ bool OTalignStubPackage::AlignStubPackage()
         finalDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid1_link0_link9", bestPackageDelayLink0Link9[1]});
         finalDelayRegisterVector.push_back({"fc7_daq_cnfg.physical_interface_block.stubs_package_delay_hybrid1_link10_link11", bestPackageDelayLink10Link11[1]});
         fBeBoardInterface->WriteBoardMultReg(theBoard, finalDelayRegisterVector);
+
+        cInterface->Bx0Alignment();
     }
 
 #ifdef __USE_ROOT__
