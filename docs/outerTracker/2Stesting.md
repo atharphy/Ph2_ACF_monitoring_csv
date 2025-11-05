@@ -71,7 +71,7 @@ The `CalibrationName_Detector` is the name of the calibration, for instance `2Sf
 
 The `InitialDetectorConfiguration_Detector` is basically a copy of the `HWDescription` section of the ` settings/MyXML.xml` used to run the test. The `FinalDetectorConfiguration_Detector` is similar to the `Initial` one with possible updated values due to the performed calibrations.
 
-In the `CalibrationStartTimestamp_Detector` and `SubCalibrationNameAndType_Detecor` there is information about the time of each calibration. The calibration start time timestamp is stored as soon as you start configuring the module. Then since multiple steps are done, the different start of the steps (SubCalibration) are listed next to the steps. This is not really needed for any particular information for the QA but   it's really to keep track of the time for developers. The `CalibrationStopTimeStamp_Detector` is the time stamp for when the calibration is finished.
+In the `CalibrationStartTimestamp_Detector` and `SubCalibrationNameAndType_Detecor` there is information about the time of each calibration. The calibration start time timestamp is stored as soon as you start configuring the module. Then since multiple steps are done, the different start of the steps (SubCalibration) are listed next to the steps. This is not really needed for any particular information for the QA but   it's really to keep track of the time for developers. The `CalibrationstubTimeStamp_Detector` is the time stamp for when the calibration is finished.
 
  
 There is a minor difference of a few seconds in what you see in the metadata and in the printout on the terminal because in the beginning time stamp in the metadata the time used to read the configurations is not considered.
@@ -303,450 +303,128 @@ The plot below stores the number of retries. The alignment procedure is tried fo
 
 It is not uncommon to have one or two retries as there are some instabilities when writing some particular registers into the board. That's why we try multiple times. If the test retries 10 times, very likely means that it never manages to align and it would be good to check the connections between the CIC and the LpGBT.
 
+##### OTverifyBoardDataWord - Hybrid
+
+This test is designed to verify that the alignment performed in the previous steps properly succeeded. Once again the CIC is set in the same configuration to send a pattern through each line. The test checks if the pattern sent by the CIC matches the pattern received by the LpGBT.
+
+Two plots (per hybrid) are stored for this test.
+
+One plot contains the number of bits used for the test. For every line, it shows how many bits were tested. The difference between the number of bits we are testing between the stubs and the Level-1 is only for timing purposes.  
+
+The stub line can be implemented directly in the firmware, which is very fast.  
+
+In contrast, the Level-1 implementation would require a major firmware update, and we currently don’t have the resources for that. That’s why you see fewer bits for Level-1.  
+
+However, it’s still on the order of 10⁶ bits — not a small number — but lower than the number of stub bits. This corresponds to the number of tester bits.
+
+![CICtoLpGBT_PatternMatchingTestedBits_Hybrid](../images/OTtesting/common/CICtoLpGBT_PatternMatchingTestedBits_Hybrid.png)
+
+We also have the error rate.  
+This value ranges from 0 to 1, where 1 means 100% errors and 0 means no errors.  
+
+From what we have observed so far, this part of the test is very stable.  
+
+An error rate around 10⁻⁶ or 10⁻⁷ might just be a glitch.  
+If the error rate is higher than that, check the connections between the hybrids and the connectors, as that might be the cause.
 
 
-[43:21.000 --> 43:23.000]  now we can verify
-[43:23.000 --> 43:25.000]  that the alignment
-[43:25.000 --> 43:27.000]  properly succeeded
-[43:27.000 --> 43:29.000]  so when you send a pattern
-[43:29.000 --> 43:31.000]  that expect a pattern
-[43:31.000 --> 43:33.000]  into the
-[43:33.000 --> 43:35.000]  into the board
-[43:35.000 --> 43:37.000]  so if I go back here
-[43:37.000 --> 43:39.000]  what
-[43:39.000 --> 43:41.000]  we do is that
-[43:41.000 --> 43:43.000]  as for the alignment
-[43:43.000 --> 43:45.000]  the word alignment
-[43:45.000 --> 43:47.000]  we send the CIC
-[43:47.000 --> 43:49.000]  in the same configuration to send pattern
-[43:49.000 --> 43:51.000]  to this line
-[43:51.000 --> 43:53.000]  and then we start
-[43:53.000 --> 43:55.000]  checking
-[43:55.000 --> 43:57.000]  if the pattern that we send from the CIC
-[43:57.000 --> 43:59.000]  actually matches the pattern
-[43:59.000 --> 44:01.000]  that we receive in the LpGBT
-[44:01.000 --> 44:03.000]  so
-[44:11.000 --> 44:13.000]  so there are two plots
-[44:13.000 --> 44:15.000]  for these
-[44:15.000 --> 44:17.000]  each hybrid has its own two plots
-[44:17.000 --> 44:19.000]  and we have basically
-[44:19.000 --> 44:21.000]  the first one
-[44:21.000 --> 44:23.000]  I'm going to start from the second one
-[44:23.000 --> 44:25.000]  is the number of bits that we are
-[44:25.000 --> 44:27.000]  testing so for every line
-[44:27.000 --> 44:29.000]  we show how many bits
-[44:29.000 --> 44:31.000]  we tested
-[44:31.000 --> 44:33.000]  and you see that there is a difference
-[44:33.000 --> 44:35.000]  between the number of bits that we are testing
-[44:35.000 --> 44:37.000]  between the stubs and the level one
-[44:37.000 --> 44:39.000]  and this is the reason it is only for
-[44:39.000 --> 44:41.000]  timing purposes
-[44:41.000 --> 44:43.000]  because the stub line
-[44:43.000 --> 44:45.000]  can be done
-[44:45.000 --> 44:47.000]  into the firmware
-[44:47.000 --> 44:49.000]  we just
-[44:49.000 --> 44:51.000]  included in the
-[44:51.000 --> 44:53.000]  new release of the PH2SF
-[44:53.000 --> 44:55.000]  in the firmware
-[44:55.000 --> 44:57.000]  that is much faster
-[44:57.000 --> 44:59.000]  the level one will require
-[44:59.000 --> 45:01.000]  a major work
-[45:01.000 --> 45:03.000]  in the firmware that we don't really have the resources for
-[45:03.000 --> 45:05.000]  and that's why
-[45:05.000 --> 45:07.000]  you get less
-[45:07.000 --> 45:09.000]  but if you look it still 10 to the 6 bits
-[45:09.000 --> 45:11.000]  so it's not a super small number
-[45:11.000 --> 45:13.000]  but it's lower than the number of stubs
-[45:13.000 --> 45:15.000]  so this is the number of tester bits
-[45:15.000 --> 45:17.000]  and together with this
-[45:17.000 --> 45:19.000]  we also have the number of ferro rate
-[45:19.000 --> 45:21.000]  so
-[45:21.000 --> 45:23.000]  this one is a number
-[45:23.000 --> 45:25.000]  that can go from 0 to 1
-[45:25.000 --> 45:27.000]  so 1 means 100%
-[45:27.000 --> 45:29.000]  errors
-[45:29.000 --> 45:31.000]  and 0 means no error
-[45:31.000 --> 45:33.000]  so here
-[45:33.000 --> 45:35.000]  as for before
-[45:35.000 --> 45:37.000]  if you see any number of errors
-[45:37.000 --> 45:39.000]  and
-[45:39.000 --> 45:41.000]  I will check the connect
-[45:41.000 --> 45:43.000]  so for what we saw so far
-[45:43.000 --> 45:45.000]  this part of the test
-[45:45.000 --> 45:47.000]  is very stable
-[45:47.000 --> 45:49.000]  so
-[45:49.000 --> 45:51.000]  an error rate that is above
-[45:51.000 --> 45:53.000]  then 1
-[45:57.000 --> 45:59.000]  10 to the minus
-[45:59.000 --> 46:01.000]  6 or 7
-[46:01.000 --> 46:03.000]  might be just a glitch
-[46:03.000 --> 46:05.000]  if this is something higher
-[46:05.000 --> 46:07.000]  check the connection between the hybrids
-[46:07.000 --> 46:09.000]  and between
-[46:09.000 --> 46:11.000]  containers with hybrids because that might be
-[46:11.000 --> 46:13.000]  the causation
-[46:17.000 --> 46:19.000]  as usual any question just
-[46:21.000 --> 46:23.000]  Fabio
-[46:23.000 --> 46:25.000]  may I ask
-[46:25.000 --> 46:27.000]  a question
-[46:27.000 --> 46:29.000]  what exactly the stop here means
-[46:29.000 --> 46:31.000]  because we don't have the real
-[46:31.000 --> 46:33.000]  data yet
-[46:33.000 --> 46:35.000]  it's just the communication between
-[46:35.000 --> 46:37.000]  the CSE
-[46:37.000 --> 46:39.000]  and the
-[46:39.000 --> 46:41.000]  the IPGPT to the IPGA or
-[46:43.000 --> 46:45.000]  so
-[46:45.000 --> 46:47.000]  the fact that you have
-[46:47.000 --> 46:49.000]  different lines
-[46:49.000 --> 46:51.000]  so we have one line
-[46:51.000 --> 46:53.000]  for the level 1
-[46:53.000 --> 46:55.000]  and 5 lines for the stops
-[46:55.000 --> 46:57.000]  and so this just indicates which line
-[46:57.000 --> 46:59.000]  is affected
-[46:59.000 --> 47:01.000]  so it's literally
-[47:01.000 --> 47:03.000]  this is
-[47:03.000 --> 47:05.000]  stop 0 line
-[47:05.000 --> 47:07.000]  stop 1 line
-[47:07.000 --> 47:09.000]  stop 3 line and so on
-[47:09.000 --> 47:11.000]  so actually the
-[47:11.000 --> 47:13.000]  number of the line that
-[47:13.000 --> 47:15.000]  is between the CSE and IPGA
-[47:25.000 --> 47:27.000]  okay now
-[47:27.000 --> 47:29.000]  we are sure
-[47:29.000 --> 47:31.000]  there are no errors
-[47:31.000 --> 47:33.000]  we are sure that the communication
-[47:33.000 --> 47:35.000]  basically between the CSE
-[47:35.000 --> 47:37.000]  and the board works fine
-[47:37.000 --> 47:39.000]  so from the CSE to the board
-[47:39.000 --> 47:41.000]  everything is aligned
-[47:41.000 --> 47:43.000]  and so the next step
-[47:43.000 --> 47:45.000]  is that we can align
-[47:45.000 --> 47:47.000]  the stop package so this
-[47:47.000 --> 47:49.000]  becomes a little bit more complicated
-[47:49.000 --> 47:51.000]  so I'm gonna add
-[47:51.000 --> 47:53.000]  the next slide
-[47:53.000 --> 47:55.000]  okay so
-[47:57.000 --> 47:59.000]  before
-[47:59.000 --> 48:01.000]  I told you that there are 5 lines
-[48:01.000 --> 48:03.000]  between the
-[48:03.000 --> 48:05.000]  the CSE
-[48:05.000 --> 48:07.000]  and the
-[48:07.000 --> 48:09.000]  the IPGPT
-[48:09.000 --> 48:11.000]  and this is the pattern
-[48:11.000 --> 48:13.000]  that is being sent
-[48:13.000 --> 48:15.000]  so we have
-[48:15.000 --> 48:17.000]  a
-[48:17.000 --> 48:19.000]  bit that indicates if the pattern is coming
-[48:19.000 --> 48:21.000]  from the CBC or the NPA
-[48:21.000 --> 48:23.000]  in this case it's just gonna be a CBC
-[48:23.000 --> 48:25.000]  then we have status
-[48:25.000 --> 48:27.000]  bits that indicate errors
-[48:27.000 --> 48:29.000]  then we have a bunch forcing
-[48:29.000 --> 48:31.000]  IDs
-[48:31.000 --> 48:33.000]  that basically
-[48:33.000 --> 48:35.000]  is telling you which is
-[48:35.000 --> 48:37.000]  the bunch forcing
-[48:37.000 --> 48:39.000]  at which this pattern
-[48:39.000 --> 48:41.000]  this packet was sent
-[48:41.000 --> 48:43.000]  and then with the number of stops
-[48:43.000 --> 48:45.000]  so how many stops the packet
-[48:45.000 --> 48:47.000]  contains and then you have all the stops
-[48:47.000 --> 48:49.000]  so forget for the time being
-[48:49.000 --> 48:51.000]  all the stops because we don't have
-[48:51.000 --> 48:53.000]  any alignment between the CBC
-[48:53.000 --> 48:55.000]  and the CSE
-[48:55.000 --> 48:57.000]  but the CSE still send this packet
-[48:59.000 --> 49:01.000]  everything that is afterward is gonna be meaningless
-[49:01.000 --> 49:03.000]  but the beginning of the pattern
-[49:03.000 --> 49:05.000]  is gonna make complete sense of this point
-[49:05.000 --> 49:07.000]  because we know that these lines are properly aligned
-[49:07.000 --> 49:09.000]  so
-[49:09.000 --> 49:11.000]  what is the
-[49:11.000 --> 49:13.000]  the important part to be done here
-[49:13.000 --> 49:15.000]  is that this packet
-[49:15.000 --> 49:17.000]  goes to the FPGA
-[49:17.000 --> 49:19.000]  but and we know that
-[49:19.000 --> 49:21.000]  we align properly
-[49:21.000 --> 49:23.000]  we know which is the first bit
-[49:23.000 --> 49:25.000]  of the 8th one
-[49:25.000 --> 49:27.000]  that are contained in each one of these
-[49:27.000 --> 49:29.000]  sub-packages but we
-[49:29.000 --> 49:31.000]  still need to know which
-[49:31.000 --> 49:33.000]  of these 8 packages
-[49:33.000 --> 49:35.000]  so you see one here
-[49:35.000 --> 49:37.000]  there are 6 here and there is the 7 here
-[49:37.000 --> 49:39.000]  we need to know which one is the first
-[49:39.000 --> 49:41.000]  because you need to understand
-[49:41.000 --> 49:43.000]  where to start
-[49:43.000 --> 49:45.000]  understanding what the data are
-[49:45.000 --> 49:47.000]  there is no header so you cannot align on a header
-[49:47.000 --> 49:49.000]  but you need to know
-[49:49.000 --> 49:51.000]  which is the first one
-[49:51.000 --> 49:53.000]  and to do that what we do is that
-[49:53.000 --> 49:55.000]  we look at the bunch forcing ID
-[49:55.000 --> 49:57.000]  because we know that between
-[49:57.000 --> 49:59.000]  2 consecutive packets
-[49:59.000 --> 50:01.000]  or N consecutive packets
-[50:01.000 --> 50:03.000]  we know that the bunch forcing ID
-[50:03.000 --> 50:05.000]  need to be changed by a certain
-[50:05.000 --> 50:07.000]  month or value that depends on
-[50:07.000 --> 50:09.000]  how much time you wait
-[50:09.000 --> 50:11.000]  between one and another
-[50:11.000 --> 50:13.000]  so
-[50:13.000 --> 50:15.000]  it becomes
-[50:15.000 --> 50:17.000]  a little bit more complicated
-[50:17.000 --> 50:19.000]  than that but
-[50:19.000 --> 50:21.000]  the concept is that
-[50:21.000 --> 50:23.000]  basically we collect
-[50:23.000 --> 50:25.000]  successive stub events
-[50:25.000 --> 50:27.000]  knowing
-[50:27.000 --> 50:29.000]  certainly what is the
-[50:29.000 --> 50:31.000]  time between the 2 consecutive
-[50:31.000 --> 50:33.000]  events and then
-[50:33.000 --> 50:35.000]  we change
-[50:35.000 --> 50:37.000]  in the firmware
-[50:37.000 --> 50:39.000]  which is the
-[50:39.000 --> 50:41.000]  first the delay
-[50:41.000 --> 50:43.000]  that will apply on this packet
-[50:43.000 --> 50:45.000]  and we see if
-[50:45.000 --> 50:47.000]  consecutive packets
-[50:47.000 --> 50:49.000]  increase by the expected number
-[50:49.000 --> 50:51.000]  of bunch forcing ID
-[50:51.000 --> 50:53.000]  so what we do is that we basically have to scan
-[50:53.000 --> 50:55.000]  a number that goes from
-[50:55.000 --> 50:57.000]  0 to
-[50:57.000 --> 50:59.000]  7
-[50:59.000 --> 51:01.000]  and then we try to understand which is
-[51:01.000 --> 51:03.000]  the
-[51:03.000 --> 51:05.000]  core at the beginning of
-[51:05.000 --> 51:07.000]  which is the core delay that we need to apply
-[51:07.000 --> 51:09.000]  such that the first packet
-[51:09.000 --> 51:11.000]  that we're going to interpret
-[51:11.000 --> 51:13.000]  is this one
-[51:13.000 --> 51:15.000]  so
-[51:15.000 --> 51:17.000]  I hope I was clear and know that is
-[51:17.000 --> 51:19.000]  quite a complicated manner
-[51:19.000 --> 51:21.000]  but the whole goal is really
-[51:21.000 --> 51:23.000]  we need to know which one is the first packet
-[51:23.000 --> 51:25.000]  and after we
-[51:25.000 --> 51:27.000]  done that then we can interpret the results
-[51:27.000 --> 51:29.000]  if we don't do that and by mistake
-[51:29.000 --> 51:31.000]  we start from this one you don't understand anything
-[51:31.000 --> 51:33.000]  because then we'll try to
-[51:33.000 --> 51:35.000]  decode the number stop packet
-[51:35.000 --> 51:37.000]  over here and that will not make sense
-[51:37.000 --> 51:39.000]  so this plot
-[51:39.000 --> 51:41.000]  is stored
-[51:41.000 --> 51:43.000]  into the optical
-[51:43.000 --> 51:45.000]  group and it is
-[51:45.000 --> 51:47.000]  this one best stop
-[51:47.000 --> 51:49.000]  package delay
-[51:49.000 --> 51:51.000]  and so we show
-[51:51.000 --> 51:53.000]  in the
-[51:53.000 --> 51:55.000]  y-axis
-[51:55.000 --> 51:57.000]  the stop package delay
-[51:57.000 --> 51:59.000]  so these are the delays that we
-[51:59.000 --> 52:01.000]  need to apply to these big packages
-[52:03.000 --> 52:05.000]  and on the y-axis we show
-[52:05.000 --> 52:07.000]  the right hybrid
-[52:07.000 --> 52:09.000]  and the left hybrid
-[52:09.000 --> 52:11.000]  and here just a number
-[52:11.000 --> 52:13.000]  just one
-[52:13.000 --> 52:15.000]  that indicates which was
-[52:15.000 --> 52:17.000]  the stop package delay that was chosen
-[52:19.000 --> 52:21.000]  the only thing
-[52:21.000 --> 52:23.000]  I mean you don't need to check anything
-[52:23.000 --> 52:25.000]  I would say
-[52:25.000 --> 52:27.000]  the reason why we put this at the
-[52:27.000 --> 52:29.000]  level of the optical group is that
-[52:29.000 --> 52:31.000]  in this moment the
-[52:31.000 --> 52:33.000]  firmware doesn't allow to have
-[52:33.000 --> 52:35.000]  two stop packages differently
-[52:35.000 --> 52:37.000]  between the two hybrids
-[52:37.000 --> 52:39.000]  by construction we just want to register
-[52:39.000 --> 52:41.000]  for both hybrids
-[52:41.000 --> 52:43.000]  is
-[52:43.000 --> 52:45.000]  reasonable enough I would say
-[52:45.000 --> 52:47.000]  because we
-[52:47.000 --> 52:49.000]  the length of the
-[52:49.000 --> 52:51.000]  the lines between
-[52:51.000 --> 52:53.000]  the two hybrids and the PGBT
-[52:53.000 --> 52:55.000]  are so small that we shouldn't have
-[52:55.000 --> 52:57.000]  a big difference but we need
-[52:57.000 --> 52:59.000]  to put it on the same plot just to make sure
-[52:59.000 --> 53:01.000]  that we never run into
-[53:01.000 --> 53:03.000]  modules that have different packages
-[53:03.000 --> 53:05.000]  and that requires a modification
-[53:05.000 --> 53:07.000]  to the field
-[53:07.000 --> 53:09.000]  so I would say from
-[53:09.000 --> 53:11.000]  the point of view
-[53:11.000 --> 53:13.000]  of the
-[53:15.000 --> 53:17.000]  of the module
-[53:17.000 --> 53:19.000]  QA
-[53:19.000 --> 53:21.000]  not too much that you need to look into that
-[53:21.000 --> 53:23.000]  very likely if you have travels into this plot
-[53:23.000 --> 53:25.000]  it means that you have travels somewhere else
-[53:25.000 --> 53:27.000]  so this one is just a nice
-[53:27.000 --> 53:29.000]  first shot
-[53:29.000 --> 53:31.000]  but here I have a question
-[53:31.000 --> 53:33.000]  so I think
-[53:33.000 --> 53:35.000]  currently as you said we have the same
-[53:35.000 --> 53:37.000]  stop package delay for both
-[53:37.000 --> 53:39.000]  hybrids how would one then
-[53:39.000 --> 53:41.000]  currently see
-[53:41.000 --> 53:43.000]  if another would be
-[53:43.000 --> 53:45.000]  needed
-[53:45.000 --> 53:47.000]  one of the hybrids
-[53:47.000 --> 53:49.000]  the two certain points are not aligned
-[53:49.000 --> 53:51.000]  so we still scan everything
-[53:51.000 --> 53:53.000]  I think there will be
-[53:53.000 --> 53:55.000]  also an intersection at the stone
-[53:55.000 --> 53:57.000]  but these two points
-[53:57.000 --> 53:59.000]  will not be aligned so you are going to
-[53:59.000 --> 54:01.000]  buy one here and one here
-[54:01.000 --> 54:03.000]  okay
-[54:03.000 --> 54:05.000]  so it's mainly for
-[54:05.000 --> 54:07.000]  basically
-[54:07.000 --> 54:09.000]  as the developers to understand
-[54:09.000 --> 54:11.000]  if there are modules that require
-[54:11.000 --> 54:13.000]  that and then we need to intervene so far
-[54:13.000 --> 54:15.000]  we will never see something like that
-[54:15.000 --> 54:17.000]  so we think it's good enough
-[54:19.000 --> 54:21.000]  okay
-[54:25.000 --> 54:27.000]  back here
-[54:27.000 --> 54:29.000]  okay
-[54:29.000 --> 54:31.000]  now
-[54:31.000 --> 54:33.000]  we can finally start
-[54:33.000 --> 54:35.000]  aligning
-[54:35.000 --> 54:37.000]  the
-[54:37.000 --> 54:39.000]  cbc to the CIC
-[54:39.000 --> 54:41.000]  so
-[54:41.000 --> 54:43.000]  in this part
-[54:43.000 --> 54:45.000]  it's kind of what we did already
-[54:45.000 --> 54:47.000]  between the
-[54:47.000 --> 54:49.000]  CIC and the pgbt
-[54:49.000 --> 54:51.000]  so we set the cbc to send
-[54:51.000 --> 54:53.000]  a pattern
-[54:53.000 --> 54:55.000]  unfortunately it's a bit more complicated
-[54:55.000 --> 54:57.000]  because you need
-[54:57.000 --> 54:59.000]  really to inject channels
-[54:59.000 --> 55:01.000]  because the cbc
-[55:01.000 --> 55:03.000]  is not able to
-[55:03.000 --> 55:05.000]  inject a particular pattern
-[55:05.000 --> 55:07.000]  so when it's done with a few
-[55:07.000 --> 55:09.000]  strips that are being injected
-[55:09.000 --> 55:11.000]  such that we get
-[55:11.000 --> 55:13.000]  a pattern on these lines
-[55:13.000 --> 55:15.000]  and then we ask the CIC to align
-[55:15.000 --> 55:17.000]  on that pattern
-[55:17.000 --> 55:19.000]  and basically the alignment
-[55:19.000 --> 55:21.000]  of
-[55:21.000 --> 55:23.000]  the phase
-[55:23.000 --> 55:25.000]  is a simplified version of
-[55:25.000 --> 55:27.000]  what the pgbt does
-[55:27.000 --> 55:29.000]  they basically copy the same block
-[55:29.000 --> 55:31.000]  into the CIC so the idea is the same
-[55:31.000 --> 55:33.000]  send a pattern and the cbc
-[55:33.000 --> 55:35.000]  try to find the best phase
-[55:35.000 --> 55:37.000]  to decode the pattern
-[55:37.000 --> 55:39.000]  and so the plots
-[55:39.000 --> 55:41.000]  are going to kind of resemble
-[55:41.000 --> 55:43.000]  the one that I was showing you
-[55:43.000 --> 55:45.000]  for the
-[55:45.000 --> 55:47.000]  cbc
-[55:47.000 --> 55:49.000]  phase alignment
-[55:49.000 --> 55:51.000]  let me go
-[55:51.000 --> 55:53.000]  these are the level of the hybrid
-[55:53.000 --> 55:55.000]  and
-[55:55.000 --> 55:57.000]  are here
-[55:59.000 --> 56:01.000]  just open them all
-[56:01.000 --> 56:03.000]  okay
-[56:03.000 --> 56:05.000]  so
-[56:07.000 --> 56:09.000]  as for
-[56:11.000 --> 56:13.000]  the pgbt
-[56:13.000 --> 56:15.000]  we ask the CIC
-[56:15.000 --> 56:17.000]  to align a hundred times
-[56:17.000 --> 56:19.000]  again we want to
-[56:19.000 --> 56:21.000]  make sure that they are not
-[56:21.000 --> 56:23.000]  instability into the alignment procedures
-[56:23.000 --> 56:25.000]  of the CIC
-[56:25.000 --> 56:27.000]  and so that it works every time
-[56:27.000 --> 56:29.000]  so at the end of every
-[56:29.000 --> 56:31.000]  let me go over here
-[56:31.000 --> 56:33.000]  to forget to plot
-[56:33.000 --> 56:35.000]  the pgbt
-[56:37.000 --> 56:39.000]  so
-[56:43.000 --> 56:45.000]  we ask
-[56:45.000 --> 56:47.000]  the
-[56:47.000 --> 56:49.000]  CIC to align 100 times
-[56:49.000 --> 56:51.000]  and at the end of each alignment
-[56:51.000 --> 56:53.000]  you can ask if the
-[56:53.000 --> 56:55.000]  alignment worked or not
-[56:55.000 --> 56:57.000]  and then we can plot the
-[56:57.000 --> 56:59.000]  efficiency of alignment so here
-[56:59.000 --> 57:01.000]  you have the various lines
-[57:01.000 --> 57:03.000]  so you have one line
-[57:03.000 --> 57:05.000]  for the level one
-[57:05.000 --> 57:07.000]  lines for the stops
-[57:07.000 --> 57:09.000]  which are these lines
-[57:09.000 --> 57:11.000]  and then we have one
-[57:11.000 --> 57:13.000]  for every cbc
-[57:13.000 --> 57:15.000]  so here shown the cbcd
-[57:15.000 --> 57:17.000]  and on the z-axis
-[57:17.000 --> 57:19.000]  we have the efficiency
-[57:19.000 --> 57:21.000]  so from 0 to 1
-[57:21.000 --> 57:23.000]  and here if you see any troubles
-[57:23.000 --> 57:25.000]  you will see something that is
-[57:25.000 --> 57:27.000]  quite a lot below the 1
-[57:27.000 --> 57:29.000]  so far we have an audio that
-[57:29.000 --> 57:31.000]  doesn't have 100% efficiency
-[57:31.000 --> 57:33.000]  but
-[57:33.000 --> 57:35.000]  I would say if you have troubles
-[57:35.000 --> 57:37.000]  you will have problems
-[57:37.000 --> 57:39.000]  you have
-[57:39.000 --> 57:41.000]  a large number of errors
-[57:41.000 --> 57:43.000]  a large number of failing
-[57:43.000 --> 57:45.000]  locking
-[57:45.000 --> 57:47.000]  into this plot
-[57:47.000 --> 57:49.000]  and as for the pgbt
-[57:49.000 --> 57:51.000]  we also plot
-[57:51.000 --> 57:53.000]  for every of the lines
-[57:53.000 --> 57:55.000]  the phase
-[57:55.000 --> 57:57.000]  and the frequency
-[57:57.000 --> 57:59.000]  for which each phase was chosen
-[57:59.000 --> 58:01.000]  that you may be zooming
-[58:01.000 --> 58:03.000]  so if you zoom in
-[58:03.000 --> 58:05.000]  you see that you have the
-[58:05.000 --> 58:07.000]  for every cbc
-[58:07.000 --> 58:09.000]  the stub lines
-[58:09.000 --> 58:11.000]  and the level one lines
-[58:11.000 --> 58:13.000]  so they are all in the same plot
-[58:13.000 --> 58:15.000]  because we didn't want to make too many plots
-[58:15.000 --> 58:17.000]  and as for the pgbt
-[58:17.000 --> 58:19.000]  you see that quite often you can get
-[58:19.000 --> 58:21.000]  something like that so it means that
-[58:21.000 --> 58:23.000]  these two phases are basically
-[58:23.000 --> 58:25.000]  equivalent and we just choose
-[58:25.000 --> 58:27.000]  the one with the highest probability
-[58:27.000 --> 58:29.000]  and then again
-[58:29.000 --> 58:31.000]  from the cbc
-[58:31.000 --> 58:33.000]  we are showing here
-[58:33.000 --> 58:35.000]  the best input phase
-[58:35.000 --> 58:37.000]  so
-[58:37.000 --> 58:39.000]  this is a 2d plot
-[58:39.000 --> 58:41.000]  so we have
-[58:41.000 --> 58:43.000]  here on the y-axis
-[58:43.000 --> 58:45.000]  the different
-[58:45.000 --> 58:47.000]  lines
-[58:47.000 --> 58:49.000]  and on the
-[58:49.000 --> 58:51.000]  x-axis the different cbc
-[58:51.000 --> 58:53.000]  and on the z-axis
-[58:53.000 --> 58:55.000]  we are the best phase
-[58:55.000 --> 58:57.000]  so basically the most probable
-[58:57.000 --> 58:59.000]  one of these plots
+![CICtoLpGBT_PatternMatchingErrorRate_Hybrid](../images/OTtesting/common/CICtoLpGBT_PatternMatchingErrorRate_Hybrid.png)
+
+
+Now, we are sure that the communication between the CIC and the board works fine.
+
+##### OTCICphaseAlignment - Hybrid
+Now, we can begin aligning the CBC with the CIC.  
+This step is conceptually similar to the alignment between the CIC and the LpGBT, but it’s a bit more complicated.
+
+Since the CBC cannot generate an arbitrary test pattern, we inject a few strips to produce a recognizable pattern on the data lines.  
+The CIC then uses this pattern to adjust its phase and achieve proper alignment.
+
+The phase alignment logic in the CIC is a simplified version of that used in the LpGBT, since the same block was copied into the CIC design.  
+The process is therefore similar:  
+- Send a known pattern.  
+- The CIC scans phases to find the one that decodes the pattern correctly.
+
+To check stability, the CIC is asked to align 100 times.  
+This ensures that the alignment procedure is reliable and repeatable; if the result is consistent across all runs, the alignment is stable.  
+At the end of each alignment, we can query whether the procedure succeeded or not.
+
+The resulting plots below resemble those used for the CIC-LpGBT phase alignment and are produced at the hybrid level.
+
+We can plot the efficiency of alignment.  
+Each vertical bin represents different elements: one line for the Level-1, 5 lines for the stubs. On the X-Axis we have one column for every CBC.  
+On the z-axis, we display the efficiency, ranging from 0 to 1.  
+If there are any issues, the efficiency will appear noticeably below 1.  
+
+![CBCtoCIC_LockingEfficiency_Hybrid](../images/OTtesting/2S/CBCtoCIC_LockingEfficiency_Hybrid.png)
+
+
+We also plot, for each line, the phase and the frequency at which each phase was chosen.  
+If you zoom in on the X-axis, you can see, for every CBC, the stub lines and the Level-1 lines all in the same plot. We combined them into a single plot to avoid creating too many separate plots.  
+
+As for the LpGBT, you will often see cases where two phases are essentially equivalent. In these cases, we choose the phase with the highest probability.
+
+![CBCtoCIC_InputPhaseDistribution_Hybrid](../images/OTtesting/2S/CBCtoCIC_InputPhaseDistribution_Hybrid.png)
+
+Then we show the best input phase in a 2D plot.  
+On the y-axis, we have the different lines, and on the x-axis, the different CBCs.  
+The z-axis represents the best phase — basically the most probable phase for each line and CBC combination.
+
+![CBCtoCIC_BestInputPhases_Hybrid](../images/OTtesting/2S/CBCtoCIC_BestInputPhases_Hybrid.png)
+
+
+##### OTCICwordAlignment - Hybrid
+##### OTCICBX0Alignment - Hybrid
+
+
+##### OTalignStubPackage - OpticalGroup
+
+The next step consists in the alignment between the CIC and the CBCs.
+
+We start with the alignment of the stub package. There are 5 stub lines between the CIC and the LpGBT and the stub info is sent following [the scheme on slide 10](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf).
+
+There is 1 bit that indicates if the pattern is coming from the CBC or the MPA.
+We consider the CBC case. Then we have status bits that indicate errors.  
+Next, we have the bunch crossing IDs, which tell you the bunch crossing at which the pattern or packet was sent.  
+
+We also include the number of stubs, indicating how many stubs the packet contains, followed by all the stub data.  
+For the time being, ignore the stub information, since there is no alignment between the CBC and the CIC.  
+
+However, the CIC still sends this packet.  
+Everything that comes after the stub number is meaningless, but the beginning of the pattern makes complete sense at this point, because we know these lines are properly aligned.
+
+#FIXME double check minute 49
+The goal is to determine which of the eight packets is the first one in the sequence, so we can correctly interpret the data that follows.  
+
+The packet is sent to the FPGA, and we already know that the lines between CIC and FPGA are properly aligned — we can identify the first bit of each of the eight sub-packages contained within the packet.  
+However, we still need to determine which of these eight packets is the very first one.  
+This is essential, because without a header, we cannot align based on a predefined marker — we must instead understand where to start reading the data.  
+
+To find the first packet, we look at the bunch crossing ID.  
+Between two (or more) consecutive packets, the bunch crossing ID changes by a specific amount that depends on the time interval between them.  
+By comparing successive packets and checking how their bunch crossing IDs change, we can infer which packet comes first.  
+
+In practice, we collect successive stub events, knowing exactly the time difference between two consecutive events.  
+Then, in the firmware, we adjust the delay applied to each packet and verify whether the consecutive packets increase by the expected number of bunch crossing IDs.  
+
+This process involves scanning delay values from 0 to 7 — corresponding to the eight possible packets — to find the correct delay that ensures the first interpreted packet is indeed the first one in the sequence.  
+
+![Board_BestStubPackageDelay_OpticalGroup](../images/OTtesting/common/Board_BestStubPackageDelay_OpticalGroup.png)
+
+On the y-axis, we show the right hybrid and the left hybrid.  
+For each, we display a single number that indicates which stub package delay was chosen.  
+
+You generally don’t need to check anything specific here.  
+
+From the module QA point of view, there isn’t much to check here.  
+If you do see an issue in this plot, it most likely indicates a problem elsewhere in the setup, for instance a failed BXO alignment.
+
+
+
+
+
 [59:05.000 --> 59:07.000]  okay now
-[59:07.000 --> 59:09.000]  as usual stop me for any
+[59:07.000 --> 59:09.000]  as usual stub me for any
 [59:09.000 --> 59:11.000]  question
 [59:11.000 --> 59:13.000]  okay now
 [59:13.000 --> 59:15.000]  yes
@@ -1201,7 +879,7 @@ It is not uncommon to have one or two retries as there are some instabilities wh
 [01:14:55.000 --> 01:14:57.000]  you know
 [01:14:57.000 --> 01:14:59.000]  suppose in the start you feel there is
 [01:14:59.000 --> 01:15:01.000]  something very problematic
-[01:15:01.000 --> 01:15:03.000]  then you stop the run and then you
+[01:15:01.000 --> 01:15:03.000]  then you stub the run and then you
 [01:15:03.000 --> 01:15:05.000]  try to fix it
 [01:15:05.000 --> 01:15:07.000]  so
 [01:15:07.000 --> 01:15:09.000]  the
@@ -1210,13 +888,13 @@ It is not uncommon to have one or two retries as there are some instabilities wh
 [01:15:15.000 --> 01:15:17.000]  the module will be
 [01:15:17.000 --> 01:15:19.000]  will be disabled
 [01:15:19.000 --> 01:15:21.000]  and once you don't have any module to run
-[01:15:21.000 --> 01:15:23.000]  on the program will stop
+[01:15:21.000 --> 01:15:23.000]  on the program will stub
 [01:15:23.000 --> 01:15:25.000]  so it's
 [01:15:25.000 --> 01:15:27.000]  something this bad is
 [01:15:27.000 --> 01:15:29.000]  something that makes the module
 [01:15:29.000 --> 01:15:31.000]  inoperable
 [01:15:31.000 --> 01:15:33.000]  the program will
-[01:15:33.000 --> 01:15:35.000]  disable and stop it
+[01:15:33.000 --> 01:15:35.000]  disable and stub it
 [01:15:37.000 --> 01:15:39.000]  so
 [01:15:41.000 --> 01:15:43.000]  my suggestion and also shouldn't take
 [01:15:43.000 --> 01:15:45.000]  too much to run
@@ -1639,7 +1317,7 @@ It is not uncommon to have one or two retries as there are some instabilities wh
 [01:30:33.000 --> 01:30:35.000]  and these are all the plots
 [01:30:35.000 --> 01:30:37.000]  for the noise
 [01:30:37.000 --> 01:30:39.000]  so I need
-[01:30:39.000 --> 01:30:41.000]  I'm just going to go ahead but stop me
+[01:30:39.000 --> 01:30:41.000]  I'm just going to go ahead but stub me
 [01:30:41.000 --> 01:30:43.000]  if you have any questions
 [01:30:43.000 --> 01:30:45.000]  okay so
 [01:30:45.000 --> 01:30:47.000]  I think basically
@@ -2489,14 +2167,14 @@ It is not uncommon to have one or two retries as there are some instabilities wh
 [02:00:41.000 --> 02:00:43.000]  the Z axis
 [02:00:43.000 --> 02:00:45.000]  we add a number of test bits
 [02:00:45.000 --> 02:00:47.000]  and as before
-[02:00:47.000 --> 02:00:49.000]  the stop pattern matches down the firmware
+[02:00:47.000 --> 02:00:49.000]  the stub pattern matches down the firmware
 [02:00:49.000 --> 02:00:51.000]  to be faster while the level 1
 [02:00:51.000 --> 02:00:53.000]  pattern matches down on the
 [02:00:53.000 --> 02:00:55.000]  VR software and that's why it takes
 [02:00:55.000 --> 02:00:57.000]  longer time
 [02:00:57.000 --> 02:00:59.000]  and therefore
 [02:00:59.000 --> 02:01:01.000]  we don't scan as many bits
-[02:01:01.000 --> 02:01:03.000]  as for the stops
+[02:01:01.000 --> 02:01:03.000]  as for the stubs
 [02:01:03.000 --> 02:01:05.000]  and then for each one of these
 [02:01:05.000 --> 02:01:07.000]  we get a plot like this
 [02:01:07.000 --> 02:01:09.000]  where X and Y axes are the same
@@ -2764,8 +2442,8 @@ It is not uncommon to have one or two retries as there are some instabilities wh
 [02:10:31.000 --> 02:10:33.000]  you have the phase on the x-axis
 [02:10:33.000 --> 02:10:35.000]  and the line on the y-axis
 [02:10:35.000 --> 02:10:37.000]  and you are going to see this
-[02:10:37.000 --> 02:10:39.000]  always stop one, stop two, stop three
-[02:10:39.000 --> 02:10:41.000]  and stop four
+[02:10:37.000 --> 02:10:39.000]  always stub one, stub two, stub three
+[02:10:39.000 --> 02:10:41.000]  and stub four
 [02:10:41.000 --> 02:10:43.000]  because
 [02:10:43.000 --> 02:10:45.000]  the forwarding
 [02:10:45.000 --> 02:10:47.000]  always goes through these four lines
@@ -3301,7 +2979,7 @@ It is not uncommon to have one or two retries as there are some instabilities wh
 [02:29:27.000 --> 02:29:29.000]  and after this I will move to
 [02:29:29.000 --> 02:29:31.000]  the monitor
 [02:29:31.000 --> 02:29:33.000]  the QM file
-[02:29:33.000 --> 02:29:35.000]  but I think we should stop
+[02:29:33.000 --> 02:29:35.000]  but I think we should stub
 [02:29:35.000 --> 02:29:37.000]  a bit to see if you
 [02:29:37.000 --> 02:29:39.000]  have any question or comments
 [02:29:41.000 --> 02:29:43.000]  on what was discussed
@@ -3330,16 +3008,16 @@ It is not uncommon to have one or two retries as there are some instabilities wh
 [02:30:37.000 --> 02:30:39.000]  result file folder
 [02:30:39.000 --> 02:30:41.000]  and the reason why it's a separate file
 [02:30:41.000 --> 02:30:43.000]  because the result
-[02:30:43.000 --> 02:30:45.000]  they go from the start to the stop
+[02:30:43.000 --> 02:30:45.000]  they go from the start to the stub
 [02:30:45.000 --> 02:30:47.000]  when you start the monitor
 [02:30:47.000 --> 02:30:49.000]  it goes from the configure to the
 [02:30:49.000 --> 02:30:51.000]  halt or the destroy
 [02:30:51.000 --> 02:30:53.000]  the reason is that for example in the Balmina
-[02:30:53.000 --> 02:30:55.000]  we do start and stop during
+[02:30:53.000 --> 02:30:55.000]  we do start and stub during
 [02:30:55.000 --> 02:30:57.000]  the test that is usually one
 [02:30:57.000 --> 02:30:59.000]  of the plateau of the temperature
 [02:30:59.000 --> 02:31:01.000]  but then
-[02:31:01.000 --> 02:31:03.000]  we are into a stop
+[02:31:01.000 --> 02:31:03.000]  we are into a stub
 [02:31:03.000 --> 02:31:05.000]  state
 [02:31:05.000 --> 02:31:07.000]  during the changing current
 [02:31:07.000 --> 02:31:09.000]  and we want to keep monitoring even
@@ -3757,7 +3435,7 @@ It is not uncommon to have one or two retries as there are some instabilities wh
 [02:45:23.000 --> 02:45:25.000]  okay
 [02:45:25.000 --> 02:45:27.000]  okay
 [02:45:27.000 --> 02:45:29.000]  I'm gonna
-[02:45:29.000 --> 02:45:31.000]  stop
+[02:45:29.000 --> 02:45:31.000]  stub
 [02:45:31.000 --> 02:45:33.000]  sharing
 [02:45:35.000 --> 02:45:37.000]  I'm gonna also
-[02:45:37.000 --> 02:45:39.000]  stop recording
+[02:45:37.000 --> 02:45:39.000]  stub recording
