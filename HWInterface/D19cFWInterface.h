@@ -164,6 +164,9 @@ class D19cFWInterface : public BeBoardFWInterface
     std::vector<uint32_t> ReadBlockRegOffsetValue(const std::string& pRegNode, const uint32_t& pBlocksize, const uint32_t& pBlockOffset);
 
     bool WriteBlockReg(const std::string& pRegNode, const std::vector<uint32_t>& pValues) override;
+
+    std::string getFWcompilationTimestamp();
+
     /*!
      * \brief Get the FW info
      */

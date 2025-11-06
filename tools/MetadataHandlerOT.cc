@@ -1,5 +1,6 @@
 #include "tools/MetadataHandlerOT.h"
 #include "HWDescription/OuterTrackerHybrid.h"
+#include "HWInterface/D19cFWInterface.h"
 #include "Utils/Container.h"
 #include "Utils/ContainerFactory.h"
 #include "Utils/ContainerSerialization.h"
@@ -8,6 +9,7 @@
 #endif
 
 using namespace Ph2_HwDescription;
+using namespace Ph2_HwInterface;
 
 MetadataHandlerOT::MetadataHandlerOT(std::string startOfTestTime) : MetadataHandler(startOfTestTime) {}
 
@@ -22,6 +24,10 @@ void MetadataHandlerOT::initMetadataHardwareSpecific()
 
 void MetadataHandlerOT::fillInitialConditionsHardwareSpecific()
 {
+    DetectorDataContainer theFWcompilationTimestampContainer;
+    ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theFWcompilationTimestampContainer);
+    fillFWcompilationTimestampContainer(theFWcompilationTimestampContainer);
+    
     bool                  isInitialValue = true;
     DetectorDataContainer theCICFuseIdContainer;
     ContainerFactory::copyAndInitHybrid<std::string>(*fDetectorContainer, theCICFuseIdContainer);
@@ -42,6 +48,7 @@ void MetadataHandlerOT::fillInitialConditionsHardwareSpecific()
 
 #ifdef __USE_ROOT__
     auto* theOTDQMMetadata = static_cast<DQMMetadataOT*>(fDQMMetadata);
+    theOTDQMMetadata->fillFWcompilationTimestamp(theFWcompilationTimestampContainer);
     theOTDQMMetadata->fillCICFuseId(theCICFuseIdContainer);
     theOTDQMMetadata->fillCICConfiguration(theCICConfigurationContainer, isInitialValue);
     fDetectorContainer->addReadoutChipQueryFunction(selectMPASSAfunction, selectMPASSAfunctionName);
@@ -51,6 +58,9 @@ void MetadataHandlerOT::fillInitialConditionsHardwareSpecific()
 #else
     if(fDQMStreamerEnabled)
     {
+        ContainerSerialization theFWcompilationTimestampSerialization("MetadataFWcompilationTimestamp");
+        theFWcompilationTimestampSerialization.streamByBoardContainer(fDQMStreamer, theFWcompilationTimestampContainer);
+
         ContainerSerialization theCICFuseIdSerialization("MetadataCICFuseId");
         theCICFuseIdSerialization.streamByBoardContainer(fDQMStreamer, theCICFuseIdContainer);
 
@@ -136,5 +146,14 @@ void MetadataHandlerOT::fillIsReadoutChipCalibratedContainer(DetectorDataContain
                 }
             }
         }
+    }
+}
+
+void MetadataHandlerOT::fillFWcompilationTimestampContainer(DetectorDataContainer& theFWcompilationTimestampContainer)
+{
+    for(auto cBoard: *fDetectorContainer)
+    {
+        auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
+        theFWcompilationTimestampContainer.getObject(cBoard->getId())->getSummary<std::string, EmptyContainer>() = theFWInterface->getFWcompilationTimestamp();
     }
 }

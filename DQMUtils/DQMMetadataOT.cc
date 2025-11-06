@@ -16,6 +16,9 @@ void DQMMetadataOT::book(TFile* theOutputFile, DetectorContainer& theDetectorStr
     DQMMetadata::book(theOutputFile, theDetectorStructure, pSettingsMap);
 
     // child book here
+    StringContainer theFWcompilationTimestampStringContainer("FWcompilationTimestamp");
+    RootContainerFactory::bookBoardHistograms<StringContainer>(theOutputFile, theDetectorStructure, fFWcompilationTimestampContainer, theFWcompilationTimestampStringContainer);
+
     StringContainer theCICFuseIdStringContainer("CICFuseId");
     RootContainerFactory::bookHybridHistograms<StringContainer>(theOutputFile, theDetectorStructure, fCICFuseIdContainer, theCICFuseIdStringContainer);
 
@@ -33,6 +36,17 @@ void DQMMetadataOT::book(TFile* theOutputFile, DetectorContainer& theDetectorStr
     RootContainerFactory::bookChipHistograms<StringContainer>(theOutputFile, theDetectorStructure, fIsReadoutChipCalibratedContainer, theIsReadoutChipCalibratedStringContainer);
     fDetectorContainer->removeReadoutChipQueryFunction(selectMPASSAfunctionName);
 }
+
+void DQMMetadataOT::fillFWcompilationTimestamp(const DetectorDataContainer& theFWcompilationTimestampContainer)
+{
+    for(const auto board: theFWcompilationTimestampContainer)
+    {
+        auto* theTreeContainerBoard = fFWcompilationTimestampContainer.getObject(board->getId());
+        if(!board->hasSummary()) continue;
+        theTreeContainerBoard->getSummary<StringContainer>().saveString(board->getSummary<std::string>().c_str());
+    }
+}
+
 
 void DQMMetadataOT::fillCICFuseId(const DetectorDataContainer& theCICFuseIdContainer)
 {
@@ -111,10 +125,19 @@ bool DQMMetadataOT::fill(std::string& inputStream)
     {
         // child fill here
 
+        ContainerSerialization theFWcompilationTimestampSerialization("MetadataFWcompilationTimestamp");
         ContainerSerialization theCICFuseIdSerialization("MetadataCICFuseId");
         ContainerSerialization theCICConfigurationSerialization("MetadataCICConfiguration");
         ContainerSerialization theReadoutChipIsCalibratedSerialization("MetadataReadoutChipIsCalibrated");
 
+        if(theFWcompilationTimestampSerialization.attachDeserializer(inputStream))
+        {
+            // std::cout << "Matched Metadata FWcompilationTimestamp!!!!!\n";
+            DetectorDataContainer theDetectorData =
+                theFWcompilationTimestampSerialization.deserializeBoardContainer<EmptyContainer, EmptyContainer, EmptyContainer, std::string, EmptyContainer>(fDetectorContainer);
+            fillFWcompilationTimestamp(theDetectorData);
+            return true;
+        }
         if(theCICFuseIdSerialization.attachDeserializer(inputStream))
         {
             // std::cout << "Matched Metadata CICFuseId!!!!!\n";

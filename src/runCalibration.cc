@@ -18,6 +18,7 @@ INITIALIZE_EASYLOGGINGPP
 
 sig_atomic_t killProcess  = 0;
 sig_atomic_t runCompleted = 0;
+sig_atomic_t runningPhysics = 0;
 
 void interruptHandler(int handler) { killProcess = 1; }
 
@@ -30,8 +31,15 @@ void killProcessFunction(MiddlewareStateMachine* theMiddlewareStateMachine)
     }
     if(killProcess)
     {
-        theMiddlewareStateMachine->abort();
-        abort();
+        if(runningPhysics)
+        {
+            runningPhysics = 0;
+        }
+        else
+        {
+            theMiddlewareStateMachine->abort();
+            abort();
+        }
     }
 }
 
@@ -198,12 +206,15 @@ int main(int argc, char* argv[])
         }
         case RUNNING:
         {
-            if(cmd.optionValue("calibration") != "psphysics" && cmd.optionValue("calibration") != "2sphysics")
+            if(cmd.optionValue("calibration") != "otphysics")
             {
                 while(theMiddlewareStateMachine.status() == MiddlewareStateMachine::Status::RUNNING) { usleep(5e5); }
             }
             else
-                usleep(20e6);
+            {
+                runningPhysics = 1;
+                while(runningPhysics){usleep(25e4);}
+            }
             std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
             theMiddlewareStateMachine.stop();
             stateMachineStatus = STOPPED;
