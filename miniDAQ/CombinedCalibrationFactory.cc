@@ -391,7 +391,14 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTBitErrorRateTest,
              OTRegisterTester>("PS Module", "PSfullTestPart2");
 
-    Register<PSPhysics>("PS Module", "psphysics");
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
+             PSPhysics>("PS Module", "psphysics");
+
     Register<TuneLpGBTVref, OTPSADCCalibration>("PS Module", "ADCandVREF");
     Register<OTalignBoardDataWord, OTPSADCCalibration>("PS Module", "ADCBiasCalibration");
 

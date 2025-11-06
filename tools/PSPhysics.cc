@@ -18,6 +18,8 @@
 #include "Utils/StartInfo.h"
 #include "tools/CicFEAlignment.h"
 #include "tools/PSAlignment.h"
+#include "HWInterface/D19cTriggerInterface.h"
+#include "HWInterface/D19cL1ReadoutInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -26,51 +28,6 @@ std::string PSPhysics::fCalibrationDescription = "Take data";
 
 void PSPhysics::ConfigureCalibration()
 {
-    PSAlignment cPSAlignment;
-    cPSAlignment.Inherit(this);
-    cPSAlignment.Initialise();
-    // map MPA outputs for PS module
-    cPSAlignment.MapMPAOutputs();
-
-    CicFEAlignment cCicAligner;
-    cCicAligner.Inherit(this);
-    StartInfo theStartInfo;
-    theStartInfo.setRunNumber(0);
-    cCicAligner.Start(theStartInfo);
-    cCicAligner.waitForRunToBeCompleted();
-    cCicAligner.Reset();
-    cCicAligner.dumpConfigFiles();
-
-    for(auto board: *fDetectorContainer)
-    {
-        for(auto opticalGroup: *board)
-        {
-            for(auto hybrid: *opticalGroup)
-            {
-                for(auto chip: *hybrid)
-                {
-                    if(chip->getFrontEndType() == FrontEndType::SSA2)
-                    {
-                        LOG(INFO) << "SSA";
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x1);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 80);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "L1-Latency_LSB", 79);
-                    }
-                    if(chip->getFrontEndType() == FrontEndType::MPA2)
-                    {
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0xF);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ModeSel_ALL", 0x0);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "HipCut_ALL", 0x0);
-                        // static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "ENFLAGS_ALL", 0x57);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "Threshold", 90);
-                        static_cast<PSInterface*>(fReadoutChipInterface)->WriteChipReg(chip, "L1Offset_1_ALL", 79);
-                        std::cout << static_cast<PSInterface*>(fReadoutChipInterface)->ReadChipReg(chip, "ReadoutMode") << std::endl;
-                    }
-                }
-            }
-        }
-    }
-
     // SystemController::Configure("settings/PS_HalfModule.xml");
 
     // #######################
@@ -78,6 +35,20 @@ void PSPhysics::ConfigureCalibration()
     // #######################
     saveRawData = this->findValueInSettings<double>("SaveRawData");
     doLocal     = false;
+
+    std::vector<std::pair<std::string, uint32_t>> boardRegisterVector;
+    boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
+    boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
+    boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
+    boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 1});
+    boardRegisterVector.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0});
+    boardRegisterVector.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0});
+    boardRegisterVector.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
+
+    for(auto theBoard: *fDetectorContainer)
+    {
+        fBeBoardInterface->WriteBoardMultReg(theBoard, boardRegisterVector);
+    }
 
     // ###########################################
     // # Initialize directory and data container #
@@ -94,6 +65,28 @@ void PSPhysics::ConfigureCalibration()
     MPAChannelGroupHandler theMPAChannelGroupHandler;
     theMPAChannelGroupHandler.setChannelGroupParameters(1, NMPAROWS, NSSACHANNELS); // 16*2*8
     setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA2);
+
+    // std::vector<uint8_t> listOfInjectedChipId = {};
+    // std::vector<Cluster> theClusterList;
+    // theClusterList.push_back(Cluster(10, 100, 1));
+
+    // for(auto theBoard: *fDetectorContainer)
+    // {
+    //     for(auto theOpticalGroup: *theBoard)
+    //     {
+    //         for(auto theHybrid: *theOpticalGroup)
+    //         {
+    //             for(auto theChip: *theHybrid)
+    //             {
+    //                 if(std::find(listOfInjectedChipId.begin(), listOfInjectedChipId.end(), theChip->getId()) != listOfInjectedChipId.end())
+    //                 {
+    //                     static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theChip, theClusterList);
+    //                 }
+    //                 else { static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theChip, {}); }
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 void PSPhysics::Running()
@@ -105,13 +98,23 @@ void PSPhysics::Running()
         char      runString[7];
         const int theRunNumber = Tool::fRunNumber;
         sprintf(runString, "%06d", theRunNumber);
-        this->addFileHandler(std::string(RESULTDIR) + "/run_" + runString + ".raw", 'w');
+        this->addFileHandler(fDirectoryName + "/run_" + runString + ".raw", 'w');
         this->initializeWriteFileHandler();
     }
 
     for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getId()])->ChipReSync();
     StartInfo theStartInfo;
     theStartInfo.setRunNumber(fRunNumber);
+
+    for(auto theBoard: *fDetectorContainer)
+    {
+        auto theFWInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject((theBoard)->getId())));
+        auto theReadoutInterface = theFWInterface->getL1ReadoutInterface();
+        theReadoutInterface->ResetReadout();
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
     SystemController::Start(theStartInfo);
 
     PSPhysics::run();
@@ -123,9 +126,13 @@ void PSPhysics::Stop()
 
     Tool::Stop();
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
     fTotalDataSize += getDataFromBoards();
 
-    LOG(WARNING) << BOLDBLUE << "Number of collected events = " << fTotalDataSize << RESET;
+    auto cTriggerInterface = static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(fDetectorContainer->getFirstObject())->getId()])->getTriggerInterface();
+    LOG(INFO) << BOLDBLUE << "Number of collected triggers = " << cTriggerInterface->getNumberOfTriggerCounter() << std::endl;
+    LOG(INFO) << BOLDBLUE << "Number of collected events   = " << fTotalDataSize << RESET;
 
     if(fTotalDataSize == 0) LOG(WARNING) << BOLDBLUE << "No data collected" << RESET;
 
@@ -162,23 +169,15 @@ unsigned int PSPhysics::getDataFromBoards()
     unsigned int dataSize = 0;
     for(const auto cBoard: *fDetectorContainer)
     {
-        // std::cout<<__LINE__<<std::endl;
         dataSize += SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
-        // std::cout<<__LINE__<<std::endl;
+
         if(dataSize != 0)
         {
-            // std::cout<<__LINE__<<std::endl;
             const std::vector<Event*>& events = SystemController::GetEvents();
-            // std::cout<<__LINE__<<std::endl;
             PSPhysics::fillDataContainer(cBoard, events);
-            // std::cout<<__LINE__<<std::endl;
-            // std::cout<<__LINE__<<std::endl;
         }
-        // std::cout<<__LINE__<<std::endl;
-        // std::cout<<__LINE__<<std::endl;
     }
-    std::cout << "Readout " << dataSize << " events" << std::endl;
-
+    
     if(fDQMStreamerEnabled)
     {
         ContainerSerialization theOccupancySerialization("PSPhysicsOccupancy");
@@ -266,78 +265,46 @@ void PSPhysics::fillDataContainer(BoardContainer* const& cBoard, const std::vect
                     if(currentChip->getFrontEndType() != FrontEndType::MPA2) continue;
 
                     // std::cout<<__LINE__<<std::endl;
-                    auto pixelClusterList = static_cast<D19cCic2Event*>(event)->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                    // std::cout<<"Numer of pixel clusters = "<<pixelClusterList.size() << " - ";
-                    auto stripClusterList = static_cast<D19cCic2Event*>(event)->GetStripClusters(cHybrid->getId(), cChip->getId());
-                    auto stubList         = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
-
-                    // std::cout<<__LINE__<<std::endl;
-                    for(auto& pixelCluster: pixelClusterList)
+                    if(currentChip->getFrontEndType() == FrontEndType::MPA2)
                     {
-                        for(uint8_t subPixel = 0; subPixel < (pixelCluster.fWidth); ++subPixel)
+                        auto pixelClusterList = static_cast<D19cCic2Event*>(event)->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                        for(auto& pixelCluster: pixelClusterList)
                         {
-                            if(pixelCluster.fAddress + subPixel < 120u) ++cChip->getChannel<float>(pixelCluster.fZpos, pixelCluster.fAddress + subPixel);
+                            for(uint8_t subPixel = 0; subPixel < (pixelCluster.fWidth); ++subPixel)
+                            {
+                                if(pixelCluster.fAddress + subPixel < 120u) ++cChip->getChannel<float>(pixelCluster.fZpos, pixelCluster.fAddress + subPixel);
+                            }
+                        }
+                        
+                        auto stubList         = static_cast<D19cCic2Event*>(event)->StubVector(cHybrid->getId(), cChip->getId());
+                        ChipDataContainer* theStubChipContainer = fStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
+                        for(auto& stub: stubList)
+                        {
+                            if(ceil(stub.getCenter()) != stub.getCenter())
+                            {
+                                if(size_t(ceil(stub.getCenter())) < 120u) theStubChipContainer->getChannel<float>(stub.getRow(), size_t(ceil(stub.getCenter()))) += 0.5;
+                                if(size_t(floor(stub.getCenter())) < 120u) theStubChipContainer->getChannel<float>(stub.getRow(), size_t(floor(stub.getCenter()))) += 0.5;
+                            }
+                            else
+                            {
+                                if(size_t(stub.getCenter()) < 120u) ++theStubChipContainer->getChannel<float>(stub.getRow(), size_t(stub.getCenter()));
+                            }
                         }
                     }
-
-                    // std::cout<<__LINE__<<std::endl;
-                    ChipDataContainer* theStubChipContainer = fStubContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId());
-                    // std::cout<<__LINE__<<std::endl;
-                    for(auto& stub: stubList)
+                    else
                     {
-                        // std::cout<<"stub.getRow()            = "<<+stub.getRow()           <<std::endl;
-                        // std::cout<<"stub.getCenter()         = "<<stub.getCenter()         <<std::endl;
-                        // std::cout<<"size_t(stub.getCenter()) = "<<size_t(stub.getCenter())<<std::endl;
-                        // std::cout<<"stub.getPosition()       = "<<+stub.getPosition()     <<std::endl;
-                        // std::cout<<__LINE__<<std::endl;
-                        if(ceil(stub.getCenter()) != stub.getCenter())
+                        ChipDataContainer* theSSAContainer = cHybrid->getObject(cChip->getId());
+                        
+                        auto stripClusterList = static_cast<D19cCic2Event*>(event)->GetStripClusters(cHybrid->getId(), cChip->getId());
+                        for(auto& stripCluster: stripClusterList)
                         {
-                            // std::cout<<__LINE__<<std::endl;
-                            if(size_t(ceil(stub.getCenter())) < 120u) theStubChipContainer->getChannel<float>(stub.getRow(), size_t(ceil(stub.getCenter()))) += 0.5;
-                            // std::cout<<__LINE__<<std::endl;
-                            if(size_t(floor(stub.getCenter())) < 120u) theStubChipContainer->getChannel<float>(stub.getRow(), size_t(floor(stub.getCenter()))) += 0.5;
-                            // std::cout<<__LINE__<<std::endl;
-                        }
-                        else
-                        {
-                            // std::cout<<__LINE__<<std::endl;
-
-                            if(size_t(stub.getCenter()) < 120u) ++theStubChipContainer->getChannel<float>(stub.getRow(), size_t(stub.getCenter()));
-                            // std::cout<<__LINE__<<std::endl;
-                        }
-                        // std::cout<<__LINE__<<std::endl;
-                    }
-
-                    // std::cout<<__LINE__<<std::endl;
-
-                    if(currentChip->getId() == 3) continue; // patch for bug in the FEH I2C address
-
-                    // std::cout<<__LINE__<<std::endl;
-                    uint16_t theCorrespondingSSAId = 9999;
-                    for(auto theCorrespondingSSA: *fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId()))
-                    {
-                        if(theCorrespondingSSA->getFrontEndType() != FrontEndType::SSA2) continue;
-                        if(theCorrespondingSSA->getId() == currentChip->getId())
-                        {
-                            theCorrespondingSSAId = theCorrespondingSSA->getId();
-                            break;
+                            for(uint8_t subStrip = 0; subStrip < (stripCluster.fWidth); ++subStrip)
+                            {
+                                if(stripCluster.fAddress + subStrip < 120u) ++theSSAContainer->getChannel<float>(0, stripCluster.fAddress + subStrip);
+                            }
                         }
                     }
-
-                    // std::cout<<__LINE__<<std::endl;
-
-                    ChipDataContainer* theSSAContainer = cHybrid->getObject(theCorrespondingSSAId);
-
-                    for(auto& stripCluster: stripClusterList)
-                    {
-                        for(uint8_t subStrip = 0; subStrip < (stripCluster.fWidth); ++subStrip)
-                        {
-                            if(stripCluster.fAddress + subStrip < 120u) ++theSSAContainer->getChannel<float>(0, stripCluster.fAddress + subStrip);
-                        }
-                    }
-                    // std::cout<<__LINE__<<std::endl;
                 }
-                // std::cout<<std::endl;
             }
         }
     }
