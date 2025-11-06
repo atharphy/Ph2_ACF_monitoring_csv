@@ -171,9 +171,10 @@ FrontEndType D19cFWInterface::getFrontEndType(uint32_t pChipCode)
 
 std::string D19cFWInterface::getFWcompilationTimestamp()
 {
-    int firmware_timestamp = ReadReg("fc7_daq_stat.general.firmware_timestamp");
-    std::string theFWcompilationTimestamp = std::to_string(((firmware_timestamp >> 27) & 0x1F)) + "." + std::to_string(((firmware_timestamp >> 23) & 0xF)) + "." + std::to_string(((firmware_timestamp >> 17)) & 0x3F) + " "
-              + std::to_string(((firmware_timestamp >> 12) & 0x1F)) + ":" + std::to_string(((firmware_timestamp >> 6) & 0x3F)) + ":" + std::to_string(((firmware_timestamp >> 0) & 0x3F));
+    int         firmware_timestamp        = ReadReg("fc7_daq_stat.general.firmware_timestamp");
+    std::string theFWcompilationTimestamp = std::to_string(((firmware_timestamp >> 27) & 0x1F)) + "." + std::to_string(((firmware_timestamp >> 23) & 0xF)) + "." +
+                                            std::to_string(((firmware_timestamp >> 17)) & 0x3F) + " " + std::to_string(((firmware_timestamp >> 12) & 0x1F)) + ":" +
+                                            std::to_string(((firmware_timestamp >> 6) & 0x3F)) + ":" + std::to_string(((firmware_timestamp >> 0) & 0x3F));
     return theFWcompilationTimestamp;
 }
 

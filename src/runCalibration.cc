@@ -16,8 +16,8 @@
 using namespace CommandLineProcessing;
 INITIALIZE_EASYLOGGINGPP
 
-sig_atomic_t killProcess  = 0;
-sig_atomic_t runCompleted = 0;
+sig_atomic_t killProcess    = 0;
+sig_atomic_t runCompleted   = 0;
 sig_atomic_t runningPhysics = 0;
 
 void interruptHandler(int handler) { killProcess = 1; }
@@ -31,10 +31,7 @@ void killProcessFunction(MiddlewareStateMachine* theMiddlewareStateMachine)
     }
     if(killProcess)
     {
-        if(runningPhysics)
-        {
-            runningPhysics = 0;
-        }
+        if(runningPhysics) { runningPhysics = 0; }
         else
         {
             theMiddlewareStateMachine->abort();
@@ -213,7 +210,7 @@ int main(int argc, char* argv[])
             else
             {
                 runningPhysics = 1;
-                while(runningPhysics){usleep(25e4);}
+                while(runningPhysics) { usleep(25e4); }
             }
             std::cout << __PRETTY_FUNCTION__ << "Supervisor Sending Stop!!!" << std::endl;
             theMiddlewareStateMachine.stop();

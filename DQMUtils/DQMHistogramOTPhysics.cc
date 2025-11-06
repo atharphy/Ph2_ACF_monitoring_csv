@@ -7,16 +7,8 @@
 
 using namespace Ph2_HwDescription;
 
-void DQMHistogramOTPhysics::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
-{
-}
+void DQMHistogramOTPhysics::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) {}
 
+bool DQMHistogramOTPhysics::fill(std::string& inputStream) { return false; }
 
-bool DQMHistogramOTPhysics::fill(std::string& inputStream)
-{
-    return false;
-}
-
-void DQMHistogramOTPhysics::process()
-{
-}
+void DQMHistogramOTPhysics::process() {}

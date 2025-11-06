@@ -47,7 +47,6 @@ void DQMMetadataOT::fillFWcompilationTimestamp(const DetectorDataContainer& theF
     }
 }
 
-
 void DQMMetadataOT::fillCICFuseId(const DetectorDataContainer& theCICFuseIdContainer)
 {
     for(const auto board: theCICFuseIdContainer)

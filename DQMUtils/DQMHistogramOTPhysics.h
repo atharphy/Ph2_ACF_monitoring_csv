@@ -24,7 +24,7 @@ class DQMHistogramOTPhysics : public DQMHistogramBase
     void reset() override {};
 
   private:
-    DetectorContainer*    fDetectorContainer;
+    DetectorContainer* fDetectorContainer;
 };
 
 #endif

@@ -37,7 +37,6 @@ class TriggerInterface
     virtual void     PrintStatus();
     virtual uint32_t getNumberOfTriggerCounter();
 
-
     uint8_t     getTriggerSource() { return fTriggerConfiguration.fTriggerSource; }
     uint8_t     getTriggerRate() { return fTriggerConfiguration.fTriggerRate; }
     void        setTimeout(uint32_t pTimeout_us) { fTimeout_us = pTimeout_us; }

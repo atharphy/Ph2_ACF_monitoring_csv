@@ -1,9 +1,9 @@
 #include "tools/OTPhysics.h"
 #include "HWInterface/D19cFWInterface.h"
+#include "HWInterface/D19cL1ReadoutInterface.h"
+#include "HWInterface/D19cTriggerInterface.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/StartInfo.h"
-#include "HWInterface/D19cTriggerInterface.h"
-#include "HWInterface/D19cL1ReadoutInterface.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -25,14 +25,11 @@ void OTPhysics::ConfigureCalibration()
     boardRegisterVector.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0});
     boardRegisterVector.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
 
-    for(auto theBoard: *fDetectorContainer)
-    {
-        fBeBoardInterface->WriteBoardMultReg(theBoard, boardRegisterVector);
-    }
+    for(auto theBoard: *fDetectorContainer) { fBeBoardInterface->WriteBoardMultReg(theBoard, boardRegisterVector); }
 
-    #ifdef __USE_ROOT__
-        fDQMHistogramOTPhysics.book(fResultFile, *fDetectorContainer, fSettingsMap);
-    #endif
+#ifdef __USE_ROOT__
+    fDQMHistogramOTPhysics.book(fResultFile, *fDetectorContainer, fSettingsMap);
+#endif
 }
 
 void OTPhysics::Running()
@@ -50,7 +47,7 @@ void OTPhysics::Running()
 
     for(auto theBoard: *fDetectorContainer)
     {
-        auto theFWInterface        = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject((theBoard)->getId())));
+        auto theFWInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject((theBoard)->getId())));
         auto theReadoutInterface = theFWInterface->getL1ReadoutInterface();
         theReadoutInterface->ResetReadout();
     }
@@ -96,10 +93,7 @@ void OTPhysics::Stop()
 unsigned int OTPhysics::getDataFromBoards()
 {
     unsigned int dataSize = 0;
-    for(const auto cBoard: *fDetectorContainer)
-    {
-        dataSize += SystemController::ReadData(static_cast<BeBoard*>(cBoard), false);
-    }
+    for(const auto cBoard: *fDetectorContainer) { dataSize += SystemController::ReadData(static_cast<BeBoard*>(cBoard), false); }
 
     return dataSize;
 }

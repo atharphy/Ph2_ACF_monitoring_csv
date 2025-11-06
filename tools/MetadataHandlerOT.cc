@@ -27,7 +27,7 @@ void MetadataHandlerOT::fillInitialConditionsHardwareSpecific()
     DetectorDataContainer theFWcompilationTimestampContainer;
     ContainerFactory::copyAndInitBoard<std::string>(*fDetectorContainer, theFWcompilationTimestampContainer);
     fillFWcompilationTimestampContainer(theFWcompilationTimestampContainer);
-    
+
     bool                  isInitialValue = true;
     DetectorDataContainer theCICFuseIdContainer;
     ContainerFactory::copyAndInitHybrid<std::string>(*fDetectorContainer, theCICFuseIdContainer);
@@ -153,7 +153,7 @@ void MetadataHandlerOT::fillFWcompilationTimestampContainer(DetectorDataContaine
 {
     for(auto cBoard: *fDetectorContainer)
     {
-        auto theFWInterface = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
+        auto theFWInterface                                                                                      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(cBoard));
         theFWcompilationTimestampContainer.getObject(cBoard->getId())->getSummary<std::string, EmptyContainer>() = theFWInterface->getFWcompilationTimestamp();
     }
 }

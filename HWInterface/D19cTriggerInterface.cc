@@ -277,10 +277,6 @@ bool D19cTriggerInterface::RunTriggerFSM()
     return !cFailed;
 }
 
-uint32_t D19cTriggerInterface::getNumberOfTriggerCounter()
-{
-    return fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter");
-}
-
+uint32_t D19cTriggerInterface::getNumberOfTriggerCounter() { return fTheRegManager->ReadReg("fc7_daq_stat.fast_command_block.trigger_in_counter"); }
 
 } // namespace Ph2_HwInterface
