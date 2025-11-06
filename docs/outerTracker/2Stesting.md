@@ -561,460 +561,73 @@ At this stage, the working point can be determined by setting the injection dela
 
 From this point onward, each injection measurement is performed using the identified injection delay and threshold, ensuring that subsequent tests are properly configured so that any injected charge is read at the correct value.
 
+##### OTinjectionOccupancyScan - Chip
 
-[01:39:07.000 --> 01:39:09.000]  the occupancy measurement
-[01:39:09.000 --> 01:39:11.000]  a different injection
-[01:39:11.000 --> 01:39:13.000]  and the reason why we want to do that
-[01:39:13.000 --> 01:39:15.000]  is because we want to have first of all
-[01:39:15.000 --> 01:39:17.000]  a reference which we know
-[01:39:17.000 --> 01:39:19.000]  what is going to be the occupancy for every channel
-[01:39:19.000 --> 01:39:21.000]  with
-[01:39:21.000 --> 01:39:23.000]  without injection
-[01:39:23.000 --> 01:39:25.000]  so basically the occupancy
-[01:39:25.000 --> 01:39:27.000]  just due to the noise
-[01:39:27.000 --> 01:39:29.000]  and then the occupancy
-[01:39:29.000 --> 01:39:31.000]  the deficiency in
-[01:39:31.000 --> 01:39:33.000]  measuring
-[01:39:33.000 --> 01:39:35.000]  events
-[01:39:35.000 --> 01:39:37.000]  with a given amount of charge
-[01:39:37.000 --> 01:39:39.000]  released by the particle
-[01:39:39.000 --> 01:39:41.000]  in this case not a particle it's just
-[01:39:41.000 --> 01:39:43.000]  an injection but we know
-[01:39:43.000 --> 01:39:45.000]  how much we need to inject
-[01:39:45.000 --> 01:39:47.000]  for a producer a certain amount of charge
-[01:39:47.000 --> 01:39:49.000]  and for these
-[01:39:49.000 --> 01:39:51.000]  we have three different
-[01:39:51.000 --> 01:39:53.000]  no sorry five different plots
-[01:39:53.000 --> 01:39:55.000]  that go now
-[01:39:55.000 --> 01:39:57.000]  and so the really first one
-[01:39:57.000 --> 01:39:59.000]  is occupancy
-[01:39:59.000 --> 01:40:01.000]  with
-[01:40:01.000 --> 01:40:03.000]  out injection
-[01:40:03.000 --> 01:40:05.000]  is
-[01:40:05.000 --> 01:40:07.000]  is done
-[01:40:07.000 --> 01:40:09.000]  without an injection
-[01:40:09.000 --> 01:40:11.000]  set the threshold in this case
-[01:40:11.000 --> 01:40:13.000]  also the injection delay but it doesn't matter
-[01:40:13.000 --> 01:40:15.000]  since we are not injecting
-[01:40:15.000 --> 01:40:17.000]  and we read
-[01:40:17.000 --> 01:40:19.000]  the occupancy
-[01:40:19.000 --> 01:40:21.000]  and
-[01:40:21.000 --> 01:40:23.000]  we are one for every chip
-[01:40:23.000 --> 01:40:25.000]  so there might be some that you can actually
-[01:40:25.000 --> 01:40:27.000]  see something
-[01:40:27.000 --> 01:40:29.000]  but in general
-[01:40:29.000 --> 01:40:31.000]  since we are five times the noise
-[01:40:31.000 --> 01:40:33.000]  I don't see anything else here
-[01:40:33.000 --> 01:40:35.000]  you shouldn't see
-[01:40:35.000 --> 01:40:37.000]  basically anything
-[01:40:37.000 --> 01:40:39.000]  or just a little
-[01:40:39.000 --> 01:40:41.000]  very small amount
-[01:40:41.000 --> 01:40:43.000]  of injected
-[01:40:43.000 --> 01:40:45.000]  of
-[01:40:49.000 --> 01:40:51.000]  and then
-[01:40:51.000 --> 01:40:53.000]  after that we also
-[01:40:53.000 --> 01:40:55.000]  inject
-[01:40:55.000 --> 01:40:57.000]  close to much
-[01:40:57.000 --> 01:40:59.000]  okay
-[01:40:59.000 --> 01:41:01.000]  we inject
-[01:41:01.000 --> 01:41:03.000]  a quarter of a meep
-[01:41:03.000 --> 01:41:05.000]  and roughly a quarter of a meep
-[01:41:05.000 --> 01:41:07.000]  correspond to the sigma
-[01:41:07.000 --> 01:41:09.000]  that you set
-[01:41:09.000 --> 01:41:11.000]  at
-[01:41:11.000 --> 01:41:13.000]  when you use
-[01:41:13.000 --> 01:41:15.000]  a pressure that is
-[01:41:15.000 --> 01:41:17.000]  a five times the noise so that's why you get around
-[01:41:17.000 --> 01:41:19.000]  50%
-[01:41:19.000 --> 01:41:21.000]  so it means that if you have
-[01:41:21.000 --> 01:41:23.000]  a quarter of a meep
-[01:41:23.000 --> 01:41:25.000]  in your sensor you are going to have
-[01:41:25.000 --> 01:41:27.000]  an efficiency of 50%
-[01:41:27.000 --> 01:41:29.000]  it's important to
-[01:41:29.000 --> 01:41:31.000]  also check smaller quantities
-[01:41:31.000 --> 01:41:33.000]  than a meep
-[01:41:33.000 --> 01:41:35.000]  of course because you
-[01:41:35.000 --> 01:41:37.000]  just giving you the most probable value
-[01:41:37.000 --> 01:41:39.000]  but you have lower value
-[01:41:39.000 --> 01:41:41.000]  but even more important is that
-[01:41:41.000 --> 01:41:43.000]  you need to
-[01:41:43.000 --> 01:41:45.000]  you need to have
-[01:41:45.000 --> 01:41:47.000]  good efficiency
-[01:41:47.000 --> 01:41:49.000]  a lower amount of charge in order to increase the cluster size
-[01:41:49.000 --> 01:41:51.000]  that's important for the resolution
-[01:41:51.000 --> 01:41:53.000]  then
-[01:41:53.000 --> 01:41:55.000]  we have other plots and it should be
-[01:41:55.000 --> 01:41:57.000]  hopefully 100%
-[01:41:57.000 --> 01:41:59.000]  so every time
-[01:41:59.000 --> 01:42:01.000]  so this is the occupancy for every channel
-[01:42:01.000 --> 01:42:03.000]  for
-[01:42:03.000 --> 01:42:05.000]  a half a meep
-[01:42:05.000 --> 01:42:07.000]  one meep and I close it
-[01:42:07.000 --> 01:42:09.000]  too early and at two minutes
-[01:42:09.000 --> 01:42:11.000]  so
-[01:42:11.000 --> 01:42:13.000]  here
-[01:42:13.000 --> 01:42:15.000]  in order to see
-[01:42:15.000 --> 01:42:17.000]  if you have any troubles
-[01:42:17.000 --> 01:42:19.000]  so okay just saying
-[01:42:19.000 --> 01:42:21.000]  everything
-[01:42:21.000 --> 01:42:23.000]  will be handled by potato
-[01:42:23.000 --> 01:42:25.000]  so
-[01:42:25.000 --> 01:42:27.000]  because there are tons of plot to be checked
-[01:42:27.000 --> 01:42:29.000]  so I have to do it for a thousand of modules
-[01:42:29.000 --> 01:42:31.000]  it's going to be really pain
-[01:42:31.000 --> 01:42:33.000]  but I would say if you have any
-[01:42:33.000 --> 01:42:35.000]  modules that are
-[01:42:35.000 --> 01:42:37.000]  flagged as bad by potato
-[01:42:37.000 --> 01:42:39.000]  then you can start looking to these plots
-[01:42:39.000 --> 01:42:41.000]  and try to understand better what it is
-[01:42:41.000 --> 01:42:43.000]  so you don't maybe at the beginning
-[01:42:43.000 --> 01:42:45.000]  check them all but slowly
-[01:42:45.000 --> 01:42:47.000]  with time you should rely more on potato
-[01:42:47.000 --> 01:42:49.000]  and then just check the bad ones
-[01:42:49.000 --> 01:42:51.000]  okay
-[01:42:51.000 --> 01:42:53.000]  and you have one for every CBC
-[01:42:53.000 --> 01:42:55.000]  so every CBC is going to be
-[01:42:55.000 --> 01:42:57.000]  slightly different so you have this information
-[01:42:57.000 --> 01:42:59.000]  for every CBC and every channel
-[01:42:59.000 --> 01:43:01.000]  so this will allow you to
-[01:43:01.000 --> 01:43:03.000]  inspect both
-[01:43:03.000 --> 01:43:05.000]  channels with
-[01:43:05.000 --> 01:43:07.000]  high noise because we'll stick out
-[01:43:07.000 --> 01:43:09.000]  into these plots
-[01:43:09.000 --> 01:43:11.000]  the new modules are pretty good so we really
-[01:43:11.000 --> 01:43:13.000]  see something and you will also see
-[01:43:13.000 --> 01:43:15.000]  channels with
-[01:43:15.000 --> 01:43:17.000]  for any reason low efficiency because
-[01:43:17.000 --> 01:43:19.000]  the comparator got damaged
-[01:43:19.000 --> 01:43:21.000]  or something like that
-[01:43:21.000 --> 01:43:23.000]  and we will spot them
-[01:43:23.000 --> 01:43:25.000]  into these plots
-[01:43:29.000 --> 01:43:31.000]  okay
-[01:43:31.000 --> 01:43:33.000]  then
-[01:43:33.000 --> 01:43:35.000]  common more noise
-[01:43:35.000 --> 01:43:37.000]  so
-[01:43:37.000 --> 01:43:39.000]  these are
-[01:43:39.000 --> 01:43:41.000]  quite a lot of plots
-[01:43:41.000 --> 01:43:43.000]  and I will for sure
-[01:43:43.000 --> 01:43:45.000]  forget
-[01:43:45.000 --> 01:43:47.000]  some of them
-[01:43:47.000 --> 01:43:49.000]  so there is this one you want to
-[01:43:51.000 --> 01:43:53.000]  to check
-[01:43:53.000 --> 01:43:55.000]  if you have
-[01:43:55.000 --> 01:43:57.000]  some
-[01:43:57.000 --> 01:43:59.000]  basically
-[01:43:59.000 --> 01:44:01.000]  cross interaction across
-[01:44:01.000 --> 01:44:03.000]  channels so in theory
-[01:44:03.000 --> 01:44:05.000]  on a perfect example you're going to have
-[01:44:05.000 --> 01:44:07.000]  that every channel is perfectly independent
-[01:44:07.000 --> 01:44:09.000]  from the others
-[01:44:09.000 --> 01:44:11.000]  and therefore
-[01:44:11.000 --> 01:44:13.000]  the noise
-[01:44:17.000 --> 01:44:19.000]  the distribution
-[01:44:19.000 --> 01:44:21.000]  of the
-[01:44:23.000 --> 01:44:25.000]  of the number of hits
-[01:44:25.000 --> 01:44:27.000]  that you record in every channel
-[01:44:27.000 --> 01:44:29.000]  would be I think a portion
-[01:44:29.000 --> 01:44:31.000]  in reality
-[01:44:31.000 --> 01:44:33.000]  is not like that because
-[01:44:33.000 --> 01:44:35.000]  the channels are belonging to the same chip
-[01:44:35.000 --> 01:44:37.000]  so they share the same ground
-[01:44:37.000 --> 01:44:39.000]  they share the same voltage
-[01:44:39.000 --> 01:44:41.000]  and
-[01:44:41.000 --> 01:44:43.000]  and physically the same
-[01:44:43.000 --> 01:44:45.000]  they share the same
-[01:44:45.000 --> 01:44:47.000]  piece of silicon if you speak about the same
-[01:44:47.000 --> 01:44:49.000]  channel the channels are the same
-[01:44:49.000 --> 01:44:51.000]  so
-[01:44:51.000 --> 01:44:53.000]  here during this test
-[01:44:53.000 --> 01:44:55.000]  we want to see if there is any correlation
-[01:44:57.000 --> 01:44:59.000]  is honestly a little bit more
-[01:44:59.000 --> 01:45:01.000]  tricky
-[01:45:01.000 --> 01:45:03.000]  to look at them
-[01:45:03.000 --> 01:45:05.000]  all the way through
-[01:45:05.000 --> 01:45:07.000]  but
-[01:45:07.000 --> 01:45:09.000]  I will say this
-[01:45:09.000 --> 01:45:11.000]  will be end or mainly
-[01:45:11.000 --> 01:45:13.000]  by potato but you can always check this
-[01:45:13.000 --> 01:45:15.000]  if you see something that is standing up
-[01:45:15.000 --> 01:45:17.000]  so
-[01:45:17.000 --> 01:45:19.000]  these
-[01:45:19.000 --> 01:45:21.000]  is the
-[01:45:21.000 --> 01:45:23.000]  so we do actually two
-[01:45:23.000 --> 01:45:25.000]  measurement of the common mode noise
-[01:45:25.000 --> 01:45:27.000]  one that is
-[01:45:27.000 --> 01:45:29.000]  called occupancy driven
-[01:45:29.000 --> 01:45:31.000]  and these in the case
-[01:45:31.000 --> 01:45:33.000]  of the twist is such that
-[01:45:33.000 --> 01:45:35.000]  the occupancy expected occupancy
-[01:45:35.000 --> 01:45:37.000]  is 50%
-[01:45:37.000 --> 01:45:39.000]  we can do that because
-[01:45:39.000 --> 01:45:41.000]  we already
-[01:45:41.000 --> 01:45:43.000]  tuned
-[01:45:43.000 --> 01:45:45.000]  the pedestal and therefore we know
-[01:45:45.000 --> 01:45:47.000]  that
-[01:45:47.000 --> 01:45:49.000]  once we set a threshold all the channels should be
-[01:45:49.000 --> 01:45:51.000]  more or less to the same occupancy
-[01:45:51.000 --> 01:45:53.000]  and in this particular case the target
-[01:45:53.000 --> 01:45:55.000]  occupancy is 50%
-[01:45:55.000 --> 01:45:57.000]  what you would expect in reality
-[01:45:57.000 --> 01:45:59.000]  in any ideal case
-[01:45:59.000 --> 01:46:01.000]  if you have a perfect distribution
-[01:46:01.000 --> 01:46:03.000]  a perfect
-[01:46:03.000 --> 01:46:05.000]  uncorrelated hips
-[01:46:05.000 --> 01:46:07.000]  you will expect that
-[01:46:07.000 --> 01:46:09.000]  you are a perfect person in distribution
-[01:46:09.000 --> 01:46:11.000]  centered in
-[01:46:11.000 --> 01:46:13.000]  half of the
-[01:46:13.000 --> 01:46:15.000]  number of hits that you are
-[01:46:15.000 --> 01:46:17.000]  the maximum number of hits that you are getting
-[01:46:17.000 --> 01:46:19.000]  so you have a 256 channel
-[01:46:19.000 --> 01:46:21.000]  set to
-[01:46:21.000 --> 01:46:23.000]  S or 54 channels
-[01:46:23.000 --> 01:46:25.000]  set to a threshold of
-[01:46:25.000 --> 01:46:27.000]  such that every channel is 50%
-[01:46:27.000 --> 01:46:29.000]  you expect the average
-[01:46:29.000 --> 01:46:31.000]  number of hits in every event is
-[01:46:31.000 --> 01:46:33.000]  half of the number of channels
-[01:46:33.000 --> 01:46:35.000]  then in reality
-[01:46:35.000 --> 01:46:37.000]  since you have
-[01:46:37.000 --> 01:46:39.000]  the situation is a little bit more complex
-[01:46:39.000 --> 01:46:41.000]  you have tail on the left
-[01:46:41.000 --> 01:46:43.000]  and on the right
-[01:46:43.000 --> 01:46:45.000]  and based on the width
-[01:46:45.000 --> 01:46:47.000]  of how much events you have
-[01:46:47.000 --> 01:46:49.000]  with
-[01:46:49.000 --> 01:46:51.000]  low number of hits or high number of hits
-[01:46:51.000 --> 01:46:53.000]  you can basically determine
-[01:46:53.000 --> 01:46:55.000]  what is the rate of the common
-[01:46:55.000 --> 01:46:57.000]  noise
-[01:46:57.000 --> 01:46:59.000]  I would say just ignore the fit
-[01:46:59.000 --> 01:47:01.000]  because we saw so far that the fit
-[01:47:01.000 --> 01:47:03.000]  is a 2 and ideal case
-[01:47:03.000 --> 01:47:05.000]  and we will probably remove it in the next version
-[01:47:05.000 --> 01:47:07.000]  what we are actually
-[01:47:07.000 --> 01:47:09.000]  doing in potatoes just we count
-[01:47:09.000 --> 01:47:11.000]  many events we have
-[01:47:11.000 --> 01:47:13.000]  in the tails and this will give us a good idea
-[01:47:13.000 --> 01:47:15.000]  what is the amount
-[01:47:15.000 --> 01:47:17.000]  of common noise
-[01:47:17.000 --> 01:47:19.000]  and this was done at the level of the chip
-[01:47:19.000 --> 01:47:21.000]  so common noise within the same chip
-[01:47:21.000 --> 01:47:23.000]  then
-[01:47:23.000 --> 01:47:25.000]  you also have
-[01:47:25.000 --> 01:47:27.000]  a similar plot but just separated
-[01:47:27.000 --> 01:47:29.000]  from the top and from the bottom
-[01:47:29.000 --> 01:47:31.000]  because
-[01:47:31.000 --> 01:47:33.000]  you can imagine that since
-[01:47:33.000 --> 01:47:35.000]  these channels
-[01:47:35.000 --> 01:47:37.000]  are all connected to the same sensor
-[01:47:37.000 --> 01:47:39.000]  you might expect to have
-[01:47:39.000 --> 01:47:41.000]  slightly different behavior from
-[01:47:41.000 --> 01:47:43.000]  the top and the bottom
-[01:47:43.000 --> 01:47:45.000]  sounds
-[01:47:51.000 --> 01:47:53.000]  so if
-[01:47:53.000 --> 01:47:55.000]  we should have also
-[01:47:55.000 --> 01:47:57.000]  top-bottom correlation
-[01:47:57.000 --> 01:47:59.000]  so basically this is the same plot
-[01:47:59.000 --> 01:48:01.000]  the same two plots that are shown here
-[01:48:01.000 --> 01:48:03.000]  but instead just showing the
-[01:48:03.000 --> 01:48:05.000]  two plots
-[01:48:05.000 --> 01:48:07.000]  separately now we
-[01:48:07.000 --> 01:48:09.000]  show them also in
-[01:48:09.000 --> 01:48:11.000]  a correlation plot
-[01:48:11.000 --> 01:48:13.000]  so you see that actually there is
-[01:48:13.000 --> 01:48:15.000]  correlation because there is
-[01:48:15.000 --> 01:48:17.000]  a diagonal
-[01:48:17.000 --> 01:48:19.000]  you don't have a perfect center
-[01:48:19.000 --> 01:48:21.000]  honestly
-[01:48:21.000 --> 01:48:23.000]  nothing really concerning for what we see
-[01:48:23.000 --> 01:48:25.000]  just that there are
-[01:48:25.000 --> 01:48:27.000]  everything these objects are on the same chip
-[01:48:27.000 --> 01:48:29.000]  so you kind of expect
-[01:48:29.000 --> 01:48:31.000]  a sort of a bit of correlation
-[01:48:31.000 --> 01:48:33.000]  but nothing really
-[01:48:33.000 --> 01:48:35.000]  too serious
-[01:48:35.000 --> 01:48:37.000]  and then
-[01:48:37.000 --> 01:48:39.000]  nothing
-[01:48:39.000 --> 01:48:41.000]  no sorry
-[01:48:41.000 --> 01:48:43.000]  I went too far
-[01:48:47.000 --> 01:48:49.000]  okay yeah I went too far
-[01:48:49.000 --> 01:48:51.000]  and this was
-[01:48:51.000 --> 01:48:53.000]  at the level of
-[01:48:53.000 --> 01:48:55.000]  the
-[01:48:55.000 --> 01:48:57.000]  chip
-[01:48:57.000 --> 01:48:59.000]  then we had the same
-[01:48:59.000 --> 01:49:01.000]  information on the level of the hybrid
-[01:49:03.000 --> 01:49:05.000]  and as before
-[01:49:05.000 --> 01:49:07.000]  we have the distribution
-[01:49:07.000 --> 01:49:09.000]  of
-[01:49:09.000 --> 01:49:11.000]  number of hits per event
-[01:49:11.000 --> 01:49:13.000]  in
-[01:49:15.000 --> 01:49:17.000]  the overall hybrid so in this case
-[01:49:17.000 --> 01:49:19.000]  it can go from 0 to
-[01:49:19.000 --> 01:49:21.000]  2096
-[01:49:23.000 --> 01:49:25.000]  maybe
-[01:49:25.000 --> 01:49:27.000]  I'll remember
-[01:49:27.000 --> 01:49:29.000]  is the 224 by 8
-[01:49:33.000 --> 01:49:35.000]  and
-[01:49:35.000 --> 01:49:37.000]  as for before we have
-[01:49:37.000 --> 01:49:39.000]  them separated from the top sensor
-[01:49:39.000 --> 01:49:41.000]  and the bottom sensor
-[01:49:41.000 --> 01:49:43.000]  and as for before we have the correlation
-[01:49:43.000 --> 01:49:45.000]  between the top
-[01:49:45.000 --> 01:49:47.000]  strips and the bottom strips
-[01:49:47.000 --> 01:49:49.000]  and also see
-[01:49:49.000 --> 01:49:51.000]  there is quite a big correlation
-[01:49:51.000 --> 01:49:53.000]  again this is the reality
-[01:49:53.000 --> 01:49:55.000]  and I don't think there is
-[01:49:55.000 --> 01:49:57.000]  too much to do
-[01:49:57.000 --> 01:49:59.000]  so
-[01:49:59.000 --> 01:50:01.000]  I will not worry about too much
-[01:50:01.000 --> 01:50:03.000]  about this
-[01:50:03.000 --> 01:50:05.000]  and
-[01:50:05.000 --> 01:50:07.000]  I think that's all of the level of the hybrid
-[01:50:07.000 --> 01:50:09.000]  and we have also
-[01:50:09.000 --> 01:50:11.000]  something on the level of the
-[01:50:13.000 --> 01:50:15.000]  module
-[01:50:15.000 --> 01:50:17.000]  let me close that
-[01:50:21.000 --> 01:50:23.000]  sorry
-[01:50:23.000 --> 01:50:25.000]  common noise
-[01:50:25.000 --> 01:50:27.000]  at the level of the module
-[01:50:29.000 --> 01:50:31.000]  as before here you have
-[01:50:31.000 --> 01:50:33.000]  more than 4000 strips
-[01:50:33.000 --> 01:50:35.000]  and as before
-[01:50:35.000 --> 01:50:37.000]  we have the
-[01:50:37.000 --> 01:50:39.000]  separated in top and bottom
-[01:50:39.000 --> 01:50:41.000]  and we have
-[01:50:41.000 --> 01:50:43.000]  the correlation
-[01:50:45.000 --> 01:50:47.000]  between
-[01:50:47.000 --> 01:50:49.000]  top and bottom
-[01:50:49.000 --> 01:50:51.000]  and
-[01:50:51.000 --> 01:50:53.000]  you see that here is a little bit less
-[01:50:53.000 --> 01:50:55.000]  correlated because I put in two
-[01:50:55.000 --> 01:50:57.000]  hybrids and the two hybrids
-[01:50:57.000 --> 01:50:59.000]  should be a bit less correlated
-[01:50:59.000 --> 01:51:01.000]  and
-[01:51:01.000 --> 01:51:03.000]  they are actually
-[01:51:03.000 --> 01:51:05.000]  uncorrelated
-[01:51:05.000 --> 01:51:07.000]  between left and right side
-[01:51:07.000 --> 01:51:09.000]  so
-[01:51:09.000 --> 01:51:11.000]  I honestly struggle a little bit more
-[01:51:11.000 --> 01:51:13.000]  to interpret these results
-[01:51:13.000 --> 01:51:15.000]  because this is
-[01:51:15.000 --> 01:51:17.000]  the reality of the module works
-[01:51:17.000 --> 01:51:19.000]  so
-[01:51:19.000 --> 01:51:21.000]  I will just say if you see
-[01:51:21.000 --> 01:51:23.000]  some particular
-[01:51:23.000 --> 01:51:25.000]  tail on some particular
-[01:51:25.000 --> 01:51:27.000]  weird noise into the
-[01:51:27.000 --> 01:51:29.000]  results from the pedenoise
-[01:51:29.000 --> 01:51:31.000]  I would suggest
-[01:51:31.000 --> 01:51:33.000]  to check these plots
-[01:51:33.000 --> 01:51:35.000]  to see if
-[01:51:35.000 --> 01:51:37.000]  for any reason these plots are
-[01:51:37.000 --> 01:51:39.000]  starting out particularly
-[01:51:39.000 --> 01:51:41.000]  if you have any particular
-[01:51:41.000 --> 01:51:43.000]  with the distribution
-[01:51:43.000 --> 01:51:45.000]  into these and I will take
-[01:51:45.000 --> 01:51:47.000]  as a reference
-[01:51:47.000 --> 01:51:49.000]  other
-[01:51:49.000 --> 01:51:51.000]  common noise plots
-[01:51:51.000 --> 01:51:53.000]  from the
-[01:51:53.000 --> 01:51:55.000]  module that
-[01:51:55.000 --> 01:51:57.000]  we can see that the
-[01:51:57.000 --> 01:51:59.000]  noise distribution
-[01:51:59.000 --> 01:52:01.000]  from the pedenoise results
-[01:52:01.000 --> 01:52:03.000]  are the expected one
-[01:52:03.000 --> 01:52:05.000]  with form moving on
-[01:52:05.000 --> 01:52:07.000]  I just
-[01:52:07.000 --> 01:52:09.000]  skip
-[01:52:09.000 --> 01:52:11.000]  completely the other
-[01:52:11.000 --> 01:52:13.000]  common more noise that are done
-[01:52:13.000 --> 01:52:15.000]  so if I enlarge
-[01:52:15.000 --> 01:52:17.000]  a little bit you see
-[01:52:17.000 --> 01:52:19.000]  that all these common more noise
-[01:52:19.000 --> 01:52:21.000]  that I show you so far have these occupancy
-[01:52:21.000 --> 01:52:23.000]  driven
-[01:52:23.000 --> 01:52:25.000]  but then after
-[01:52:25.000 --> 01:52:27.000]  Giovanni suggested
-[01:52:27.000 --> 01:52:29.000]  we also included another
-[01:52:29.000 --> 01:52:31.000]  measurement that is
-[01:52:31.000 --> 01:52:33.000]  measured except the same
-[01:52:33.000 --> 01:52:35.000]  plot but at three
-[01:52:35.000 --> 01:52:37.000]  sigma
-[01:52:37.000 --> 01:52:39.000]  and the reason
-[01:52:39.000 --> 01:52:41.000]  for that
-[01:52:41.000 --> 01:52:43.000]  is that is also another way
-[01:52:43.000 --> 01:52:45.000]  to better visualize
-[01:52:45.000 --> 01:52:47.000]  the effect of the noise so when you
-[01:52:47.000 --> 01:52:49.000]  look at the
-[01:52:49.000 --> 01:52:51.000]  zero sigma
-[01:52:51.000 --> 01:52:53.000]  occupancy that
-[01:52:53.000 --> 01:52:55.000]  is expected to be a 50%
-[01:52:55.000 --> 01:52:57.000]  you can look both
-[01:52:57.000 --> 01:52:59.000]  the left
-[01:52:59.000 --> 01:53:01.000]  tail and the right
-[01:53:01.000 --> 01:53:03.000]  tail because you don't expect
-[01:53:03.000 --> 01:53:05.000]  that all the channel fire at the same time
-[01:53:05.000 --> 01:53:07.000]  instead for the three sigma
-[01:53:07.000 --> 01:53:09.000]  you can focus just
-[01:53:09.000 --> 01:53:11.000]  on the right tail
-[01:53:11.000 --> 01:53:13.000]  and so if I zoom in you see that
-[01:53:13.000 --> 01:53:15.000]  it's basically the same idea
-[01:53:15.000 --> 01:53:17.000]  but focusing mainly
-[01:53:17.000 --> 01:53:19.000]  to the right tail so
-[01:53:19.000 --> 01:53:21.000]  I will say this is just another way
-[01:53:21.000 --> 01:53:23.000]  to see exactly the same results
-[01:53:23.000 --> 01:53:25.000]  but for much like a different perspective
-[01:53:25.000 --> 01:53:27.000]  so focusing just on the right
-[01:53:27.000 --> 01:53:29.000]  tail and
-[01:53:29.000 --> 01:53:31.000]  not on the left
-[01:53:31.000 --> 01:53:33.000]  and the right tail
-[01:53:33.000 --> 01:53:35.000]  so
-[01:53:35.000 --> 01:53:37.000]  given the amount of data
-[01:53:37.000 --> 01:53:39.000]  we collected so far we don't see
-[01:53:39.000 --> 01:53:41.000]  much of
-[01:53:41.000 --> 01:53:43.000]  a reason to choose
-[01:53:43.000 --> 01:53:45.000]  to do the QA on one or the two
-[01:53:45.000 --> 01:53:47.000]  so since we're at the beginning
-[01:53:47.000 --> 01:53:49.000]  we decided to include both of them
-[01:53:49.000 --> 01:53:51.000]  the time required to
-[01:53:51.000 --> 01:53:53.000]  collect this data is very short
-[01:53:53.000 --> 01:53:55.000]  so there was basically no
-[01:53:55.000 --> 01:53:57.000]  go back and
-[01:53:57.000 --> 01:53:59.000]  we now have available both
-[01:53:59.000 --> 01:54:01.000]  so I would say
-[01:54:01.000 --> 01:54:03.000]  basically
-[01:54:03.000 --> 01:54:05.000]  the reference of the user
-[01:54:05.000 --> 01:54:07.000]  you can focus more on this
-[01:54:07.000 --> 01:54:09.000]  this one is lightly more obvious
-[01:54:09.000 --> 01:54:11.000]  because you just see the tail
-[01:54:11.000 --> 01:54:13.000]  on one side the other one
-[01:54:13.000 --> 01:54:15.000]  might be slightly more
-[01:54:15.000 --> 01:54:17.000]  tricky because you have to consider both
-[01:54:17.000 --> 01:54:19.000]  that you said
-[01:54:21.000 --> 01:54:23.000]  okay so
-[01:54:23.000 --> 01:54:25.000]  for the
-[01:54:25.000 --> 01:54:27.000]  occupancy driven that is zero
-[01:54:27.000 --> 01:54:29.000]  sigma and the three sigma
-[01:54:29.000 --> 01:54:31.000]  plots are identical so I'm
-[01:54:31.000 --> 01:54:33.000]  just not going to go through all of them
-[01:54:33.000 --> 01:54:35.000]  the information that we
-[01:54:35.000 --> 01:54:37.000]  do is exactly the same
-[01:54:37.000 --> 01:54:39.000]  the only difference is that now
-[01:54:39.000 --> 01:54:41.000]  the plots are all shifted to the left
-[01:54:41.000 --> 01:54:43.000]  because we expect
-[01:54:43.000 --> 01:54:45.000]  low average occupancy
-[01:54:51.000 --> 01:54:53.000]  zero as well
-[01:54:53.000 --> 01:54:55.000]  when the person just told me
-[01:54:55.000 --> 01:54:57.000]  sorry
-[01:54:57.000 --> 01:54:59.000]  so we covered this
-[01:54:59.000 --> 01:55:01.000]  okay
-[01:55:01.000 --> 01:55:03.000]  now
-[01:55:03.000 --> 01:55:05.000]  we go
-[01:55:05.000 --> 01:55:07.000]  add
-[01:55:07.000 --> 01:55:09.000]  to the
+The occupancy is measured for different injection charges to establish a reference: first by recording the occupancy without injection to quantify the contribution from noise alone, and then by measuring the response for known injected charges, allowing evaluation of the detection efficiency for signals corresponding to specific charge amounts.
+
+Five different measurements are performed, corresponding to five different plots. Three examples are shown, for no injection and one for some injected charge.
+
+The one below is without injection.
+![ChannelOccupancy_Injection_0.000_MIP_Chip](../images/OTtesting/2S/ChannelOccupancy_Injection_0.000_MIP_Chip_Chip.png)
+
+The occupancy is measured for each chip, and although some slight activity may appear, the threshold is set to five times the noise, so almost no signal is expected except for very small fluctuations (that may be more visible in log scale).
+
+Then, injections are performed at different charge levels — for example, a quarter of a MIP, which corresponds to roughly the same level as the threshold set at five times the noise, yielding about 50% efficiency. This value indicates that a signal equivalent to a quarter of a MIP produces a 50% detection probability. Measuring lower charges is important to study cluster size and improve spatial resolution. Subsequent plots show the occupancy for each channel at 0.25, 0.5, 1, and 2 MIPs, allowing identification of potential issues. The inspection of these results is automated by potato, which flags problematic modules; manual inspection is mainly needed for those flagged as bad. Since each CBC chip behaves slightly differently, occupancy maps are produced per CBC and per channel, enabling the identification of noisy or inefficient channels, such as those with damaged comparators, although new modules typically show very few such cases.
+
+![ChannelOccupancy_Injection_0.250_MIP_Chip](../images/OTtesting/2S/ChannelOccupancy_Injection_0.250_MIP_Chip.png)
+![ChannelOccupancy_Injection_1.000_MIP_Chip](../images/OTtesting/2S/ChannelOccupancy_Injection_1.000_MIP_Chip.png)
+
+##### OTCMNoise (Common Noise) - OpticalGroup, Hybrid, Chip
+The common mode noise test checks whether there is any correlation in the noise across different channels of the same chip.
+Ideally, each channel should behave independently, meaning that noise fluctuations in one channel should not affect others. However, in reality, the channels share common elements — such as the same ground, power supply, and piece of silicon — which can lead to correlated noise.
+This test is used to quantify that correlation. Two types of measurements are performed, Occupancy-driven common noise, where the threshold is set such that each channel has about 50% occupancy and one with the threshold at 3 sigma from the pedestal. Since the pedestal has already been tuned, all channels should exhibit similar occupancy. Plots will be shown only for the first case.
+In a perfectly uncorrelated system, the distribution of the number of hits per event would follow a binomial shape centered at half the number of channels (e.g., 128 hits for a 256-channel chip like the CBC).
+In practice, however, the distribution shows tails on both sides — events with unusually high or low numbers of hits. The width of this distribution reflects the level of correlation between channels: the broader it is, the stronger the common mode noise.
+The inspection of this test is typically automated by potato, but manual checks can be done if a module shows anomalous behavior.
+
+- Below the common noise distribution for one CBC is shown. 
+
+Here the hits on one chip are shown. The same plot exist divided for top and bottom sensors. Since all channels are connected to the same sensor, slight differences in behavior can occur between the top and bottom sensors, leading to small variations in the observed common mode noise.
+![CommonNoiseHits_OccupancyDriven_Chip](../images/OTtesting/2S/CommonNoiseHits_OccupancyDriven_Chip.png)
+
+A top–bottom correlation is expected since the channels belong to the same chip; this is visualized by plotting the two distributions together in a correlation plot, where the presence of a diagonal indicates some correlation, though the effect is minor and not concerning given that all elements share the same sensor and electronics.
+![CommonNoiseTopBottomCorrelation_OccupancyDriven_Chip](../images/OTtesting/2S/CommonNoiseTopBottomCorrelation_OccupancyDriven_Chip.png)
+
+Here we show the correlaton of the chip with the rest of the hybrid.
+![CommonNoiseHybridCorrelation_OccupancyDriven_Chip](../images/OTtesting/2S/CommonNoiseHybridCorrelation_OccupancyDriven_Chip.png)
+
+Here we have the correlation of the channels within one chip, showing which other channels are firing when one channel is firing. The diagonal is comparing one channel with itself.
+![2DChipHits_OccupancyDriven_Chip](../images/OTtesting/2S/2DChipHits_OccupancyDriven_Chip.png)
+
+- Now we show distributions at the hybrid level
+
+
+Here we look at the distribution of the number of hits per event across the entire hybrid. In this case, the range extends from 0 up to 2036 channels (corresponding to 254 × 8).The same plot exist divided for top and bottom sensors.
+![CommonNoiseHits_OccupancyDriven_Hybrid](../images/OTtesting/2S/CommonNoiseHits_OccupancyDriven_Hybrid.png)
+
+As before, the correlation between the top and bottom strips is observed, showing a significant degree of correlation. This behavior reflects the real conditions of the system and is not a major concern.
+![CommonNoiseTopBottomCorrelation_OccupancyDriven_Hybrid](../images/OTtesting/2S/CommonNoiseTopBottomCorrelation_OccupancyDriven_Hybrid.png)
+
+- OpticalGroup/Module level distributions
+
+Here we have more than 4000 channels. As before we have also plots for top and bottom divided and for their correlations. The correlations between top and bottom is lower as we are now combining two hybrids.
+![CommonNoiseHits_OccupancyDriven_OpticalGroup](../images/OTtesting/2S/CommonNoiseHits_OccupancyDriven_OpticalGroupd.png)
+
+The two hybrids below appear uncorrelated. 
+![CommonNoiseCrossHybridCorrelation_OccupancyDriven_OpticalGroup](../images/OTtesting/2S/CommonNoiseCrossHybridCorrelation_OccupancyDriven_OpticalGroup.png)
+
+
+These results are harder to interpret, reflecting the true behavior of the module, so if any unusual tails or unexpected noise appear in the pedenoise results, these plots should be checked to identify possible anomalies by comparing them with reference common noise plots from other modules to confirm that the noise distribution matches expectations.
+
+
+
+
+An additional measurement was included using the same plot evaluated above but with the threshold at three sigma from the pedestal, providing an alternative way to visualize the noise effect. At zero sigma (shown above), where the expected occupancy is 50%, both left and right tails can be inspected since not all channels are expected to fire simultaneously, while at three sigma, the focus is on the right tail to highlight deviations. This offers the same information from a different perspective, emphasizing one side of the distribution. Given the current dataset, there is no clear advantage to using one representation over the other, so both are included since the acquisition time is minimal. The three-sigma plot is generally more straightforward to interpret because it isolates one tail, while the zero-sigma version requires considering both sides. For occupancy-driven tests, the zero- and three-sigma plots contain equivalent information, except that the three-sigma plots are shifted left due to lower average occupancy.
+
+
+
+##### OTCICtoLpGBTecv - OpticalGroup
+
 [01:55:09.000 --> 01:55:11.000]  electric chain validation
 [01:55:11.000 --> 01:55:13.000]  so this is going to be
 [01:55:13.000 --> 01:55:15.000]  a bit complicated
