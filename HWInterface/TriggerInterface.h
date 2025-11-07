@@ -35,6 +35,7 @@ class TriggerInterface
     virtual bool     WaitForNTriggers(uint32_t pNTriggers);
     virtual bool     SendNTriggers(uint32_t pNTriggers);
     virtual void     PrintStatus();
+    virtual uint32_t getNumberOfTriggerCounter();
 
     uint8_t     getTriggerSource() { return fTriggerConfiguration.fTriggerSource; }
     uint8_t     getTriggerRate() { return fTriggerConfiguration.fTriggerRate; }

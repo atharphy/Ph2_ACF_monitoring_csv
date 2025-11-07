@@ -68,4 +68,10 @@ void TriggerInterface::PrintStatus()
     return;
 }
 
+uint32_t TriggerInterface::getNumberOfTriggerCounter()
+{
+    LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function TriggerInterface::PrintStatus is getNumberOfTriggerCounter" << RESET;
+    return 0;
+}
+
 } // namespace Ph2_HwInterface

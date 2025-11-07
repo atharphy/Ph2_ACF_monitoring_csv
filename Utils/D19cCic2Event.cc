@@ -547,7 +547,7 @@ ClusterCollection<StripClusterPS, 32> D19cCic2Event::GetStripClusters(uint8_t pH
 
     if(fIs2S || pReadoutChipId >= 8)
     {
-        std::cerr << "D19cCic2Event::getClusters can be called only for SSA, aborting" << std::endl;
+        std::cerr << "D19cCic2Event::GetStripClusters can be called only for SSA, aborting" << std::endl;
         abort();
     }
     return fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId)->getSummary<ClusterCollection<StripClusterPS, 32>>();

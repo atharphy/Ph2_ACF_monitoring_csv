@@ -324,6 +324,9 @@
 
     <Setting name="OTPatternCheckerHelper_NumberOfBits">1E10</Setting>
 
+    <Setting name="OTPhysics_TriggerSource">3</Setting> <!-- 1 -> L1, 2 -> Stubs, 3 -> User-Defined Frequency, 4 -> TLU, 5 -> Ext Trigger (DIO5), 6 -> Test Pulse Trigger -->
+    <Setting name="OTPhysics_UserTriggerRate">5</Setting> <!-- in kHz -->
+
 </Settings>
 
 

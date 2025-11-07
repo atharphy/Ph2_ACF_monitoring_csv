@@ -17,6 +17,7 @@
 #include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
 #include "DQMUtils/DQMHistogramOTPScommonNoise.h"
 #include "DQMUtils/DQMHistogramOTPSringOscillatorTest.h"
+#include "DQMUtils/DQMHistogramOTPhysics.h"
 #include "DQMUtils/DQMHistogramOTRegisterTester.h"
 #include "DQMUtils/DQMHistogramOTSSAtoMPAecv.h"
 #include "DQMUtils/DQMHistogramOTSSAtoSSAecv.h"
@@ -35,7 +36,6 @@
 #include "DQMUtils/DQMHistogramPedestalEqualizationPSAtPedestal.h"
 #include "DQMUtils/DQMMetadataIT.h"
 #include "DQMUtils/DQMMetadataOT.h"
-#include "DQMUtils/PSPhysicsHistograms.h"
 #include "DQMUtils/Physics2SHistograms.h"
 #include "DQMUtils/RD53ClockDelayHistograms.h"
 #include "DQMUtils/RD53DataReadbackOptimizationHistograms.h"
@@ -247,6 +247,8 @@ DQMCalibrationFactory::DQMCalibrationFactory()
 
     Register<DQMMetadataOT, DQMHistogramOTCICphaseAlignment, DQMHistogramOTalignLpGBTinputsForBypass, DQMHistogramOTChipToCICecv>("ChipToCICecv");
 
+    Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTalignStubPackage, DQMHistogramOTPhysics>("otphysics");
+
     // 2S specific calibrations
 
     Register<DQMMetadataOT,
@@ -284,6 +286,17 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTChipToCICecv,
              DQMHistogramOTBitErrorRateTest,
              DQMHistogramOTRegisterTester>("2SfullTest");
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTCICBX0Alignment,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramPedestalEqualization,
+             DQMHistogramPedeNoise,
+             DQMHistogramOTinjectionDelayOptimization>("prepare2SforPhysics");
 
     Register<DQMMetadataOT,
              DQMHistogramOTVTRxLightYieldScan,
@@ -417,7 +430,16 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTBitErrorRateTest,
              DQMHistogramOTRegisterTester>("PSfullTestPart2");
 
-    Register<DQMMetadataOT, PSPhysicsHistograms>("psphysics");
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTCICBX0Alignment,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramPedestalEqualizationPSAtPedestal,
+             DQMHistogramPedeNoise,
+             DQMHistogramOTinjectionDelayOptimization>("preparePSforPhysics");
 
     Register<DQMMetadataOT, DQMHistogramOTalignBoardDataWord, DQMHistogramOTPSADCCalibration>("ADCBiasCalibration");
 

@@ -169,6 +169,15 @@ FrontEndType D19cFWInterface::getFrontEndType(uint32_t pChipCode)
         return FrontEndType::UNDEFINED;
 }
 
+std::string D19cFWInterface::getFWcompilationTimestamp()
+{
+    int         firmware_timestamp        = ReadReg("fc7_daq_stat.general.firmware_timestamp");
+    std::string theFWcompilationTimestamp = std::to_string(((firmware_timestamp >> 27) & 0x1F)) + "." + std::to_string(((firmware_timestamp >> 23) & 0xF)) + "." +
+                                            std::to_string(((firmware_timestamp >> 17)) & 0x3F) + " " + std::to_string(((firmware_timestamp >> 12) & 0x1F)) + ":" +
+                                            std::to_string(((firmware_timestamp >> 6) & 0x3F)) + ":" + std::to_string(((firmware_timestamp >> 0) & 0x3F));
+    return theFWcompilationTimestamp;
+}
+
 uint32_t D19cFWInterface::getBoardInfo()
 {
     // firmware info
@@ -182,9 +191,7 @@ uint32_t D19cFWInterface::getBoardInfo()
     uint32_t fmc1_card_type = ReadReg("fc7_daq_stat.general.info.fmc1_card_type");
     uint32_t fmc2_card_type = ReadReg("fc7_daq_stat.general.info.fmc2_card_type");
 
-    int firmware_timestamp = ReadReg("fc7_daq_stat.general.firmware_timestamp");
-    LOG(INFO) << "Compiled on: " << BOLDGREEN << ((firmware_timestamp >> 27) & 0x1F) << "." << ((firmware_timestamp >> 23) & 0xF) << "." << ((firmware_timestamp >> 17) & 0x3F) << " "
-              << ((firmware_timestamp >> 12) & 0x1F) << ":" << ((firmware_timestamp >> 6) & 0x3F) << ":" << ((firmware_timestamp >> 0) & 0x3F) << " (dd.mm.yy hh:mm:ss)" << RESET;
+    LOG(INFO) << "Compiled on: " << BOLDGREEN << getFWcompilationTimestamp() << " (dd.mm.yy hh:mm:ss)" << RESET;
 
     if(implementation == 0)
         LOG(INFO) << "Implementation: " << BOLDGREEN << "Optical" << RESET;
