@@ -251,6 +251,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 [31:47.000 --> 31:49.000]  thanks
 [31:55.000 --> 31:57.000]  and
 
+##### Alignemnt -> establish proper communication for all chips on a module & FPGA
 
 ##### OTalignLpGBTinputs - OpticalGroup
 
@@ -405,7 +406,7 @@ These plots are not used for debugging or QA; they are mainly to store the value
 
 
 ##### OTCICBX0Alignment - Hybrid
-This is the last step of the CBC-CIC alignment. It is more relevant for PS modules where the stub info is sent over 2words but it is performed also for 2S ones even if the stub info is sent into a single word.
+This is the last step of the CBCICIC alignment. It is more relevant for PS modules where the stub info is sent over 2words but it is performed also for 2S ones even if the stub info is sent into a single word.
 
 Since all CBCs and lines are synchronized, only one of the chip and lines is set to send a pattern and used for the measurement of the BX0 delay. The BX0 delay is measured between a Resync and the reception of the pattern in the CIC.
 
@@ -620,502 +621,39 @@ The two hybrids below appear uncorrelated.
 These results are harder to interpret, reflecting the true behavior of the module, so if any unusual tails or unexpected noise appear in the pedenoise results, these plots should be checked to identify possible anomalies by comparing them with reference common noise plots from other modules to confirm that the noise distribution matches expectations.
 
 
-
-
 An additional measurement was included using the same plot evaluated above but with the threshold at three sigma from the pedestal, providing an alternative way to visualize the noise effect. At zero sigma (shown above), where the expected occupancy is 50%, both left and right tails can be inspected since not all channels are expected to fire simultaneously, while at three sigma, the focus is on the right tail to highlight deviations. This offers the same information from a different perspective, emphasizing one side of the distribution. Given the current dataset, there is no clear advantage to using one representation over the other, so both are included since the acquisition time is minimal. The three-sigma plot is generally more straightforward to interpret because it isolates one tail, while the zero-sigma version requires considering both sides. For occupancy-driven tests, the zero- and three-sigma plots contain equivalent information, except that the three-sigma plots are shifted left due to lower average occupancy.
 
+##### Electric Chain Validation (ECV)
+The electric chain validation focuses on evaluating the width of the working area of the communication phases within the module. Unlike the verification step, which uses the phase identified by the CIC or the LpGBT as optimal, the validation manually scans different phases to determine the range over which the chain remains operational. A broad working area indicates a stable configuration, while a narrow one suggests that the system operates close to its limits and may become unstable once installed in the detector.
+
+##### OTCICtoLpGBTecv - Hybrid
+The CIC-to-LpGBT ECV studies the transmission between the CIC and LpGBT by varying the LpGBT sampling phase and checking whether the data patterns sent by the CIC are correctly reconstructed in the FPGA. For each phase setting, the number of tested bits and corresponding error rate are recorded in hybrid-level plots labeled as CIC-to-LpGBT pattern matching. The test also explores the impact of varying the current used by the CIC to drive the data (SLVS strenght, from 1 to 5), the LpGBT clock polarity, and the CIC clock drive strength (from 1 to 7). The LpGBT provides the clock to the hybrid, and changing its polarity effectively shifts the clock phase by 50%. These variations help evaluate how different transmission parameters affect data reconstruction and identify the range of stable operating conditions where several phases ensure reliable communication between components.
 
 
-##### OTCICtoLpGBTecv - OpticalGroup
+This plot shows, on the Y axis, the line ID corresponding to each transmission line, and on the X axis, the manually selected LpGBT sampling phase, which ranges from 0 to 14. The phase is varied manually rather than letting the LpGBT automatically adjust it, in order to explore also regions where the LpGBT cannot properly sample the incoming data. The Z axis represents the number of tested bits, with the stub pattern matched in firmware for speed, while the Level-1 pattern matching is performed in the software, resulting in longer scan times and fewer tested bits.
+![CICtoLpGBT_PatternMatchingTestedBits_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid](../images/OTtesting/2S/CICtoLpGBT_PatternMatchingTestedBits_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid.png)
 
-[01:55:09.000 --> 01:55:11.000]  electric chain validation
-[01:55:11.000 --> 01:55:13.000]  so this is going to be
-[01:55:13.000 --> 01:55:15.000]  a bit complicated
-[01:55:15.000 --> 01:55:17.000]  and there are really
-[01:55:17.000 --> 01:55:19.000]  a lot of plots
-[01:55:19.000 --> 01:55:21.000]  but I think the main concept
-[01:55:21.000 --> 01:55:23.000]  is that if you
-[01:55:23.000 --> 01:55:25.000]  understood
-[01:55:25.000 --> 01:55:27.000]  how these
-[01:55:27.000 --> 01:55:29.000]  verify steps work
-[01:55:31.000 --> 01:55:33.000]  then at this point
-[01:55:33.000 --> 01:55:35.000]  you understood
-[01:55:37.000 --> 01:55:39.000]  you understand
-[01:55:39.000 --> 01:55:41.000]  what the electric chain validation does
-[01:55:41.000 --> 01:55:43.000]  because the only difference with respect to the electric chain
-[01:55:43.000 --> 01:55:45.000]  to the verified plot
-[01:55:45.000 --> 01:55:47.000]  is that during the electric chain validation
-[01:55:47.000 --> 01:55:49.000]  we don't choose
-[01:55:49.000 --> 01:55:51.000]  only the phase
-[01:55:51.000 --> 01:55:53.000]  that is identified by
-[01:55:53.000 --> 01:55:55.000]  either the CIC
-[01:55:55.000 --> 01:55:57.000]  or the LpGBT to be the best one
-[01:55:57.000 --> 01:55:59.000]  we change them manually
-[01:55:59.000 --> 01:56:01.000]  because we want to see how wide
-[01:56:01.000 --> 01:56:03.000]  is the work in area
-[01:56:03.000 --> 01:56:05.000]  you don't want to have
-[01:56:05.000 --> 01:56:07.000]  a single phase that works
-[01:56:07.000 --> 01:56:09.000]  because it means that
-[01:56:09.000 --> 01:56:11.000]  you are a little bit at the edge
-[01:56:11.000 --> 01:56:13.000]  as you might have that
-[01:56:13.000 --> 01:56:15.000]  things might be working now
-[01:56:15.000 --> 01:56:17.000]  and after installing to the detector
-[01:56:17.000 --> 01:56:19.000]  and that single phase is not anymore
-[01:56:19.000 --> 01:56:21.000]  so the whole idea
-[01:56:21.000 --> 01:56:23.000]  of the electric chain validation
-[01:56:23.000 --> 01:56:25.000]  is how wide is the work in area
-[01:56:25.000 --> 01:56:27.000]  so
-[01:56:27.000 --> 01:56:29.000]  I'm going to start
-[01:56:29.000 --> 01:56:31.000]  from the
-[01:56:31.000 --> 01:56:33.000]  CIC to LpGBT validation
-[01:56:33.000 --> 01:56:35.000]  so we are basically
-[01:56:35.000 --> 01:56:37.000]  looking at this phase
-[01:56:37.000 --> 01:56:39.000]  these lines over here
-[01:56:39.000 --> 01:56:41.000]  so we change
-[01:56:41.000 --> 01:56:43.000]  the sampling phase of the LpGBT
-[01:56:43.000 --> 01:56:45.000]  and we see if
-[01:56:45.000 --> 01:56:47.000]  the signal
-[01:56:47.000 --> 01:56:49.000]  the
-[01:56:49.000 --> 01:56:51.000]  pattern that are sent by the CIC
-[01:56:51.000 --> 01:56:53.000]  are properly
-[01:56:53.000 --> 01:56:55.000]  reconstructed into the SPGA
-[01:56:57.000 --> 01:56:59.000]  for each of these phase
-[01:56:59.000 --> 01:57:01.000]  so the plots
-[01:57:01.000 --> 01:57:03.000]  are saved
-[01:57:03.000 --> 01:57:05.000]  at the high B level
-[01:57:05.000 --> 01:57:07.000]  and
-[01:57:07.000 --> 01:57:09.000]  all the plots are
-[01:57:09.000 --> 01:57:11.000]  CIC to LpGBT
-[01:57:11.000 --> 01:57:13.000]  pattern matching
-[01:57:13.000 --> 01:57:15.000]  and for each one of these
-[01:57:15.000 --> 01:57:17.000]  there is the error rate
-[01:57:17.000 --> 01:57:19.000]  and the tested bits
-[01:57:19.000 --> 01:57:21.000]  as before, let's open one quickly
-[01:57:21.000 --> 01:57:23.000]  here is the number of bits
-[01:57:23.000 --> 01:57:25.000]  that we
-[01:57:25.000 --> 01:57:27.000]  tested for every one of these lines
-[01:57:27.000 --> 01:57:29.000]  and
-[01:57:29.000 --> 01:57:31.000]  these
-[01:57:31.000 --> 01:57:33.000]  are the number of
-[01:57:33.000 --> 01:57:35.000]  error that we measure
-[01:57:35.000 --> 01:57:37.000]  for every line. I'm going to
-[01:57:37.000 --> 01:57:39.000]  go more into details, no more about it
-[01:57:39.000 --> 01:57:41.000]  then
-[01:57:41.000 --> 01:57:43.000]  so
-[01:57:43.000 --> 01:57:45.000]  what we can also change
-[01:57:45.000 --> 01:57:47.000]  is
-[01:57:47.000 --> 01:57:49.000]  the
-[01:57:49.000 --> 01:57:51.000]  strength
-[01:57:51.000 --> 01:57:53.000]  of the current used
-[01:57:53.000 --> 01:57:55.000]  to drive the lines
-[01:57:55.000 --> 01:57:57.000]  by the CIC
-[01:57:57.000 --> 01:57:59.000]  so the CIC is sending data
-[01:57:59.000 --> 01:58:01.000]  to these and you can set
-[01:58:01.000 --> 01:58:03.000]  how much current is used
-[01:58:03.000 --> 01:58:05.000]  to drive the lines
-[01:58:05.000 --> 01:58:07.000]  and
-[01:58:07.000 --> 01:58:09.000]  you can expect that by changing these
-[01:58:09.000 --> 01:58:11.000]  you can, sorry
-[01:58:11.000 --> 01:58:13.000]  to change these current
-[01:58:13.000 --> 01:58:15.000]  you might have different
-[01:58:15.000 --> 01:58:17.000]  behavior in the LpGBT
-[01:58:17.000 --> 01:58:19.000]  reconstructing them
-[01:58:19.000 --> 01:58:21.000]  then we have the
-[01:58:21.000 --> 01:58:23.000]  LpGBT clock polarity
-[01:58:23.000 --> 01:58:25.000]  so the LpGBT sends
-[01:58:25.000 --> 01:58:27.000]  the
-[01:58:27.000 --> 01:58:29.000]  provides the clock
-[01:58:29.000 --> 01:58:31.000]  to the
-[01:58:31.000 --> 01:58:33.000]  hybrid so
-[01:58:33.000 --> 01:58:35.000]  you reconstruct the clock from the incoming data
-[01:58:35.000 --> 01:58:37.000]  and provides it to the hybrid
-[01:58:37.000 --> 01:58:39.000]  and you can set the polarity of the clock so
-[01:58:39.000 --> 01:58:41.000]  you can basically change its phase
-[01:58:41.000 --> 01:58:43.000]  by 50%
-[01:58:43.000 --> 01:58:45.000]  and these are
-[01:58:45.000 --> 01:58:47.000]  see that we do both of them
-[01:58:47.000 --> 01:58:49.000]  and finally
-[01:58:49.000 --> 01:58:51.000]  the CIC clock strength
-[01:58:51.000 --> 01:58:53.000]  as for these lines
-[01:58:53.000 --> 01:58:55.000]  the LpGBT sends the clock
-[01:58:55.000 --> 01:58:57.000]  and you can change the current
-[01:58:57.000 --> 01:58:59.000]  that is used to drive the line of the clock
-[01:58:59.000 --> 01:59:01.000]  so I have to
-[01:59:01.000 --> 01:59:03.000]  set this by an overkill but this was
-[01:59:03.000 --> 01:59:05.000]  at the beginning so we were not sure
-[01:59:05.000 --> 01:59:07.000]  how much we need to test so
-[01:59:07.000 --> 01:59:09.000]  we can imagine that in the future we can
-[01:59:09.000 --> 01:59:11.000]  drop some of these
-[01:59:11.000 --> 01:59:13.000]  so I'm just going to focus
-[01:59:13.000 --> 01:59:15.000]  probably on one of them
-[01:59:27.000 --> 01:59:29.000]  let me try to see if there is some
-[01:59:29.000 --> 01:59:31.000]  a little bit more
-[01:59:31.000 --> 01:59:33.000]  representative so maybe
-[01:59:33.000 --> 01:59:35.000]  so it will be clear
-[01:59:35.000 --> 01:59:37.000]  because
-[01:59:37.000 --> 01:59:39.000]  these phases are usually
-[01:59:39.000 --> 01:59:41.000]  pretty good
-[01:59:41.000 --> 01:59:43.000]  so you don't see too much
-[01:59:43.000 --> 01:59:45.000]  which is good which means that
-[01:59:45.000 --> 01:59:47.000]  basically
-[01:59:47.000 --> 01:59:49.000]  several of these phases
-[01:59:49.000 --> 01:59:51.000]  keep open the problem
-[01:59:51.000 --> 01:59:53.000]  several of the phases
-[01:59:53.000 --> 01:59:55.000]  are going to be
-[01:59:55.000 --> 01:59:57.000]  good for working
-[01:59:57.000 --> 01:59:59.000]  maybe this one is better
-[01:59:59.000 --> 02:00:01.000]  ok
-[02:00:03.000 --> 02:00:05.000]  let's take this
-[02:00:05.000 --> 02:00:07.000]  so in this plot
-[02:00:07.000 --> 02:00:09.000]  what we show is that
-[02:00:09.000 --> 02:00:11.000]  for each on the Y axis
-[02:00:11.000 --> 02:00:13.000]  we show the line
-[02:00:13.000 --> 02:00:15.000]  ID so these
-[02:00:15.000 --> 02:00:17.000]  are the lines
-[02:00:19.000 --> 02:00:21.000]  and on the X axis
-[02:00:21.000 --> 02:00:23.000]  we show the
-[02:00:23.000 --> 02:00:25.000]  phase that is selected
-[02:00:25.000 --> 02:00:27.000]  so the phase can go from 0 to
-[02:00:27.000 --> 02:00:29.000]  14 so we change it manually
-[02:00:29.000 --> 02:00:31.000]  the LPGPT phase
-[02:00:31.000 --> 02:00:33.000]  we don't let the LPGPT adjust
-[02:00:33.000 --> 02:00:35.000]  we change it manually because we also want
-[02:00:35.000 --> 02:00:37.000]  to work in the area where the LPGPT doesn't
-[02:00:37.000 --> 02:00:39.000]  see anything
-[02:00:39.000 --> 02:00:41.000]  and then on the Y axis
-[02:00:41.000 --> 02:00:43.000]  the Z axis
-[02:00:43.000 --> 02:00:45.000]  we add a number of test bits
-[02:00:45.000 --> 02:00:47.000]  and as before
-[02:00:47.000 --> 02:00:49.000]  the stub pattern matches down the firmware
-[02:00:49.000 --> 02:00:51.000]  to be faster while the level 1
-[02:00:51.000 --> 02:00:53.000]  pattern matches down on the
-[02:00:53.000 --> 02:00:55.000]  VR software and that's why it takes
-[02:00:55.000 --> 02:00:57.000]  longer time
-[02:00:57.000 --> 02:00:59.000]  and therefore
-[02:00:59.000 --> 02:01:01.000]  we don't scan as many bits
-[02:01:01.000 --> 02:01:03.000]  as for the stubs
-[02:01:03.000 --> 02:01:05.000]  and then for each one of these
-[02:01:05.000 --> 02:01:07.000]  we get a plot like this
-[02:01:07.000 --> 02:01:09.000]  where X and Y axes are the same
-[02:01:09.000 --> 02:01:11.000]  so the lines
-[02:01:11.000 --> 02:01:13.000]  and the phases
-[02:01:13.000 --> 02:01:15.000]  why the Z axis
-[02:01:15.000 --> 02:01:17.000]  is the number
-[02:01:17.000 --> 02:01:19.000]  there already
-[02:01:19.000 --> 02:01:21.000]  it's written a bit small
-[02:01:21.000 --> 02:01:23.000]  but it's written the time
-[02:01:23.000 --> 02:01:25.000]  so
-[02:01:25.000 --> 02:01:27.000]  you can expect that some
-[02:01:27.000 --> 02:01:29.000]  of the lines will not work
-[02:01:29.000 --> 02:01:31.000]  because you are sampling
-[02:01:31.000 --> 02:01:33.000]  the incoming data from the SSC
-[02:01:33.000 --> 02:01:35.000]  when the incoming data are transitioning
-[02:01:35.000 --> 02:01:37.000]  and this is definitely not a good place
-[02:01:37.000 --> 02:01:39.000]  because you are misinterpreting
-[02:01:39.000 --> 02:01:41.000]  the Z on Y
-[02:01:41.000 --> 02:01:43.000]  so
-[02:01:43.000 --> 02:01:45.000]  how we identify a good module
-[02:01:45.000 --> 02:01:47.000]  is basically
-[02:01:47.000 --> 02:01:49.000]  how wide is the area
-[02:01:49.000 --> 02:01:51.000]  in which you can find a good phase
-[02:01:51.000 --> 02:01:53.000]  so for example here
-[02:01:53.000 --> 02:01:55.000]  the
-[02:01:55.000 --> 02:01:57.000]  the width of the phase actually
-[02:01:57.000 --> 02:01:59.000]  the one on the left but just
-[02:01:59.000 --> 02:02:01.000]  let's pretend that something here is bad
-[02:02:01.000 --> 02:02:03.000]  the width of
-[02:02:03.000 --> 02:02:05.000]  the phase in which you can work
-[02:02:05.000 --> 02:02:07.000]  is this amount
-[02:02:07.000 --> 02:02:09.000]  imagine you have
-[02:02:09.000 --> 02:02:11.000]  a really bad scenario in which
-[02:02:11.000 --> 02:02:13.000]  you have
-[02:02:13.000 --> 02:02:15.000]  several values
-[02:02:15.000 --> 02:02:17.000]  which you don't have a good phase
-[02:02:17.000 --> 02:02:19.000]  and maybe I think I spot one before
-[02:02:21.000 --> 02:02:23.000]  yes
-[02:02:23.000 --> 02:02:25.000]  so
-[02:02:29.000 --> 02:02:31.000]  yes
-[02:02:31.000 --> 02:02:33.000]  so
-[02:02:33.000 --> 02:02:35.000]  this one is a really bad scenario
-[02:02:35.000 --> 02:02:37.000]  because you see that basically
-[02:02:37.000 --> 02:02:39.000]  there is no phase in which
-[02:02:39.000 --> 02:02:41.000]  things are working fine
-[02:02:41.000 --> 02:02:43.000]  why that?
-[02:02:43.000 --> 02:02:45.000]  because we are very likely using
-[02:02:45.000 --> 02:02:47.000]  a combination clock polarity
-[02:02:47.000 --> 02:02:49.000]  and to abstract that are not
-[02:02:49.000 --> 02:02:51.000]  as obvious current is the minimum
-[02:02:51.000 --> 02:02:53.000]  and basically you cannot
-[02:02:53.000 --> 02:02:55.000]  find any phases in which things are working
-[02:02:55.000 --> 02:02:57.000]  you can imagine also that
-[02:02:57.000 --> 02:02:59.000]  you have something in between in which
-[02:02:59.000 --> 02:03:01.000]  for example this one is a zero
-[02:03:01.000 --> 02:03:03.000]  and you have just one phase that works
-[02:03:03.000 --> 02:03:05.000]  and this would be a bad mortgage because
-[02:03:05.000 --> 02:03:07.000]  you are really relying on this phase
-[02:03:07.000 --> 02:03:09.000]  and never ever being
-[02:03:09.000 --> 02:03:11.000]  always being good and which is unsafe
-[02:03:11.000 --> 02:03:13.000]  so basically the distance between
-[02:03:13.000 --> 02:03:15.000]  at the length
-[02:03:15.000 --> 02:03:17.000]  of which you get zero error
-[02:03:17.000 --> 02:03:19.000]  indicates you how wide is
-[02:03:19.000 --> 02:03:21.000]  the working area
-[02:03:21.000 --> 02:03:23.000]  and how well your module
-[02:03:23.000 --> 02:03:25.000]  can absorb
-[02:03:25.000 --> 02:03:27.000]  variation in that
-[02:03:27.000 --> 02:03:29.000]  standard condition that may change
-[02:03:29.000 --> 02:03:31.000]  the width of the phase
-[02:03:31.000 --> 02:03:33.000]  so as I was saying you have really a lot of them
-[02:03:33.000 --> 02:03:35.000]  because it's a
-[02:03:35.000 --> 02:03:37.000]  scanner multi-parameters so we are changing
-[02:03:37.000 --> 02:03:39.000]  the
-[02:03:39.000 --> 02:03:41.000]  C-C clock
-[02:03:41.000 --> 02:03:43.000]  SLBS current, the LpGBT clock polarity
-[02:03:43.000 --> 02:03:45.000]  and the LpGBT clock strength
-[02:03:45.000 --> 02:03:47.000]  so you have really a lot of them
-[02:03:47.000 --> 02:03:49.000]  you don't need to look
-[02:03:49.000 --> 02:03:51.000]  all of them
-[02:03:51.000 --> 02:03:53.000]  potato will do the job
-[02:03:53.000 --> 02:03:55.000]  but this is the typical plot that you
-[02:03:55.000 --> 02:03:57.000]  want to do
-[02:03:57.000 --> 02:03:59.000]  once you see that
-[02:03:59.000 --> 02:04:01.000]  you have problem with alignment
-[02:04:01.000 --> 02:04:03.000]  of these kind of things that
-[02:04:03.000 --> 02:04:05.000]  it prevents you to have a stable communication
-[02:04:05.000 --> 02:04:07.000]  a lot of errors in communicating
-[02:04:07.000 --> 02:04:09.000]  in a
-[02:04:09.000 --> 02:04:11.000]  decoding the events
-[02:04:11.000 --> 02:04:13.000]  these kind of things may indicate
-[02:04:13.000 --> 02:04:15.000]  that your working range is
-[02:04:15.000 --> 02:04:17.000]  small and
-[02:04:17.000 --> 02:04:19.000]  even if the LpGBT can align
-[02:04:19.000 --> 02:04:21.000]  the C-C
-[02:04:21.000 --> 02:04:23.000]  it might not be a good alignment
-[02:04:23.000 --> 02:04:25.000]  you just found a phase but then
-[02:04:25.000 --> 02:04:27.000]  that phase is not really stable
-[02:04:29.000 --> 02:04:31.000]  so
-[02:04:31.000 --> 02:04:33.000]  let me open just another one
-[02:04:33.000 --> 02:04:35.000]  so for example this one is a pretty good one
-[02:04:35.000 --> 02:04:37.000]  you see that you have a wide range
-[02:04:37.000 --> 02:04:39.000]  of areas in which things are working fine
-[02:04:43.000 --> 02:04:45.000]  any question on this
-[02:04:45.000 --> 02:04:47.000]  because basically all the electric chain validation
-[02:04:47.000 --> 02:04:49.000]  will look like these
-[02:04:49.000 --> 02:04:51.000]  so you see
-[02:04:51.000 --> 02:04:53.000]  how we are plotting this
-[02:04:53.000 --> 02:04:55.000]  basically you understand how we are plotting all the electric chain validation
-[02:05:07.000 --> 02:05:09.000]  then next step
-[02:05:09.000 --> 02:05:11.000]  of the electric chain validation
-[02:05:11.000 --> 02:05:13.000]  is actually an auxiliary step
-[02:05:15.000 --> 02:05:17.000]  you kind of remember before
-[02:05:17.000 --> 02:05:19.000]  I mentioned briefly
-[02:05:19.000 --> 02:05:21.000]  in the plots
-[02:05:21.000 --> 02:05:23.000]  at the beginning
-[02:05:23.000 --> 02:05:25.000]  let me open one again
-[02:05:31.000 --> 02:05:33.000]  yes, okay in this one
-[02:05:33.000 --> 02:05:35.000]  you kind of remember
-[02:05:35.000 --> 02:05:37.000]  I was telling you so here
-[02:05:37.000 --> 02:05:39.000]  despite the fact that we have five lines
-[02:05:39.000 --> 02:05:41.000]  we are just going to show one of them
-[02:05:41.000 --> 02:05:43.000]  because we cannot really distinguish
-[02:05:43.000 --> 02:05:45.000]  since the C-C does a risk rambling
-[02:05:45.000 --> 02:05:47.000]  we cannot really distinguish
-[02:05:47.000 --> 02:05:49.000]  between
-[02:05:49.000 --> 02:05:51.000]  in which line an error occurs
-[02:05:53.000 --> 02:05:55.000]  this is
-[02:05:55.000 --> 02:05:57.000]  partially true
-[02:05:57.000 --> 02:05:59.000]  we can actually set the C-C
-[02:05:59.000 --> 02:06:01.000]  in bypass mode
-[02:06:01.000 --> 02:06:03.000]  so basically you can
-[02:06:03.000 --> 02:06:05.000]  ask the C-C
-[02:06:05.000 --> 02:06:07.000]  just to forward the incoming
-[02:06:07.000 --> 02:06:09.000]  data
-[02:06:09.000 --> 02:06:11.000]  to the LpGBT
-[02:06:11.000 --> 02:06:13.000]  without any processing
-[02:06:13.000 --> 02:06:15.000]  this is
-[02:06:15.000 --> 02:06:17.000]  a bit more complicated
-[02:06:17.000 --> 02:06:19.000]  for a few reasons
-[02:06:19.000 --> 02:06:21.000]  the first one is that
-[02:06:21.000 --> 02:06:23.000]  each CBC has
-[02:06:23.000 --> 02:06:25.000]  five lines
-[02:06:25.000 --> 02:06:27.000]  actually six lines
-[02:06:27.000 --> 02:06:29.000]  in input to the C-C
-[02:06:29.000 --> 02:06:31.000]  so there are six times eight
-[02:06:31.000 --> 02:06:33.000]  so 48 lines going to the C-C
-[02:06:33.000 --> 02:06:35.000]  but only
-[02:06:35.000 --> 02:06:37.000]  six coming out from the C-C
-[02:06:37.000 --> 02:06:39.000]  to LpGBT
-[02:06:39.000 --> 02:06:41.000]  so you cannot forward all of them in one shot
-[02:06:41.000 --> 02:06:43.000]  so you have to choose what you
-[02:06:43.000 --> 02:06:45.000]  want to forward
-[02:06:45.000 --> 02:06:47.000]  and then on top of that
-[02:06:49.000 --> 02:06:51.000]  you cannot forward
-[02:06:51.000 --> 02:06:53.000]  out by construction
-[02:06:53.000 --> 02:06:55.000]  all the lines
-[02:06:55.000 --> 02:06:57.000]  for the one CBC
-[02:06:57.000 --> 02:06:59.000]  but you can forward only
-[02:06:59.000 --> 02:07:01.000]  four
-[02:07:01.000 --> 02:07:03.000]  and these four
-[02:07:03.000 --> 02:07:05.000]  are
-[02:07:05.000 --> 02:07:07.000]  what is called a
-[02:07:07.000 --> 02:07:09.000]  five port
-[02:07:09.000 --> 02:07:11.000]  and here in the stable you see the grouping
-[02:07:11.000 --> 02:07:13.000]  so
-[02:07:13.000 --> 02:07:15.000]  there are 12 five ports
-[02:07:15.000 --> 02:07:17.000]  and each one of these have four lines
-[02:07:17.000 --> 02:07:19.000]  and these four lines
-[02:07:19.000 --> 02:07:21.000]  are basically
-[02:07:21.000 --> 02:07:23.000]  values information that are coming
-[02:07:23.000 --> 02:07:25.000]  from the various chips
-[02:07:25.000 --> 02:07:27.000]  so basically the first ten five port
-[02:07:27.000 --> 02:07:29.000]  are only the
-[02:07:29.000 --> 02:07:31.000]  trigger information
-[02:07:31.000 --> 02:07:33.000]  and then the last two are
-[02:07:33.000 --> 02:07:35.000]  for the level ones
-[02:07:35.000 --> 02:07:37.000]  and
-[02:07:37.000 --> 02:07:39.000]  to do the mapping
-[02:07:39.000 --> 02:07:41.000]  is even more complicated
-[02:07:41.000 --> 02:07:43.000]  because
-[02:07:43.000 --> 02:07:45.000]  the C-I-C
-[02:07:45.000 --> 02:07:47.000]  has
-[02:07:47.000 --> 02:07:49.000]  used a front-end ID
-[02:07:49.000 --> 02:07:51.000]  that is the one
-[02:07:51.000 --> 02:07:53.000]  indicating the second column
-[02:07:53.000 --> 02:07:55.000]  that actually doesn't match
-[02:07:55.000 --> 02:07:57.000]  the one that is used
-[02:07:57.000 --> 02:07:59.000]  in the I-Sql-C
-[02:07:59.000 --> 02:08:01.000]  that is also the one
-[02:08:01.000 --> 02:08:03.000]  that we used for indicating the modules
-[02:08:03.000 --> 02:08:05.000]  in the
-[02:08:05.000 --> 02:08:07.000]  chips into PH2-ACF
-[02:08:07.000 --> 02:08:09.000]  so there are basically two IDs
-[02:08:09.000 --> 02:08:11.000]  one that is used for the I-Sql-C
-[02:08:11.000 --> 02:08:13.000]  and one is used for the C-I-C
-[02:08:13.000 --> 02:08:15.000]  to identify which system is connected
-[02:08:15.000 --> 02:08:17.000]  they don't match
-[02:08:17.000 --> 02:08:19.000]  and for historical reason
-[02:08:19.000 --> 02:08:21.000]  it was chosen to PH2-ACF to use
-[02:08:21.000 --> 02:08:23.000]  the I-Sql-C1
-[02:08:23.000 --> 02:08:25.000]  so these are the numbers that you see in the PH2-ACF
-[02:08:25.000 --> 02:08:27.000]  but then there is a bit of mapping
-[02:08:27.000 --> 02:08:29.000]  so all the way down to the port
-[02:08:29.000 --> 02:08:31.000]  the five port and the port line
-[02:08:31.000 --> 02:08:33.000]  to actually understand which
-[02:08:33.000 --> 02:08:35.000]  lines you are
-[02:08:35.000 --> 02:08:37.000]  you are expecting
-[02:08:37.000 --> 02:08:39.000]  so you see is a bit complicated
-[02:08:41.000 --> 02:08:43.000]  but this is how we need to do it
-[02:08:43.000 --> 02:08:45.000]  in the PH2-ACF
-[02:08:45.000 --> 02:08:47.000]  I don't think you need to understand really the details
-[02:08:47.000 --> 02:08:49.000]  because the PH2-ACF then does
-[02:08:49.000 --> 02:08:51.000]  a little bit of
-[02:08:51.000 --> 02:08:53.000]  remapping
-[02:08:53.000 --> 02:08:55.000]  for you
-[02:08:55.000 --> 02:08:57.000]  I don't worry too much about what is happening
-[02:08:57.000 --> 02:08:59.000]  into this step
-[02:08:59.000 --> 02:09:01.000]  ok so
-[02:09:01.000 --> 02:09:03.000]  for the
-[02:09:03.000 --> 02:09:05.000]  the second problem
-[02:09:05.000 --> 02:09:07.000]  that I will mention is that
-[02:09:07.000 --> 02:09:09.000]  once running by pass mode
-[02:09:09.000 --> 02:09:11.000]  the LpGBT
-[02:09:11.000 --> 02:09:13.000]  so
-[02:09:13.000 --> 02:09:15.000]  the data that are coming out from the C-I-C
-[02:09:15.000 --> 02:09:17.000]  are not any more clock
-[02:09:17.000 --> 02:09:19.000]  to the usual clock in which we
-[02:09:19.000 --> 02:09:21.000]  did the phase alignment and so on
-[02:09:21.000 --> 02:09:23.000]  so we need
-[02:09:23.000 --> 02:09:25.000]  to re-align the LpGBT
-[02:09:25.000 --> 02:09:27.000]  but by construction
-[02:09:27.000 --> 02:09:29.000]  this cannot be done automatically
-[02:09:29.000 --> 02:09:31.000]  it needs to be done
-[02:09:31.000 --> 02:09:33.000]  manually
-[02:09:33.000 --> 02:09:35.000]  so we need to do a manual strain of the LpGBT phases
-[02:09:35.000 --> 02:09:37.000]  in order to align
-[02:09:37.000 --> 02:09:39.000]  the data
-[02:09:39.000 --> 02:09:41.000]  coming from the C-I-C when the C-I-C
-[02:09:41.000 --> 02:09:43.000]  is in bypass mode
-[02:09:43.000 --> 02:09:45.000]  so it's an extra complication
-[02:09:45.000 --> 02:09:47.000]  so
-[02:09:47.000 --> 02:09:49.000]  that's why we need to do
-[02:09:49.000 --> 02:09:51.000]  one five port at a time
-[02:09:51.000 --> 02:09:53.000]  to scan the LpGBT phase
-[02:09:53.000 --> 02:09:55.000]  and find the best phase
-[02:09:55.000 --> 02:09:57.000]  and this is what is happening
-[02:09:57.000 --> 02:09:59.000]  into all these plots
-[02:09:59.000 --> 02:10:01.000]  that I'm showing you here
-[02:10:01.000 --> 02:10:03.000]  that has this
-[02:10:03.000 --> 02:10:05.000]  LpGBT for C-I-C by pass
-[02:10:05.000 --> 02:10:07.000]  and there are
-[02:10:07.000 --> 02:10:09.000]  for each of the
-[02:10:09.000 --> 02:10:11.000]  five port
-[02:10:11.000 --> 02:10:13.000]  four plots
-[02:10:13.000 --> 02:10:15.000]  so let's start
-[02:10:15.000 --> 02:10:17.000]  from
-[02:10:17.000 --> 02:10:19.000]  the
-[02:10:19.000 --> 02:10:21.000]  from the
-[02:10:21.000 --> 02:10:23.000]  test base
-[02:10:25.000 --> 02:10:27.000]  okay
-[02:10:27.000 --> 02:10:29.000]  so here you kind of recognize the same idea
-[02:10:29.000 --> 02:10:31.000]  so
-[02:10:31.000 --> 02:10:33.000]  you have the phase on the x-axis
-[02:10:33.000 --> 02:10:35.000]  and the line on the y-axis
-[02:10:35.000 --> 02:10:37.000]  and you are going to see this
-[02:10:37.000 --> 02:10:39.000]  always stub one, stub two, stub three
-[02:10:39.000 --> 02:10:41.000]  and stub four
-[02:10:41.000 --> 02:10:43.000]  because
-[02:10:43.000 --> 02:10:45.000]  the forwarding
-[02:10:45.000 --> 02:10:47.000]  always goes through these four lines
-[02:10:47.000 --> 02:10:49.000]  every time
-[02:10:49.000 --> 02:10:51.000]  so we just need to provide a name
-[02:10:51.000 --> 02:10:53.000]  there is no correlation
-[02:10:53.000 --> 02:10:55.000]  between these and what's
-[02:10:55.000 --> 02:10:57.000]  happening to the CBC
-[02:10:57.000 --> 02:10:59.000]  so
-[02:10:59.000 --> 02:11:01.000]  it's a bit annoying but
-[02:11:01.000 --> 02:11:03.000]  this is how we do it
-[02:11:03.000 --> 02:11:05.000]  and then for the same plot
-[02:11:05.000 --> 02:11:07.000]  we have the
-[02:11:09.000 --> 02:11:11.000]  it is
-[02:11:11.000 --> 02:11:13.000]  the error rate
-[02:11:17.000 --> 02:11:19.000]  here you cannot see slightly better
-[02:11:19.000 --> 02:11:21.000]  so yeah
-[02:11:21.000 --> 02:11:23.000]  the phase scan again
-[02:11:23.000 --> 02:11:25.000]  the line
-[02:11:25.000 --> 02:11:27.000]  and then
-[02:11:27.000 --> 02:11:29.000]  the error rate
-[02:11:29.000 --> 02:11:31.000]  in percentage, in percentage from zero to one
-[02:11:31.000 --> 02:11:33.000]  and we need to identify
-[02:11:33.000 --> 02:11:35.000]  the working area so you see that
-[02:11:35.000 --> 02:11:37.000]  there is a nice area in which we don't have any error
-[02:11:37.000 --> 02:11:39.000]  so we set
-[02:11:39.000 --> 02:11:41.000]  our working point
-[02:11:41.000 --> 02:11:43.000]  in the middle of the widest
-[02:11:43.000 --> 02:11:45.000]  area and we know from that point
-[02:11:45.000 --> 02:11:47.000]  onward is that very likely
-[02:11:49.000 --> 02:11:51.000]  the data that from the CIC
-[02:11:51.000 --> 02:11:53.000]  sorry from the CBC
-[02:11:53.000 --> 02:11:55.000]  are bypassed by the CIC
-[02:11:55.000 --> 02:11:57.000]  goes to the LpGBT and arrive to the board
-[02:11:57.000 --> 02:11:59.000]  are properly identified
-[02:11:59.000 --> 02:12:01.000]  so it is important to align
-[02:12:01.000 --> 02:12:03.000]  properly the LpGBT
-[02:12:03.000 --> 02:12:05.000]  and unfortunately we need to repeat this for every
-[02:12:05.000 --> 02:12:07.000]  five-port
-[02:12:07.000 --> 02:12:09.000]  because these every five-port
-[02:12:09.000 --> 02:12:11.000]  are different
-[02:12:11.000 --> 02:12:13.000]  are different working points
-[02:12:13.000 --> 02:12:15.000]  so from one to another you see that there are variations
-[02:12:15.000 --> 02:12:17.000]  so we need to repeat it all
-[02:12:17.000 --> 02:12:19.000]  so all these steps
-[02:12:19.000 --> 02:12:21.000]  I think you can safely ignore all these
-[02:12:21.000 --> 02:12:23.000]  plots
-[02:12:23.000 --> 02:12:25.000]  as long as everything works
-[02:12:25.000 --> 02:12:27.000]  because it is pure auxiliary calibration
-[02:12:27.000 --> 02:12:29.000]  to make the next trans-tap
-[02:12:29.000 --> 02:12:31.000]  which is the electric chain validation
-[02:12:31.000 --> 02:12:33.000]  between in this case the CBC
-[02:12:33.000 --> 02:12:35.000]  and the CIC to work
+
+In the plot below the Z axis represents the number of errors. Some lines are expected not to work properly, since sampling may occur when the incoming data from the CIC are transitioning, leading to bit misinterpretation. The quality of a module is therefore evaluated by the width of the phase range over which correct data transmission is achieved.
+![CICtoLpGBT_PatternMatchingErrorRate_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid](../images/OTtesting/2S/CICtoLpGBT_PatternMatchingErrorRate_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid.png)
+
+Many versions of the above plots are stored for the various values and combinations of the current used by the CIC to drive the data (SLVS strenght, from 1 to 5), the LpGBT clock polarity, and the CIC clock drive strength (from 1 to 7).
+
+##### OTalignLpGBTinputsForBypass - Hybrid
+The next step in the electrical chain validation is an auxiliary procedure that allows studying data transmission with the CIC in bypass mode. Normally, the CIC scrambles the data coming from the readout chip, making it impossible to determine on which line an error occurs, but in bypass mode the CIC simply forwards the incoming data to the LpGBT without processing. Since each CBC sends six lines to the CIC, and only six lines total go from the CIC to the LpGBT, not all can be forwarded simultaneously, so a subset must be selected. The CIC allows forwarding only four lines at a time, grouped into so-called “five ports.” There are twelve five ports in total: the first ten carry trigger information, and the last two carry Level-1 data. 
+[Mapping](https://fnal-outer-tracker.docs.cern.ch/documents/PhyPortMap.pdf) these correctly is complicated by the fact that the CIC and I2C systems use different front-end IDs to identify connected chips, and these IDs do not match. PH2_ACF uses the I2C IDs and automatically performs the internal remapping between the CIC front-end IDs, five ports, and line indices, so this does not need to be handled manually.
+A further complication arises because, in bypass mode, the CIC output is no longer synchronized to the standard clock that the LpGBT uses for phase alignment. As a result, the phase alignment of the LpGBT must be re-tuned manually. The procedure consists of scanning the LpGBT phases for each five port individually to identify the correct phase alignment for data transmission, as shown in the “LpGBT for CIC bypass” plots.
+
+In these plots, the x-axis shows the LpGBT phase, and the y-axis shows the line index. You will always see four lines—stub 1 through stub 4—since the forwarding in bypass mode always goes through four lines, regardless of which CBC they originate from. These labels are therefore arbitrary and not correlated with specific CBC lines, but they are needed for display. Here we see again the tested bits.
+![LpGBTforCICbypass_PhaseScanTestedBits_phyPort0_Hybrid](../images/OTtesting/2S/LpGBTforCICbypass_PhaseScanTestedBits_phyPort0_Hybrid.png)
+
+
+The corresponding plot below shows the error rate (from 0 to 1) as a function of phase and line. The goal is to identify the working region where no transmission errors occur. The optimal working point is chosen at the center of the widest error-free region, ensuring that the data bypassed from the CIC to the LpGBT and sent to the board are correctly received. Because each five-port behaves differently and has its own optimal phase alignment, this scan must be repeated for every five-port. 
+
+![LpGBTforCICbypass_PhaseScanBitErrorRate_phyPort0_Hybrid](../images/OTtesting/2S/LpGBTforCICbypass_PhaseScanBitErrorRate_phyPort0_Hybrid.png)
+
+All these scans are auxiliary calibration steps—if everything works properly, the details of these plots can be ignored, since their purpose is simply to enable the final validation of the electrical chain between the CBC and the CIC.
+
 [02:12:35.000 --> 02:12:37.000]  so all of these
 [02:12:37.000 --> 02:12:39.000]  it just made that identify
 [02:12:39.000 --> 02:12:41.000]  the best phase which is also
@@ -1252,17 +790,17 @@ An additional measurement was included using the same plot evaluated above but w
 [02:17:25.000 --> 02:17:27.000]  is that we want to
 [02:17:27.000 --> 02:17:29.000]  check
 [02:17:29.000 --> 02:17:31.000]  the stability of the link between the
-[02:17:31.000 --> 02:17:33.000]  basically the LPGPT
+[02:17:31.000 --> 02:17:33.000]  basically the LpGBT
 [02:17:33.000 --> 02:17:35.000]  and FPGA going through
 [02:17:35.000 --> 02:17:37.000]  the VTRX
 [02:17:37.000 --> 02:17:39.000]  so this will allow you to check
 [02:17:39.000 --> 02:17:41.000]  if there are problems between
-[02:17:41.000 --> 02:17:43.000]  the LPGPT and VTRX
+[02:17:41.000 --> 02:17:43.000]  the LpGBT and VTRX
 [02:17:43.000 --> 02:17:45.000]  or between the VTRX
 [02:17:45.000 --> 02:17:47.000]  and the board
 [02:17:47.000 --> 02:17:49.000]  and
 [02:17:49.000 --> 02:17:51.000]  so
-[02:17:51.000 --> 02:17:53.000]  the LPGPT has some functionality
+[02:17:51.000 --> 02:17:53.000]  the LpGBT has some functionality
 [02:17:53.000 --> 02:17:55.000]  to create a PRBS
 [02:17:55.000 --> 02:17:57.000]  which is
 [02:17:57.000 --> 02:17:59.000]  a pseudo random
@@ -1278,7 +816,7 @@ An additional measurement was included using the same plot evaluated above but w
 [02:18:17.000 --> 02:18:19.000]  and then at that point
 [02:18:19.000 --> 02:18:21.000]  we can see
 [02:18:21.000 --> 02:18:23.000]  if every pattern matching the expected pattern
-[02:18:23.000 --> 02:18:25.000]  sent by the LPGPT
+[02:18:23.000 --> 02:18:25.000]  sent by the LpGBT
 [02:18:25.000 --> 02:18:27.000]  matches the expected pattern
 [02:18:27.000 --> 02:18:29.000]  received by the FC7
 [02:18:29.000 --> 02:18:31.000]  and this will allow us to
@@ -1287,11 +825,11 @@ An additional measurement was included using the same plot evaluated above but w
 [02:18:35.000 --> 02:18:37.000]  during the transmission
 [02:18:37.000 --> 02:18:39.000]  so
 [02:18:43.000 --> 02:18:45.000]  so the
-[02:18:45.000 --> 02:18:47.000]  LPGPT has different
+[02:18:45.000 --> 02:18:47.000]  LpGBT has different
 [02:18:47.000 --> 02:18:49.000]  procedure that can be used
 [02:18:49.000 --> 02:18:51.000]  for generating this pattern
 [02:18:51.000 --> 02:18:53.000]  you can check them into the
-[02:18:53.000 --> 02:18:55.000]  LPGPT manual
+[02:18:53.000 --> 02:18:55.000]  LpGBT manual
 [02:18:55.000 --> 02:18:57.000]  the one that we are using
 [02:18:57.000 --> 02:18:59.000]  basically emulates one PLBS
 [02:18:59.000 --> 02:19:01.000]  for every one of these lines
@@ -1303,10 +841,10 @@ An additional measurement was included using the same plot evaluated above but w
 [02:19:11.000 --> 02:19:13.000]  and then handle them
 [02:19:13.000 --> 02:19:15.000]  as we handle normally the lines
 [02:19:15.000 --> 02:19:17.000]  that are
-[02:19:17.000 --> 02:19:19.000]  encoded by the LPGPT
+[02:19:17.000 --> 02:19:19.000]  encoded by the LpGBT
 [02:19:19.000 --> 02:19:21.000]  and then decoded back
 [02:19:21.000 --> 02:19:23.000]  so you're gonna see even if the lines
-[02:19:23.000 --> 02:19:25.000]  between the LPGPT and VTRX
+[02:19:23.000 --> 02:19:25.000]  between the LpGBT and VTRX
 [02:19:25.000 --> 02:19:27.000]  and between the VTRX
 [02:19:27.000 --> 02:19:29.000]  and the FGA
 [02:19:29.000 --> 02:19:31.000]  is a single line
@@ -1331,7 +869,7 @@ An additional measurement was included using the same plot evaluated above but w
 [02:20:09.000 --> 02:20:11.000]  but basically you are just testing
 [02:20:11.000 --> 02:20:13.000]  one single line
 [02:20:13.000 --> 02:20:15.000]  okay so all the results
-[02:20:15.000 --> 02:20:17.000]  since it's done at the level of the LPGPT
+[02:20:15.000 --> 02:20:17.000]  since it's done at the level of the LpGBT
 [02:20:17.000 --> 02:20:19.000]  are stored
 [02:20:19.000 --> 02:20:21.000]  in the optical view
 [02:20:21.000 --> 02:20:23.000]  and
@@ -1343,13 +881,13 @@ An additional measurement was included using the same plot evaluated above but w
 [02:20:33.000 --> 02:20:35.000]  because
 [02:20:35.000 --> 02:20:37.000]  so this is basically a technicality
 [02:20:37.000 --> 02:20:39.000]  but
-[02:20:41.000 --> 02:20:43.000]  the LPGPT
+[02:20:41.000 --> 02:20:43.000]  the LpGBT
 [02:20:43.000 --> 02:20:45.000]  generates this bit error rate
 [02:20:45.000 --> 02:20:47.000]  pattern
 [02:20:47.000 --> 02:20:49.000]  from
 [02:20:49.000 --> 02:20:51.000]  clock source
 [02:20:51.000 --> 02:20:53.000]  that you can change the phase
-[02:20:53.000 --> 02:20:55.000]  and there are some phases in which the LPGPT
+[02:20:53.000 --> 02:20:55.000]  and there are some phases in which the LpGBT
 [02:20:55.000 --> 02:20:57.000]  will not work because it will not
 [02:20:57.000 --> 02:20:59.000]  understand its own pattern
 [02:20:59.000 --> 02:21:01.000]  so we need to do a quick scan
@@ -1365,7 +903,7 @@ An additional measurement was included using the same plot evaluated above but w
 [02:21:23.000 --> 02:21:25.000]  I mean it doesn't tell you anything
 [02:21:25.000 --> 02:21:27.000]  about the code in order to
 [02:21:27.000 --> 02:21:29.000]  avoid generating bits
-[02:21:29.000 --> 02:21:31.000]  where the LPGPT
+[02:21:29.000 --> 02:21:31.000]  where the LpGBT
 [02:21:31.000 --> 02:21:33.000]  is in a condition that is not ready to transmit
 [02:21:33.000 --> 02:21:35.000]  and create a fake
 [02:21:35.000 --> 02:21:37.000]  bit error rate that has nothing to do
