@@ -15,8 +15,8 @@ void OTPhysics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    fSaveRawData = this->findValueInSettings<double>("SaveRawData");
-    uint8_t theTriggerSource = this->findValueInSettings<double>("OTPhysics_TriggerSource", 3);
+    fSaveRawData               = this->findValueInSettings<double>("SaveRawData");
+    uint8_t theTriggerSource   = this->findValueInSettings<double>("OTPhysics_TriggerSource", 3);
     uint8_t theUserTriggerRate = this->findValueInSettings<double>("OTPhysics_UserTriggerRate", 10);
 
     std::vector<std::pair<std::string, uint32_t>> boardRegisterVector;
