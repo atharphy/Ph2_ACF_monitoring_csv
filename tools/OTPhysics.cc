@@ -16,11 +16,13 @@ void OTPhysics::ConfigureCalibration()
     // # Retrieve parameters #
     // #######################
     fSaveRawData = this->findValueInSettings<double>("SaveRawData");
+    uint8_t theTriggerSource = this->findValueInSettings<double>("OTPhysics_TriggerSource", 3);
+    uint8_t theUserTriggerRate = this->findValueInSettings<double>("OTPhysics_UserTriggerRate", 10);
 
     std::vector<std::pair<std::string, uint32_t>> boardRegisterVector;
-    boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", 3});
+    boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", theTriggerSource});
     boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
-    boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", 1});
+    boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", theUserTriggerRate});
     boardRegisterVector.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0});
     boardRegisterVector.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0});
     boardRegisterVector.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
@@ -60,6 +62,9 @@ void OTPhysics::Running()
     SystemController::Start(theStartInfo);
 
     fTotalDataSize = 0;
+
+    auto cTriggerInterface = static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(fDetectorContainer->getFirstObject())->getId()])->getTriggerInterface();
+    cTriggerInterface->PrintStatus();
 
     LOG(INFO) << BOLDYELLOW << "Collecting data using OTPhysics" << RESET;
     LOG(INFO) << BOLDYELLOW << "Press Ctrl + C to stop data taking" << RESET;
