@@ -654,135 +654,21 @@ The corresponding plot below shows the error rate (from 0 to 1) as a function of
 
 All these scans are auxiliary calibration steps—if everything works properly, the details of these plots can be ignored, since their purpose is simply to enable the final validation of the electrical chain between the CBC and the CIC.
 
-[02:12:35.000 --> 02:12:37.000]  so all of these
-[02:12:37.000 --> 02:12:39.000]  it just made that identify
-[02:12:39.000 --> 02:12:41.000]  the best phase which is also
-[02:12:41.000 --> 02:12:43.000]  included
-[02:12:47.000 --> 02:12:49.000]  somewhere
-[02:12:49.000 --> 02:12:51.000]  best phase
-[02:12:51.000 --> 02:12:53.000]  so here I am telling you that
-[02:12:53.000 --> 02:12:55.000]  the five-port is the best
-[02:12:55.000 --> 02:12:57.000]  the five-port is over here
-[02:12:57.000 --> 02:12:59.000]  so you see that it is in the wide
-[02:12:59.000 --> 02:13:01.000]  area
-[02:13:01.000 --> 02:13:03.000]  and it is kind of in the center
-[02:13:03.000 --> 02:13:05.000]  the next one is a sixth
-[02:13:05.000 --> 02:13:07.000]  which is over here
-[02:13:07.000 --> 02:13:09.000]  that is between these two points
-[02:13:09.000 --> 02:13:11.000]  and so
-[02:13:13.000 --> 02:13:15.000]  after we have done all these
-[02:13:15.000 --> 02:13:17.000]  then we can actually set this phase
-[02:13:17.000 --> 02:13:19.000]  and run
-[02:13:21.000 --> 02:13:23.000]  the electric chain validation
-[02:13:23.000 --> 02:13:25.000]  between the CBC
-[02:13:25.000 --> 02:13:27.000]  and the CIC
-[02:13:27.000 --> 02:13:29.000]  which is basically our last
-[02:13:29.000 --> 02:13:31.000]  step of the electric chain validation
-[02:13:33.000 --> 02:13:35.000]  so for these
-[02:13:35.000 --> 02:13:37.000]  we have plot all the way down
-[02:13:37.000 --> 02:13:39.000]  here
-[02:13:39.000 --> 02:13:41.000]  and
-[02:13:41.000 --> 02:13:43.000]  as for
-[02:13:43.000 --> 02:13:45.000]  before
-[02:13:45.000 --> 02:13:47.000]  we have two plots
-[02:13:47.000 --> 02:13:49.000]  for each one of the points
-[02:13:49.000 --> 02:13:51.000]  and again is
-[02:13:51.000 --> 02:13:53.000]  we are going to guess it now
-[02:13:53.000 --> 02:13:55.000]  is error rate
-[02:13:55.000 --> 02:13:57.000]  and
-[02:13:57.000 --> 02:13:59.000]  number of tests
-[02:13:59.000 --> 02:14:01.000]  and
-[02:14:01.000 --> 02:14:03.000]  more or less as for the
-[02:14:03.000 --> 02:14:05.000]  electric chain validation
-[02:14:05.000 --> 02:14:07.000]  we set three different
-[02:14:07.000 --> 02:14:09.000]  values in the current
-[02:14:09.000 --> 02:14:11.000]  of the CBC
-[02:14:11.000 --> 02:14:13.000]  used for driving the lines
-[02:14:13.000 --> 02:14:15.000]  between the CBC
-[02:14:15.000 --> 02:14:17.000]  and
-[02:14:17.000 --> 02:14:19.000]  CIC
-[02:14:19.000 --> 02:14:21.000]  so you can set the current use here
-[02:14:21.000 --> 02:14:23.000]  and you can imagine a bit more current
-[02:14:23.000 --> 02:14:25.000]  actually rather than taking
-[02:14:25.000 --> 02:14:27.000]  current zero
-[02:14:27.000 --> 02:14:29.000]  sorry
-[02:14:29.000 --> 02:14:31.000]  the other way around 14 is the lowest
-[02:14:31.000 --> 02:14:33.000]  current
-[02:14:33.000 --> 02:14:35.000]  zero
-[02:14:35.000 --> 02:14:37.000]  is the highest
-[02:14:37.000 --> 02:14:39.000]  and
-[02:14:39.000 --> 02:14:41.000]  eight is coming
-[02:14:41.000 --> 02:14:43.000]  okay
-[02:14:43.000 --> 02:14:45.000]  so you can recognize
-[02:14:45.000 --> 02:14:47.000]  the same plot as before
-[02:14:47.000 --> 02:14:49.000]  so here we have the phases
-[02:14:49.000 --> 02:14:51.000]  and the x axis
-[02:14:51.000 --> 02:14:53.000]  and the y axis you have the various lines
-[02:14:53.000 --> 02:14:55.000]  you see that there are all the CBCs connected
-[02:14:55.000 --> 02:14:57.000]  for each one you have all the lines
-[02:14:57.000 --> 02:14:59.000]  of the CBC
-[02:14:59.000 --> 02:15:01.000]  line you see that
-[02:15:01.000 --> 02:15:03.000]  there is no phase two and three
-[02:15:03.000 --> 02:15:05.000]  because these phases do not work
-[02:15:05.000 --> 02:15:07.000]  on the CIC
-[02:15:07.000 --> 02:15:09.000]  so we simply skip that
-[02:15:09.000 --> 02:15:11.000]  and as usual
-[02:15:11.000 --> 02:15:13.000]  you see the number of tests
-[02:15:13.000 --> 02:15:15.000]  for the level one is lower
-[02:15:15.000 --> 02:15:17.000]  because they need to be done on the software
-[02:15:17.000 --> 02:15:19.000]  it's still 10 to the 5 so it's not super low
-[02:15:19.000 --> 02:15:21.000]  but
-[02:15:21.000 --> 02:15:23.000]  it's a bit lower in order to
-[02:15:23.000 --> 02:15:25.000]  not take too much time
-[02:15:25.000 --> 02:15:27.000]  and here is
-[02:15:27.000 --> 02:15:29.000]  what we get for
-[02:15:29.000 --> 02:15:31.000]  the
-[02:15:31.000 --> 02:15:33.000]  for the error rate test
-[02:15:33.000 --> 02:15:35.000]  so you see that most
-[02:15:35.000 --> 02:15:37.000]  of the phases
-[02:15:37.000 --> 02:15:39.000]  most of the area have a wide phase
-[02:15:39.000 --> 02:15:41.000]  so let's say for example this one
-[02:15:41.000 --> 02:15:43.000]  you see there is a wide area
-[02:15:43.000 --> 02:15:45.000]  in which any of these phases
-[02:15:45.000 --> 02:15:47.000]  should work
-[02:15:47.000 --> 02:15:49.000]  and means that is pretty good
-[02:15:49.000 --> 02:15:51.000]  level ones are the ones that
-[02:15:51.000 --> 02:15:53.000]  sometimes are affected by some
-[02:15:53.000 --> 02:15:55.000]  issues in the pattern matching
-[02:15:55.000 --> 02:15:57.000]  and this is something that is happening
-[02:15:57.000 --> 02:15:59.000]  where not always the data
-[02:15:59.000 --> 02:16:01.000]  are properly sampled
-[02:16:01.000 --> 02:16:03.000]  and then we do the matching
-[02:16:03.000 --> 02:16:05.000]  via software by reading those data
-[02:16:05.000 --> 02:16:07.000]  and sometimes we get some
-[02:16:07.000 --> 02:16:09.000]  where we don't get 100%
-[02:16:09.000 --> 02:16:11.000]  because some of it are misread
-[02:16:11.000 --> 02:16:13.000]  not really something concerning
-[02:16:13.000 --> 02:16:15.000]  we are trying to
-[02:16:15.000 --> 02:16:17.000]  improve it but it's going to be a little bit more challenging
-[02:16:17.000 --> 02:16:19.000]  because it's really the mechanism
-[02:16:19.000 --> 02:16:21.000]  for how these data are sampled
-[02:16:21.000 --> 02:16:23.000]  and so we are going to probably leave
-[02:16:23.000 --> 02:16:25.000]  with that but you clearly see
-[02:16:25.000 --> 02:16:27.000]  phases which they don't work there
-[02:16:27.000 --> 02:16:29.000]  the error rate are much much much higher
-[02:16:29.000 --> 02:16:31.000]  so this is 45%
-[02:16:31.000 --> 02:16:33.000]  compared to
-[02:16:33.000 --> 02:16:35.000]  two per mil even less than two per mil
-[02:16:35.000 --> 02:16:37.000]  okay
-[02:16:37.000 --> 02:16:39.000]  and as for before we had the four different
-[02:16:39.000 --> 02:16:41.000]  currents but
-[02:16:41.000 --> 02:16:43.000]  the amount
-[02:16:43.000 --> 02:16:45.000]  the plots are always the same
-[02:16:49.000 --> 02:16:51.000]  okay
-[02:16:51.000 --> 02:16:53.000]  so we are at the end
-[02:16:53.000 --> 02:16:55.000]  of the electric chain validation
-[02:16:57.000 --> 02:16:59.000]  before moving on
-[02:16:59.000 --> 02:17:01.000]  do you have any questions
-[02:17:01.000 --> 02:17:03.000]  for this?
-[02:17:11.000 --> 02:17:13.000]  okay and now
-[02:17:13.000 --> 02:17:15.000]  the last
-[02:17:15.000 --> 02:17:17.000]  two tests
+##### OTChipToCICecv - Hybrid
+The final step of the electrical chain validation focuses on the link between the CBC and the CIC. For this stage, we again produce two plots per scan point: the error rate and the number of tests. The procedure is similar to the previous validation steps, but here we vary the CBC output drive current that controls the signal strength on the lines between the CBC and the CIC. Three current settings are typically used to study the behavior of the link. In this configuration, a higher drive strength corresponds to a lower numerical value—so current setting 0 gives the highest current, 14 the lowest, and 8 an intermediate value.
+
+The plots follow the same format as before, with the phase on the x-axis and the line ID on the y-axis, showing all CBCs and their corresponding lines. Phases 2 and 3 are absent because they are not functional on the CIC and are therefore skipped. As usual, the number of tests is smaller for the Level-1 data since those checks are performed in software—still around 10⁵ to ensure sufficient statistics without excessive runtime. 
+
+![CBCtoCIC_PhaseScanTestedBits_CBC_SLVScurrent_0_Hybrid](../images/OTtesting/2S/CBCtoCIC_PhaseScanTestedBits_CBC_SLVScurrent_0_Hybrid.png)
+
+The corresponding error-rate plots show that most channels exhibit a broad phase region with zero errors, indicating a stable and well-aligned communication between the CBC and the CIC.
+
+![CBCtoCIC_PhaseScanErrorRate_CBC_SLVScurrent_0_Hybrid](../images/OTtesting/2S/CBCtoCIC_PhaseScanErrorRate_CBC_SLVScurrent_0_Hybrid.png)
+The Level-1 channels occasionally show issues in the pattern matching due to imperfect data sampling, leading to rare misreads and preventing a 100% match rate. While this is not a major concern, improvements are being explored, though the underlying sampling mechanism makes it difficult to fully eliminate. The plots clearly show that non-working phases have much higher error rates—around 45% compared to below 0.2% in well-aligned regions. As before, the results are shown for four different current settings, all displaying similar behavior.
+
+This is the conclusion of the electric chain validation.
+
+
 [02:17:17.000 --> 02:17:19.000]  so a bit error rate
 [02:17:19.000 --> 02:17:21.000]  this one is the newest one
 [02:17:21.000 --> 02:17:23.000]  so the idea
