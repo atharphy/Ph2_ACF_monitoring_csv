@@ -696,33 +696,9 @@ This test checks the stability of the I2C communication by repeatedly writing an
 
 ![RegisterMatchingEfficiency_Hybrid](../images/OTtesting/2S/RegisterMatchingEfficiency_Hybrid.png)
 
-[02:29:13.000 --> 02:29:15.000]  and
-[02:29:15.000 --> 02:29:17.000]  okay so
-[02:29:17.000 --> 02:29:19.000]  these are
-[02:29:19.000 --> 02:29:21.000]  all the tests
-[02:29:21.000 --> 02:29:23.000]  and all the plots that
-[02:29:23.000 --> 02:29:25.000]  we run from the result
-[02:29:25.000 --> 02:29:27.000]  file
-[02:29:27.000 --> 02:29:29.000]  and after this I will move to
-[02:29:29.000 --> 02:29:31.000]  the monitor
-[02:29:31.000 --> 02:29:33.000]  the QM file
-[02:29:33.000 --> 02:29:35.000]  but I think we should stub
-[02:29:35.000 --> 02:29:37.000]  a bit to see if you
-[02:29:37.000 --> 02:29:39.000]  have any question or comments
-[02:29:41.000 --> 02:29:43.000]  on what was discussed
-[02:29:49.000 --> 02:29:51.000]  okay
-[02:29:53.000 --> 02:29:55.000]  okay
-[02:29:57.000 --> 02:29:59.000]  can you just
-[02:29:59.000 --> 02:30:01.000]  confirm you can still hear me
-[02:30:01.000 --> 02:30:03.000]  just to be sure
-[02:30:03.000 --> 02:30:05.000]  yes
-[02:30:05.000 --> 02:30:07.000]  okay one yes
-[02:30:07.000 --> 02:30:09.000]  go ahead
-[02:30:09.000 --> 02:30:11.000]  I just have a doubt that I was speaking
-[02:30:11.000 --> 02:30:13.000]  to myself because it was not the
-[02:30:13.000 --> 02:30:15.000]  first time it happened
-[02:30:15.000 --> 02:30:17.000]  okay
-[02:30:17.000 --> 02:30:19.000]  so moving on
+### Monitoring  
+
+
 [02:30:19.000 --> 02:30:21.000]  to the monitor
 [02:30:21.000 --> 02:30:23.000]  so the monitor is a separate file
 [02:30:23.000 --> 02:30:25.000]  it's gonna

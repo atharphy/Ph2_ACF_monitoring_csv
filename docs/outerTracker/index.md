@@ -26,5 +26,10 @@ The configuration of a 2S Module performed by Ph2_ACF is described [here](https:
 - [DC-DC bPol 12V5](https://power-distribution.web.cern.ch/assets/datasheets/bPOL12V_V6%20datasheet%20V1.9.pdf)
 - [CBC documentation page](http://www.hep.ph.ic.ac.uk/ASIC/CBC_documentation/)
 
+##### Module Data flow
+- [PS](../images/OTtesting/PSmoduleDataFlow.pdf)
+- [2S](../images/OTtesting/2SmoduleDataFlow.pdf)
+
+
 
 
