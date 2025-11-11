@@ -286,7 +286,7 @@ double hitProbabilityFunction(double* pStrips, double* pPar)
         sampleProbability -= hitProbability(x + samplingHalfStep);
 
         // probability of hit taking cmn into account
-        hitProb = hitProbability((threshold + x * cmnFraction) * indFraction);
+        hitProb = hitProbability((threshold + x * cmnFraction) / indFraction);
         // distribution function scaled to nevents
         result += binomialPdf(int(nActiveStrips), iStrips, hitProb) * sampleProbability * nEvents;
     }
