@@ -698,265 +698,41 @@ This test checks the stability of the I2C communication by repeatedly writing an
 
 ### Monitoring  
 
+The monitor produces a separate file stored in its own folder (`MonitorDQM`) and the file name contains a time stamp for identification typically within the result file directory when running manually. It is separated from the result file because the monitor records data from the configure to the halt or destroy state, while the result file only covers the calibration start-to-stop interval. For instance, during Burn-in tests, monitoring continues even when the system is in a stop state between temperature plateaus or to track changes during current adjustments. Since these periods occur at different times, two distinct files are generated. A dedicated script  merges the monitor and result files along with additional data, such as power supply information, into a single combined dataset used by Potato for module qualification.
 
-[02:30:19.000 --> 02:30:21.000]  to the monitor
-[02:30:21.000 --> 02:30:23.000]  so the monitor is a separate file
-[02:30:23.000 --> 02:30:25.000]  it's gonna
-[02:30:25.000 --> 02:30:27.000]  store it into
-[02:30:27.000 --> 02:30:29.000]  the
-[02:30:29.000 --> 02:30:31.000]  into a separate folder
-[02:30:31.000 --> 02:30:33.000]  for most of the cases
-[02:30:33.000 --> 02:30:35.000]  when you're running manually it's all of the case
-[02:30:35.000 --> 02:30:37.000]  GIFT actually moved it already into
-[02:30:37.000 --> 02:30:39.000]  result file folder
-[02:30:39.000 --> 02:30:41.000]  and the reason why it's a separate file
-[02:30:41.000 --> 02:30:43.000]  because the result
-[02:30:43.000 --> 02:30:45.000]  they go from the start to the stub
-[02:30:45.000 --> 02:30:47.000]  when you start the monitor
-[02:30:47.000 --> 02:30:49.000]  it goes from the configure to the
-[02:30:49.000 --> 02:30:51.000]  halt or the destroy
-[02:30:51.000 --> 02:30:53.000]  the reason is that for example in the Balmina
-[02:30:53.000 --> 02:30:55.000]  we do start and stub during
-[02:30:55.000 --> 02:30:57.000]  the test that is usually one
-[02:30:57.000 --> 02:30:59.000]  of the plateau of the temperature
-[02:30:59.000 --> 02:31:01.000]  but then
-[02:31:01.000 --> 02:31:03.000]  we are into a stub
-[02:31:03.000 --> 02:31:05.000]  state
-[02:31:05.000 --> 02:31:07.000]  during the changing current
-[02:31:07.000 --> 02:31:09.000]  and we want to keep monitoring even
-[02:31:09.000 --> 02:31:11.000]  if you don't do any run and that's why
-[02:31:11.000 --> 02:31:13.000]  you have two separate files because
-[02:31:13.000 --> 02:31:15.000]  there are different times
-[02:31:17.000 --> 02:31:19.000]  then
-[02:31:21.000 --> 02:31:23.000]  people are working on
-[02:31:23.000 --> 02:31:25.000]  creating
-[02:31:25.000 --> 02:31:27.000]  a business script that merge
-[02:31:27.000 --> 02:31:29.000]  all the information together also including
-[02:31:29.000 --> 02:31:31.000]  an information like power supply and so on
-[02:31:31.000 --> 02:31:33.000]  so what actually potato receives
-[02:31:33.000 --> 02:31:35.000]  is a combination of the two
-[02:31:35.000 --> 02:31:37.000]  files together
-[02:31:37.000 --> 02:31:39.000]  this is still
-[02:31:39.000 --> 02:31:41.000]  being developed
-[02:31:41.000 --> 02:31:43.000]  so I just wanted to show you
-[02:31:43.000 --> 02:31:45.000]  exactly what
-[02:31:47.000 --> 02:31:49.000]  all this information will be used
-[02:31:49.000 --> 02:31:51.000]  for
-[02:31:51.000 --> 02:31:53.000]  the
-[02:31:53.000 --> 02:31:55.000]  qualification
-[02:31:55.000 --> 02:31:57.000]  so the monitor
-[02:31:57.000 --> 02:31:59.000]  is also set into the XML
-[02:31:59.000 --> 02:32:01.000]  file
-[02:32:01.000 --> 02:32:03.000]  and there is a list of the parameter
-[02:32:03.000 --> 02:32:05.000]  that we are testing and for each one of these
-[02:32:05.000 --> 02:32:07.000]  there is a plot as a function
-[02:32:07.000 --> 02:32:09.000]  of time or the values that we are monitoring
-[02:32:09.000 --> 02:32:11.000]  so the first
-[02:32:11.000 --> 02:32:13.000]  leveler which we start monitoring
-[02:32:13.000 --> 02:32:15.000]  is at the level of the optical group
-[02:32:15.000 --> 02:32:17.000]  and all the information
-[02:32:17.000 --> 02:32:19.000]  that are extracted from the
-[02:32:19.000 --> 02:32:21.000]  LpGBT which has an ADC
-[02:32:21.000 --> 02:32:23.000]  and the ADC
-[02:32:23.000 --> 02:32:25.000]  is both connected to values
-[02:32:25.000 --> 02:32:27.000]  that are inside the chip
-[02:32:27.000 --> 02:32:29.000]  or
-[02:32:29.000 --> 02:32:31.000]  are coming from the lines
-[02:32:31.000 --> 02:32:33.000]  that are connected to the chip
-[02:32:33.000 --> 02:32:35.000]  and there are all listed here
-[02:32:35.000 --> 02:32:37.000]  so here are the full list of values
-[02:32:37.000 --> 02:32:39.000]  that we register
-[02:32:39.000 --> 02:32:41.000]  and the name of the value is always
-[02:32:41.000 --> 02:32:43.000]  stored into the name or the plot
-[02:32:43.000 --> 02:32:45.000]  as well as
-[02:32:45.000 --> 02:32:47.000]  into
-[02:32:47.000 --> 02:32:49.000]  the plot
-[02:32:49.000 --> 02:32:51.000]  title itself
-[02:32:51.000 --> 02:32:53.000]  so the first one
-[02:32:53.000 --> 02:32:55.000]  it is
-[02:32:55.000 --> 02:32:57.000]  the
-[02:32:57.000 --> 02:32:59.000]  VDD
-[02:32:59.000 --> 02:33:01.000]  so
-[02:33:01.000 --> 02:33:03.000]  the LpGBT
-[02:33:03.000 --> 02:33:05.000]  uses a few
-[02:33:05.000 --> 02:33:07.000]  digital voltages
-[02:33:07.000 --> 02:33:09.000]  that are used to make it work
-[02:33:09.000 --> 02:33:11.000]  and these allow you to
-[02:33:11.000 --> 02:33:13.000]  monitor their values
-[02:33:13.000 --> 02:33:15.000]  in particular they should be around 1.2
-[02:33:15.000 --> 02:33:17.000]  and you see that this table over
-[02:33:17.000 --> 02:33:19.000]  the run
-[02:33:19.000 --> 02:33:21.000]  these were taken
-[02:33:21.000 --> 02:33:23.000]  at the same time of the result file
-[02:33:23.000 --> 02:33:25.000]  I will show you before
-[02:33:25.000 --> 02:33:27.000]  not that it matters too much
-[02:33:27.000 --> 02:33:29.000]  but just to show you that even if you run
-[02:33:29.000 --> 02:33:31.000]  you don't see too many instabilities
-[02:33:31.000 --> 02:33:33.000]  okay
-[02:33:33.000 --> 02:33:35.000]  so this is one
-[02:33:35.000 --> 02:33:37.000]  I'm just going to open the mall
-[02:33:37.000 --> 02:33:39.000]  I will say in most of the cases
-[02:33:39.000 --> 02:33:41.000]  these
-[02:33:41.000 --> 02:33:43.000]  should give you a bit more
-[02:33:43.000 --> 02:33:45.000]  immediate feedback if something
-[02:33:45.000 --> 02:33:47.000]  structurally bad
-[02:33:47.000 --> 02:33:49.000]  is happening to your module
-[02:33:49.000 --> 02:33:51.000]  so these should be around
-[02:33:51.000 --> 02:33:53.000]  1.2
-[02:33:53.000 --> 02:33:55.000]  so if you see something really
-[02:33:55.000 --> 02:33:57.000]  low, really high
-[02:33:57.000 --> 02:33:59.000]  mind the case some major issues
-[02:33:59.000 --> 02:34:01.000]  don't worry too much about
-[02:34:01.000 --> 02:34:03.000]  these wings because the ADC
-[02:34:03.000 --> 02:34:05.000]  is not perfect sometimes has a
-[02:34:05.000 --> 02:34:07.000]  longer
-[02:34:07.000 --> 02:34:09.000]  readout and
-[02:34:09.000 --> 02:34:11.000]  we don't really have feedback when something is wrong
-[02:34:11.000 --> 02:34:13.000]  you just have a real number so you can
-[02:34:13.000 --> 02:34:15.000]  just ignore the smallest wings
-[02:34:15.000 --> 02:34:17.000]  if the thing stays
-[02:34:17.000 --> 02:34:19.000]  up or down for quite a long time
-[02:34:19.000 --> 02:34:21.000]  then it might indicate something
-[02:34:21.000 --> 02:34:23.000]  a single point is never an issue
-[02:34:23.000 --> 02:34:25.000]  okay
-[02:34:25.000 --> 02:34:27.000]  then
-[02:34:27.000 --> 02:34:29.000]  the other
-[02:34:29.000 --> 02:34:31.000]  another voltage that we are monitoring
-[02:34:31.000 --> 02:34:33.000]  is this one
-[02:34:33.000 --> 02:34:35.000]  this is basically the same voltage
-[02:34:35.000 --> 02:34:37.000]  so I'm not really completely sure
-[02:34:37.000 --> 02:34:39.000]  what is the difference between these two
-[02:34:39.000 --> 02:34:41.000]  I will just guess there are two different
-[02:34:41.000 --> 02:34:43.000]  blocks of the
-[02:34:43.000 --> 02:34:45.000]  of the activity that takes that
-[02:34:45.000 --> 02:34:47.000]  two different voltages
-[02:34:47.000 --> 02:34:49.000]  in order to work
-[02:34:49.000 --> 02:34:51.000]  different instances of two
-[02:34:51.000 --> 02:34:53.000]  different voltage in order to work
-[02:34:53.000 --> 02:34:55.000]  and then we have the temperature
-[02:34:55.000 --> 02:34:57.000]  measurement
-[02:34:57.000 --> 02:34:59.000]  so this
-[02:34:59.000 --> 02:35:01.000]  really the measurement
-[02:35:01.000 --> 02:35:03.000]  of the temperature sensor
-[02:35:03.000 --> 02:35:05.000]  inside the HPT
-[02:35:05.000 --> 02:35:07.000]  you see that it's largely
-[02:35:07.000 --> 02:35:09.000]  warm up this was done into the KT
-[02:35:09.000 --> 02:35:11.000]  box probably we don't tell you
-[02:35:11.000 --> 02:35:13.000]  too much of a control of a temperature
-[02:35:13.000 --> 02:35:15.000]  here
-[02:35:15.000 --> 02:35:17.000]  these temperature are already
-[02:35:17.000 --> 02:35:19.000]  calibrated they come
-[02:35:19.000 --> 02:35:21.000]  the information
-[02:35:21.000 --> 02:35:23.000]  comes from this big file
-[02:35:23.000 --> 02:35:25.000]  that I've also mentioned
-[02:35:25.000 --> 02:35:27.000]  at the beginning and the LpGBT group
-[02:35:27.000 --> 02:35:29.000]  is providing to us
-[02:35:29.000 --> 02:35:31.000]  and contains
-[02:35:31.000 --> 02:35:33.000]  a few information
-[02:35:33.000 --> 02:35:35.000]  which also the calibration
-[02:35:35.000 --> 02:35:37.000]  calibration for the
-[02:35:37.000 --> 02:35:39.000]  internal temperature sensor
-[02:35:39.000 --> 02:35:41.000]  the LpGBT so this should be quite
-[02:35:41.000 --> 02:35:43.000]  reliable
-[02:35:43.000 --> 02:35:45.000]  then there are a few extra
-[02:35:45.000 --> 02:35:47.000]  that
-[02:35:47.000 --> 02:35:49.000]  at the moment we are not using them
-[02:35:49.000 --> 02:35:51.000]  and we are just keeping them
-[02:35:51.000 --> 02:35:53.000]  available
-[02:35:53.000 --> 02:35:55.000]  let me just open
-[02:35:55.000 --> 02:35:57.000]  both of them ADC0 and AC3
-[02:35:57.000 --> 02:35:59.000]  these are inputs into
-[02:35:59.000 --> 02:36:01.000]  the
-[02:36:01.000 --> 02:36:03.000]  LpGBT that are coming
-[02:36:03.000 --> 02:36:05.000]  from
-[02:36:05.000 --> 02:36:07.000]  I think the two hybrids 0 and 3
-[02:36:07.000 --> 02:36:09.000]  I think are the two different hybrids
-[02:36:09.000 --> 02:36:11.000]  and these are values that
-[02:36:11.000 --> 02:36:13.000]  are being
-[02:36:13.000 --> 02:36:15.000]  controlled
-[02:36:15.000 --> 02:36:17.000]  by the
-[02:36:17.000 --> 02:36:19.000]  the CIC so the CIC has the possibility
-[02:36:19.000 --> 02:36:21.000]  to output
-[02:36:21.000 --> 02:36:23.000]  an analog value that
-[02:36:23.000 --> 02:36:25.000]  can monitor
-[02:36:25.000 --> 02:36:27.000]  some information internal
-[02:36:27.000 --> 02:36:29.000]  to the
-[02:36:29.000 --> 02:36:31.000]  CBC
-[02:36:31.000 --> 02:36:33.000]  we are not really setting anything
-[02:36:33.000 --> 02:36:35.000]  in particular also because it's a little
-[02:36:35.000 --> 02:36:37.000]  more complicated because it's the same
-[02:36:37.000 --> 02:36:39.000]  line for all the CBC so you
-[02:36:39.000 --> 02:36:41.000]  need to enable one CBC at a time
-[02:36:41.000 --> 02:36:43.000]  so we just
-[02:36:43.000 --> 02:36:45.000]  include them here
-[02:36:45.000 --> 02:36:47.000]  just for completeness
-[02:36:47.000 --> 02:36:49.000]  but you can safely
-[02:36:49.000 --> 02:36:51.000]  ignore them and we can use them
-[02:36:51.000 --> 02:36:53.000]  in the future if something comes up
-[02:36:53.000 --> 02:36:55.000]  that we need to monitor
-[02:36:55.000 --> 02:36:57.000]  for the time being we don't
-[02:36:57.000 --> 02:36:59.000]  think there was anything particular
-[02:36:59.000 --> 02:37:01.000]  so we just keep them and in this moment
-[02:37:01.000 --> 02:37:03.000]  they attach us to something that I
-[02:37:03.000 --> 02:37:05.000]  don't even know so
-[02:37:05.000 --> 02:37:07.000]  they look cool because they change
-[02:37:07.000 --> 02:37:09.000]  but we don't really use them
-[02:37:09.000 --> 02:37:11.000]  okay
-[02:37:11.000 --> 02:37:13.000]  then
-[02:37:13.000 --> 02:37:15.000]  so we have
-[02:37:15.000 --> 02:37:17.000]  another
-[02:37:17.000 --> 02:37:19.000]  plot so
-[02:37:19.000 --> 02:37:21.000]  these
-[02:37:21.000 --> 02:37:23.000]  is the monitor on the left
-[02:37:25.000 --> 02:37:27.000]  voltage that goes
-[02:37:27.000 --> 02:37:29.000]  on the left hybrid is 1.25 volts
-[02:37:29.000 --> 02:37:31.000]  I don't think we have
-[02:37:31.000 --> 02:37:33.000]  anything about the right hybrid
-[02:37:33.000 --> 02:37:35.000]  we are limited input so we are just
-[02:37:35.000 --> 02:37:37.000]  one I guess the assumption is that
-[02:37:37.000 --> 02:37:39.000]  since everything comes from the DC-DC converter
-[02:37:39.000 --> 02:37:41.000]  there is no particular reason
-[02:37:41.000 --> 02:37:43.000]  why the left hybrid and the right hybrid
-[02:37:43.000 --> 02:37:45.000]  should save a different voltage
-[02:37:45.000 --> 02:37:47.000]  and this should be around 1.25
-[02:37:47.000 --> 02:37:49.000]  in reality it's like lower
-[02:37:49.000 --> 02:37:51.000]  so far I saw this
-[02:37:51.000 --> 02:37:53.000]  for every single module we
-[02:37:53.000 --> 02:37:55.000]  tested so I think
-[02:37:55.000 --> 02:37:57.000]  is as good
-[02:37:57.000 --> 02:37:59.000]  as one can expect
-[02:37:59.000 --> 02:38:01.000]  as usual quick swing
-[02:38:01.000 --> 02:38:03.000]  you can just simply ignore
-[02:38:03.000 --> 02:38:05.000]  then
-[02:38:05.000 --> 02:38:07.000]  this is the input voltage
-[02:38:07.000 --> 02:38:09.000]  that you are providing from the power supply
-[02:38:09.000 --> 02:38:11.000]  you usually use
-[02:38:11.000 --> 02:38:13.000]  10.5
-[02:38:13.000 --> 02:38:15.000]  slightly lower
-[02:38:15.000 --> 02:38:17.000]  I'm not sure if this due to some
-[02:38:17.000 --> 02:38:19.000]  dropping the cable
-[02:38:19.000 --> 02:38:21.000]  or is really that in reality
-[02:38:21.000 --> 02:38:23.000]  you have some
-[02:38:23.000 --> 02:38:25.000]  some filter on something that's slightly lower
-[02:38:25.000 --> 02:38:27.000]  on it is
-[02:38:27.000 --> 02:38:29.000]  not super well calibrated
-[02:38:29.000 --> 02:38:31.000]  because this goes through a voltage divider
-[02:38:31.000 --> 02:38:33.000]  so there might be uncertainty
-[02:38:33.000 --> 02:38:35.000]  in the car
-[02:38:35.000 --> 02:38:37.000]  in the resistors
-[02:38:37.000 --> 02:38:39.000]  that are used in the voltage
-[02:38:39.000 --> 02:38:41.000]  divider in my previous
-[02:38:41.000 --> 02:38:43.000]  life-different value from that
-[02:38:43.000 --> 02:38:45.000]  again the module is very
-[02:38:45.000 --> 02:38:47.000]  resilient so
-[02:38:47.000 --> 02:38:49.000]  here you will really see something
-[02:38:49.000 --> 02:38:51.000]  when you have something
-[02:38:51.000 --> 02:38:53.000]  quite big
-[02:38:53.000 --> 02:38:55.000]  I think the module can be powerful
-[02:38:55.000 --> 02:38:57.000]  8 volts or even something like that
-[02:38:57.000 --> 02:38:59.000]  so it is quite resilient
-[02:38:59.000 --> 02:39:01.000]  resilient
-[02:39:01.000 --> 02:39:03.000]  ADC I already mentioned it
+
+The monitor is configured in the XML file, which defines the list of parameters to be measured. For each parameter, a plot is produced showing its value as a function of time or the evolution of the monitored quantity during the run.
+
+#### LpGBT - OpticalGroup
+The first level of monitoring is performed at the optical group level. All information is extracted from the LpGBT, which includes an ADC. This ADC can measure both internal quantities within the chip and external signals from lines connected to it. All these monitored quantities are listed in the XML, and the name of each value is included both in the plot title and in the plot file name for clarity.
+
+
+The first monitored quantity is VDD, one of the digital supply voltages used by the LpGBT. These measurements allow you to check that the power remain stable during operation. Typically, the voltage should be around 1.2 V.
+The plots shown here were taken at the same time as the result files from before, although the exact timing isn’t critical — the key point is that even during data taking, you shouldn’t see large fluctuations.
+In most cases, these plots provide an immediate indication of any structural problem with the module. If you notice values significantly higher or lower than 1.2 V, it could point to a major issue. Small spikes in the distribution aren’t a concern — the ADC isn’t perfect and sometimes gives slightly delayed readings. These single-point deviations can be ignored, but if the voltage stays persistently high or low over time, that’s a sign of a potential problem.
+
+![D_B(0)_LpGBT_DQM_VDD_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VDD_OpticalGroup(0).png)
+
+
+Another monitored voltage is shown here, which is essentially the same supply as the previous one. The difference sgould be that they correspond to two separate internal blocks of the LpGBT that each require their own instance of the same voltage to operate.
+![D_B(0)_LpGBT_DQM_VDDA_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VDDA_OpticalGroup(0).png)
+
+Then we have the temperature measurement, which comes from the internal temperature sensor of the LpGBT. You can see a gradual warm-up, as this test was performed in the KIT box where the temperature is not tightly controlled. These temperature values are already calibrated using information provided by the LpGBT group in the configuration file mentioned earlier, which includes the calibration constants for the internal sensor, so the measurement should be quite reliable. 
+![D_B(0)_LpGBT_DQM_LpGBTtemp_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_LpGBTtemp_OpticalGroup(0).png)
+
+
+There are also a few additional monitored quantities, ADC0 and ADC3, which are inputs to the LpGBT coming from the two hybrids. These values are controlled by the CIC, which can output an analog signal to monitor internal information. At the moment, nothing specific is configured on these channels since enabling them would require activating one CBC at a time, so they are included mainly for completeness. They can be safely ignored for now, although they may become useful in future studies; currently, they are simply connected to undefined signals, so while their values may fluctuate, they do not carry meaningful information.
+![D_B(0)_LpGBT_DQM_ADC0_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_ADC0_OpticalGroup(0).png) 
+![D_B(0)_LpGBT_DQM_ADC3_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_ADC3_OpticalGroup(0).png) 
+
+There is another monitored quantity showing the voltage on the left hybrid, which should be around 1.25 V. There isn’t a separate measurement for the right hybrid due to limited inputs, but the assumption is that both hybrids get the same voltage from the DC-DC converter. In practice, the measured voltage is slightly lower, which has been consistent across all tested modules. Minor fluctuations can be ignored.
+![D_B(0)_LpGBT_DQM_1V25_Left_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_1V25_Left_OpticalGroup(0).png) 
+
+This is the input voltage coming from the power supply, which is usually set around 10.5 V. The measured voltage may be slightly lower, possibly due to cable drops, filtering, or uncertainties in the voltage divider used for measurement. The module itself is quite resilient, so only significant deviations—well below the nominal voltage, e.g., down to 8 V—would cause concern. Minor differences are not critical.
+![D_B(0)_LpGBT_DQM_VIN_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VIN_OpticalGroup(0).png) 
+
+![D_B(0)_LpGBT_DQM_SensorTemp_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_SensorTemp_OpticalGroup(0).png) 
+
 [02:39:03.000 --> 02:39:05.000]  and then sensor
 [02:39:05.000 --> 02:39:07.000]  temperature
 [02:39:07.000 --> 02:39:09.000]  so this is the temperature
