@@ -179,8 +179,8 @@ void OTCICphaseAlignment::phaseAlignment()
                 if(!cLocked)
                 {
                     LOG(INFO) << BOLDRED << "FAILED to lock CIC inputs on Board id " << +theBoard->getId() << " OpticalGroup id" << +theOpticalGroup->getId() << " Hybrid id" << +theHybrid->getId()
-                              << " --- OpticalGroup will be disabled" << RESET;
-                    ExceptionHandler::getInstance()->disableOpticalGroup(theBoard->getId(), theOpticalGroup->getId());
+                              << " --- Hybrid will be disabled" << RESET;
+                    ExceptionHandler::getInstance()->disableHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId());
                     continue;
                 }
             } // CICs
