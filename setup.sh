@@ -110,6 +110,8 @@ export EuDaqFlag='-D__EUDAQ__'
 # C++ standard #
 ################
 export STDCXX="17"
+export LC_ALL=C
+export LANG=C
 
 ###################################################
 # Stand-alone application, without data streaming #

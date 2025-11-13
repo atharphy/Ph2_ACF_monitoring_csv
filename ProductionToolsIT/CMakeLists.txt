@@ -94,6 +94,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     message("--     ${BoldCyan}#### Building the following executables: ####${Reset}")
 
     # Add the library
+    list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/CMSITprodToolDAQ.cc")
     add_library(Ph2_ProductionToolsIT STATIC ${SOURCES} ${HEADERS})
 
     foreach(sourcefile ${BINARIES})
