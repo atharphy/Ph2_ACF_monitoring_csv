@@ -142,114 +142,8 @@ The calibration is performed for three different values of the electrical attenu
 The eye opening is a capability of the LpGBT and more info can be found in the manual. A high count rate (z-axis) corresponds to the center of the eye, above the lower part of the signal (voltage) but below the high part of the signal (voltage) - the large yellow area. Outside this range of the signal there is a lower count. The absolute numbers are not easy to interpret. The relevant part is the transition region between the two yellow areas. 
 This plot was especially relevant for LpGBT v1 that had known issues with the transistion part moving up and down with the power.
 
-#FIXME - check this part for clarity on the above
-[27:54.000 --> 27:56.000]  imagine you have
-[27:58.000 --> 28:00.000]  a signal that it
-[28:00.000 --> 28:02.000]  looks like
-[28:02.000 --> 28:04.000]  that okay
-[28:04.000 --> 28:06.000]  okay so what the eye-opening
-[28:06.000 --> 28:08.000]  does is that
-[28:08.000 --> 28:10.000]  basically plot this one
-[28:10.000 --> 28:12.000]  on top of the inverted one
-[28:12.000 --> 28:14.000]  mm-hmm
-[28:16.000 --> 28:18.000]  that is gonna be look like that
-[28:18.000 --> 28:20.000]  okay
-[28:20.000 --> 28:22.000]  so this is the eye-opening
-[28:22.000 --> 28:24.000]  so basically if you set
-[28:26.000 --> 28:28.000]  a point in time here
-[28:28.000 --> 28:30.000]  and a threshold here
-[28:30.000 --> 28:32.000]  if you take
-[28:32.000 --> 28:34.000]  the bar if you check
-[28:34.000 --> 28:36.000]  the value of the voltage that you receive
-[28:36.000 --> 28:38.000]  is above the threshold
-[28:38.000 --> 28:40.000]  below the threshold
-[28:40.000 --> 28:42.000]  you will be able to distinguish
-[28:42.000 --> 28:44.000]  the ones
-[28:44.000 --> 28:46.000]  from the zeros
-[28:46.000 --> 28:48.000]  okay
-[28:48.000 --> 28:50.000]  so one of the problem the LpGBT
-[28:50.000 --> 28:52.000]  is that
-[28:52.000 --> 28:54.000]  sometimes
-[28:55.000 --> 28:57.000]  you get
-[28:58.000 --> 29:00.000]  something that
-[29:00.000 --> 29:02.000]  it looks like this
-[29:03.000 --> 29:05.000]  so you add the up one
-[29:05.000 --> 29:07.000]  that is still fine
-[29:07.000 --> 29:09.000]  but the
-[29:09.000 --> 29:11.000]  mm-hmm
-[29:11.000 --> 29:13.000]  how can I go with
-[29:15.000 --> 29:17.000]  the bottom one
-[29:17.000 --> 29:19.000]  that I
-[29:19.000 --> 29:21.000]  would say basically look like this
-[29:21.000 --> 29:23.000]  so that this transition
-[29:23.000 --> 29:25.000]  is all the way up here
-[29:25.000 --> 29:27.000]  okay
-[29:29.000 --> 29:31.000]  where is the problem now
-[29:31.000 --> 29:33.000]  so
-[29:35.000 --> 29:37.000]  then you probably don't have the transition
-[29:37.000 --> 29:39.000]  at the same voltage
-[29:39.000 --> 29:41.000]  they are too different
-[29:43.000 --> 29:45.000]  I
-[29:45.000 --> 29:47.000]  start to have some doubt of what I was saying
-[29:47.000 --> 29:49.000]  this is not something that we like
-[29:49.000 --> 29:51.000]  too much I guess the main problem
-[29:51.000 --> 29:53.000]  is that you have this lowest loop
-[29:53.000 --> 29:55.000]  and
-[29:55.000 --> 29:57.000]  then since the slope
-[29:57.000 --> 29:59.000]  is lower
-[29:59.000 --> 30:01.000]  then you have a smaller
-[30:01.000 --> 30:03.000]  phase
-[30:03.000 --> 30:05.000]  a long slope
-[30:05.000 --> 30:07.000]  you have a smaller phase in which you can find
-[30:07.000 --> 30:09.000]  the alignment
-[30:09.000 --> 30:11.000]  so I think in reality it is actually like this
-[30:13.000 --> 30:15.000]  so they cross like that
-[30:15.000 --> 30:17.000]  so you have a less room
-[30:17.000 --> 30:19.000]  to identify the one
-[30:19.000 --> 30:21.000]  from the zeros and that is the main problem
-[30:21.000 --> 30:23.000]  and there is where
-[30:23.000 --> 30:25.000]  you may have communication issues
-[30:27.000 --> 30:29.000]  okay
-[30:29.000 --> 30:31.000]  no competition
-[30:31.000 --> 30:33.000]  why is so bad
-[30:33.000 --> 30:35.000]  but they so
-[30:35.000 --> 30:37.000]  what they did is that they kind of correlate
-[30:37.000 --> 30:39.000]  so
-[30:39.000 --> 30:41.000]  the packet of the
-[30:41.000 --> 30:43.000]  LpGBT comes with an error correction
-[30:43.000 --> 30:45.000]  in our case
-[30:45.000 --> 30:47.000]  we use the effect 5 which means that
-[30:47.000 --> 30:49.000]  up to 5 errors we can
-[30:49.000 --> 30:51.000]  correct the effect states for
-[30:51.000 --> 30:53.000]  forward error corrections
-[30:53.000 --> 30:55.000]  so I think what Atlas found out
-[30:55.000 --> 30:57.000]  was that
-[30:57.000 --> 30:59.000]  you get
-[30:59.000 --> 31:01.000]  for some LpGBT
-[31:01.000 --> 31:03.000]  you are getting quite large number of
-[31:03.000 --> 31:05.000]  forward error correction
-[31:05.000 --> 31:07.000]  meaning that you can still recover them
-[31:07.000 --> 31:09.000]  but something is going wrong
-[31:09.000 --> 31:11.000]  and then
-[31:11.000 --> 31:13.000]  they kind of correlated this
-[31:13.000 --> 31:15.000]  high number of effect error correction
-[31:15.000 --> 31:17.000]  with some problem with the eye opening
-[31:17.000 --> 31:19.000]  so that is basically the symptom
-[31:19.000 --> 31:21.000]  that is telling you that when you place it
-[31:21.000 --> 31:23.000]  into a real module
-[31:23.000 --> 31:25.000]  you may have errors
-[31:25.000 --> 31:27.000]  in the communication
-[31:27.000 --> 31:29.000]  and
-[31:29.000 --> 31:31.000]  it is good that you are able to correct them
-[31:31.000 --> 31:33.000]  but if you already start with a baseline
-[31:33.000 --> 31:35.000]  that you have a lot of
-[31:35.000 --> 31:37.000]  error that you can correct
-[31:37.000 --> 31:39.000]  if you get more than 5 bits
-[31:39.000 --> 31:41.000]  that are flipped into the same packet
-[31:41.000 --> 31:43.000]  you cannot correct anymore
-[31:43.000 --> 31:45.000]  and this is unrecoverable anymore
-[31:47.000 --> 31:49.000]  thanks
-[31:55.000 --> 31:57.000]  and
+For a more detailed explanation check the video tutorial around minutes 27-32. This is not reported here as this should not be problematic anymore with LpGBTv2.
+
 
 ##### Alignemnt -> establish proper communication for all chips on a module & FPGA
 
@@ -257,8 +151,7 @@ This plot was especially relevant for LpGBT v1 that had known issues with the tr
 
 To better understand the alignment steps, please refer to the [2S module communication scheme on slide 5](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf) where we see the 8 CBCs per side that communicate with one CIC. The CIC (one per side) communicate with the LpGBT and the LpGBT with the FPGA.
 
-#FIXME - minutes 32 - 33 
-For the data rate that can be handled in the FPGA, the signal coming from the module is then split in separate components for the two FEH and in L1 (red line) and stub data (blue lines).
+For the data rate that can be handled in the FPGA, the signal coming from the module is then split in separate components for the two FEHs and then in L1 (red line) and stub data (blue lines).
 
 This test is used to make sure that the LpGBT understands what the CIC sends.
 Basically the LpGBT samples the data received and this test finds the correct sampling phase. If the phase is not correct, sometimes a one can be interpreted as a zero, or vice versa, and therefore the communication will not work. 
@@ -419,7 +312,7 @@ An empty plot shows that the alignment fails. This could be due to a problem on 
 This is the last alignment step of the stub package. There are 5 stub lines between the CIC and the LpGBT and the stub info is sent following [the scheme on slide 10](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf).
 
 There is 1 bit that indicates if the pattern is coming from the CBC or the MPA.
-We consider the CBC case. Then we have status bits that indicate errors.  
+We consider the CBC case (bit = 0). Then we have status bits that indicate errors.  
 Next, we have the bunch crossing IDs, which tell you the bunch crossing at which the pattern or packet was sent.  
 
 We also include the number of stubs, indicating how many stubs the packet contains, followed by all the stub data.  
@@ -428,7 +321,6 @@ For the time being, ignore the stub information, since there is no alignment bet
 However, the CIC still sends this packet.  
 Everything that comes after the stub number is meaningless, but the beginning of the pattern makes complete sense at this point, because we know these lines are properly aligned.
 
-#FIXME double check minute 49
 The goal is to determine which of the eight packets is the first one in the sequence, so we can correctly interpret the data that follows.  
 
 The packet is sent to the FPGA, and we already know that the lines between CIC and FPGA are properly aligned — we can identify the first bit of each of the eight sub-packages contained within the packet.  
@@ -731,190 +623,22 @@ There is another monitored quantity showing the voltage on the left hybrid, whic
 This is the input voltage coming from the power supply, which is usually set around 10.5 V. The measured voltage may be slightly lower, possibly due to cable drops, filtering, or uncertainties in the voltage divider used for measurement. The module itself is quite resilient, so only significant deviations—well below the nominal voltage, e.g., down to 8 V—would cause concern. Minor differences are not critical.
 ![D_B(0)_LpGBT_DQM_VIN_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VIN_OpticalGroup(0).png) 
 
+The next monitored parameter is the sensor temperature.
+Each sensor includes an NTC (Negative Temperature Coefficient) resistor, meaning its resistance decreases as temperature increases. In other words, higher temperatures correspond to lower resistances and therefore to higher measured voltages (since a fixed current is injected through the resistor).
+The system injects a known current through the NTC and reads the resulting voltage drop to estimate the temperature. The specific resistor monitored here is the one placed on the top sensor — on the high-voltage side of the module, where two connections are available, one of which is the temperature sensor. Thus, this measurement represents the temperature of the top sensor.
 ![D_B(0)_LpGBT_DQM_SensorTemp_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_SensorTemp_OpticalGroup(0).png) 
 
-[02:39:03.000 --> 02:39:05.000]  and then sensor
-[02:39:05.000 --> 02:39:07.000]  temperature
-[02:39:07.000 --> 02:39:09.000]  so this is the temperature
-[02:39:09.000 --> 02:39:11.000]  without on the sensor
-[02:39:11.000 --> 02:39:13.000]  there is an NTC
-[02:39:13.000 --> 02:39:15.000]  negative
-[02:39:15.000 --> 02:39:17.000]  power and
-[02:39:17.000 --> 02:39:19.000]  negative temperature
-[02:39:19.000 --> 02:39:21.000]  for efficient resistor
-[02:39:21.000 --> 02:39:23.000]  so it means that
-[02:39:23.000 --> 02:39:25.000]  higher is the
-[02:39:25.000 --> 02:39:27.000]  lower is the voltage
-[02:39:27.000 --> 02:39:29.000]  lower is the
-[02:39:29.000 --> 02:39:31.000]  lower is the temperature
-[02:39:31.000 --> 02:39:33.000]  lower is the resistance
-[02:39:33.000 --> 02:39:35.000]  I think it works like that
-[02:39:35.000 --> 02:39:37.000]  but anyway what we do
-[02:39:37.000 --> 02:39:39.000]  is that we inject a certain amount of current
-[02:39:39.000 --> 02:39:41.000]  and we
-[02:39:41.000 --> 02:39:43.000]  in that resistor we read
-[02:39:43.000 --> 02:39:45.000]  the voltage
-[02:39:45.000 --> 02:39:47.000]  and here is this resistor is the one
-[02:39:47.000 --> 02:39:49.000]  that is on the top sensor
-[02:39:49.000 --> 02:39:51.000]  in the peak
-[02:39:51.000 --> 02:39:53.000]  the high voltage state that has two connections
-[02:39:53.000 --> 02:39:55.000]  one of the two is the temperature sensor
-[02:39:55.000 --> 02:39:57.000]  and this is the one that we are reading
-[02:39:57.000 --> 02:39:59.000]  and this therefore is the temperature of the top sensor
-[02:40:03.000 --> 02:40:05.000]  then leakage current
-[02:40:05.000 --> 02:40:07.000]  so this is the measurement
-[02:40:07.000 --> 02:40:09.000]  of the current
-[02:40:09.000 --> 02:40:11.000]  that
-[02:40:11.000 --> 02:40:13.000]  the
-[02:40:13.000 --> 02:40:15.000]  the VTRX needs to be called incoming
-[02:40:19.000 --> 02:40:21.000]  light
-[02:40:21.000 --> 02:40:23.000]  and therefore there is a diode that
-[02:40:23.000 --> 02:40:25.000]  connects
-[02:40:25.000 --> 02:40:27.000]  to the fiber
-[02:40:27.000 --> 02:40:29.000]  and the diode transforms
-[02:40:29.000 --> 02:40:31.000]  the signal
-[02:40:31.000 --> 02:40:33.000]  in the optical signal to a current
-[02:40:33.000 --> 02:40:35.000]  that is used for
-[02:40:35.000 --> 02:40:37.000]  the data
-[02:40:37.000 --> 02:40:39.000]  transfer and then
-[02:40:39.000 --> 02:40:41.000]  you can measure the leakage current
-[02:40:41.000 --> 02:40:43.000]  of these
-[02:40:43.000 --> 02:40:45.000]  of these
-[02:40:45.000 --> 02:40:47.000]  diodes
-[02:40:47.000 --> 02:40:49.000]  so I think we have a quick discussion
-[02:40:49.000 --> 02:40:51.000]  few weeks ago
-[02:40:51.000 --> 02:40:53.000]  with Dana
-[02:40:53.000 --> 02:40:55.000]  I
-[02:40:55.000 --> 02:40:57.000]  understood the first time
-[02:40:57.000 --> 02:40:59.000]  I think this indicates really the average light
-[02:40:59.000 --> 02:41:01.000]  that is collected
-[02:41:01.000 --> 02:41:03.000]  by this diode
-[02:41:03.000 --> 02:41:05.000]  for the time being
-[02:41:05.000 --> 02:41:07.000]  I don't think it's going to tell us too much
-[02:41:07.000 --> 02:41:09.000]  but in the future with the radiation
-[02:41:09.000 --> 02:41:11.000]  this will probably go
-[02:41:11.000 --> 02:41:13.000]  down I guess
-[02:41:13.000 --> 02:41:15.000]  because the conversion factor
-[02:41:15.000 --> 02:41:17.000]  from a photon collector will go down
-[02:41:17.000 --> 02:41:19.000]  so this can be used for monitoring
-[02:41:19.000 --> 02:41:21.000]  radiation damage
-[02:41:21.000 --> 02:41:23.000]  of course we are not
-[02:41:23.000 --> 02:41:25.000]  in this case for production
-[02:41:25.000 --> 02:41:27.000]  really the
-[02:41:27.000 --> 02:41:29.000]  last two
-[02:41:29.000 --> 02:41:31.000]  so these are two
-[02:41:31.000 --> 02:41:33.000]  temperature sensor
-[02:41:33.000 --> 02:41:35.000]  I'm going to open them both
-[02:41:35.000 --> 02:41:37.000]  let's close a few things
-[02:41:37.000 --> 02:41:39.000]  zoom
-[02:41:39.000 --> 02:41:41.000]  zoom
-[02:41:41.000 --> 02:41:43.000]  zoom
-[02:41:43.000 --> 02:41:45.000]  zoom
-[02:41:45.000 --> 02:41:47.000]  zoom
-[02:41:47.000 --> 02:41:49.000]  so the B pole
-[02:41:49.000 --> 02:41:51.000]  is the
-[02:41:51.000 --> 02:41:53.000]  the
-[02:41:53.000 --> 02:41:55.000]  chip
-[02:41:55.000 --> 02:41:57.000]  that allow you to convert
-[02:41:57.000 --> 02:41:59.000]  the
-[02:41:59.000 --> 02:42:01.000]  in the
-[02:42:01.000 --> 02:42:03.000]  in the
-[02:42:03.000 --> 02:42:05.000]  DC DC convert
-[02:42:05.000 --> 02:42:07.000]  convert the
-[02:42:07.000 --> 02:42:09.000]  voltage
-[02:42:09.000 --> 02:42:11.000]  that you are providing to the module
-[02:42:11.000 --> 02:42:13.000]  to the needed voltages for the chip
-[02:42:13.000 --> 02:42:15.000]  for the chips into the module
-[02:42:15.000 --> 02:42:17.000]  and there are two
-[02:42:17.000 --> 02:42:19.000]  the B pole 12
-[02:42:19.000 --> 02:42:21.000]  that can convert
-[02:42:21.000 --> 02:42:23.000]  12 because it can convert 12 volts
-[02:42:23.000 --> 02:42:25.000]  in reality we use only 10.5 volts
-[02:42:25.000 --> 02:42:27.000]  into
-[02:42:27.000 --> 02:42:29.000]  2.5 volts
-[02:42:29.000 --> 02:42:31.000]  and then a second stage
-[02:42:31.000 --> 02:42:33.000]  that converts from 12
-[02:42:33.000 --> 02:42:35.000]  so is the B pole
-[02:42:35.000 --> 02:42:37.000]  2B5
-[02:42:37.000 --> 02:42:39.000]  from
-[02:42:39.000 --> 02:42:41.000]  2.5 to 1.2 volts
-[02:42:41.000 --> 02:42:43.000]  something like that
-[02:42:43.000 --> 02:42:45.000]  we have two stages because
-[02:42:45.000 --> 02:42:47.000]  the VTRAX needs 2.5 volts
-[02:42:47.000 --> 02:42:49.000]  so that's why we need
-[02:42:49.000 --> 02:42:51.000]  2
-[02:42:51.000 --> 02:42:53.000]  and that's why
-[02:42:53.000 --> 02:42:55.000]  there are these two steps
-[02:42:55.000 --> 02:42:57.000]  so each one of these
-[02:42:57.000 --> 02:42:59.000]  they have
-[02:42:59.000 --> 02:43:01.000]  temperature sensor
-[02:43:01.000 --> 02:43:03.000]  that we that are connected also
-[02:43:03.000 --> 02:43:05.000]  to the
-[02:43:05.000 --> 02:43:07.000]  VT
-[02:43:07.000 --> 02:43:09.000]  however
-[02:43:09.000 --> 02:43:11.000]  these two sensor
-[02:43:11.000 --> 02:43:13.000]  temperature sensor are not calibrated
-[02:43:13.000 --> 02:43:15.000]  in particular is not calibrated
-[02:43:15.000 --> 02:43:17.000]  the offset
-[02:43:17.000 --> 02:43:19.000]  the
-[02:43:19.000 --> 02:43:21.000]  the slope is quite
-[02:43:21.000 --> 02:43:23.000]  precise as for all the
-[02:43:23.000 --> 02:43:25.000]  temperature sensor we have available
-[02:43:25.000 --> 02:43:27.000]  in the chips in this example
-[02:43:27.000 --> 02:43:29.000]  but the offset is not calibrated
-[02:43:29.000 --> 02:43:31.000]  I don't think we have anything to correct
-[02:43:31.000 --> 02:43:33.000]  for that
-[02:43:33.000 --> 02:43:35.000]  so don't use to match the absolute value
-[02:43:35.000 --> 02:43:37.000]  but you can use the variations to see
-[02:43:37.000 --> 02:43:39.000]  for example if it's not well connected
-[02:43:39.000 --> 02:43:41.000]  you must see that this value might go
-[02:43:41.000 --> 02:43:43.000]  much higher than the other one
-[02:43:43.000 --> 02:43:45.000]  in the offset
-[02:43:45.000 --> 02:43:47.000]  I just took the more or less the
-[02:43:47.000 --> 02:43:49.000]  average that I see in the model
-[02:43:49.000 --> 02:43:51.000]  they had a bit of a study
-[02:43:51.000 --> 02:43:53.000]  what is the offset variation to the center point
-[02:43:53.000 --> 02:43:55.000]  just to have something reasonable
-[02:43:55.000 --> 02:43:57.000]  but again the absolute
-[02:43:57.000 --> 02:43:59.000]  value is not really
-[02:43:59.000 --> 02:44:01.000]  alive
-[02:44:01.000 --> 02:44:03.000]  and I think if I'm not mistaken
-[02:44:03.000 --> 02:44:05.000]  that's all because at the other level
-[02:44:05.000 --> 02:44:07.000]  we don't have any other
-[02:44:07.000 --> 02:44:09.000]  monitoring capabilities
-[02:44:09.000 --> 02:44:11.000]  for the 2S
-[02:44:11.000 --> 02:44:13.000]  or at least we don't
-[02:44:13.000 --> 02:44:15.000]  monitor anything else
-[02:44:15.000 --> 02:44:17.000]  so
-[02:44:17.000 --> 02:44:19.000]  this is all for the monitoring part
-[02:44:19.000 --> 02:44:21.000]  for the 2S
-[02:44:21.000 --> 02:44:23.000]  any
-[02:44:23.000 --> 02:44:25.000]  questions comments
-[02:44:25.000 --> 02:44:27.000]  on this
-[02:44:35.000 --> 02:44:37.000]  anything
-[02:44:37.000 --> 02:44:39.000]  you would like to ask
-[02:44:39.000 --> 02:44:41.000]  discuss
-[02:44:43.000 --> 02:44:45.000]  sorry for
-[02:44:45.000 --> 02:44:47.000]  you
-[02:44:47.000 --> 02:44:49.000]  I just have one question
-[02:44:49.000 --> 02:44:51.000]  the leakage current of the
-[02:44:51.000 --> 02:44:53.000]  VTRX plus
-[02:44:53.000 --> 02:44:55.000]  the RSSI signal
-[02:44:55.000 --> 02:44:57.000]  for its
-[02:44:59.000 --> 02:45:01.000]  it is exactly that one
-[02:45:01.000 --> 02:45:03.000]  and I just
-[02:45:03.000 --> 02:45:05.000]  use this one because
-[02:45:05.000 --> 02:45:07.000]  okay
-[02:45:07.000 --> 02:45:09.000]  not that I understand much better
-[02:45:09.000 --> 02:45:11.000]  this leakage current but I thought was
-[02:45:11.000 --> 02:45:13.000]  slightly more
-[02:45:13.000 --> 02:45:15.000]  comprehensible than the RSSI
-[02:45:15.000 --> 02:45:17.000]  it is exactly that thing
-[02:45:17.000 --> 02:45:19.000]  thank you
-[02:45:23.000 --> 02:45:25.000]  okay
-[02:45:25.000 --> 02:45:27.000]  okay
-[02:45:27.000 --> 02:45:29.000]  I'm gonna
-[02:45:29.000 --> 02:45:31.000]  stub
-[02:45:31.000 --> 02:45:33.000]  sharing
-[02:45:35.000 --> 02:45:37.000]  I'm gonna also
-[02:45:37.000 --> 02:45:39.000]  stub recording
+Then there is the measurement of the current related to the VTRx+ receiver. The VTRx+ receives incoming light through a fiber, and a photodiode inside converts this optical signal into an electrical current used for data transmission. The measured current corresponds to the diode’s response — sometimes referred to as the RSSI (received signal strength indicator) — which represents the amount of light collected by the diode.
+For now, this measurement is mostly stable and not particularly informative, but it can become useful in the future. With radiation damage, the photodiode’s efficiency is expected to decrease, meaning the same amount of incoming light would generate a smaller current. Monitoring this evolution can therefore help track radiation effects on the VTRx+ performance.
+During production testing, this parameter is not critical, but it is kept for completeness and possible long-term monitoring.
+![D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0).png)
+
+The last two quantities monitored are the temperature sensors from the bPOLs.
+The bPOL is the chip that in the DC-DC converter converts the voltage provided to the module to the needed voltages for the chips on the module. There are two bPOL one for the conversion 12 (in reality we supply 10.5) -> 2.5 and one for the conversion 2.5 -> 1.2. We have two stages because the VTRX needs 2.5 volts.
+Each bPOL has a temperature sensor but they are not calibrated. The slope is precise but the offset is not. So the absulute value is not correct but the variations are accurate.
+For example, if one is not well connected, one of the sensors may show a quite different value.
+
+![D_B(0)_LpGBT_DQM_BPOL12Vtemp_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0).png)
+![D_B(0)_LpGBT_DQM_BPOL2V5temp_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0).png)
+
+For 2S modules, we are not monitoring any other level.
