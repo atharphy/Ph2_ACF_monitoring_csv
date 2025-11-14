@@ -163,7 +163,8 @@ float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip,
     uint8_t  theVrefFuseIDValue       = theChip->pChipFuseID.ADCRef();
     uint8_t  theVrefReadRegisterValue = fReadoutChipInterface->readVrefRegister(theChip);
 
-    if(theChip->getFrontEndType() == FrontEndType::MPA2) fReadoutChipInterface->WriteChipReg(theChip, "ADCtrimming", 0x60); // ADCtrimming bit 6 = 0 uses e-fuse value for VREF, = 1 allows to update the value 
+    if(theChip->getFrontEndType() == FrontEndType::MPA2)
+        fReadoutChipInterface->WriteChipReg(theChip, "ADCtrimming", 0x60); // ADCtrimming bit 6 = 0 uses e-fuse value for VREF, = 1 allows to update the value
 
     // FIXME for now the VREF is not written in the SSA fuse ID so we check if it is zero or not.
     uint8_t theVrefToUse = theVrefFuseIDValue != 0 ? theVrefFuseIDValue : theVrefReadRegisterValue;
