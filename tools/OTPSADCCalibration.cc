@@ -19,6 +19,7 @@ void OTPSADCCalibration::Initialise(void)
     fRegisterHelper->takeSnapshot();
 
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ADCcontrol$");
+    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ADCtrimming$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^A[0-6]$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^B[0-6]$");
     // fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^C[0-6]$");
@@ -161,6 +162,9 @@ float OTPSADCCalibration::CalibrateVref(Ph2_HwDescription::ReadoutChip* theChip,
     uint32_t theADCBandGapValue       = fReadoutChipInterface->readADCBandGap(theChip);
     uint8_t  theVrefFuseIDValue       = theChip->pChipFuseID.ADCRef();
     uint8_t  theVrefReadRegisterValue = fReadoutChipInterface->readVrefRegister(theChip);
+
+    if(theChip->getFrontEndType() == FrontEndType::MPA2) fReadoutChipInterface->WriteChipReg(theChip, "ADCtrimming", 0x60); // ADCtrimming bit 6 = 0 uses e-fuse value for VREF, = 1 allows to update the value 
+
     // FIXME for now the VREF is not written in the SSA fuse ID so we check if it is zero or not.
     uint8_t theVrefToUse = theVrefFuseIDValue != 0 ? theVrefFuseIDValue : theVrefReadRegisterValue;
 
