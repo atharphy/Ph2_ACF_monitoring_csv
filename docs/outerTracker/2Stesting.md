@@ -161,13 +161,13 @@ This is an automatic procedure done by the LpGBT that has this automatic phase a
 There are three plots associated with this test, identified with `CICtoLpGBT` string. 
 
 
-![CICtoLpGBT_PhaseAlignmentEfficiency](../images/OTtesting/common/CICtoLpGBT_PhaseAlignmentEfficiency.png)
+![CICtoLpGBT_PhaseAlignmentEfficiency](../images/OTtesting/2S/CICtoLpGBT_PhaseAlignmentEfficiency.png)
 
 The *Phase Alignment Efficiency* is obtained repeting the automic phase alignment 100 times (default value that can be configured in the XML) and counting how many times the alignment succeeded. If there are no troubles you should see 100% efficiency. This is telling us how well the automatic procedure on the LpGBT works.
 
 Then we want also to extract the best phase that allow the LpGBT to properly sample the data. This is shown in the next two plots.
 
-![CICtoLpGBT_FoundPhaseDistribution](../images/OTtesting/common/CICtoLpGBT_FoundPhaseDistribution.png)
+![CICtoLpGBT_FoundPhaseDistribution](../images/OTtesting/2S/CICtoLpGBT_FoundPhaseDistribution.png)
 
 On the X axis the various lines between CIC and LpGBT are shown: 1 L1, 5 stub lines for the right (R) and left (L) FEHs. On the Y axis the phase. The LpGBT scans phases between 0 to 14, covering two clock cycles. The 15 is an error code that is used by the LpGBT. When repeating the measurement 100 times, we store basically the frequency for which one phase is chosen and this is shown on the Z-axis.
 
@@ -175,7 +175,7 @@ Usually you see bins with roughly 1 (yellow) on one phase and in some cases two 
 If a vertical line of bins with some frequency  is seen, it means that LpGBT was not able to choose any particular phase and that something is going on  with that particular line. The line goes to the connector between the service hybrid and the front end hybrid so something may be wrong with that connector, since the hybrids were already tested and it would be quite unlikely that LpGBT or the CIC are the problem or their connection with the hybrid is the problem.
 
 The best phase (the one with the highest frequency) is chosen from the previous plot, used by the LpGBT and shown in the plot below, one for each line.
-![CICtoLpGBT_BestPhase](../images/OTtesting/common/CICtoLpGBT_BestPhase.png)
+![CICtoLpGBT_BestPhase](../images/OTtesting/2S/CICtoLpGBT_BestPhase.png)
 
 ##### OTalignBoardDataWord - Hybrid
 After we have done the alignment of the LpGBT, we align the data word into the FC7. 
@@ -211,7 +211,7 @@ In contrast, the Level-1 implementation would require a major firmware update, a
 
 However, it’s still on the order of 10⁶ bits — not a small number — but lower than the number of stub bits. This corresponds to the number of tester bits.
 
-![CICtoLpGBT_PatternMatchingTestedBits_Hybrid](../images/OTtesting/common/CICtoLpGBT_PatternMatchingTestedBits_Hybrid.png)
+![CICtoLpGBT_PatternMatchingTestedBits_Hybrid](../images/OTtesting/2S/CICtoLpGBT_PatternMatchingTestedBits_Hybrid.png)
 
 We also have the error rate.  
 This value ranges from 0 to 1, where 1 means 100% errors and 0 means no errors.  
@@ -222,7 +222,7 @@ An error rate around 10⁻⁶ or 10⁻⁷ might just be a glitch.
 If the error rate is higher than that, check the connections between the hybrids and the connectors, as that might be the cause.
 
 
-![CICtoLpGBT_PatternMatchingErrorRate_Hybrid](../images/OTtesting/common/CICtoLpGBT_PatternMatchingErrorRate_Hybrid.png)
+![CICtoLpGBT_PatternMatchingErrorRate_Hybrid](../images/OTtesting/2S/CICtoLpGBT_PatternMatchingErrorRate_Hybrid.png)
 
 
 Now, we are sure that the communication between the CIC and the board works fine.
