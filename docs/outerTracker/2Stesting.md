@@ -188,11 +188,11 @@ To do the alignment, the test tells the FPGA which is the expected pattern.
 
 Once the FPGA receives a packet, it is checked the delay that is needed  such that the first bit of the packet is the first bit of the expected pattern. The delay is called FPGA *bitslips*. The chosen bitslip for each line is shown in the plot below. There is one plot per hybrid. This plots have the purpose to store the found value.
 
-![Board_WordAlignmentBitSlipValues_Hybrid](../images/OTtesting/common/Board_WordAlignmentBitSlipValues_Hybrid.png)
+![Board_WordAlignmentBitSlipValues_Hybrid](../images/OTtesting/2S/Board_WordAlignmentBitSlipValues_Hybrid.png)
 
 The plot below stores the number of retries. The alignment procedure is tried for a maximum of 10 times in case of failures. Retries can indicate instabilities. The retry number is stored per each line since each line is handled separately.
 
-![Board_WordAlignmentRetryNumbers_Hybrid](../images/OTtesting/common/Board_WordAlignmentRetryNumbers_Hybrid.png)
+![Board_WordAlignmentRetryNumbers_Hybrid](../images/OTtesting/2S/Board_WordAlignmentRetryNumbers_Hybrid.png)
 
 
 It is not uncommon to have one or two retries as there are some instabilities when writing some particular registers into the board. That's why we try multiple times. If the test retries 10 times, very likely means that it never manages to align and it would be good to check the connections between the CIC and the LpGBT.
