@@ -1,319 +1,329 @@
-/opt/homebrew/Cellar/openai-whisper/20250625/libexec/lib/python3.13/site-packages/whisper/transcribe.py:132: UserWarning: FP16 is not supported on CPU; using FP32 instead
-  warnings.warn("FP16 is not supported on CPU; using FP32 instead")
-Detecting language using up to the first 30 seconds. Use `--language` to specify the language
-Detected language: English
-[00:00.000 --> 00:02.060]  you
-[00:30.000 --> 00:55.000]  Okay, I think we can probably start. So the plan is there are four people that were already here yesterday is going to be the same. So I'm going to go through the
-[00:55.000 --> 01:16.000]  root files that are produced by px2cf and go through every block. Oops, I got the wrong one for I forgot to change the title. I'm going to go through the
-[01:16.000 --> 01:42.000]  The plots that are produced by px2cf and I really forgot to change a bunch of stuff. I realize it now. Okay, yeah, so, so I'm going to update the slide so
-[01:43.000 --> 01:56.000]  You notice there are a bunch of tools because I just did a copy and paste. But anyway, the idea is that I will describe the output that is produced by the PS full test and so the quick test just a subset of
-[01:56.000 --> 02:12.000]  The steps run by the full test will focus only the px2cf part. And so if you need extra material
-[02:12.000 --> 02:25.000]  And here I did a very nice job in updating these formula sort of wiki that contains a bunch of information so that might be useful in case
-[02:25.000 --> 02:46.000]  In case you would like to deeper to dig a little bit deeper into the understanding of the modules or the chip so you can find a module and so on. So the commands are here. You notice I really messed up with the copy and paste, but you should know it quite well we have a quick test and a full test.
-[02:47.000 --> 03:08.000]  So during the when we run a calibration we actually produce two files, one that contains the calibration results and the metadata and a second one that instead contains the monitor so the evolution of time of some of the values that we are monitoring.
-[03:09.000 --> 03:16.000]  So these two files are produced separately because they have two different time spans.
-[03:16.000 --> 03:28.000]  One, so the result file is produced from the start to the stop, one is that the monitor file is produced from the configure to the hold or the destroy.
-[03:28.000 --> 03:51.000]  And when you run px2cf by the command line or by gift, basically there is no difference, but instead, for example, the burning boxer, the run time is only during the basically the plateau of the temperature, but we still want to monitor the
-[03:52.000 --> 04:00.000]  the other information over the all temperature cycles also when there is a transition of temperature.
-[04:00.000 --> 04:03.000]  Fabio, do you want questions at the end?
-[04:03.000 --> 04:11.000]  Yeah, I was going to say right away so I just interact me if you have any questions.
-[04:11.000 --> 04:14.000]  So it's going to be quite interactive.
-[04:14.000 --> 04:24.000]  Okay, so I have a question if is it possible from common light to just have monitor the QM running, even if not test is ongoing and to the running.
-[04:24.000 --> 04:39.000]  Is there any way to approach that by common line not really thinking.
-[04:39.000 --> 04:51.000]  Not really because the common line at the end of the calibration will issue the whole so we cannot follow up with you about how to do it.
-[04:51.000 --> 04:53.000]  Yeah, we can add it.
-[04:53.000 --> 05:06.000]  I don't think there is anything out of the box that one can use but I think it should be relatively easy to add something I just wait for an input for keyboard and that's it.
-[05:06.000 --> 05:11.000]  Yeah, we can do that.
-[05:11.000 --> 05:15.000]  Okay, so.
-[05:15.000 --> 05:28.000]  So, just a few things. Let me check. So, yeah, there is a so since was asked already a few times.
-[05:28.000 --> 05:41.000]  I can you see I made this a high quality drawing for the location of the left and right hybrids.
-[05:41.000 --> 06:01.000]  And their position with respect to the PRH and average of the position of the, as I said, MP is in the module, and also the position of the row and column extreme so the zero zero point and zero nine and then 60 points or this might be useful in case you are looking
-[06:01.000 --> 06:24.000]  at where physically your chip or your channels are into the into the module. Okay, so I'm going to start going through the various information that we stole in the root file I'm going to start from the metadata for the people that were here yesterday
-[06:24.000 --> 06:30.000]  Apologies because it's going to be a little bit of a petition.
-[06:30.000 --> 06:34.000]  So, starting so the metadata.
-[06:34.000 --> 06:37.000]  They're storing to the result file.
-[06:37.000 --> 06:50.000]  And so at the level of the detector we have information basically about your setup. So we have.
-[06:50.000 --> 06:55.000]  We have the name of the user that run the test.
-[06:55.000 --> 07:01.000]  This is the user of the computer, the name of the computer itself.
-[07:02.000 --> 07:20.000]  The gith tag should just contain the head most important that gith commit that is the one that allow us to point to which comment was used and before is the correct that was user if it is it was running with an auto out of the software.
-[07:20.000 --> 07:26.000]  Then the calibration that was run the PS full test for this case.
-[07:26.000 --> 07:42.000]  Then I'm going to skip quickly this I'm going to come back later so we have few information about the time that is required for for the calibration so we have a timestamp of the starting point so this as soon as the configuration step starts.
-[07:42.000 --> 07:48.000]  Then we have forever sub calibration we have the the starting point.
-[07:48.000 --> 07:57.000]  These mainly to understand if there is for any reason your setup is slower to understand if there is one particular calibration that is affecting that.
-[07:57.000 --> 08:04.000]  And then the stop timestamp and this is when the issue when the stop is issued.
-[08:04.000 --> 08:11.000]  There are so if you make a difference there are a few different a few seconds in a.
-[08:11.000 --> 08:24.000]  Difference between the values that you see here and the value that is printed in the terminal because you don't should XML file so there are a few seconds of difference but over this time scale should really matter too much.
-[08:25.000 --> 08:29.000]  Yes, so this is a local timer right.
-[08:29.000 --> 08:33.000]  It is not you to see.
-[08:33.000 --> 08:35.000]  Okay.
-[08:35.000 --> 08:51.000]  And then actually something that I said wrong yesterday, we'll have to make a correction so there are these two other information initial detector configuration and the final detector configuration.
-[08:51.000 --> 09:04.000]  These tools, the XML file that you run by for some reason when I sit in this code, it doesn't see too much, but I think I.
-[09:04.000 --> 09:12.000]  Yeah, I dump it so this is the object string as well for the conventional these are the object string because otherwise you have to make a dictionary.
-[09:12.000 --> 09:24.000]  But if you get the object string from the file and you ask to dump, it will dump the content and you can recognize that this is XML file.
-[09:24.000 --> 09:35.000]  And we store it both at the beginning of the calibration with initial detector configuration and at the end of the calibration that shouldn't change anything.
-[09:35.000 --> 09:41.000]  But just for consistency with all the other we store it at the beginning idea.
-[09:41.000 --> 09:50.000]  Okay, moving on at the level of the board, we have the board IP address.
-[09:50.000 --> 10:02.000]  And then as for the XML file, we also store the XML file that contains the setting of the board.
-[10:02.000 --> 10:21.000]  So if I go quickly for the same reason it's not really shown nicely, but if I go quickly into the, for example, the PS module, you see that the configuration file of the board is pointing to another XML, which is over here.
-[10:21.000 --> 10:27.000]  And the file, the content that that the object string is actually this file.
-[10:27.000 --> 10:36.000]  As for before, since it is an XML file and the score tries to do some sort of formatting than it is.
-[10:36.000 --> 10:46.000]  And so in this case, we need to store it, the initial one, the final one, because we are optimizing some of the parameters on the board.
-[10:46.000 --> 10:51.000]  We need to communicate with the module and so we want to see what changes.
-[10:51.000 --> 10:56.000]  So if I move between one and another, you might see some difference. There is a zero here.
-[10:56.000 --> 11:01.000]  That is actually some information that was added.
-[11:01.000 --> 11:05.000]  Okay, moving onwards, the optical group.
-[11:05.000 --> 11:12.000]  So there is a name ID. So when you run it manually, you don't really see anything because we're not providing any information.
-[11:12.000 --> 11:23.000]  But instead, if you run it with the gift or, or this duck, you will see for the bandina, you will see the module name.
-[11:23.000 --> 11:28.000]  So the one that you input in the group.
-[11:28.000 --> 11:38.000]  And then we have the initial configuration of the LGBT here is that it's different. So there is no rendering so you kind of recognize it.
-[11:38.000 --> 11:43.000]  And as well, there is the final one that is over here.
-[11:43.000 --> 11:47.000]  They, they look the same because they're kind of the same.
-[11:47.000 --> 11:48.000]  Yes.
-[11:48.000 --> 11:53.000]  We do we have any parameter to fill the name ID from command line.
-[11:53.000 --> 11:55.000]  No.
-[11:55.000 --> 11:59.000]  Okay, so perhaps we can look into adding that.
-[11:59.000 --> 12:05.000]  Because we will use the command line and we have the name of the module so we can do the same.
-[12:05.000 --> 12:07.000]  Okay.
-[12:07.000 --> 12:09.000]  So.
-[12:09.000 --> 12:20.000]  Okay, so this is done by sending a configuration command via this duck and gift.
-[12:20.000 --> 12:24.000]  It is a bit more complicated than that when you have more than one module.
-[12:24.000 --> 12:29.000]  When you have one is easy to be done when you have more you have to do one sort of a month.
-[12:29.000 --> 12:34.000]  We need to do that.
-[12:34.000 --> 12:38.000]  I love the look.
-[12:38.000 --> 12:51.000]  Then, still at this level, we have the huge idea of the LGBT that is added from the LGBT and the same for the video experts.
-[12:51.000 --> 12:53.000]  Okay.
-[12:53.000 --> 13:00.000]  Then going on, I'm going to just show you one idea because they are the same information that I store.
-[13:00.000 --> 13:07.000]  So at this level, we cool until we add the hybrid ID, but some speech to a CF doesn't interact with that.
-[13:07.000 --> 13:09.000]  We don't really include anything.
-[13:09.000 --> 13:11.000]  I don't know if I get a little point.
-[13:11.000 --> 13:22.000]  Either potato, get that both interact with the database can include that information is a bit redundant since you already have the mapping between the module and the ID into the database.
-[13:22.000 --> 13:28.000]  So we don't really need to add it even more here, but there was just a place for that.
-[13:28.000 --> 13:31.000]  Then we have also the CAC fuse ID.
-[13:31.000 --> 13:33.000]  This is weird.
-[13:33.000 --> 13:35.000]  I didn't check that.
-[13:35.000 --> 13:41.000]  So we need to check if for some reason we didn't read it properly.
-[13:41.000 --> 13:57.000]  And then since also the CAC has the 60 configuration, we also have the initial 30 and the final 30 stored at this level.
-[13:57.000 --> 14:04.000]  And then I guess I'm going to just open the SSA work and I'm going to open both.
-[14:04.000 --> 14:14.000]  At this level, we also store the name ID, which is the fuse ID, the initial configuration and the final configuration.
-[14:14.000 --> 14:21.000]  And if we go to the SSA quickly, it's going to be at the same information ID.
-[14:21.000 --> 14:29.000]  So as per Tuesday initial configuration and final configuration.
-[14:29.000 --> 14:37.000]  And these are all the metadata that we are storing into the root file.
-[14:37.000 --> 14:39.000]  So, Fabio, just one quick question.
-[14:39.000 --> 14:46.000]  This TXT, it means that when we do alignment procedures or something like that, in the final, they are going to be different than in the beginning.
-[14:46.000 --> 14:47.000]  Correct.
-[14:47.000 --> 14:50.000]  So, for example, let's take one as a say.
-[14:50.000 --> 14:58.000]  So I take the first one, so the initial one, and you see that, let me see.
-[14:58.000 --> 15:05.000]  Yes, the three minga, everything is F, that is the initial value.
-[15:05.000 --> 15:18.000]  And instead, if I take the one afterwards, you see that instead all these values are different, these are the values that are used, that are obtained after the training.
-[15:18.000 --> 15:25.000]  Okay.
-[15:25.000 --> 15:32.000]  Then I'm going to close everything.
-[15:32.000 --> 15:34.000]  So it's going to take a little bit of time.
-[15:34.000 --> 15:50.000]  Otherwise, in front of the messy.
-[15:50.000 --> 16:06.000]  Okay, then we really start with all the steps of the full test, since the full test is just an extension, a quick test, I just go through all of these and you should get already all the information that you need for the quick test.
-[16:06.000 --> 16:23.000]  So, okay, the configuration, we just read the settings from the TXT and XML files, and then we store, we load all the registers into the board and the ASIC.
-[16:23.000 --> 16:27.000]  So this pretty straightforward, we don't really store anything.
-[16:27.000 --> 16:32.000]  Then the next step is to tune the LPGVT VRF.
-[16:32.000 --> 16:44.000]  This VRF is the one that used for the ADC, so in order to provide meaningful value from the ADC.
-[16:44.000 --> 16:49.000]  These, in the past, it was a tune, but we didn't really change the name.
-[16:49.000 --> 17:05.000]  And now, instead, now, since quite some time, the LPGVT group provided a long TXT file that contains a bunch of information ordered by the FuseID or for the LPGVT that I produced.
-[17:05.000 --> 17:17.000]  So what we do is that we just go through the full list, we match the LPGVT based on the FuseID that we read, and then we read from that file the VRF that we should use.
-[17:17.000 --> 17:28.000]  These also include a few other information, one with some calibration parameters that then are used for converting the ADC value into voltages.
-[17:28.000 --> 17:39.000]  So at this level, we don't store any information, we just take this value from the VRF and we load into the LPGVT.
-[17:39.000 --> 17:46.000]  Then, this is actually a step that is not done into the quick test because it's relatively long.
-[17:46.000 --> 17:55.000]  So both the SSA and NPA, they also have an ADC that also need to be calibrated.
-[17:55.000 --> 18:06.000]  These, I'm wrong, but these at the moment assume a band gap that is, so all the calibration is based on the band gap.
-[18:06.000 --> 18:31.000]  The band gap is assumed to be the same value for all NPA and SSA, so we're still waiting for the chip developer to provide us an equivalent of what is provided for the LPGVT in order to have a more refined band gap and I think also VRF such that we can go directly uploading that.
-[18:32.000 --> 18:44.000]  Still, this calibration will be run because there are a set of biases based on voltages within the chip that makes the chip work as expected.
-[18:44.000 --> 18:58.000]  In particular, make the amount of electron that you're injecting, the one that is actually expected and therefore these steps is optimizing all these parameters.
-[18:58.000 --> 19:16.000]  So I don't think there is really too much to show into the plots, but if I go quickly to one of them, we are just storing the VRF that we found after calibrating the ADC VRF.
-[19:16.000 --> 19:29.000]  And then we store also the slope of the conversion between the ADC DAC value into ADC voltage.
-[19:29.000 --> 19:35.000]  So this is just one slope that we store and then is used for all the ADC conversion.
-[19:35.000 --> 19:56.000]  So one thing that you need to consider is that before running this test, your output from the ADC, so basically the monitor, will not be super precise, will be reasonably precise, but not super, super precise because you still need to do this step.
-[19:56.000 --> 20:01.000]  Okay, I just gonna move on, but interacting if you have any questions.
-[20:01.000 --> 20:04.000]  So then with the...
-[20:04.000 --> 20:13.000]  Sorry, the temperature that is read from the MPA chips is going through this calibration here.
-[20:13.000 --> 20:14.000]  Yes.
-[20:14.000 --> 20:16.000]  Okay.
-[20:16.000 --> 20:30.000]  Okay, so one thing I may be missing is right now, if I understand we don't have yet or perhaps we start having some module for which the MPA temperature sensors were calibrated.
-[20:30.000 --> 20:37.000]  I'm not sure if this calibration data is already available anywhere, but I wonder if it is clear.
-[20:37.000 --> 20:54.000]  I mean, if you're going to change these parameters compared to what they were when they calibrated this temperature sensor, if then we have really a way to reconstruct which calibration we should use for the overall bias.
-[20:54.000 --> 21:03.000]  Because my understanding is this MPA, this temperature sensor, before they get calibrated, they have a very large zero uncertainty, if you want to say.
-[21:03.000 --> 21:04.000]  Yes.
-[21:04.000 --> 21:06.000]  So you don't know the...
-[21:06.000 --> 21:09.000]  It's just low, and you don't know...
-[21:09.000 --> 21:14.000]  Well, you know there's low very well, you don't know the intercept very well.
-[21:14.000 --> 21:15.000]  That is...
-[21:15.000 --> 21:16.000]  Okay.
-[21:16.000 --> 21:23.000]  So that information, it comes from the wafer testing.
-[21:23.000 --> 21:24.000]  So when...
-[21:24.000 --> 21:34.000]  So the chuck that was used for doing the wafer testing is kept to a reasonable temperature, I think it's 20 degrees.
-[21:34.000 --> 21:39.000]  And then what they do during the steps that they lead, they DC...
-[21:39.000 --> 21:49.000]  Sorry, sorry, the voltage corresponding to that temperature sensor, and therefore we can have the offset point.
-[21:49.000 --> 22:06.000]  In this moment, this is not stored anywhere in the chip, it needs to be stored into a file that the chip developer needs to provide us, such that we can plug it in and use it in order to set the correct load for every chip.
-[22:06.000 --> 22:07.000]  We don't...
-[22:07.000 --> 22:12.000]  Okay, so what we get is the voltage from them corresponding to a given temperature.
-[22:12.000 --> 22:13.000]  Correct.
-[22:13.000 --> 22:15.000]  Okay, so not the DC value.
-[22:15.000 --> 22:18.000]  So if we do this calibration, then it's even better.
-[22:18.000 --> 22:19.000]  Okay.
-[22:19.000 --> 22:20.000]  Thank you.
-[22:20.000 --> 22:21.000]  No problem.
-[22:21.000 --> 22:22.000]  Well, the volt...
-[22:22.000 --> 22:33.000]  I'm not 100% sure that provide already the voltage or the DC value, so not after applying the calibration, not after applying basically this load.
-[22:33.000 --> 22:39.000]  So these are not 100% sure what they are going to provide, but at the end of the day, the day should be the same, right?
-[22:39.000 --> 22:43.000]  Because it is just as low as between the two.
-[22:43.000 --> 22:46.000]  So just an extra conversion.
-[22:46.000 --> 22:47.000]  Is anyway...
-[22:47.000 --> 22:50.000]  Is the red be at the same ADC?
-[22:50.000 --> 23:00.000]  So it just depends if they store the low ADC or if they store the ADC after applying already the conversion.
-[23:00.000 --> 23:01.000]  Okay, but...
-[23:01.000 --> 23:03.000]  Okay, then perhaps we'll take it offline.
-[23:03.000 --> 23:07.000]  I may be a bit more confused about that.
-[23:07.000 --> 23:15.000]  So I don't think it is something that they can output on a pad and then measure it with a volmeter.
-[23:15.000 --> 23:21.000]  Do you have any microadmipa if I'm wrong?
-[23:21.000 --> 23:28.000]  I was trying to refresh my memory because now it's a long time that we discussed this and we didn't have any news.
-[23:28.000 --> 23:33.000]  But so I think they will provide us the real band cap measurement.
-[23:33.000 --> 23:39.000]  And with that one, we can calibrate more precisely our VRF.
-[23:39.000 --> 23:51.000]  And then I don't remember if they will provide us already the starting point of VRF that is giving the correct 850 millivolts.
-[23:51.000 --> 23:58.000]  Because with the previous step, we are just setting the range of the ADC.
-[23:58.000 --> 24:04.000]  And then with the second step, we are doing the real slope calibration.
-[24:04.000 --> 24:08.000]  I think they're going to provide us already the VRF.
-[24:08.000 --> 24:12.000]  And actually, I think they even store it into the fuses.
-[24:12.000 --> 24:21.000]  Yeah, the VRF can read it from the fuses AD and should be the one that gives us the correct range.
-[24:21.000 --> 24:33.000]  Because if you go back to the other plot, basically if we change VRF, we change the range in millivolts of the ADC.
-[24:33.000 --> 24:42.000]  And here we set the VRF in ADC such that the range in millivolts is at 850.
-[24:42.000 --> 24:50.000]  And they also measure the temperature, but I don't think they have the possibility to output any decent voltage.
-[24:50.000 --> 24:55.000]  So they read the temperature, but still we have the same ADC.
-[24:55.000 --> 25:03.000]  But the difference between all the other tests is that in this case, the wafer is on a chuck at a fixed temperature.
-[25:03.000 --> 25:08.000]  So we know at that temperature what is either the ADC or the voltage that is being built.
-[25:08.000 --> 25:19.000]  If they provide the low ADC or if they provide it after applying this curve.
-[25:20.000 --> 25:25.000]  Okay, so we direct the light here scan.
-[25:25.000 --> 25:31.000]  So let me go back and close a few things.
-[25:31.000 --> 25:43.000]  So what we do here is that we, so let me go a little closer, so it's more clear.
-[25:43.000 --> 26:01.000]  So here we mentioned the power that the SFP sees on the FC7 in micro-watt changing the modulation of the optical output and the bias of the optical output.
-[26:01.000 --> 26:12.000]  So if you look into this direction, this is quite obvious, you increase the bias and therefore you increase the power that is seen into the SFP.
-[26:12.000 --> 26:30.000]  So the modulation goes on the other direction and the reasons that the bias sets the high value of the optical output and instead the modulation sets this wing down.
-[26:30.000 --> 26:38.000]  And since it's an average, basically increasing the modulation, increase the swing down and the average of the power goes down.
-[26:38.000 --> 26:42.000]  So that's why you see this.
-[26:42.000 --> 26:55.000]  So from this plot, from the point of view of the QA, you can see if there are some.
-[26:55.000 --> 27:03.000]  So you can use the overall value to see if for any reason you have an extra attenuation that you don't expect.
-[27:03.000 --> 27:18.000]  That is a little bit more complicated to get because it might depend slightly on the module and that I would say very likely if you have not enough output power, then you're going to see other type of problems.
-[27:18.000 --> 27:22.000]  But this will tell us if the output is within a certain range.
-[27:22.000 --> 27:33.000]  And also, you can check if there are problems related to one or the two settings that you can set on the laser driver.
-[27:33.000 --> 27:44.000]  So if it's flat on one direction on the other, this might indicate that you cannot actually set the modulation of the bias for that particular.
-[27:44.000 --> 27:50.000]  Okay, then I open interest. So this was discussed quite a lot.
-[27:50.000 --> 28:04.000]  So the FPGVT has the capability to do these eye openings can basically checks every time.
-[28:04.000 --> 28:20.000]  So it counts every time the signal that is receiving from the interacts already converted into electrons is between two values, the high value and the low values.
-[28:20.000 --> 28:27.000]  And so the result that all the center of the curve is going to fill with the higher counts.
-[28:27.000 --> 28:32.000]  I forgot to put the crawler.
-[28:32.000 --> 28:46.000]  Because it's all the center is going to be with a higher count and all the area in which the signal is not within the high and low value is going to have a low count.
-[28:46.000 --> 28:51.000]  So what is going to see at the end is going to look like the eye open.
-[28:51.000 --> 29:04.000]  So for this one, the known problems that in after testing with some devices that were done by Atlas, they saw high effect.
-[29:04.000 --> 29:15.000]  So for all their correction counters, when these crossing or the eye was moving towards high value or low value.
-[29:15.000 --> 29:22.000]  So this is the known problem that we should know by now.
-[29:22.000 --> 29:34.000]  There is another thing to keep into account the FPGVT has the capability to attenuate the signal coming from the interacts and you can attenuate it to one third.
-[29:34.000 --> 29:42.000]  That is this plot, two third and that is this one and not attenuated at all.
-[29:42.000 --> 29:49.000]  So for the time being, there is not a clear recipe, which one we should look for.
-[29:49.000 --> 29:52.000]  So for just completeness, we run all three of them.
-[29:52.000 --> 30:00.000]  For what I saw and for also my understanding, most of the issues comes from the highest attenuation.
-[30:00.000 --> 30:02.000]  That is also the default one.
-[30:02.000 --> 30:13.000]  And therefore, this is the thing that they're going to change in a new version to avoid that you start in the worst conditions that you start with not a mission at all.
-[30:13.000 --> 30:18.000]  And they should provide more stability.
-[30:18.000 --> 30:22.000]  Okay, then we have to start with the alignment.
-[30:22.000 --> 30:27.000]  So this probably the more complicated part.
-[30:27.000 --> 30:36.000]  So if I go to this slide, so this is just a quick representation of how the module look like.
-[30:36.000 --> 30:42.000]  So in the module, you have an LPGVT and two hybrids, each one with the front end hybrid.
-[30:42.000 --> 30:49.000]  There's a session with the CSC and then each of the CSC is connected to eight MPAs.
-[30:49.000 --> 30:59.000]  And then each SSA is paired with his own MPA, we are level one and cluster lines.
-[30:59.000 --> 31:11.000]  And then on top of that, all these need to communicate with the FPGA and then we need to be able to reconstruct what the CSC is sending to the LPGVT.
-[31:11.000 --> 31:22.000]  So the signal is then splitting to hybrids and then each hybrid information is split back into the lines that are in output from the CSC.
-[31:22.000 --> 31:25.000]  So now we need to align everything.
-[31:25.000 --> 31:31.000]  And the first step, so to make sure that we can properly understand all the communication.
-[31:31.000 --> 31:37.000]  So the first step is the alignment between the CSC and LPGVT.
-[31:37.000 --> 31:46.000]  In particular here, we are sending a pattern from the data generated by the CSC and we ask the LPGVT to align this pattern.
-[31:46.000 --> 32:02.000]  So the LPGVT has an automatic alignment procedure that is going to find basically the center of the eye and therefore identify the best phase in order to read properly the output from the CSC.
-[32:03.000 --> 32:16.000]  So these steps, the information are stored at the level of the optical group and there are three plots that I'm going to open.
-[32:16.000 --> 32:38.000]  So in order to be sure that we can align reliably the LPGVT on the CSC output, this alignment procedure is repeated 100 times.
-[32:38.000 --> 32:46.000]  And therefore we check, first of all, what is the alignment efficiency.
-[32:46.000 --> 32:51.000]  So we expect that every time we ask the LPGVT to align, the alignment works.
-[32:51.000 --> 32:56.000]  If it doesn't, it might indicate that something not great is going on.
-[32:56.000 --> 33:08.000]  And so you might need to further inspect the module, in particular the connection between the readout hybrid and the frontenite.
-[33:08.000 --> 33:14.000]  Also, every time we run an alignment, we are going to get a possible phase.
-[33:14.000 --> 33:18.000]  And the various phases are shown into the plot.
-[33:18.000 --> 33:25.000]  So you have basically a distribution of the best phase that every time was identified.
-[33:25.000 --> 33:33.000]  And you see that there are two cases in which you have two possible phases that are chosen.
-[33:33.000 --> 33:36.000]  One case in which the two phases are close by.
-[33:36.000 --> 33:45.000]  Another case in which the phases are far apart, but you need to consider this phase actually scans over two clock cycles.
-[33:45.000 --> 33:51.000]  So roughly the distance between two consecutive clock cycles is roughly eight.
-[33:51.000 --> 33:54.000]  And therefore basically these two phases are identical.
-[33:54.000 --> 34:03.000]  It just means that you have that sometimes you choose one clock cycle and sometimes you choose the following one.
-[34:03.000 --> 34:05.000]  So nothing really concerning.
-[34:05.000 --> 34:15.000]  Here, I would say if you have any type of problems, you're going to see a long series, a long sequence of vertical phases,
-[34:15.000 --> 34:19.000]  meaning that every time you run it just pick randomly.
-[34:19.000 --> 34:27.000]  Or the other option is that you're going to see the align the phase stuck at 15, which is the error code,
-[34:27.000 --> 34:34.000]  but you are going to see it also into the over here into the failure of the alignment procedure.
-[34:34.000 --> 34:42.000]  Then out of all these phases, what we do is that we select the one with the highest frequency and we set that one as our best phase.
-[34:42.000 --> 34:44.000]  Just to pick up one that looks reasonable.
-[34:44.000 --> 34:49.000]  And the best phase is stored into this plot just for reference.
-[34:49.000 --> 34:52.000]  Here, this plot doesn't tell you too much about the QC.
-[34:52.000 --> 34:54.000]  Mainly are the other two.
-[34:54.000 --> 34:56.000]  Okay.
-[34:56.000 --> 34:58.000]  As usual, just stop me.
-[34:58.000 --> 35:02.000]  I'm just going to follow and the next step.
-[35:02.000 --> 35:14.000]  At this point, we align the CAC to the LPGVT and therefore we can proceed the alignment basically between the CAC and the board.
-[35:14.000 --> 35:19.000]  Because this line needs to be understood by the board at this point.
-[35:19.000 --> 35:25.000]  And this step is called align board data world.
-[35:25.000 --> 35:40.000]  And the idea here is that you're receiving a packet that we need to identify what is the first world of the packet.
-[35:40.000 --> 35:46.000]  So just to give you an idea, in particular for the stubs.
-[35:47.000 --> 35:51.000]  So the stop packet looks like this.
-[35:51.000 --> 35:59.000]  And the first step that we need to do is that we need to identify the first bit of the sequence.
-[35:59.000 --> 36:04.000]  So you need to know which is this bit, which is this bit and which is this bit.
-[36:04.000 --> 36:11.000]  And therefore you can properly reconstruct the whole pattern after you identify the first bit of the aid.
-[36:11.000 --> 36:18.000]  So this is stored at the level of the hybrid.
-[36:18.000 --> 36:29.000]  Because if I go back over here, you see that the FPGA thinks in terms of hybrids, not in terms of modules.
-[36:29.000 --> 36:33.000]  Let me just close this.
-[36:33.000 --> 36:38.000]  And we have two plots.
-[36:38.000 --> 36:49.000]  So we need to identify the delay that we need to apply on the world in order to find the first bit.
-[36:49.000 --> 36:58.000]  Now there is a little bit of extra complexity here because it depends if you do 10G or 5G.
-[36:58.000 --> 37:04.000]  With 10G you have to think in terms of 16 bits and with the 5G you need to think in terms of 8 bits.
-[37:04.000 --> 37:11.000]  But the idea is the same. You need to delay the incoming data in order to find the first bit of the aid.
-[37:11.000 --> 37:14.000]  So at the end what we store is what is called bit flip.
-[37:14.000 --> 37:18.000]  So it's basically the delay in number of bits that you're applying.
-[37:18.000 --> 37:24.000]  Here I would say no information for the QC are really available.
-[37:24.000 --> 37:29.000]  It's just going to tell you which is the delay that was chosen.
-[37:29.000 --> 37:32.000]  So not too much to talk about this plot.
-[37:32.000 --> 37:36.000]  It might be slightly more useful instead to look at this other plot.
-[37:36.000 --> 37:51.000]  So there are a few instabilities in writing some specific registers into the firmware that is probably more related to IP bus than to our design.
-[37:51.000 --> 38:01.000]  And so it is a bit complicated to address but what we do is that we address them via software by retrying particular steps when they fail.
-[38:02.000 --> 38:08.000]  And in this case we try up to 10 times and we store the number of retries here.
-[38:08.000 --> 38:17.000]  So if you see something with a very high number of retries, then in my indicates some issues.
-[38:17.000 --> 38:25.000]  But if you see just one or two retries that is kind of expected due to the disestability that was mentioned before.
-[38:26.000 --> 38:39.000]  Okay, so at this point we know that the pattern that is sent by the CSC is properly understood by the FPGA.
-[38:39.000 --> 38:48.000]  At this point the next step is that we can actually verify our stable is this link.
-[38:48.000 --> 38:55.000]  And to do that, we set the CSC in order to inject constantly patterns on these lines.
-[38:55.000 --> 39:00.000]  And then we see how many times we properly constructed those patterns.
-[39:00.000 --> 39:08.000]  So these are stored.
-[39:08.000 --> 39:18.000]  Okay, so these are stored at the level of the hybrids.
-[39:18.000 --> 39:28.000]  So what we do is that we inject several patterns, each one was stored at the level of the hybrids.
-[39:28.000 --> 39:40.000]  So what we do is that we inject several patterns, each one with a relatively large amount of bits, and then we do the pattern matching.
-[39:40.000 --> 39:46.000]  We store for all these pattern matching results that I'm going to show you, we always store two blocks.
-[39:46.000 --> 39:53.000]  One that contains the number of bits that we actually tested and one that contains the error rate.
-[39:53.000 --> 40:00.000]  So you see that for the stubs, the big count is quite high, it's 10 to the 8.
-[40:00.000 --> 40:05.000]  For the level one is smaller, it's still 10 to the 6.
-[40:05.000 --> 40:10.000]  And the main reason is that for the stubs, we managed to put the pattern matching to the firmware.
-[40:10.000 --> 40:15.000]  One instead for the level one, this becomes way more complicated.
-[40:15.000 --> 40:18.000]  And therefore we're doing this via software.
-[40:18.000 --> 40:29.000]  We don't really plan to do it in the firmware anyway because it will require quite a lot of work and not too much of a gain in terms of speed up.
-[40:29.000 --> 40:40.000]  So for all the plot that you're going to see in today, you're going to always see that the stubs have a large number of tests at bit with respect to the level ones.
-[40:41.000 --> 40:45.000]  So given a number of test bits, then we show also the error rate.
-[40:45.000 --> 40:54.000]  So these you should expect basically never to see errors.
-[40:54.000 --> 41:05.000]  However, so for the level one, since the matching is done via software, we know that there are some instabilities in writing into a specific file for that we use.
-[41:05.000 --> 41:13.000]  So you might see very small amount of errors in the order of 10 to the minus five or something like that.
-[41:13.000 --> 41:19.000]  So nothing too much concerning for the stubs for this particular plot and there is any problems.
-[41:19.000 --> 41:28.000]  So I think you can safely assume that the stubs pattern matching should be always at zero.
-[41:28.000 --> 41:31.000]  Of course, this was tested on a limited sample.
-[41:31.000 --> 41:36.000]  So we will see if something else comes up.
-[41:36.000 --> 41:49.000]  So after this test, you basically know that the communication between the CAC and the all the way to the board is stable.
+# Description of PS test results
+
+This documentation is adapted from the [PS testing with Ph2_ACF tutorial](https://indico.cern.ch/event/1540158/). This focuses on the tests performed during module production with the goal of qualify the modules.
+
+**For production testing, official releases and tools as GIPHT should be used.**
+
+For other testing the main commands after installing the software are:
+
+```
+cd Ph2_ACF  # change the directory accordingly
+source setup.sh 
+```
+
+If not already done, insert the correct machine and IP address in the
+xml file located in the settings directory that you are going to use. The recommended XML is [settings/PS_Module_v2p1.xml](../../settings/PS_Module_v2p1.xml)
+
+```
+<connection id="board" uri="localhost://192.168.0.12:50001" address_table="<file://settings/address_tables/uDTC_OT_address_table.xml>"
+```
+
+List firmwares on SD card:
+
+``` fpgaconfig -c settings/MyXML.xml -l ```
+
+To load a new firmware: The firmware are stored in
+<https://udtc-ot-firmware.web.cern.ch/>. Be sure the version you are
+downloading is compatible with the code version you are using, the
+module type, the CIC version etc.
+
+```
+fpgaconfig -c settings/MyXML.xml -f PATH_TO_FILE -i FW_NICKNAME
+fpgaconfig -c settings/MyXML.xml -i FW_NICKNAME
+```
+
+To load an existing firmware just use the second line above.
+
+Blue light on FC7 blinks at 1Hz if firmware loaded properly.
+
+To run a test
+
+```
+runCalibration -f settings/MyXML.xml   -c CALIBRATION_NAME
+```
+
+To list the availaible calibrations
+
+```
+runCalibration -h
+```
+
+## Test result description
+The description below is for the standard `PSfullTest` that is a very comprehensive set of measurements. The `PSquickTest` is a subset of that.
+
+When running, two files are created:
+- The `Results.root` that contains all the calibration results and the metadata
+- The monitoring that contains the variables that we  would like to monitor, for example temperatures, voltages, in some cases also currents
+
+### Results description
+
+#### Metadata
+When you open the file, the main folder inside is the `Detector` folder, containing metadata.
+
+Metadata are storing what in root is called the object string and the reason for that is that if you store anything else that is not an object you need to create a dictionary. With a string we can basically store everything that we need.
+
+
+For instance, `Username_Detector` contains the user name of the computer where the tests is carried out and `HostName_Detector` is the name of the computer.
+
+`GitCommitHash_Detector` and `GitTag_Detector` are used verify that the user is in the right tag and commit for production. These fields will be used by the Potato grading software.
+
+The `CalibrationName_Detector` is the name of the calibration, for instance `PSfullTest` to track which type of test you run.
+
+The `InitialDetectorConfiguration_Detector` is basically a copy of the `HWDescription` section of the ` settings/MyXML.xml` used to run the test. The `FinalDetectorConfiguration_Detector` is similar to the `Initial` one with possible updated values due to the performed calibrations.
+
+In the `CalibrationStartTimestamp_Detector` and `SubCalibrationNameAndType_Detecor` there is information about the time of each calibration. The calibration start time timestamp is stored as soon as you start configuring the module. Then since multiple steps are done, the different start of the steps (SubCalibration) are listed next to the steps. This is not really needed for any particular information for the QA but   it's really to keep track of the time for developers. The `CalibrationstubTimeStamp_Detector` is the time stamp for when the calibration is finished.
+
+ 
+There is a minor difference of a few seconds in what you see in the metadata and in the printout on the terminal because in the beginning time stamp in the metadata the time used to read the configurations is not considered.
+
+After the `Detector` folder we have the `Board`. Here we have three metadata:
+- `D_NameID_Board` is the IP address
+- `D_InitialBoardConfiguration_Board` is the XML for the board configuration, typically what you have in [settings/BeBoardFiles/uDTC_registers_PS.xml](../../settings/BeBoardFiles/uDTC_registers_PS.xml)
+- `D_FinalBoardConfiguration_Board` is the same as above with possible updated values depending on the performed calibration
+
+This is mainly for debugging.
+
+After the `Board`, there is the `OpticalGroup`.
+The `NameId` is empty if you run manually while if you run with `GIPHT` the module ID will be stored. Calibrations should always be performed with `GIPHT` or the Burnin box controller.
+
+At the optical group level we have two chips, the LpGBT and the VTRX.
+In the `InitialLpGBTConfiguration` (`FinalLpGBTConfiguration`) the starting (final) values of all the registers are stored. 
+The `LpGBTFuseId` and `VTRxFuseId` are the IDs stored in the chip. 
+
+The `IsLpGBTCalibrated` is set to 1 if the calibration data is found in [the calibration file](../../settings/lpGBTFiles/lpgbt_calibration.csv) and used for that LpGBT.
+
+After the `OpticalGroup`, we move to the `Hybrid` level. A fully working module has two hybrids.
+The `NameId` is used to store the Hybrid ID. Similar to the optical group, there is no direct interaction with the DB in Ph2_ACF and it will be filled at a later stage in the analysis and grading procedure. 
+
+Each hybrid has a CIC chip for which three metadata are stored: `CICFuseId` and the `InitialCICConfiguration` and `FinalCICConfiguration` with the starting and final 
+values of all chip registers.
+
+Every hybrid contains 8 SSA chips and is connected to 8 MPAs. There is a directory for each of them containg the same metadata `NameId` with the fuse ID, `InitialReadoutChipConfiguration` and `FinalReadoutChipConfiguration` with the registers.
+Similar to the LpGBT case, the `IsReadoutChipCalibrated` is set to 1 if the calibration data is found and used for that chip. Currently calibrations are available for MPAs but not SSAs.
+
+#### Calibrations 
+
+The first step is the configuration where we just load all the registers into the various chips. Basically we just take the information that are stored in the values configuration file and we just load them into the chips.
+
+The other steps are more elaborate and produce result plots described below.
+
+##### TuneLpGBTVref - OpticalGroup
+
+Vref is basically the reference voltage for the LpGBT ADC converter. It's needed for converting into meaningful values the ADC that are read by the LpGBT. This step is  basically the loading (not really a tuning) of a value that the LpGBT group gave us and is stored in [the calibration file](../../settings/lpGBTFiles/lpgbt_calibration.csv). The information for a specific LpGBT can be found by the fuse ID. In this step we retrieve the value from the file and we store it in the chip. No plots are produced.
+
+
+##### OTPSADCCalibration - Chip
+This calibration step is not included in the `PSquickTest` because it is relatively long. Both the SSA and the MPA contain an ADC that requires calibration. A band-gap is present in each chip. A precise calibration is available from the chip developers obatined at wafer testing for MPAs but not SSAs.
+The ADC calibration is still executed because several internal biases depend on specific voltages that determine the correct amount of charge injected during tests, and these parameters must be optimized. 
+
+The calibration is performed in two main steps. During wafer testing at about 25 °C, the true band-gap value of each chip is measured in millivolts, and the corresponding ADC_VREF register value is programmed so that the ADC range spans 850 mV. This VREF setting is saved in the chip fuses. When the chip is mounted on a module, the first task is to verify that the fused VREF still produces an effective 850 mV range when compared to the band-gap value, which should remain stable. If the range has shifted, VREF is re-optimized. Once VREF is confirmed or corrected, all other ADC-related registers are tuned accordingly.
+
+Two plots are stored. The first shows the ADC_VREF register giving a range of 850mV. 
+![VREF_DACtoV_Chip](../images/OTtesting/PS/VREF_DACtoV_Chip.png)
+
+The second one is the ADC calibration curve obtained during the procedure.
+![ADC_Slope_MPA](../images/OTtesting/PS/ADC_Slope_MPA.png)
+
+
+##### OTVTRxLightYieldScan - OpticalGroup
+
+This test is performed to verify that we are able to change the VTRX settings to increase or decrease the optical power that is emitted.
+
+![VTRx_LightYieldScan](../images/OTtesting/common/VTRx_LightYieldScan.png)
+
+The bias and modulation, shown on the x and y axes of the plot, are two registers of the VTRX that control the laser driver. On the Z axis we have the power in microWatt that is measured by the the SFP connector, the receiver on the FC7.
+
+We obtain the distribution measuring the power varying the bias and modulation.
+Moving from the left to the right, the power increases.
+For the modulation, when you increase it, you decrease the power. The reason is that basically the bias sets the high level and instead the modulation controls the swing down.
+
+If the power in the x and y direction is not changing, something is going on with the driver controller. Moreover, the optical power that you receive might be lower in case you have some damage on the fibers - less obvious and this will be handled by potato. Very likely you will see other problems.
+
+<details>
+  <summary>Known issues</summary>
+
+A distribution like the one below may be due to a problematic SFP connector on the FC7 or dirt in the fibers.
+
+![VTRx_LightYieldScan_buggy](../images/OTtesting/common/VTRx_LightYieldScan_buggy.png)
+</details>
+
+
+##### OTLpGBTEyeOpeningTest - OpticalGroup
+
+The calibration is performed for three different values of the electrical attenuation that the LpGBT applies to the VTRx signal that is proportional to the optical power that is received. The signal can be attenuated to 1/3, 2/3 or not attenuated. Here we show and explain the result for one of the attenuations.
+
+![LpGBT_EyeOpeningScan](../images/OTtesting/common/LpGBT_EyeOpeningScan.png)
+
+The eye opening is a capability of the LpGBT and more info can be found in the manual. A high count rate (z-axis) corresponds to the center of the eye, above the lower part of the signal (voltage) but below the high part of the signal (voltage) - the large yellow area. Outside this range of the signal there is a lower count. The absolute numbers are not easy to interpret. The relevant part is the transition region between the two yellow areas. 
+This plot was especially relevant for LpGBT v1 that had known issues with the transistion part moving up and down with the power.
+
+For a more detailed explanation check the video tutorial around minutes 27-32. This is not reported here as this should not be problematic anymore with LpGBTv2.
+
+
+##### Alignemnt -> establish proper communication for all chips on a module & FPGA
+
+##### OTalignLpGBTinputs - OpticalGroup
+
+To better understand the alignment steps, please refer to the [PS module communication scheme on slide 4](https://indico.cern.ch/event/1540158/contributions/6481542/attachments/3057153/5408250/FRavera_2025_04_28_PSschool.pdf) where we see the 8 SSAs and 8 MPAs per side. Each SSA is paired with an MPA and the MPAs communicate with the CIC. The CIC (one per side) communicate with the LpGBT and the LpGBT with the FPGA.
+
+For the data rate that can be handled in the FPGA, the signal coming from the module is then split in separate components for the two FEHs and then in L1 (red line) and stub data (blue lines).
+
+This test is used to make sure that the LpGBT understands what the CIC sends.
+Basically the LpGBT samples the data received and this test finds the correct sampling phase. If the phase is not correct, sometimes a one can be interpreted as a zero, or vice versa, and therefore the communication will not work. 
+
+This is an automatic procedure done by the LpGBT that has this automatic phase alignment. The test sets the CIC in a state that sends a specific pattern and ask the LpGBT to align, ie to find the best phase for sampling the incoming data from the CIC.
+
+There are three plots associated with this test, identified with `CICtoLpGBT` string. 
+
+![CICtoLpGBT_PhaseAlignmentEfficiency](../images/OTtesting/PS/CICtoLpGBT_PhaseAlignmentEfficiency.png)
+
+The *Phase Alignment Efficiency* is obtained repeting the automic phase alignment 100 times (default value that can be configured in the XML) and counting how many times the alignment succeeded. If there are no troubles you should see 100% efficiency. This is telling us how well the automatic procedure on the LpGBT works.
+
+Then we want also to extract the best phase that allow the LpGBT to properly sample the data. This is shown in the next two plots.
+
+![CICtoLpGBT_FoundPhaseDistribution](../images/OTtesting/PS/CICtoLpGBT_FoundPhaseDistribution.png)
+
+On the X axis the various lines between CIC and LpGBT are shown: 1 L1, 5 stub lines for the right (R) and left (L) FEHs. On the Y axis the phase. The LpGBT scans phases between 0 to 14, covering two clock cycles. The 15 is an error code that is used by the LpGBT. When repeating the measurement 100 times, we store basically the frequency for which one phase is chosen and this is shown on the Z-axis.
+
+Usually you see bins with roughly 1 (yellow) on one phase and in some cases two phases are picked with a similar frequency. 
+If a vertical line of bins with some frequency  is seen, it means that LpGBT was not able to choose any particular phase and that something is going on  with that particular line. The line goes to the connector between the service hybrid and the front end hybrid so something may be wrong with that connector, since the hybrids were already tested and it would be quite unlikely that LpGBT or the CIC are the problem or their connection with the hybrid is the problem.
+
+The best phase (the one with the highest frequency) is chosen from the previous plot, used by the LpGBT and shown in the plot below, one for each line.
+![CICtoLpGBT_BestPhase](../images/OTtesting/PS/CICtoLpGBT_BestPhase.png)
+
+
+##### OTalignBoardDataWord - Hybrid
+After we have done the alignment of the LpGBT, we align the data word into the FC7. 
+Once more, we set the CIC such that it keeps sending data through the lines described in the [OTalignLpGBTinputs - OpticalGroup](#otalignlpgbtinputs---opticalgroup). This time we want to identify the data in the FPGA.
+
+For the PS, we have two data transmission speeds, 10G and 5G, corresponding to the CIC sending packets of 16 and 8 bits respectively. These bits are properly identified into the FPGA, by identifying the first bit.
+For instance, if the CIC sends a sequence of 101010 then you need to know that the first one has to be a 1 and then the second one has to be a 0.
+
+To do the alignment, the test tells the FPGA which is the expected pattern.
+
+Once the FPGA receives a packet, it is checked the delay that is needed  such that the first bit of the packet is the first bit of the expected pattern. The delay is called FPGA *bitslips*. The chosen bitslip for each line is shown in the plot below. There is one plot per hybrid. This plots have the purpose to store the found value.
+![Board_WordAlignmentBitSlipValues_Hybrid](../images/OTtesting/PS/Board_WordAlignmentBitSlipValues_Hybrid.png)
+
+The plot below stores the number of retries. The alignment procedure is tried for a maximum of 10 times in case of failures. Retries can indicate instabilities. The retry number is stored per each line since each line is handled separately.
+
+![Board_WordAlignmentRetryNumbers_Hybrid](../images/OTtesting/PS/Board_WordAlignmentRetryNumbers_Hybrid.png)
+
+
+It is not uncommon to have one or two retries as there are some instabilities when writing some particular registers into the board. That's why we try multiple times. If the test retries 10 times, very likely means that it never manages to align and it would be good to check the connections between the CIC and the LpGBT.
+
+##### OTverifyBoardDataWord - Hybrid
+
+This test is designed to verify that the alignment performed in the previous steps properly succeeded. Once again the CIC is set in the same configuration to send a pattern through each line. The test checks if the pattern sent by the CIC matches the pattern received by the LpGBT.
+
+Two plots (per hybrid) are stored for this test.
+
+One plot contains the number of bits used for the test. For every line, it shows how many bits were tested. The difference between the number of bits we are testing between the stubs and the Level-1 is only for timing purposes.  
+
+The stub line can be implemented directly in the firmware, which is very fast.  
+
+In contrast, the Level-1 implementation would require a major firmware update, and we currently don’t have the resources for that. That’s why you see fewer bits for Level-1.  
+
+However, it’s still on the order of 10⁶ bits — not a small number — but lower than the number of stub bits. This corresponds to the number of tester bits.
+
+![CICtoLpGBT_PatternMatchingTestedBits_Hybrid](../images/OTtesting/PS/CICtoLpGBT_PatternMatchingTestedBits_Hybrid.png)
+
+We also have the error rate.  
+This value ranges from 0 to 1, where 1 means 100% errors and 0 means no errors.  
+
+From what we have observed so far, this part of the test is very stable.  
+
+An error rate around 10⁻⁶ or 10⁻⁷ might just be a glitch.  
+If the error rate is higher than that, check the connections between the hybrids and the connectors, as that might be the cause.
+
+
+![CICtoLpGBT_PatternMatchingErrorRate_Hybrid](../images/OTtesting/PS/CICtoLpGBT_PatternMatchingErrorRate_Hybrid.png)
+
+
+Now, we are sure that the communication between the CIC and the board works fine.
+
+#FIXME update for MPA
+##### OTCICphaseAlignment - Hybrid
+Now, we can begin aligning the CBC with the CIC.  
+This step is conceptually similar to the alignment between the CIC and the LpGBT, but it’s a bit more complicated. The goal is to synchronize all the lines between CIC and CBC.
+
+Since the CBC cannot generate an arbitrary test pattern, we inject a few strips to produce a recognizable pattern on the data lines.  
+The CIC then uses this pattern to adjust its phase and achieve proper alignment.
+
+The phase alignment logic in the CIC is a simplified version of that used in the LpGBT, since the same block was copied into the CIC design.  
+The process is therefore similar:  
+- Send a known pattern.  
+- The CIC scans phases to find the one that decodes the pattern correctly.
+
+To check stability, the CIC is asked to align 100 times.  
+This ensures that the alignment procedure is reliable and repeatable; if the result is consistent across all runs, the alignment is stable.  
+At the end of each alignment, we can query whether the procedure succeeded or not.
+
+The resulting plots below resemble those used for the CIC-LpGBT phase alignment and are produced at the hybrid level.
+
+We can plot the efficiency of alignment.  
+Each vertical bin represents different elements: one line for the Level-1, 5 lines for the stubs. On the X-Axis we have one column for every CBC.  
+On the z-axis, we display the efficiency, ranging from 0 to 1.  
+If there are any issues, the efficiency will appear noticeably below 1.  
+
+![CBCtoCIC_LockingEfficiency_Hybrid](../images/OTtesting/2S/CBCtoCIC_LockingEfficiency_Hybrid.png)
+
+
+We also plot, for each line, the phase and the frequency at which each phase was chosen.  
+If you zoom in on the X-axis, you can see, for every CBC, the stub lines and the Level-1 lines all in the same plot. We combined them into a single plot to avoid creating too many separate plots.  
+
+As for the LpGBT, you will often see cases where two phases are essentially equivalent. In these cases, we choose the phase with the highest probability.
+
+![CBCtoCIC_InputPhaseDistribution_Hybrid](../images/OTtesting/2S/CBCtoCIC_InputPhaseDistribution_Hybrid.png)
+
+This phase scan above is performed over two clock cycles.  
+For example, if one phase is around 5, the equivalent phase on the next cycle would be 5 + 8 = 13.  
+So effectively, there are two working points for each line, and the system will pick one of the two.  
+
+Looking at five phases individually might be misleading, since some of them are equivalent due to the two-cycle scan.  
+
+The error code is represented by the number 15.  
+If a value of 15 appears, it means the alignment failed.  
+However, we rarely see this because the hybrids and modules we receive are generally good, and the CBCs within the same hybrid have already been tested.  
+
+If an issue does occur, the lock efficiency should reflect it — for example, a 15 in the phase scan would likely correspond to a low or failing lock efficiency.
+
+Then we show the best input phase in a 2D plot.  
+On the y-axis, we have the different lines, and on the x-axis, the different CBCs.  
+The z-axis represents the best phase — basically the most probable phase for each line and CBC combination.
+
+![CBCtoCIC_BestInputPhases_Hybrid](../images/OTtesting/2S/CBCtoCIC_BestInputPhases_Hybrid.png)
+
+
+##### OTCICwordAlignment - Hybrid
+The next step to be addressed is the CBC's processing of stubs. The goal is to align all lines with the 40MHz clock. 
+
+Now, the CIC can correctly identify ones and zeros coming from the CBC, but the CIC also needs to process the stub information.  
+Each CBC sends stubs in a specific format: three lines for the stub address, one and a half lines for the bending, and one line for the error code [(See slide 8)](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf).  
+
+The CIC must understand these bits and decide which stubs to actually send, because it cannot send all stubs at once. Each CIC can handle only a limited number of stubs.  
+
+This step is called word alignment because the CIC needs to identify not only the first bit but also its position in the full data stream.  
+The procedure is similar to what is done in the FC7 for bit identification. The CBC is set to send a specific pattern and we tell the CIC what to expect. 
+
+This creates a single plot showing the delay applied on each line of the CBC.  
+Since the lines are very similar in length, values should be roughly identical.  
+If any line shows a value drastically different from the average, it may indicate a problem.  
+![CBCtoCIC_WordAlignmentDelay_Hybrid](../images/OTtesting/2S/CBCtoCIC_WordAlignmentDelay_Hybrid.png)
+
+These plots are not used for debugging or QA; they are mainly to store the values chosen. Unlike previous scans, this one only scans a single phase, so there is just one working point for each line.
+
+
+##### OTCICBX0Alignment - Hybrid
+This is the last step of the CBCICIC alignment. It is more relevant for PS modules where the stub info is sent over 2words but it is performed also for 2S ones even if the stub info is sent into a single word.
+
+Since all CBCs and lines are synchronized, only one of the chip and lines is set to send a pattern and used for the measurement of the BX0 delay. The BX0 delay is measured between a Resync and the reception of the pattern in the CIC.
+
+![CICBX0AlignmentDelay_Hybrid](../images/OTtesting/2S/CICBX0AlignmentDelay_Hybrid.png)
+
+An empty plot shows that the alignment fails. This could be due to a problem on the CBC/CBC line chosen for the alignment or on a problem in the CIC.
+
+
+#FIXME BEGIN OTalignStubPackage
 [41:49.000 --> 41:57.000]  The next step is then to better align information about the stubs.
 [41:58.000 --> 42:02.000]  Because we actually need the next steps.
 [42:02.000 --> 42:16.000]  The reason for that, if I go back to the stock packet, you see that the stock packet is not only one bunch crossing long, but these eight bunch crossing all the way up to here.
@@ -337,38 +347,40 @@ Detected language: English
 [44:22.000 --> 44:36.000]  And it is kind of reasonable, the length between the lines between the left and right hybrid are relatively short compared to the width of this delay in terms of nanoseconds.
 [44:36.000 --> 44:48.000]  So, we are just plotting them both such that we know that if we start seeing some modules that don't respect any more these, but they're still functional, then we know that we need to modify the field.
 [44:48.000 --> 45:01.000]  But in general, from this plot, you expect two bits, two bins filled, only one for each of the row, and they should be all the same stock package delay.
+#FIXME END OTalignStubPackage
+
 [45:01.000 --> 45:15.000]  Okay, so at this point, we know that we proper align all the information that are coming out from the CC all the way to the board.
-[45:15.000 --> 45:28.000]  Now, the next step is to align the output of the NPA to the CC.
-[45:28.000 --> 45:40.000]  So the CC need to sample the NPA output so we can set a phase in order to properly sample the output such that the CC can understand what is received.
-[45:40.000 --> 45:56.000]  To do that, the CC implements basically the same idea of the LPGVT so as an automatic phase alignment procedure that indicates the best phase that is in the center of the arc.
-[45:56.000 --> 46:04.000]  So the plots that I'm going to show you are very similar to the same to the plots I was showing you for the LPGVT.
+[45:15.000 --> 45:28.000]  Now, the next step is to align the output of the MPA to the CC.
+[45:28.000 --> 45:40.000]  So the CC need to sample the MPA output so we can set a phase in order to properly sample the output such that the CC can understand what is received.
+[45:40.000 --> 45:56.000]  To do that, the CC implements basically the same idea of the LpGBT so as an automatic phase alignment procedure that indicates the best phase that is in the center of the arc.
+[45:56.000 --> 46:04.000]  So the plots that I'm going to show you are very similar to the same to the plots I was showing you for the LpGBT.
 [46:04.000 --> 46:10.000]  And since these are a hybrid level procedure, we just already level the hybrid.
 [46:10.000 --> 46:28.000]  So these are the plots.
-[46:28.000 --> 46:42.000]  So as for the LPGVT, we repeat the alignment, I think was on the stage 100 times, and then at every iteration, we can ask the CC if the alignment succeeded.
-[46:42.000 --> 46:58.000]  And this is plot into this plot where we show the locking efficiency of the CC out of the 100 test as a function of the NPA AD and as a function of the lines.
+[46:28.000 --> 46:42.000]  So as for the LpGBT, we repeat the alignment, I think was on the stage 100 times, and then at every iteration, we can ask the CC if the alignment succeeded.
+[46:42.000 --> 46:58.000]  And this is plot into this plot where we show the locking efficiency of the CC out of the 100 test as a function of the MPA AD and as a function of the lines.
 [46:58.000 --> 47:05.000]  So we have one level one lines and five step lines that are these one over here.
 [47:05.000 --> 47:13.000]  In this case, for what I saw, again, statistic is limited, but if the locking efficiency works, it always works.
 [47:13.000 --> 47:21.000]  So you should expect to have a content that is always 100% for these bits.
-[47:21.000 --> 47:32.000]  Then as for the LPGVT, since we repeat the scan multiple times, we do forever this line of distribution of the phase that was identified, the best phase.
+[47:21.000 --> 47:32.000]  Then as for the LpGBT, since we repeat the scan multiple times, we do forever this line of distribution of the phase that was identified, the best phase.
 [47:32.000 --> 47:35.000]  If I zoom in, you can clearly see all of them.
-[47:35.000 --> 47:40.000]  So this is for the first NPA, and then we start for the second NPA.
-[47:40.000 --> 47:45.000]  And the idea is the same that we have for the LPGVT.
+[47:35.000 --> 47:40.000]  So this is for the first MPA, and then we start for the second MPA.
+[47:40.000 --> 47:45.000]  And the idea is the same that we have for the LpGBT.
 [47:45.000 --> 47:50.000]  So we choose the one that has the highest frequency to be our best phase.
-[47:50.000 --> 48:03.000]  And to show which was the phase that was actually selected here is plotted again as a function of the NPA and the step line, the best phase that was selected.
+[47:50.000 --> 48:03.000]  And to show which was the phase that was actually selected here is plotted again as a function of the MPA and the step line, the best phase that was selected.
 [48:03.000 --> 48:11.000]  In this case, I don't think you can really understand too much what is if there is a failure.
 [48:11.000 --> 48:14.000]  So this is just mainly for reference.
-[48:14.000 --> 48:20.000]  As for the LPGVT, locking efficiency, mine became some issues.
+[48:14.000 --> 48:20.000]  As for the LpGBT, locking efficiency, mine became some issues.
 [48:20.000 --> 48:38.000]  And as well as phase 15 is a error code or a long list of possible phases, which means that the SSC was just picking up a random phase.
 [48:38.000 --> 48:50.000]  Okay, so now we recognize the level of the SSC, the correct sampling phase, in order to identify the...
 [48:50.000 --> 48:55.000]  to properly reconstruct basically bit one from bit zeroes.
-[48:55.000 --> 49:04.000]  Then there is an extra step needed here because the SSC is not just taking information from NPA and send them out, it will elaborate them.
+[48:55.000 --> 49:04.000]  Then there is an extra step needed here because the SSC is not just taking information from MPA and send them out, it will elaborate them.
 [49:04.000 --> 49:13.000]  And in particular for the STAPs, we need to properly identify the STAP packets.
-[49:13.000 --> 49:28.000]  And the STAP packet that is sent by the NPA is something that looks like that, in which we have up to five STAPs storing two voltage one of 8 bits.
+[49:13.000 --> 49:28.000]  And the STAP packet that is sent by the MPA is something that looks like that, in which we have up to five STAPs storing two voltage one of 8 bits.
 [49:28.000 --> 49:36.000]  Also in this case, we need to find the first of the 8 bits, and therefore we do again another word alignment.
-[49:36.000 --> 49:45.000]  For this case, we send NPA in order to inject a specific pattern, and then we tell to the LPGVT that pattern.
-[49:45.000 --> 49:57.000]  So the LPGVT knows which pattern you need to expect, and we'll basically do an automatic scan of a bit relay in order to properly reconstruct that pattern.
+[49:36.000 --> 49:45.000]  For this case, we send MPA in order to inject a specific pattern, and then we tell to the LpGBT that pattern.
+[49:45.000 --> 49:57.000]  So the LpGBT knows which pattern you need to expect, and we'll basically do an automatic scan of a bit relay in order to properly reconstruct that pattern.
 [49:58.000 --> 50:07.000]  So the plot that we store for this STAP is this one, the word alignment.
-[50:07.000 --> 50:18.000]  And as a function of the NPA ID and the STAP line, so here is only for the STAP line, there is no word alignment for the level one lines,
+[50:07.000 --> 50:18.000]  And as a function of the MPA ID and the STAP line, so here is only for the STAP line, there is no word alignment for the level one lines,
 [50:18.000 --> 50:26.000]  because it's not needed, there is a header and the SSC uses the header to identify the correct packet.
 [50:27.000 --> 50:36.000]  We store the phase. Unfortunately, the plot doesn't look really impressive because phase zero is also a possible value,
 [50:36.000 --> 50:47.000]  and if you do a set of in content zero to a plot, it just looks empty, but phase 15 would be a problem.
@@ -377,7 +389,7 @@ Detected language: English
 [51:08.000 --> 51:09.000]  Yeah, yeah, we can.
 [51:09.000 --> 51:13.000]  Okay, thank you.
 [51:13.000 --> 51:23.000]  Okay, at this point, we have everything set up to work properly, so few extra comments.
-[51:23.000 --> 51:32.000]  We, at the moment, we don't do an alignment between the SSN NPA because there is just a physical two phase possibility,
+[51:23.000 --> 51:32.000]  We, at the moment, we don't do an alignment between the SSN MPA because there is just a physical two phase possibility,
 [51:32.000 --> 51:37.000]  and so far we found that one of the two phases always works.
 [51:37.000 --> 51:43.000]  So we are not doing any extra alignment between these two.
 [51:43.000 --> 51:52.000]  Of course, if in a future we start seeing problems, we are going to introduce something, but it doesn't look like to be the case at the moment.
@@ -393,12 +405,12 @@ Detected language: English
 [53:22.000 --> 53:32.000]  For the time being, we still don't have it, we need to understand better what is the reason, it might be related or it might be this, and we'll just not understand what is going on.
 [53:32.000 --> 53:36.000]  Okay.
 [53:36.000 --> 53:58.000]  So going back to what I was saying, so if you just skip these extra two steps that I just mentioned, in theory we have everything that is needed to completely verify the communication between the module and the FPGA.
-[53:58.000 --> 54:08.000]  So the next step is to verify the communication between the CIC and in this case the NPA.
-[54:08.000 --> 54:19.000]  So we are checking this line. So what we're doing is that we're setting the NPA in order to send a specific pattern, and we reconstruct the pattern at the level of FPGA.
-[54:19.000 --> 54:27.000]  We know that between CIC and FPGVT was already stable, and so we're now going all the way back to the NPA.
+[53:58.000 --> 54:08.000]  So the next step is to verify the communication between the CIC and in this case the MPA.
+[54:08.000 --> 54:19.000]  So we are checking this line. So what we're doing is that we're setting the MPA in order to send a specific pattern, and we reconstruct the pattern at the level of FPGA.
+[54:19.000 --> 54:27.000]  We know that between CIC and LpGBT was already stable, and so we're now going all the way back to the MPA.
 [54:27.000 --> 54:44.000]  So the results that we stored are at the level of the hybrid, and since it's a pattern matching, we do again, we still have two plots.
 [54:44.000 --> 54:49.000]  One that contains the number of test bits, and one that contains the error rate.
-[54:49.000 --> 55:02.000]  So both the two plots are shown as a function on the NPA hybrid in the x-axis, and on the y-axis we show separately the level one line and the stub lines.
+[54:49.000 --> 55:02.000]  So both the two plots are shown as a function on the MPA hybrid in the x-axis, and on the y-axis we show separately the level one line and the stub lines.
 [55:02.000 --> 55:16.000]  So here's just a comment. So at this point, we don't really have the possibility to understand if one of these lines, which one of these lines is the cause of an issue, if you see an issue.
 [55:16.000 --> 55:31.000]  And the reason is that we require quite a lengthy procedure in order to distinguish them, and this is done actually at the level of the electric chain validation.
 [55:31.000 --> 55:36.000]  So you will see actually later how we can distinguish where the problem is coming from.
@@ -636,7 +648,7 @@ Detected language: English
 [01:19:45.000 --> 01:19:50.000]  And the reason is that the rightmost chip, in reality, does not really exist.
 [01:19:50.000 --> 01:19:53.000]  It just duplicated.
 [01:19:53.000 --> 01:20:01.000]  And this is because for simplicity, they need to match the number of strips.
-[01:20:01.000 --> 01:20:12.000]  But in reality, the number of real pixels that you have on the NPA, the real number of columns that you have is not 120, but it's only 118.
+[01:20:01.000 --> 01:20:12.000]  But in reality, the number of real pixels that you have on the MPA, the real number of columns that you have is not 120, but it's only 118.
 [01:20:12.000 --> 01:20:15.000]  But at the edge, every chip is duplicated.
 [01:20:15.000 --> 01:20:25.000]  So in total, you will see it's from 120 pixels, even if in reality there are less than 120 columns.
 [01:20:25.000 --> 01:20:32.000]  Okay, so these are the plots at the level of the chip.
@@ -650,13 +662,13 @@ Detected language: English
 [01:21:22.000 --> 01:21:25.000]  So just pick up, don't worry about interrupting.
 [01:21:25.000 --> 01:21:27.000]  Okay, no, I just raised my hand.
 [01:21:27.000 --> 01:21:31.000]  So just a technical question.
-[01:21:31.000 --> 01:21:38.000]  How is the conversion between channels and row and columns in the NPA?
+[01:21:31.000 --> 01:21:38.000]  How is the conversion between channels and row and columns in the MPA?
 [01:21:38.000 --> 01:21:39.000]  Yes.
 [01:21:39.000 --> 01:21:47.000]  So I did this very high technical design, high level technical design.
 [01:21:47.000 --> 01:21:53.000]  So I indicate in the position, so these are, I forgot to mention, this is the top view.
 [01:21:53.000 --> 01:22:03.000]  So you have the arrow H, the POH left and right, and the position of the 00 point on the left side is over here.
 [01:22:03.000 --> 01:22:15.000]  And therefore this is a 0 960 and is inverted into the right high because they are specular.
-[01:22:15.000 --> 01:22:21.000]  Yeah, but then there are some plots, which you have on the NPA, on the NPA folder.
+[01:22:15.000 --> 01:22:21.000]  Yeah, but then there are some plots, which you have on the MPA, on the MPA folder.
 [01:22:21.000 --> 01:22:27.000]  You have plots where there is channels and they goes up to all the pixel that you have.
 [01:22:27.000 --> 01:22:34.000]  And for example, if you add the plots, the 2D plots, there are column and rows.
 [01:22:34.000 --> 01:22:43.000]  So you just, it's just row times plus the columns or vice versa.
@@ -785,7 +797,7 @@ Detected language: English
 [01:35:33.000 --> 01:35:42.000]  So just to give you the idea, in the West, we said the pressure at the pedestal, such that the average occupancy is 50%.
 [01:35:42.000 --> 01:35:54.000]  And we can do that because the 2S and the 2S sends data unsparcified.
 [01:35:54.000 --> 01:35:57.000]  So we get one bit for every strip.
-[01:35:57.000 --> 01:36:01.000]  And then the CAC can just bypass the specification.
+[01:35:57.000 --> 01:36:01.000]  And then the CIC can just bypass the specification.
 [01:36:01.000 --> 01:36:06.000]  And so you can get the occupancy up to 100%.
 [01:36:06.000 --> 01:36:09.000]  So all the strips hit.
 [01:36:09.000 --> 01:36:13.000]  In the PS, there is not such an option.
@@ -849,7 +861,7 @@ Detected language: English
 [01:41:59.000 --> 01:42:01.000]  So you see the number of hits.
 [01:42:01.000 --> 01:42:09.000]  So the distribution of the events given a certain number of hits, you see that we cannot do something great.
 [01:42:09.000 --> 01:42:22.000]  The occupancy is quite low by construction, both for the occupancy driven by even more for the three sigma because the three sigma goes down quite even faster than the occupancy by construction.
-[01:42:22.000 --> 01:42:27.000]  And the same is for the NPA.
+[01:42:22.000 --> 01:42:27.000]  And the same is for the MPA.
 [01:42:27.000 --> 01:42:29.000]  It's not the same idea.
 [01:42:29.000 --> 01:42:35.000]  You see that here we start to see a little bit more tail to the left and right.
 [01:42:35.000 --> 01:42:39.000]  And the three sigma and which requires that it look like that.
@@ -857,13 +869,13 @@ Detected language: English
 [01:42:43.000 --> 01:42:45.000]  Yeah, sorry about that.
 [01:42:45.000 --> 01:42:50.000]  It's good to go to this plot because I didn't notice that.
 [01:42:50.000 --> 01:43:02.000]  And then we have also a few information at the level of the hybrid that gives a little bit more information about the correlation.
-[01:43:02.000 --> 01:43:07.000]  Okay, so we have correlation between NPA and SSA.
-[01:43:07.000 --> 01:43:14.000]  So number of hits into the SSA and number of hits into the NPA.
+[01:43:02.000 --> 01:43:07.000]  Okay, so we have correlation between MPA and SSA.
+[01:43:07.000 --> 01:43:14.000]  So number of hits into the SSA and number of hits into the MPA.
 [01:43:14.000 --> 01:43:20.000]  Keep forgetting to do this.
 [01:43:20.000 --> 01:43:23.000]  Okay, let me zoom in a little more.
-[01:43:23.000 --> 01:43:29.000]  And you get a number of events are given a certain number of hits on NPA and SSA.
+[01:43:23.000 --> 01:43:29.000]  And you get a number of events are given a certain number of hits on MPA and SSA.
 [01:43:29.000 --> 01:43:33.000]  So you get this distribution.
-[01:43:33.000 --> 01:43:37.000]  And you have one for every SSA to NPA couple.
+[01:43:33.000 --> 01:43:37.000]  And you have one for every SSA to MPA couple.
 [01:43:37.000 --> 01:43:45.000]  Then we have these that is at the level of the overall hybrid.
 [01:43:45.000 --> 01:43:52.000]  So let's keep to the three sigma by mistake.
 [01:43:52.000 --> 01:43:53.000]  Is this one?
@@ -889,17 +901,17 @@ Detected language: English
 [01:46:49.000 --> 01:47:04.000]  But then these alignment has only one possible phase that to choose from these will be potentially bad because once you install into the detector it might be that the conditions that it changes and then the phase is not anymore available.
 [01:47:04.000 --> 01:47:10.000]  So the goal of the electric chain validation is to check how wide are these phases.
 [01:47:10.000 --> 01:47:20.000]  So we're going to start from so it is a little bit more scramble with respect to the previous one is simply to avoid any extra alignment steps.
-[01:47:21.000 --> 01:47:29.000]  So the order is that we start from the electric chain validation between the SSA and the NPA.
+[01:47:21.000 --> 01:47:29.000]  So the order is that we start from the electric chain validation between the SSA and the MPA.
 [01:47:29.000 --> 01:47:47.000]  So basically, we are checking these the quality of these lines and the overall idea for this plot is basically always sort of a very five step where we inject a pattern and we see how well the patterns are constructed.
 [01:47:47.000 --> 01:47:51.000]  But on top of that, we do a scan of phases.
 [01:47:51.000 --> 01:47:54.000]  So we force the phase manually.
-[01:47:54.000 --> 01:47:59.000]  We don't let the chip, the CIC, the NPA, whatever, choose.
+[01:47:54.000 --> 01:47:59.000]  We don't let the chip, the CIC, the MPA, whatever, choose.
 [01:47:59.000 --> 01:48:08.000]  We force it and we also do the test outside the area in which the chip can work.
-[01:48:09.000 --> 01:48:20.000]  So starting from the SSA to NPA, these plots are stored into the into the hybrid level.
+[01:48:09.000 --> 01:48:20.000]  So starting from the SSA to MPA, these plots are stored into the into the hybrid level.
 [01:48:20.000 --> 01:48:30.000]  So since all these are pattern matching, we have two plots, one with the error rate and one with the test base.
-[01:48:30.000 --> 01:48:34.000]  You see that we have a few SSA to NPA.
+[01:48:30.000 --> 01:48:34.000]  You see that we have a few SSA to MPA.
 [01:48:34.000 --> 01:48:48.000]  And the reason is that we also scan the current, the drives these lines over here that is set by a register into the SSA.
-[01:48:48.000 --> 01:48:58.000]  So we can check with different amount of current that we are injecting this line with the range that we see in NPA because you can imagine that might change a little bit.
+[01:48:48.000 --> 01:48:58.000]  So we can check with different amount of current that we are injecting this line with the range that we see in MPA because you can imagine that might change a little bit.
 [01:48:58.000 --> 01:49:03.000]  So I'm going to open, for example, this one.
 [01:49:03.000 --> 01:49:05.000]  Okay.
 [01:49:05.000 --> 01:49:07.000]  Okay, forgetting, sorry.
@@ -909,7 +921,7 @@ Detected language: English
 [01:49:17.000 --> 01:49:23.000]  So first of all.
 [01:49:23.000 --> 01:49:29.000]  So bear with me because I've been more complicated.
 [01:49:29.000 --> 01:49:34.000]  With PS, you're going to hear it is a bit more complicated every time.
-[01:49:34.000 --> 01:49:49.000]  So in between the SSA and NPA, we don't really have a real phase or actually just two possible phases that sets the edge of the clock on which the NPA is sampling the data coming from the SSA.
+[01:49:34.000 --> 01:49:49.000]  So in between the SSA and MPA, we don't really have a real phase or actually just two possible phases that sets the edge of the clock on which the MPA is sampling the data coming from the SSA.
 [01:49:49.000 --> 01:49:53.000]  So basically, you just have a phase of 50% that you can change.
 [01:49:53.000 --> 01:49:58.000]  Now, what does it mean changing the phase?
 [01:49:58.000 --> 01:50:08.000]  It potentially also means that you can select the other edge of the clock.
@@ -988,7 +1000,7 @@ Detected language: English
 [01:58:16.000 --> 01:58:26.000]  And I guess because the two SSA are so close that it's quite foggy in the communication.
 [01:58:26.000 --> 01:58:36.000]  Okay, so these allow you to check between two SSAs, the lateral communication.
 [01:58:36.000 --> 01:58:38.000]  Okay.
-[01:58:38.000 --> 01:58:44.000]  Then moving onwards, so the CAC to help you with the electric chain validation.
+[01:58:38.000 --> 01:58:44.000]  Then moving onwards, so the CIC to help you with the electric chain validation.
 [01:58:44.000 --> 01:58:48.000]  This one is was developed a little bit.
 [01:58:48.000 --> 01:58:51.000]  Sometimes advanced with respect to the other.
 [01:58:51.000 --> 01:58:57.000]  So just for you, we are checking this communication here.
@@ -999,12 +1011,12 @@ Detected language: English
 [01:59:24.000 --> 01:59:27.000]  So the number test a bit and error rate.
 [01:59:27.000 --> 01:59:33.000]  And here we change a few things at the same time.
 [01:59:33.000 --> 01:59:40.000]  So we change the, as for before, we change the amount of current used to drive the lines.
-[01:59:40.000 --> 01:59:43.000]  In this case is the CAC that is there in the line.
+[01:59:40.000 --> 01:59:43.000]  In this case is the CIC that is there in the line.
 [01:59:43.000 --> 01:59:45.000]  We can change this.
 [01:59:45.000 --> 01:59:48.000]  Then we also change other two parameters.
-[01:59:48.000 --> 01:59:59.000]  The clock polarity because it's not shown here, but that PgT provides the clock to the hybrid in particular also to the CAC.
+[01:59:48.000 --> 01:59:59.000]  The clock polarity because it's not shown here, but that PgT provides the clock to the hybrid in particular also to the CIC.
 [01:59:59.000 --> 02:00:11.000]  And it is extracted from the, from the, it's a record from the input optical line that is received from the at C7.
-[02:00:11.000 --> 02:00:20.000]  And so by changing the clock polarity, you basically change the working point of the CAC and therefore the working, the phases in which this work.
+[02:00:11.000 --> 02:00:20.000]  And so by changing the clock polarity, you basically change the working point of the CIC and therefore the working, the phases in which this work.
 [02:00:20.000 --> 02:00:28.000]  Also, you can set the current that is used to drive the, these clock line.
 [02:00:28.000 --> 02:00:36.000]  I think these will be slimmed a little bit because we're scanning a bit too much for what we saw.
 [02:00:36.000 --> 02:00:42.000]  But since these are the first modules, we want just to make sure that we have the under control.
@@ -1013,7 +1025,7 @@ Detected language: English
 [02:00:47.000 --> 02:00:53.000]  Hopefully it's going to be a good one.
 [02:00:54.000 --> 02:00:57.000]  So the idea is already the same.
 [02:00:57.000 --> 02:01:00.000]  Number of test bits and error rate.
-[02:01:00.000 --> 02:01:09.000]  So number of test bits here are shown as a function of the LPGVT phase that we're applying the PgVT to sample incoming data.
+[02:01:00.000 --> 02:01:09.000]  So number of test bits here are shown as a function of the LpGBT phase that we're applying the PgVT to sample incoming data.
 [02:01:09.000 --> 02:01:18.000]  And these are the seven lines, one for the level one and six for the stops, still these lines.
 [02:01:19.000 --> 02:01:23.000]  As usual, stops, stops matching is done into the firmware.
 [02:01:23.000 --> 02:01:29.000]  So we can afford to test more bits with respect to the level ones, which are still at 10 to the five.
@@ -1023,7 +1035,7 @@ Detected language: English
 [02:01:52.000 --> 02:02:07.000]  So when you set your clock edge to sample in this area, you don't get a good identification of the bits because the signal is changing at this point.
 [02:02:07.000 --> 02:02:09.000]  So you cannot sample here.
 [02:02:09.000 --> 02:02:13.000]  But the most important part is that you have plenty of phases that you can choose.
-[02:02:13.000 --> 02:02:20.000]  And the LPGVT is you're not choosing one in between, but it could have chosen many more than that.
+[02:02:13.000 --> 02:02:20.000]  And the LpGBT is you're not choosing one in between, but it could have chosen many more than that.
 [02:02:20.000 --> 02:02:23.000]  So this is what will look like a good one.
 [02:02:23.000 --> 02:02:29.000]  A bad one, it will mean that you have a small phase range or no phase range at all.
 [02:02:29.000 --> 02:02:32.000]  No phase range, you will see it earlier.
@@ -1032,7 +1044,7 @@ Detected language: English
 [02:02:40.000 --> 02:02:45.000]  I think you can try to open an inverter clock.
 [02:02:45.000 --> 02:02:53.000]  I think this should move things slightly around and not test a bit this one.
 [02:02:53.000 --> 02:03:07.000]  You see that things move between the two because you're changing the clock that the CIC is using and therefore is changing the edge that is needed to sample this.
-[02:03:07.000 --> 02:03:11.000]  They come in the time to the LPGVT.
+[02:03:07.000 --> 02:03:11.000]  They come in the time to the LpGBT.
 [02:03:11.000 --> 02:03:13.000]  Okay.
 [02:03:13.000 --> 02:03:20.000]  Then, okay, we go into even more complex territory.
 [02:03:21.000 --> 02:03:33.000]  So, you might remember before I was telling you, okay, at this point in time, there is no really way to understand if you have a problem on the stub pattern matching.
@@ -1040,7 +1052,7 @@ Detected language: English
 [02:03:39.000 --> 02:03:44.000]  Nope.
 [02:03:44.000 --> 02:04:00.000]  So, I was telling you here, we just have one bit, a one bin that tells you there were errors in the stub line, but we cannot really distinguish at this point which of the stub line is causing the issue.
 [02:04:00.000 --> 02:04:07.000]  The reason for that is that in order to do that, we need to set the CIC into a bypass mode.
-[02:04:07.000 --> 02:04:26.000]  There are a few problems. The first one is that the one is set to the CIC in bypass mode, the phase of these lines changes, and you really need, you need to realign the LPGVT, but you cannot use the automatic alignment because you are not providing the pattern that LPGVT expects, so you need to do a manual scan.
+[02:04:07.000 --> 02:04:26.000]  There are a few problems. The first one is that the one is set to the CIC in bypass mode, the phase of these lines changes, and you really need, you need to realign the LpGBT, but you cannot use the automatic alignment because you are not providing the pattern that LpGBT expects, so you need to do a manual scan.
 [02:04:26.000 --> 02:04:30.000]  That is what we're going to cover into this step.
 [02:04:30.000 --> 02:04:56.000]  And then the other complexity is that the CIC receives an input 48 lines times 8 chip, so 48 lines, but it can output only maximum 7, so you need to do basically few lines at a time.
 [02:04:56.000 --> 02:05:15.000]  And by construction, you can do just four lines at a time because the lines are organized into what are called five-port, and when you bypass them, you can bypass one five-port at a time, and these will be sent out to these lines over here.
@@ -1049,11 +1061,11 @@ Detected language: English
 [02:05:56.000 --> 02:06:18.000]  the front end ID used by the CIC does not match the I-square CID of the NTAs, that are the ones that we use in PH2SF, and the mapping between the front end ID and the CIC, and the mapping on the front end ID used by the I-square CID and the four by PH2SF is shown here,
 [02:06:18.000 --> 02:06:24.000]  and just to be very complicated, most of the thing is different between left and right of this map.
 [02:06:25.000 --> 02:06:44.000]  Well, okay, you don't need to know all of that, because the plot that you're going to see already are going to the mapping that you usually use in your XML file and the I-square C map, which are the numbers that you see on the hybrid when you look at the module under the microscope.
-[02:06:44.000 --> 02:07:00.000]  Okay, so all of these, so we need to loop over all these five-ports, after we set the NPA to inject a certain pattern, we loop over all of them, and we scan the LPGVT phase in order to find a working point.
+[02:06:44.000 --> 02:07:00.000]  Okay, so all of these, so we need to loop over all these five-ports, after we set the MPA to inject a certain pattern, we loop over all of them, and we scan the LpGBT phase in order to find a working point.
 [02:07:01.000 --> 02:07:06.000]  So all these plots are stored over here.
-[02:07:07.000 --> 02:07:29.000]  They are in this LPGVT for CIC bypass, as usual, bit error rate and test bits, and also we store the best phase, which is the one that we identified with, by looking at the phase range in which you get known.
+[02:07:07.000 --> 02:07:29.000]  They are in this LpGBT for CIC bypass, as usual, bit error rate and test bits, and also we store the best phase, which is the one that we identified with, by looking at the phase range in which you get known.
 [02:07:31.000 --> 02:07:33.000]  So let me try to open all of them.
-[02:07:34.000 --> 02:07:42.000]  So as usual, number of test bits as a function of the phase that we set on the LPGVT and the lines.
+[02:07:34.000 --> 02:07:42.000]  So as usual, number of test bits as a function of the phase that we set on the LpGBT and the lines.
 [02:07:42.000 --> 02:07:49.000]  So here the lines are going to always be this, because these are the ones that the lines that are used when you are setting the bypass mode.
 [02:07:50.000 --> 02:08:03.000]  And then when you see the error rate, you are going to see there are points in which you have no errors, and we try to set in the center of the largest area with no errors at all.
 [02:08:04.000 --> 02:08:11.000]  So these plots, and then we'll get the best phase from this.
@@ -1062,15 +1074,15 @@ Detected language: English
 [02:08:27.000 --> 02:08:28.000]  Okay.
 [02:08:29.000 --> 02:08:47.000]  So at this point, we identified the best phase given which phyport is sent is bypassed. If I open, for example, another phyport, you're going to see that the phase are different.
 [02:08:47.000 --> 02:08:54.000]  So these, unfortunately, need to be repeated for every phase phyport, so that's why I assume it.
-[02:08:54.000 --> 02:09:12.000]  But these points are once we identify those phases, then you can safely run the electricity invalidation between the MPAs, in this case, and the CAC, by setting the CAC bypass mode and injecting a part of an MPA.
+[02:08:54.000 --> 02:09:12.000]  But these points are once we identify those phases, then you can safely run the electricity invalidation between the MPAs, in this case, and the CIC, by setting the CIC bypass mode and injecting a part of an MPA.
 [02:09:12.000 --> 02:09:18.000]  So we know that this pattern will go through the LGBT, we will have the core phase, and we're going to see it over here.
-[02:09:18.000 --> 02:09:27.000]  And then we are able to get the plot from the electricity invalidation between the MPA and the CAC.
+[02:09:18.000 --> 02:09:27.000]  And then we are able to get the plot from the electricity invalidation between the MPA and the CIC.
 [02:09:27.000 --> 02:09:34.000]  Also in this case, we can set the current that drives these lines by setting a register into the MPA.
 [02:09:34.000 --> 02:09:37.000]  We do three different settings.
 [02:09:37.000 --> 02:09:50.000]  And guess what? We have an error rate and a number of testing bits.
 [02:09:50.000 --> 02:09:53.000]  So this one and number of test bits in particular.
 [02:09:53.000 --> 02:09:58.000]  So on the x-axis of the phase, on the y-axis, you have the various lines.
-[02:09:58.000 --> 02:10:06.000]  You see there are two empty columns because these two phases don't work into the CAC.
+[02:09:58.000 --> 02:10:06.000]  You see there are two empty columns because these two phases don't work into the CIC.
 [02:10:06.000 --> 02:10:12.000]  And for the bit error rate, this honestly was quite a good plot.
 [02:10:12.000 --> 02:10:26.000]  It's not always this good, but you see that for every of these lines, you get a very wide area in which any one of these phases will work because it doesn't cause any.
 [02:10:26.000 --> 02:10:32.000]  And this concludes the electric chain validation.
@@ -1080,7 +1092,7 @@ Detected language: English
 [02:11:01.000 --> 02:11:14.000]  I'm just going to move forward, but if I have any questions, just ask and stop me anytime.
 [02:11:14.000 --> 02:11:19.000]  Okay, so we're almost at the end.
 [02:11:19.000 --> 02:11:21.000]  Bit error rate test.
-[02:11:21.000 --> 02:11:34.000]  So this uses a functionality of the LPGVT in which we are able to inject pseudo random pattern that we refer to as PRBS.
+[02:11:21.000 --> 02:11:34.000]  So this uses a functionality of the LpGBT in which we are able to inject pseudo random pattern that we refer to as PRBS.
 [02:11:34.000 --> 02:11:44.000]  And these particular tests is done by pretending that the PRBS is generated by these lines.
 [02:11:44.000 --> 02:11:52.000]  And then these send all the way back to the FPGA, split back into the separated components of the line.
 [02:11:52.000 --> 02:12:02.000]  And then we check if the generated patterns matches the received pattern.
@@ -1094,9 +1106,9 @@ Detected language: English
 [02:12:56.000 --> 02:13:03.000]  Okay, wrong knot.
 [02:13:03.000 --> 02:13:12.000]  So these are stored at the level of the optical group.
 [02:13:12.000 --> 02:13:17.000]  And we store a few plots.
-[02:13:17.000 --> 02:13:33.000]  So the first one that we do is a face scan because these pseudo random pattern are generated into the LPGVT using a cloud source.
-[02:13:33.000 --> 02:13:43.000]  But the LPGVT still need to properly decode this pattern in order to shoot them out correctly.
-[02:13:43.000 --> 02:13:52.000]  And therefore, you have the possibility to change the clock phases such that the LPGVT quickly samples those data.
+[02:13:17.000 --> 02:13:33.000]  So the first one that we do is a face scan because these pseudo random pattern are generated into the LpGBT using a cloud source.
+[02:13:33.000 --> 02:13:43.000]  But the LpGBT still need to properly decode this pattern in order to shoot them out correctly.
+[02:13:43.000 --> 02:13:52.000]  And therefore, you have the possibility to change the clock phases such that the LpGBT quickly samples those data.
 [02:13:52.000 --> 02:14:04.000]  And therefore, the first step is to do this clock face scan in which for each one of these lines, we identify the working point of the clock.
 [02:14:05.000 --> 02:14:10.000]  Basically, we need to find a wide area in which things are working fine.
 [02:14:10.000 --> 02:14:13.000]  And the best phase is then stored over here.
@@ -1220,9 +1232,9 @@ Detected language: English
 [02:28:06.000 --> 02:28:16.000]  So I tried to fix it a little bit better and it works as we've seen for the sensor temperature before the VTRX is still not working fine.
 [02:28:16.000 --> 02:28:21.000]  So that's why you see this ring, but we're addressing that.
 [02:28:22.000 --> 02:28:32.000]  And finally, with the PS, we also monitor the LPG, the 2.5 volts.
-[02:28:32.000 --> 02:28:39.000]  That is the one that is applied to the LPGVT server to the VTRX that requires 2.5 volts.
+[02:28:32.000 --> 02:28:39.000]  That is the one that is applied to the LpGBT server to the VTRX that requires 2.5 volts.
 [02:28:39.000 --> 02:28:43.000]  So here we can monitor the voltage.
-[02:28:43.000 --> 02:28:50.000]  Okay, so these are the information that we store at the level of the LPGVT.
+[02:28:43.000 --> 02:28:50.000]  Okay, so these are the information that we store at the level of the LpGBT.
 [02:28:50.000 --> 02:28:55.000]  And then the next information that we can store for the SSN and PA.
 [02:28:55.000 --> 02:29:10.000]  So we have two voltages, the analog voltage that is around 1.2, 1.3.
 [02:29:10.000 --> 02:29:18.000]  And as well as the digital voltage that it should be around 1 is slightly higher than 1.
@@ -1237,7 +1249,7 @@ Detected language: English
 [02:29:56.000 --> 02:30:04.000]  But the absolute value is not.
 [02:30:04.000 --> 02:30:13.000]  So this was probably higher than what we're showing here because we were running long calibration without cooling.
 [02:30:13.000 --> 02:30:22.000]  So these don't use them as absolute values until we get the real calibration.
-[02:30:22.000 --> 02:30:25.000]  And for the NPA is the same.
+[02:30:22.000 --> 02:30:25.000]  And for the MPA is the same.
 [02:30:25.000 --> 02:30:34.000]  We store the two measurements of the digital and analog current voltage as well as the temperature.
 [02:30:34.000 --> 02:30:46.000]  And as for the SSA, also this is not really accurate in terms of absolute value.
 [02:30:46.000 --> 02:30:59.000]  And those are all the parameters that were currently monitored during all the measurements that we do with the PH2SEL.
