@@ -241,12 +241,12 @@ If the error rate is higher than that, check the connections between the hybrids
 
 Now, we are sure that the communication between the CIC and the board works fine.
 
-#FIXME update for MPA
-##### OTCICphaseAlignment - Hybrid
-Now, we can begin aligning the CBC with the CIC.  
-This step is conceptually similar to the alignment between the CIC and the LpGBT, but it’s a bit more complicated. The goal is to synchronize all the lines between CIC and CBC.
 
-Since the CBC cannot generate an arbitrary test pattern, we inject a few strips to produce a recognizable pattern on the data lines.  
+##### OTCICphaseAlignment - Hybrid
+Now, we can begin aligning the MPA with the CIC.  
+This step is conceptually similar to the alignment between the CIC and the LpGBT, but it’s a bit more complicated. The goal is to synchronize all the lines between CIC and MPA.
+
+The MPA is set in a state that is sending a specific pattern to the CIC.
 The CIC then uses this pattern to adjust its phase and achieve proper alignment.
 
 The phase alignment logic in the CIC is a simplified version of that used in the LpGBT, since the same block was copied into the CIC design.  
@@ -256,24 +256,23 @@ The process is therefore similar:
 
 To check stability, the CIC is asked to align 100 times.  
 This ensures that the alignment procedure is reliable and repeatable; if the result is consistent across all runs, the alignment is stable.  
-At the end of each alignment, we can query whether the procedure succeeded or not.
+At the end of each alignment, we can query whether the procedure suCICeeded or not.
 
 The resulting plots below resemble those used for the CIC-LpGBT phase alignment and are produced at the hybrid level.
 
 We can plot the efficiency of alignment.  
-Each vertical bin represents different elements: one line for the Level-1, 5 lines for the stubs. On the X-Axis we have one column for every CBC.  
+Each vertical bin represents different elements: one line for the Level-1, 5 lines for the stubs. On the X-Axis we have one column for every MPA.  
 On the z-axis, we display the efficiency, ranging from 0 to 1.  
 If there are any issues, the efficiency will appear noticeably below 1.  
 
-![CBCtoCIC_LockingEfficiency_Hybrid](../images/OTtesting/2S/CBCtoCIC_LockingEfficiency_Hybrid.png)
+![MPAtoCIC_LockingEfficiency_Hybrid](../images/OTtesting/PS/MPAtoCIC_LockingEfficiency_Hybrid.png)
 
 
 We also plot, for each line, the phase and the frequency at which each phase was chosen.  
-If you zoom in on the X-axis, you can see, for every CBC, the stub lines and the Level-1 lines all in the same plot. We combined them into a single plot to avoid creating too many separate plots.  
 
 As for the LpGBT, you will often see cases where two phases are essentially equivalent. In these cases, we choose the phase with the highest probability.
 
-![CBCtoCIC_InputPhaseDistribution_Hybrid](../images/OTtesting/2S/CBCtoCIC_InputPhaseDistribution_Hybrid.png)
+![MPAtoCIC_InputPhaseDistribution_Hybrid](../images/OTtesting/PS/MPAtoCIC_InputPhaseDistribution_Hybrid.png)
 
 This phase scan above is performed over two clock cycles.  
 For example, if one phase is around 5, the equivalent phase on the next cycle would be 5 + 8 = 13.  
@@ -283,22 +282,22 @@ Looking at five phases individually might be misleading, since some of them are 
 
 The error code is represented by the number 15.  
 If a value of 15 appears, it means the alignment failed.  
-However, we rarely see this because the hybrids and modules we receive are generally good, and the CBCs within the same hybrid have already been tested.  
+However, we rarely see this because the hybrids and modules we receive are generally good, and the MPAs within the same hybrid have already been tested.  
 
 If an issue does occur, the lock efficiency should reflect it — for example, a 15 in the phase scan would likely correspond to a low or failing lock efficiency.
 
 Then we show the best input phase in a 2D plot.  
-On the y-axis, we have the different lines, and on the x-axis, the different CBCs.  
-The z-axis represents the best phase — basically the most probable phase for each line and CBC combination.
+On the y-axis, we have the different lines, and on the x-axis, the different MPAs.  
+The z-axis represents the best phase — basically the most probable phase for each line and MPA combination.
 
-![CBCtoCIC_BestInputPhases_Hybrid](../images/OTtesting/2S/CBCtoCIC_BestInputPhases_Hybrid.png)
+![MPAtoCIC_BestInputPhases_Hybrid](../images/OTtesting/PS/MPAtoCIC_BestInputPhases_Hybrid.png)
 
-
+#FIXME update for MPA
 ##### OTCICwordAlignment - Hybrid
-The next step to be addressed is the CBC's processing of stubs. The goal is to align all lines with the 40MHz clock. 
+The next step to be addressed is the MPA's processing of stubs. The goal is to align all lines with the 40MHz clock. 
 
-Now, the CIC can correctly identify ones and zeros coming from the CBC, but the CIC also needs to process the stub information.  
-Each CBC sends stubs in a specific format: three lines for the stub address, one and a half lines for the bending, and one line for the error code [(See slide 8)](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf).  
+Now, the CIC can correctly identify ones and zeros coming from the MPA, but the CIC also needs to process the stub information.  
+Each MPA sends stubs in a specific format, with the information of the number of stubs, their address and bending divided on multiple lines [(See slide 7)](https://indico.cern.ch/event/1540158/contributions/6481542/attachments/3057153/5408250/FRavera_2025_04_28_PSschool.pdf).  
 
 The CIC must understand these bits and decide which stubs to actually send, because it cannot send all stubs at once. Each CIC can handle only a limited number of stubs.  
 
@@ -349,38 +348,17 @@ An empty plot shows that the alignment fails. This could be due to a problem on 
 [44:48.000 --> 45:01.000]  But in general, from this plot, you expect two bits, two bins filled, only one for each of the row, and they should be all the same stock package delay.
 #FIXME END OTalignStubPackage
 
-[45:01.000 --> 45:15.000]  Okay, so at this point, we know that we proper align all the information that are coming out from the CC all the way to the board.
-[45:15.000 --> 45:28.000]  Now, the next step is to align the output of the MPA to the CC.
-[45:28.000 --> 45:40.000]  So the CC need to sample the MPA output so we can set a phase in order to properly sample the output such that the CC can understand what is received.
-[45:40.000 --> 45:56.000]  To do that, the CC implements basically the same idea of the LpGBT so as an automatic phase alignment procedure that indicates the best phase that is in the center of the arc.
-[45:56.000 --> 46:04.000]  So the plots that I'm going to show you are very similar to the same to the plots I was showing you for the LpGBT.
-[46:04.000 --> 46:10.000]  And since these are a hybrid level procedure, we just already level the hybrid.
-[46:10.000 --> 46:28.000]  So these are the plots.
-[46:28.000 --> 46:42.000]  So as for the LpGBT, we repeat the alignment, I think was on the stage 100 times, and then at every iteration, we can ask the CC if the alignment succeeded.
-[46:42.000 --> 46:58.000]  And this is plot into this plot where we show the locking efficiency of the CC out of the 100 test as a function of the MPA AD and as a function of the lines.
-[46:58.000 --> 47:05.000]  So we have one level one lines and five step lines that are these one over here.
-[47:05.000 --> 47:13.000]  In this case, for what I saw, again, statistic is limited, but if the locking efficiency works, it always works.
-[47:13.000 --> 47:21.000]  So you should expect to have a content that is always 100% for these bits.
-[47:21.000 --> 47:32.000]  Then as for the LpGBT, since we repeat the scan multiple times, we do forever this line of distribution of the phase that was identified, the best phase.
-[47:32.000 --> 47:35.000]  If I zoom in, you can clearly see all of them.
-[47:35.000 --> 47:40.000]  So this is for the first MPA, and then we start for the second MPA.
-[47:40.000 --> 47:45.000]  And the idea is the same that we have for the LpGBT.
-[47:45.000 --> 47:50.000]  So we choose the one that has the highest frequency to be our best phase.
-[47:50.000 --> 48:03.000]  And to show which was the phase that was actually selected here is plotted again as a function of the MPA and the step line, the best phase that was selected.
-[48:03.000 --> 48:11.000]  In this case, I don't think you can really understand too much what is if there is a failure.
-[48:11.000 --> 48:14.000]  So this is just mainly for reference.
-[48:14.000 --> 48:20.000]  As for the LpGBT, locking efficiency, mine became some issues.
-[48:20.000 --> 48:38.000]  And as well as phase 15 is a error code or a long list of possible phases, which means that the SSC was just picking up a random phase.
-[48:38.000 --> 48:50.000]  Okay, so now we recognize the level of the SSC, the correct sampling phase, in order to identify the...
+
+ in order to identify the...
 [48:50.000 --> 48:55.000]  to properly reconstruct basically bit one from bit zeroes.
 [48:55.000 --> 49:04.000]  Then there is an extra step needed here because the SSC is not just taking information from MPA and send them out, it will elaborate them.
-[49:04.000 --> 49:13.000]  And in particular for the STAPs, we need to properly identify the STAP packets.
-[49:13.000 --> 49:28.000]  And the STAP packet that is sent by the MPA is something that looks like that, in which we have up to five STAPs storing two voltage one of 8 bits.
+[49:04.000 --> 49:13.000]  And in particular for the stubs, we need to properly identify the stub packets.
+[49:13.000 --> 49:28.000]  And the stub packet that is sent by the MPA is something that looks like that, in which we have up to five stubs storing two voltage one of 8 bits.
 [49:28.000 --> 49:36.000]  Also in this case, we need to find the first of the 8 bits, and therefore we do again another word alignment.
 [49:36.000 --> 49:45.000]  For this case, we send MPA in order to inject a specific pattern, and then we tell to the LpGBT that pattern.
 [49:45.000 --> 49:57.000]  So the LpGBT knows which pattern you need to expect, and we'll basically do an automatic scan of a bit relay in order to properly reconstruct that pattern.
-[49:58.000 --> 50:07.000]  So the plot that we store for this STAP is this one, the word alignment.
-[50:07.000 --> 50:18.000]  And as a function of the MPA ID and the STAP line, so here is only for the STAP line, there is no word alignment for the level one lines,
+[49:58.000 --> 50:07.000]  So the plot that we store for this stub is this one, the word alignment.
+[50:07.000 --> 50:18.000]  And as a function of the MPA ID and the stub line, so here is only for the stub line, there is no word alignment for the level one lines,
 [50:18.000 --> 50:26.000]  because it's not needed, there is a header and the SSC uses the header to identify the correct packet.
 [50:27.000 --> 50:36.000]  We store the phase. Unfortunately, the plot doesn't look really impressive because phase zero is also a possible value,
 [50:36.000 --> 50:47.000]  and if you do a set of in content zero to a plot, it just looks empty, but phase 15 would be a problem.
@@ -440,11 +418,11 @@ An empty plot shows that the alignment fails. This could be due to a problem on 
 [58:50.000 --> 58:55.000]  So each line sends the cluster through these lines.
 [58:55.000 --> 59:00.000]  And these are in order of the strip that is it.
 [59:00.000 --> 59:08.000]  So basically, you need to inject eight cluster every time because you need to make sure that you feel all of these.
-[59:08.000 --> 59:12.000]  Otherwise, you will never be able to access the higher cluster lines.
+[59:08.000 --> 59:12.000]  Otherwise, you will never be able to aCICess the higher cluster lines.
 [59:12.000 --> 59:14.000]  Okay, these are just the technicality.
 [59:15.000 --> 59:35.000]  So the plot that is saved, again, is two plots, one for the number of tested bits.
-[59:35.000 --> 59:42.000]  Again, you have more tested bits on the STAPs lines.
-[59:42.000 --> 59:51.000]  Okay, these are the cluster lines, but they still go to the STAP lines after the SSA and MPA pass them.
+[59:35.000 --> 59:42.000]  Again, you have more tested bits on the stubs lines.
+[59:42.000 --> 59:51.000]  Okay, these are the cluster lines, but they still go to the stub lines after the SSA and MPA pass them.
 [59:51.000 --> 59:53.000]  And then the level one lines are less.
 [59:53.000 --> 59:57.000]  And this is the kind of plot that you should expect.
 [59:57.000 --> 01:00:15.000]  So here, in particular, you see that here we are having quite a large number of bad, I mean, high errors.
