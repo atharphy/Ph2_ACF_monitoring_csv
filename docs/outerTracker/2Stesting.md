@@ -283,7 +283,7 @@ The z-axis represents the best phase — basically the most probable phase for e
 The next step to be addressed is the CBC's processing of stubs. The goal is to align all lines with the 40MHz clock. 
 
 Now, the CIC can correctly identify ones and zeros coming from the CBC, but the CIC also needs to process the stub information.  
-Each CBC sends stubs in a specific format: three lines for the stub address, one and a half lines for the bending, and one line for the error code [(See slide 8)](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf).  
+Each CBC sends stubs in a specific format: three lines for the stub address, one and a half lines for the bending, and some bits on the last line for the error code [(See slide 8)](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf).  
 
 The CIC must understand these bits and decide which stubs to actually send, because it cannot send all stubs at once. Each CIC can handle only a limited number of stubs.  
 
