@@ -292,293 +292,215 @@ The z-axis represents the best phase — basically the most probable phase for e
 
 ![MPAtoCIC_BestInputPhases_Hybrid](../images/OTtesting/PS/MPAtoCIC_BestInputPhases_Hybrid.png)
 
-#FIXME update for MPA
 ##### OTCICwordAlignment - Hybrid
 The next step to be addressed is the MPA's processing of stubs. The goal is to align all lines with the 40MHz clock. 
 
 Now, the CIC can correctly identify ones and zeros coming from the MPA, but the CIC also needs to process the stub information.  
 Each MPA sends stubs in a specific format, with the information of the number of stubs, their address and bending divided on multiple lines [(See slide 7)](https://indico.cern.ch/event/1540158/contributions/6481542/attachments/3057153/5408250/FRavera_2025_04_28_PSschool.pdf).  
 
-The CIC must understand these bits and decide which stubs to actually send, because it cannot send all stubs at once. Each CIC can handle only a limited number of stubs.  
+An additional step is required because the CIC does not simply forward the information coming from the MPA; it processes it. The CIC must understand these bits and decide which stubs to actually send, because it cannot send all stubs at once. Each CIC can handle only a limited number of stubs.  
+In particular, for the stubs, the CIC must correctly identify the stub packets. Each stub packet sent by the MPA contains up to five stubs, encoded in two 8-bit words. As before, we must determine the correct starting bit of these 8-bit words, so another word-alignment procedure is performed.
+To do this, the MPA is configured to send a known stub pattern. The CIC is then told which pattern to expect. Using this reference, the CIC automatically scans the possible bit shifts and determines the correct alignment needed to reconstruct the stub pattern accurately.
 
-This step is called word alignment because the CIC needs to identify not only the first bit but also its position in the full data stream.  
-The procedure is similar to what is done in the FC7 for bit identification. The CBC is set to send a specific pattern and we tell the CIC what to expect. 
-
-This creates a single plot showing the delay applied on each line of the CBC.  
+This creates a single plot showing the delay applied on each line of the MPA.  
 Since the lines are very similar in length, values should be roughly identical.  
 If any line shows a value drastically different from the average, it may indicate a problem.  
-![CBCtoCIC_WordAlignmentDelay_Hybrid](../images/OTtesting/2S/CBCtoCIC_WordAlignmentDelay_Hybrid.png)
+![MPAtoCIC_WordAlignmentDelay_Hybrid](../images/OTtesting/PS/MPAtoCIC_WordAlignmentDelay_Hybrid.png)
 
 These plots are not used for debugging or QA; they are mainly to store the values chosen. Unlike previous scans, this one only scans a single phase, so there is just one working point for each line.
 
-
 ##### OTCICBX0Alignment - Hybrid
-This is the last step of the CBCICIC alignment. It is more relevant for PS modules where the stub info is sent over 2words but it is performed also for 2S ones even if the stub info is sent into a single word.
+This is the last step of the MPA - CIC alignment. It is more relevant for PS modules where the stub info is sent over 2 words but it is performed also for 2S ones even if the stub info is sent into a single word.
 
-Since all CBCs and lines are synchronized, only one of the chip and lines is set to send a pattern and used for the measurement of the BX0 delay. The BX0 delay is measured between a Resync and the reception of the pattern in the CIC.
+Since all MPAs and lines are synchronized, only one of the chip and lines is set to send a pattern and used for the measurement of the BX0 delay. The BX0 delay is measured between a Resync and the reception of the pattern in the CIC. This basically aligns the lines with the 20MHz clock.
 
-![CICBX0AlignmentDelay_Hybrid](../images/OTtesting/2S/CICBX0AlignmentDelay_Hybrid.png)
+![CICBX0AlignmentDelay_Hybrid](../images/OTtesting/PS/CICBX0AlignmentDelay_Hybrid.png)
 
-An empty plot shows that the alignment fails. This could be due to a problem on the CBC/CBC line chosen for the alignment or on a problem in the CIC.
+An empty plot shows that the alignment fails. This could be due to a problem on the MPA/MPA line chosen for the alignment or on a problem in the CIC.
+
+##### OTalignStubPackage - OpticalGroup
+
+This is the last alignment step of the stub package. There are 6 stub lines between the CIC and the LpGBT and the stub info is sent following [the scheme on slide 12](https://indico.cern.ch/event/1540158/contributions/6481542/attachments/3057153/5408250/FRavera_2025_04_28_PSschool.pdf).
+
+There is 1 bit that indicates if the pattern is coming from the CBC or the MPA.
+We consider the MPA case (bit = 1). Then we have status bits that indicate errors.  
+Next, we have the bunch crossing IDs, which tell you the bunch crossing at which the pattern or packet was sent.  
+
+We also include the number of stubs, indicating how many stubs the packet contains, followed by all the stub data.  
+
+The goal is to determine which of the eight packets is the first one in the sequence, so we can correctly interpret the data that follows.  
+
+The packet is sent to the FPGA, and we already know that the lines between CIC and FPGA are properly aligned — we can identify the first bit of each of the eight sub-packages contained within the packet.  
+However, we still need to determine which of these eight packets is the very first one.  
+This is essential, because without a header, we cannot align based on a predefined marker — we must instead understand where to start reading the data.  
+
+To find the first packet, we look at the bunch crossing ID.  
+Between two (or more) consecutive packets, the bunch crossing ID changes by a specific amount that depends on the time interval between them.  
+By comparing successive packets and checking how their bunch crossing IDs change, we can infer which packet comes first.  
+
+In practice, we collect successive stub events, knowing exactly the time difference between two consecutive events.  
+Then, in the firmware, we adjust the delay applied to each packet and verify whether the consecutive packets increase by the expected number of bunch crossing IDs.  
+
+This process involves scanning delay values from 0 to 7 — corresponding to the eight possible packets — to find the correct delay that ensures the first interpreted packet is indeed the first one in the sequence.  
+
+![Board_BestStubPackageDelay_OpticalGroup](../images/OTtesting/common/Board_BestStubPackageDelay_OpticalGroup.png)
+
+On the y-axis, we show the right hybrid and the left hybrid.  
+For each, we display a single number that indicates which stub package delay was chosen.  
+
+You generally don’t need to check anything specific here.  
+
+From the module QA point of view, there isn’t much to check here.  
+If you do see an issue in this plot, it most likely indicates a problem elsewhere in the setup, for instance a failed BXO alignment.
+
+This concludes the alignment section.
+
+##### OTverifyCICdataWord - Hybrid
+
+At this point, all chips are aligned: the CIC is synced with the LpGBT, the MPA data are correctly decoded by both the FPGA and the CIC, and all chips are communicating. The final step is to check the connection quality between the MPA and CIC.
+We set the MPA to send a specific pattern and check if the received data matches. The resulting plots show cumulative errors for all stub lines and Level-1 lines together. At this stage, we cannot pinpoint which line caused an issue without additional, more time-consuming steps, so we just look at a combined value.
+
+Stub tested bits, showed below, are higher because their pattern matching is done in firmware, while Level-1 errors are computed in software, which takes longer. 
+![MPAtoCIC_PatternMatchingTestedBits_Hybrid](../images/OTtesting/PS/MPAtoCIC_PatternMatchingTestedBits_Hybrid.png)
+
+Small error rates (around 0.01–0.1%) are normal and not a concern. Large errors, e.g., 20%, would indicate a real problem.
 
 
-#FIXME BEGIN OTalignStubPackage
-[41:49.000 --> 41:57.000]  The next step is then to better align information about the stubs.
-[41:58.000 --> 42:02.000]  Because we actually need the next steps.
-[42:02.000 --> 42:16.000]  The reason for that, if I go back to the stock packet, you see that the stock packet is not only one bunch crossing long, but these eight bunch crossing all the way up to here.
-[42:16.000 --> 42:36.000]  And we know that this point we can identify the first bit of the of each one of these packets, but we still don't know how to identify the first of this packet, which is the one that contains the information that allows them to decode all the other stubs.
-[42:36.000 --> 42:40.000]  So this is done by the stock package alignment.
-[42:40.000 --> 42:45.000]  And in particular, we are focusing on the bunch person ID.
-[42:45.000 --> 42:52.000]  We can basically read this package with a fixed frequency.
-[42:52.000 --> 42:59.000]  And so we know how much the bunch person ID should increase between two consecutive leads.
-[43:00.000 --> 43:08.000]  And therefore, if we don't see this increasing, it means that we are not applying the core delay in order to identify the first of this package.
-[43:08.000 --> 43:13.000]  Of course, if you read the same bits over here, they will not make sense anymore.
-[43:13.000 --> 43:27.000]  So, at the end of this procedure, we store one single file, one single plot at the level of the optical group.
-[43:27.000 --> 43:29.000]  Here we go.
-[43:29.000 --> 43:34.000]  This is the stock package delay.
-[43:34.000 --> 43:43.000]  And so here is shown the stock package delay, they can go from zero to seven, zero to seven packets.
-[43:43.000 --> 43:50.000]  And the y-axis indicates the hybrid, so left and right.
-[43:50.000 --> 43:56.000]  And this is just one, it doesn't really show anything, just show you which point it was selected.
-[43:56.000 --> 44:03.000]  We're showing it like this because at the moment, this was implemented into the firmware.
-[44:03.000 --> 44:12.000]  We don't foresee that we have two packages that are two delays that have two different numbers on a two hybrid.
-[44:12.000 --> 44:16.000]  We have a single register for the overall module.
-[44:16.000 --> 44:22.000]  So far, we never saw a module that is not in this situation.
-[44:22.000 --> 44:36.000]  And it is kind of reasonable, the length between the lines between the left and right hybrid are relatively short compared to the width of this delay in terms of nanoseconds.
-[44:36.000 --> 44:48.000]  So, we are just plotting them both such that we know that if we start seeing some modules that don't respect any more these, but they're still functional, then we know that we need to modify the field.
-[44:48.000 --> 45:01.000]  But in general, from this plot, you expect two bits, two bins filled, only one for each of the row, and they should be all the same stock package delay.
-#FIXME END OTalignStubPackage
+![MPAtoCIC_PatternMatchingErrorRate_Hybrid](../images/OTtesting/PS/MPAtoCIC_PatternMatchingErrorRate_Hybrid.png)
 
 
- in order to identify the...
-[48:50.000 --> 48:55.000]  to properly reconstruct basically bit one from bit zeroes.
-[48:55.000 --> 49:04.000]  Then there is an extra step needed here because the SSC is not just taking information from MPA and send them out, it will elaborate them.
-[49:04.000 --> 49:13.000]  And in particular for the stubs, we need to properly identify the stub packets.
-[49:13.000 --> 49:28.000]  And the stub packet that is sent by the MPA is something that looks like that, in which we have up to five stubs storing two voltage one of 8 bits.
-[49:28.000 --> 49:36.000]  Also in this case, we need to find the first of the 8 bits, and therefore we do again another word alignment.
-[49:36.000 --> 49:45.000]  For this case, we send MPA in order to inject a specific pattern, and then we tell to the LpGBT that pattern.
-[49:45.000 --> 49:57.000]  So the LpGBT knows which pattern you need to expect, and we'll basically do an automatic scan of a bit relay in order to properly reconstruct that pattern.
-[49:58.000 --> 50:07.000]  So the plot that we store for this stub is this one, the word alignment.
-[50:07.000 --> 50:18.000]  And as a function of the MPA ID and the stub line, so here is only for the stub line, there is no word alignment for the level one lines,
-[50:18.000 --> 50:26.000]  because it's not needed, there is a header and the SSC uses the header to identify the correct packet.
-[50:27.000 --> 50:36.000]  We store the phase. Unfortunately, the plot doesn't look really impressive because phase zero is also a possible value,
-[50:36.000 --> 50:47.000]  and if you do a set of in content zero to a plot, it just looks empty, but phase 15 would be a problem.
-[50:48.000 --> 50:58.000]  No, sorry, forget what I said, there is no 15 here, so any value is valid, so from zero to seven.
-[50:58.000 --> 51:08.000]  Okay, just I keep going, can you just confirm you can hear me or not?
-[51:08.000 --> 51:09.000]  Yeah, yeah, we can.
-[51:09.000 --> 51:13.000]  Okay, thank you.
-[51:13.000 --> 51:23.000]  Okay, at this point, we have everything set up to work properly, so few extra comments.
-[51:23.000 --> 51:32.000]  We, at the moment, we don't do an alignment between the SSN MPA because there is just a physical two phase possibility,
-[51:32.000 --> 51:37.000]  and so far we found that one of the two phases always works.
-[51:37.000 --> 51:43.000]  So we are not doing any extra alignment between these two.
-[51:43.000 --> 51:52.000]  Of course, if in a future we start seeing problems, we are going to introduce something, but it doesn't look like to be the case at the moment.
-[51:52.000 --> 52:02.000]  Another step that I pleased on is that we, before we're starting UI, just need to find the first bit, but this is basically the same for the CSS,
-[52:02.000 --> 52:13.000]  so we have that the packet is divided into two bunch crossing, so we should identify the first one of these two.
-[52:13.000 --> 52:24.000]  And for these, we technically had a procedure that is called the BX0 alignment, but up to now, we find out that the value that is done by the procedure,
-[52:24.000 --> 52:32.000]  that in theory full work, this automatic procedure by the CRC, doesn't seem really to provide the correct one.
-[52:32.000 --> 52:46.000]  In particular, it always inverts the lowest bit of the register that sets this delay, which means that is identifying the baron of these two packets.
-[52:46.000 --> 52:53.000]  So for the time being, we're not doing it, and we're setting to a static value.
-[52:53.000 --> 53:05.000]  And however, in the past days, the PISA group mentioned that when they go cold, they stop seeing the data that are going through the stub line.
-[53:05.000 --> 53:10.000]  So this might be something that we have to look back into it.
-[53:10.000 --> 53:22.000]  However, after asking them to run a few tests, it doesn't really seem to be the case to be related to this problem, but it's something that we might need to add back on the procedure.
-[53:22.000 --> 53:32.000]  For the time being, we still don't have it, we need to understand better what is the reason, it might be related or it might be this, and we'll just not understand what is going on.
-[53:32.000 --> 53:36.000]  Okay.
-[53:36.000 --> 53:58.000]  So going back to what I was saying, so if you just skip these extra two steps that I just mentioned, in theory we have everything that is needed to completely verify the communication between the module and the FPGA.
-[53:58.000 --> 54:08.000]  So the next step is to verify the communication between the CIC and in this case the MPA.
-[54:08.000 --> 54:19.000]  So we are checking this line. So what we're doing is that we're setting the MPA in order to send a specific pattern, and we reconstruct the pattern at the level of FPGA.
-[54:19.000 --> 54:27.000]  We know that between CIC and LpGBT was already stable, and so we're now going all the way back to the MPA.
-[54:27.000 --> 54:44.000]  So the results that we stored are at the level of the hybrid, and since it's a pattern matching, we do again, we still have two plots.
-[54:44.000 --> 54:49.000]  One that contains the number of test bits, and one that contains the error rate.
-[54:49.000 --> 55:02.000]  So both the two plots are shown as a function on the MPA hybrid in the x-axis, and on the y-axis we show separately the level one line and the stub lines.
-[55:02.000 --> 55:16.000]  So here's just a comment. So at this point, we don't really have the possibility to understand if one of these lines, which one of these lines is the cause of an issue, if you see an issue.
-[55:16.000 --> 55:31.000]  And the reason is that we require quite a lengthy procedure in order to distinguish them, and this is done actually at the level of the electric chain validation.
-[55:31.000 --> 55:36.000]  So you will see actually later how we can distinguish where the problem is coming from.
-[55:36.000 --> 55:43.000]  At this point, we just know that one of these connections has a problem.
-[55:43.000 --> 55:56.000]  As before, stub matching is done in the firmware, so you have a quite large number of events, a number of bit testers compared to the level one in order not to have a too lengthy calibration.
-[55:56.000 --> 55:59.000]  And the error rate should look something like that.
-[55:59.000 --> 56:04.000]  Again, the level one sometimes have some instabilities, so you might see some errors.
-[56:04.000 --> 56:10.000]  And on some of the real modules I was testing, I also saw some instabilities sometimes on the stubs.
-[56:10.000 --> 56:20.000]  So for what we saw, if you have a broken connection, you have quite a large number of events, so 10% or something like that.
-[56:20.000 --> 56:35.000]  Sometimes we see an order of one per meal of errors, and these I think are due to some instabilities that we really didn't address at the beginning, because with the first module we were just lucky when I was testing the new procedure and it was working.
-[56:36.000 --> 56:47.000]  So something to keep in mind, if you see some low error rate in the order of percent is very likely due to the some instabilities.
-[56:47.000 --> 56:51.000]  Try to run it one more time if the error doesn't go away.
-[56:52.000 --> 56:57.000]  Okay, contact me and check the wild bones.
-[56:57.000 --> 57:05.000]  So one important point is that for the MPA, all these communications are going through a wild bone pair.
-[57:05.000 --> 57:12.000]  So if you see errors through these lines, it means that you need to check the wild bones.
-[57:12.000 --> 57:18.000]  Okay, so this is quite important because for the strip side, you can just check the noise.
-[57:18.000 --> 57:31.000]  For the pixel size, you are going to a chip, so you need to check all these verify steps that allow you to see the problems in the wild bone between the MPA and the hybrid.
-[57:34.000 --> 57:45.000]  Okay, and then the really last step of this alignment is the verification and the communication between, say, an MPA.
-[57:45.000 --> 57:50.000]  So these lines, also these lines are wild bone and that's why it's important to check them.
-[57:50.000 --> 57:57.000]  Or if you notice, all these alignment procedure are done also in the quick test that is meant to check the module before encapsulation.
-[57:57.000 --> 58:04.000]  So that's why we include them all because they allow you to spot missing wild bones.
-[58:04.000 --> 58:09.000]  So for this one, the idea is kind of similar as before.
-[58:09.000 --> 58:19.000]  Unfortunately, it's a bit more complicated, more technical thing, but MPA doesn't allow to bypass itself.
-[58:19.000 --> 58:27.000]  So the only way to see what is going on here is to inject real stuff.
-[58:27.000 --> 58:39.000]  So basically, we need to inject some channels into the SSA in the corresponding channel to the MPA in order to make use of these lines.
-[58:39.000 --> 58:50.000]  And that is even honestly a bit more complicated than that because you see that each line sends, so these are the eight lines between the SSA and MPA for the cluster.
-[58:50.000 --> 58:55.000]  So each line sends the cluster through these lines.
-[58:55.000 --> 59:00.000]  And these are in order of the strip that is it.
-[59:00.000 --> 59:08.000]  So basically, you need to inject eight cluster every time because you need to make sure that you feel all of these.
-[59:08.000 --> 59:12.000]  Otherwise, you will never be able to aCICess the higher cluster lines.
-[59:12.000 --> 59:14.000]  Okay, these are just the technicality.
-[59:15.000 --> 59:35.000]  So the plot that is saved, again, is two plots, one for the number of tested bits.
-[59:35.000 --> 59:42.000]  Again, you have more tested bits on the stubs lines.
-[59:42.000 --> 59:51.000]  Okay, these are the cluster lines, but they still go to the stub lines after the SSA and MPA pass them.
-[59:51.000 --> 59:53.000]  And then the level one lines are less.
-[59:53.000 --> 59:57.000]  And this is the kind of plot that you should expect.
-[59:57.000 --> 01:00:15.000]  So here, in particular, you see that here we are having quite a large number of bad, I mean, high errors.
-[01:00:15.000 --> 01:00:17.000]  And these are actually a real one.
-[01:00:17.000 --> 01:00:19.000]  So every time I run, I always get the same.
-[01:00:19.000 --> 01:00:26.000]  This is an older prototype and I didn't want to invest too much time in picking it, but we just did it on another one a few days ago.
-[01:00:26.000 --> 01:00:29.000]  And we actually could spot a missing world bond.
-[01:00:29.000 --> 01:00:31.000]  So look at this plot.
-[01:00:31.000 --> 01:00:36.000]  You see that these, for example, you have quite a low thing is actually if you run it one more time, it disappears.
-[01:00:36.000 --> 01:00:40.000]  So as I was saying, we found some of the stability here and there.
-[01:00:40.000 --> 01:00:45.000]  But please look at this because you will tell you immediately which world bond is the missing one.
-[01:00:45.000 --> 01:00:51.000]  And whoever really the position is a bit more complicated because you have to look into the manual of the MPA.
-[01:00:51.000 --> 01:00:57.000]  We should make some sort of automatic conversion actually should be relatively easy to do.
-[01:00:57.000 --> 01:01:04.000]  So if somebody would like to candidate, that would be a very helpful information to extract from this plot.
-[01:01:04.000 --> 01:01:07.000]  So you don't need to go and see the manual.
-[01:01:07.000 --> 01:01:15.000]  You just know which world bond correspond to this beam.
-[01:01:15.000 --> 01:01:17.000]  Okay.
-[01:01:17.000 --> 01:01:21.000]  So this is the end of the line part.
-[01:01:21.000 --> 01:01:30.000]  So at this point, we know that our module is well aligned between the various ASICs and with the FC7.
-[01:01:30.000 --> 01:01:41.000]  And we also know what is the error rate that we have in between the various connections.
-[01:01:41.000 --> 01:01:46.000]  I'm going to stop briefly here because this is probably the most complicated part.
-[01:01:46.000 --> 01:01:53.000]  Do you have anything you would like to ask at this point?
-[01:01:53.000 --> 01:01:57.000]  I'll give you.
-[01:01:57.000 --> 01:02:02.000]  The result file that you're showing, is it for the 10G module?
-[01:02:02.000 --> 01:02:05.000]  Can you repeat the word?
-[01:02:05.000 --> 01:02:10.000]  I mean, the result file you are showing, is it for the 10G?
-[01:02:10.000 --> 01:02:13.000]  Yeah, it is a 10G module.
-[01:02:13.000 --> 01:02:15.000]  Okay.
-[01:02:15.000 --> 01:02:22.000]  So in the phase alignment between the CIC and the LPGBT,
-[01:02:22.000 --> 01:02:31.000]  so in the 5G, will there be the 8-tap difference?
-[01:02:31.000 --> 01:02:33.000]  In the phase?
-[01:02:33.000 --> 01:02:37.000]  Yeah, in the LPGBT and the CIC.
-[01:02:37.000 --> 01:02:48.000]  LPGBT and CIC.
-[01:02:48.000 --> 01:02:50.000]  This one?
-[01:02:50.000 --> 01:02:52.000]  Yeah.
-[01:02:52.000 --> 01:02:56.000]  No, because these are still phases.
-[01:02:56.000 --> 01:03:09.000]  So the LPGBT splits the clock that is using into 14 phases, 15 phases, okay?
-[01:03:09.000 --> 01:03:11.000]  And it's going to scan them.
-[01:03:11.000 --> 01:03:16.000]  So if you have the clock speed that is half of the speed,
-[01:03:16.000 --> 01:03:20.000]  it's basically that every phase is going to be just twice as long.
-[01:03:20.000 --> 01:03:25.000]  So it will keep going from 0 to 15.
-[01:03:25.000 --> 01:03:33.000]  If you go to the 2D plot, if you go to the 2D plot.
-[01:03:33.000 --> 01:03:37.000]  There is no 2D plot.
-[01:03:37.000 --> 01:03:41.000]  Yeah, this one, this one.
-[01:03:41.000 --> 01:03:43.000]  Yeah, this one, this one, yeah.
-[01:03:43.000 --> 01:03:49.000]  So let's say for the front end hybrid, left one, start line two,
-[01:03:49.000 --> 01:03:52.000]  you have the two phases.
-[01:03:52.000 --> 01:03:56.000]  You get the two power phases and these are different by eight phases, right?
-[01:03:56.000 --> 01:03:58.000]  Yes.
-[01:03:58.000 --> 01:04:03.000]  So in the 5G module also, you will expect this kind of tap difference?
-[01:04:03.000 --> 01:04:07.000]  Yes, because it is, so the phase is not of its value.
-[01:04:07.000 --> 01:04:12.000]  The phase is really 115 of the clock.
-[01:04:12.000 --> 01:04:19.000]  So if you go twice the speed, simply the phase is going to be half of what you have.
-[01:04:19.000 --> 01:04:23.000]  So it should be always the same because the phase is really,
-[01:04:23.000 --> 01:04:30.000]  depends on the clock that you're using.
-[01:04:30.000 --> 01:04:38.000]  Yeah, but for the 5G and the 10G, the LPGBT will be in the 640MHz, right?
-[01:04:38.000 --> 01:04:39.000]  640MHz, yes.
-[01:04:39.000 --> 01:04:43.000]  So this phase is going to always be two clock cycles.
-[01:04:43.000 --> 01:04:47.000]  They overvalued the phase from 0 to 15.
-[01:04:47.000 --> 01:04:55.000]  So in one case, it's going to be one divided by 640MHz,
-[01:04:55.000 --> 01:04:59.000]  and the other case is going to be one divided by 320MHz.
-[01:04:59.000 --> 01:05:06.000]  So these steps are also going to change between the two values.
-[01:05:06.000 --> 01:05:11.000]  So you are always spending two clock cycles.
-[01:05:11.000 --> 01:05:15.000]  It's just that the clock cycles are shorter when you go to 10G,
-[01:05:15.000 --> 01:05:20.000]  but the phase scan is always across two clock cycles.
-[01:05:20.000 --> 01:05:25.000]  Ah, okay.
-[01:05:25.000 --> 01:05:26.000]  Okay, thank you.
-[01:05:26.000 --> 01:05:33.000]  No problem.
-[01:05:33.000 --> 01:05:38.000]  If anything else, we'll go ahead.
-[01:05:38.000 --> 01:05:41.000]  So we'll add up to here.
-[01:05:41.000 --> 01:05:47.000]  So now we do the ring oscillator test.
-[01:05:47.000 --> 01:05:53.000]  So this is something that was asked to be included by the chip developer.
-[01:05:53.000 --> 01:06:02.000]  So they have these oscillators that, what, oscillates?
-[01:06:02.000 --> 01:06:06.000]  And they count how many oscillations they have in a fixed amount of time.
-[01:06:06.000 --> 01:06:12.000]  The number of oscillations depends on the temperature, the power,
-[01:06:12.000 --> 01:06:17.000]  and also the radiation damage, which is not really the case that we're interested into.
-[01:06:17.000 --> 01:06:23.000]  And so they can, in case there are bad power distribution,
-[01:06:23.000 --> 01:06:27.000]  something like that, then might indicate some issues.
-[01:06:27.000 --> 01:06:32.000]  After discussing with the chip designer, we decided that so far,
-[01:06:32.000 --> 01:06:39.000]  they didn't really spot any particular problem that was not seen by other type of tests.
-[01:06:39.000 --> 01:06:41.000]  So we just include them.
-[01:06:41.000 --> 01:06:45.000]  The test is super fast, so it doesn't really matter too much.
-[01:06:45.000 --> 01:06:53.000]  And we just provide some limits in potato that we use to set what is considered good.
-[01:06:53.000 --> 01:06:59.000]  And this is based on the statistic that they collected from the wafer testing.
-[01:06:59.000 --> 01:07:09.000]  So I don't really know what this moment in time, because we don't really have a failure in the case in which we failed,
-[01:07:09.000 --> 01:07:12.000]  that we can actually spot on this plot.
-[01:07:12.000 --> 01:07:18.000]  So I think you can safely skip them, because when you look at them, it's not really meaningful.
-[01:07:18.000 --> 01:07:25.000]  But basically, you have for every chip, you have a set of these ring oscillators.
-[01:07:25.000 --> 01:07:28.000]  Actually, two set of ring oscillators.
-[01:07:28.000 --> 01:07:31.000]  So you have what is called a delay count.
-[01:07:31.000 --> 01:07:33.000]  And the other one, an inverter count.
-[01:07:33.000 --> 01:07:35.000]  I don't know the details about that.
-[01:07:35.000 --> 01:07:37.000]  They tell you two different information.
-[01:07:37.000 --> 01:07:41.000]  I think one of the two is for the temperature and the other one for the radiation damage.
-[01:07:41.000 --> 01:07:43.000]  So we don't really care about one of the two.
-[01:07:43.000 --> 01:07:46.000]  The information is the marble.
-[01:07:46.000 --> 01:07:53.000]  And then for each module, you have, for each MPA, you have a ring oscillator in the periphery.
-[01:07:53.000 --> 01:07:56.000]  And one for each row.
-[01:07:56.000 --> 01:07:58.000]  In the SSA, it's slightly different.
-[01:07:58.000 --> 01:08:00.000]  You have less.
-[01:08:00.000 --> 01:08:06.000]  And so for every chip, you have four of them.
-[01:08:06.000 --> 01:08:11.000]  And for what MS2, there is a bottom left, bottom center, bottom right, and top right.
-[01:08:11.000 --> 01:08:13.000]  So just different location of the chip.
-[01:08:13.000 --> 01:08:18.000]  So as I was saying, I think you can ignore them from the time being.
-[01:08:18.000 --> 01:08:26.000]  I just told, so I just wanted to mention them also in this tutorial.
-[01:08:26.000 --> 01:08:31.000]  Okay.
-[01:08:31.000 --> 01:08:33.000]  Then.
-[01:08:33.000 --> 01:08:35.000]  So pedestal equalization.
-[01:08:35.000 --> 01:08:39.000]  So this one, I think, you know, quite well, gonna be brief.
-[01:08:39.000 --> 01:08:46.000]  The idea is that every,
-[01:08:46.000 --> 01:09:01.000]  every comparator by construction will always have a slightly different offset because you cannot really set it super precise due to mismatch when you, this comparator implemented to the chip.
-[01:09:01.000 --> 01:09:14.000]  And therefore there are various techniques that are used in order to compensate for that. And in particular for both MPN as I say, what is done is that we apply a global threshold.
-[01:09:14.000 --> 01:09:21.000]  And then in every channel, we have a local threshold that is added on top of the global one.
-[01:09:21.000 --> 01:09:36.000]  And since the local can be set independently from for every channel, you can use it to equalize the threshold for every channel such that you have a uniform threshold.
-[01:09:36.000 --> 01:09:44.000]  So here we have a difference between the quick test and the full test. You see that the name are different.
-[01:09:44.000 --> 01:09:51.000]  The reason is that in the quick test, we do a binary scan.
-[01:09:51.000 --> 01:10:01.000]  However, for since we're using the fast counter without which is the counters that are synchronous, the occupancy is not monotone.
-[01:10:01.000 --> 01:10:14.000]  And so we need to be far away from the area of the pedestal. Otherwise you have some, you have a big peak due to the fact that you're reading the events synchronously.
-[01:10:14.000 --> 01:10:30.000]  So you count basically many times the event past the threshold and when you're close to the pedestal, you're gonna have a bunch of events that cause that because the noise just making your comparator oscillating up and down constantly.
-[01:10:30.000 --> 01:10:37.000]  So you need to inject high value to be far away from the pedestal.
-[01:10:37.000 --> 01:10:55.000]  But that doesn't provide your very precise pedestal trimming because it will start playing a game also variation of amplification and amount of charging injected across several channels.
-[01:10:55.000 --> 01:11:06.000]  So it is a good approach to have a quick feedback on noisy channels or low noise channel that for the strips indicate were born in this connection.
-[01:11:06.000 --> 01:11:20.000]  But if you want something more precise, then allow you to have occupancy measurement at the relatively low threshold, then this method doesn't work anymore.
-[01:11:20.000 --> 01:11:35.000]  So in the full test, the full scan instead that is done during the full test, what we do is that rather than doing a binary search, we scan every single offset, which is more lengthy.
-[01:11:35.000 --> 01:11:41.000]  But it allows us to avoid the problems due to the fact that the threshold is not monotone.
-[01:11:41.000 --> 01:11:44.000]  Sorry, the occupancy versus threshold is not monotone.
-[01:11:45.000 --> 01:11:48.000]  The outcome of the two plots are actually the same.
-[01:11:48.000 --> 01:11:55.000]  So you don't, so it's kind of transparent from the point of view of the files that they saved.
-[01:11:55.000 --> 01:12:01.000]  And these are located at the level of the chips.
-[01:12:01.000 --> 01:12:11.000]  In particular, two plots, one that contains the offset.
-[01:12:11.000 --> 01:12:20.000]  So this one is the best value, the best local threshold that was identified in order to properly equalize the threshold.
-[01:12:20.000 --> 01:12:24.000]  And one is instead the occupancy given the threshold.
-[01:12:24.000 --> 01:12:29.000]  So basically we ask a target occupancy to be achieved that is around 50%.
-[01:12:29.000 --> 01:12:37.000]  So you should expect something like this with all the channels that will see later on these 50%.
-[01:12:37.000 --> 01:12:39.000]  So where to see problems?
-[01:12:39.000 --> 01:12:49.000]  So most of the issue will be more clearly visible when you run the next step, this curve, because they do a more complete analysis of their own measurement.
-[01:12:49.000 --> 01:12:55.000]  But already from these two plots, you can try to understand already something that might have failed.
-[01:12:55.000 --> 01:13:06.000]  So for the offset, since we are trying to target in 50%, if you see some channels that have a very high or low offset, so close to zero, close to one.
-[01:13:06.000 --> 01:13:08.000]  Sorry, occupancy.
-[01:13:08.000 --> 01:13:15.000]  It means that something failed during the trimming.
-[01:13:15.000 --> 01:13:25.000]  Quick note, I realized while doing the slides that we had an error in the label of the y-axis.
-[01:13:25.000 --> 01:13:28.000]  This is actually occupancy, not offset.
-[01:13:28.000 --> 01:13:31.000]  We'll be fixing the next tag.
-[01:13:31.000 --> 01:13:37.000]  And instead also from this plot, here is really the offset.
-[01:13:37.000 --> 01:13:41.000]  If you see, so this value can go from zero to 31.
-[01:13:41.000 --> 01:13:52.000]  If you see a few channels that are stuck to zero to 31, it means that you didn't have enough range to correct those channels.
-[01:13:52.000 --> 01:13:57.000]  Same this for the MPA, for the SSA is kind of the same.
-[01:13:57.000 --> 01:14:09.000]  The only difference is that it is shown in 2D, because it's a little bit more easy to be understood, to see their distribution.
-[01:14:09.000 --> 01:14:20.000]  And also in this case, also here there is a mistake, it is the wrong columns and the y-axis is the occupancy and the offset.
-[01:14:20.000 --> 01:14:25.000]  So the reasonment is kind of the same.
-[01:14:25.000 --> 01:14:36.000]  This is not working honestly super great at the moment, so we're trying to understand if we can do a bit better into having a more uniform distribution.
-[01:14:36.000 --> 01:14:42.000]  As you see, there are a few that are quite high, around 70%.
-[01:14:42.000 --> 01:14:47.000]  One instead for the SSA, this was a little bit more uniform.
-[01:14:47.000 --> 01:14:52.000]  It might be simply that we cannot do much better than that for the chip.
-[01:14:52.000 --> 01:14:57.000]  So we're going to see if we can improve it a little bit.
-[01:14:57.000 --> 01:15:03.000]  Okay, so this is for the pedestal equalization.
+
+Both plots show data as a function of the MPA hybrid on the x-axis, while on the y-axis we separately display the Level-1 line and the stub lines.
+At this stage, we cannot yet determine which of the stubs lines is responsible for a potential issue, if one is observed. Distinguishing between them requires a relatively involved procedure, which is performed during the electrical chain validation.
+You will see later how we can identify the specific source of a problem. For now, we can only conclude that one of these connections is faulty.
+
+One important point is that for the MPA, <span style="color:red;font-weight:bold;"> all these communications go through a wirebond pair. So if you observe errors (100% error rate) on these lines, you should inspect the wirebonds</span>.
+This is crucial because, on the strip side, you can simply monitor the noise, whereas on the pixel side you are communicating with a chip. Therefore, <span style="color:red;font-weight:bold;">you need to run all the verification steps that help identify issues in the wirebonds between the MPA and the hybrid</span>.
+
+##### OTverifyMPASSAdataWord - Hybrid
+
+The final step of this alignment procedure is the verification of the communication between the SSA and the MPA. These lines are also wirebonded, which is why it is crucial to check them.
+All of these alignment procedures are included in the quick test performed before encapsulation, specifically because they help detect missing wirebonds.
+The idea is similar to what we described earlier. However, it is slightly more technical because the MPA cannot be bypassed. The only way to validate these connections is to inject real data.
+In practice, you need to inject signals into the SSA on the channels that correspond to the MPA inputs so that these lines are actually used.
+This becomes even more involved because the eight SSA–MPA lines used for cluster communication each transmit clusters from specific strips. This means you must inject eight clusters each time to ensure all lines are exercised; otherwise, you would never be able to reach or test the higher cluster-number lines.
+These are just some of the technical details involved.
+
+
+Stub tested bits, showed below as clusters since they will be interpreted as stubs byt the MPA, are higher because their pattern matching is done in firmware, while Level-1 errors are computed in software, which takes longer. 
+
+![SSAtoMPA_PatternMatchingTestedBits_Hybrid](../images/OTtesting/PS/SSAtoMPA_PatternMatchingTestedBits_Hybrid.png)
+
+
+Small error rates (around 0.01–0.1%) are normal and not a concern. Large errors, e.g., 20%, would indicate a real problem. Examples of known issues are shown below.
+![SSAtoMPA_PatternMatchingErrorRate_Hybrid](../images/OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_Hybrid.png)
+
+As before, <span style="color:red;font-weight:bold;"> all these communications go through a wirebond pair. So if you observe errors (100% error rate) on these lines, you should inspect the wirebonds</span>.
+This is crucial because, on the strip side, you can simply monitor the noise, whereas on the pixel side you are communicating with a chip. Therefore, <span style="color:red;font-weight:bold;">you need to run all the verification steps that help identify issues in the wirebonds between the MPA and the hybrid</span>.
+
+<details>
+  <summary>Known issues</summary>
+
+Example of a missing wirebond, 100% error rate for one chip and line. [This debug script](../../pythonUtils/ModuleNoiseAnalyzer.py) will help you identify the wirebond number. When inspecting the wirebonds, remember that wirebond 12 for the bandgap is never connected.
+
+![SSAtoMPA_PatternMatchingErrorRate_Hybrid_missingWirebond](../images/OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_missingWirebond.png)
+
+The one below is a known issue not yet understood. Please report if you observe it!
+![SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem](../images/OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem.png)
+
+</details>
+
+##### OTPSringOscillatorTest - Hybrid
+
+Now we perform the ring oscillator test. This test was included at the request of the chip developers. The chips contain simple oscillators that continuously toggle, and the system counts how many oscillations occur within a fixed measurement window. The number of oscillations depends mainly on temperature, power distribution, and—in principle—radiation damage, although the latter is not relevant for the production module tests.
+The idea is that abnormal oscillator counts could indicate problems such as poor power distribution. However, after discussions with the chip designers, we agreed that so far this test has not revealed any issues that were not already visible with other, more direct tests. Since the test is extremely fast, we still run it, and the acceptance limits used in Potato come from wafer-testing statistics.
+At this point, we do not have any clear failure cases that would show up distinctly in the ring-oscillator plots. For this reason, these plots are generally not very informative when looking for module-level problems, and you can safely ignore them during visual inspection.
+Each chip implements two families of ring oscillators:
+- Delay-based oscillators, mainly sensitive to voltage and process variations.
+- Inverter-based oscillators, more sensitive to radiation damage.
+
+These two types provide complementary information, but only at a very qualitative level for our purposes.
+There is also an important difference between the strip side (SSA) and the pixel side (MPA):
+- MPA: Ring oscillators are present both in the periphery and in every pixel row, so each MPA has several oscillators distributed across the chip.
+- SSA: Fewer oscillators are implemented; each SSA typically has four ring oscillator locations (e.g., bottom-left, bottom-center, bottom-right, and top-right).
+
+All oscillators are controlled and read through I²C registers. A configuration register defines the measurement duration, and the read-only registers report the number of oscillations during that interval. Starting a new measurement simply requires toggling the start bit.
+In summary, the ring oscillator test is included for completeness and historical reasons, but it is not currently used to diagnose module failures.
+
+Here two example plots for MPA
+![MPA_RingOscillatorDelayCounts_Hybrid](../images/OTtesting/PS/MPA_RingOscillatorDelayCounts_Hybrid.png)
+![MPA_RingOscillatorInverterCounts_Hybrid](../images/OTtesting/PS/MPA_RingOscillatorInverterCounts_Hybrid.png)
+
+And here for SSA
+![SSA_RingOscillatorDelayCounts_Hybrid](../images/OTtesting/PS/SSA_RingOscillatorDelayCounts_Hybrid.png)
+![SSA_RingOscillatorInverterCounts_Hybrid](../images/OTtesting/PS/SSA_RingOscillatorInverterCounts_Hybrid.png)
+
+##### PedestalEqualization, "Trimming" (quick test) - Chip
+
+Every comparator has an intrinsic offset due to transistor mismatch—this is unavoidable in the chip fabrication process. To compensate for these variations, both the MPA and the SSA implement two thresholds:
+- A global threshold, common to all channels.
+- A local threshold, adjustable independently per channel.
+By tuning the local threshold for each channel, we can equalize the effective threshold across the chip so that all channels respond uniformly.
+
+You’ll notice the naming of the procedures differs between the quick test and the full test.
+**Quick test**: uses a binary scan.
+Since we use the fast synchronous counters, the occupancy curve is not monotonic. Near the pedestal, noise makes the comparator toggle up and down rapidly, so the counter sees repeated threshold crossings. For this reason, we must inject a large signal, far from the pedestal, otherwise the result becomes dominated by noise oscillations.
+This approach is fine for spotting clearly noisy or clearly quiet channels (which, on the strip side, often correlates with missing wirebonds), but the pedestal trimming itself is not very precise.
+
+For each chip, two plots are produced. SSA results are shown as 1D distributions; all channels are in one block. MPA are displayed as a 2D map, which makes the spatial distribution easier to inspect.
+
+Offset (local threshold) that equalizes the channel to the target. Valid offset values range from 0 to 31. Channels stuck at 0 or 31 indicate the allowed range was not sufficient to correct the channel. 
+![ChannelOffsetValues_SSA_quick](../images/OTtesting/PS/ChannelOffsetValues_SSA_quick.png)
+![2DChannelOffsetValues_MPA_quick](../images/OTtesting/PS/2DChannelOffsetValues_MPA_quick.png)
+
+
+Occupancy at the chosen threshold (target ≈ 50%)
+Ideally, every channel reaches ~50% occupancy once properly trimmed.
+In the occupancy plot, channels far from 50% (close to 0% or close to 100%) indicate the trimming failed.
+
+![ChannelOccupancyAfterOffsetEqualization_SSA_quick](../images/OTtesting/PS/ChannelOccupancyAfterOffsetEqualization_SSA_quick.png)
+![2DChannelOccupancyAfterOffsetEqualization_MPA_quick](../images/OTtesting/PS/2DChannelOccupancyAfterOffsetEqualization_MPA_quick.png)
+
+
+
+##### PedestalEqualizationPSatPedestal, "Trimming" (fullTest) - Chip
+
+This calibration is done without pulse injection and is more precise in determining the pedestal compared to the one performed during the quickTest.
+
+First, tune “Vtrim” per each chip, `C[0, 6]` for MPAs and `Bias_D5DAC8` for SSAs.
+“Vtrim” = 31 gives the maximum range for the trim bits for MPAs and the minimum one for SSAs.
+
+Then, tune trim bits for each channel. 
+
+Calibration steps for each chip:
+1. Set trim bits to max and Vtrim to 0. Find the channels that have the lowest (LOW) and
+highest (HIGH) thresholds giving the max occupancy.
+2. Set trim bits of HIGH to the minimum value and find the target threshold giving the
+maximum occupancy (TARGET).
+3. Do a binary scan on Vtrim (inspired by https://gitlab.cern.ch/gzevi/NewSoftware/-/blob/main/src/StateSetters/ModulePedestalNoisePS.cpp?ref_type=heads#L80) until
+LOW has TARGET as the threshold giving the maximum occupancy.
+4. Set the threshold to TARGET for all channels. Scan trimbits and set as the final trim
+bit for each channel the one giving the maximum occupancy.
+
+Three plots are saved per each chip type.
+Two plots show the pedestal (per channel and as a cumulative distribution) to evaluate the uniformity of the trimming procedure. If the trimming succeeded the distribution is very narrow.
+
+SSA plots:
+![ChannelPedestal_SSA_full](../images/OTtesting/PS/ChannelPedestal_SSA_full.png)
+![PedestalDistribution_SSA_full](../images/OTtesting/PS/PedestalDistribution_SSA_full.png)
+
+
+
+MPA plots:
+![ChannelPedestal_MPA_full](../images/OTtesting/PS/ChannelPedestal_MPA_full.png)
+![PedestalDistribution_MPA_full](../images/OTtesting/PS/PedestalDistribution_MPA_full.png)
+
+Offset (local threshold) that equalizes the channel to the target. Valid offset values range from 0 to 31. Channels stuck at 0 or 31 indicate the allowed range was not sufficient to correct the channel.
+SSA: 
+![ChannelTrimBit_SSA_full](../images/OTtesting/PS/ChannelTrimBit_SSA_full.png)
+MPA:
+![ChannelTrimBit_MPA_full](../images/OTtesting/PS/ChannelTrimBit_MPA_full.png)
+
 [01:15:03.000 --> 01:15:08.000]  And then we have the noise measurement, the scars.
 [01:15:08.000 --> 01:15:15.000]  So for the S-carve, okay, this you know quite well.
 [01:15:15.000 --> 01:15:20.000]  So we scan the threshold with a given injection and we measure the occupancy.
