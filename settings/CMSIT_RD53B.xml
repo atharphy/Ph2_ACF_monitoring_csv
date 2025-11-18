@@ -78,7 +78,7 @@
               ToT6to4Mapping         =      "0"
               ToTDualEdgeCount       =      "0"
 
-              RESISTORI2V            =   "5000"
+              RESISTORI2V            =   "4990"
               NTCBETA                =   "3435"
               RNTCAT25C              =  "10000"
               ADC_OFFSET_VOLT        =     "63"
