@@ -299,7 +299,7 @@ These plots are not used for debugging or QA; they are mainly to store the value
 
 
 ##### OTCICBX0Alignment - Hybrid
-This is the last step of the CBCICIC alignment. It is more relevant for PS modules where the stub info is sent over 2words but it is performed also for 2S ones even if the stub info is sent into a single word.
+This is the last step of the CBC - CIC alignment. It is more relevant for PS modules where the stub info is sent over 2 words but it is performed also for 2S ones even if the stub info is sent into a single word.
 
 Since all CBCs and lines are synchronized, only one of the chip and lines is set to send a pattern and used for the measurement of the BX0 delay. The BX0 delay is measured between a Resync and the reception of the pattern in the CIC.
 
@@ -316,10 +316,6 @@ We consider the CBC case (bit = 0). Then we have status bits that indicate error
 Next, we have the bunch crossing IDs, which tell you the bunch crossing at which the pattern or packet was sent.  
 
 We also include the number of stubs, indicating how many stubs the packet contains, followed by all the stub data.  
-For the time being, ignore the stub information, since there is no alignment between the CBC and the CIC.  
-
-However, the CIC still sends this packet.  
-Everything that comes after the stub number is meaningless, but the beginning of the pattern makes complete sense at this point, because we know these lines are properly aligned.
 
 The goal is to determine which of the eight packets is the first one in the sequence, so we can correctly interpret the data that follows.  
 
