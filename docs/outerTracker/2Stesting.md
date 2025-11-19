@@ -161,13 +161,13 @@ This is an automatic procedure done by the LpGBT that has this automatic phase a
 There are three plots associated with this test, identified with `CICtoLpGBT` string. 
 
 
-![CICtoLpGBT_PhaseAlignmentEfficiency](../images/OTtesting/common/CICtoLpGBT_PhaseAlignmentEfficiency.png)
+![CICtoLpGBT_PhaseAlignmentEfficiency](../images/OTtesting/2S/CICtoLpGBT_PhaseAlignmentEfficiency.png)
 
 The *Phase Alignment Efficiency* is obtained repeting the automic phase alignment 100 times (default value that can be configured in the XML) and counting how many times the alignment succeeded. If there are no troubles you should see 100% efficiency. This is telling us how well the automatic procedure on the LpGBT works.
 
 Then we want also to extract the best phase that allow the LpGBT to properly sample the data. This is shown in the next two plots.
 
-![CICtoLpGBT_FoundPhaseDistribution](../images/OTtesting/common/CICtoLpGBT_FoundPhaseDistribution.png)
+![CICtoLpGBT_FoundPhaseDistribution](../images/OTtesting/2S/CICtoLpGBT_FoundPhaseDistribution.png)
 
 On the X axis the various lines between CIC and LpGBT are shown: 1 L1, 5 stub lines for the right (R) and left (L) FEHs. On the Y axis the phase. The LpGBT scans phases between 0 to 14, covering two clock cycles. The 15 is an error code that is used by the LpGBT. When repeating the measurement 100 times, we store basically the frequency for which one phase is chosen and this is shown on the Z-axis.
 
@@ -175,7 +175,7 @@ Usually you see bins with roughly 1 (yellow) on one phase and in some cases two 
 If a vertical line of bins with some frequency  is seen, it means that LpGBT was not able to choose any particular phase and that something is going on  with that particular line. The line goes to the connector between the service hybrid and the front end hybrid so something may be wrong with that connector, since the hybrids were already tested and it would be quite unlikely that LpGBT or the CIC are the problem or their connection with the hybrid is the problem.
 
 The best phase (the one with the highest frequency) is chosen from the previous plot, used by the LpGBT and shown in the plot below, one for each line.
-![CICtoLpGBT_BestPhase](../images/OTtesting/common/CICtoLpGBT_BestPhase.png)
+![CICtoLpGBT_BestPhase](../images/OTtesting/2S/CICtoLpGBT_BestPhase.png)
 
 ##### OTalignBoardDataWord - Hybrid
 After we have done the alignment of the LpGBT, we align the data word into the FC7. 
@@ -188,11 +188,11 @@ To do the alignment, the test tells the FPGA which is the expected pattern.
 
 Once the FPGA receives a packet, it is checked the delay that is needed  such that the first bit of the packet is the first bit of the expected pattern. The delay is called FPGA *bitslips*. The chosen bitslip for each line is shown in the plot below. There is one plot per hybrid. This plots have the purpose to store the found value.
 
-![Board_WordAlignmentBitSlipValues_Hybrid](../images/OTtesting/common/Board_WordAlignmentBitSlipValues_Hybrid.png)
+![Board_WordAlignmentBitSlipValues_Hybrid](../images/OTtesting/2S/Board_WordAlignmentBitSlipValues_Hybrid.png)
 
 The plot below stores the number of retries. The alignment procedure is tried for a maximum of 10 times in case of failures. Retries can indicate instabilities. The retry number is stored per each line since each line is handled separately.
 
-![Board_WordAlignmentRetryNumbers_Hybrid](../images/OTtesting/common/Board_WordAlignmentRetryNumbers_Hybrid.png)
+![Board_WordAlignmentRetryNumbers_Hybrid](../images/OTtesting/2S/Board_WordAlignmentRetryNumbers_Hybrid.png)
 
 
 It is not uncommon to have one or two retries as there are some instabilities when writing some particular registers into the board. That's why we try multiple times. If the test retries 10 times, very likely means that it never manages to align and it would be good to check the connections between the CIC and the LpGBT.
@@ -211,7 +211,7 @@ In contrast, the Level-1 implementation would require a major firmware update, a
 
 However, it’s still on the order of 10⁶ bits — not a small number — but lower than the number of stub bits. This corresponds to the number of tester bits.
 
-![CICtoLpGBT_PatternMatchingTestedBits_Hybrid](../images/OTtesting/common/CICtoLpGBT_PatternMatchingTestedBits_Hybrid.png)
+![CICtoLpGBT_PatternMatchingTestedBits_Hybrid](../images/OTtesting/2S/CICtoLpGBT_PatternMatchingTestedBits_Hybrid.png)
 
 We also have the error rate.  
 This value ranges from 0 to 1, where 1 means 100% errors and 0 means no errors.  
@@ -222,7 +222,7 @@ An error rate around 10⁻⁶ or 10⁻⁷ might just be a glitch.
 If the error rate is higher than that, check the connections between the hybrids and the connectors, as that might be the cause.
 
 
-![CICtoLpGBT_PatternMatchingErrorRate_Hybrid](../images/OTtesting/common/CICtoLpGBT_PatternMatchingErrorRate_Hybrid.png)
+![CICtoLpGBT_PatternMatchingErrorRate_Hybrid](../images/OTtesting/2S/CICtoLpGBT_PatternMatchingErrorRate_Hybrid.png)
 
 
 Now, we are sure that the communication between the CIC and the board works fine.
@@ -283,7 +283,7 @@ The z-axis represents the best phase — basically the most probable phase for e
 The next step to be addressed is the CBC's processing of stubs. The goal is to align all lines with the 40MHz clock. 
 
 Now, the CIC can correctly identify ones and zeros coming from the CBC, but the CIC also needs to process the stub information.  
-Each CBC sends stubs in a specific format: three lines for the stub address, one and a half lines for the bending, and one line for the error code [(See slide 8)](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf).  
+Each CBC sends stubs in a specific format: three lines for the stub address, one and a half lines for the bending, and some bits on the last line for the error code [(See slide 8)](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf).  
 
 The CIC must understand these bits and decide which stubs to actually send, because it cannot send all stubs at once. Each CIC can handle only a limited number of stubs.  
 
@@ -299,7 +299,7 @@ These plots are not used for debugging or QA; they are mainly to store the value
 
 
 ##### OTCICBX0Alignment - Hybrid
-This is the last step of the CBCICIC alignment. It is more relevant for PS modules where the stub info is sent over 2words but it is performed also for 2S ones even if the stub info is sent into a single word.
+This is the last step of the CBC - CIC alignment. It is more relevant for PS modules where the stub info is sent over 2 words but it is performed also for 2S ones even if the stub info is sent into a single word.
 
 Since all CBCs and lines are synchronized, only one of the chip and lines is set to send a pattern and used for the measurement of the BX0 delay. The BX0 delay is measured between a Resync and the reception of the pattern in the CIC.
 
@@ -316,10 +316,6 @@ We consider the CBC case (bit = 0). Then we have status bits that indicate error
 Next, we have the bunch crossing IDs, which tell you the bunch crossing at which the pattern or packet was sent.  
 
 We also include the number of stubs, indicating how many stubs the packet contains, followed by all the stub data.  
-For the time being, ignore the stub information, since there is no alignment between the CBC and the CIC.  
-
-However, the CIC still sends this packet.  
-Everything that comes after the stub number is meaningless, but the beginning of the pattern makes complete sense at this point, because we know these lines are properly aligned.
 
 The goal is to determine which of the eight packets is the first one in the sequence, so we can correctly interpret the data that follows.  
 
@@ -547,7 +543,7 @@ The corresponding plot below shows the error rate (from 0 to 1) as a function of
 All these scans are auxiliary calibration steps—if everything works properly, the details of these plots can be ignored, since their purpose is simply to enable the final validation of the electrical chain between the CBC and the CIC.
 
 ##### OTChipToCICecv - Hybrid
-The final step of the electrical chain validation focuses on the link between the CBC and the CIC. For this stage, we again produce two plots per scan point: the error rate and the number of tests. The procedure is similar to the previous validation steps, but here we vary the CBC output drive current that controls the signal strength on the lines between the CBC and the CIC. Three current settings are typically used to study the behavior of the link. In this configuration, a higher drive strength corresponds to a lower numerical value—so current setting 0 gives the highest current, 14 the lowest, and 8 an intermediate value.
+The final step of the electrical chain validation focuses on the link between the CBC and the CIC. For this stage, we again produce two plots per scan point: the error rate and the number of tests. The procedure is similar to the previous validation steps, but here we vary the CBC output drive current that controls the signal strength on the lines between the CBC and the CIC. Three current settings are typically used to study the behavior of the link. In this configuration, a higher drive strength corresponds to a lower numerical value—so current setting 0 gives the highest current, 14 the lowest, and 8 an intermediate value. There is no need for a CBC to CBC ECV because the CBC uses a fake channel connected to the neighboring chip.
 
 The plots follow the same format as before, with the phase on the x-axis and the line ID on the y-axis, showing all CBCs and their corresponding lines. Phases 2 and 3 are absent because they are not functional on the CIC and are therefore skipped. As usual, the number of tests is smaller for the Level-1 data since those checks are performed in software—still around 10⁵ to ensure sufficient statistics without excessive runtime. 
 
