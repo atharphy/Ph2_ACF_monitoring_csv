@@ -807,116 +807,76 @@ This test checks the stability of the I2C communication by repeatedly writing an
 
 ![RegisterMatchingEfficiency_Hybrid](../images/OTtesting/PS/RegisterMatchingEfficiency_Hybrid.png)
 
-[02:20:40.000 --> 02:20:42.000]  Then monitor BQM plot.
-[02:20:42.000 --> 02:20:55.000]  So all these information that we're storing are contained into the XML file just for you one as a reference.
-[02:20:55.000 --> 02:20:58.000]  They are located over here.
-[02:20:58.000 --> 02:21:04.000]  At the end of the XML file and it contains the list of information that we are storing.
-[02:21:04.000 --> 02:21:13.000]  For the PS we're storing both information read by the LPGT and information read by the SSA and the MPA.
-[02:21:13.000 --> 02:21:16.000]  So I'm going to go to all of these plots.
-[02:21:16.000 --> 02:21:28.000]  So these are T-graph and as I was saying are stored into a separate plot such that you can monitor also when you are not in a running condition.
-[02:21:28.000 --> 02:21:34.000]  So starting, just closing everything.
-[02:21:34.000 --> 02:21:41.000]  So the first, so it's going to look like the same structure of the Resalphi.
-[02:21:41.000 --> 02:21:50.000]  And then at the optical group, we start to see the monitor of the LPGT.
-[02:21:50.000 --> 02:21:57.000]  So these are in particular first three are measurement of some values that are read inside the LPGT.
-[02:21:57.000 --> 02:22:01.000]  And in particular, this one is one voltage.
-[02:22:01.000 --> 02:22:05.000]  They call VDD that should be around 1.2 volts.
-[02:22:05.000 --> 02:22:07.000]  It's more or less stable.
-[02:22:07.000 --> 02:22:12.000]  Just please ignore if you see some large swing like that.
-[02:22:12.000 --> 02:22:16.000]  The ADC readout sometimes fails.
-[02:22:16.000 --> 02:22:18.000]  So you might see some sort of swing.
-[02:22:18.000 --> 02:22:21.000]  So these are clearly not real.
-[02:22:21.000 --> 02:22:23.000]  So don't be alarmed when you have something like that.
-[02:22:23.000 --> 02:22:30.000]  These are the beginning will sometimes happen at any time.
-[02:22:30.000 --> 02:22:33.000]  And the same for these other voltage.
-[02:22:33.000 --> 02:22:37.000]  I honestly, not 100% sure what are these values.
-[02:22:37.000 --> 02:22:39.000]  So why we have these two values?
-[02:22:39.000 --> 02:22:48.000]  I would guess there are two blocks that have two different voltages to avoid first talk or something like that in basic.
-[02:22:48.000 --> 02:22:49.000]  Those are available.
-[02:22:49.000 --> 02:22:51.000]  We monitor them both.
-[02:22:51.000 --> 02:22:53.000]  And they are both more or less to the same value.
-[02:22:53.000 --> 02:22:57.000]  So far we haven't seen surprises.
-[02:22:57.000 --> 02:23:01.000]  Then the temperature.
-[02:23:01.000 --> 02:23:05.000]  So you see here there are some swings that we can sort of ignore.
-[02:23:05.000 --> 02:23:12.000]  That means you mean this is the temperature of the sensor that is within the LPGT.
-[02:23:12.000 --> 02:23:17.000]  This should be quite accurate because we already have the calibration of all the LPGT.
-[02:23:17.000 --> 02:23:21.000]  So this value should be quite realistic.
-[02:23:21.000 --> 02:23:35.000]  I don't know exactly in terms of degrees because I don't remember what the LPGT group said, but it should be the absolute value should be quite realistic.
-[02:23:35.000 --> 02:23:43.000]  Just open to the flag.
-[02:23:43.000 --> 02:23:59.000]  And the other information are read out by input that are provided to the LPGT via some connector of the data that then go into the internal ADC of the LPGT.
-[02:23:59.000 --> 02:24:03.000]  The first one is the sensor temperature.
-[02:24:03.000 --> 02:24:12.000]  And with the sensor temperature, I mean the one that sticks out from the ROH and is in contact with the sensor.
-[02:24:12.000 --> 02:24:20.000]  So this is basically equivalent of what we have for the 2S.
-[02:24:20.000 --> 02:24:38.000]  So also this one, the measurement of the temperature of the resistor should be quite accurate because we have the calibration of the LPGT as well as the nominal NTC calibration.
-[02:24:38.000 --> 02:24:44.000]  This is the NCT, so it is the name of the resistor.
-[02:24:44.000 --> 02:25:02.000]  So then there is the question of how accurate is the measurement of the sensor temperature because of not great contact with the sensor itself and some power that is leaked from the ROH.
-[02:25:02.000 --> 02:25:11.000]  But the measurement should be quite accurate to the temperature that is seen by the resistor.
-[02:25:11.000 --> 02:25:26.000]  Then we have the measurement of the leakage current on the diode that converts the optical signal into an electrical signal.
-[02:25:26.000 --> 02:25:41.000]  As far as I understood, this is the measurement basically of the, so it's going to be used during data taking to monitor the radiation damage of this diode.
-[02:25:41.000 --> 02:25:51.000]  This we have to have an idea of the yield of the signal that is collected by the diode.
-[02:25:51.000 --> 02:25:58.000]  So this should be the average current generated by the light that is being received.
-[02:25:58.000 --> 02:26:02.000]  So for the time being, we don't really have a plan to use it.
-[02:26:02.000 --> 02:26:17.000]  I would say that if we have problems with this diode, we will see this in effect from other behavior of the plot.
-[02:26:17.000 --> 02:26:22.000]  Sorry, now I have also to open to the dog.
-[02:26:22.000 --> 02:26:28.000]  Okay, and then we also monitor for the VTRX the temperature.
-[02:26:28.000 --> 02:26:34.000]  And as you can see already without an zoom, we are having some issue over here.
-[02:26:34.000 --> 02:27:00.000]  So, first of all, this is the temperature that is a temperature sensor that we read from the VTRX itself is not going to be super accurate in terms of absolute value because we don't have a calibration value for that.
-[02:27:00.000 --> 02:27:09.000]  But as all the temperature sensor that we have, those are quite released in terms of relative variations.
-[02:27:09.000 --> 02:27:29.000]  Now, while we have these, okay, this was due to a recent thing that was added and we actually, Stefan found out that we were setting the, so you need to set up a current to be provided to the resistors.
-[02:27:29.000 --> 02:27:41.000]  In order to measure the temperature and what we were doing is that we were setting the current given the expected resistors in order to have a good resolution.
-[02:27:41.000 --> 02:27:51.000]  The problem with that is that when you go down in temperature, the value of the resistor changes drastically by the factor of 10 or even more.
-[02:27:51.000 --> 02:27:55.000]  And therefore, if you use the nominal value of room temperature will not work anymore.
-[02:27:55.000 --> 02:28:06.000]  So what was added is that instead of using the previous values, but then when you have that the readout of the ADC fails once that sometimes happened, then it got stuck.
-[02:28:06.000 --> 02:28:16.000]  So I tried to fix it a little bit better and it works as we've seen for the sensor temperature before the VTRX is still not working fine.
-[02:28:16.000 --> 02:28:21.000]  So that's why you see this ring, but we're addressing that.
-[02:28:22.000 --> 02:28:32.000]  And finally, with the PS, we also monitor the LPG, the 2.5 volts.
-[02:28:32.000 --> 02:28:39.000]  That is the one that is applied to the LpGBT server to the VTRX that requires 2.5 volts.
-[02:28:39.000 --> 02:28:43.000]  So here we can monitor the voltage.
-[02:28:43.000 --> 02:28:50.000]  Okay, so these are the information that we store at the level of the LpGBT.
-[02:28:50.000 --> 02:28:55.000]  And then the next information that we can store for the SSN and PA.
-[02:28:55.000 --> 02:29:10.000]  So we have two voltages, the analog voltage that is around 1.2, 1.3.
-[02:29:10.000 --> 02:29:18.000]  And as well as the digital voltage that it should be around 1 is slightly higher than 1.
-[02:29:18.000 --> 02:29:23.000]  So here, so far, I don't think we saw anything, but it might be an indication.
-[02:29:23.000 --> 02:29:27.000]  Maybe if a certain amount something fails, you can see a drastic drop or something like that.
-[02:29:27.000 --> 02:29:32.000]  So I would guess we'll be using failure cases to do a bit of debugging.
-[02:29:32.000 --> 02:29:40.000]  But so far, if you don't have enough power, you will see clearly some other problems.
-[02:29:40.000 --> 02:29:43.000]  And finally, we have the temperature measurement.
-[02:29:43.000 --> 02:29:46.000]  This was briefly discussed at the beginning.
-[02:29:46.000 --> 02:29:49.000]  This is the part that at the moment we still don't have the calibration.
-[02:29:49.000 --> 02:29:56.000]  So the relative variation should be quite accurate.
-[02:29:56.000 --> 02:30:04.000]  But the absolute value is not.
-[02:30:04.000 --> 02:30:13.000]  So this was probably higher than what we're showing here because we were running long calibration without cooling.
-[02:30:13.000 --> 02:30:22.000]  So these don't use them as absolute values until we get the real calibration.
-[02:30:22.000 --> 02:30:25.000]  And for the MPA is the same.
-[02:30:25.000 --> 02:30:34.000]  We store the two measurements of the digital and analog current voltage as well as the temperature.
-[02:30:34.000 --> 02:30:46.000]  And as for the SSA, also this is not really accurate in terms of absolute value.
-[02:30:46.000 --> 02:30:59.000]  And those are all the parameters that were currently monitored during all the measurements that we do with the PH2SEL.
-[02:30:59.000 --> 02:31:03.000]  Any questions or comments on this?
-[02:31:03.000 --> 02:31:12.000]  Okay.
-[02:31:12.000 --> 02:31:24.000]  So we are at the end of this discussion.
-[02:31:24.000 --> 02:31:50.000]  So I think we can, so I'm going to just ask you if there is anything that you would like to better understand what was discussed today.
-[02:31:50.000 --> 02:31:55.000]  Sorry, I have a question.
-[02:31:55.000 --> 02:31:57.000]  Maybe I missed something.
-[02:31:57.000 --> 02:32:03.000]  At some point you said that the first and the last three are duplicated.
-[02:32:03.000 --> 02:32:07.000]  There's a lot of slides so I don't remember exactly where it was.
-[02:32:07.000 --> 02:32:11.000]  But I didn't really understand what was the reason.
-[02:32:11.000 --> 02:32:26.000]  Yeah, it's simply because when you have, I'm going to open in the meantime, when you have to do the bombarding of the two asyps,
-[02:32:26.000 --> 02:32:34.000]  it is quite difficult to have a very small space in between the two chips.
-[02:32:34.000 --> 02:32:42.000]  So what they usually do, and this is done also for the inner tracker for the current and I think also the future.
-[02:32:42.000 --> 02:33:00.000]  What they do is that they make the picture at the edge between the two chips a bit wider such that you have a bit more room to compensate for the fact that you cannot cut the basic super precise.
-[02:33:00.000 --> 02:33:03.000]  So this is usually the case.
-[02:33:03.000 --> 02:33:09.000]  In our case, there is an extra complication that you need to reconstruct the steps.
-[02:33:09.000 --> 02:33:16.000]  So you need to have the capability to match the pixel with the strips.
-[02:33:16.000 --> 02:33:30.000]  And since you have 120 columns in the strips,
-[02:33:30.000 --> 02:33:37.000]  it is much easier if you can do 120 pixel 2.
-[02:33:37.000 --> 02:33:49.000]  Simply because then you don't need to think, okay, I have to shift one strip by one because I need to match with the picture that is actually shifted.
-[02:33:49.000 --> 02:34:02.000]  It's just a small trick in which they just duplicate everything they pretend that the pixel are actually 16 by 120.
-[02:34:02.000 --> 02:34:15.000]  And then you just feed everything to the cluster mechanism that reconstruct the clusters that that point is completely agnostic about what is going on before just going to receive every time a two hits from the corner pixel and that's it.
-[02:34:15.000 --> 02:34:19.000]  And then we'll assume that that is a pixel of cluster size too.
-[02:34:19.000 --> 02:34:23.000]  And it will be much easier to match it with the strips.
-[02:34:23.000 --> 02:34:34.000]  As you saw in practice actually the pixels are actually 118 on the side.
-[02:34:34.000 --> 02:34:52.000]  Yes, exactly 118 on the sensor 118 and on the pixel are 120 but the two at the edge are fake are just duplicating whatever they see in the in the previous picture.
-[02:34:52.000 --> 02:34:54.000]  I see. Okay, thank you.
-[02:34:54.000 --> 02:34:56.000]  No problem.
-[02:35:05.000 --> 02:35:18.000]  Okay, anything else that you want to chat about.
-[02:35:18.000 --> 02:35:26.000]  Okay, then what I'm gonna do is that I'm gonna stop the recording.
-[02:35:26.000 --> 02:35:29.000]  I'm sharing.
+
+### Monitoring  
+
+The monitor produces a separate file stored in its own folder (`MonitorDQM`) and the file name contains a time stamp for identification typically within the result file directory when running manually. It is separated from the result file because the monitor records data from the configure to the halt or destroy state, while the result file only covers the calibration start-to-stop interval. For instance, during Burn-in tests, monitoring continues even when the system is in a stop state between temperature plateaus or to track changes during current adjustments. Since these periods occur at different times, two distinct files are generated. A dedicated script  merges the monitor and result files along with additional data, such as power supply information, into a single combined dataset used by Potato for module qualification.
+
+
+The monitor is configured in the XML file, which defines the list of parameters to be measured. For each parameter, a plot is produced showing its value as a function of time or the evolution of the monitored quantity during the run.
+
+#### LpGBT - OpticalGroup
+The first level of monitoring is performed at the optical group level. All information is extracted from the LpGBT, which includes an ADC. This ADC can measure both internal quantities within the chip and external signals from lines connected to it. All these monitored quantities are listed in the XML, and the name of each value is included both in the plot title and in the plot file name for clarity.
+
+The first monitored quantity is VDD, one of the digital supply voltages used by the LpGBT. These measurements allow you to check that the power remain stable during operation. Typically, the voltage should be around 1.2 V.
+The plots shown here were taken at the same time as the result files from before, although the exact timing isn’t critical — the key point is that even during data taking, you shouldn’t see large fluctuations.
+In most cases, these plots provide an immediate indication of any structural problem with the module. If you notice values significantly higher or lower than 1.2 V, it could point to a major issue. Small spikes in the distribution aren’t a concern — the ADC isn’t perfect and sometimes gives slightly delayed readings. These single-point deviations can be ignored, but if the voltage stays persistently high or low over time, that’s a sign of a potential problem.
+
+![D_B(0)_LpGBT_DQM_VDD_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VDD_OpticalGroup(0).png)
+
+
+Another monitored voltage is shown here, which is essentially the same supply as the previous one. The difference sgould be that they correspond to two separate internal blocks of the LpGBT that each require their own instance of the same voltage to operate.
+![D_B(0)_LpGBT_DQM_VDDA_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VDDA_OpticalGroup(0).png)
+
+Then we have the temperature measurement, which comes from the internal temperature sensor of the LpGBT. You can see a gradual warm-up, as this test was performed in the KIT box where the temperature is not tightly controlled. These temperature values are already calibrated using information provided by the LpGBT group in the configuration file mentioned earlier, which includes the calibration constants for the internal sensor, so the measurement should be quite reliable. 
+![D_B(0)_LpGBT_DQM_LpGBTtemp_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_LpGBTtemp_OpticalGroup(0).png)
+
+
+There are also a few additional monitored quantities, ADC0 and ADC3, which are inputs to the LpGBT coming from the two hybrids. These values are controlled by the CIC, which can output an analog signal to monitor internal information. At the moment, nothing specific is configured on these channels since enabling them would require activating one CBC at a time, so they are included mainly for completeness. They can be safely ignored for now, although they may become useful in future studies; currently, they are simply connected to undefined signals, so while their values may fluctuate, they do not carry meaningful information.
+![D_B(0)_LpGBT_DQM_ADC0_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_ADC0_OpticalGroup(0).png) 
+![D_B(0)_LpGBT_DQM_ADC3_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_ADC3_OpticalGroup(0).png) 
+
+There is another monitored quantity showing the voltage on the left hybrid, which should be around 1.25 V. There isn’t a separate measurement for the right hybrid due to limited inputs, but the assumption is that both hybrids get the same voltage from the DC-DC converter. In practice, the measured voltage is slightly lower, which has been consistent across all tested modules. Minor fluctuations can be ignored.
+![D_B(0)_LpGBT_DQM_1V25_Left_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_1V25_Left_OpticalGroup(0).png) 
+
+This is the input voltage coming from the power supply, which is usually set around 10.5 V. The measured voltage may be slightly lower, possibly due to cable drops, filtering, or uncertainties in the voltage divider used for measurement. The module itself is quite resilient, so only significant deviations—well below the nominal voltage, e.g., down to 8 V—would cause concern. Minor differences are not critical.
+![D_B(0)_LpGBT_DQM_VIN_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VIN_OpticalGroup(0).png) 
+
+The next monitored parameter is the sensor temperature.
+Each sensor includes an NTC (Negative Temperature Coefficient) resistor, meaning its resistance decreases as temperature increases. In other words, higher temperatures correspond to lower resistances and therefore to higher measured voltages (since a fixed current is injected through the resistor).
+The system injects a known current through the NTC and reads the resulting voltage drop to estimate the temperature. The specific resistor monitored here is the one placed on the top sensor — on the high-voltage side of the module, where two connections are available, one of which is the temperature sensor. Thus, this measurement represents the temperature of the top sensor.
+![D_B(0)_LpGBT_DQM_SensorTemp_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_SensorTemp_OpticalGroup(0).png) 
+
+Then there is the measurement of the current related to the VTRx+ receiver. The VTRx+ receives incoming light through a fiber, and a photodiode inside converts this optical signal into an electrical current used for data transmission. The measured current corresponds to the diode’s response — sometimes referred to as the RSSI (received signal strength indicator) — which represents the amount of light collected by the diode.
+For now, this measurement is mostly stable and not particularly informative, but it can become useful in the future. With radiation damage, the photodiode’s efficiency is expected to decrease, meaning the same amount of incoming light would generate a smaller current. Monitoring this evolution can therefore help track radiation effects on the VTRx+ performance.
+During production testing, this parameter is not critical, but it is kept for completeness and possible long-term monitoring.
+![D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0).png)
+
+The last two quantities monitored are the temperature sensors from the bPOLs.
+The bPOL is the chip that in the DC-DC converter converts the voltage provided to the module to the needed voltages for the chips on the module. There are two bPOL one for the conversion 12 (in reality we supply 10.5) -> 2.5 and one for the conversion 2.5 -> 1.2. We have two stages because the VTRX needs 2.5 volts.
+Each bPOL has a temperature sensor but they are not calibrated. The slope is precise but the offset is not. So the absulute value is not correct but the variations are accurate.
+For example, if one is not well connected, one of the sensors may show a quite different value.
+
+![D_B(0)_LpGBT_DQM_BPOL12Vtemp_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0).png)
+![D_B(0)_LpGBT_DQM_BPOL2V5temp_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0).png)
+
+#### SSA and MPA - Chip
+The next type of information we record for both the SSA and the MPA are the analog and digital voltages. The analog voltage is typically around 1.2–1.3 V, while the digital voltage should be close to (but slightly above) 1 V. So far these quantities have behaved as expected, but they may become useful indicators in failure scenarios—for example if a component breaks, one might observe a sudden drop or abnormal behavior. In practice, if the chip does not receive enough power, other issues usually appear very clearly.
+
+SSA:
+![D_B(0)SSA_DQM_AVDD](../images/OTtesting/PS/SSA_DQM_AVDD.png)
+![D_B(0)SSA_DQM_DVDD](../images/OTtesting/PS/SSA_DQM_DVDD.png)
+
+MPA:
+![D_B(0)MPA_DQM_AVDD](../images/OTtesting/PS/MPA_DQM_AVDD.png)
+![D_B(0)MPA_DQM_DVDD](../images/OTtesting/PS/MPA_DQM_DVDD.png)
+
+We also monitor the temperature. Calibrations are only available for MPAs, so only relative variations can be trusted for SSAs. The true temperature is likely higher than what is shown, as the calibrations were performed over long periods without cooling. Until the proper calibration is available, the absolute values should not be interpreted literally.
+
+SSA:
+![SSA_DQM_temp](../images/OTtesting/PS/SSA_DQM_temp.png)
+
+MPA:
+![MPA_DQM_temp](../images/OTtesting/PS/MPA_DQM_temp.png)
+
+These are all the parameters currently monitored during the measurements performed with the Ph2_ACF.
