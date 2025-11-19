@@ -501,575 +501,312 @@ SSA:
 MPA:
 ![ChannelTrimBit_MPA_full](../images/OTtesting/PS/ChannelTrimBit_MPA_full.png)
 
-[01:15:03.000 --> 01:15:08.000]  And then we have the noise measurement, the scars.
-[01:15:08.000 --> 01:15:15.000]  So for the S-carve, okay, this you know quite well.
-[01:15:15.000 --> 01:15:20.000]  So we scan the threshold with a given injection and we measure the occupancy.
-[01:15:20.000 --> 01:15:25.000]  What you get is that theoretically should have a step function.
-[01:15:25.000 --> 01:15:30.000]  But then of course there's noise, so that step function is convoluted with a Gaussian.
-[01:15:30.000 --> 01:15:37.000]  And so the final result is a business error function that has a S shape.
-[01:15:37.000 --> 01:15:41.000]  So that's why we often refer them to as scarves.
-[01:15:41.000 --> 01:15:48.000]  By fitting the scarve, then we can extract back the convoluted Gaussian.
-[01:15:48.000 --> 01:15:57.000]  And therefore we can extract the noise and from the center of the convoluted step function, we can extract the duration.
-[01:15:57.000 --> 01:16:01.000]  So this stores a few more plots.
-[01:16:01.000 --> 01:16:07.000]  So starting from the chip level and in particular from the SSA.
-[01:16:07.000 --> 01:16:13.000]  So we store the full S-carve.
-[01:16:13.000 --> 01:16:19.000]  And this is also a function of the channel, the threshold that we apply in the occupancy.
-[01:16:19.000 --> 01:16:26.000]  And if I do a projection, we are going to see that this actually is an S-carve, an S shape.
-[01:16:26.000 --> 01:16:36.000]  So if you want to see all of them and since we fit them, we also store under the channel folder the S-carve with its own fit.
-[01:16:36.000 --> 01:16:42.000]  So you can also check if one particular noise or pedestal phone look weird,
-[01:16:42.000 --> 01:16:48.000]  but you can come and see if for any reason the fit was failed.
-[01:16:48.000 --> 01:16:56.000]  Then still at the level of the chip, we also store the pedestal distribution.
-[01:16:56.000 --> 01:17:01.000]  So basically the center of the S-carve that you should see is quite sharp.
-[01:17:01.000 --> 01:17:03.000]  So it's quite uniform pedestal.
-[01:17:03.000 --> 01:17:14.000]  This is thanks to the trimming as well as the pedestal distribution, but instead across the various channels.
-[01:17:14.000 --> 01:17:20.000]  So you can see how it works across the whole SSA.
-[01:17:20.000 --> 01:17:23.000]  And we do the same for the noise.
-[01:17:23.000 --> 01:17:32.000]  So we show the noise distribution, cumulative, and then the noise per channel.
-[01:17:32.000 --> 01:17:39.000]  So you can see that in the channels.
-[01:17:39.000 --> 01:17:47.000]  And that's all for the S-carve at the level of the chip, at least for SSA.
-[01:17:47.000 --> 01:17:52.000]  Just quickly for MPA, the idea is more or less the same.
-[01:17:52.000 --> 01:17:55.000]  The main difference is that some of them are 2D.
-[01:17:55.000 --> 01:18:03.000]  So this is the same as before, the S-carve for all the channels that you see is already quite well trimmed.
-[01:18:03.000 --> 01:18:04.000]  So not too bad.
-[01:18:04.000 --> 01:18:08.000]  We're just trying to see if we can do a bit better.
-[01:18:08.000 --> 01:18:15.000]  This is the, sorry, the skipped one, the pedestal distribution.
-[01:18:15.000 --> 01:18:22.000]  So you see that these are the kind of taste that we're trying to see if we can improve slightly.
-[01:18:22.000 --> 01:18:35.000]  And as for the MPA, we have the channel, where is it?
-[01:18:35.000 --> 01:18:36.000]  Can you find it?
-[01:18:36.000 --> 01:18:37.000]  Yes.
-[01:18:37.000 --> 01:18:46.000]  The channel distribution across the overall, sorry, the pedestal distribution across the overall channel.
-[01:18:46.000 --> 01:18:51.000]  Actually, I just realized it would be nice to make this one 2D rather than 1D.
-[01:18:51.000 --> 01:18:59.000]  So you can see the distribution across the map of the chip.
-[01:18:59.000 --> 01:19:02.000]  Same for the noise.
-[01:19:02.000 --> 01:19:15.000]  We have the channel noise distribution for the pixel, as well as the distribution along all the channels.
-[01:19:15.000 --> 01:19:18.000]  But in this case, we also have the 2D distribution.
-[01:19:18.000 --> 01:19:35.000]  And this one is a little bit more informing because you see that the noise at the edges are bigger because the chip, the pixel over there are larger because they need to keep into account that you cannot put 2As extra to cross to each other.
-[01:19:35.000 --> 01:19:45.000]  Also, one other information that you might notice, the two values, the two leftmost values are always the same.
-[01:19:45.000 --> 01:19:50.000]  And the reason is that the rightmost chip, in reality, does not really exist.
-[01:19:50.000 --> 01:19:53.000]  It just duplicated.
-[01:19:53.000 --> 01:20:01.000]  And this is because for simplicity, they need to match the number of strips.
-[01:20:01.000 --> 01:20:12.000]  But in reality, the number of real pixels that you have on the MPA, the real number of columns that you have is not 120, but it's only 118.
-[01:20:12.000 --> 01:20:15.000]  But at the edge, every chip is duplicated.
-[01:20:15.000 --> 01:20:25.000]  So in total, you will see it's from 120 pixels, even if in reality there are less than 120 columns.
-[01:20:25.000 --> 01:20:32.000]  Okay, so these are the plots at the level of the chip.
-[01:20:32.000 --> 01:20:42.000]  And then we have also other plots that show you the behavior on the overall module that are over here.
-[01:20:42.000 --> 01:20:51.000]  So we have the strip noise distribution over the whole hybrid, sorry, not module hybrid.
-[01:20:51.000 --> 01:20:55.000]  The same, but just the cumulative distribution.
-[01:20:55.000 --> 01:21:03.000]  The pixel channel noise distribution, as well as the cumulative distribution.
-[01:21:03.000 --> 01:21:11.000]  So basically the same plot that we're showing at the level of the chip, but just accumulated over the whole hybrid.
-[01:21:11.000 --> 01:21:18.000]  And this is all from the, oh yeah, so Alessandro, please go ahead.
-[01:21:18.000 --> 01:21:22.000]  I might not see the hands just up and let us show you now.
-[01:21:22.000 --> 01:21:25.000]  So just pick up, don't worry about interrupting.
-[01:21:25.000 --> 01:21:27.000]  Okay, no, I just raised my hand.
-[01:21:27.000 --> 01:21:31.000]  So just a technical question.
-[01:21:31.000 --> 01:21:38.000]  How is the conversion between channels and row and columns in the MPA?
-[01:21:38.000 --> 01:21:39.000]  Yes.
-[01:21:39.000 --> 01:21:47.000]  So I did this very high technical design, high level technical design.
-[01:21:47.000 --> 01:21:53.000]  So I indicate in the position, so these are, I forgot to mention, this is the top view.
-[01:21:53.000 --> 01:22:03.000]  So you have the arrow H, the POH left and right, and the position of the 00 point on the left side is over here.
-[01:22:03.000 --> 01:22:15.000]  And therefore this is a 0 960 and is inverted into the right high because they are specular.
-[01:22:15.000 --> 01:22:21.000]  Yeah, but then there are some plots, which you have on the MPA, on the MPA folder.
-[01:22:21.000 --> 01:22:27.000]  You have plots where there is channels and they goes up to all the pixel that you have.
-[01:22:27.000 --> 01:22:34.000]  And for example, if you add the plots, the 2D plots, there are column and rows.
-[01:22:34.000 --> 01:22:43.000]  So you just, it's just row times plus the columns or vice versa.
-[01:22:43.000 --> 01:22:47.000]  It is basically one row.
-[01:22:47.000 --> 01:22:51.000]  And then we stick after that the other row and so on.
-[01:22:51.000 --> 01:22:53.000]  So basically you move from left to right.
-[01:22:53.000 --> 01:22:57.000]  And then you go to the next row and you go back to right.
-[01:22:57.000 --> 01:22:59.000]  Okay, perfect. Thanks.
-[01:22:59.000 --> 01:23:01.000]  No problem.
-[01:23:01.000 --> 01:23:10.000]  Yeah, we're going to try to include all the plots of the pixel.
-[01:23:10.000 --> 01:23:20.000]  I noticed that once we're going through them, some of them, they don't really have the 2D.
-[01:23:20.000 --> 01:23:23.000]  So we're thinking we're going to just include also the 2D.
-[01:23:23.000 --> 01:23:29.000]  So it is useful also to visualize them to be so you can better understand where those are located.
-[01:23:29.000 --> 01:23:36.000]  But it's also useful to see in 1D because sometimes you see some particular trend that in 2D cannot be visible.
-[01:23:36.000 --> 01:23:44.000]  Or more 3D to be the same.
-[01:23:44.000 --> 01:23:46.000]  Okay, moving on.
-[01:23:46.000 --> 01:23:57.000]  So up to here, if you exclude the fact that we also included the ADC calibration and that, oh, I forgot to mention one thing.
-[01:23:57.000 --> 01:24:11.000]  Pedestal, so since we have done the full test for the full scan, sorry, for the pedestal, then we can do the noise injection with low injection because we trim better the pedestal.
-[01:24:11.000 --> 01:24:18.000]  So we know that the pedestal is more equalizing so we can inject lower noise.
-[01:24:18.000 --> 01:24:26.000]  Cannot be too low because of the one you run again to the big peak due to the asynchronous nature of the counters.
-[01:24:26.000 --> 01:24:34.000]  But other than that, the steps that we do up to here, excluding the ADC, are the same that is done with the quick test.
-[01:24:34.000 --> 01:24:39.000]  So basically up to now we just discussed the quick test part.
-[01:24:39.000 --> 01:24:46.000]  Now we're going to move on the thing that we just do on the full test.
-[01:24:46.000 --> 01:24:50.000]  And the first one is the injection delay optimization.
-[01:24:50.000 --> 01:25:05.000]  So here you rely on the fact that the results of the quick test are already somewhere and you pulling in the trims from the quick test.
-[01:25:05.000 --> 01:25:08.000]  No, we do it from scratch every time.
-[01:25:08.000 --> 01:25:15.000]  But then how do you inject the lower charge and expect things to work?
-[01:25:15.000 --> 01:25:20.000]  No, in the quick test we don't do the low charge injection.
-[01:25:20.000 --> 01:25:23.000]  If you turn, we do the full scan.
-[01:25:23.000 --> 01:25:25.000]  So the one that Kevin developed.
-[01:25:25.000 --> 01:25:28.000]  Oh, so this is really just one by one.
-[01:25:29.000 --> 01:25:45.000]  But in principle, you can limit the range of that and improve timing further if you already take results of the quick scan, quick test.
-[01:25:45.000 --> 01:25:47.000]  In theory, yes.
-[01:25:47.000 --> 01:25:52.000]  The only thing is that you will need to rely on the database.
-[01:25:53.000 --> 01:25:59.000]  But what if we run a pedestrian equalization without full scan right before that?
-[01:25:59.000 --> 01:26:01.000]  Will that be faster?
-[01:26:04.000 --> 01:26:06.000]  A priori, maybe yes.
-[01:26:06.000 --> 01:26:14.000]  I don't know how much you will gain on limiting the range of the full scan.
-[01:26:14.000 --> 01:26:16.000]  Oh, it's already down to three minutes.
-[01:26:16.000 --> 01:26:17.000]  Okay, that's fine.
-[01:26:17.000 --> 01:26:18.000]  Thanks.
-[01:26:18.000 --> 01:26:19.000]  No, no problem.
-[01:26:19.000 --> 01:26:21.000]  So I might check.
-[01:26:21.000 --> 01:26:27.000]  I don't know if, so you still, you will add other seconds.
-[01:26:27.000 --> 01:26:32.000]  But improving three minutes is not enough.
-[01:26:32.000 --> 01:26:40.000]  So I don't think it is a big deal at this point to keep the full test like that.
-[01:26:40.000 --> 01:26:42.000]  Okay.
-[01:26:42.000 --> 01:26:46.000]  Okay, going back to the delay optimization.
-[01:26:46.000 --> 01:26:55.000]  So the reason this point is that up to now we did everything with the injection without the synchronous without.
-[01:26:55.000 --> 01:26:58.000]  So you don't need to worry about the injection delay.
-[01:26:58.000 --> 01:27:00.000]  You don't need to worry about the latency.
-[01:27:00.000 --> 01:27:06.000]  You just inject and the counter is going to count that the comparator went above the pressure.
-[01:27:06.000 --> 01:27:10.000]  The signal went above the pressure comparator.
-[01:27:10.000 --> 01:27:21.000]  And then, however, we want to do some testing, which we all really inject events and we count the efficiency.
-[01:27:21.000 --> 01:27:31.000]  And the reason why this is, I think it's better to be done with synchronous counters that with a synchronous, especially when you go low in a threshold.
-[01:27:31.000 --> 01:27:39.000]  You don't know exactly what is your denominator because the synchronous might count three, four times into the same bunch crossing.
-[01:27:39.000 --> 01:27:43.000]  Because you have the nature of the synchronous without.
-[01:27:43.000 --> 01:27:49.000]  So instead of with the synchronous, you always know how many events you injected.
-[01:27:49.000 --> 01:27:58.000]  But in order to do that, you have to make sure that once you inject, you are also sampling the correct point of the pulse shape.
-[01:27:58.000 --> 01:28:05.000]  And in order to do that, we do a scan of the injection delay.
-[01:28:05.000 --> 01:28:07.000]  Why I close it, I have no idea.
-[01:28:07.000 --> 01:28:09.000]  Let me open it back.
-[01:28:19.000 --> 01:28:28.000]  And so we do a scan injecting of the occupancy.
-[01:28:28.000 --> 01:28:36.000]  Okay, yeah. So what we do here is that for each one of these pointing, we are delaying the injection at a certain amount.
-[01:28:36.000 --> 01:28:43.000]  And then we find the threshold at which we get a 50% occupancy.
-[01:28:43.000 --> 01:28:51.000]  What it means is that when you're 50%, your show is exactly at the height of the signal that you're going to sampling.
-[01:28:51.000 --> 01:28:58.000]  And therefore by simply plotting these as a function of the delay, you can actually reconstruct the whole shape.
-[01:28:58.000 --> 01:29:05.000]  And then the next step is just to identify the working point.
-[01:29:05.000 --> 01:29:14.000]  And this is this point, the second plot that is saved, that for the delay is relatively easy.
-[01:29:14.000 --> 01:29:16.000]  This is set at the peak.
-[01:29:16.000 --> 01:29:22.000]  And the reason why is that the peak in time in first approximation is dependent on the amount of charge that you inject.
-[01:29:22.000 --> 01:29:27.000]  So even if you decide to inject less charge, the peak is going to still be there.
-[01:29:27.000 --> 01:29:33.000]  And then from the distance from the pedestal, what we do is that we set it at 5 sigma.
-[01:29:33.000 --> 01:29:35.000]  For the time being, we'll choose that value.
-[01:29:35.000 --> 01:29:41.000]  It can be discussed to be changed, but I'm just showing you what the H2ACF is doing right now.
-[01:29:41.000 --> 01:29:48.000]  So we know that from this point onwards, all the measurement will be done with this threshold and with this injection delay.
-[01:29:48.000 --> 01:29:56.000]  If we don't change anything else, we know that every time we inject the module is in a good condition to record the heat.
-[01:29:57.000 --> 01:30:01.000]  And this is for the SSA.
-[01:30:01.000 --> 01:30:05.000]  For the MPA is exactly the same.
-[01:30:05.000 --> 01:30:13.000]  It's slightly different, however, the part shape, but the idea is identical.
-[01:30:13.000 --> 01:30:17.000]  You inject, you find a peak, and then you find a pedestal.
-[01:30:17.000 --> 01:30:25.000]  You know what is the noise because you just measure with a scale, you raise the pressure by five times that noise and you set the working point.
-[01:30:27.000 --> 01:30:35.000]  Okay, so at this point, we can actually do injection measurement because we know that the injection is properly set.
-[01:30:35.000 --> 01:30:49.000]  And we do this by injecting three different, sorry, five different amount of charge.
-[01:30:49.000 --> 01:30:57.000]  And I'm showing you first with the SSA.
-[01:30:57.000 --> 01:31:05.000]  So here it is shown the occupancy for every channel.
-[01:31:05.000 --> 01:31:15.000]  And we do it for zero meep, a quarter of a meep, half a meep, one meep and two meep.
-[01:31:15.000 --> 01:31:21.000]  And so zero meep, you basically shouldn't see anything because five signals quite high.
-[01:31:21.000 --> 01:31:27.000]  So the coupons should be below 10 to the minus five.
-[01:31:27.000 --> 01:31:31.000]  And sometimes you see one, but nothing really concerning.
-[01:31:31.000 --> 01:31:37.000]  I mean, one hit because the probability is low, but not zero.
-[01:31:37.000 --> 01:31:50.000]  Then a quarter of a meep, it comes out to be roughly around 50, a bit more than 50%, because if you do the calculation, you see that is roughly the pressure that we're setting.
-[01:31:50.000 --> 01:31:57.000]  Then half a meep is on the percent and as well as one meep and two meep.
-[01:31:57.000 --> 01:32:03.000]  And it is quite important to check lower meeps, not to have both radiation damage.
-[01:32:03.000 --> 01:32:11.000]  But for the fact that you're going to have a lower, the yours have events with low, is on now distribution.
-[01:32:11.000 --> 01:32:17.000]  But most important, I would say, because you care about the cluster size.
-[01:32:17.000 --> 01:32:24.000]  And then the same thing is done for the PS.
-[01:32:24.000 --> 01:32:37.000]  The only difference for the PS is that instead we show a 2D plot in order to see what the problem, whether it's occurring.
-[01:32:37.000 --> 01:32:42.000]  I think, okay, just for simplicity, I open everything like that.
-[01:32:42.000 --> 01:32:45.000]  The scale always goes from zero to one.
-[01:32:45.000 --> 01:32:55.000]  And as you see, there are a few noise-inch pixels, but the coupons is very low, so nothing really concerning.
-[01:32:55.000 --> 01:33:05.000]  With a quarter of a meep, instead you start to see here 100% efficiency, because the pressure is much lower for the pixel.
-[01:33:05.000 --> 01:33:10.000]  Thanks to the lower noise and the same for half a meep, one meep, and two meeps.
-[01:33:10.000 --> 01:33:17.000]  So just a small comment. You remember before saying this, pixel don't relax.
-[01:33:17.000 --> 01:33:23.000]  Every time a heat is duplicated, a heat is created here is duplicated.
-[01:33:23.000 --> 01:33:32.000]  So that's why sometimes you see something like that, but we're ignoring everything that is not month, that is not injected at the moment.
-[01:33:32.000 --> 01:33:36.000]  So you really need to be a little bit lucky to see something like that.
-[01:33:36.000 --> 01:33:43.000]  But the point is just ignore completely the first and the last, because we are not really injecting them.
-[01:33:43.000 --> 01:33:50.000]  We are just nothing. These pixels don't exist at all.
-[01:33:50.000 --> 01:34:00.000]  So you can just safely ignore them and all the rest that are 100%.
-[01:34:01.000 --> 01:34:03.000]  Okay.
-[01:34:03.000 --> 01:34:08.000]  Then the common mode noise.
-[01:34:08.000 --> 01:34:19.000]  So these.
-[01:34:19.000 --> 01:34:29.000]  So common mode noise. These are a lot of blood and I might forget some of them.
-[01:34:29.000 --> 01:34:39.000]  Okay. So the idea of the common mode noise that we want to see if there are a correlation between the channels.
-[01:34:39.000 --> 01:34:47.000]  Interior expect that every channel is completely independent from the others, but in reality, they belong to the same chip.
-[01:34:47.000 --> 01:34:49.000]  They belong to the same hybrid.
-[01:34:49.000 --> 01:34:55.000]  They share in common ground and in power.
-[01:34:55.000 --> 01:35:00.000]  So they're never going to be perfectly uncorrelated.
-[01:35:00.000 --> 01:35:08.000]  So we have, we do in reality two measurements of the common mode noise at two different thresholds.
-[01:35:08.000 --> 01:35:15.000]  And these came out after discussing with Giovanni that there was interesting to do some measurements for the integration.
-[01:35:15.000 --> 01:35:23.000]  We added a second step, but since the calibration is quite fast, it doesn't really hurt the time that is required.
-[01:35:23.000 --> 01:35:25.000]  You see that is 16 seconds.
-[01:35:25.000 --> 01:35:27.000]  So what is the trick over here?
-[01:35:27.000 --> 01:35:33.000]  So initially what we wanted to do is to maximize the occupancy.
-[01:35:33.000 --> 01:35:42.000]  So just to give you the idea, in the West, we said the pressure at the pedestal, such that the average occupancy is 50%.
-[01:35:42.000 --> 01:35:54.000]  And we can do that because the 2S and the 2S sends data unsparcified.
-[01:35:54.000 --> 01:35:57.000]  So we get one bit for every strip.
-[01:35:57.000 --> 01:36:01.000]  And then the CIC can just bypass the specification.
-[01:36:01.000 --> 01:36:06.000]  And so you can get the occupancy up to 100%.
-[01:36:06.000 --> 01:36:09.000]  So all the strips hit.
-[01:36:09.000 --> 01:36:13.000]  In the PS, there is not such an option.
-[01:36:13.000 --> 01:36:16.000]  You are limited by the amount of cluster that you can send out.
-[01:36:16.000 --> 01:36:26.000]  And in particular, you can send up to 127 strip cluster and 127 picture cluster for the whole hybrid.
-[01:36:26.000 --> 01:36:30.000]  So it's definitely not 100% occupancy.
-[01:36:30.000 --> 01:36:38.000]  So in order to try to do something as close as possible, the original idea was to the 2S.
-[01:36:38.000 --> 01:36:48.000]  The original idea was to inject an amount of certain pressure such that the occupancy is around 50% of the maximum available cluster.
-[01:36:48.000 --> 01:36:52.000]  So around 60ish cluster.
-[01:36:52.000 --> 01:36:57.000]  And these are the plots that are called occupancy driven.
-[01:36:57.000 --> 01:37:05.000]  So in this one, we are trying to have around 50% of the overall occupancy.
-[01:37:05.000 --> 01:37:16.000]  And hopefully you are going to see better when I show you at the level of the hybrid.
-[01:37:16.000 --> 01:37:18.000]  Kind of.
-[01:37:18.000 --> 01:37:25.000]  So we are trying to move these basically as much of the center as possible.
-[01:37:25.000 --> 01:37:33.000]  Consider that it's pretty tough because the resolution of the pressure doesn't allow you to do super fine adjustments.
-[01:37:33.000 --> 01:37:35.000]  So you get what you get with it.
-[01:37:35.000 --> 01:37:45.000]  So the idea for this plot should have been that we look both at the tail on the left and the tail on the right to see if there are effects of common monos.
-[01:37:45.000 --> 01:37:53.000]  You don't expect all the strips to fire at the same time or picture to fire at the same time.
-[01:37:53.000 --> 01:37:57.000]  You expect to be kind of independent.
-[01:37:57.000 --> 01:37:59.000]  Yes.
-[01:37:59.000 --> 01:38:06.000]  I mean, one thing we could do, I guess, these 127 limit is on the hybrid, not on the single chips, right?
-[01:38:06.000 --> 01:38:19.000]  So in principle, if we will switch on one chip at a time, we could, let's say measure the chip common mode, not clearly the model common mode or the hybrid common mode, but having that really at 50% I guess.
-[01:38:19.000 --> 01:38:27.000]  So you still have, you're not going to gain too much because the limit is 32 hits, 32 cluster.
-[01:38:27.000 --> 01:38:30.000]  So you gain just a little bit.
-[01:38:30.000 --> 01:38:42.000]  You still have to go to 12 clusters, which means instead of 12, instead of eight, I think more or less now you get 12.
-[01:38:42.000 --> 01:38:44.000]  So you're not going to gain too much.
-[01:38:44.000 --> 01:38:49.000]  You're still pretty far away from having something that is close to 50%.
-[01:38:49.000 --> 01:38:52.000]  No, but why? So you say the limit is 32, so you can be...
-[01:38:52.000 --> 01:38:54.000]  32.
-[01:38:54.000 --> 01:38:55.000]  Second?
-[01:38:55.000 --> 01:39:03.000]  It's 32 per the picture chip, and I think it's 24 for the strip chip.
-[01:39:03.000 --> 01:39:08.000]  And then overall, you can get up to 127 per hybrid.
-[01:39:08.000 --> 01:39:19.000]  No, these are good, but if you enable only one SSA or one MPA at a time, then you get basically 32 out of 128 possible.
-[01:39:19.000 --> 01:39:21.000]  Still, you need to...
-[01:39:21.000 --> 01:39:23.000]  Sorry, I'm bad.
-[01:39:23.000 --> 01:39:32.000]  You still need to stay around half of that because you need to be able to see more hits and less hits.
-[01:39:32.000 --> 01:39:37.000]  So it's going to be, you can center up to 16.
-[01:39:37.000 --> 01:39:42.000]  So yeah, you're going to get just a factor of two or something like that.
-[01:39:42.000 --> 01:39:43.000]  So you don't gain too much.
-[01:39:43.000 --> 01:39:48.000]  And also the other reason is that it will take just longer because you have to loop over.
-[01:39:48.000 --> 01:39:49.000]  Yeah, that's clear.
-[01:39:49.000 --> 01:39:51.000]  Then you need to do it 16 times.
-[01:39:51.000 --> 01:39:53.000]  But it's pretty fast right now.
-[01:39:53.000 --> 01:39:55.000]  Yeah, it's pretty fast.
-[01:39:55.000 --> 01:39:58.000]  It's just going to take basically eight times of that.
-[01:39:58.000 --> 01:40:02.000]  So it's just going to sum up a little bit.
-[01:40:02.000 --> 01:40:11.000]  The other thing that this came out from the discussion with Giovanni was that in reality is true.
-[01:40:11.000 --> 01:40:16.000]  That is nice that you don't expect all the channels to find at the same time.
-[01:40:16.000 --> 01:40:20.000]  And also you don't expect all the channels not to fire at the same time.
-[01:40:20.000 --> 01:40:31.000]  But at the end, you can also just look at the right tail instead of looking both at the left and the high tail.
-[01:40:31.000 --> 01:40:34.000]  And instead of looking both at the low tail and high tail.
-[01:40:34.000 --> 01:40:36.000]  So it's just going to give you half of the picture.
-[01:40:36.000 --> 01:40:45.000]  But if you're looking for something common in between the two, there is not really something that you can expect that happens just on one of the two side.
-[01:40:45.000 --> 01:40:59.000]  So that's why together with the occupancy driven, we have a second plot that is three sigma noise in which you can just look for the tail on one side.
-[01:40:59.000 --> 01:41:09.000]  So at the end of the day, what we decided to go for the time being is to have both, same for the two S.
-[01:41:09.000 --> 01:41:21.000]  And so we can choose a later point if we see that one of the two is a bit more discriminating.
-[01:41:21.000 --> 01:41:27.000]  We can just use one of the two and drop the other or we can just keep them both since it's relatively fast.
-[01:41:27.000 --> 01:41:36.000]  And so we can still have a capability to refine our analysis to a later point.
-[01:41:36.000 --> 01:41:42.000]  Okay, so I digress a little bit, but just to show you the plots.
-[01:41:42.000 --> 01:41:59.000]  So we have one plot at the level of the chip and it's basically this one.
-[01:41:59.000 --> 01:42:01.000]  So you see the number of hits.
-[01:42:01.000 --> 01:42:09.000]  So the distribution of the events given a certain number of hits, you see that we cannot do something great.
-[01:42:09.000 --> 01:42:22.000]  The occupancy is quite low by construction, both for the occupancy driven by even more for the three sigma because the three sigma goes down quite even faster than the occupancy by construction.
-[01:42:22.000 --> 01:42:27.000]  And the same is for the MPA.
-[01:42:27.000 --> 01:42:29.000]  It's not the same idea.
-[01:42:29.000 --> 01:42:35.000]  You see that here we start to see a little bit more tail to the left and right.
-[01:42:35.000 --> 01:42:39.000]  And the three sigma and which requires that it look like that.
-[01:42:39.000 --> 01:42:43.000]  So we will need to cross check it again.
-[01:42:43.000 --> 01:42:45.000]  Yeah, sorry about that.
-[01:42:45.000 --> 01:42:50.000]  It's good to go to this plot because I didn't notice that.
-[01:42:50.000 --> 01:43:02.000]  And then we have also a few information at the level of the hybrid that gives a little bit more information about the correlation.
-[01:43:02.000 --> 01:43:07.000]  Okay, so we have correlation between MPA and SSA.
-[01:43:07.000 --> 01:43:14.000]  So number of hits into the SSA and number of hits into the MPA.
-[01:43:14.000 --> 01:43:20.000]  Keep forgetting to do this.
-[01:43:20.000 --> 01:43:23.000]  Okay, let me zoom in a little more.
-[01:43:23.000 --> 01:43:29.000]  And you get a number of events are given a certain number of hits on MPA and SSA.
-[01:43:29.000 --> 01:43:33.000]  So you get this distribution.
-[01:43:33.000 --> 01:43:37.000]  And you have one for every SSA to MPA couple.
-[01:43:37.000 --> 01:43:45.000]  Then we have these that is at the level of the overall hybrid.
-[01:43:45.000 --> 01:43:52.000]  So let's keep to the three sigma by mistake.
-[01:43:52.000 --> 01:43:53.000]  Is this one?
-[01:43:53.000 --> 01:43:55.000]  Okay, same plot with occupancy driven.
-[01:43:55.000 --> 01:43:57.000]  The other one was a three sigma.
-[01:43:57.000 --> 01:44:08.000]  And you have the same idea number of events in the Z axis and the beans are the number of hits in the strip and number of hits in the pixel.
-[01:44:08.000 --> 01:44:15.000]  And then we also get one D plots.
-[01:44:15.000 --> 01:44:26.000]  So these are the number of events given a certain number of hits for the pixel and for the strips.
-[01:44:26.000 --> 01:44:36.000]  So this was for the occupancy driven exactly the same points are for the three sigma as you see for the pixel is a little bit higher, which is surprising.
-[01:44:36.000 --> 01:44:38.000]  We will need to check that.
-[01:44:38.000 --> 01:44:41.000]  But for the steps you see that is going quite low.
-[01:44:41.000 --> 01:44:49.000]  So the overall idea of this plot, what we're doing the level of potatoes that in the past that was a discussion about doing the feet.
-[01:44:49.000 --> 01:45:08.000]  These feet are quite complicated because they assume some some Gaussian behavior of the noise and some, I don't know what's that they evaluate which type of common mode noise they can address.
-[01:45:08.000 --> 01:45:13.000]  So the feet wasn't really a good indication what was going on.
-[01:45:13.000 --> 01:45:26.000]  We decided just to look for the number of hits above a center number of events above a certain number of which will give us an indication if the module as large for more noise or not.
-[01:45:26.000 --> 01:45:32.000]  It will be probably a final little bit more statistic, but for the time being this is the idea.
-[01:45:32.000 --> 01:45:44.000]  And we said some reasonable number of hits on which we are cutting and we'll just count on them on many events we have above that.
-[01:45:44.000 --> 01:45:58.000]  Okay, so now we have done with the part of the related to basically channel behavior.
-[01:45:58.000 --> 01:46:04.000]  Now we're going to go through the electric chain validation.
-[01:46:05.000 --> 01:46:20.000]  Do you have any question on what was discussed so far because the picture validation is going to be a bit intense.
-[01:46:20.000 --> 01:46:38.000]  Okay, so the goal of the electric chain validation is that we want to so before we saw that we could align the is between themselves and then that we can see meaningful data with the very five steps that we did before.
-[01:46:38.000 --> 01:46:49.000]  Now the goal is that we want to see how big is the area in which the module can align, because imagine you have alignment that always works.
-[01:46:49.000 --> 01:47:04.000]  But then these alignment has only one possible phase that to choose from these will be potentially bad because once you install into the detector it might be that the conditions that it changes and then the phase is not anymore available.
-[01:47:04.000 --> 01:47:10.000]  So the goal of the electric chain validation is to check how wide are these phases.
-[01:47:10.000 --> 01:47:20.000]  So we're going to start from so it is a little bit more scramble with respect to the previous one is simply to avoid any extra alignment steps.
-[01:47:21.000 --> 01:47:29.000]  So the order is that we start from the electric chain validation between the SSA and the MPA.
-[01:47:29.000 --> 01:47:47.000]  So basically, we are checking these the quality of these lines and the overall idea for this plot is basically always sort of a very five step where we inject a pattern and we see how well the patterns are constructed.
-[01:47:47.000 --> 01:47:51.000]  But on top of that, we do a scan of phases.
-[01:47:51.000 --> 01:47:54.000]  So we force the phase manually.
-[01:47:54.000 --> 01:47:59.000]  We don't let the chip, the CIC, the MPA, whatever, choose.
-[01:47:59.000 --> 01:48:08.000]  We force it and we also do the test outside the area in which the chip can work.
-[01:48:09.000 --> 01:48:20.000]  So starting from the SSA to MPA, these plots are stored into the into the hybrid level.
-[01:48:20.000 --> 01:48:30.000]  So since all these are pattern matching, we have two plots, one with the error rate and one with the test base.
-[01:48:30.000 --> 01:48:34.000]  You see that we have a few SSA to MPA.
-[01:48:34.000 --> 01:48:48.000]  And the reason is that we also scan the current, the drives these lines over here that is set by a register into the SSA.
-[01:48:48.000 --> 01:48:58.000]  So we can check with different amount of current that we are injecting this line with the range that we see in MPA because you can imagine that might change a little bit.
-[01:48:58.000 --> 01:49:03.000]  So I'm going to open, for example, this one.
-[01:49:03.000 --> 01:49:05.000]  Okay.
-[01:49:05.000 --> 01:49:07.000]  Okay, forgetting, sorry.
-[01:49:07.000 --> 01:49:09.000]  Okay, forgetting.
-[01:49:09.000 --> 01:49:16.000]  Don't call Z.
-[01:49:16.000 --> 01:49:17.000]  Okay.
-[01:49:17.000 --> 01:49:23.000]  So first of all.
-[01:49:23.000 --> 01:49:29.000]  So bear with me because I've been more complicated.
-[01:49:29.000 --> 01:49:34.000]  With PS, you're going to hear it is a bit more complicated every time.
-[01:49:34.000 --> 01:49:49.000]  So in between the SSA and MPA, we don't really have a real phase or actually just two possible phases that sets the edge of the clock on which the MPA is sampling the data coming from the SSA.
-[01:49:49.000 --> 01:49:53.000]  So basically, you just have a phase of 50% that you can change.
-[01:49:53.000 --> 01:49:58.000]  Now, what does it mean changing the phase?
-[01:49:58.000 --> 01:50:08.000]  It potentially also means that you can select the other edge of the clock.
-[01:50:08.000 --> 01:50:18.000]  But by doing that, you might go, you might shift by one bit and you can shift it from either to the left or to the right.
-[01:50:18.000 --> 01:50:38.000]  So for this reason, in this plot, you're going to see three bins for the falling edge of the clock and three bins for the rising edge of the clock because we also apply an extra offset that might be able to compensate the fact that by changing the clock
-[01:50:38.000 --> 01:50:43.000]  edge on which we're sampling, we're moving by one bit to the left or right.
-[01:50:43.000 --> 01:50:53.000]  We can honestly reduce the number of bits that are shifting, but I was not sure it was going to sample the first bit before and a bit after.
-[01:50:53.000 --> 01:51:00.000]  And that's why for each one of these, I'm going always to do the nominal bit delay, the bit before and the bit after.
-[01:51:00.000 --> 01:51:09.000]  Then with experience, we can skim it a little bit and gain a bit of time from this calibration.
-[01:51:09.000 --> 01:51:18.000]  So this plot shows the number of tested bits as a function of the different setting that we use.
-[01:51:18.000 --> 01:51:22.000]  And for each one of these lines, let me see if I can zoom in.
-[01:51:22.000 --> 01:51:29.000]  You see that we have all the lines for all the MPAs.
-[01:51:30.000 --> 01:51:32.000]  I can go back.
-[01:51:32.000 --> 01:51:33.000]  Okay.
-[01:51:33.000 --> 01:51:38.000]  And then on this slide, we have the error rate.
-[01:51:38.000 --> 01:51:41.000]  So the plot is the same.
-[01:51:41.000 --> 01:51:53.000]  So falling edge, rising edge, and for each one, we shift for plus and minus and no shift at all of the bit that we're using as a first bit.
-[01:51:53.000 --> 01:51:59.000]  So what you should expect for a good module is that you have one area.
-[01:51:59.000 --> 01:52:00.000]  Okay.
-[01:52:00.000 --> 01:52:08.000]  For each one of these lines, at least one area in which you get zero errors.
-[01:52:08.000 --> 01:52:22.000]  So you see, for example, that if I take the MPA 14, you see, sorry, 13, you see that there are a few areas for both the two edge or the clock that still works.
-[01:52:22.000 --> 01:52:27.000]  So in theory, this MPA can choose both of them.
-[01:52:27.000 --> 01:52:32.000]  It doesn't need to be all in the same one because every each one of these setting is independent.
-[01:52:32.000 --> 01:52:39.000]  So you can choose independently, but as long as on every horizontal line, there is a working point, you are good to go.
-[01:52:39.000 --> 01:52:46.000]  Then as I was saying before, there are a few instabilities that are trying to work it out.
-[01:52:46.000 --> 01:52:50.000]  For example, this one is not a problem because you couldn't choose this.
-[01:52:50.000 --> 01:52:58.000]  This one is not a problem because we couldn't choose these very likely these are instabilities, but these will pass the test because you still have the possibility to make it work.
-[01:52:58.000 --> 01:53:04.000]  This one, you kind of remember, let me open back the original plot.
-[01:53:04.000 --> 01:53:09.000]  Those are the same effect that we were seeing over here.
-[01:53:09.000 --> 01:53:15.000]  So these lines are the same that we have on these lines.
-[01:53:15.000 --> 01:53:18.000]  Okay, so everything is consistent.
-[01:53:18.000 --> 01:53:34.000]  So this is telling us that we have good communication and we have at least one working point for each one of these lines, excluding these that have problems between every SSA and every MPA.
-[01:53:34.000 --> 01:53:45.000]  So it would be ideal to have two points because that would be really the best, but in reality, when you're turning the clock edge by a full clock cycle, then you're not going to work.
-[01:53:45.000 --> 01:53:49.000]  It's quite important to make it work.
-[01:53:49.000 --> 01:53:54.000]  Okay.
-[01:53:54.000 --> 01:54:03.000]  Then the next step is that we want to check the
-[01:54:04.000 --> 01:54:08.000]  phases that we have between the SSA and the SSA.
-[01:54:08.000 --> 01:54:14.000]  So every SSA is changing the information of the right and leftmost
-[01:54:14.000 --> 01:54:18.000]  strips with the neighboring ones.
-[01:54:18.000 --> 01:54:22.000]  So I think I added
-[01:54:22.000 --> 01:54:27.000]  something that I got from one of the old people.
-[01:54:27.000 --> 01:54:31.000]  So the idea is that you have two nearby SSAs.
-[01:54:31.000 --> 01:54:34.000]  So this is one SSA and this is the other one.
-[01:54:34.000 --> 01:54:45.000]  And since you can have hits that can go across one SSA and another MPA and you want still to represent the stops, the SSA need to change this information.
-[01:54:45.000 --> 01:54:54.000]  So these happens also for the CBC, but for the CBC is different because here, there you have
-[01:54:54.000 --> 01:55:02.000]  basically a fake channel connected to the neighbor CBC.
-[01:55:02.000 --> 01:55:11.000]  In this case, you really have a line that changes one pattern and the pattern is this one.
-[01:55:11.000 --> 01:55:21.000]  So if that line is not properly understood for any reason, then you completely lose the communication between the two MPAs.
-[01:55:21.000 --> 01:55:23.000]  So that's what the between the two SSA.
-[01:55:23.000 --> 01:55:27.000]  So that's why I want to make sure that we have a good communication between the two.
-[01:55:27.000 --> 01:55:32.000]  This is not tested at the level of the quick test because these are only bump ones.
-[01:55:32.000 --> 01:55:35.000]  So there is nothing that you can do at that point.
-[01:55:35.000 --> 01:55:38.000]  You cannot fix that is not a word born that you can redo.
-[01:55:38.000 --> 01:55:44.000]  So that's why we just do it at the level of the full test.
-[01:55:44.000 --> 01:55:54.000]  So the plot that we save are kind of similar to what I was showing you now and also the level of the hybrid.
-[01:55:54.000 --> 01:56:05.000]  Again, also for this case, we store two plots for every condition because we have the usual error rate and number of test bits.
-[01:56:05.000 --> 01:56:13.000]  And also in this case, we can control the current that drives these lines.
-[01:56:13.000 --> 01:56:19.000]  So we are also scanning three different currents for these lines.
-[01:56:19.000 --> 01:56:31.000]  And as for before, let's see the plots.
-[01:56:31.000 --> 01:56:49.000]  Okay, so as for before, what we do is that we show that again, here we don't have a real phase, we just have the selection of the clock edge.
-[01:56:49.000 --> 01:56:55.000]  And as for before, we can have a clock shift, a bit shift.
-[01:56:55.000 --> 01:57:02.000]  And therefore we are still going to minus one plus zero and plus zero plus one bit shift.
-[01:57:02.000 --> 01:57:08.000]  Just to make sure that by shifting the edge, we don't just go into the neighboring bit.
-[01:57:08.000 --> 01:57:11.000]  Just to iterate again on this.
-[01:57:11.000 --> 01:57:12.000]  It doesn't mean that it's bad.
-[01:57:12.000 --> 01:57:18.000]  It means simply that we need, when you change the clock edge, we need also to change the bit.
-[01:57:19.000 --> 01:57:26.000]  Okay, and on the y-axis, we show the direction of the communication.
-[01:57:26.000 --> 01:57:30.000]  So from which SSA to which SSA.
-[01:57:30.000 --> 01:57:38.000]  And you see that we go here, I guess is from left to right and here is from right to left.
-[01:57:38.000 --> 01:57:43.000]  And as for the other one, we show the error rate.
-[01:57:43.000 --> 01:57:50.000]  So one thing here, you see why we have to do the difference.
-[01:57:50.000 --> 01:58:05.000]  You have to check also the one bit before, one bit after, because for this case, when we go from the rising clock to the falling one, you see that some of them, not all of them still work, but they are shifted by one bit.
-[01:58:05.000 --> 01:58:07.000]  So that's why we need to do the bit shift.
-[01:58:07.000 --> 01:58:14.000]  And for this case, you see that there is at least for each one of these lines, there is a working point.
-[01:58:14.000 --> 01:58:16.000]  Honestly, in most of the cases, there are two.
-[01:58:16.000 --> 01:58:26.000]  And I guess because the two SSA are so close that it's quite foggy in the communication.
-[01:58:26.000 --> 01:58:36.000]  Okay, so these allow you to check between two SSAs, the lateral communication.
-[01:58:36.000 --> 01:58:38.000]  Okay.
-[01:58:38.000 --> 01:58:44.000]  Then moving onwards, so the CIC to help you with the electric chain validation.
-[01:58:44.000 --> 01:58:48.000]  This one is was developed a little bit.
-[01:58:48.000 --> 01:58:51.000]  Sometimes advanced with respect to the other.
-[01:58:51.000 --> 01:58:57.000]  So just for you, we are checking this communication here.
-[01:58:57.000 --> 01:59:01.000]  We are not going to the same order because by changing these, we have to change the alignment.
-[01:59:01.000 --> 01:59:03.000]  So we don't want to repeat the alignment to run that.
-[01:59:03.000 --> 01:59:11.000]  It's just a technicality to speed up a little bit the steps.
-[01:59:11.000 --> 01:59:24.000]  So here, you're going to hear me saying that all the time today, two blocks for every step.
-[01:59:24.000 --> 01:59:27.000]  So the number test a bit and error rate.
-[01:59:27.000 --> 01:59:33.000]  And here we change a few things at the same time.
-[01:59:33.000 --> 01:59:40.000]  So we change the, as for before, we change the amount of current used to drive the lines.
-[01:59:40.000 --> 01:59:43.000]  In this case is the CIC that is there in the line.
-[01:59:43.000 --> 01:59:45.000]  We can change this.
-[01:59:45.000 --> 01:59:48.000]  Then we also change other two parameters.
-[01:59:48.000 --> 01:59:59.000]  The clock polarity because it's not shown here, but that PgT provides the clock to the hybrid in particular also to the CIC.
-[01:59:59.000 --> 02:00:11.000]  And it is extracted from the, from the, it's a record from the input optical line that is received from the at C7.
-[02:00:11.000 --> 02:00:20.000]  And so by changing the clock polarity, you basically change the working point of the CIC and therefore the working, the phases in which this work.
-[02:00:20.000 --> 02:00:28.000]  Also, you can set the current that is used to drive the, these clock line.
-[02:00:28.000 --> 02:00:36.000]  I think these will be slimmed a little bit because we're scanning a bit too much for what we saw.
-[02:00:36.000 --> 02:00:42.000]  But since these are the first modules, we want just to make sure that we have the under control.
-[02:00:42.000 --> 02:00:45.000]  So that's why you see a bunch of these plots.
-[02:00:45.000 --> 02:00:47.000]  I'm just going to open one.
-[02:00:47.000 --> 02:00:53.000]  Hopefully it's going to be a good one.
-[02:00:54.000 --> 02:00:57.000]  So the idea is already the same.
-[02:00:57.000 --> 02:01:00.000]  Number of test bits and error rate.
-[02:01:00.000 --> 02:01:09.000]  So number of test bits here are shown as a function of the LpGBT phase that we're applying the PgVT to sample incoming data.
-[02:01:09.000 --> 02:01:18.000]  And these are the seven lines, one for the level one and six for the stops, still these lines.
-[02:01:19.000 --> 02:01:23.000]  As usual, stops, stops matching is done into the firmware.
-[02:01:23.000 --> 02:01:29.000]  So we can afford to test more bits with respect to the level ones, which are still at 10 to the five.
-[02:01:29.000 --> 02:01:31.000]  So it's not a small number.
-[02:01:31.000 --> 02:01:45.000]  And then on the error, on the error rate, what you clearly see is that we have a wide area in which we can choose one of these phases, each one of these phases because there were no other.
-[02:01:45.000 --> 02:01:52.000]  These two are basically the rising and falling edge of the sigma.
-[02:01:52.000 --> 02:02:07.000]  So when you set your clock edge to sample in this area, you don't get a good identification of the bits because the signal is changing at this point.
-[02:02:07.000 --> 02:02:09.000]  So you cannot sample here.
-[02:02:09.000 --> 02:02:13.000]  But the most important part is that you have plenty of phases that you can choose.
-[02:02:13.000 --> 02:02:20.000]  And the LpGBT is you're not choosing one in between, but it could have chosen many more than that.
-[02:02:20.000 --> 02:02:23.000]  So this is what will look like a good one.
-[02:02:23.000 --> 02:02:29.000]  A bad one, it will mean that you have a small phase range or no phase range at all.
-[02:02:29.000 --> 02:02:32.000]  No phase range, you will see it earlier.
-[02:02:32.000 --> 02:02:36.000]  Small one, you will see just from this.
-[02:02:37.000 --> 02:02:40.000]  Okay. All the other one are just variation of that.
-[02:02:40.000 --> 02:02:45.000]  I think you can try to open an inverter clock.
-[02:02:45.000 --> 02:02:53.000]  I think this should move things slightly around and not test a bit this one.
-[02:02:53.000 --> 02:03:07.000]  You see that things move between the two because you're changing the clock that the CIC is using and therefore is changing the edge that is needed to sample this.
-[02:03:07.000 --> 02:03:11.000]  They come in the time to the LpGBT.
-[02:03:11.000 --> 02:03:13.000]  Okay.
-[02:03:13.000 --> 02:03:20.000]  Then, okay, we go into even more complex territory.
-[02:03:21.000 --> 02:03:33.000]  So, you might remember before I was telling you, okay, at this point in time, there is no really way to understand if you have a problem on the stub pattern matching.
-[02:03:33.000 --> 02:03:39.000]  Let me open back the plot so you can remember it.
-[02:03:39.000 --> 02:03:44.000]  Nope.
-[02:03:44.000 --> 02:04:00.000]  So, I was telling you here, we just have one bit, a one bin that tells you there were errors in the stub line, but we cannot really distinguish at this point which of the stub line is causing the issue.
-[02:04:00.000 --> 02:04:07.000]  The reason for that is that in order to do that, we need to set the CIC into a bypass mode.
-[02:04:07.000 --> 02:04:26.000]  There are a few problems. The first one is that the one is set to the CIC in bypass mode, the phase of these lines changes, and you really need, you need to realign the LpGBT, but you cannot use the automatic alignment because you are not providing the pattern that LpGBT expects, so you need to do a manual scan.
-[02:04:26.000 --> 02:04:30.000]  That is what we're going to cover into this step.
-[02:04:30.000 --> 02:04:56.000]  And then the other complexity is that the CIC receives an input 48 lines times 8 chip, so 48 lines, but it can output only maximum 7, so you need to do basically few lines at a time.
-[02:04:56.000 --> 02:05:15.000]  And by construction, you can do just four lines at a time because the lines are organized into what are called five-port, and when you bypass them, you can bypass one five-port at a time, and these will be sent out to these lines over here.
-[02:05:16.000 --> 02:05:36.000]  So you need to loop over all these five-ports, and then it's a bit complicated to do the mapping back, but the PH2SF does it for you because then in reality you would like to see what is the line and the corresponding ID that you use in PH2SF.
-[02:05:36.000 --> 02:05:56.000]  So here you have got the full table to see all the mapping, so for every front end we have the trigger lines that are the first nine, yeah, ten five-ports, and the level one are the last two, and then there is an extra complexity, because of course,
-[02:05:56.000 --> 02:06:18.000]  the front end ID used by the CIC does not match the I-square CID of the NTAs, that are the ones that we use in PH2SF, and the mapping between the front end ID and the CIC, and the mapping on the front end ID used by the I-square CID and the four by PH2SF is shown here,
-[02:06:18.000 --> 02:06:24.000]  and just to be very complicated, most of the thing is different between left and right of this map.
-[02:06:25.000 --> 02:06:44.000]  Well, okay, you don't need to know all of that, because the plot that you're going to see already are going to the mapping that you usually use in your XML file and the I-square C map, which are the numbers that you see on the hybrid when you look at the module under the microscope.
-[02:06:44.000 --> 02:07:00.000]  Okay, so all of these, so we need to loop over all these five-ports, after we set the MPA to inject a certain pattern, we loop over all of them, and we scan the LpGBT phase in order to find a working point.
-[02:07:01.000 --> 02:07:06.000]  So all these plots are stored over here.
-[02:07:07.000 --> 02:07:29.000]  They are in this LpGBT for CIC bypass, as usual, bit error rate and test bits, and also we store the best phase, which is the one that we identified with, by looking at the phase range in which you get known.
-[02:07:31.000 --> 02:07:33.000]  So let me try to open all of them.
-[02:07:34.000 --> 02:07:42.000]  So as usual, number of test bits as a function of the phase that we set on the LpGBT and the lines.
-[02:07:42.000 --> 02:07:49.000]  So here the lines are going to always be this, because these are the ones that the lines that are used when you are setting the bypass mode.
-[02:07:50.000 --> 02:08:03.000]  And then when you see the error rate, you are going to see there are points in which you have no errors, and we try to set in the center of the largest area with no errors at all.
-[02:08:04.000 --> 02:08:11.000]  So these plots, and then we'll get the best phase from this.
-[02:08:11.000 --> 02:08:14.000]  So these plots are purely auxiliary.
-[02:08:14.000 --> 02:08:26.000]  We store them because when you see problems to a later stage, you want to understand if something was happening, so you can come back and see for any reason. This type was the one thing.
-[02:08:27.000 --> 02:08:28.000]  Okay.
-[02:08:29.000 --> 02:08:47.000]  So at this point, we identified the best phase given which phyport is sent is bypassed. If I open, for example, another phyport, you're going to see that the phase are different.
-[02:08:47.000 --> 02:08:54.000]  So these, unfortunately, need to be repeated for every phase phyport, so that's why I assume it.
-[02:08:54.000 --> 02:09:12.000]  But these points are once we identify those phases, then you can safely run the electricity invalidation between the MPAs, in this case, and the CIC, by setting the CIC bypass mode and injecting a part of an MPA.
-[02:09:12.000 --> 02:09:18.000]  So we know that this pattern will go through the LGBT, we will have the core phase, and we're going to see it over here.
-[02:09:18.000 --> 02:09:27.000]  And then we are able to get the plot from the electricity invalidation between the MPA and the CIC.
-[02:09:27.000 --> 02:09:34.000]  Also in this case, we can set the current that drives these lines by setting a register into the MPA.
-[02:09:34.000 --> 02:09:37.000]  We do three different settings.
-[02:09:37.000 --> 02:09:50.000]  And guess what? We have an error rate and a number of testing bits.
-[02:09:50.000 --> 02:09:53.000]  So this one and number of test bits in particular.
-[02:09:53.000 --> 02:09:58.000]  So on the x-axis of the phase, on the y-axis, you have the various lines.
-[02:09:58.000 --> 02:10:06.000]  You see there are two empty columns because these two phases don't work into the CIC.
-[02:10:06.000 --> 02:10:12.000]  And for the bit error rate, this honestly was quite a good plot.
-[02:10:12.000 --> 02:10:26.000]  It's not always this good, but you see that for every of these lines, you get a very wide area in which any one of these phases will work because it doesn't cause any.
-[02:10:26.000 --> 02:10:32.000]  And this concludes the electric chain validation.
-[02:10:32.000 --> 02:10:38.000]  I know that is quite heavy, but I think the plots are a little bit more clear once they're explained.
-[02:10:38.000 --> 02:10:50.000]  So the whole idea is simply check how wide is the phase space in which you can find a phase that will allow you to properly set the communication between two phases.
-[02:10:50.000 --> 02:11:01.000]  And the various steps are just to check different lines that are in between two phases.
-[02:11:01.000 --> 02:11:14.000]  I'm just going to move forward, but if I have any questions, just ask and stop me anytime.
-[02:11:14.000 --> 02:11:19.000]  Okay, so we're almost at the end.
-[02:11:19.000 --> 02:11:21.000]  Bit error rate test.
-[02:11:21.000 --> 02:11:34.000]  So this uses a functionality of the LpGBT in which we are able to inject pseudo random pattern that we refer to as PRBS.
-[02:11:34.000 --> 02:11:44.000]  And these particular tests is done by pretending that the PRBS is generated by these lines.
-[02:11:44.000 --> 02:11:52.000]  And then these send all the way back to the FPGA, split back into the separated components of the line.
-[02:11:52.000 --> 02:12:02.000]  And then we check if the generated patterns matches the received pattern.
-[02:12:02.000 --> 02:12:11.000]  So we know what exactly the sequences so we can set the same sequence in the FPGA and we do this match.
-[02:12:11.000 --> 02:12:20.000]  So just one technical thing, we are technically just testing one line, but you're going to see plot for the different lines.
-[02:12:20.000 --> 02:12:29.000]  And this is simply due to the fact that we don't have enough resources to have all in the firmware to have all the lines done in one shot.
-[02:12:29.000 --> 02:12:32.000]  So we are going to do one line at a time.
-[02:12:32.000 --> 02:12:37.000]  And in theory, we can just sum all the results together.
-[02:12:37.000 --> 02:12:50.000]  But since it's quite new, we prefer to keep them separated so we can distinguish from some sort of behavior that might be related to some bug or something like that.
-[02:12:50.000 --> 02:12:56.000]  So but from point of view of analysis, you can just assume to sum them all together.
-[02:12:56.000 --> 02:13:03.000]  Okay, wrong knot.
-[02:13:03.000 --> 02:13:12.000]  So these are stored at the level of the optical group.
-[02:13:12.000 --> 02:13:17.000]  And we store a few plots.
-[02:13:17.000 --> 02:13:33.000]  So the first one that we do is a face scan because these pseudo random pattern are generated into the LpGBT using a cloud source.
-[02:13:33.000 --> 02:13:43.000]  But the LpGBT still need to properly decode this pattern in order to shoot them out correctly.
-[02:13:43.000 --> 02:13:52.000]  And therefore, you have the possibility to change the clock phases such that the LpGBT quickly samples those data.
-[02:13:52.000 --> 02:14:04.000]  And therefore, the first step is to do this clock face scan in which for each one of these lines, we identify the working point of the clock.
-[02:14:05.000 --> 02:14:10.000]  Basically, we need to find a wide area in which things are working fine.
-[02:14:10.000 --> 02:14:13.000]  And the best phase is then stored over here.
-[02:14:13.000 --> 02:14:19.000]  So this is just a technicality to make things work and on creating spurious errors.
-[02:14:19.000 --> 02:14:35.000]  Just a small caveat. So I did this measurement with a 10G module and with a 10G in this case, the clock face span is fixed.
-[02:14:35.000 --> 02:14:41.000]  It doesn't change if we go 10 giga or 5 giga.
-[02:14:41.000 --> 02:14:44.000]  And that's why I don't need to do the full scan.
-[02:14:44.000 --> 02:14:46.000]  I just need to do half of the scan.
-[02:14:46.000 --> 02:14:49.000]  So that's why you are never going to see anything on top of that.
-[02:14:49.000 --> 02:14:54.000]  Just to prove you that I'm not doing it at all for all the other ones.
-[02:14:54.000 --> 02:14:56.000]  We store also the number of tests a bit.
-[02:14:56.000 --> 02:15:00.000]  Let me see that here. We don't do absolutely anything.
-[02:15:00.000 --> 02:15:10.000]  But once we identify the correct phase with this scan, then we can actually do the real bit error rate test.
-[02:15:10.000 --> 02:15:18.000]  And as usual, we store two information, the number of tests a bit that you see.
-[02:15:18.000 --> 02:15:28.000]  So we are collecting 10 to the 10, kind of 10 to the 10 bits for every line.
-[02:15:28.000 --> 02:15:30.000]  And as I was saying, you can sum them all together.
-[02:15:30.000 --> 02:15:35.000]  It's a separate acquisition, but just they're testing the same thing.
-[02:15:36.000 --> 02:15:43.000]  And so we are doing roughly 10 to the 11 bits that are tested.
-[02:15:43.000 --> 02:15:48.000]  You also see there is some symmetry simply because we do that the hybrid's in parallel.
-[02:15:48.000 --> 02:15:52.000]  So we stop these, but one line at a time.
-[02:15:52.000 --> 02:15:56.000]  So we stop these two hybrids at the same time, these two hybrid at the same time.
-[02:15:56.000 --> 02:16:04.000]  So that's why the beta tests that are kind of symmetric because we are doing the two acquisition in parallel.
-[02:16:05.000 --> 02:16:11.000]  And you see, we don't really have a way to ask a number of bits.
-[02:16:11.000 --> 02:16:14.000]  We just calculate how long it's going to take.
-[02:16:14.000 --> 02:16:24.000]  And we just check that the amount of bits that are tested matches that are at least as big as the number of bits.
-[02:16:24.000 --> 02:16:28.000]  And then the bit error rate shows something like that.
-[02:16:28.000 --> 02:16:30.000]  It should be over zero.
-[02:16:30.000 --> 02:16:38.000]  So for this type of application, the request is usually to be below 10 to the minus 12, 10 to the minus 13.
-[02:16:38.000 --> 02:16:43.000]  And since you are testing 10 to the 11, you will expect always zero.
-[02:16:43.000 --> 02:16:55.000]  The reason why we cannot really do in production more than that is because this is really the time that you need to wait for receiving all these bits.
-[02:16:55.000 --> 02:17:02.000]  And if you had to do around 10 to the 13, it comes to be around a few hours of data taking.
-[02:17:02.000 --> 02:17:04.000]  So it is not really feasible.
-[02:17:04.000 --> 02:17:07.000]  We did it on a couple of modules while developing it.
-[02:17:07.000 --> 02:17:15.000]  And we will probably do it on more modules in the future just to have sort of an idea of things that are behaving overall.
-[02:17:15.000 --> 02:17:23.000]  But on every modules, it becomes very complicated because it will take quite a lot of time.
-[02:17:24.000 --> 02:17:33.000]  Okay. And then the last plot that we save at the same time of the bit error rate test is the forward error correction counter.
-[02:17:33.000 --> 02:17:39.000]  So these modules implement a FAC5.
-[02:17:39.000 --> 02:17:43.000]  They stand for forward error correction five bits.
-[02:17:43.000 --> 02:17:52.000]  And the reason is that they have a special extra bits that allow to correct up to five bit flips.
-[02:17:53.000 --> 02:18:04.000]  So the thing that we want to check is that not only you don't have a bit error rate test, but you also don't have error that were there, but they were actually corrected.
-[02:18:04.000 --> 02:18:09.000]  So in the firmware, we had the possibility to count how many errors were corrected.
-[02:18:09.000 --> 02:18:17.000]  And in this case, you don't see it anymore split for the two left and right hybrid because this is a property of the overall packet.
-[02:18:17.000 --> 02:18:26.000]  So we just count how many errors were in the packet that contains both the left and right hybrid.
-[02:18:26.000 --> 02:18:28.000]  So this is a single plot.
-[02:18:28.000 --> 02:18:41.000]  So what might happen is that you see FAC counters, but you don't see any bit error counters simply because the errors were, we were able to correct them, which is good.
-[02:18:41.000 --> 02:18:51.000]  But we also want to make sure that we don't have any error to correct because the communication is good to start with.
-[02:18:51.000 --> 02:18:59.000]  Okay, and now I'm really at the end of the result file and it's the OT register tester.
-[02:18:59.000 --> 02:19:02.000]  So this is a very simple test.
-[02:19:02.000 --> 02:19:15.000]  So what we do is that we read and write, I think, 1000 times a few registers in all the ASAPs that we have at the level of the hybrid of the SQLC.
-[02:19:15.000 --> 02:19:18.000]  So this is a check of the SQLC stability.
-[02:19:18.000 --> 02:19:31.000]  And with a store in a plot that is at the level of the hybrid, what the efficiency for each of the chips for you see the SSA, the MPA and the SAC.
-[02:19:31.000 --> 02:19:40.000]  Here you want to basically check if you have any problem basically in the connector between the front end and the without hybrid.
-[02:19:41.000 --> 02:19:46.000]  Because if you have a bad connection, you might have some stability in this process.
-[02:19:46.000 --> 02:19:48.000]  So far, we never seen anything like that.
-[02:19:48.000 --> 02:19:53.000]  And efficiency is always 100% because that process is very stable.
-[02:19:53.000 --> 02:19:58.000]  It should be very stable for all the good models.
-[02:19:58.000 --> 02:20:14.000]  Okay, so this was the overall discussion for the plots that are produced by the full test and these include also the quick test.
-[02:20:14.000 --> 02:20:19.000]  So I'm going to next move to the monitor BQM file.
-[02:20:19.000 --> 02:20:30.000]  So I think it's a good time to stop to see if you have any comments or question what was discussed today.
-[02:20:30.000 --> 02:20:37.000]  Until then.
-[02:20:37.000 --> 02:20:39.000]  Okay.
+##### PedeNoise - Hybrid, Chip, Channel
+
+A scan of the applied threshold is performed, measuring the occupancy injecting some pulse for each threshold value. Ideally, this would produce a perfect step function. In reality, the presence of noise modifies the response, effectively convoluting the step function with a Gaussian. The Gaussian represents the noise in the system, and the resulting curve takes an S shape. This S-shaped curve is referred to as the “S curve.”
+
+For this test, many plots are saved at different levels.
+
+The S-Curve distribution is saved for each channel and shown below for one example channel.
+On the X-axis there is the applied threshold in VcTh units (1 VcTh unit =  94 electrons for MPAs and 250 electrons for SSAs). Lower VcTh correspond to lower thresholds. On the Y-axis there is the occpuncy. Each S-curve is fitted individually. From this fit, the Gaussian component of the convolution allows extraction of the noise, represented by the width of the Gaussian. The underlying step function from the convolution corresponds to the pedestal, which is measured at around 50% occupancy. This measurement is performed without injection, so the pedestal obtained reflects the actual baseline of the system.
+
+SSA:
+![SCurve_1channel_SSA](../images/OTtesting/PS/SCurve_1channel_SSA.png)
+MPA:
+![SCurve_1channel_MPA](../images/OTtesting/PS/SCurve_1channel_MPA.png)
+
+At the chip level, a 2D summary plot is stored summarizing the S-curve of all channels. Each plot shows channels on the x-axis, thresholds on the y-axis, and occupancy on the z-axis, with each line representing a single channel.
+
+SSA:
+![SCurve_SSA](../images/OTtesting/PS/SCurve_SSA.png)
+
+MPA:
+For the 2D plots, you have both columns and rows. The 1D representation is simply obtained by taking each row and placing it after the previous one. In other words, you read the pixels from left to right across a row, then move to the next row and again go from left to right, and so on.
+![SCurve_MPA](../images/OTtesting/PS/SCurve_MPA.png)
+
+<details>
+  <summary>Known issues</summary>
+
+For the strip sensor only (plots taken from 2S modules):
+
+Broken wirebond or disconnected bump bond can show up as a compressed S-curve for a specific channel.
+
+![SCurve_Chip_buggy](../images/OTtesting/2S/SCurve_Chip_buggy.png)
+
+Another know issues is when horizontal stripes are present. This is a communication issue affecting the whole module. Example will be added when found again.
+
+
+</details>
+
+
+From the S-Curve, the pulse height for every channel can be extracted. The cumulative distribution of the pulse height should appear very sharp, while failures would show as long tails or outliers.
+
+SSA:
+![PulseHeightDistribution_SSA](../images/OTtesting/PS/PulseHeightDistribution_SSA.png)
+
+MPA:
+![PulseHeightDistribution_MPA](../images/OTtesting/PS/PulseHeightDistribution_MPA.png)
+
+The channel pedestal plot shows the pedestal for each channel, revealing a very uniform distribution across all channels within a few VcTh, corresponding to a width of a few hundred electrons.
+
+SSA:
+![ChannelPulseHeight_SSA](../images/OTtesting/PS/ChannelPulseHeight_SSA.png)
+
+MPA:
+![ChannelPulseHeight_MPA](../images/OTtesting/PS/ChannelPulseHeight_MPA.png)
+
+
+Similar distribution are also shown for the noise.
+
+SSA:
+
+![NoiseDistribution_SSA](../images/OTtesting/PS/NoiseDistribution_SSA.png)
+![ChannelNoise_SSA](../images/OTtesting/PS/ChannelNoise_SSA.png)
+
+MPA:
+![NoiseDistribution_MPA](../images/OTtesting/PS/NoiseDistribution_MPA.png)
+![ChannelNoise_MPA](../images/OTtesting/PS/ChannelNoise_MPA.png)
+
+In this case, we also have the 2D distribution.
+This view is more informative because you can immediately see that the noise is larger at the edges. The reason is that the pixels near the edges are physically larger.
+Another detail you may notice is that the two leftmost columns always have the same value.
+This is because the leftmost and rightmost channels do not actually exist—they are duplicated entries. The duplication is done to simplify the matching to the strip side.
+In reality, the MPA does not have 120 distinct pixel columns. It has only 118 real columns, but the edge columns are duplicated so that the data structure still appears to have 120 columns. That is why you see 120 columns in the plots even though the number of physical columns is smaller.
+![2DChannelNoise_MPA](../images/OTtesting/PS/2DChannelNoise_MPA.png)
+
+There are there very similar distributions summarizing the performance at the hybrid level.
+
+Strips:
+![StripNoiseDistribution_Hybrid](../images/OTtesting/PS/StripNoiseDistribution_Hybrid.png)
+Higher noise toward the POH (SSA0 on right hybrid and SSA7 on left hybrid) is expected.
+![StripChannelNoise_Hybrid](../images/OTtesting/PS/StripChannelNoise_Hybrid.png)
+
+
+
+Pixels:
+![PixelNoiseDistribution_Hybrid](../images/OTtesting/PS/PixelNoiseDistribution_Hybrid.png)
+![PIxelChannelNoise_Hybrid](../images/OTtesting/PS/PixelChannelNoise_Hybrid.png)
+
+
+
+<details>
+  <summary>Known issues</summary>
+
+A group of channel with high noise may indicate a scratch on the sensor.
+![StripChannelNoise_Scratch](../images/OTtesting/2S/StripChannelNoise_Scratch.png)
+
+A channel with low noise could indicate a broken wirebond. Below 2 a broken bumpbond.
+![StripChannelNoise_brokenBonds](../images/OTtesting/2S/StripChannelNoise_brokenBonds.png)
+
+Groups of broken channels in the center of CBC can indicate that sparking occurred.
+![StripChannelNoise_Sparking](../images/OTtesting/2S/StripChannelNoise_Sparking.png)
+
+If the HV is not applied, a very high noise is shown over both hybrids and sensors.
+</details>
+
+##### OTinjectionDelayOptimization - Chip
+Up to this point, all our tests used asynchronous injection, so we didn’t need to worry about injection delay or latency. You simply inject a charge, and the counter registers whenever the signal crosses the comparator threshold.
+However, when we want to measure efficiencies by injecting real events, asynchronous counters become unreliable—especially at low thresholds—because they can count multiple times within the same bunch crossing. With synchronous counters, on the other hand, you always know exactly how many events were injected, so the denominator of the efficiency is well defined.
+To use synchronous counting correctly, we must ensure that the sampling occurs at the right point on the pulse shape. For this reason, we perform a scan of the injection delay.
+
+
+Injection tests are performed by scanning the injection delay and measuring, for each delay, the threshold corresponding to 50% occupancy—where the input signal equals the comparator threshold—allowing reconstruction of the full signal distribution as a function of time.
+
+SSA:
+![ThresholdVsDelayScan_SSA](../images/OTtesting/PS/ThresholdVsDelayScan_SSA.png)
+MPA:
+![ThresholdVsDelayScan_MPA](../images/OTtesting/PS/ThresholdVsDelayScan_MPA.png)
+At this stage, the working point can be determined by setting the injection delay at the signal peak, which in first approximation is independent of the injected charge, ensuring that the signal always crosses the threshold at the same instant; the distance from the pedestal is then adjusted—typically five times the measured pedestal noise from the previous calibration—to suppress pedestal-induced noise and precisely define the working point.
+
+![BestThresholdAndDelay_SSA](../images/OTtesting/PS/BestThresholdAndDelay_SSA.png)
+
+![BestThresholdAndDelay_MPA](../images/OTtesting/PS/BestThresholdAndDelay_MPA.png)
+
+From this point onward, each injection measurement is performed using the identified injection delay and threshold, ensuring that subsequent tests are properly configured so that any injected charge is read at the correct value.
+
+##### OTinjectionOccupancyScan - Chip
+
+The occupancy is measured for different injection charges to establish a reference: first by recording the occupancy without injection to quantify the contribution from noise alone, and then by measuring the response for known injected charges, allowing evaluation of the detection efficiency for signals corresponding to specific charge amounts.
+
+Five different measurements are performed, corresponding to five different plots. Three examples are shown, for no injection and one for some injected charge.
+
+The one below is without injection.
+SSA:
+![ChannelOccupancy_Injection_0.000_MIP_SSA](../images/OTtesting/PS/ChannelOccupancy_Injection_0.000_MIP_SSA.png)
+MPA:
+![ChannelOccupancy_Injection_0.000_MIP_MPA](../images/OTtesting/PS/ChannelOccupancy_Injection_0.000_MIP_MPA.png)
+
+The occupancy is measured for each chip, and although some slight activity may appear, the threshold is set to five times the noise, so almost no signal is expected except for very small fluctuations (that may be more visible in log scale).
+
+Then, injections are performed at different charge levels — for example, a quarter of a MIP, which corresponds to roughly the same level as the threshold set at five times the noise, yielding about 50% efficiency. This value indicates that a signal equivalent to a quarter of a MIP produces a 50% detection probability. Measuring lower charges is important to study cluster size and improve spatial resolution. Subsequent plots show the occupancy for each channel at 0.25, 0.5, 1, and 2 MIPs, allowing identification of potential issues. The inspection of these results is automated by potato, which flags problematic modules; manual inspection is mainly needed for those flagged as bad. Since each CBC chip behaves slightly differently, occupancy maps are produced per CBC and per channel, enabling the identification of noisy or inefficient channels, such as those with damaged comparators, although new modules typically show very few such cases.
+
+SSA:
+![ChannelOccupancy_Injection_0.250_MIP_SSA](../images/OTtesting/PS/ChannelOccupancy_Injection_0.250_MIP_SSA.png)
+![ChannelOccupancy_Injection_1.000_MIP_SSA](../images/OTtesting/PS/ChannelOccupancy_Injection_1.000_MIP_SSA.png)
+MPA:
+The inefficiency in the edge pixels are not real. They are a result of the large double pixels.
+![ChannelOccupancy_Injection_0.250_MIP_MPA](../images/OTtesting/PS/ChannelOccupancy_Injection_0.250_MIP_MPA.png)
+![ChannelOccupancy_Injection_1.000_MIP_SSA](../images/OTtesting/PS/ChannelOccupancy_Injection_1.000_MIP_MPA.png)
+
+
+##### OTPScommonNoise - OpticalGroup, Hybrid, Chip
+The goal of the common-mode noise measurement is to check whether channels behave in a correlated way. Ideally each channel would be completely independent, but in reality channels on the same chip and hybrid share ground, power, and other circuitry, so some correlation is expected.
+We perform two measurements at two different thresholds. This came after discussions with Giovanni, who suggested adding an additional point for integration studies. Since the calibration is fast (about 16 seconds), adding a second threshold has minimal impact on total time.
+Occupancy-driven approach
+The original idea—taken from the 2S procedure—was to maximize the occupancy.
+For the 2S this is straightforward because the 2S sends unsparsified data: we get one bit per strip, and the CIC can bypass sparsification. This makes it possible to reach 100% occupancy.
+For the PS, however, the output is limited by the maximum number of clusters that can be transmitted:
+- up to 127 strip clusters per hybrid
+- up to 127 pixel clusters per hybrid
+So we cannot reach full occupancy. To approximate the 2S-style approach, we tune the threshold to achieve about 50% of the available clusters—roughly 60 clusters for the whole hybrid. Because the threshold DAC has limited resolution, the occupancy cannot be tuned very precisely, but we aim to center the distribution as much as possible. These results are shown in the occupancy-driven plots.
+The idea is to examine both the low- and high-occupancy tails to look for signs of common-mode effects, since you do not expect all channels to fire—or not fire—simultaneously.
+A possible alternative would be to enable one SSA or one MPA at a time. That would allow a slightly higher relative occupancy per chip (e.g., 16 clusters out of 32 instead of 8 out of 127), but the gain is modest and the procedure would become significantly longer, since it would need to be repeated for all chips.
+In practice we might only need to look at one side of the distribution. Correlated noise is not expected to affect the low and high tails differently. Therefore, in addition to the occupancy-driven plot, we also produce a 3σ noise plot, which focuses on only one tail.
+
+For now we keep both methods—occupancy-driven and 3σ noise—just as we do for the 2S. Since the scans are fast, having both gives more flexibility, and later we can choose the one that provides the best discrimination or simply keep both if they remain useful.
+
+
+- Below the common noise distribution for one chip is shown. 
+
+Here the hits on one chip are shown. It shows the distribution of events vs. number of hits on that chip.
+Occupancy is low by construction because the PS cannot reach high hit multiplicity.
+SSA:
+![CommonNoiseHits_OccupancyDriven_SSA](../images/OTtesting/PS/CommonNoiseHits_OccupancyDriven_Chip_SSA.png)
+MPA:
+![CommonNoiseHits_OccupancyDriven_MPA](../images/OTtesting/PS/CommonNoiseHits_OccupancyDriven_Chip_MPA.png)
+
+- Now we show distributions at the hybrid level
+
+
+Here we look at the distribution of the number of hits per event across the entire hybrid for strips and pixels. The hybrid-level 1D hit distributions show the number of events as a function of the number of hits for pixels and strips separately. Both occupancy-driven and 3σ versions exist. The pixel side often shows a slightly higher tail, while the strip side falls off quickly at low hit counts due to cluster-size limits.
+![CommonNoiseHitsStrip_OccupancyDriven_Hybrid](../images/OTtesting/PS/CommonNoiseHitsStrip_OccupancyDriven_Hybrid.png)
+![CommonNoiseHitsPixel_OccupancyDriven_Hybrid](../images/OTtesting/PS/CommonNoiseHitsPixel_OccupancyDriven_Hybrid.png)
+
+We also have common noise correlation plots for each SSA-MPA pair. The chip-to-chip correlation plots display the number of hits in the SSA versus the number of hits in the MPA for each event, with the z-axis showing how many events populate each combination. These plots allow you to see correlated behaviour between the pixel and strip chips within the same module.
+![SSAtoMPA_CommonNoiseCorrelation_OccupancyDriven_Hybrid](../images/OTtesting/PS/SSAtoMPA_CommonNoiseCorrelation_OccupancyDriven_Hybrid.png)
+
+And the correlation at the hybrid level. At the hybrid level, the 2D correlation plots use the number of strip hits on the x-axis and the number of pixel hits on the y-axis, with the number of events shown on the z-axis. These give a global view of correlations across the entire hybrid
+![CommonNoiseStripPixelCorrelation_OccupancyDriven_Hybrid](../images/OTtesting/PS/CommonNoiseStripPixelCorrelation_OccupancyDriven_Hybrid.png)
+
+
+- OpticalGroup/Module level distributions
+
+![CommonNoiseHitsStrip_OccupancyDriven_OG](../images/OTtesting/PS/CommonNoiseHitsStrip_OccupancyDriven_OG.png)
+![CommonNoiseHitsPixel_OccupancyDriven_OG](../images/OTtesting/PS/CommonNoiseHitsPixel_OccupancyDriven_OG.png)
+
+
+And the correlation at the hybrid level:
+![CommonNoiseStripPixelCorrelation_OccupancyDriven_OG](../images/OTtesting/PS/CommonNoiseStripPixelCorrelation_OccupancyDriven_OG.png)
+
+
+These results are harder to interpret, reflecting the true behavior of the module, so if any unusual tails or unexpected noise appear in the pedenoise results, these plots should be checked to identify possible anomalies by comparing them with reference common noise plots from other modules to confirm that the noise distribution matches expectations.
+
+##### Electric Chain Validation (ECV)
+The electric chain validation focuses on evaluating the width of the working area of the communication phases within the module. Unlike the verification step, which uses the phase identified by the CIC or the LpGBT as optimal, the validation manually scans different phases to determine the range over which the chain remains operational. A broad working area indicates a stable configuration, while a narrow one suggests that the system operates close to its limits and may become unstable once installed in the detector.
+
+
+##### OTSSAtoMPAecv - Hybrid
+
+We force the system into all possible operating points, including regions outside the normal working range of the chip. Starting with the SSA-to-MPA communication, these plots are stored at the hybrid level. Because everything is based on pattern matching, we produce two plots: one showing the error rate and one showing the number of tested bits. You will notice several SSA→MPA plots, because we also scan the current that drives the lines between the SSA and MPA. This current is set by a register on the SSA, and by scanning it we check how the MPA responds to different drive strengths, since the optimal value can vary.
+
+Between the SSA and MPA there is no real fine phase control: only two possible phases exist, corresponding to the rising or falling edge of the clock on which the MPA samples the data arriving from the SSA. Changing the sampling phase may effectively switch to the opposite edge of the clock, but doing so can also shift the data by one bit to the left or right. To account for this, the plot contains three bins for the rising edge and three for the falling edge. For each edge we test the nominal bit, the bit before, and the bit after. This compensates for the possible bit shift introduced when the sampling edge changes. With more experience we may eventually reduce the number of tested offsets, but for now we include all three to guarantee that the first bit is correctly sampled.
+
+The first plot shows the number of tested bits for every configuration, and each line corresponds to a different MPA. 
+
+![SSAtoMPA_SamplingEdgeTestedBits_SSA_SLVScurrent_4_Hybrid](../images/OTtesting/PS/SSAtoMPA_SamplingEdgeTestedBits_SSA_SLVScurrent_4_Hybrid.png)
+
+The second plot shows the error rate for the same configurations—again grouped by rising edge, falling edge, and the three possible bit offsets for each. For a good module you expect that, for each horizontal line (each line of each MPA), at least one configuration yields zero errors.
+
+![SSAtoMPA_SamplingEdgeErrorRate_SSA_SLVScurrent_4_Hybrid](../images/OTtesting/PS/SSAtoMPA_SamplingEdgeErrorRate_SSA_SLVScurrent_4_Hybrid.png)
+
+Each configuration is independent, so the MPAs do not all need to use the same clock edge or offset; as long as every MPA has at least one valid setting, the module is considered good.
+
+
+##### OTSSAtoSSAecv - Hybrid
+
+The next step is to check the phases between one SSA and the neighboring SSA. Each SSA exchanges information about the leftmost and rightmost strips with the adjacent chip. This is necessary because hits can span across two SSAs and their corresponding MPAs, and the system must still be able to form correct stubs. The same concept exists for the CBC, but in that case it is implemented differently: the CBC uses a fake channel connected to the neighboring chip, whereas the SSA uses an actual line that transfers the pattern shown here. If this line is not interpreted correctly for any reason, the communication between the two SSAs is lost. Since this is a purely bump-bond–level connection, it is not something that can be fixed during the quick test; it can only be evaluated during the full test.
+The plots we save are similar to the SSA→MPA communication plots and are also stored at the hybrid level. For each condition we again save two plots: one with the error rate and one showing the number of tested bits. As before, we scan three different drive-current settings for these lines by adjusting the SSA register that controls the current.
+As with the previous case, there is no fine phase control between the SSAs—only the choice of sampling on the rising or the falling edge of the clock. Changing the sampling edge can produce a one-bit shift in either direction, so we test three bit positions (–1, 0, +1) for each of the two edges to ensure that a working configuration is not missed simply because the sampling edge moves the data boundary.
+In the plots, the y-axis shows the direction of the communication: one set of lines corresponds to SSA-A sending to SSA-B, and the other corresponds to SSA-B sending back to SSA-A. Just as before, the second plot shows the corresponding error rate for all tested configurations.
+This is also the reason why we must include the bit-shift tests. When switching from rising-edge sampling to falling-edge sampling, some SSAs still work correctly, but the valid working point is shifted by one bit. For each communication direction, at least one valid configuration is required, and in practice there are often two. This is likely because the two SSAs are physically close, making the communication relatively forgiving.
+Overall, this procedure verifies the lateral communication between neighboring SSAs and ensures that every pair has at least one reliable operating point.
+
+![SSAtoSSA_SamplingEdgeTestedBits_SSA_SLVScurrent_4_Hybrid](../images/OTtesting/PS/SSAtoSSA_SamplingEdgeTestedBits_SSA_SLVScurrent_4_Hybrid.png)
+![SSAtoSSA_SamplingEdgeErrorRate_SSA_SLVScurrent_4_Hybrid](../images/OTtesting/PS/SSAtoSSA_SamplingEdgeErrorRate_SSA_SLVScurrent_4_Hybrid.png)
+
+
+##### OTCICtoLpGBTecv - Hybrid
+The CIC-to-LpGBT ECV studies the transmission between the CIC and LpGBT by varying the LpGBT sampling phase and checking whether the data patterns sent by the CIC are correctly reconstructed in the FPGA. For each phase setting, the number of tested bits and corresponding error rate are recorded in hybrid-level plots labeled as CIC-to-LpGBT pattern matching. The test also explores the impact of varying the current used by the CIC to drive the data (SLVS strenght, from 1 to 5), the LpGBT clock polarity, and the CIC clock drive strength (from 1 to 7). The LpGBT provides the clock to the hybrid, and changing its polarity effectively shifts the clock phase by 50%. These variations help evaluate how different transmission parameters affect data reconstruction and identify the range of stable operating conditions where several phases ensure reliable communication between components.
+
+
+This plot shows, on the Y axis, the line ID corresponding to each transmission line, and on the X axis, the manually selected LpGBT sampling phase, which ranges from 0 to 14. The phase is varied manually rather than letting the LpGBT automatically adjust it, in order to explore also regions where the LpGBT cannot properly sample the incoming data. The Z axis represents the number of tested bits, with the stub pattern matched in firmware for speed, while the Level-1 pattern matching is performed in the software, resulting in longer scan times and fewer tested bits.
+![CICtoLpGBT_PatternMatchingTestedBits_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid](../images/OTtesting/PS/CICtoLpGBT_PatternMatchingTestedBits_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid.png)
+
+
+In the plot below the Z axis represents the number of errors. Some lines are expected not to work properly, since sampling may occur when the incoming data from the CIC are transitioning, leading to bit misinterpretation. The quality of a module is therefore evaluated by the width of the phase range over which correct data transmission is achieved.
+![CICtoLpGBT_PatternMatchingErrorRate_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid](../images/OTtesting/PS/CICtoLpGBT_PatternMatchingErrorRate_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid.png)
+
+Many versions of the above plots are stored for the various values and combinations of the current used by the CIC to drive the data (SLVS strenght, from 1 to 5), the LpGBT clock polarity, and the CIC clock drive strength (from 1 to 7).
+
+##### OTalignLpGBTinputsForBypass - Hybrid
+Earlier I mentioned that, at that stage of [MPAtoCIC_PatternMatcing](#otverifycicdataword---hybrid)  testing, we cannot yet determine which specific stub line is causing an error in the stub pattern matching. The plot we looked at only shows a single bin indicating that some error occurred, but it does not identify which stub line is responsible. To obtain that level of detail, the CIC must be put into bypass mode.
+This introduces several complications. First, when the CIC is in bypass mode, the phase of the data lines changes. Because of this, the LpGBT must be realigned. However, we cannot use the automatic alignment, since the bypassed data does not contain the pattern expected by the LpGBT, so we are forced to perform a manual phase scan. This is what the next step is about.
+The second complication is that the CIC receives 48 input lines from each group of eight MPAs, but can output at most seven lines at a time. In practice, the lines are grouped into “phyports,” and only one phyport can be bypassed at a time. This means we can only test four lines at once. We therefore need to loop over all phyports to cover all lines.
+[Mapping](https://fnal-outer-tracker.docs.cern.ch/documents/PhyPortMap.pdf) the CIC lines back to the identifiers used in Ph2_ACF is non-trivial, because the front-end IDs used inside the CIC do not match the I²C addresses assigned to the MPAs. The full mapping between CIC front-end IDs, I²C IDs, and the identifiers used in Ph2_ACF is given in the table shown here. To make things more confusing, the mapping differs between the left and right branches of the hybrid. Fortunately, Ph2_ACF handles this internally, so the plots you will see are already expressed in terms of the familiar IDs used in your XML configuration and the numbers printed on the hybrid.
+For each phyport, we configure the MPAs to inject a known pattern, set the CIC into bypass mode, and then scan the LpGBT phase to find a working region. The resulting plots are stored in the directory for “LpGBT for CIC bypass” and include both the number of tested bits and the bit-error rate. We also store the “best phase,” defined as the central value of the largest continuous phase region with zero errors.
+The test-bit plots show, for each phase of the LpGBT, how many bits were received, and the error-rate plots indicate where errors occur. 
+
+![LpGBTforCICbypass_PhaseScanTestedBits_phyPort0_Hybrid](../images/OTtesting/PS/LpGBTforCICbypass_PhaseScanTestedBits_phyPort0_Hybrid.png)
+
+In the error-rate plot, the regions with no errors mark the usable phases, and we select the nominal operating phase in the center of the widest such region. 
+
+![LpGBTforCICbypass_PhaseScanBitErrorRate_phyPort1_Hybrid](../images/OTtesting/PS/LpGBTforCICbypass_PhaseScanBitErrorRate_phyPort1_Hybrid.png)
+
+These plots are mainly auxiliary: they allow you to diagnose problems later on by checking whether any anomaly was already visible at the bypass-mode stage.
+Since each phyport has a different optimal phase, this entire procedure must be repeated for all phyports. After completing this scan, we have a reliable phase setting for each group of lines. At that point, we can safely run the full link-validation tests between the MPAs and the CIC in bypass mode, using injected patterns from the MPAs and verifying their integrity through the CIC.
+
+##### OTChipToCICecv - Hybrid
+
+The final step of the electrical chain validation focuses on the link between the MPA and the CIC. For this stage, we again produce two plots per scan point: the error rate and the number of tests. The procedure is similar to the previous validation steps, but here we vary the MPA output drive current that controls the signal strength on the lines between the MPA and the CIC. Three current settings are typically used to study the behavior of the link. In this configuration, a higher drive strength corresponds to a lower numerical value—so current setting 0 gives the highest current, 14 the lowest, and 8 an intermediate value. 
+
+The plots follow the same format as before, with the phase on the x-axis and the line ID on the y-axis, showing all MPAs and their corresponding lines. Phases 2 and 3 are absent because they are not functional on the CIC and are therefore skipped. As usual, the number of tests is smaller for the Level-1 data since those checks are performed in software—still around 10⁵ to ensure sufficient statistics without excessive runtime. 
+
+![MPAtoCIC_PhaseScanTestedBits_MPA_SLVScurrent_1_Hybrid](../images/OTtesting/PS/MPAtoCIC_PhaseScanTestedBits_MPA_SLVScurrent_1_Hybrid.png)
+
+The corresponding error-rate plots show that most channels exhibit a broad phase region with zero errors, indicating a stable and well-aligned communication between the MPA and the CIC.
+
+![MPAtoCIC_PhaseScanErrorRate_MPA_SLVScurrent_1_Hybrid](../images/OTtesting/PS/MPAtoCIC_PhaseScanErrorRate_MPA_SLVScurrent_1_Hybrid.png)
+The Level-1 channels occasionally show issues in the pattern matching due to imperfect data sampling, leading to rare misreads and preventing a 100% match rate. While this is not a major concern, improvements are being explored, though the underlying sampling mechanism makes it difficult to fully eliminate. The plots clearly show that non-working phases have much higher error rates—around 45% compared to below 0.2% in well-aligned regions. As before, the results are shown for four different current settings, all displaying similar behavior.
+
+
+##### OTBitErrorRateTest - OpticalGroup
+The bit error rate (BER) test is designed to verify the stability of the optical link between the LpGBT and the FPGA, passing through the VTRx. This allows checking for transmission issues either between the LpGBT and VTRx or between the VTRx and the board.
+The LpGBT includes a built-in PRBS (Pseudo-Random Bit Sequence) generator, which produces a known pseudo-random bit pattern. The same pattern is generated in the firmware, and by comparing the sent and received sequences, any bit mismatches can be detected—indicating corrupted bits during transmission.
+The LpGBT offers multiple PRBS modes (listed in its manual), and in this test, one PRBS is emulated per line. Although the data link is a single physical channel between the LpGBT, VTRx, and FPGA, the results are split by line in the firmware for analysis.
+Because of limited FPGA resources, the test is run sequentially, one line at a time, and results are kept separate to help identify and debug potential issues. Since the test runs at the LpGBT level, all results are stored in the optical view.
+The first plot shows the bit error rate phase scan. This step is mostly a technical procedure, as the LpGBT generates the bit error rate pattern from a clock source whose phase can be adjusted. Certain phases prevent the LpGBT from correctly interpreting its own pattern, so a quick scan is performed to identify the valid working phases. 
+
+![BERTerrorRatePhaseScan_OpticalGroup](../images/OTtesting/PS/BERTerrorRatePhaseScan_OpticalGroup.png)
+![BERTtestedBitsCounterPhaseScan_OpticalGroup](../images/OTtesting/PS/BERTtesteBitCounterPhaseScan_OpticalGroup.png)
+
+Once a stable phase is found, it is stored as the best phase. This step ensures that the LpGBT is in a proper transmission state and avoids generating fake bit errors unrelated to the actual link between the module and the FC7. After determining the correct phase, the real bit error rate test can be performed.
+
+![BERTbestPhase_OpticalGroup](../images/OTtesting/PS/BERTbestPhase_OpticalGroup.png)
+
+As for the other plots, there are two levels of information: one plot shows the number of tested bits, which reaches approximately 10¹⁰ bits and appears fairly uniform. The distribution is roughly symmetric because the two hybrids are tested in parallel, meaning that when the stub number two on the right hybrid is tested, the corresponding stub number two on the left hybrid is tested as well, resulting in similar counts. The exact number of tested bits is not strictly controlled, since only a minimum threshold is set and the system runs until that is exceeded, so small variations are expected and not concerning.
+![BERTtestedBitsCounter_OpticalGroup](../images/OTtesting/PS/BERTtesteBitCounter_OpticalGroup.png)
+
+The key plot is the bit error rate, which measures the stability of the link while remaining split by line. Under normal conditions, the bit error rate is expected to be zero. Summing across all lines corresponds to about 10¹¹–10¹² tested bits, and the expected bit error rate is below 10⁻¹²–10⁻¹³. Testing up to 10¹³ bits would require several hours, so the procedure uses a lower value for practicality. During development, modules tested up to 10¹³ bits showed no errors, confirming the link stability. Therefore, the standard validation relies on about 10¹¹ tested bits per run, which provides sufficient confidence in link performance while keeping testing time reasonable.
+![BERTerrorRate_OpticalGroup](../images/OTtesting/PS/BERTerrorRate_OpticalGroup.png)
+
+The forward error correction (FEC) counter provides complementary information to the bit error rate by tracking how many bits were flipped during transmission but successfully corrected by the FEC mechanism, which can fix up to five flipped bits per packet. Although a zero bit error rate indicates no uncorrected errors, nonzero FEC counts can still reveal link instabilities. The firmware records the number of corrected bits, and this information is stored cumulatively for the entire LpGBT packet, resulting in a single value for both hybrids. The results remain separated by line since each line is tested independently due to firmware resource limits, but they can be summed to assess overall behavior. The plot reports counts rather than percentages because the total number of transmitted packets is not precisely known, though it can be approximated from the test duration and total bits processed. Consistent factor counts across lines suggest stable communication, while localized or irregular counts may indicate transient link issues.
+![FECerrorCounter_OpticalGroup](../images/OTtesting/PS/FECerrorCounter_OpticalGroup.png)
+
+##### OTRegisterTester - Hybrid
+This test checks the stability of the I2C communication by repeatedly writing and reading specific registers on both the CBCs and the CIC. A known pattern is written and read back, then its inverse is written and read back, and this cycle is repeated about a thousand times. The results are summarized in a single plot showing the read and write efficiency for each of the eight CBCs and the CIC, with one plot per hybrid. The expected outcome is a consistent 100% efficiency, as the CIC I2C communication is typically very stable. For the CBCs, register page flipping that is known to cause instabilities is avoided to ensure meaningful results. The goal is not to test the general chip performance but to identify possible I2C instabilities specific to the module, which could originate from issues in the connectors between the FEH and SEH if deviations are observed.
+
+![RegisterMatchingEfficiency_Hybrid](../images/OTtesting/PS/RegisterMatchingEfficiency_Hybrid.png)
+
 [02:20:40.000 --> 02:20:42.000]  Then monitor BQM plot.
 [02:20:42.000 --> 02:20:55.000]  So all these information that we're storing are contained into the XML file just for you one as a reference.
 [02:20:55.000 --> 02:20:58.000]  They are located over here.
