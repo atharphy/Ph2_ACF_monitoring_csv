@@ -130,7 +130,7 @@ uint32_t PatternMatcher::countMatchingBits(const std::vector<uint32_t>& theWordV
 {
     uint32_t numberOfMatchingBits = 0;
 
-    for(size_t index = 0; index <= fPatternAndMaskVector.size(); ++index)
+    for(size_t index = 0; index < fPatternAndMaskVector.size(); ++index)
     {
         if(index >= theWordVector.size()) break;
         uint32_t        patternAndWordXOR = theWordVector[index] ^ fPatternAndMaskVector[index].first;
