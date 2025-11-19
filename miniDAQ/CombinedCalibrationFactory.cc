@@ -60,6 +60,7 @@
 #include "tools/RD53ThrAdjustment.h"
 #include "tools/RD53ThrEqualization.h"
 #include "tools/RD53ThrMinimization.h"
+#include "tools/TestPSEvents.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
 
@@ -447,6 +448,14 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTPScommonNoise>("PS Module", "PScommonnoise");
 
     Register<OTalignBoardDataWord, OTalignStubPackage, OTPScommonNoise>("PS Module", "PScommonnoisenocalib");
+
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTCICBX0Alignment,
+             //  OTalignStubPackage,
+             TestPSEvents>("PS Module", "testPSevents");
 
     // reduced test set for DEE integration
     Register<OTlpGBTID>("DEE Integration", "LPGBTID");

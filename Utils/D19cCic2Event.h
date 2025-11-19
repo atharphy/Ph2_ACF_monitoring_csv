@@ -16,6 +16,8 @@
 #include <array>
 #include <iterator>
 #include <numeric>
+#include "HWDescription/Definition.h"
+#include "Utils/HybridL1EventInfo.h"
 
 namespace Ph2_HwInterface
 {
@@ -101,20 +103,12 @@ struct EventStub
  * \brief Event container to manipulate event flux from the Cbc
  */
 
-struct HybridL1EventInfo
+struct HybridL1EventInfoHandler
 {
-    HybridL1EventInfo() {}
+    HybridL1EventInfoHandler() {}
     void     parseData(std::vector<uint32_t>::const_iterator dataStart);
-    uint8_t  fErrorCode{0};
-    uint8_t  fHybridId{0};
-    uint8_t  fChipId{0};
-    uint8_t  fChipType{0};
-    uint16_t fFrameDelay{0};
-    uint16_t fStatusBits{0};
-    uint16_t fL1counter{0};
-    uint8_t  fNumberOfStripClusters{0};
-    uint8_t  fNumberOfPixelClusters{0};
     void     print() const;
+    HybridL1EventInfo fHybridL1EventInfo;
 };
 
 struct ChipL1EventInfo
@@ -155,7 +149,7 @@ class D19cCic2Event : public Event
      * \param pNbCbc
      * \param pEventBuf : the pointer to the raw Event buffer of this Event
      */
-    D19cCic2Event(const Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& list, bool pWithTLU = false);
+    D19cCic2Event(const Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& list);
     /*!
      * \brief Copy Constructor of the Event Class
      */
@@ -265,7 +259,6 @@ class D19cCic2Event : public Event
     static bool                                          ifAreDecodedEventContainersReady;
     static uintptr_t                                     fLastEventDecodedPointer;
 
-    uint8_t     fTLUenabled = 0;
     static bool fIs2S;
     static bool fIsSparsified;
 
@@ -286,6 +279,7 @@ class D19cCic2Event : public Event
 
   public:
     void print();
+    HybridL1EventInfoHandler getHybridL1EventInfoHandler(uint8_t pHybridId);
 };
 } // namespace Ph2_HwInterface
 #endif

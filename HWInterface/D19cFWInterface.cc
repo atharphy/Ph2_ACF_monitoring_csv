@@ -11,6 +11,7 @@
  */
 
 #include "HWInterface/D19cFWInterface.h"
+#include "HWDescription/BeBoard.h"
 #include "HWDescription/BeBoardRegItem.h"
 #include "HWDescription/Hybrid.h"
 #include "HWDescription/OuterTrackerHybrid.h"

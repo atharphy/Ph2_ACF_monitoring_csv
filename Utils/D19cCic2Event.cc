@@ -61,30 +61,30 @@ bool StripClusterPS::isChannelHit(uint8_t col) const { return col >= fAddress &&
 
 void StripClusterPS::print() const { std::cout << "First strip = " << +fAddress << " cluster width = " << +fWidth << std::endl; }
 
-void HybridL1EventInfo::parseData(std::vector<uint32_t>::const_iterator dataStart)
+void HybridL1EventInfoHandler::parseData(std::vector<uint32_t>::const_iterator dataStart)
 {
-    fErrorCode             = (*(dataStart) >> 24) & 0xF;
-    fHybridId              = (*(dataStart) >> 16) & 0xFF;
-    fChipId                = (*(dataStart) >> 12) & 0xF;
-    fChipType              = (*(dataStart + 1) >> 12) & 0xF;
-    fFrameDelay            = *(dataStart + 1) & 0xFFF;
-    fStatusBits            = *(dataStart + 2) >> 23;
-    fL1counter             = (*(dataStart + 2) >> 14) & 0x1FF;
-    fNumberOfStripClusters = (*(dataStart + 2) >> 7) & 0x7F;
-    fNumberOfPixelClusters = *(dataStart + 2) & 0x7F;
+    fHybridL1EventInfo.fErrorCode             = (*(dataStart) >> 24) & 0xF;
+    fHybridL1EventInfo.fHybridId              = (*(dataStart) >> 16) & 0xFF;
+    fHybridL1EventInfo.fChipId                = (*(dataStart) >> 12) & 0xF;
+    fHybridL1EventInfo.fChipType              = (*(dataStart + 1) >> 12) & 0xF;
+    fHybridL1EventInfo.fFrameDelay            = *(dataStart + 1) & 0xFFF;
+    fHybridL1EventInfo.fStatusBits            = *(dataStart + 2) >> 23;
+    fHybridL1EventInfo.fL1counter             = (*(dataStart + 2) >> 14) & 0x1FF;
+    fHybridL1EventInfo.fNumberOfStripClusters = (*(dataStart + 2) >> 7) & 0x7F;
+    fHybridL1EventInfo.fNumberOfPixelClusters = *(dataStart + 2) & 0x7F;
 }
 
-void HybridL1EventInfo::print() const
+void HybridL1EventInfoHandler::print() const
 {
-    std::cout << "ErrorCode             = " << +fErrorCode << std::endl;
-    std::cout << "HybridId              = " << +fHybridId << std::endl;
-    std::cout << "ChipId                = " << +fChipId << std::endl;
-    std::cout << "ChipType              = " << +fChipType << std::endl;
-    std::cout << "FrameDelay            = " << +fFrameDelay << std::endl;
-    std::cout << "StatusBits            = " << +fStatusBits << std::endl;
-    std::cout << "L1counter             = " << +fL1counter << std::endl;
-    std::cout << "NumberOfStripClusters = " << +fNumberOfStripClusters << std::endl;
-    std::cout << "NumberOfPixelClusters = " << +fNumberOfPixelClusters << std::endl;
+    std::cout << "ErrorCode             = " << +fHybridL1EventInfo.fErrorCode << std::endl;
+    std::cout << "HybridId              = " << +fHybridL1EventInfo.fHybridId << std::endl;
+    std::cout << "ChipId                = " << +fHybridL1EventInfo.fChipId << std::endl;
+    std::cout << "ChipType              = " << +fHybridL1EventInfo.fChipType << std::endl;
+    std::cout << "FrameDelay            = " << +fHybridL1EventInfo.fFrameDelay << std::endl;
+    std::cout << "StatusBits            = " << +fHybridL1EventInfo.fStatusBits << std::endl;
+    std::cout << "L1counter             = " << +fHybridL1EventInfo.fL1counter << std::endl;
+    std::cout << "NumberOfStripClusters = " << +fHybridL1EventInfo.fNumberOfStripClusters << std::endl;
+    std::cout << "NumberOfPixelClusters = " << +fHybridL1EventInfo.fNumberOfPixelClusters << std::endl;
 }
 
 void ChipL1EventInfo::parseData(std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9>::const_iterator dataStart, size_t bitStart)
@@ -175,10 +175,10 @@ BoardDataContainer                            D19cCic2Event::fDecodedStubEvent  
 std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9> D19cCic2Event::fTheChipDataVector = std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9>();
 
 // Event implementation
-D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list, bool pWithTLU) : fTLUenabled(pWithTLU), fBoard(pBoard)
+D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list) : fBoard(pBoard)
 {
     bool localIs2S         = pBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S;
-    bool localIsSparsified = pBoard->getSparsification();
+    bool localIsSparsified = localIs2S ? pBoard->getSparsification() : true;
     if(fIs2S != localIs2S || fIsSparsified != localIsSparsified)
     {
         fIsSparsified                    = localIsSparsified;
@@ -192,8 +192,8 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list,
     {
         if(fIs2S)
         {
-            if(fIsSparsified) { ContainerFactory::copyAndInitStructure<EmptyContainer, ClusterCollection<Cluster2S, 31>, HybridL1EventInfo, EmptyContainer, EmptyContainer>(*pBoard, fDecodedL1Event); }
-            else { ContainerFactory::copyAndInitStructure<EmptyContainer, ChipL1EventInfo, HybridL1EventInfo, EmptyContainer, EmptyContainer>(*pBoard, fDecodedL1Event); }
+            if(fIsSparsified) { ContainerFactory::copyAndInitStructure<EmptyContainer, ClusterCollection<Cluster2S, 31>, HybridL1EventInfoHandler, EmptyContainer, EmptyContainer>(*pBoard, fDecodedL1Event); }
+            else { ContainerFactory::copyAndInitStructure<EmptyContainer, ChipL1EventInfo, HybridL1EventInfoHandler, EmptyContainer, EmptyContainer>(*pBoard, fDecodedL1Event); }
         }
         else
         {
@@ -203,12 +203,12 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list,
             for(auto theOpticalGroup: *pBoard)
             {
                 auto decodedEventOpticalGroup = fDecodedL1Event.addOpticalGroupDataContainer(theOpticalGroup->getId());
-                decodedEventOpticalGroup->initialize<EmptyContainer, HybridL1EventInfo>();
+                decodedEventOpticalGroup->initialize<EmptyContainer, HybridL1EventInfoHandler>();
 
                 for(auto theHybrid: *theOpticalGroup)
                 {
                     auto decodedEventHybrid = decodedEventOpticalGroup->addHybridDataContainer(theHybrid->getId());
-                    decodedEventHybrid->initialize<HybridL1EventInfo, ClusterCollection<StripClusterPS, 32>>();
+                    decodedEventHybrid->initialize<HybridL1EventInfoHandler, ClusterCollection<StripClusterPS, 32>>();
 
                     for(auto theChip: *theHybrid)
                     {
@@ -226,8 +226,6 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list,
 
         ifAreDecodedEventContainersReady = true;
     }
-
-    fTLUenabled = (uint8_t)pWithTLU;
 
     fLocalData = std::move(list);
 }
@@ -306,23 +304,23 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
 {
     auto theCicToChipMapping = getCicToChipMapping(theHybridEventContainer->getId());
 
-    HybridL1EventInfo* theHybridL1EventInfoPointer;
+    HybridL1EventInfoHandler* theHybridL1EventInfoHandlerPointer;
 
     if(fIs2S)
     {
-        if(fIsSparsified) { theHybridL1EventInfoPointer = &theHybridEventContainer->getSummary<HybridL1EventInfo, ClusterCollection<Cluster2S, 31>>(); }
-        else { theHybridL1EventInfoPointer = &theHybridEventContainer->getSummary<HybridL1EventInfo, ChipL1EventInfo>(); }
+        if(fIsSparsified) { theHybridL1EventInfoHandlerPointer = &theHybridEventContainer->getSummary<HybridL1EventInfoHandler, ClusterCollection<Cluster2S, 31>>(); }
+        else { theHybridL1EventInfoHandlerPointer = &theHybridEventContainer->getSummary<HybridL1EventInfoHandler, ChipL1EventInfo>(); }
     }
-    else { theHybridL1EventInfoPointer = &theHybridEventContainer->getSummary<HybridL1EventInfo, ClusterCollection<StripClusterPS, 32>>(); }
+    else { theHybridL1EventInfoHandlerPointer = &theHybridEventContainer->getSummary<HybridL1EventInfoHandler, ClusterCollection<StripClusterPS, 32>>(); }
 
-    theHybridL1EventInfoPointer->parseData(dataStartIterator);
+    theHybridL1EventInfoHandlerPointer->parseData(dataStartIterator);
 
     size_t currentBitCount = 32 * 3;
     if(fIs2S)
     {
         if(fIsSparsified)
         {
-            for(size_t clusterNumber = 0; clusterNumber < theHybridL1EventInfoPointer->fNumberOfStripClusters; ++clusterNumber)
+            for(size_t clusterNumber = 0; clusterNumber < theHybridL1EventInfoHandlerPointer->fHybridL1EventInfo.fNumberOfStripClusters; ++clusterNumber)
             {
                 uint32_t  theClusterWord = getWord<CLUSTER_2S_DATA_SIZE, CLUSTER_2S_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
                 Cluster2S theCluster2S;
@@ -370,7 +368,7 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
     }
     else
     {
-        for(size_t stripClusterNumber = 0; stripClusterNumber < theHybridL1EventInfoPointer->fNumberOfStripClusters; ++stripClusterNumber)
+        for(size_t stripClusterNumber = 0; stripClusterNumber < theHybridL1EventInfoHandlerPointer->fHybridL1EventInfo.fNumberOfStripClusters; ++stripClusterNumber)
         {
             uint32_t       theClusterWord = getWord<STRIP_CLUSTER_PS_DATA_SIZE, STRIP_CLUSTER_PS_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
             StripClusterPS theStripClusterPS;
@@ -382,7 +380,7 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
             }
             currentBitCount += STRIP_CLUSTER_PS_DATA_SIZE;
         }
-        for(size_t pixelClusterNumber = 0; pixelClusterNumber < theHybridL1EventInfoPointer->fNumberOfPixelClusters; ++pixelClusterNumber)
+        for(size_t pixelClusterNumber = 0; pixelClusterNumber < theHybridL1EventInfoHandlerPointer->fHybridL1EventInfo.fNumberOfPixelClusters; ++pixelClusterNumber)
         {
             uint32_t       theClusterWord = getWord<PIXEL_CLUSTER_PS_DATA_SIZE, PIXEL_CLUSTER_PS_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
             PixelClusterPS thePixelClusterPS;
@@ -558,16 +556,16 @@ uint16_t D19cCic2Event::L1Status(uint8_t pHybridId)
     decodeEvent();
 
     auto                     theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
-    const HybridL1EventInfo* theHybridL1EventInfoPointer;
+    const HybridL1EventInfoHandler* theHybridL1EventInfoHandlerPointer;
     if(fIsSparsified)
     {
         if(fIs2S)
-            theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, ClusterCollection<Cluster2S, 31>>();
+            theHybridL1EventInfoHandlerPointer = &theHybridL1Event->getSummary<HybridL1EventInfoHandler, ClusterCollection<Cluster2S, 31>>();
         else
-            theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, ClusterCollection<StripClusterPS, 32>>();
+            theHybridL1EventInfoHandlerPointer = &theHybridL1Event->getSummary<HybridL1EventInfoHandler, ClusterCollection<StripClusterPS, 32>>();
     }
-    else { theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, ChipL1EventInfo>(); }
-    return theHybridL1EventInfoPointer->fStatusBits;
+    else { theHybridL1EventInfoHandlerPointer = &theHybridL1Event->getSummary<HybridL1EventInfoHandler, ChipL1EventInfo>(); }
+    return theHybridL1EventInfoHandlerPointer->fHybridL1EventInfo.fStatusBits;
 }
 
 uint32_t D19cCic2Event::Error(uint8_t pHybridId, uint8_t pReadoutChipId)
@@ -577,12 +575,12 @@ uint32_t D19cCic2Event::Error(uint8_t pHybridId, uint8_t pReadoutChipId)
     if(fIsSparsified)
     {
         auto                     theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
-        const HybridL1EventInfo* theHybridL1EventInfoPointer;
+        const HybridL1EventInfoHandler* theHybridL1EventInfoHandlerPointer;
         if(fIs2S)
-            theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, ClusterCollection<Cluster2S, 31>>();
+            theHybridL1EventInfoHandlerPointer = &theHybridL1Event->getSummary<HybridL1EventInfoHandler, ClusterCollection<Cluster2S, 31>>();
         else
-            theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, ClusterCollection<StripClusterPS, 32>>();
-        auto theCicStatusBits = theHybridL1EventInfoPointer->fStatusBits;
+            theHybridL1EventInfoHandlerPointer = &theHybridL1Event->getSummary<HybridL1EventInfoHandler, ClusterCollection<StripClusterPS, 32>>();
+        auto theCicStatusBits = theHybridL1EventInfoHandlerPointer->fHybridL1EventInfo.fStatusBits;
         return theCicStatusBits >> (getIdForCic(pHybridId, pReadoutChipId) + 1);
     }
     else { return fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId)->getSummary<ChipL1EventInfo>().fErrorCode; }
@@ -610,12 +608,12 @@ uint32_t D19cCic2Event::L1Id(uint8_t pHybridId, uint8_t pReadoutChipId)
     if(fIsSparsified)
     {
         auto                     theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
-        const HybridL1EventInfo* theHybridL1EventInfoPointer;
+        const HybridL1EventInfoHandler* theHybridL1EventInfoHandlerPointer;
         if(fIs2S)
-            theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, ClusterCollection<Cluster2S, 31>>();
+            theHybridL1EventInfoHandlerPointer = &theHybridL1Event->getSummary<HybridL1EventInfoHandler, ClusterCollection<Cluster2S, 31>>();
         else
-            theHybridL1EventInfoPointer = &theHybridL1Event->getSummary<HybridL1EventInfo, ClusterCollection<StripClusterPS, 32>>();
-        return theHybridL1EventInfoPointer->fL1counter;
+            theHybridL1EventInfoHandlerPointer = &theHybridL1Event->getSummary<HybridL1EventInfoHandler, ClusterCollection<StripClusterPS, 32>>();
+        return theHybridL1EventInfoHandlerPointer->fHybridL1EventInfo.fL1counter;
     }
     else { return fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId)->getSummary<ChipL1EventInfo>().fL1id; }
 }
@@ -836,17 +834,17 @@ void D19cCic2Event::print()
         {
             std::cout << "Hybrid id = " << theHybrid->getId() << std::endl;
 
-            const HybridL1EventInfo* theHybridL1EventInfoPointer;
+            const HybridL1EventInfoHandler* theHybridL1EventInfoHandlerPointer;
             if(fIsSparsified)
             {
                 if(fIs2S)
-                    theHybridL1EventInfoPointer = &theHybrid->getSummary<HybridL1EventInfo, ClusterCollection<Cluster2S, 31>>();
+                    theHybridL1EventInfoHandlerPointer = &theHybrid->getSummary<HybridL1EventInfoHandler, ClusterCollection<Cluster2S, 31>>();
                 else
-                    theHybridL1EventInfoPointer = &theHybrid->getSummary<HybridL1EventInfo, ClusterCollection<StripClusterPS, 32>>();
+                    theHybridL1EventInfoHandlerPointer = &theHybrid->getSummary<HybridL1EventInfoHandler, ClusterCollection<StripClusterPS, 32>>();
             }
-            else { theHybridL1EventInfoPointer = &theHybrid->getSummary<HybridL1EventInfo, ChipL1EventInfo>(); }
+            else { theHybridL1EventInfoHandlerPointer = &theHybrid->getSummary<HybridL1EventInfoHandler, ChipL1EventInfo>(); }
             std::cout << "L1 header" << std::endl;
-            theHybridL1EventInfoPointer->print();
+            theHybridL1EventInfoHandlerPointer->print();
             for(auto theChip: *theHybrid)
             {
                 std::cout << "Chip id = " << theChip->getId() << std::endl;
@@ -890,5 +888,20 @@ void D19cCic2Event::print()
         }
     }
 }
+
+HybridL1EventInfoHandler D19cCic2Event::getHybridL1EventInfoHandler(uint8_t pHybridId)
+{
+    decodeEvent();
+    auto theHybrid = fDecodedL1Event.getHybrid(pHybridId/2, pHybridId);
+    if(fIsSparsified)
+    {
+        if(fIs2S)
+            return theHybrid->getSummary<HybridL1EventInfoHandler, ClusterCollection<Cluster2S, 31>>();
+        else
+            return theHybrid->getSummary<HybridL1EventInfoHandler, ClusterCollection<StripClusterPS, 32>>();
+    }
+    else { return theHybrid->getSummary<HybridL1EventInfoHandler, ChipL1EventInfo>(); }
+}
+
 
 } // namespace Ph2_HwInterface
