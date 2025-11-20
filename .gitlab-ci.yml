@@ -32,6 +32,9 @@ variables:
   MKDOCS_VERSION: '1.5.3'
   MATERIAL_VERSION: '9.5.18'
 
+  # Disable Git LFS downloads
+  GIT_LFS_SKIP_SMUDGE: "1"
+
 
 stages:
   - validation
