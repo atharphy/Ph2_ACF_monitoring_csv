@@ -215,7 +215,7 @@ void OTMeasureOccupancy::setOptimalThreshold()
                     auto  theChipFrontEndType   = theChip->getFrontEndType();
 
                     if(theChipFrontEndType == FrontEndType::CBC3) distanceFromThreshold = -expectedNoise * fCBCnumberOfSigmaNoiseAwayFromPedestal;
-                    if(theChipFrontEndType == FrontEndType::SSA2) distanceFromThreshold = fSSAnumberOfSigmaNoiseAwayFromPedestal * SSA_NOISE_SIGMA_SCALE_FACTOR;
+                    if(theChipFrontEndType == FrontEndType::SSA2) distanceFromThreshold = expectedNoise * fSSAnumberOfSigmaNoiseAwayFromPedestal * SSA_NOISE_SIGMA_SCALE_FACTOR;
                     if(theChipFrontEndType == FrontEndType::MPA2) distanceFromThreshold = expectedNoise * fMPAnumberOfSigmaNoiseAwayFromPedestal;
                     float theBestThreshold = thePedestal + distanceFromThreshold;
                     fReadoutChipInterface->WriteChipReg(theChip, "Threshold", std::round(theBestThreshold));
