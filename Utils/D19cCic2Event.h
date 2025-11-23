@@ -155,7 +155,7 @@ class D19cCic2Event : public Event
     /*!
      * \brief Destructor of the Event Class
      */
-    ~D19cCic2Event() {}
+    ~D19cCic2Event() {fLastEventDecodedPointer = reinterpret_cast<uintptr_t>(nullptr);}
 
     /*!
      * \brief Set an Event to the Event map
