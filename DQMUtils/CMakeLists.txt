@@ -11,7 +11,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Boost also needs to be linked
     #    include_directories(${Boost_INCLUDE_DIRS})
     #link_directories(${Boost_LIBRARY_DIRS})
-    set(LIBS ${LIBS} ${Boost_ANY_LIBRARY} ${Boost_ITERATOR_LIBRARY} boost_serialization Ph2_Parser Ph2_Utils)
+    set(LIBS ${LIBS} ${Boost_ANY_LIBRARY} ${Boost_ITERATOR_LIBRARY} boost_serialization Ph2_Parser Ph2_Utils Ph2_EventDict)
 
     # Find root and link against it
     if(${ROOT_FOUND})
@@ -32,41 +32,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     file(GLOB SOURCES *.cc)
     add_library(Ph2_DQMUtils STATIC ${SOURCES})
     TARGET_LINK_LIBRARIES(Ph2_DQMUtils ${LIBS})
-
-    include_directories(${PROJECT_SOURCE_DIR}/Utils)
-
-    set(DICT_HEADERS
-        HybridL1EventInfo.h
-    )
-
-    set(LINKDEF_FILE
-        LinkDef.h
-    )
-
-    ROOT_GENERATE_DICTIONARY(
-        G__Ph2_EventDict
-        ${DICT_HEADERS}
-        LINKDEF ${LINKDEF_FILE}
-        OPTIONS "-I${PROJECT_SOURCE_DIR}/Utils"   # <-- IMPORTANT: QUOTED!
-    )
-
-    add_library(Ph2_EventDict SHARED
-        ${CMAKE_CURRENT_BINARY_DIR}/G__Ph2_EventDict.cxx
-    )
-
-    target_include_directories(Ph2_EventDict PUBLIC
-        ${PROJECT_SOURCE_DIR}/Utils
-    )
-
-    target_link_libraries(Ph2_EventDict
-        PUBLIC Ph2_Utils ${ROOT_LIBRARIES}
-    )
-
-    add_custom_command(TARGET Ph2_EventDict POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                ${CMAKE_CURRENT_BINARY_DIR}/G__Ph2_EventDict_rdict.pcm
-                ${PROJECT_SOURCE_DIR}/lib/
-    )
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/RootUtils *.cc)
 

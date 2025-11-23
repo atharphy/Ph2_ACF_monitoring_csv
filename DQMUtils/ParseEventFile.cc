@@ -4,6 +4,7 @@
 #include "Utils/FileHandler.h"
 #include "Utils/FileHeader.h"
 #include <TFile.h>
+#include <TObjString.h>
 #include <TTree.h>
 #include <fstream>
 #include <iostream>
@@ -33,21 +34,12 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
     TFile *file = new TFile(rootFileName.c_str(), "RECREATE");
     TTree *tree = new TTree("Events", "Events");
 
-    uint32_t theEventCount;
-    tree->Branch("eventId", &theEventCount, "eventId/I");
-    std::vector<HybridL1EventInfo> theHybridL1EventInfoList;
-    tree->Branch("HybridL1EventInfo", &theHybridL1EventInfoList);
+    BoardEventPS theBoardEventPS;
+    tree->Branch("BoardEventPS", &theBoardEventPS);
 
     FileHandler theFileHandler(rawFileName, 'r');
     FileHeader  theFileHeader;
     bool        isHeaderPresent = theFileHandler.getHeader(theFileHeader);
-
-    // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] theFileHeader.fType = " << theFileHeader.fType << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] theFileHeader.fVersionMajor = " << theFileHeader.fVersionMajor << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] theFileHeader.fVersionMinor = " << theFileHeader.fVersionMinor << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] theFileHeader.fBeId = " << theFileHeader.fBeId << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] theFileHeader.fNchip = " << theFileHeader.fNchip << std::endl;
-    // std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "] theFileHeader.fEventSize = " << theFileHeader.fEventSize << std::endl;
 
     auto   theData     = theFileHandler.readFile();
     size_t theDataSize = theData.size();
@@ -68,26 +60,37 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
         std::vector<uint32_t> theEventData(theData.begin() + currentEventStart, theData.begin() + currentEventStart + eventSize);
         D19cCic2Event theEventParsed(theBoard, theEventData);
 
-        theHybridL1EventInfoList.clear();
-
-        theEventCount = theEventParsed.GetEventCount();
+        theBoardEventPS.fHybridL1EventList.clear();
+        theBoardEventPS.fBoardEventInfo = theEventParsed.getBoardEventInfo();
 
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                theEventParsed.getHybridL1EventInfoHandler(theHybrid->getId()).print();
-                std::cout << std::endl;
-                theHybridL1EventInfoList.push_back(theEventParsed.getHybridL1EventInfoHandler(theHybrid->getId()).fHybridL1EventInfo);
+                HybridL1EventPS theHybridL1EventPS;
+                theHybridL1EventPS.fHybridL1EventInfo = theEventParsed.getHybridL1EventInfoHandler(theHybrid->getId()).fHybridL1EventInfo;
+
+                for(auto theChip: *theHybrid)
+                {
+                    if(theChip->getId() >= 8) continue;
+                    ChipL1EventInfo theChipL1EventInfo;
+                    theChipL1EventInfo.fChipId = theChip->getId();
+
+                    // std::vector<StripClusterPS> theStripClusterPSList;
+                    // for(auto theCluster : theEventParsed.GetStripClusters(theHybrid->getId(), theChip->getId()))
+                    // {
+                    //     theStripClusterPSList.push_back(theCluster.fStripClusterPS);
+                    // }
+                    // theHybridL1EventPS.fCBCEventList.push_back(std::make_pair(theChipL1EventInfo, theStripClusterPSList));
+                }
+                theBoardEventPS.fHybridL1EventList.push_back(theHybridL1EventPS);
             }
         }
 
         tree->Fill();
         
         currentEventStart += eventSize;
-        break;
     }
-
 
     LOG(INFO) << BOLDYELLOW << "Parsing completed for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
 

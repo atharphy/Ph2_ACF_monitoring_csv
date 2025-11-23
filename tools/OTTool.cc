@@ -640,15 +640,16 @@ void OTTool::ContinuousReadoutTh(uint8_t cBrdId)
 // event print-out
 void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
 {
+    auto theD19cCic2Event = static_cast<D19cCic2Event*>(pEvent);
     auto cSparsified = pBoard->getSparsification();
     if(cSparsified)
         LOG(DEBUG) << BOLDBLUE << "Checking with internal - sparisified data" << RESET;
     else
         LOG(DEBUG) << BOLDBLUE << "Checking with internal - un-sparisified data" << RESET;
 
-    if(pEvent->GetEventCount() % fPrintConfig.fPrintEvery != 0) return;
+    if(theD19cCic2Event->GetEventCount() % fPrintConfig.fPrintEvery != 0) return;
     std::stringstream cEvntHeader;
-    cEvntHeader << "Event#" << +pEvent->GetEventCount() << " -- " << +fEventCountInt << " in readout..." << RESET;
+    cEvntHeader << "Event#" << +theD19cCic2Event->GetEventCount() << " -- " << +fEventCountInt << " in readout..." << RESET;
     std::stringstream cHeader;
 
     std::ofstream cOutFile_LT, cOutFile_RT, cOutFile_LB, cOutFile_RB;
@@ -656,7 +657,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
     cOutFile_RT.open("OTTool_RT.dat", std::ios_base::app);
     cOutFile_LB.open("OTTool_LB.dat", std::ios_base::app);
     cOutFile_RB.open("OTTool_RB.dat", std::ios_base::app);
-    fBoardData.cEventId = pEvent->GetEventCount();
+    fBoardData.cEventId = theD19cCic2Event->GetEventCount();
     fBoardData.boardId  = pBoard->getId();
     for(auto cOpticalGroup: *pBoard)
     {
@@ -666,12 +667,12 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
         fBoardData.opticalGroupId = cOpticalGroup->getId();
         for(auto cHybrid: *cOpticalGroup)
         {
-            auto cL1IdCIC  = static_cast<D19cCic2Event*>(pEvent)->L1Id(cHybrid->getId(), 0);
-            auto cL1Status = static_cast<D19cCic2Event*>(pEvent)->L1Status(cHybrid->getId());
-            auto cBxId     = (pEvent)->BxId(cHybrid->getId());
-            auto cStubStat = static_cast<D19cCic2Event*>(pEvent)->StubStatus(cHybrid->getId());
+            auto cL1IdCIC  = theD19cCic2Event->L1Id(cHybrid->getId(), 0);
+            auto cL1Status = theD19cCic2Event->L1Status(cHybrid->getId());
+            auto cBxId     = theD19cCic2Event->BxId(cHybrid->getId());
+            auto cStubStat = theD19cCic2Event->StubStatus(cHybrid->getId());
 
-            if(pEvent->GetEventCount() < 10000)
+            if(theD19cCic2Event->GetEventCount() < 10000)
             {
                 std::vector<uint32_t> cHits_TopSensor(cHybrid->size() * 127, 0);
                 std::vector<uint32_t> cHits_BottomSensor(cHybrid->size() * 127, 0);
@@ -679,7 +680,7 @@ void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
                 for(auto cChip: *cHybrid)
                 {
                     uint16_t cOffset = cChip->getId() * cChip->size() / 2.;
-                    auto     cHits   = pEvent->GetHits(cHybrid->getId(), cChip->getId());
+                    auto     cHits   = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
                     for(auto cChnl = 0; cChnl < (int)cChip->size(); cChnl++)
                     {
                         uint16_t cStripOffset = cOffset; //(cChnlIndx % 2 == 0) ? cOffset : (cNchannels*8) / 2 + cOffset;

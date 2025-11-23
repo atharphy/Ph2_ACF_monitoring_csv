@@ -100,7 +100,7 @@ void OTCICwordAlignment::Reset()
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    auto cBx = (int)cEvent->BxId(cHybrid->getId());
+                    auto cBx = (int)static_cast<D19cCic2Event*>(cEvent)->BxId(cHybrid->getId());
                     LOG(DEBUG) << BOLDGREEN << "Link#" << +cOpticalGroup->getId() << " Hybrid#" << +cHybrid->getId() << " BxId " << cBx << RESET;
                 }
             }

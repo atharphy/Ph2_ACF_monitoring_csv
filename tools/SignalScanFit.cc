@@ -237,7 +237,7 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                             TProfile* cClusterSizeOdd     = static_cast<TProfile*>(getHist(cCbc, "Cbc_ClusterSize_odd"));
                             TH2D*     cClusters2DEvenHist = dynamic_cast<TH2D*>(getHist(cCbc, "Cbc_Clusters2D_even"));
                             TH2D*     cClusters2DOddHist  = dynamic_cast<TH2D*>(getHist(cCbc, "Cbc_Clusters2D_odd"));
-                            auto      cHits               = cEvent->GetHits(cHybrid->getId(), cCbc->getId());
+                            auto      cHits               = static_cast<D19cCic2Event*>(cEvent)->GetHits(cHybrid->getId(), cCbc->getId());
                             LOG(DEBUG) << BOLDBLUE << "Found " << +cHits.size() << " hits in CBC" << +cCbc->getId() << RESET;
                             for(auto cId: cHits)
                             {

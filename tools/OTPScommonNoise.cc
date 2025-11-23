@@ -149,7 +149,8 @@ void OTPScommonNoise::TakeData(float numberOfSigma)
             {
                 for(auto& cEvent: events)
                 {
-                    LOG(DEBUG) << BOLDYELLOW << " Event number " << cEvent->GetEventCount() << RESET;
+                    auto theD19cCic2Event = static_cast<D19cCic2Event*>(cEvent);
+                    LOG(DEBUG) << BOLDYELLOW << " Event number " << theD19cCic2Event->GetEventCount() << RESET;
                     if(theEventCounter > fNumberOfEvents) continue;
 
                     uint32_t cStripModuleHits = 0;
@@ -163,7 +164,7 @@ void OTPScommonNoise::TakeData(float numberOfSigma)
                         for(auto cChip: *cHybrid)
                         {
                             // uint32_t chipOffset_module = (cHybrid->getId() * HYBRID_CHANNELS_OT) + (cChip->getId() * NCHANNELS);
-                            auto hit_vec = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                            auto hit_vec = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
 
                             uint32_t cEventHits = hit_vec.size();                            //
                             LOG(DEBUG) << BOLDBLUE << " cEventHits " << cEventHits << RESET; //                              = cEventHitsEven + cEventHitsOdd;
@@ -191,7 +192,7 @@ void OTPScommonNoise::TakeData(float numberOfSigma)
 
                                 cPixelHybridHits += cEventHits;
 
-                                auto     strip_hit       = cEvent->GetHits(cHybrid->getId(), cChip->getId() % 8);
+                                auto     strip_hit       = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId() % 8);
                                 uint32_t cStripEventHits = strip_hit.size();
                                 the2DSSAMPACorrelationContainer.getObject(theBoard->getId())
                                     ->getObject(cOpticalGroup->getId())

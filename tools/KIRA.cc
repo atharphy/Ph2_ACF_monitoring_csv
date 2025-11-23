@@ -172,13 +172,14 @@ void KIRA::determineLatency()
                     {
                         for(auto cChip: *cHybrid)
                         {
+                            auto theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
                             if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
                             // skip all chips that are not directly illuminated by the LED
                             if(cHybrid->getId() % 2 == 0 && cChip->getId() != 7 - cLatencyLED) continue;
                             if(cHybrid->getId() % 2 == 1 && cChip->getId() != cLatencyLED) continue;
 
-                            auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                            if(cHits.size() != 0) LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
+                            auto cHits = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
+                            if(cHits.size() != 0) LOG(DEBUG) << BOLDBLUE << "Event#" << theD19cCic2Event->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
                             for(auto cHit: cHits)
                             {
                                 // monitor only specified sensor channels
@@ -383,6 +384,7 @@ DetectorDataContainer KIRA::analyseEvents(BeBoard* pBoard, const std::vector<Eve
     fNReadbackEvents = pEvents.size();
     do {
         if(cEventIter >= pEvents.end()) break;
+        auto theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
         for(auto cOpticalGroup: *pBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
@@ -397,8 +399,8 @@ DetectorDataContainer KIRA::analyseEvents(BeBoard* pBoard, const std::vector<Eve
                         if(cHybrid->getId() % 2 == 1 && cChip->getId() != pLED) continue;
                     }
 
-                    auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                    if(cHits.size() != 0) LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
+                    auto cHits = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
+                    if(cHits.size() != 0) LOG(DEBUG) << BOLDBLUE << "Event#" << theD19cCic2Event->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
                     for(auto cHit: cHits)
                     {
                         LOG(DEBUG) << "Hit: " << cHit.second << RESET;

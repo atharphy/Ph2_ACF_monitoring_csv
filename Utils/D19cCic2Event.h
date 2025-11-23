@@ -17,7 +17,7 @@
 #include <iterator>
 #include <numeric>
 #include "HWDescription/Definition.h"
-#include "Utils/HybridL1EventInfo.h"
+#include "EventContainer/OTEventContainers.h"
 
 namespace Ph2_HwInterface
 {
@@ -72,16 +72,14 @@ struct PixelClusterPS
     void         print() const;
 };
 
-struct StripClusterPS
+struct StripClusterPSHandler
 {
-    StripClusterPS() {};
+    StripClusterPSHandler() {};
     bool         parseData(uint32_t data);
-    uint8_t      fAddress{0xFF};
-    uint8_t      fMip{0xFF};
-    uint8_t      fWidth{0xFF};
     inline float getBaricentre() const;
     inline bool  isChannelHit(uint8_t col) const;
     void         print() const;
+    StripClusterPS fStripClusterPS;
 };
 
 struct EventStub
@@ -111,9 +109,9 @@ struct HybridL1EventInfoHandler
     HybridL1EventInfo fHybridL1EventInfo;
 };
 
-struct ChipL1EventInfo
+struct CBCL1EventInfo
 {
-    ChipL1EventInfo() {}
+    CBCL1EventInfo() {}
     void                    parseData(std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9>::const_iterator dataStart, size_t bitStart = 0);
     uint8_t                 fErrorCode{0};
     uint16_t                fPipelineAddress{0};
@@ -167,25 +165,19 @@ class D19cCic2Event : public Event
     void decodeEvent();
 
     /*!
-     * \brief Get the Cbc Event counter
-     * \return Cbc Event counter
-     */
-    uint32_t GetEventCountCBC() const override { return fEventCountCBC; }
-
-    /*!
      * \brief Function to get all Error bits
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Error bit
      */
-    uint32_t Error(uint8_t pHybridId, uint8_t pCbcId) override;
+    uint32_t Error(uint8_t pHybridId, uint8_t pCbcId);
     /*!
      * \brief Function to get pipeline address
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Pipeline address
      */
-    uint32_t PipelineAddress(uint8_t pHybridId, uint8_t pCbcId) override;
+    uint32_t PipelineAddress(uint8_t pHybridId, uint8_t pCbcId);
     /*!
      * \brief Function to get a CBC pixel bit data
      * \param pHybridId : Hybrid Id
@@ -193,14 +185,14 @@ class D19cCic2Event : public Event
      * \param i : pixel bit data number i
      * \return Data Bit
      */
-    bool DataBit(uint8_t pHybridId, uint8_t pCbcId, uint8_t row, uint8_t col) override;
+    bool DataBit(uint8_t pHybridId, uint8_t pCbcId, uint8_t row, uint8_t col);
     /*!
      * \brief Function to get bit vector of CBC data
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      * \return Data Bit vector
      */
-    std::vector<bool> DataBitVector(uint8_t pHybridId, uint8_t pCbcId) override;
+    std::vector<bool> DataBitVector(uint8_t pHybridId, uint8_t pCbcId);
 
     /*!
      * \brief Function to get Stub bit
@@ -208,7 +200,7 @@ class D19cCic2Event : public Event
      * \param pCbcId : Cbc Id
      * \return stub bit?
      */
-    bool StubBit(uint8_t pHybridId, uint8_t pCbcId) override;
+    bool StubBit(uint8_t pHybridId, uint8_t pCbcId);
     /*!
      * \brief Get a vector of Stubs - will be empty for Cbc2
      * \param pHybridId : Hybrid Id
@@ -228,17 +220,18 @@ class D19cCic2Event : public Event
      * \param pCbcId : Cbc Id
      * \return vector with hit channels (row, col)
      */
-    std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId) override;
+    std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId);
     ClusterCollection<Cluster2S, 31>           getClusters(uint8_t pHybridId, uint8_t pCbcId);
-    ClusterCollection<StripClusterPS, 32>      GetStripClusters(uint8_t pHybridId, uint8_t pMPAId);
+    ClusterCollection<StripClusterPSHandler, 32>      GetStripClusters(uint8_t pHybridId, uint8_t pMPAId);
     ClusterCollection<PixelClusterPS, 32>      GetPixelClusters(uint8_t pHybridId, uint8_t pMPAId);
 
     void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) override;
 
     uint16_t L1Status(uint8_t pHybridId);
     uint32_t L1Id(uint8_t pHybridId, uint8_t pReadoutChipId);
-    uint32_t BxId(uint8_t pHybridId) override;
+    uint32_t BxId(uint8_t pHybridId);
     uint16_t StubStatus(uint8_t pHybridId);
+    BoardEventInfo getBoardEventInfo();
 
   private:
     // figure out how to switch between various hybrid types here
@@ -258,6 +251,7 @@ class D19cCic2Event : public Event
     static std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9> fTheChipDataVector;
     static bool                                          ifAreDecodedEventContainersReady;
     static uintptr_t                                     fLastEventDecodedPointer;
+    BoardEventInfo                                       fBoardEventInfo;
 
     static bool fIs2S;
     static bool fIsSparsified;
@@ -280,6 +274,28 @@ class D19cCic2Event : public Event
   public:
     void print();
     HybridL1EventInfoHandler getHybridL1EventInfoHandler(uint8_t pHybridId);
+
+    /*!
+     * \brief Get the bunch value
+     * \return Bunch value
+     */
+    uint32_t GetBunch() const { return fBoardEventInfo.fBunch; }
+    /*!
+     * \brief Get the Event counter
+     * \return Event counter
+     */
+    uint32_t GetEventCount() const { return fBoardEventInfo.fEventCount; }
+    /*!
+     * \brief Get TDC value ??
+     * \return TDC value
+     */
+    uint32_t GetTDC() const { return fBoardEventInfo.fTDC; }
+    /*!
+     * \brief Get External trigger  id ??
+     * \return external trigger value
+     */
+    uint32_t GetExternalTriggerId() const { return fBoardEventInfo.fExternalTriggerID; }
+
 };
 } // namespace Ph2_HwInterface
 #endif

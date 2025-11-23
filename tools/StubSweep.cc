@@ -298,15 +298,15 @@ uint8_t StubSweep::getStubPosition(std::vector<Event*> pEvents, uint32_t pHybrid
 
     for(auto& cEvent: pEvents)
     {
-        uint32_t cNhits = cEvent->GetNHits(pHybridId, pCbcId);
+        uint32_t cNhits = static_cast<D19cCic2Event*>(cEvent)->GetNHits(pHybridId, pCbcId);
         // std::string cHitsString = cEvent->HitsBitString( pHybridId, pCbcId );
-        auto cHits = cEvent->GetHits(pHybridId, pCbcId);
+        auto cHits = static_cast<D19cCic2Event*>(cEvent)->GetHits(pHybridId, pCbcId);
 
         outp.str("");
         outp << BOLDGREEN << ">>> Event #" << cN++ << " [" << +cNhits << " hits].\n\t\t\t";
 
         // outp << CYAN << "Hits : " << cHitsString ;
-        if(cEvent->StubBit(pHybridId, pCbcId))
+        if(static_cast<D19cCic2Event*>(cEvent)->StubBit(pHybridId, pCbcId))
         {
             // only look at the first stub that comes out of the cbc
             auto      cStubs = static_cast<D19cCic2Event*>(cEvent)->StubVector(pHybridId, pCbcId);

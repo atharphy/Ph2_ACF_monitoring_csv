@@ -589,8 +589,8 @@ void LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                                 cBxIds[cId] = cDummy;
                                 cIter       = cBxIds.find(cId);
                             }
-                            cIter->second.push_back(cEvent->BxId(cId));
-                            LOG(INFO) << BOLDYELLOW << "Event#" << +cEvent->GetEventCount() << "\t.. Hybrid#" << +cId << " BxId is " << cEvent->BxId(cId) << RESET;
+                            cIter->second.push_back(static_cast<D19cCic2Event*>(cEvent)->BxId(cId));
+                            LOG(INFO) << BOLDYELLOW << "Event#" << +static_cast<D19cCic2Event*>(cEvent)->GetEventCount() << "\t.. Hybrid#" << +cId << " BxId is " << static_cast<D19cCic2Event*>(cEvent)->BxId(cId) << RESET;
                         }
                     }
 
@@ -770,7 +770,7 @@ void LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
         {
             for(auto cHybrid: *cOpticalGroup)
             {
-                auto cBx = (int)cEvent->BxId(cHybrid->getId());
+                auto cBx = (int)static_cast<D19cCic2Event*>(cEvent)->BxId(cHybrid->getId());
                 LOG(INFO) << BOLDGREEN << "Event#" << cEventCount << " Link#" << +cOpticalGroup->getId() << " Hybrid#" << +cHybrid->getId() << " BxId " << cBx << RESET;
             }
         }
@@ -862,7 +862,7 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
         for(auto& cEvent: cEventsWithStubs)
         {
             auto cHybrid = pOpticalGroup->getFirstObject();
-            auto cBx     = (int)cEvent->BxId(cHybrid->getId());
+            auto cBx     = (int)static_cast<D19cCic2Event*>(cEvent)->BxId(cHybrid->getId());
             if(cBxIds.size() > 0)
             {
                 int cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxIds[cBxIds.size() - 1] % cMaxBxCounter);

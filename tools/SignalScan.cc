@@ -158,7 +158,7 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 
                                 for(int cChan = 0; cChan < NCHANNELS; cChan++)
                                 {
-                                    int cHits = cEvent->DataBit(cHybrid->getId(), cCbc->getId(), 0, cChan);
+                                    int cHits = static_cast<D19cCic2Event*>(cEvent)->DataBit(cHybrid->getId(), cCbc->getId(), 0, cChan);
                                     cSignalScan->Fill(cChan, cVcth, cHits);
                                     cHitCounter += cHits;
                                     cTotalHitCounter += cHits;
