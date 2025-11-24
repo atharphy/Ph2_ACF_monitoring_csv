@@ -731,15 +731,14 @@ std::vector<StubHandler> D19cCic2Event::StubVector(uint8_t pHybridId, uint8_t pR
 {
     decodeEvent();
     std::vector<StubHandler> theStubVector;
-    auto                   theHybridStubContainer = fDecodedStubEvent.getHybrid(pHybridId / 2, pHybridId);
-
+    auto                   theChipStubContainer = fDecodedStubEvent.getChip(pHybridId / 2, pHybridId, pReadoutChipId);
     if(fIs2S)
     {
-        for(auto& StubHandler: theHybridStubContainer->getSummary<ClusterCollection<StubHandler, 3>>()) { theStubVector.push_back(StubHandler); }
+        for(auto& StubHandler: theChipStubContainer->getSummary<ClusterCollection<StubHandler, 3>>()) { theStubVector.push_back(StubHandler); }
     }
     else
     {
-        for(auto& StubHandler: theHybridStubContainer->getSummary<ClusterCollection<StubHandler, 5>>()) { theStubVector.push_back(StubHandler); }
+        for(auto& StubHandler: theChipStubContainer->getSummary<ClusterCollection<StubHandler, 5>>()) { theStubVector.push_back(StubHandler); }
     }
     return theStubVector;
 }
