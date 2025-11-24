@@ -34,24 +34,47 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
     TFile *file = new TFile(rootFileName.c_str(), "RECREATE");
     TTree *tree = new TTree("Events", "Events");
 
-    BoardEventPS theBoardEventPS;
-    tree->Branch("BoardEventPS", &theBoardEventPS);
-
     FileHandler theFileHandler(rawFileName, 'r');
     FileHeader  theFileHeader;
     bool        isHeaderPresent = theFileHandler.getHeader(theFileHeader);
-
+    
     auto   theData     = theFileHandler.readFile();
-    size_t theDataSize = theData.size();
     if(theData.size() == 0)
     {
         LOG(WARNING) << WARNING_FORMAT << "ParseEventFile::parseFile -> data vector is empty for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
         return false;
     }
-
-    // std::vector<std::unique_ptr<D19cCic2Event>> fEventList;
-
+    
     size_t currentEventStart = (isHeaderPresent ? FileHeader::fHeaderSize : 0);
+
+    LOG(INFO) << BOLDYELLOW << "Parsing completed for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
+
+    if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS)
+    {
+        fillEventTreePS(tree, theBoard, theData, currentEventStart);
+    }
+    else if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S)
+    {
+        fillEventTree2S(tree, theBoard, theData, currentEventStart);
+    }
+    else
+    {
+        LOG(ERROR) << ERROR_FORMAT << "ParseEventFile::parseFile -> Unsupported FrontEndType for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
+        return false;
+    }
+
+    tree->Write();
+    file->Close();
+
+    return true;
+}
+
+void ParseEventFile::fillEventTreePS(TTree* tree, const BeBoard* theBoard, const std::vector<uint32_t>& theData, size_t currentEventStart)
+{
+    size_t theDataSize = theData.size();
+
+    BoardEventPS theBoardEventPS;
+    tree->Branch("BoardEventPS", &theBoardEventPS);
 
     while(currentEventStart < theDataSize)
     {
@@ -113,10 +136,57 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
         currentEventStart += eventSize;
     }
 
-    LOG(INFO) << BOLDYELLOW << "Parsing completed for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
+}
 
-    tree->Write();
-    file->Close();
+void ParseEventFile::fillEventTree2S(TTree* tree, const BeBoard* theBoard, const std::vector<uint32_t>& theData, size_t currentEventStart)
+{
+    size_t theDataSize = theData.size();
 
-    return true;
+    BoardEvent2S theBoardEvent2S;
+    tree->Branch("BoardEvent2S", &theBoardEvent2S);
+
+    while(currentEventStart < theDataSize)
+    {
+        size_t eventSize = (theData.at(currentEventStart) & 0xFFFF) * 4;
+        if(currentEventStart + eventSize >= theDataSize) break;
+        std::vector<uint32_t> theEventData(theData.begin() + currentEventStart, theData.begin() + currentEventStart + eventSize);
+        D19cCic2Event theEventParsed(theBoard, theEventData);
+
+        theBoardEvent2S.fHybrideventList.clear();
+        theBoardEvent2S.fBoardEventInfo = theEventParsed.getBoardEventInfo();
+
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                HybridEvent2S theHybridL1Event2S;
+                theHybridL1Event2S.fHybridL1EventInfo = theEventParsed.getHybridL1EventInfoHandler(theHybrid->getId()).fHybridL1EventInfo;
+
+                for(auto theChip: *theHybrid)
+                {
+                    CBCevent theCBCL1Event;
+                    theCBCL1Event.fChipEventInfo.fChipId = theChip->getId();
+                    theCBCL1Event.fChipEventInfo.fIsL1ErrorFlagSet = theEventParsed.IsL1ErrorSet(theHybrid->getId(), theChip->getId());
+                    theCBCL1Event.fChipEventInfo.fIsStubErrorFlagSet = theEventParsed.IsStubErrorSet(theHybrid->getId(), theChip->getId());
+
+                    for(auto theCluster : theEventParsed.getClusters(theHybrid->getId(), theChip->getId()))
+                    {
+                        theCBCL1Event.fClusterList.push_back(theCluster.fCluster2S);
+                    }
+
+                    for(auto theStubHandler : theEventParsed.StubVector(theHybrid->getId(), theChip->getId()))
+                    {
+                        theCBCL1Event.fStubList.push_back(theStubHandler.fStub);
+                    }
+                    theHybridL1Event2S.fCBCeventList.push_back(theCBCL1Event);
+                }
+                theBoardEvent2S.fHybrideventList.push_back(theHybridL1Event2S);
+            }
+        }
+
+        tree->Fill();
+        
+        currentEventStart += eventSize;
+    }
+
 }

@@ -148,9 +148,9 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
                                 cClustersHisto->Fill(cVcth, cClusters.size());
                                 for(auto& cCluster: cClusters)
                                 {
-                                    cClusterWidth->Fill(cCluster.fClusterWidth, cVcth);
-                                    // cClustersHisto->Fill(cCluster.fFirstStrip, cCluster.fClusterWidth);
-                                    if(cCluster.fClusterWidth <= 2) { cClusterCounter++; }
+                                    cClusterWidth->Fill(cCluster.fCluster2S.fWidth, cVcth);
+                                    // cClustersHisto->Fill(cCluster.fAddress, cCluster.fCluster2S.fWidth);
+                                    if(cCluster.fCluster2S.fWidth <= 2) { cClusterCounter++; }
                                 }
 
                                 cHistName         = Form("Fe%dCbc%d_SignalScan", +cHybrid->getId(), +cCbc->getId());
@@ -300,8 +300,8 @@ void SignalScan::ScanSignal(uint16_t cVcthStart, uint16_t cVcthStop)
 
 //                             for (int i = 0; i < cClusters.size(); i++)
 //                             {
-//                                 cClusterDataString += std::to_string (cClusters[i].fFirstStrip) + "."
-//                                                       + std::to_string (cClusters[i].fClusterWidth) + "^"
+//                                 cClusterDataString += std::to_string (cClusters[i].fAddress) + "."
+//                                                       + std::to_string (cClusters[i].fWidth) + "^"
 //                                                       + std::to_string (cClusters[i].getSensor()) + "-";
 //                             }
 

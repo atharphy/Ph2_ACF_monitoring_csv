@@ -23,19 +23,19 @@ namespace Ph2_HwInterface
 {
 
 /*!
- * \class Cluster2S
- * \brief Cluster2S object for the Event
+ * \class Cluster2SHandler
+ * \brief Cluster2SHandler object for the Event
  */
-struct Cluster2S
+struct Cluster2SHandler
 {
-    Cluster2S() {};
+    Cluster2SHandler() {};
     bool         parseData(uint32_t data);
-    uint16_t     fFirstStrip;
-    uint8_t      fClusterWidth;
-    uint8_t      getSensor() const { return (fFirstStrip + 1) & 0x01; }
-    inline float getBaricentre() const { return fFirstStrip + float(fClusterWidth) / 2. - 0.5; };
+    uint8_t      getSensor() const { return (fCluster2S.fAddress + 1) & 0x01; }
+    inline float getBaricentre() const { return fCluster2S.fAddress + float(fCluster2S.fWidth) / 2. - 0.5; };
     inline bool  isChannelHit(uint8_t channel) const;
     void         print() const;
+    Cluster2S    fCluster2S;
+
 };
 
 template <typename T, size_t N>
@@ -212,7 +212,7 @@ class D19cCic2Event : public Event
      * \return vector with hit channels (row, col)
      */
     std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId);
-    ClusterCollection<Cluster2S, 31>           getClusters(uint8_t pHybridId, uint8_t pCbcId);
+    ClusterCollection<Cluster2SHandler, 31>           getClusters(uint8_t pHybridId, uint8_t pCbcId);
     ClusterCollection<StripClusterPSHandler, 32>      GetStripClusters(uint8_t pHybridId, uint8_t pMPAId);
     ClusterCollection<PixelClusterPSHandler, 32>      GetPixelClusters(uint8_t pHybridId, uint8_t pMPAId);
 
