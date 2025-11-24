@@ -1131,16 +1131,16 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                 bool   cSingles       = true;
                                 for(auto cPxlCluster: cPxlClusters)
                                 {
-                                    uint32_t cRow = cPxlCluster.fZpos;
-                                    uint32_t cCol = cPxlCluster.fAddress;
-                                    if(cPxlCluster.fWidth != 1)
+                                    uint32_t cRow = cPxlCluster.fPixelClusterPS.fZpos;
+                                    uint32_t cCol = cPxlCluster.fPixelClusterPS.fAddress;
+                                    if(cPxlCluster.fPixelClusterPS.fWidth != 1)
                                     {
                                         cSingles = false;
                                         continue;
                                     }
                                     cClusterContainerS0->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
-                                    for(uint8_t cOff = 0; cOff < cPxlCluster.fWidth; cOff++) cCenterOfMassP += cPxlCluster.fAddress + cOff;
-                                    cCenterOfMassP /= (cPxlCluster.fWidth);
+                                    for(uint8_t cOff = 0; cOff < cPxlCluster.fPixelClusterPS.fWidth; cOff++) cCenterOfMassP += cPxlCluster.fPixelClusterPS.fAddress + cOff;
+                                    cCenterOfMassP /= (cPxlCluster.fPixelClusterPS.fWidth);
                                 }
                                 double cCenterOfMassS = 0;
                                 for(auto cStrpCluster: cStripClusters)
@@ -1179,9 +1179,9 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                      << cDiffIndx << " ]\n";
                                 for(auto cPxlCluster: cPxlClusters)
                                 {
-                                    uint32_t cRow = cPxlCluster.fZpos;
-                                    uint32_t cCol = cPxlCluster.fAddress - 1;
-                                    if(cPxlCluster.fWidth != 0) continue;
+                                    uint32_t cRow = cPxlCluster.fPixelClusterPS.fZpos;
+                                    uint32_t cCol = cPxlCluster.fPixelClusterPS.fAddress - 1;
+                                    if(cPxlCluster.fPixelClusterPS.fWidth != 0) continue;
                                     cOut << "\t\t\t\t\t.. P cluster  - row " << cRow << " column " << cCol << "\n";
                                 }
                                 bool cStubFound = (cStubs.size() > 0);

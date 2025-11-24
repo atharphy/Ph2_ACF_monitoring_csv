@@ -72,16 +72,28 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
 
                 for(auto theChip: *theHybrid)
                 {
-                    if(theChip->getId() >= 8) continue;
-                    ChipL1EventInfo theChipL1EventInfo;
-                    theChipL1EventInfo.fChipId = theChip->getId();
-
-                    // std::vector<StripClusterPS> theStripClusterPSList;
-                    // for(auto theCluster : theEventParsed.GetStripClusters(theHybrid->getId(), theChip->getId()))
-                    // {
-                    //     theStripClusterPSList.push_back(theCluster.fStripClusterPS);
-                    // }
-                    // theHybridL1EventPS.fCBCEventList.push_back(std::make_pair(theChipL1EventInfo, theStripClusterPSList));
+                    if(theChip->getId() < 8)
+                    {
+                        SSAL1Event theSSAL1Event;
+                        theSSAL1Event.fChipL1EventInfo.fChipId = theChip->getId();
+    
+                        for(auto theCluster : theEventParsed.GetStripClusters(theHybrid->getId(), theChip->getId()))
+                        {
+                            theSSAL1Event.fClusterList.push_back(theCluster.fStripClusterPS);
+                        }
+                        theHybridL1EventPS.fSSAL1EventList.push_back(theSSAL1Event);
+                    }
+                    else
+                    {
+                        MPAL1Event theMPAL1Event;
+                        theMPAL1Event.fChipL1EventInfo.fChipId = theChip->getId();
+    
+                        for(auto theCluster : theEventParsed.GetPixelClusters(theHybrid->getId(), theChip->getId()))
+                        {
+                            theMPAL1Event.fClusterList.push_back(theCluster.fPixelClusterPS);
+                        }
+                        theHybridL1EventPS.fMPAL1EventList.push_back(theMPAL1Event);
+                    }
                 }
                 theBoardEventPS.fHybridL1EventList.push_back(theHybridL1EventPS);
             }

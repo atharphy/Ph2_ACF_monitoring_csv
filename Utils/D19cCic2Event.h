@@ -60,16 +60,14 @@ struct ClusterCollection
     std::array<T, N> theContainer;
 };
 
-struct PixelClusterPS
+struct PixelClusterPSHandler
 {
-    PixelClusterPS() {};
+    PixelClusterPSHandler() {};
     bool         parseData(uint32_t data);
-    uint8_t      fAddress{0xFF};
-    uint8_t      fWidth{0xFF};
-    uint8_t      fZpos{0xFF};
     inline float getBaricentre() const;
     inline bool  isChannelHit(uint8_t row, uint8_t col) const;
     void         print() const;
+    PixelClusterPS fPixelClusterPS;
 };
 
 struct StripClusterPSHandler
@@ -223,7 +221,7 @@ class D19cCic2Event : public Event
     std::vector<std::pair<uint16_t, uint16_t>> GetHits(uint8_t pHybridId, uint8_t pCbcId);
     ClusterCollection<Cluster2S, 31>           getClusters(uint8_t pHybridId, uint8_t pCbcId);
     ClusterCollection<StripClusterPSHandler, 32>      GetStripClusters(uint8_t pHybridId, uint8_t pMPAId);
-    ClusterCollection<PixelClusterPS, 32>      GetPixelClusters(uint8_t pHybridId, uint8_t pMPAId);
+    ClusterCollection<PixelClusterPSHandler, 32>      GetPixelClusters(uint8_t pHybridId, uint8_t pMPAId);
 
     void fillChipDataContainer(ChipDataContainer* chipContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) override;
 

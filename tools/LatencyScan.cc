@@ -327,9 +327,9 @@ void LatencyScan::ScanLatency()
                                     for(auto& cPclstr: cPclstrs)
                                     {
                                         if(cSclstrs.size() > 0)
-                                            LOG(DEBUG) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width "
-                                                       << +cPclstr.fWidth << RESET;
-                                        for(uint8_t cId = 0; cId < (cPclstr.fWidth); cId++)
+                                            LOG(DEBUG) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cPclstr.fPixelClusterPS.fAddress << " col " << +cPclstr.fPixelClusterPS.fZpos << " width "
+                                                       << +cPclstr.fPixelClusterPS.fWidth << RESET;
+                                        for(uint8_t cId = 0; cId < (cPclstr.fPixelClusterPS.fWidth); cId++)
                                         {
                                             cHitContainer.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -338,7 +338,7 @@ void LatencyScan::ScanLatency()
                                                 ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()
                                                 .at(cTDCVal) += 1;
                                             // auto& cOccChip = cOccHybrid->getObject(cChip->getId());
-                                            // cOccChip->getChannel<Occupancy>(cPclstr.fZpos, cPclstr.fAddress + cId).fOccupancy++;
+                                            // cOccChip->getChannel<Occupancy>(cPclstr.fPixelClusterPS.fZpos, cPclstr.fPixelClusterPS.fAddress + cId).fOccupancy++;
                                         }
                                     }
                                     for(auto& cSclstr: cSclstrs)
