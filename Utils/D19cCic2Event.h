@@ -80,19 +80,16 @@ struct StripClusterPSHandler
     StripClusterPS fStripClusterPS;
 };
 
-struct EventStub
+struct StubHandler
 {
-    EventStub() : fPosition(255u), fBend(255u), fRow(255u) {};
+    StubHandler() {};
     bool           parseData(uint32_t data, bool is2S);
-    inline uint8_t getPosition() const { return fPosition; }
-    inline uint8_t getBend() const { return fBend; }
-    inline uint8_t getRow() const { return fRow; }
-    inline float   getCenter() const { return static_cast<float>((fPosition / 2.)); }
-
-    uint8_t fPosition{0xFF};
-    uint8_t fBend{0xFF};
-    uint8_t fRow{0xFF};
+    inline uint8_t getPosition() const { return fStub.fPosition; }
+    inline uint8_t getBend() const { return fStub.fBend; }
+    inline uint8_t getRow() const { return fStub.fRow; }
+    inline float   getCenter() const { return static_cast<float>((fStub.fPosition / 2.)); }
     void    print() const;
+    Stub fStub;
 };
 /*!
  * \class Event
@@ -162,13 +159,9 @@ class D19cCic2Event : public Event
      */
     void decodeEvent();
 
-    /*!
-     * \brief Function to get all Error bits
-     * \param pHybridId : Hybrid Id
-     * \param pCbcId : Cbc Id
-     * \return Error bit
-     */
-    uint32_t Error(uint8_t pHybridId, uint8_t pCbcId);
+
+    uint32_t IsL1ErrorSet(uint8_t pHybridId, uint8_t pCbcId);
+    uint32_t IsStubErrorSet(uint8_t pHybridId, uint8_t pCbcId);
     /*!
      * \brief Function to get pipeline address
      * \param pHybridId : Hybrid Id
@@ -204,7 +197,7 @@ class D19cCic2Event : public Event
      * \param pHybridId : Hybrid Id
      * \param pCbcId : Cbc Id
      */
-    std::vector<EventStub> StubVector(uint8_t pHybridId, uint8_t pCbcId);
+    std::vector<StubHandler> StubVector(uint8_t pHybridId, uint8_t pCbcId);
     /*!
      * \brief Function to count the Hits in this event
      * \param pHybridId : Hybrid Id

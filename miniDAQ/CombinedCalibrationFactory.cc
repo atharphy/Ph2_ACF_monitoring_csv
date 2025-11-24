@@ -48,7 +48,6 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/PedestalEqualizationPSAtPedestal.h"
 #include "tools/PedestalEqualizationPSFullScan.h"
-#include "tools/Physics2S.h"
 #include "tools/RD53ClockDelay.h"
 #include "tools/RD53Gain.h"
 #include "tools/RD53GainOptimization.h"
@@ -297,8 +296,6 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTinjectionDelayOptimization,
              OTinjectionOccupancyScan,
              OTCMNoise>("2S Module", "2SnoiseTests");
-
-    Register<Physics2S>("2S Module", "physics2s");
 
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTalignLpGBTinputsForBypass, OTChipToCICecv>("2S Module", "2Secv");
 

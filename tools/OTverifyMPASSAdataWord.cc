@@ -172,8 +172,8 @@ void OTverifyMPASSAdataWord::injectStubsPS(Ph2_HwDescription::ReadoutChip* theMP
         abort();
     }
 
-    uint8_t rowCoordinate = listOfStubs.at(0).fZ;
-    uint8_t colCoordinate = listOfStubs.at(0).fSeed;
+    uint8_t rowCoordinate = listOfStubs.at(0).fRow;
+    uint8_t colCoordinate = listOfStubs.at(0).fPosition;
 
     std::vector<Cluster> thePixelClusterList = produceMatchingPixelClusterList(rowCoordinate, colCoordinate);
     static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theMPA, thePixelClusterList);
@@ -200,9 +200,9 @@ PatternMatcher OTverifyMPASSAdataWord::producePatternMatcherPS(uint8_t chipIdFor
         {
             thePattern.addToPattern(0x0, 0x0, 3);                // BX offset
             thePattern.addToPattern(chipIdForCIC, 0x7, 3);       // Chip ID
-            thePattern.addToPattern(theStub.fSeed + 2, 0xFF, 8); // seed
+            thePattern.addToPattern(theStub.fPosition + 2, 0xFF, 8); // seed
             thePattern.addToPattern(theStub.fBend, 0x7, 3);      // bending
-            thePattern.addToPattern(theStub.fZ, 0xF, 4);         // z
+            thePattern.addToPattern(theStub.fRow, 0xF, 4);         // z
         }
     }
 
@@ -252,9 +252,9 @@ PatternMatcher OTverifyMPASSAdataWord::produceStubPatternMatcher(const std::vect
         {
             thePattern.addToPattern(0x0, 0x0, 3);                              // BX offset
             thePattern.addToPattern(chipIdForCIC, 0x7, 3);                     // Chip ID
-            thePattern.addToPattern(theStub.fSeed + 2, 0xFF, 8);               // seed
+            thePattern.addToPattern(theStub.fPosition + 2, 0xFF, 8);               // seed
             thePattern.addToPattern(fBendingToCode.at(theStub.fBend), 0x7, 3); // bending
-            thePattern.addToPattern(theStub.fZ, 0xF, 4);                       // z
+            thePattern.addToPattern(theStub.fRow, 0xF, 4);                       // z
         }
     }
 

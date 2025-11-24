@@ -60,42 +60,51 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
         std::vector<uint32_t> theEventData(theData.begin() + currentEventStart, theData.begin() + currentEventStart + eventSize);
         D19cCic2Event theEventParsed(theBoard, theEventData);
 
-        theBoardEventPS.fHybridL1EventList.clear();
+        theBoardEventPS.fHybrideventList.clear();
         theBoardEventPS.fBoardEventInfo = theEventParsed.getBoardEventInfo();
 
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                HybridL1EventPS theHybridL1EventPS;
+                HybridEventPS theHybridL1EventPS;
                 theHybridL1EventPS.fHybridL1EventInfo = theEventParsed.getHybridL1EventInfoHandler(theHybrid->getId()).fHybridL1EventInfo;
 
                 for(auto theChip: *theHybrid)
                 {
                     if(theChip->getId() < 8)
                     {
-                        SSAL1Event theSSAL1Event;
-                        theSSAL1Event.fChipL1EventInfo.fChipId = theChip->getId();
+                        SSAevent theSSAL1Event;
+                        theSSAL1Event.fChipEventInfo.fChipId = theChip->getId();
+                        theSSAL1Event.fChipEventInfo.fIsL1ErrorFlagSet = theEventParsed.IsL1ErrorSet(theHybrid->getId(), theChip->getId());
+                        theSSAL1Event.fChipEventInfo.fIsStubErrorFlagSet = theEventParsed.IsStubErrorSet(theHybrid->getId(), theChip->getId());
     
                         for(auto theCluster : theEventParsed.GetStripClusters(theHybrid->getId(), theChip->getId()))
                         {
                             theSSAL1Event.fClusterList.push_back(theCluster.fStripClusterPS);
                         }
-                        theHybridL1EventPS.fSSAL1EventList.push_back(theSSAL1Event);
+                        theHybridL1EventPS.fSSAeventList.push_back(theSSAL1Event);
                     }
                     else
                     {
-                        MPAL1Event theMPAL1Event;
-                        theMPAL1Event.fChipL1EventInfo.fChipId = theChip->getId();
+                        MPAevent theMPAL1Event;
+                        theMPAL1Event.fChipEventInfo.fChipId = theChip->getId();
+                        theMPAL1Event.fChipEventInfo.fIsL1ErrorFlagSet = theEventParsed.IsL1ErrorSet(theHybrid->getId(), theChip->getId());
+                        theMPAL1Event.fChipEventInfo.fIsStubErrorFlagSet = theEventParsed.IsStubErrorSet(theHybrid->getId(), theChip->getId());
     
                         for(auto theCluster : theEventParsed.GetPixelClusters(theHybrid->getId(), theChip->getId()))
                         {
                             theMPAL1Event.fClusterList.push_back(theCluster.fPixelClusterPS);
                         }
-                        theHybridL1EventPS.fMPAL1EventList.push_back(theMPAL1Event);
+
+                        for(auto theStubHandler : theEventParsed.StubVector(theHybrid->getId(), theChip->getId()))
+                        {
+                            theMPAL1Event.fStubList.push_back(theStubHandler.fStub);
+                        }
+                        theHybridL1EventPS.fMPAeventList.push_back(theMPAL1Event);
                     }
                 }
-                theBoardEventPS.fHybridL1EventList.push_back(theHybridL1EventPS);
+                theBoardEventPS.fHybrideventList.push_back(theHybridL1EventPS);
             }
         }
 

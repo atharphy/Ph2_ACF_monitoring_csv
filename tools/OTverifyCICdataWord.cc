@@ -339,9 +339,9 @@ void OTverifyCICdataWord::injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA, 
     }
 
     const auto&          theStub     = listOfStubs.at(0);
-    uint8_t              clusterSeed = theStub.fSeed / 2 - 1;
-    uint8_t              clusterSize = theStub.fSeed % 2 + 1;
-    uint8_t              zPosition   = theStub.fZ;
+    uint8_t              clusterSeed = theStub.fPosition / 2 - 1;
+    uint8_t              clusterSize = theStub.fPosition % 2 + 1;
+    uint8_t              zPosition   = theStub.fRow;
     uint8_t              theBending  = theStub.fBend;
     std::vector<Cluster> theClusterList{Cluster(zPosition, clusterSeed, clusterSize)};
 
@@ -358,7 +358,7 @@ void OTverifyCICdataWord::injectStubs2S(Ph2_HwDescription::ReadoutChip* theCBC, 
     int                                           bendingCode = 0;
     for(const auto& theStub: listOfStubs)
     {
-        stubSeedAndBending.push_back(std::make_pair(theStub.fSeed, bendingCode * 2));
+        stubSeedAndBending.push_back(std::make_pair(theStub.fPosition, bendingCode * 2));
         theRegisterVector.push_back({"Bend" + std::to_string(7 + bendingCode), theStub.fBend});
         ++bendingCode;
     }
@@ -381,7 +381,7 @@ PatternMatcher OTverifyCICdataWord::producePatternMatcher2S(uint8_t chipIdForCIC
 
     // Order stub by bending
     std::map<uint8_t, uint8_t> orderedStubBendingCodeAndSeedVector;
-    for(const auto& stubSeedAndBending: listOfStubs) { orderedStubBendingCodeAndSeedVector[stubSeedAndBending.fBend] = stubSeedAndBending.fSeed; }
+    for(const auto& stubSeedAndBending: listOfStubs) { orderedStubBendingCodeAndSeedVector[stubSeedAndBending.fBend] = stubSeedAndBending.fPosition; }
     if(orderedStubBendingCodeAndSeedVector.size() != listOfStubs.size())
     {
         std::cerr << __PRETTY_FUNCTION__ << " [" << __LINE__ << "] orderedStubBendingCodeAndSeedVector and stubSeedAndBendingVector sizes to not match!" << std::endl;
@@ -440,9 +440,9 @@ PatternMatcher OTverifyCICdataWord::producePatternMatcherPS(uint8_t chipIdForCIC
         {
             thePattern.addToPattern(0x0, 0x0, 3);            // BX offset
             thePattern.addToPattern(chipIdForCIC, 0x7, 3);   // Chip ID
-            thePattern.addToPattern(theStub.fSeed, 0xFF, 8); // seed
+            thePattern.addToPattern(theStub.fPosition, 0xFF, 8); // seed
             thePattern.addToPattern(theStub.fBend, 0x7, 3);  // bending
-            thePattern.addToPattern(theStub.fZ, 0xF, 4);     // z
+            thePattern.addToPattern(theStub.fRow, 0xF, 4);     // z
         }
     }
 

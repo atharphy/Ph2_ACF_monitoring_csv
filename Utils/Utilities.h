@@ -38,17 +38,6 @@ struct Cluster
     uint8_t fColWidth;
 };
 
-struct Stub
-{
-    Stub(uint8_t theSeed, uint8_t theBend, uint8_t theZ) : fSeed(theSeed), fBend(theBend), fZ(theZ) {}
-
-    Stub() : fSeed(0), fBend(0), fZ(0) {}
-
-    uint8_t fSeed;
-    uint8_t fBend;
-    uint8_t fZ;
-};
-
 template <typename... Args>
 std::string string_format(const std::string& format, Args... args)
 {
