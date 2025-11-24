@@ -8,9 +8,9 @@
 */
 
 #include "Utils/Event.h"
-#include "Utils/easylogging++.h"
 #include "Utils/ConsoleColor.h"
 #include "Utils/DataContainer.h"
+#include "Utils/easylogging++.h"
 
 using namespace Ph2_HwDescription;
 

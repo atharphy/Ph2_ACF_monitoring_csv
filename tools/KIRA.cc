@@ -179,7 +179,8 @@ void KIRA::determineLatency()
                             if(cHybrid->getId() % 2 == 1 && cChip->getId() != cLatencyLED) continue;
 
                             auto cHits = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
-                            if(cHits.size() != 0) LOG(DEBUG) << BOLDBLUE << "Event#" << theD19cCic2Event->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
+                            if(cHits.size() != 0)
+                                LOG(DEBUG) << BOLDBLUE << "Event#" << theD19cCic2Event->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
                             for(auto cHit: cHits)
                             {
                                 // monitor only specified sensor channels

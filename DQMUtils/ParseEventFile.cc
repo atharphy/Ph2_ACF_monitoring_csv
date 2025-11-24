@@ -28,35 +28,29 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
     char boardIdString[4];
     sprintf(boardIdString, "%03d", theBoard->getId() & 0x1FF);
 
-    std::string rawFileName = fRawFileFolderPath + "/" + "run_" + runString + "_Board" + boardIdString + ".raw";
+    std::string rawFileName  = fRawFileFolderPath + "/" + "run_" + runString + "_Board" + boardIdString + ".raw";
     std::string rootFileName = fRawFileFolderPath + "/" + "run_" + runString + "_Board" + boardIdString + ".root";
 
-    TFile *file = new TFile(rootFileName.c_str(), "RECREATE");
-    TTree *tree = new TTree("Events", "Events");
+    TFile* file = new TFile(rootFileName.c_str(), "RECREATE");
+    TTree* tree = new TTree("Events", "Events");
 
     FileHandler theFileHandler(rawFileName, 'r');
     FileHeader  theFileHeader;
     bool        isHeaderPresent = theFileHandler.getHeader(theFileHeader);
-    
-    auto   theData     = theFileHandler.readFile();
+
+    auto theData = theFileHandler.readFile();
     if(theData.size() == 0)
     {
         LOG(WARNING) << WARNING_FORMAT << "ParseEventFile::parseFile -> data vector is empty for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
         return false;
     }
-    
+
     size_t currentEventStart = (isHeaderPresent ? FileHeader::fHeaderSize : 0);
 
     LOG(INFO) << BOLDYELLOW << "Parsing completed for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
 
-    if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS)
-    {
-        fillEventTreePS(tree, theBoard, theData, currentEventStart);
-    }
-    else if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S)
-    {
-        fillEventTree2S(tree, theBoard, theData, currentEventStart);
-    }
+    if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) { fillEventTreePS(tree, theBoard, theData, currentEventStart); }
+    else if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S) { fillEventTree2S(tree, theBoard, theData, currentEventStart); }
     else
     {
         LOG(ERROR) << ERROR_FORMAT << "ParseEventFile::parseFile -> Unsupported FrontEndType for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
@@ -81,7 +75,7 @@ void ParseEventFile::fillEventTreePS(TTree* tree, const BeBoard* theBoard, const
         size_t eventSize = (theData.at(currentEventStart) & 0xFFFF) * 4;
         if(currentEventStart + eventSize >= theDataSize) break;
         std::vector<uint32_t> theEventData(theData.begin() + currentEventStart, theData.begin() + currentEventStart + eventSize);
-        D19cCic2Event theEventParsed(theBoard, theEventData);
+        D19cCic2Event         theEventParsed(theBoard, theEventData);
 
         theBoardEventPS.fHybrideventList.clear();
         theBoardEventPS.fBoardEventInfo = theEventParsed.getBoardEventInfo();
@@ -98,32 +92,23 @@ void ParseEventFile::fillEventTreePS(TTree* tree, const BeBoard* theBoard, const
                     if(theChip->getId() < 8)
                     {
                         SSAevent theSSAL1Event;
-                        theSSAL1Event.fChipEventInfo.fChipId = theChip->getId();
-                        theSSAL1Event.fChipEventInfo.fIsL1ErrorFlagSet = theEventParsed.IsL1ErrorSet(theHybrid->getId(), theChip->getId());
+                        theSSAL1Event.fChipEventInfo.fChipId             = theChip->getId();
+                        theSSAL1Event.fChipEventInfo.fIsL1ErrorFlagSet   = theEventParsed.IsL1ErrorSet(theHybrid->getId(), theChip->getId());
                         theSSAL1Event.fChipEventInfo.fIsStubErrorFlagSet = theEventParsed.IsStubErrorSet(theHybrid->getId(), theChip->getId());
-    
-                        for(auto theCluster : theEventParsed.GetStripClusters(theHybrid->getId(), theChip->getId()))
-                        {
-                            theSSAL1Event.fClusterList.push_back(theCluster.fStripClusterPS);
-                        }
+
+                        for(auto theCluster: theEventParsed.GetStripClusters(theHybrid->getId(), theChip->getId())) { theSSAL1Event.fClusterList.push_back(theCluster.fStripClusterPS); }
                         theHybridL1EventPS.fSSAeventList.push_back(theSSAL1Event);
                     }
                     else
                     {
                         MPAevent theMPAL1Event;
-                        theMPAL1Event.fChipEventInfo.fChipId = theChip->getId();
-                        theMPAL1Event.fChipEventInfo.fIsL1ErrorFlagSet = theEventParsed.IsL1ErrorSet(theHybrid->getId(), theChip->getId());
+                        theMPAL1Event.fChipEventInfo.fChipId             = theChip->getId();
+                        theMPAL1Event.fChipEventInfo.fIsL1ErrorFlagSet   = theEventParsed.IsL1ErrorSet(theHybrid->getId(), theChip->getId());
                         theMPAL1Event.fChipEventInfo.fIsStubErrorFlagSet = theEventParsed.IsStubErrorSet(theHybrid->getId(), theChip->getId());
-    
-                        for(auto theCluster : theEventParsed.GetPixelClusters(theHybrid->getId(), theChip->getId()))
-                        {
-                            theMPAL1Event.fClusterList.push_back(theCluster.fPixelClusterPS);
-                        }
 
-                        for(auto theStubHandler : theEventParsed.StubVector(theHybrid->getId(), theChip->getId()))
-                        {
-                            theMPAL1Event.fStubList.push_back(theStubHandler.fStub);
-                        }
+                        for(auto theCluster: theEventParsed.GetPixelClusters(theHybrid->getId(), theChip->getId())) { theMPAL1Event.fClusterList.push_back(theCluster.fPixelClusterPS); }
+
+                        for(auto theStubHandler: theEventParsed.StubVector(theHybrid->getId(), theChip->getId())) { theMPAL1Event.fStubList.push_back(theStubHandler.fStub); }
                         theHybridL1EventPS.fMPAeventList.push_back(theMPAL1Event);
                     }
                 }
@@ -132,10 +117,9 @@ void ParseEventFile::fillEventTreePS(TTree* tree, const BeBoard* theBoard, const
         }
 
         tree->Fill();
-        
+
         currentEventStart += eventSize;
     }
-
 }
 
 void ParseEventFile::fillEventTree2S(TTree* tree, const BeBoard* theBoard, const std::vector<uint32_t>& theData, size_t currentEventStart)
@@ -150,7 +134,7 @@ void ParseEventFile::fillEventTree2S(TTree* tree, const BeBoard* theBoard, const
         size_t eventSize = (theData.at(currentEventStart) & 0xFFFF) * 4;
         if(currentEventStart + eventSize >= theDataSize) break;
         std::vector<uint32_t> theEventData(theData.begin() + currentEventStart, theData.begin() + currentEventStart + eventSize);
-        D19cCic2Event theEventParsed(theBoard, theEventData);
+        D19cCic2Event         theEventParsed(theBoard, theEventData);
 
         theBoardEvent2S.fHybrideventList.clear();
         theBoardEvent2S.fBoardEventInfo = theEventParsed.getBoardEventInfo();
@@ -165,19 +149,13 @@ void ParseEventFile::fillEventTree2S(TTree* tree, const BeBoard* theBoard, const
                 for(auto theChip: *theHybrid)
                 {
                     CBCevent theCBCL1Event;
-                    theCBCL1Event.fChipEventInfo.fChipId = theChip->getId();
-                    theCBCL1Event.fChipEventInfo.fIsL1ErrorFlagSet = theEventParsed.IsL1ErrorSet(theHybrid->getId(), theChip->getId());
+                    theCBCL1Event.fChipEventInfo.fChipId             = theChip->getId();
+                    theCBCL1Event.fChipEventInfo.fIsL1ErrorFlagSet   = theEventParsed.IsL1ErrorSet(theHybrid->getId(), theChip->getId());
                     theCBCL1Event.fChipEventInfo.fIsStubErrorFlagSet = theEventParsed.IsStubErrorSet(theHybrid->getId(), theChip->getId());
 
-                    for(auto theCluster : theEventParsed.getClusters(theHybrid->getId(), theChip->getId()))
-                    {
-                        theCBCL1Event.fClusterList.push_back(theCluster.fCluster2S);
-                    }
+                    for(auto theCluster: theEventParsed.getClusters(theHybrid->getId(), theChip->getId())) { theCBCL1Event.fClusterList.push_back(theCluster.fCluster2S); }
 
-                    for(auto theStubHandler : theEventParsed.StubVector(theHybrid->getId(), theChip->getId()))
-                    {
-                        theCBCL1Event.fStubList.push_back(theStubHandler.fStub);
-                    }
+                    for(auto theStubHandler: theEventParsed.StubVector(theHybrid->getId(), theChip->getId())) { theCBCL1Event.fStubList.push_back(theStubHandler.fStub); }
                     theHybridL1Event2S.fCBCeventList.push_back(theCBCL1Event);
                 }
                 theBoardEvent2S.fHybrideventList.push_back(theHybridL1Event2S);
@@ -185,8 +163,7 @@ void ParseEventFile::fillEventTree2S(TTree* tree, const BeBoard* theBoard, const
         }
 
         tree->Fill();
-        
+
         currentEventStart += eventSize;
     }
-
 }

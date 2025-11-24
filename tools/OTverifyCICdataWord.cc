@@ -438,11 +438,11 @@ PatternMatcher OTverifyCICdataWord::producePatternMatcherPS(uint8_t chipIdForCIC
     {
         for(auto theStub: listOfStubs)
         {
-            thePattern.addToPattern(0x0, 0x0, 3);            // BX offset
-            thePattern.addToPattern(chipIdForCIC, 0x7, 3);   // Chip ID
+            thePattern.addToPattern(0x0, 0x0, 3);                // BX offset
+            thePattern.addToPattern(chipIdForCIC, 0x7, 3);       // Chip ID
             thePattern.addToPattern(theStub.fPosition, 0xFF, 8); // seed
-            thePattern.addToPattern(theStub.fBend, 0x7, 3);  // bending
-            thePattern.addToPattern(theStub.fRow, 0xF, 4);     // z
+            thePattern.addToPattern(theStub.fBend, 0x7, 3);      // bending
+            thePattern.addToPattern(theStub.fRow, 0xF, 4);       // z
         }
     }
 

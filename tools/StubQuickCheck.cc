@@ -153,9 +153,9 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
     int          cSyncLoss           = 0;
     for(auto cEvent: pEvents)
     {
-        auto theD19cCic2Event = static_cast<D19cCic2Event*>(cEvent);
-        auto                  cEventCount = theD19cCic2Event->GetEventCount();
-        auto                  cTDC        = theD19cCic2Event->GetTDC();
+        auto                  theD19cCic2Event = static_cast<D19cCic2Event*>(cEvent);
+        auto                  cEventCount      = theD19cCic2Event->GetEventCount();
+        auto                  cTDC             = theD19cCic2Event->GetTDC();
         std::vector<uint32_t> cBxIds(0);
 
         LOG(DEBUG) << BOLDBLUE << "Event " << +cEventCount << " --- TDC  " << +cTDC << RESET;

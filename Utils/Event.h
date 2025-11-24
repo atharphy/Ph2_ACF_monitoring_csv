@@ -19,12 +19,12 @@
 #include <bitset>
 #include <cstring>
 #include <iomanip>
+#include <iostream>
+#include <map>
+#include <memory>
 #include <sstream>
 #include <string>
-#include <memory>
 #include <vector>
-#include <map>
-#include <iostream>
 
 class BoardDataContainer;
 class HybridDataContainer;
@@ -33,7 +33,7 @@ class ChannelGroupBase;
 
 namespace Ph2_HwDescription
 {
-  class BeBoard;
+class BeBoard;
 }
 
 namespace Ph2_HwInterface
@@ -62,7 +62,7 @@ class Event
      */
     virtual ~Event() {}
 
-    virtual uint32_t GetNHits(uint8_t pHybridId, uint8_t pCbcId) {return 0;}
+    virtual uint32_t GetNHits(uint8_t pHybridId, uint8_t pCbcId) { return 0; }
 
     virtual void fillDataContainer(BoardDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup);
     virtual void fillChipDataContainer(ChipDataContainer* boardContainer, const std::shared_ptr<ChannelGroupBase> testChannelGroup, uint8_t hybridId) = 0;

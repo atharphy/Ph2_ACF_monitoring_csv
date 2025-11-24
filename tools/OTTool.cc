@@ -641,7 +641,7 @@ void OTTool::ContinuousReadoutTh(uint8_t cBrdId)
 void OTTool::EventPrintout(BeBoard* pBoard, Event* pEvent)
 {
     auto theD19cCic2Event = static_cast<D19cCic2Event*>(pEvent);
-    auto cSparsified = pBoard->getSparsification();
+    auto cSparsified      = pBoard->getSparsification();
     if(cSparsified)
         LOG(DEBUG) << BOLDBLUE << "Checking with internal - sparisified data" << RESET;
     else

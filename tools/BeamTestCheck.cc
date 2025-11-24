@@ -1172,8 +1172,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                 cBend                       = (std::fabs(cDifference) <= 3.5) ? cDifference : 7.0;
                                 double            cDiffIndx = (cBend - (-7.5)) / 0.5;
                                 std::stringstream cOut;
-                                cOut << "Event#" << theD19cCic2Event->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status " << std::bitset<8>(cStubStat)
-                                     << " Hybrid#" << +cHybrid->getId() << " Chip# " << +cChip->getId() << " found " << +cStubs.size() << " stubs"
+                                cOut << "Event#" << theD19cCic2Event->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status "
+                                     << std::bitset<8>(cStubStat) << " Hybrid#" << +cHybrid->getId() << " Chip# " << +cChip->getId() << " found " << +cStubs.size() << " stubs"
                                      << " and exactly 1 cluster in each of S0 + S1 "
                                      << " center of mass P-Cluster " << cCenterOfMassP << " center of mass S-Cluster " << cCenterOfMassS << " bend from clusters is " << cBend << " [ Id is "
                                      << cDiffIndx << " ]\n";
@@ -1280,7 +1280,8 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
 
                         // loop over hits and count
                         auto cHits = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
-                        if(cHits.size() > 0) LOG(DEBUG) << BOLDBLUE << "Event#" << theD19cCic2Event->GetEventCount() << " Chip#" << +(cChip->getId() % 8) << "   " << +cHits.size() << " hits." << RESET;
+                        if(cHits.size() > 0)
+                            LOG(DEBUG) << BOLDBLUE << "Event#" << theD19cCic2Event->GetEventCount() << " Chip#" << +(cChip->getId() % 8) << "   " << +cHits.size() << " hits." << RESET;
                         for(auto cHit: cHits)
                         {
                             auto& cOccChip = cOccHybrid->getObject(cChip->getId());
@@ -1602,11 +1603,11 @@ void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinuousReadout)
             int cRefHits = 0;
             do {
                 if(cEventIter >= cEvents.end()) break;
-                auto theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
-                uint8_t cTDCVal = theD19cCic2Event->GetTDC();
+                auto    theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
+                uint8_t cTDCVal          = theD19cCic2Event->GetTDC();
                 cTDCContainer->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(cTDCVal)++;
 
-                //theD19cCic2Event->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup());
+                // theD19cCic2Event->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup());
                 for(auto cOpticalGroup: *pBoard)
                 {
                     auto& cOccOG = cOccBrd->getObject(cOpticalGroup->getId());

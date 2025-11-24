@@ -198,11 +198,11 @@ PatternMatcher OTverifyMPASSAdataWord::producePatternMatcherPS(uint8_t chipIdFor
     {
         for(auto theStub: listOfStubs)
         {
-            thePattern.addToPattern(0x0, 0x0, 3);                // BX offset
-            thePattern.addToPattern(chipIdForCIC, 0x7, 3);       // Chip ID
+            thePattern.addToPattern(0x0, 0x0, 3);                    // BX offset
+            thePattern.addToPattern(chipIdForCIC, 0x7, 3);           // Chip ID
             thePattern.addToPattern(theStub.fPosition + 2, 0xFF, 8); // seed
-            thePattern.addToPattern(theStub.fBend, 0x7, 3);      // bending
-            thePattern.addToPattern(theStub.fRow, 0xF, 4);         // z
+            thePattern.addToPattern(theStub.fBend, 0x7, 3);          // bending
+            thePattern.addToPattern(theStub.fRow, 0xF, 4);           // z
         }
     }
 
@@ -252,9 +252,9 @@ PatternMatcher OTverifyMPASSAdataWord::produceStubPatternMatcher(const std::vect
         {
             thePattern.addToPattern(0x0, 0x0, 3);                              // BX offset
             thePattern.addToPattern(chipIdForCIC, 0x7, 3);                     // Chip ID
-            thePattern.addToPattern(theStub.fPosition + 2, 0xFF, 8);               // seed
+            thePattern.addToPattern(theStub.fPosition + 2, 0xFF, 8);           // seed
             thePattern.addToPattern(fBendingToCode.at(theStub.fBend), 0x7, 3); // bending
-            thePattern.addToPattern(theStub.fRow, 0xF, 4);                       // z
+            thePattern.addToPattern(theStub.fRow, 0xF, 4);                     // z
         }
     }
 

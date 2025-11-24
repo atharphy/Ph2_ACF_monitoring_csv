@@ -590,7 +590,8 @@ void LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
                                 cIter       = cBxIds.find(cId);
                             }
                             cIter->second.push_back(static_cast<D19cCic2Event*>(cEvent)->BxId(cId));
-                            LOG(INFO) << BOLDYELLOW << "Event#" << +static_cast<D19cCic2Event*>(cEvent)->GetEventCount() << "\t.. Hybrid#" << +cId << " BxId is " << static_cast<D19cCic2Event*>(cEvent)->BxId(cId) << RESET;
+                            LOG(INFO) << BOLDYELLOW << "Event#" << +static_cast<D19cCic2Event*>(cEvent)->GetEventCount() << "\t.. Hybrid#" << +cId << " BxId is "
+                                      << static_cast<D19cCic2Event*>(cEvent)->BxId(cId) << RESET;
                         }
                     }
 

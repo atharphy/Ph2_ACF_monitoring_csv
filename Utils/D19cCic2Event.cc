@@ -28,8 +28,8 @@ namespace Ph2_HwInterface
 
 bool Cluster2SHandler::parseData(uint32_t data)
 {
-    fCluster2S.fAddress   = ((data >> 3) & 0xFF) - 1;
-    fCluster2S.fWidth = (data & 0x7) + 1;
+    fCluster2S.fAddress = ((data >> 3) & 0xFF) - 1;
+    fCluster2S.fWidth   = (data & 0x7) + 1;
     return fCluster2S.fAddress < NCHANNELS;
 }
 
@@ -45,9 +45,15 @@ bool PixelClusterPSHandler::parseData(uint32_t data)
     return fPixelClusterPS.fAddress < NSSACHANNELS;
 }
 
-bool PixelClusterPSHandler::isChannelHit(uint8_t row, uint8_t col) const { return col >= fPixelClusterPS.fAddress && col < (fPixelClusterPS.fAddress + fPixelClusterPS.fWidth) && row == fPixelClusterPS.fZpos; }
+bool PixelClusterPSHandler::isChannelHit(uint8_t row, uint8_t col) const
+{
+    return col >= fPixelClusterPS.fAddress && col < (fPixelClusterPS.fAddress + fPixelClusterPS.fWidth) && row == fPixelClusterPS.fZpos;
+}
 
-void PixelClusterPSHandler::print() const { std::cout << "First pixel row = " << +fPixelClusterPS.fZpos << " col = " << +fPixelClusterPS.fAddress << " cluster width = " << +fPixelClusterPS.fWidth << std::endl; }
+void PixelClusterPSHandler::print() const
+{
+    std::cout << "First pixel row = " << +fPixelClusterPS.fZpos << " col = " << +fPixelClusterPS.fAddress << " cluster width = " << +fPixelClusterPS.fWidth << std::endl;
+}
 
 bool StripClusterPSHandler::parseData(uint32_t data)
 {
@@ -193,7 +199,10 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list)
     {
         if(fIs2S)
         {
-            if(fIsSparsified) { ContainerFactory::copyAndInitStructure<EmptyContainer, ClusterCollection<Cluster2SHandler, 31>, HybridL1EventInfoHandler, EmptyContainer, EmptyContainer>(*pBoard, fDecodedL1Event); }
+            if(fIsSparsified)
+            {
+                ContainerFactory::copyAndInitStructure<EmptyContainer, ClusterCollection<Cluster2SHandler, 31>, HybridL1EventInfoHandler, EmptyContainer, EmptyContainer>(*pBoard, fDecodedL1Event);
+            }
             else { ContainerFactory::copyAndInitStructure<EmptyContainer, CBCL1EventInfo, HybridL1EventInfoHandler, EmptyContainer, EmptyContainer>(*pBoard, fDecodedL1Event); }
         }
         else
@@ -323,11 +332,13 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
         {
             for(size_t clusterNumber = 0; clusterNumber < theHybridL1EventInfoHandlerPointer->fHybridL1EventInfo.fNumberOfStripClusters; ++clusterNumber)
             {
-                uint32_t  theClusterWord = getWord<CLUSTER_2S_DATA_SIZE, CLUSTER_2S_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
+                uint32_t         theClusterWord = getWord<CLUSTER_2S_DATA_SIZE, CLUSTER_2S_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
                 Cluster2SHandler theCluster2S;
                 if(theCluster2S.parseData(theClusterWord))
                 {
-                    theHybridEventContainer->getObject((*theCicToChipMapping)[theClusterWord >> (CLUSTER_2S_DATA_SIZE - 3)])->getSummary<ClusterCollection<Cluster2SHandler, 31>>().addCluster(theCluster2S);
+                    theHybridEventContainer->getObject((*theCicToChipMapping)[theClusterWord >> (CLUSTER_2S_DATA_SIZE - 3)])
+                        ->getSummary<ClusterCollection<Cluster2SHandler, 31>>()
+                        .addCluster(theCluster2S);
                 }
                 currentBitCount += CLUSTER_2S_DATA_SIZE;
             }
@@ -371,7 +382,7 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
     {
         for(size_t stripClusterNumber = 0; stripClusterNumber < theHybridL1EventInfoHandlerPointer->fHybridL1EventInfo.fNumberOfStripClusters; ++stripClusterNumber)
         {
-            uint32_t       theClusterWord = getWord<STRIP_CLUSTER_PS_DATA_SIZE, STRIP_CLUSTER_PS_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
+            uint32_t              theClusterWord = getWord<STRIP_CLUSTER_PS_DATA_SIZE, STRIP_CLUSTER_PS_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
             StripClusterPSHandler theStripClusterPS;
             if(theStripClusterPS.parseData(theClusterWord))
             {
@@ -383,7 +394,7 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
         }
         for(size_t pixelClusterNumber = 0; pixelClusterNumber < theHybridL1EventInfoHandlerPointer->fHybridL1EventInfo.fNumberOfPixelClusters; ++pixelClusterNumber)
         {
-            uint32_t       theClusterWord = getWord<PIXEL_CLUSTER_PS_DATA_SIZE, PIXEL_CLUSTER_PS_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
+            uint32_t              theClusterWord = getWord<PIXEL_CLUSTER_PS_DATA_SIZE, PIXEL_CLUSTER_PS_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
             PixelClusterPSHandler thePixelClusterPSHandler;
             if(thePixelClusterPSHandler.parseData(theClusterWord))
             {
@@ -413,13 +424,15 @@ uint16_t D19cCic2Event::decodeHybridStubEvent(HybridDataContainer* theHybridStub
     {
         if(fIs2S)
         {
-            uint32_t  theClusterWord = getWord<STUB_2S_DATA_SIZE, STUB_2S_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
+            uint32_t    theClusterWord = getWord<STUB_2S_DATA_SIZE, STUB_2S_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
             StubHandler theStubHandler;
             if(theStubHandler.parseData(theClusterWord, true))
             {
                 try
                 {
-                    theHybridStubEventContainer->getObject((*theCicToChipMapping)[theClusterWord >> (STUB_2S_DATA_SIZE - 3)])->getSummary<ClusterCollection<StubHandler, 3>>().addCluster(theStubHandler);
+                    theHybridStubEventContainer->getObject((*theCicToChipMapping)[theClusterWord >> (STUB_2S_DATA_SIZE - 3)])
+                        ->getSummary<ClusterCollection<StubHandler, 3>>()
+                        .addCluster(theStubHandler);
                 }
                 catch(const std::exception& e)
                 {
@@ -431,7 +444,7 @@ uint16_t D19cCic2Event::decodeHybridStubEvent(HybridDataContainer* theHybridStub
         }
         else
         {
-            uint32_t  theClusterWord = getWord<STUB_PS_DATA_SIZE, STUB_PS_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
+            uint32_t    theClusterWord = getWord<STUB_PS_DATA_SIZE, STUB_PS_DATA_MASK>(dataStartIterator + currentBitCount / 32, currentBitCount % 32);
             StubHandler theStubHandler;
             if(theStubHandler.parseData(theClusterWord, false))
             {
@@ -511,14 +524,20 @@ void D19cCic2Event::fillChipDataContainer(ChipDataContainer* chipContainer, cons
             {
                 for(auto theCluster: theChipL1Container->getSummary<ClusterCollection<StripClusterPSHandler, 32>>())
                 {
-                    for(size_t channel = theCluster.fStripClusterPS.fAddress; channel < theCluster.fStripClusterPS.fAddress + theCluster.fStripClusterPS.fWidth; ++channel) { updateIfUnmasked(0, channel); }
+                    for(size_t channel = theCluster.fStripClusterPS.fAddress; channel < theCluster.fStripClusterPS.fAddress + theCluster.fStripClusterPS.fWidth; ++channel)
+                    {
+                        updateIfUnmasked(0, channel);
+                    }
                 }
             }
             else
             {
                 for(auto theCluster: theChipL1Container->getSummary<ClusterCollection<PixelClusterPSHandler, 32>>())
                 {
-                    for(size_t channel = theCluster.fPixelClusterPS.fAddress; channel < theCluster.fPixelClusterPS.fAddress + theCluster.fPixelClusterPS.fWidth; ++channel) { updateIfUnmasked(theCluster.fPixelClusterPS.fZpos, channel); }
+                    for(size_t channel = theCluster.fPixelClusterPS.fAddress; channel < theCluster.fPixelClusterPS.fAddress + theCluster.fPixelClusterPS.fWidth; ++channel)
+                    {
+                        updateIfUnmasked(theCluster.fPixelClusterPS.fZpos, channel);
+                    }
                 }
             }
         }
@@ -556,7 +575,7 @@ uint16_t D19cCic2Event::L1Status(uint8_t pHybridId)
 {
     decodeEvent();
 
-    auto                     theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
+    auto                            theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
     const HybridL1EventInfoHandler* theHybridL1EventInfoHandlerPointer;
     if(fIsSparsified)
     {
@@ -575,7 +594,7 @@ uint32_t D19cCic2Event::IsL1ErrorSet(uint8_t pHybridId, uint8_t pReadoutChipId)
 
     if(fIsSparsified)
     {
-        auto                     theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
+        auto                            theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
         const HybridL1EventInfoHandler* theHybridL1EventInfoHandlerPointer;
         if(fIs2S)
             theHybridL1EventInfoHandlerPointer = &theHybridL1Event->getSummary<HybridL1EventInfoHandler, ClusterCollection<Cluster2SHandler, 31>>();
@@ -586,7 +605,6 @@ uint32_t D19cCic2Event::IsL1ErrorSet(uint8_t pHybridId, uint8_t pReadoutChipId)
     }
     else { return fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId)->getSummary<CBCL1EventInfo>().fErrorCode; }
 }
-
 
 uint32_t D19cCic2Event::IsStubErrorSet(uint8_t pHybridId, uint8_t pReadoutChipId)
 {
@@ -623,7 +641,7 @@ uint32_t D19cCic2Event::L1Id(uint8_t pHybridId, uint8_t pReadoutChipId)
     decodeEvent();
     if(fIsSparsified)
     {
-        auto                     theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
+        auto                            theHybridL1Event = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
         const HybridL1EventInfoHandler* theHybridL1EventInfoHandlerPointer;
         if(fIs2S)
             theHybridL1EventInfoHandlerPointer = &theHybridL1Event->getSummary<HybridL1EventInfoHandler, ClusterCollection<Cluster2SHandler, 31>>();
@@ -713,7 +731,10 @@ std::vector<bool> D19cCic2Event::DataBitVector(uint8_t pHybridId, uint8_t pReado
                 std::vector<bool> bitList(NSSACHANNELS * NMPAROWS, false);
                 for(auto theCluster: theChipL1Container->getSummary<ClusterCollection<PixelClusterPSHandler, 32>>())
                 {
-                    for(size_t channel = theCluster.fPixelClusterPS.fAddress; channel < theCluster.fPixelClusterPS.fAddress + theCluster.fPixelClusterPS.fWidth; ++channel) { bitList[channel + NSSACHANNELS * theCluster.fPixelClusterPS.fZpos] = true; }
+                    for(size_t channel = theCluster.fPixelClusterPS.fAddress; channel < theCluster.fPixelClusterPS.fAddress + theCluster.fPixelClusterPS.fWidth; ++channel)
+                    {
+                        bitList[channel + NSSACHANNELS * theCluster.fPixelClusterPS.fZpos] = true;
+                    }
                 }
                 return bitList;
             }
@@ -731,7 +752,7 @@ std::vector<StubHandler> D19cCic2Event::StubVector(uint8_t pHybridId, uint8_t pR
 {
     decodeEvent();
     std::vector<StubHandler> theStubVector;
-    auto                   theChipStubContainer = fDecodedStubEvent.getChip(pHybridId / 2, pHybridId, pReadoutChipId);
+    auto                     theChipStubContainer = fDecodedStubEvent.getChip(pHybridId / 2, pHybridId, pReadoutChipId);
     if(fIs2S)
     {
         for(auto& StubHandler: theChipStubContainer->getSummary<ClusterCollection<StubHandler, 3>>()) { theStubVector.push_back(StubHandler); }
@@ -800,14 +821,20 @@ std::vector<std::pair<uint16_t, uint16_t>> D19cCic2Event::GetHits(uint8_t pHybri
             {
                 for(auto theCluster: theChipL1Container->getSummary<ClusterCollection<StripClusterPSHandler, 32>>())
                 {
-                    for(size_t channel = theCluster.fStripClusterPS.fAddress; channel < theCluster.fStripClusterPS.fAddress + theCluster.fStripClusterPS.fWidth; ++channel) { theHitList.emplace_back(0, channel); }
+                    for(size_t channel = theCluster.fStripClusterPS.fAddress; channel < theCluster.fStripClusterPS.fAddress + theCluster.fStripClusterPS.fWidth; ++channel)
+                    {
+                        theHitList.emplace_back(0, channel);
+                    }
                 }
             }
             else
             {
                 for(auto theCluster: theChipL1Container->getSummary<ClusterCollection<PixelClusterPSHandler, 32>>())
                 {
-                    for(size_t channel = theCluster.fPixelClusterPS.fAddress; channel < theCluster.fPixelClusterPS.fAddress + theCluster.fPixelClusterPS.fWidth; ++channel) { theHitList.emplace_back(theCluster.fPixelClusterPS.fZpos, channel); }
+                    for(size_t channel = theCluster.fPixelClusterPS.fAddress; channel < theCluster.fPixelClusterPS.fAddress + theCluster.fPixelClusterPS.fWidth; ++channel)
+                    {
+                        theHitList.emplace_back(theCluster.fPixelClusterPS.fZpos, channel);
+                    }
                 }
             }
         }
@@ -907,7 +934,7 @@ void D19cCic2Event::print()
 HybridL1EventInfoHandler D19cCic2Event::getHybridL1EventInfoHandler(uint8_t pHybridId)
 {
     decodeEvent();
-    auto theHybrid = fDecodedL1Event.getHybrid(pHybridId/2, pHybridId);
+    auto theHybrid = fDecodedL1Event.getHybrid(pHybridId / 2, pHybridId);
     if(fIsSparsified)
     {
         if(fIs2S)
@@ -918,9 +945,6 @@ HybridL1EventInfoHandler D19cCic2Event::getHybridL1EventInfoHandler(uint8_t pHyb
     else { return theHybrid->getSummary<HybridL1EventInfoHandler, CBCL1EventInfo>(); }
 }
 
-BoardEventInfo D19cCic2Event::getBoardEventInfo()
-{
-    return fBoardEventInfo;
-}
+BoardEventInfo D19cCic2Event::getBoardEventInfo() { return fBoardEventInfo; }
 
 } // namespace Ph2_HwInterface

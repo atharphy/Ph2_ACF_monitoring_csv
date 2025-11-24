@@ -460,7 +460,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                             cNStubsFound += cStubs.size();
                         } // Chips
                         if(cNstubsThisHybrd > 0)
-                            LOG(INFO) << BOLDMAGENTA << "Event#" << +theD19cCic2Event->GetEventCount() << " found " << +cNstubsThisHybrd << " stubs in CIC#" << +cHybrid->getId() << " BxId is " << +cBx << RESET;
+                            LOG(INFO) << BOLDMAGENTA << "Event#" << +theD19cCic2Event->GetEventCount() << " found " << +cNstubsThisHybrd << " stubs in CIC#" << +cHybrid->getId() << " BxId is " << +cBx
+                                      << RESET;
                     } // hybrids
                 } // OGs
             } // events
@@ -501,8 +502,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                             auto cHits  = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
                             if((int)(cHits.size()) > 0 && (int)cStubs.size() > 0)
                             {
-                                LOG(INFO) << BOLDGREEN << "Event#" << +theD19cCic2Event->GetEventCount() << " ... found " << cHits.size() << " hits in FE#" << +cChip->getId() << " and " << +cStubs.size()
-                                          << " stubs." << RESET;
+                                LOG(INFO) << BOLDGREEN << "Event#" << +theD19cCic2Event->GetEventCount() << " ... found " << cHits.size() << " hits in FE#" << +cChip->getId() << " and "
+                                          << +cStubs.size() << " stubs." << RESET;
                             }
                         } // Chips
                     } // hybrids
