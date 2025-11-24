@@ -171,6 +171,6 @@ enum class EventType
 
 #define L1_UNSPARSFIED_BLOCK_SIZE_2S 11
 
-#define SSA_NOISE_SIGMA_SCALE_FACTOR 0.7 // based on the measurement at FNAL
+#define SSA_NOISE_SIGMA_SCALE_FACTOR 0.75 // based on the measurement at FNAL
 
 #endif
