@@ -1,7 +1,5 @@
 # Description of PS test results
 
-[TOC maxLevel=3]
-
 This documentation is adapted from the [PS testing with Ph2_ACF tutorial](https://indico.cern.ch/event/1540158/). This focuses on the tests performed during module production with the goal of qualify the modules.
 
 **For production testing, official releases and tools as GIPHT should be used.**
