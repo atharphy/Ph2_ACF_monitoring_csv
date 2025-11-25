@@ -61,6 +61,8 @@ markdown_extensions:
       anchor_linenums: true
   - pymdownx.superfences
   - tables
+  - toc:
+      permalink: "#"
 
 extra_javascript:
   - javascript/config.js
