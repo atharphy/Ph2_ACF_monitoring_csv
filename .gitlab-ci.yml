@@ -30,6 +30,7 @@ image:
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
   MKDOCS_VERSION: '1.5.3'
+  MKDOCS_CONFIG: "mkdocs.yml"
   MATERIAL_VERSION: '9.5.18'
 
   # Disable Git LFS downloads

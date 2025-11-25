@@ -1,0 +1,16 @@
+image: python:3.10
+
+stages:
+  - build
+
+pages:
+  stage: build
+  before_script:
+    - pip install mkdocs mkdocs-material
+  script:
+    - mkdocs build -d public
+  artifacts:
+    paths:
+      - public
+  only:
+    - Dev
