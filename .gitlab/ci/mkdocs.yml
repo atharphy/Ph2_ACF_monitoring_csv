@@ -1,0 +1,12 @@
+pages:
+  stage: pages
+  image: python:3.10
+  before_script:
+    - pip install mkdocs==1.5.3 mkdocs-material
+  script:
+    - mkdocs build -d public
+  artifacts:
+    paths:
+      - public
+  only:
+    - Dev
