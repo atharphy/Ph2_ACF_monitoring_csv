@@ -529,7 +529,7 @@ Here we have more than 4000 channels. As before we have also plots for top and b
 
 ![CommonNoiseHits_OccupancyDriven_OpticalGroup](./OTtesting/2S/CommonNoiseHits_OccupancyDriven_OpticalGroup.png)
 
-The two hybrids below appear uncorrelated.
+The two hybrids below appear anti-correlated.
 
 ![CommonNoiseCrossHybridCorrelation_OccupancyDriven_OpticalGroup](./OTtesting/2S/CommonNoiseCrossHybridCorrelation_OccupancyDriven_OpticalGroup.png)
 
