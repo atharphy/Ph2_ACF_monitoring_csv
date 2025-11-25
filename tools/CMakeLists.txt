@@ -157,7 +157,6 @@ else()
             ROOT::RIO
             EXCLUDE RD53eudaqProducer.h RD53eudaqProducer.cc
             EXCLUDE Eudaq2Producer.h Eudaq2Producer.cc
-            EXCLUDE SSAPhysics.h SSAPhysics.cc
             )
 
     target_compile_definitions(Ph2_Tools PRIVATE)

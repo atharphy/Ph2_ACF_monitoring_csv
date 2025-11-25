@@ -146,8 +146,7 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // reconfigure sparsification + FEs enabled in this CIC
-    LOG(INFO) << BOLDMAGENTA << "StubBackEndAlignment::FindPackageDelay Resetting Sparsification" << RESET;
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
+    setSparsification(pBoard,false);
     size_t cIndx = 0;
 
     for(auto cOpticalGroup: *pBoard)
@@ -155,7 +154,6 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            fCicInterface->SetSparsification(cCic, cSparsified);
             fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
             cIndx++;
         }
@@ -173,16 +171,6 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // auto     cSetting1  = fSettingsMap.find("StubAlignmentScanStart");
     uint32_t cScanStart = 100;
     LOG(INFO) << BOLDMAGENTA << "DNEN" << RESET;
-
-    // sparsification of
-    bool cSparsified = pBoard->getSparsification();
-    if(cSparsified)
-        LOG(INFO) << BOLDMAGENTA << "StubBackEndAlignment::FindStubLatency Sparsification on " << RESET;
-    else
-        LOG(INFO) << BOLDMAGENTA << "StubBackEndAlignment::FindStubLatency Sparsification off " << RESET;
-
-    LOG(INFO) << GREEN << "Trying to find stub latency finding in the back-end" << RESET;
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
 
     // read back original masks
     bool cWithPS = false;
@@ -515,15 +503,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // reconfigure sparsification
     // this->enableTestPulse(false);
     LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Resetting Sparsification" << RESET;
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            fCicInterface->SetSparsification(cCic, cSparsified);
-        } // hybrids
-    } // OG
+    setSparsification(pBoard,false);
+
     // set everything back to original values .. like I wasn't here
     // reset fast command registers
     LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Resetting BeBoards regs back to their original values" << RESET;

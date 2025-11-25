@@ -66,6 +66,7 @@
 #define BEBOARD_BOARDRESET_ATTRIBUTE_NAME "boardReset"
 #define BEBOARD_CONFIGURE_ATTRIBUTE_NAME "configure"
 #define BEBOARD_COMMENT_ATTRIBUTE_NAME "comment"
+#define BEBOARD_ENABLESPARSIFICATION_ATTRIBUTE_NAME "enableSparsification"
 
 // BeBoard connection attributes
 #define BEBOARD_CONNECTION_ID_ATTRIBUTE_NAME "id"

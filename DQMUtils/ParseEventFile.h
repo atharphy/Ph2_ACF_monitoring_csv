@@ -22,7 +22,7 @@ class ParseEventFile
   private:
     bool        parseBoardFile(const Ph2_HwDescription::BeBoard* theBoard);
     void        fillEventTreePS(TTree* tree, const Ph2_HwDescription::BeBoard* theBoard, const std::vector<uint32_t>& theData, size_t currentEventStart);
-    void        fillEventTree2S(TTree* tree, const Ph2_HwDescription::BeBoard* theBoard, const std::vector<uint32_t>& theData, size_t currentEventStart);
+    void        fillEventTree2S(TTree* tree, const Ph2_HwDescription::BeBoard* theBoard, const std::vector<uint32_t>& theData, size_t currentEventStart, bool isSparsified);
     std::string fRawFileFolderPath;
     int         fRunNumber;
 };

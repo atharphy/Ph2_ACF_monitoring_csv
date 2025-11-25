@@ -50,7 +50,7 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
     LOG(INFO) << BOLDYELLOW << "Parsing completed for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
 
     if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) { fillEventTreePS(tree, theBoard, theData, currentEventStart); }
-    else if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S) { fillEventTree2S(tree, theBoard, theData, currentEventStart); }
+    else if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S) { fillEventTree2S(tree, theBoard, theData, currentEventStart, theFileHeader.fCICeventType == CICeventType::Sparsified); }
     else
     {
         LOG(ERROR) << ERROR_FORMAT << "ParseEventFile::parseFile -> Unsupported FrontEndType for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
@@ -75,7 +75,7 @@ void ParseEventFile::fillEventTreePS(TTree* tree, const BeBoard* theBoard, const
         size_t eventSize = (theData.at(currentEventStart) & 0xFFFF) * 4;
         if(currentEventStart + eventSize >= theDataSize) break;
         std::vector<uint32_t> theEventData(theData.begin() + currentEventStart, theData.begin() + currentEventStart + eventSize);
-        D19cCic2Event         theEventParsed(theBoard, theEventData);
+        D19cCic2Event         theEventParsed(theBoard, theEventData, true);
 
         theBoardEventPS.fHybrideventList.clear();
         theBoardEventPS.fBoardEventInfo = theEventParsed.getBoardEventInfo();
@@ -122,7 +122,7 @@ void ParseEventFile::fillEventTreePS(TTree* tree, const BeBoard* theBoard, const
     }
 }
 
-void ParseEventFile::fillEventTree2S(TTree* tree, const BeBoard* theBoard, const std::vector<uint32_t>& theData, size_t currentEventStart)
+void ParseEventFile::fillEventTree2S(TTree* tree, const BeBoard* theBoard, const std::vector<uint32_t>& theData, size_t currentEventStart, bool isSparsified)
 {
     size_t theDataSize = theData.size();
 
@@ -134,7 +134,7 @@ void ParseEventFile::fillEventTree2S(TTree* tree, const BeBoard* theBoard, const
         size_t eventSize = (theData.at(currentEventStart) & 0xFFFF) * 4;
         if(currentEventStart + eventSize >= theDataSize) break;
         std::vector<uint32_t> theEventData(theData.begin() + currentEventStart, theData.begin() + currentEventStart + eventSize);
-        D19cCic2Event         theEventParsed(theBoard, theEventData);
+        D19cCic2Event         theEventParsed(theBoard, theEventData, isSparsified);
 
         theBoardEvent2S.fHybrideventList.clear();
         theBoardEvent2S.fBoardEventInfo = theEventParsed.getBoardEventInfo();

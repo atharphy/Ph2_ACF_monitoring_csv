@@ -187,6 +187,9 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
     uint8_t cReset = convertAnyInt(pBeBordNode.attribute(BEBOARD_LINKRESET_ATTRIBUTE_NAME).value());
     cBeBoard->setLinkReset(cReset);
 
+    uint8_t cEnableSparsification = convertAnyInt(pBeBordNode.attribute(BEBOARD_ENABLESPARSIFICATION_ATTRIBUTE_NAME).value());
+    cBeBoard->getSparsificationFlagHandler().fSparsified = bool(cEnableSparsification);
+
     std::string cComment = (pBeBordNode.attribute(BEBOARD_COMMENT_ATTRIBUTE_NAME) ? pBeBordNode.attribute(BEBOARD_COMMENT_ATTRIBUTE_NAME).value() : "");
     cBeBoard->setComment(cComment);
 
@@ -1016,11 +1019,6 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
                                     uint16_t cMask        = (~(1 << cBitPosition)) & 0xFF;
 
                                     uint16_t cValueFromFile = cChildGlobal.attribute(cAttribute.c_str()).as_uint();
-                                    if(cAttribute == "enableSparsification")
-                                    {
-                                        pBoard->setSparsification(bool(cValueFromFile));
-                                        LOG(INFO) << BOLDYELLOW << "Board sparisfication set to " << pBoard->getSparsification() << RESET;
-                                    }
 
                                     os << GREEN << "|\t|\t|\t|---- Setting " << cAttribute << " to  " << cValueFromFile << "\n" << RESET;
                                     LOG(DEBUG) << BOLDBLUE << " Global settings " << cAttribute << " [ " << *it << " ]-- set to " << cValueFromFile << RESET;

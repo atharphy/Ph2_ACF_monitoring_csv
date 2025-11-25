@@ -141,6 +141,13 @@ class D19cCic2Event : public Event
      * \param pNbCbc
      * \param pEventBuf : the pointer to the raw Event buffer of this Event
      */
+    D19cCic2Event(const Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& list, bool isSparsified);
+    /*!
+     * \brief Constructor of the Event Class
+     * \param pBoard : Board to work with
+     * \param pNbCbc
+     * \param pEventBuf : the pointer to the raw Event buffer of this Event
+     */
     D19cCic2Event(const Ph2_HwDescription::BeBoard* pBoard, std::vector<uint32_t>& list);
     /*!
      * \brief Copy Constructor of the Event Class

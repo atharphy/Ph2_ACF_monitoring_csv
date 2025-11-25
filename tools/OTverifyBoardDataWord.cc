@@ -413,10 +413,7 @@ void OTverifyBoardDataWord::prepareFWForL1IntegrityTest(Ph2_HwDescription::BeBoa
     cVecReg.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0x1});
     fBeBoardInterface->WriteBoardMultReg(theBoard, cVecReg);
 
-    for(auto theOpticalGroup: *theBoard)
-    {
-        for(auto theHybrid: *theOpticalGroup) { fCicInterface->SetSparsification(static_cast<OuterTrackerHybrid*>(theHybrid)->fCic, true); }
-    }
+    setSparsification(theBoard, true);
 }
 
 uint8_t OTverifyBoardDataWord::getNumberOfBytesInSinglePacket(OpticalGroup* cOpticalGroup) const

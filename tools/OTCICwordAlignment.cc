@@ -77,7 +77,7 @@ void OTCICwordAlignment::Reset()
         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.global.hybrid_enable", cEnableMask);
         // reconfigure sparsification + FEs enabled in this CIC
         bool cSparsified = theBoard->getSparsification();
-        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
+        setSparsification(theBoard, cSparsified);
 
         for(auto theOpticalGroup: *theBoard)
         {

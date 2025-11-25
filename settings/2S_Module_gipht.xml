@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1" configure="1">
+  <BeBoard Id="0" boardType="D19C" eventType="VR2S"  linkReset="1" boardReset="1" configure="1" enableSparsification="0">
     <!-- B598 skeleton -->
     <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.35.2:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <CDCE configure="0" clockRate="320"/>
@@ -323,7 +323,7 @@
     <Setting name="OTBitErrorRateTest_NumberOfBits">1E10</Setting>
 
     <Setting name="OTPatternCheckerHelper_NumberOfBits">1E10</Setting>
-
+    <Setting name ="OTPhysics_SaveRawData">1</Setting>
     <Setting name="OTPhysics_TriggerSource">3</Setting> <!-- 1 -> L1, 2 -> Stubs, 3 -> User-Defined Frequency, 4 -> TLU, 5 -> Ext Trigger (DIO5), 6 -> Test Pulse Trigger -->
     <Setting name="OTPhysics_UserTriggerRate">5</Setting> <!-- in kHz -->
 

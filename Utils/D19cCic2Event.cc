@@ -182,10 +182,10 @@ BoardDataContainer                            D19cCic2Event::fDecodedStubEvent  
 std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9> D19cCic2Event::fTheChipDataVector = std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9>();
 
 // Event implementation
-D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list) : fBoard(pBoard)
+D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list, bool isSparsified) : fBoard(pBoard)
 {
     bool localIs2S         = pBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S;
-    bool localIsSparsified = localIs2S ? pBoard->getSparsification() : true;
+    bool localIsSparsified = localIs2S ? isSparsified : true;
     if(fIs2S != localIs2S || fIsSparsified != localIsSparsified)
     {
         fIsSparsified                    = localIsSparsified;
@@ -238,6 +238,10 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list)
     }
 
     fLocalData = std::move(list);
+}
+
+D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list) : D19cCic2Event(pBoard, list, pBoard->getSparsification())
+{
 }
 
 void D19cCic2Event::decodeEvent()

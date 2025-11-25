@@ -723,11 +723,6 @@ void SystemController::InitializeOT(BeBoard* pBoard)
 
 void SystemController::ConfigureOT(BeBoard* pBoard)
 {
-    // Set board sparisification
-    // based on what is configured in the fw register
-    // read CIC sparsification setting from fW register
-    // make sure board is also set to the same thing
-    pBoard->setSparsification(fBeBoardInterface->ReadBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
     InitializeOT(pBoard);
 
     // Hard reset Chips on hybrid if lpGBT is there; if no lpGBT this
@@ -763,6 +758,8 @@ void SystemController::ConfigureOT(BeBoard* pBoard)
         } // hybrid
     } // OG
     LOG(INFO) << BOLDMAGENTA << "Configured OT module" << RESET;
+
+    setSparsification(pBoard, pBoard->getSparsification());
 }
 
 void SystemController::ModuleStartUpPS(const OpticalGroup* pOpticalGroup)
@@ -970,7 +967,7 @@ void SystemController::initializeWriteFileHandler()
         uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
         uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
 
-        FileHeader cHeader(cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType());
+        FileHeader cHeader(cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType(), (cBoard->getSparsification() ? CICeventType::Sparsified : CICeventType::Unsparsified));
 
         std::stringstream cBeBoardString;
         cBeBoardString << "_Board" << std::setw(3) << std::setfill('0') << cBeId;
@@ -1316,6 +1313,23 @@ void SystemController::DumpRegisters()
                           << RESET;
                 flpGBTInterface->DumpChipRegisters(cOpticalGroup->flpGBT);
             }
+}
+
+void SystemController::setSparsification(BeBoard* theBoard, bool enable)
+{
+    if(theBoard->getFirstObject()->getFrontEndType() != FrontEndType::OuterTracker2S) return;
+    uint8_t enableValue = enable ? 1 : 0;
+
+    fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", enableValue);
+
+    theBoard->getSparsificationFlagHandler().fSparsified = enable;
+    for(auto theOpticalGroup: *theBoard)
+    {
+        for(auto theHybrid: *theOpticalGroup)
+        {
+            fCicInterface->SetSparsification(static_cast<OuterTrackerHybrid*>(theHybrid)->fCic, enableValue);
+        }
+    }
 }
 
 } // namespace Ph2_System

@@ -759,38 +759,6 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
     }
     else { this->ReadoutChipReset(); }
 
-    // modifying FC7 configuration based on CIC
-    // TODO: avoid hardcoding sparsification and stubs?
-    cVecReg.clear();
-    if(fFirmwareFrontEndType == FrontEndType::CIC2)
-    {
-        // assuming only one type of CIC per board ...
-        for(auto cOpticalGroup: *pBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto  cOuterTrackerHybrid = static_cast<OuterTrackerHybrid*>(cHybrid);
-                auto& cCic                = cOuterTrackerHybrid->fCic;
-                if(cCic == nullptr) continue;
-                std::vector<std::pair<std::string, uint32_t>> cVecReg;
-                // make sure CIC is receiving clock
-                // cVecReg.push_back( {"fc7_daq_cnfg.physical_interface_block.cic.clock_enable" , 1 } ) ;
-                // disable stub debug
-                cVecReg.push_back({"fc7_daq_cnfg.ddr3_debug.stub_enable", 0});
-                std::string cFwRegName = "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable";
-                std::string cRegName   = "FE_CONFIG";
-                ChipRegItem cRegItem   = static_cast<const OuterTrackerHybrid*>(pBoard->getFirstObject()->getFirstObject())->fCic->getRegItem(cRegName);
-                uint8_t     cRegValue  = (cRegItem.fValue & 0x10) >> 4;
-                LOG(INFO) << BOLDBLUE << "Sparsification set to " << +cRegValue << RESET;
-                cVecReg.push_back({cFwRegName, (cRegItem.fValue & 0x10) >> 4});
-                for(auto cReg: cVecReg) LOG(INFO) << BOLDBLUE << "Setting firmware register " << cReg.first << " to " << +cReg.second << RESET;
-                this->WriteStackReg(cVecReg);
-                cVecReg.clear();
-            }
-        }
-    }
-    else { LOG(INFO) << BOLDBLUE << "Firmware NOT configured for a CIC" << RESET; }
-
     // Enable hybrids + Chips for readout
     LOG(INFO) << BOLDGREEN << "According to the Firmware status registers, it was compiled for: " << fFWNHybrids << " hybrid(s), " << fFWNChips << " " << cChipName << " chip(s) per hybrid" << RESET;
     this->EnableFrontEnds(pBoard);
@@ -1159,12 +1127,6 @@ void D19cFWInterface::ChipTrigger() { fFastCommandInterface->SendGlobalL1A(); }
 bool D19cFWInterface::Bx0Alignment()
 {
     bool     cSuccess   = false;
-    uint32_t cStubDebug = this->ReadReg("fc7_daq_cnfg.ddr3_debug.stub_enable");
-    if(cStubDebug)
-    {
-        LOG(INFO) << BOLDBLUE << "Stub debug enable set to " << cStubDebug << "..... so disabling it!!." << RESET;
-        this->WriteReg("fc7_daq_cnfg.ddr3_debug.stub_enable", 0x00);
-    }
     // send a resync and reset readout
     bool    cWait     = true;
     uint8_t cAttempts = 0;

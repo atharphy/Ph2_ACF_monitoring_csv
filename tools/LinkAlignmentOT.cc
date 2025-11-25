@@ -746,15 +746,14 @@ void LinkAlignmentOT::AlignStubPackage(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // reconfigure sparsification + FEs enabled in this CIC
-    LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::FindPackageDelay Resetting Sparsification" << RESET;
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
+    setSparsification(pBoard, false);
+
     size_t cIndx = 0;
     for(auto cOpticalGroup: *pBoard)
     {
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            fCicInterface->SetSparsification(cCic, cSparsified);
             fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
             cIndx++;
         }
@@ -903,15 +902,12 @@ bool LinkAlignmentOT::AlignStubPackage(const OpticalGroup* pOpticalGroup)
     cRegVec.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", cOriginalTLUconfig});
     fBeBoardInterface->WriteBoardMultReg((*cBoardIter), cRegVec);
 
-    // reconfigure sparsification + FEs enabled in this CIC
-    LOG(INFO) << BOLDMAGENTA << "LinkAlignmentOT::FindPackageDelay Resetting Sparsification" << RESET;
-    fBeBoardInterface->WriteBoardReg((*cBoardIter), "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
+    // FEs enabled in this CIC
     size_t cIndx = 0;
 
     for(auto cHybrid: *pOpticalGroup)
     {
         auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-        fCicInterface->SetSparsification(cCic, cSparsified);
         fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
         cIndx++;
     }

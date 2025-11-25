@@ -97,24 +97,9 @@ void OTTool::Prepare()
 #endif
         uint32_t cSparsified = cBoard->getSparsification(); // this is set in the file parser .. so check using that
         LOG(DEBUG) << BOLDYELLOW << " Sparsification: " << +cSparsified << RESET;
-        fBeBoardInterface->WriteBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);
-        // make sure I am in un-sparsified mode
-        LOG(INFO) << BOLDGREEN << "Setting sparsification on BeBoard#" << +cBoard->getId() << ((cSparsified == 1) ? " ON" : " OFF") << RESET;
-        for(auto cOpticalGroup: *cBoard)
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-                fCicInterface->SetSparsification(cCic, cSparsified);
-            }
-        }
+        setSparsification(cBoard, cSparsified);
     }
-    // for(auto cBoard: *fDetectorContainer)
-    // {
-    //     bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
-    //     cBoard->setSparsification(cSparsified);
-    // }
-
+   
     // clear map of modified registers
     // probably this should be a container per board
     // since we should be able to mix different types of boards

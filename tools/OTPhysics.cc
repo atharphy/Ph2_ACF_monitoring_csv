@@ -2,6 +2,7 @@
 #include "HWInterface/D19cFWInterface.h"
 #include "HWInterface/D19cL1ReadoutInterface.h"
 #include "HWInterface/D19cTriggerInterface.h"
+#include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/StartInfo.h"
 
@@ -12,10 +13,12 @@ std::string OTPhysics::fCalibrationDescription = "Take data";
 
 void OTPhysics::ConfigureCalibration()
 {
+    fRegisterHelper->takeSnapshot();
+
     // #######################
     // # Retrieve parameters #
     // #######################
-    fSaveRawData               = this->findValueInSettings<double>("SaveRawData");
+    fSaveRawData               = this->findValueInSettings<double>("OTPhysics_SaveRawData", 1);
     uint8_t theTriggerSource   = this->findValueInSettings<double>("OTPhysics_TriggerSource", 3);
     uint8_t theUserTriggerRate = this->findValueInSettings<double>("OTPhysics_UserTriggerRate", 10);
 
@@ -27,7 +30,12 @@ void OTPhysics::ConfigureCalibration()
     boardRegisterVector.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0});
     boardRegisterVector.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
 
-    for(auto theBoard: *fDetectorContainer) { fBeBoardInterface->WriteBoardMultReg(theBoard, boardRegisterVector); }
+    for(auto theBoard: *fDetectorContainer)
+    { 
+        fBeBoardInterface->WriteBoardMultReg(theBoard, boardRegisterVector); 
+        setSparsification(theBoard, true);
+    }
+
 
 #ifdef __USE_ROOT__
     fDQMHistogramOTPhysics.book(fResultFile, *fDetectorContainer, fSettingsMap);
@@ -93,6 +101,7 @@ void OTPhysics::Stop()
     if(fTotalDataSize == 0) LOG(WARNING) << WARNING_FORMAT << "No data collected" << RESET;
 
     this->closeFileHandler();
+    fRegisterHelper->restoreSnapshot();
 }
 
 unsigned int OTPhysics::getDataFromBoards()

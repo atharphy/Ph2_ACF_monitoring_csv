@@ -30,7 +30,7 @@ void OTPScommonNoise::Initialise(void)
 #endif
 }
 
-void OTPScommonNoise::ConfigureCalibration() { saveRawData = this->findValueInSettings<double>("SaveRawData"); }
+void OTPScommonNoise::ConfigureCalibration() { saveRawData = this->findValueInSettings<double>("OTPScommonNoise_SaveRawData"); }
 
 void OTPScommonNoise::SetThresholds(float numberOfSigma)
 {
