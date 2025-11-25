@@ -547,12 +547,12 @@ At the chip level, a 2D summary plot is stored summarizing the S-curve of all ch
 
 SSA:
 
-![SCurve_SSA](OTtesting/PS/SCurve_SSA.png)
+![SCurve_SSA](OTtesting/PS/Scurve_SSA.png)
 
 MPA:
 For the 2D plots, you have both columns and rows. The 1D representation is simply obtained by taking each row and placing it after the previous one. In other words, you read the pixels from left to right across a row, then move to the next row and again go from left to right, and so on.
 
-![SCurve_MPA](OTtesting/PS/SCurve_MPA.png)
+![SCurve_MPA](OTtesting/PS/Scurve_MPA.png)
 
 <details>
   <summary>Known issues</summary>
