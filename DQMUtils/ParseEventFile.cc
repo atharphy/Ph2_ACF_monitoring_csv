@@ -37,6 +37,61 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
     FileHandler theFileHandler(rawFileName, 'r');
     FileHeader  theFileHeader;
     bool        isHeaderPresent = theFileHandler.getHeader(theFileHeader);
+    if(isHeaderPresent)
+    {
+        auto toHex = [](uint32_t value) {
+            std::ostringstream oss;
+            oss << std::hex << std::setw(8) << std::setfill('0') << std::uppercase << value;
+            return oss.str();
+        };
+
+        TObjString theType(theFileHeader.fType.c_str());
+        theType.Write("fType");
+
+        TObjString theVersionMajor(toHex(theFileHeader.fVersionMajor).c_str());
+        theVersionMajor.Write("fVersionMajor");
+
+        TObjString theVersionMinor(toHex(theFileHeader.fVersionMinor).c_str());
+        theVersionMinor.Write("fVersionMinor");
+
+        TObjString theBeId(std::to_string(theFileHeader.fBeId).c_str());
+        theBeId.Write("fBeId");
+
+        std::string theEventTypeString = "UNKNOWN";
+        switch (theFileHeader.fEventType)
+        {
+        case EventType::VR:
+            theEventTypeString = "VR";
+            break;
+        case EventType::ZS:
+            theEventTypeString = "ZS";
+            break;
+        
+        default:
+            break;
+        }
+        
+        TObjString theEventType(theEventTypeString.c_str());
+        theEventType.Write("fEventType");
+
+        std::string theCICeventTypeString = "UNKNOWN";
+        switch (theFileHeader.fCICeventType)
+        {
+        case CICeventType::Sparsified:
+            theCICeventTypeString = "Sparsified";
+            break;
+        case CICeventType::Unsparsified:
+            theCICeventTypeString = "Unsparsified";
+            break;
+        }
+
+        TObjString theCICeventType(theCICeventTypeString.c_str());
+        theCICeventType.Write("fCICeventType");
+    }
+    else
+    {
+        LOG(WARNING) << WARNING_FORMAT << "ParseEventFile::parseFile -> No valid header found for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
+    }
 
     auto theData = theFileHandler.readFile();
     if(theData.size() == 0)
