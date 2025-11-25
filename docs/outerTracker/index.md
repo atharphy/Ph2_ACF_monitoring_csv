@@ -12,6 +12,11 @@ The configuration of a 2S Module performed by Ph2_ACF is described [here](https:
 - [POTATO](https://indico.cern.ch/event/1416773/#1-potato-installation-and-intr)
 - [Database Dashboard](https://indico.cern.ch/event/1515620/#4-dca-dashboard-tutorial)
 
+##### Test descroption 
+
+- [2S testing](2Stesting.md)
+- [PS testing](PStesting.md)
+
 ##### Manuals
 - [Module power passthrough board](https://indico.cern.ch/event/1160121/contributions/4880651/attachments/2446980/4193033/2022_05_18_ModulePowerPassThrough.pdf)
 - [D19c manual](https://gitlab.cern.ch/cms_tk_ph2/d19c-firmware/blob/master/doc/d19c_manual.pdf)
@@ -27,8 +32,8 @@ The configuration of a 2S Module performed by Ph2_ACF is described [here](https:
 - [CBC documentation page](http://www.hep.ph.ic.ac.uk/ASIC/CBC_documentation/)
 
 ##### Module Data flow
-- [PS](../images/OTtesting/PSmoduleDataFlow.pdf)
-- [2S](../images/OTtesting/2SmoduleDataFlow.pdf)
+- [PS](OTtesting/PSmoduleDataFlow.pdf)
+- [2S](OTtesting/2SmoduleDataFlow.pdf)
 
 
 
