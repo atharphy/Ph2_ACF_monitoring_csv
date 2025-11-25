@@ -15,15 +15,15 @@ The Imperial College μTCA adapter card provides the power and the communication
 In the image below you see an FC7 board with the names of the different
 components:
 
-![FC7](images/FC7.png)
+![FC7](/general/images/FC7.png)
 
 In the image below you see a QUAD with FMC connector.
 
-![FMC_QUAD](images/FMC_Quad_SFP-2.jpeg)
+![FMC_QUAD](/general/images/FMC_Quad_SFP-2.jpeg)
 
 A Quad can host up to 4 SFP as the one below.
 
-![FSP](images/SFP.png)
+![FSP](/general/images/SFP.png)
 
 An Octa is very similar to a Quad but can have up to 8 SFP, in 2 rows of
 4 each.
@@ -31,4 +31,4 @@ An Octa is very similar to a Quad but can have up to 8 SFP, in 2 rows of
 The Dio5 board shown below can be used to see signals or to give
 external signals:
 
-![dio5](images/dio5.png)
+![dio5](/general/images/dio5.png)

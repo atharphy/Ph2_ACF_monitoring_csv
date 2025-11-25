@@ -32,8 +32,8 @@ The configuration of a 2S Module performed by Ph2_ACF is described [here](https:
 - [CBC documentation page](http://www.hep.ph.ic.ac.uk/ASIC/CBC_documentation/)
 
 ##### Module Data flow
-- [PS](OTtesting/PSmoduleDataFlow.pdf)
-- [2S](OTtesting/2SmoduleDataFlow.pdf)
+- [PS](/outerTracker/OTtesting/PSmoduleDataFlow.pdf)
+- [2S](/outerTracker/OTtesting/2SmoduleDataFlow.pdf)
 
 
 
