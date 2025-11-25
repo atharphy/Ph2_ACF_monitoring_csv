@@ -14,7 +14,7 @@ source setup.sh
 ```
 
 If not already done, insert the correct machine and IP address in the
-xml file located in the settings directory that you are going to use. The recommended XML is [settings/2S_Module.xml](../../settings/2S_Module.xml)
+xml file located in the settings directory that you are going to use. The recommended XML is [settings/2S_Module.xml](https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF/-/tree/Dev/settings/2S_Module.xml)
 
 ```
 <connection id="board" uri="localhost://192.168.0.12:50001" address_table="<file://settings/address_tables/uDTC_OT_address_table.xml>"
@@ -80,7 +80,7 @@ There is a minor difference of a few seconds in what you see in the metadata and
 
 After the `Detector` folder we have the `Board`. Here we have three metadata:
 - `D_NameID_Board` is the IP address
-- `D_InitialBoardConfiguration_Board` is the XML for the board configuration, typically what you have in [settings/BeBoardFiles/uDTC_registers_2S.xml](../../settings/BeBoardFiles/uDTC_registers_2S.xml)
+- `D_InitialBoardConfiguration_Board` is the XML for the board configuration, typically what you have in [settings/BeBoardFiles/uDTC_registers_2S.xml](https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF/-/tree/Dev/settings/BeBoardFiles/uDTC_registers_2S.xml)
 - `D_FinalBoardConfiguration_Board` is the same as above with possible updated values depending on the performed calibration
 
 This is mainly for debugging.
@@ -92,7 +92,7 @@ At the optical group level we have two chips, the LpGBT and the VTRX.
 In the `InitialLpGBTConfiguration` (`FinalLpGBTConfiguration`) the starting (final) values of all the registers are stored. 
 The `LpGBTFuseId` and `VTRxFuseId` are the IDs stored in the chip. 
 
-The `IsLpGBTCalibrated` is set to 1 if the calibration data is found in [the calibration file](../../settings/lpGBTFiles/lpgbt_calibration.csv) and used for that LpGBT.
+The `IsLpGBTCalibrated` is set to 1 if the calibration data is found in [the calibration file](https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF/-/tree/Dev/settings/lpGBTFiles/lpgbt_calibration.csv) and used for that LpGBT.
 
 After the `OpticalGroup`, we move to the `Hybrid` level. A fully working module has two hybrids.
 The `NameId` is used to store the Hybrid ID. Similar to the optical group, there is no direct interaction with the DB in Ph2_ACF and it will be filled at a later stage in the analysis and grading procedure. 
@@ -110,7 +110,7 @@ The other steps are more elaborate and produce result plots described below.
 
 ##### TuneLpGBTVref - OpticalGroup
 
-Vref is basically the reference voltage for the LpGBT ADC converter. It's needed for converting into meaningful values the ADC that are read by the LpGBT. This step is  basically the loading (not really a tuning) of a value that the LpGBT group gave us and is stored in [the calibration file](../../settings/lpGBTFiles/lpgbt_calibration.csv). The information for a specific LpGBT can be found by the fuse ID. In this step we retrieve the value from the file and we store it in the chip. No plots are produced.
+Vref is basically the reference voltage for the LpGBT ADC converter. It's needed for converting into meaningful values the ADC that are read by the LpGBT. This step is  basically the loading (not really a tuning) of a value that the LpGBT group gave us and is stored in [the calibration file](https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF/-/tree/Dev/settings/lpGBTFiles/lpgbt_calibration.csv). The information for a specific LpGBT can be found by the fuse ID. In this step we retrieve the value from the file and we store it in the chip. No plots are produced.
 
 ##### OTVTRxLightYieldScan - OpticalGroup
 
@@ -149,7 +149,8 @@ For a more detailed explanation check the video tutorial around minutes 27-32. T
 
 ##### Alignemnt -> establish proper communication for all chips on a module & FPGA
 
-##### OTalignLpGBTinputs - OpticalGroup
+##### OTalignLpGBTinputs - OpticalGroup  {#otalignlpgbtinputs---opticalgroup}
+
 
 To better understand the alignment steps, please refer to the [2S module communication scheme on slide 5](https://indico.cern.ch/event/1540157/contributions/6481541/attachments/3057152/5426570/FRavera_2025_04_28_2Sschool.pdf) where we see the 8 CBCs per side that communicate with one CIC. The CIC (one per side) communicate with the LpGBT and the LpGBT with the FPGA.
 
@@ -528,7 +529,7 @@ As before, the correlation between the top and bottom strips is observed, showin
 
 Here we have more than 4000 channels. As before we have also plots for top and bottom divided and for their correlations. The correlations between top and bottom is lower as we are now combining two hybrids.
 
-![CommonNoiseHits_OccupancyDriven_OpticalGroup](OTtesting/2S/CommonNoiseHits_OccupancyDriven_OpticalGroupd.png)
+![CommonNoiseHits_OccupancyDriven_OpticalGroup](OTtesting/2S/CommonNoiseHits_OccupancyDriven_OpticalGroup.png)
 
 The two hybrids below appear uncorrelated.
 

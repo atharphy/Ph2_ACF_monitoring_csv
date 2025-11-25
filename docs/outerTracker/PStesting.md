@@ -14,7 +14,7 @@ source setup.sh
 ```
 
 If not already done, insert the correct machine and IP address in the
-xml file located in the settings directory that you are going to use. The recommended XML is [settings/PS_Module_v2p1.xml](../../settings/PS_Module_v2p1.xml)
+xml file located in the settings directory that you are going to use. The recommended XML is [settings/PS_Module_v2p1.xml](https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF/-/tree/Dev/settings/PS_Module_v2p1.xml)
 
 ```
 <connection id="board" uri="localhost://192.168.0.12:50001" address_table="<file://settings/address_tables/uDTC_OT_address_table.xml>"
@@ -80,7 +80,7 @@ There is a minor difference of a few seconds in what you see in the metadata and
 
 After the `Detector` folder we have the `Board`. Here we have three metadata:
 - `D_NameID_Board` is the IP address
-- `D_InitialBoardConfiguration_Board` is the XML for the board configuration, typically what you have in [settings/BeBoardFiles/uDTC_registers_PS.xml](../../settings/BeBoardFiles/uDTC_registers_PS.xml)
+- `D_InitialBoardConfiguration_Board` is the XML for the board configuration, typically what you have in [settings/BeBoardFiles/uDTC_registers_PS.xml](https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF/-/tree/Dev/settings/BeBoardFiles/uDTC_registers_PS.xml)
 - `D_FinalBoardConfiguration_Board` is the same as above with possible updated values depending on the performed calibration
 
 This is mainly for debugging.
@@ -92,7 +92,7 @@ At the optical group level we have two chips, the LpGBT and the VTRX.
 In the `InitialLpGBTConfiguration` (`FinalLpGBTConfiguration`) the starting (final) values of all the registers are stored. 
 The `LpGBTFuseId` and `VTRxFuseId` are the IDs stored in the chip. 
 
-The `IsLpGBTCalibrated` is set to 1 if the calibration data is found in [the calibration file](../../settings/lpGBTFiles/lpgbt_calibration.csv) and used for that LpGBT.
+The `IsLpGBTCalibrated` is set to 1 if the calibration data is found in [the calibration file](https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF/-/tree/Dev/settings/lpGBTFiles/lpgbt_calibration.csv) and used for that LpGBT.
 
 After the `OpticalGroup`, we move to the `Hybrid` level. A fully working module has two hybrids.
 The `NameId` is used to store the Hybrid ID. Similar to the optical group, there is no direct interaction with the DB in Ph2_ACF and it will be filled at a later stage in the analysis and grading procedure. 
@@ -111,7 +111,7 @@ The other steps are more elaborate and produce result plots described below.
 
 ##### TuneLpGBTVref - OpticalGroup
 
-Vref is basically the reference voltage for the LpGBT ADC converter. It's needed for converting into meaningful values the ADC that are read by the LpGBT. This step is  basically the loading (not really a tuning) of a value that the LpGBT group gave us and is stored in [the calibration file](../../settings/lpGBTFiles/lpgbt_calibration.csv). The information for a specific LpGBT can be found by the fuse ID. In this step we retrieve the value from the file and we store it in the chip. No plots are produced.
+Vref is basically the reference voltage for the LpGBT ADC converter. It's needed for converting into meaningful values the ADC that are read by the LpGBT. This step is  basically the loading (not really a tuning) of a value that the LpGBT group gave us and is stored in [the calibration file](https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF/-/tree/Dev/settings/lpGBTFiles/lpgbt_calibration.csv). The information for a specific LpGBT can be found by the fuse ID. In this step we retrieve the value from the file and we store it in the chip. No plots are produced.
 
 
 ##### OTPSADCCalibration - Chip
@@ -166,7 +166,7 @@ For a more detailed explanation check the video tutorial around minutes 27-32. T
 
 ##### Alignemnt -> establish proper communication for all chips on a module & FPGA
 
-##### OTalignLpGBTinputs - OpticalGroup
+##### OTalignLpGBTinputs - OpticalGroup {#otalignlpgbtinputs---opticalgroup}
 
 To better understand the alignment steps, please refer to the [PS module communication scheme on slide 4](https://indico.cern.ch/event/1540158/contributions/6481542/attachments/3057153/5408250/FRavera_2025_04_28_PSschool.pdf) where we see the 8 SSAs and 8 MPAs per side. Each SSA is paired with an MPA and the MPAs communicate with the CIC. The CIC (one per side) communicate with the LpGBT and the LpGBT with the FPGA.
 
@@ -362,7 +362,7 @@ If you do see an issue in this plot, it most likely indicates a problem elsewher
 
 This concludes the alignment section.
 
-##### OTverifyCICdataWord - Hybrid
+##### OTverifyCICdataWord - Hybrid {#otverifycicdataword---hybrid}
 
 At this point, all chips are aligned: the CIC is synced with the LpGBT, the MPA data are correctly decoded by both the FPGA and the CIC, and all chips are communicating. The final step is to check the connection quality between the MPA and CIC.
 We set the MPA to send a specific pattern and check if the received data matches. The resulting plots show cumulative errors for all stub lines and Level-1 lines together. At this stage, we cannot pinpoint which line caused an issue without additional, more time-consuming steps, so we just look at a combined value.
