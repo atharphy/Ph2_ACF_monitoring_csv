@@ -120,5 +120,7 @@ nav:
       - 'Outer Tracker': outerTracker/index.md
       - 'Firmware naming conventions': outerTracker/firmware.md
       - '2S module': outerTracker/2SConfiguration.md
+      - '2S testing': outerTracker/2Stesting.md
+      - 'PS testing': outerTracker/PStesting.md
   
     - 'Interesting links': interesting_links/index.md
