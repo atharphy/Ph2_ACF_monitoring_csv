@@ -102,8 +102,7 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
 
     size_t currentEventStart = (isHeaderPresent ? FileHeader::fHeaderSize : 0);
 
-    LOG(INFO) << BOLDYELLOW << "Parsing completed for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
-
+    
     if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) { fillEventTreePS(tree, theBoard, theData, currentEventStart); }
     else if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S) { fillEventTree2S(tree, theBoard, theData, currentEventStart, theFileHeader.fCICeventType == CICeventType::Sparsified); }
     else
@@ -111,10 +110,12 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
         LOG(ERROR) << ERROR_FORMAT << "ParseEventFile::parseFile -> Unsupported FrontEndType for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
         return false;
     }
-
+    
     tree->Write();
     file->Close();
-
+    LOG(INFO) << BOLDYELLOW << "Parsing completed for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
+    LOG(INFO) << BOLDGREEN << "TTree file created: " << rootFileName << RESET;
+    
     return true;
 }
 

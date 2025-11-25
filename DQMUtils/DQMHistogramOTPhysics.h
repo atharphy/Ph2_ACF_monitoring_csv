@@ -25,6 +25,8 @@ class DQMHistogramOTPhysics : public DQMHistogramBase
 
   private:
     DetectorContainer* fDetectorContainer;
+    std::string        fResultDirectoryName;
+    int                fRunNumber;
 };
 
 #endif

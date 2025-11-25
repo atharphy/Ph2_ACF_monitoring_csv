@@ -102,6 +102,10 @@ void OTPhysics::Stop()
 
     this->closeFileHandler();
     fRegisterHelper->restoreSnapshot();
+
+#ifdef __USE_ROOT__
+    fDQMHistogramOTPhysics.process();
+#endif
 }
 
 unsigned int OTPhysics::getDataFromBoards()
