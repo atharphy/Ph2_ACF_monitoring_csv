@@ -118,6 +118,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
                                                                 "TEMPSENS_OFFSET_TOP",
                                                                 "TEMPSENS_OFFSET_BOTTOM",
                                                                 "SAMPLE_N_TIMES",
+                                                                "SAMPLE_NTC_SLOPE",
                                                                 "WAIT_MUX_CONFIG",
                                                                 "VREF_ADC",
                                                                 "INJ_CAP"}; // @CONST@
@@ -981,7 +982,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         const uint16_t maxVal       = maxADC;
         uint16_t       maxADCval    = 0;
         uint16_t       it           = 0;
-        uint16_t       nSteps       = pChip->getRegItem("SAMPLE_N_TIMES").fValue;
+        uint16_t       nSteps       = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
         const uint16_t saveADC      = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
         uint16_t       ntcVolt      = 0;
         uint16_t       ntcCurr      = 0;

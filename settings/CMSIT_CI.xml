@@ -79,7 +79,8 @@
               ADC_OFFSET_VOLT        =     "63"
               ADC_MAXIMUM_VOLT       =    "839"
               TEMPSENS_IDEAL_FACTOR  =   "1225"
-              SAMPLE_N_TIMES         =     "10"
+              SAMPLE_N_TIMES         =      "1"
+              SAMPLE_NTC_SLOPE       =     "10"
               WAIT_MUX_CONFIG        =    "100"
               VREF_ADC               =    "800"
               />
