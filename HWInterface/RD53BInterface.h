@@ -51,6 +51,7 @@ class RD53BInterface : public RD53Interface
     void     SendGlobalPulse(Ph2_HwDescription::Chip* pChip, uint16_t route, uint16_t pulseDuration);
     void     SendChipCommandsWithSync(Ph2_HwDescription::RD53* pRD53, const std::vector<uint16_t>& cmdStream);
     void     ResetCoreColumns(Ph2_HwDescription::RD53* pRD53);
+    void     readNTCvoltCurr(Ph2_HwDescription::ReadoutChip* pChip, uint16_t dacNTC, uint16_t& ntcVolt, uint16_t& ntcCurr);
 
     // ###########################
     // # Dedicated to monitoring #

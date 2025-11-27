@@ -745,7 +745,8 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
 int RD53BInterface::getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage, bool silentRunning)
 // ############################################
 // # Possible observable name values are also #
-// # - INTERNAL_NTC                           #
+// # - INTERNAL_NTC_REL                       #
+// # - INTERNAL_NTC_ABS                       #
 // # - INTERNAL_NTC_VOLT                      #
 // ############################################
 {
@@ -821,10 +822,16 @@ int RD53BInterface::getADCobservable(const std::string& observableName, bool& is
                                                                           {"VrefD", 0x27}};
 
     auto search = currentMultiplexer.find(observableName);
-    if(observableName == "INTERNAL_NTC")
+    if(observableName == "INTERNAL_NTC_REL")
     {
         currentObservable   = currentMultiplexer.find("NTC_CURR")->second;
         voltageObservable   = voltageMultiplexer.find("I_MUX")->second;
+        isCurrentNotVoltage = true;
+    }
+    else if(observableName == "INTERNAL_NTC_ABS")
+    {
+        currentObservable   = currentMultiplexer.find("NTC_CURR")->second;
+        voltageObservable   = voltageMultiplexer.find("NTC_VOLT")->second;
         isCurrentNotVoltage = true;
     }
     else if(observableName == "INTERNAL_NTC_VOLT")
@@ -930,7 +937,8 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         {"POLY_TEMPSENS_TOP", "TEMPSENS_OFFSET_TOP"},
         {"POLY_TEMPSENS_BOTTOM", "TEMPSENS_OFFSET_BOTTOM"},
         {"INTERNAL_NTC_VOLT", ""},
-        {"INTERNAL_NTC", ""},
+        {"INTERNAL_NTC_REL", ""},
+        {"INTERNAL_NTC_ABS", ""},
     };
 
     const auto iterator = observableToCalibrationConstant.find(type);
@@ -945,19 +953,102 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     float       valueLow  = 0;
     float       valueHigh = 0;
 
-    if(type.find("INTERNAL_NTC") != std::string::npos)
+    auto RtoT = [&](float resistance) { return 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; };
+
+    if(type.find("INTERNAL_NTC_REL") != std::string::npos)
     {
         bool     isCurrentNotVoltage;
         uint32_t observable = RD53BInterface::getADCobservable("INTERNAL_NTC_VOLT", isCurrentNotVoltage);
         float    voltage    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, observable));
-        observable          = RD53BInterface::getADCobservable("INTERNAL_NTC", isCurrentNotVoltage);
+        observable          = RD53BInterface::getADCobservable("INTERNAL_NTC_REL", isCurrentNotVoltage);
         float current       = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, observable), true);
 
         // ###############################################
         // # Calculate temperature with NTC Beta formula #
         // ###############################################
-        float resistance  = 1e3 * voltage / (current != 0 ? current : 1);           // [kOhm]
-        float temperature = 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; // [Celsius]
+        float resistance  = 1e3 * voltage / (current != 0 ? current : 1); // [kOhm]
+        float temperature = RtoT(resistance);                             // [Celsius]
+
+        return temperature;
+    }
+    else if(type.find("INTERNAL_NTC_ABS") != std::string::npos)
+    {
+        auto&          pRD53RegMap  = pChip->getRegMap();
+        uint16_t       minADC       = 0;
+        uint16_t       maxADC       = RD53Shared::setBits(pRD53RegMap.at("DAC_NTC").fBitSize);
+        uint16_t       midADC       = (minADC + maxADC) / 2;
+        const uint16_t numberOfBits = floor(log2(maxADC - minADC + 1) + 1);
+        const uint16_t maxVal       = maxADC;
+        uint16_t       maxADCval    = 0;
+        uint16_t       it           = 0;
+        uint16_t       nSteps       = pChip->getRegItem("SAMPLE_N_TIMES").fValue;
+        const uint16_t saveADC      = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
+        uint16_t       ntcVolt      = 0;
+        uint16_t       ntcCurr      = 0;
+
+        // #################################
+        // # Find ADC value for saturation #
+        // #################################
+        RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
+        while(it <= numberOfBits)
+        {
+            if((ntcVolt < maxVal) && (ntcCurr < maxVal))
+            {
+                minADC    = midADC;
+                maxADCval = midADC;
+            }
+            else
+                maxADC = midADC;
+            midADC = (minADC + maxADC) / 2;
+
+            RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
+            it++;
+        }
+
+        // #########################################################################
+        // # Scan from 0 to saturation to compute ADC volt independent temperature #
+        // #########################################################################
+        const uint16_t       step = maxADCval / nSteps;
+        std::vector<int32_t> ntcVoltVec;
+        std::vector<int32_t> ntcCurrVec;
+        std::vector<int32_t> ntcADCVec;
+        for(uint16_t i = 0; i < nSteps; i++)
+        {
+            RD53BInterface::readNTCvoltCurr(pChip, step * i, ntcVolt, ntcCurr);
+            ntcVoltVec.push_back(ntcVolt);
+            ntcCurrVec.push_back(ntcCurr);
+            ntcADCVec.push_back(step * i);
+        }
+
+        // ########################
+        // # Compute the averages #
+        // ########################
+        float avgVolt = (ntcVoltVec.size() != 0 ? reduce(ntcVoltVec.begin(), ntcVoltVec.end()) / ntcVoltVec.size() : 0);
+        float avgCurr = (ntcCurrVec.size() != 0 ? reduce(ntcCurrVec.begin(), ntcCurrVec.end()) / ntcCurrVec.size() : 0);
+        float avgADC  = (ntcADCVec.size() != 0 ? reduce(ntcADCVec.begin(), ntcADCVec.end()) / ntcADCVec.size() : 0);
+        std::for_each(ntcVoltVec.begin(), ntcVoltVec.end(), [avgVolt](auto& e) { e -= avgVolt; });
+        std::for_each(ntcCurrVec.begin(), ntcCurrVec.end(), [avgCurr](auto& e) { e -= avgCurr; });
+        std::for_each(ntcADCVec.begin(), ntcADCVec.end(), [avgADC](auto& e) { e -= avgADC; });
+
+        // ######################
+        // # Compute the slopes #
+        // ######################
+        float slopeVolt = std::inner_product(ntcADCVec.begin(), ntcADCVec.end(), ntcVoltVec.begin(), 0);
+        float slopeCurr = std::inner_product(ntcADCVec.begin(), ntcADCVec.end(), ntcCurrVec.begin(), 0);
+        float slopeADC  = std::inner_product(ntcADCVec.begin(), ntcADCVec.end(), ntcADCVec.begin(), 0);
+        slopeVolt /= slopeADC;
+        slopeCurr /= slopeADC;
+
+        // ###########################
+        // # Compute the temperature #
+        // ###########################
+        float resistance  = pChip->getRegItem("RESISTORI2V").fValue * slopeVolt / slopeCurr * 1e-3; // [kOhm]
+        float temperature = RtoT(resistance);                                                       // [Celsius]
+
+        // #########################
+        // # Restore initial value #
+        // #########################
+        RD53Interface::WriteChipReg(pChip, "DAC_NTC", saveADC);
 
         return temperature;
     }
@@ -993,6 +1084,13 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     RD53Interface::WriteChipReg(pChip, "MON_SENS_SLDO", 0);
 
     return e / (idealityFactor * kb * log(biasIratio)) * (valueHigh - valueLow) / nDEM - T0C;
+}
+
+void RD53BInterface::readNTCvoltCurr(ReadoutChip* pChip, uint16_t dacNTC, uint16_t& ntcVolt, uint16_t& ntcCurr)
+{
+    RD53Interface::WriteChipReg(pChip, "DAC_NTC", dacNTC);
+    ntcVolt = RD53Interface::ReadChipADC(pChip, "NTC_VOLT");
+    ntcCurr = RD53Interface::ReadChipADC(pChip, "NTC_CURR");
 }
 
 } // namespace Ph2_HwInterface
