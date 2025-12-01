@@ -98,7 +98,7 @@ struct StubHandler
 struct HybridL1EventInfoHandler
 {
     HybridL1EventInfoHandler() {}
-    void              parseData(std::vector<uint32_t>::const_iterator dataStart);
+    void              parseData(std::vector<uint32_t>::const_iterator dataStart, bool is2S);
     void              print() const;
     HybridL1EventInfo fHybridL1EventInfo;
 };
@@ -275,22 +275,22 @@ class D19cCic2Event : public Event
      * \brief Get the bunch value
      * \return Bunch value
      */
-    uint32_t GetBunch() const { return fBoardEventInfo.fBunch; }
+    uint32_t GetBunch();
     /*!
      * \brief Get the Event counter
      * \return Event counter
      */
-    uint32_t GetEventCount() const { return fBoardEventInfo.fEventCount; }
+    uint32_t GetEventCount();
     /*!
      * \brief Get TDC value ??
      * \return TDC value
      */
-    uint32_t GetTDC() const { return fBoardEventInfo.fTDC; }
+    uint32_t GetTDC();
     /*!
      * \brief Get External trigger  id ??
      * \return external trigger value
      */
-    uint32_t GetExternalTriggerId() const { return fBoardEventInfo.fExternalTriggerID; }
+    uint32_t GetExternalTriggerId();
 };
 } // namespace Ph2_HwInterface
 #endif

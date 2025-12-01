@@ -67,7 +67,7 @@ bool StripClusterPSHandler::isChannelHit(uint8_t col) const { return col >= fStr
 
 void StripClusterPSHandler::print() const { std::cout << "First strip = " << +fStripClusterPS.fAddress << " cluster width = " << +fStripClusterPS.fWidth << std::endl; }
 
-void HybridL1EventInfoHandler::parseData(std::vector<uint32_t>::const_iterator dataStart)
+void HybridL1EventInfoHandler::parseData(std::vector<uint32_t>::const_iterator dataStart, bool is2S)
 {
     fHybridL1EventInfo.fErrorCode             = (*(dataStart) >> 24) & 0xF;
     fHybridL1EventInfo.fHybridId              = (*(dataStart) >> 16) & 0xFF;
@@ -76,8 +76,16 @@ void HybridL1EventInfoHandler::parseData(std::vector<uint32_t>::const_iterator d
     fHybridL1EventInfo.fFrameDelay            = *(dataStart + 1) & 0xFFF;
     fHybridL1EventInfo.fStatusBits            = *(dataStart + 2) >> 23;
     fHybridL1EventInfo.fL1counter             = (*(dataStart + 2) >> 14) & 0x1FF;
-    fHybridL1EventInfo.fNumberOfStripClusters = (*(dataStart + 2) >> 7) & 0x7F;
-    fHybridL1EventInfo.fNumberOfPixelClusters = *(dataStart + 2) & 0x7F;
+    if(is2S)
+    {
+        fHybridL1EventInfo.fNumberOfStripClusters = (*(dataStart + 2)) & 0x7F;
+        fHybridL1EventInfo.fNumberOfPixelClusters = 0;
+    }
+    else
+    {
+        fHybridL1EventInfo.fNumberOfStripClusters = (*(dataStart + 2) >> 7) & 0x7F;
+        fHybridL1EventInfo.fNumberOfPixelClusters = *(dataStart + 2) & 0x7F;
+    }
     fHybridL1EventInfo.fIsCICErrorFlagSet     = ((fHybridL1EventInfo.fStatusBits & 0x1) == 0x1);
 }
 
@@ -327,7 +335,7 @@ uint16_t D19cCic2Event::decodeHybridL1Event(HybridDataContainer* theHybridEventC
     }
     else { theHybridL1EventInfoHandlerPointer = &theHybridEventContainer->getSummary<HybridL1EventInfoHandler, ClusterCollection<StripClusterPSHandler, 32>>(); }
 
-    theHybridL1EventInfoHandlerPointer->parseData(dataStartIterator);
+    theHybridL1EventInfoHandlerPointer->parseData(dataStartIterator, fIs2S);
 
     size_t currentBitCount = 32 * 3;
     if(fIs2S)
@@ -949,6 +957,35 @@ HybridL1EventInfoHandler D19cCic2Event::getHybridL1EventInfoHandler(uint8_t pHyb
     else { return theHybrid->getSummary<HybridL1EventInfoHandler, CBCL1EventInfo>(); }
 }
 
-BoardEventInfo D19cCic2Event::getBoardEventInfo() { return fBoardEventInfo; }
+BoardEventInfo D19cCic2Event::getBoardEventInfo()
+{
+    decodeEvent();
+    return fBoardEventInfo;
+}
+
+uint32_t  D19cCic2Event::GetBunch() 
+{
+    decodeEvent();
+    return fBoardEventInfo.fBunch;
+}
+
+uint32_t  D19cCic2Event::GetEventCount() 
+{
+    decodeEvent();
+    return fBoardEventInfo.fEventCount;
+}
+
+uint32_t  D19cCic2Event::GetTDC() 
+{
+    decodeEvent();
+    return fBoardEventInfo.fTDC;
+}
+
+uint32_t  D19cCic2Event::GetExternalTriggerId() 
+{
+    decodeEvent();
+    return fBoardEventInfo.fExternalTriggerID;
+}
+
 
 } // namespace Ph2_HwInterface

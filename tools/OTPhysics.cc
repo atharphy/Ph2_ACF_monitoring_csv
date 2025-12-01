@@ -21,6 +21,7 @@ void OTPhysics::ConfigureCalibration()
     fSaveRawData               = this->findValueInSettings<double>("OTPhysics_SaveRawData", 1);
     uint8_t theTriggerSource   = this->findValueInSettings<double>("OTPhysics_TriggerSource", 3);
     uint8_t theUserTriggerRate = this->findValueInSettings<double>("OTPhysics_UserTriggerRate", 10);
+    bool injectNoise           = this->findValueInSettings<double>("OTPhysics_InjectNoise", 1);
 
     std::vector<std::pair<std::string, uint32_t>> boardRegisterVector;
     boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", theTriggerSource});
@@ -34,6 +35,39 @@ void OTPhysics::ConfigureCalibration()
     { 
         fBeBoardInterface->WriteBoardMultReg(theBoard, boardRegisterVector); 
         setSparsification(theBoard, true);
+        if(injectNoise)
+        {
+            for(auto theOpticalGroup: *theBoard)
+            {
+                for(auto theHybrid: *theOpticalGroup)
+                {
+                    for(auto theChip: *theHybrid)
+                    {
+                        if(theChip->getFrontEndType() == FrontEndType::MPA2 || theChip->getFrontEndType() == FrontEndType::SSA2)
+                        {
+                            std::vector<Cluster> theClusterList {};
+                            if(theChip->getId() == 2)
+                            {
+                                theClusterList.push_back(Cluster(10, 10, 1));
+                            }
+                            static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theChip, theClusterList);
+                        }
+                        else if(theChip->getFrontEndType() == FrontEndType::CBC3)
+                        {
+                            std::vector<std::pair<uint8_t, uint8_t>> theClusterAddressAndWidthVector {};
+                            if(theChip->getId() == 2)
+                            {
+                                theClusterAddressAndWidthVector.push_back({10, 1});
+                                theClusterAddressAndWidthVector.push_back({11, 1});
+                            }
+                            fReadoutChipInterface->WriteChipReg(theChip, "HitOr", 1);
+                            static_cast<CbcInterface*>(fReadoutChipInterface)->selectLogicMode(theChip, "Sampled", true, true);
+                            static_cast<CbcInterface*>(fReadoutChipInterface)->injectClusters(theChip, theClusterAddressAndWidthVector);
+                        }
+                    }
+                }
+            }
+        }
     }
 
 

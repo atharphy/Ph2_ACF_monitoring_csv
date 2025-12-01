@@ -191,33 +191,33 @@ void ParseEventFile::fillEventTree2S(TTree* tree, const BeBoard* theBoard, const
         if(currentEventStart + eventSize >= theDataSize) break;
         std::vector<uint32_t> theEventData(theData.begin() + currentEventStart, theData.begin() + currentEventStart + eventSize);
         D19cCic2Event         theEventParsed(theBoard, theEventData, isSparsified);
-
+        
         theBoardEvent2S.fHybrideventList.clear();
         theBoardEvent2S.fBoardEventInfo = theEventParsed.getBoardEventInfo();
-
+        
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
                 HybridEvent2S theHybridL1Event2S;
                 theHybridL1Event2S.fHybridL1EventInfo = theEventParsed.getHybridL1EventInfoHandler(theHybrid->getId()).fHybridL1EventInfo;
-
+                
                 for(auto theChip: *theHybrid)
                 {
                     CBCevent theCBCL1Event;
                     theCBCL1Event.fChipEventInfo.fChipId             = theChip->getId();
                     theCBCL1Event.fChipEventInfo.fIsL1ErrorFlagSet   = theEventParsed.IsL1ErrorSet(theHybrid->getId(), theChip->getId());
                     theCBCL1Event.fChipEventInfo.fIsStubErrorFlagSet = theEventParsed.IsStubErrorSet(theHybrid->getId(), theChip->getId());
-
+                    
                     for(auto theCluster: theEventParsed.getClusters(theHybrid->getId(), theChip->getId())) { theCBCL1Event.fClusterList.push_back(theCluster.fCluster2S); }
-
+                    
                     for(auto theStubHandler: theEventParsed.StubVector(theHybrid->getId(), theChip->getId())) { theCBCL1Event.fStubList.push_back(theStubHandler.fStub); }
                     theHybridL1Event2S.fCBCeventList.push_back(theCBCL1Event);
                 }
                 theBoardEvent2S.fHybrideventList.push_back(theHybridL1Event2S);
             }
         }
-
+        
         tree->Fill();
 
         currentEventStart += eventSize;
