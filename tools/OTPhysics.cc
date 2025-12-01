@@ -46,7 +46,7 @@ void OTPhysics::ConfigureCalibration()
                         if(theChip->getFrontEndType() == FrontEndType::MPA2 || theChip->getFrontEndType() == FrontEndType::SSA2)
                         {
                             std::vector<Cluster> theClusterList {};
-                            if(theChip->getId() == 2)
+                            if(theChip->getId() % 8 == 2)
                             {
                                 theClusterList.push_back(Cluster(10, 10, 1));
                             }
