@@ -12,7 +12,7 @@ source setup.sh
 ```
 
 If not already done, insert the correct machine and IP address in the
-xml file located in the settings directory that you are going to use. The recommended XML is [settings/PS_Module_v2p1.xml](../../settings/PS_Module_v2p1.xml)
+xml file located in the settings directory that you are going to use. The recommended XML is [settings/PS_Module_v2p1.xml](https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF/-/tree/Dev/settings/PS_Module_v2p1.xml)
 
 ```
 <connection id="board" uri="localhost://192.168.0.12:50001" address_table="<file://settings/address_tables/uDTC_OT_address_table.xml>"
@@ -78,7 +78,7 @@ There is a minor difference of a few seconds in what you see in the metadata and
 
 After the `Detector` folder we have the `Board`. Here we have three metadata:
 - `D_NameID_Board` is the IP address
-- `D_InitialBoardConfiguration_Board` is the XML for the board configuration, typically what you have in [settings/BeBoardFiles/uDTC_registers_PS.xml](../../settings/BeBoardFiles/uDTC_registers_PS.xml)
+- `D_InitialBoardConfiguration_Board` is the XML for the board configuration, typically what you have in [settings/BeBoardFiles/uDTC_registers_PS.xml](https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF/-/tree/Dev/settings/BeBoardFiles/uDTC_registers_PS.xml)
 - `D_FinalBoardConfiguration_Board` is the same as above with possible updated values depending on the performed calibration
 
 This is mainly for debugging.
@@ -90,7 +90,7 @@ At the optical group level we have two chips, the LpGBT and the VTRX.
 In the `InitialLpGBTConfiguration` (`FinalLpGBTConfiguration`) the starting (final) values of all the registers are stored. 
 The `LpGBTFuseId` and `VTRxFuseId` are the IDs stored in the chip. 
 
-The `IsLpGBTCalibrated` is set to 1 if the calibration data is found in [the calibration file](../../settings/lpGBTFiles/lpgbt_calibration.csv) and used for that LpGBT.
+The `IsLpGBTCalibrated` is set to 1 if the calibration data is found in [the calibration file](https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF/-/tree/Dev/settings/lpGBTFiles/lpgbt_calibration.csv) and used for that LpGBT.
 
 After the `OpticalGroup`, we move to the `Hybrid` level. A fully working module has two hybrids.
 The `NameId` is used to store the Hybrid ID. Similar to the optical group, there is no direct interaction with the DB in Ph2_ACF and it will be filled at a later stage in the analysis and grading procedure. 
@@ -109,7 +109,7 @@ The other steps are more elaborate and produce result plots described below.
 
 ##### TuneLpGBTVref - OpticalGroup
 
-Vref is basically the reference voltage for the LpGBT ADC converter. It's needed for converting into meaningful values the ADC that are read by the LpGBT. This step is  basically the loading (not really a tuning) of a value that the LpGBT group gave us and is stored in [the calibration file](../../settings/lpGBTFiles/lpgbt_calibration.csv). The information for a specific LpGBT can be found by the fuse ID. In this step we retrieve the value from the file and we store it in the chip. No plots are produced.
+Vref is basically the reference voltage for the LpGBT ADC converter. It's needed for converting into meaningful values the ADC that are read by the LpGBT. This step is  basically the loading (not really a tuning) of a value that the LpGBT group gave us and is stored in [the calibration file](https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF/-/tree/Dev/settings/lpGBTFiles/lpgbt_calibration.csv). The information for a specific LpGBT can be found by the fuse ID. In this step we retrieve the value from the file and we store it in the chip. No plots are produced.
 
 
 ##### OTPSADCCalibration - Chip
@@ -118,18 +118,20 @@ The ADC calibration is still executed because several internal biases depend on 
 
 The calibration is performed in two main steps. During wafer testing at about 25 °C, the true band-gap value of each chip is measured in millivolts, and the corresponding ADC_VREF register value is programmed so that the ADC range spans 850 mV. This VREF setting is saved in the chip fuses. When the chip is mounted on a module, the first task is to verify that the fused VREF still produces an effective 850 mV range when compared to the band-gap value, which should remain stable. If the range has shifted, VREF is re-optimized. Once VREF is confirmed or corrected, all other ADC-related registers are tuned accordingly.
 
-Two plots are stored. The first shows the ADC_VREF register giving a range of 850mV. 
-![VREF_DACtoV_Chip](../images/OTtesting/PS/VREF_DACtoV_Chip.png)
+Two plots are stored. The first shows the ADC_VREF register giving a range of 850mV.
+
+![VREF_DACtoV_Chip](./OTtesting/PS/VREF_DACtoV_Chip.png)
 
 The second one is the ADC calibration curve obtained during the procedure.
-![ADC_Slope_MPA](../images/OTtesting/PS/ADC_Slope_MPA.png)
+
+![ADC_Slope_MPA](./OTtesting/PS/ADC_Slope_MPA.png)
 
 
 ##### OTVTRxLightYieldScan - OpticalGroup
 
 This test is performed to verify that we are able to change the VTRX settings to increase or decrease the optical power that is emitted.
 
-![VTRx_LightYieldScan](../images/OTtesting/common/VTRx_LightYieldScan.png)
+![VTRx_LightYieldScan](./OTtesting/common/VTRx_LightYieldScan.png)
 
 The bias and modulation, shown on the x and y axes of the plot, are two registers of the VTRX that control the laser driver. On the Z axis we have the power in microWatt that is measured by the the SFP connector, the receiver on the FC7.
 
@@ -144,7 +146,7 @@ If the power in the x and y direction is not changing, something is going on wit
 
 A distribution like the one below may be due to a problematic SFP connector on the FC7 or dirt in the fibers.
 
-![VTRx_LightYieldScan_buggy](../images/OTtesting/common/VTRx_LightYieldScan_buggy.png)
+![VTRx_LightYieldScan_buggy](./OTtesting/common/VTRx_LightYieldScan_buggy.png)
 </details>
 
 
@@ -152,7 +154,7 @@ A distribution like the one below may be due to a problematic SFP connector on t
 
 The calibration is performed for three different values of the electrical attenuation that the LpGBT applies to the VTRx signal that is proportional to the optical power that is received. The signal can be attenuated to 1/3, 2/3 or not attenuated. Here we show and explain the result for one of the attenuations.
 
-![LpGBT_EyeOpeningScan](../images/OTtesting/common/LpGBT_EyeOpeningScan.png)
+![LpGBT_EyeOpeningScan](./OTtesting/common/LpGBT_EyeOpeningScan.png)
 
 The eye opening is a capability of the LpGBT and more info can be found in the manual. A high count rate (z-axis) corresponds to the center of the eye, above the lower part of the signal (voltage) but below the high part of the signal (voltage) - the large yellow area. Outside this range of the signal there is a lower count. The absolute numbers are not easy to interpret. The relevant part is the transition region between the two yellow areas. 
 This plot was especially relevant for LpGBT v1 that had known issues with the transistion part moving up and down with the power.
@@ -162,7 +164,7 @@ For a more detailed explanation check the video tutorial around minutes 27-32. T
 
 ##### Alignemnt -> establish proper communication for all chips on a module & FPGA
 
-##### OTalignLpGBTinputs - OpticalGroup
+##### OTalignLpGBTinputs - OpticalGroup {#otalignlpgbtinputs---opticalgroup}
 
 To better understand the alignment steps, please refer to the [PS module communication scheme on slide 4](https://indico.cern.ch/event/1540158/contributions/6481542/attachments/3057153/5408250/FRavera_2025_04_28_PSschool.pdf) where we see the 8 SSAs and 8 MPAs per side. Each SSA is paired with an MPA and the MPAs communicate with the CIC. The CIC (one per side) communicate with the LpGBT and the LpGBT with the FPGA.
 
@@ -175,13 +177,13 @@ This is an automatic procedure done by the LpGBT that has this automatic phase a
 
 There are three plots associated with this test, identified with `CICtoLpGBT` string. 
 
-![CICtoLpGBT_PhaseAlignmentEfficiency](../images/OTtesting/PS/CICtoLpGBT_PhaseAlignmentEfficiency.png)
+![CICtoLpGBT_PhaseAlignmentEfficiency](./OTtesting/PS/CICtoLpGBT_PhaseAlignmentEfficiency.png)
 
 The *Phase Alignment Efficiency* is obtained repeting the automic phase alignment 100 times (default value that can be configured in the XML) and counting how many times the alignment succeeded. If there are no troubles you should see 100% efficiency. This is telling us how well the automatic procedure on the LpGBT works.
 
 Then we want also to extract the best phase that allow the LpGBT to properly sample the data. This is shown in the next two plots.
 
-![CICtoLpGBT_FoundPhaseDistribution](../images/OTtesting/PS/CICtoLpGBT_FoundPhaseDistribution.png)
+![CICtoLpGBT_FoundPhaseDistribution](./OTtesting/PS/CICtoLpGBT_FoundPhaseDistribution.png)
 
 On the X axis the various lines between CIC and LpGBT are shown: 1 L1, 5 stub lines for the right (R) and left (L) FEHs. On the Y axis the phase. The LpGBT scans phases between 0 to 14, covering two clock cycles. The 15 is an error code that is used by the LpGBT. When repeating the measurement 100 times, we store basically the frequency for which one phase is chosen and this is shown on the Z-axis.
 
@@ -189,7 +191,8 @@ Usually you see bins with roughly 1 (yellow) on one phase and in some cases two 
 If a vertical line of bins with some frequency  is seen, it means that LpGBT was not able to choose any particular phase and that something is going on  with that particular line. The line goes to the connector between the service hybrid and the front end hybrid so something may be wrong with that connector, since the hybrids were already tested and it would be quite unlikely that LpGBT or the CIC are the problem or their connection with the hybrid is the problem.
 
 The best phase (the one with the highest frequency) is chosen from the previous plot, used by the LpGBT and shown in the plot below, one for each line.
-![CICtoLpGBT_BestPhase](../images/OTtesting/PS/CICtoLpGBT_BestPhase.png)
+
+![CICtoLpGBT_BestPhase](./OTtesting/PS/CICtoLpGBT_BestPhase.png)
 
 
 ##### OTalignBoardDataWord - Hybrid
@@ -202,11 +205,12 @@ For instance, if the CIC sends a sequence of 101010 then you need to know that t
 To do the alignment, the test tells the FPGA which is the expected pattern.
 
 Once the FPGA receives a packet, it is checked the delay that is needed  such that the first bit of the packet is the first bit of the expected pattern. The delay is called FPGA *bitslips*. The chosen bitslip for each line is shown in the plot below. There is one plot per hybrid. This plots have the purpose to store the found value.
-![Board_WordAlignmentBitSlipValues_Hybrid](../images/OTtesting/PS/Board_WordAlignmentBitSlipValues_Hybrid.png)
+
+![Board_WordAlignmentBitSlipValues_Hybrid](./OTtesting/PS/Board_WordAlignmentBitSlipValues_Hybrid.png)
 
 The plot below stores the number of retries. The alignment procedure is tried for a maximum of 10 times in case of failures. Retries can indicate instabilities. The retry number is stored per each line since each line is handled separately.
 
-![Board_WordAlignmentRetryNumbers_Hybrid](../images/OTtesting/PS/Board_WordAlignmentRetryNumbers_Hybrid.png)
+![Board_WordAlignmentRetryNumbers_Hybrid](./OTtesting/PS/Board_WordAlignmentRetryNumbers_Hybrid.png)
 
 
 It is not uncommon to have one or two retries as there are some instabilities when writing some particular registers into the board. That's why we try multiple times. If the test retries 10 times, very likely means that it never manages to align and it would be good to check the connections between the CIC and the LpGBT.
@@ -225,7 +229,7 @@ In contrast, the Level-1 implementation would require a major firmware update, a
 
 However, it’s still on the order of 10⁶ bits — not a small number — but lower than the number of stub bits. This corresponds to the number of tester bits.
 
-![CICtoLpGBT_PatternMatchingTestedBits_Hybrid](../images/OTtesting/PS/CICtoLpGBT_PatternMatchingTestedBits_Hybrid.png)
+![CICtoLpGBT_PatternMatchingTestedBits_Hybrid](./OTtesting/PS/CICtoLpGBT_PatternMatchingTestedBits_Hybrid.png)
 
 We also have the error rate.  
 This value ranges from 0 to 1, where 1 means 100% errors and 0 means no errors.  
@@ -236,7 +240,7 @@ An error rate around 10⁻⁶ or 10⁻⁷ might just be a glitch.
 If the error rate is higher than that, check the connections between the hybrids and the connectors, as that might be the cause.
 
 
-![CICtoLpGBT_PatternMatchingErrorRate_Hybrid](../images/OTtesting/PS/CICtoLpGBT_PatternMatchingErrorRate_Hybrid.png)
+![CICtoLpGBT_PatternMatchingErrorRate_Hybrid](./OTtesting/PS/CICtoLpGBT_PatternMatchingErrorRate_Hybrid.png)
 
 
 Now, we are sure that the communication between the CIC and the board works fine.
@@ -265,14 +269,14 @@ Each vertical bin represents different elements: one line for the Level-1, 5 lin
 On the z-axis, we display the efficiency, ranging from 0 to 1.  
 If there are any issues, the efficiency will appear noticeably below 1.  
 
-![MPAtoCIC_LockingEfficiency_Hybrid](../images/OTtesting/PS/MPAtoCIC_LockingEfficiency_Hybrid.png)
+![MPAtoCIC_LockingEfficiency_Hybrid](./OTtesting/PS/MPAtoCIC_LockingEfficiency_Hybrid.png)
 
 
 We also plot, for each line, the phase and the frequency at which each phase was chosen.  
 
 As for the LpGBT, you will often see cases where two phases are essentially equivalent. In these cases, we choose the phase with the highest probability.
 
-![MPAtoCIC_InputPhaseDistribution_Hybrid](../images/OTtesting/PS/MPAtoCIC_InputPhaseDistribution_Hybrid.png)
+![MPAtoCIC_InputPhaseDistribution_Hybrid](./OTtesting/PS/MPAtoCIC_InputPhaseDistribution_Hybrid.png)
 
 This phase scan above is performed over two clock cycles.  
 For example, if one phase is around 5, the equivalent phase on the next cycle would be 5 + 8 = 13.  
@@ -290,7 +294,7 @@ Then we show the best input phase in a 2D plot.
 On the y-axis, we have the different lines, and on the x-axis, the different MPAs.  
 The z-axis represents the best phase — basically the most probable phase for each line and MPA combination.
 
-![MPAtoCIC_BestInputPhases_Hybrid](../images/OTtesting/PS/MPAtoCIC_BestInputPhases_Hybrid.png)
+![MPAtoCIC_BestInputPhases_Hybrid](./OTtesting/PS/MPAtoCIC_BestInputPhases_Hybrid.png)
 
 ##### OTCICwordAlignment - Hybrid
 The next step to be addressed is the MPA's processing of stubs. The goal is to align all lines with the 40MHz clock. 
@@ -304,8 +308,9 @@ To do this, the MPA is configured to send a known stub pattern. The CIC is then 
 
 This creates a single plot showing the delay applied on each line of the MPA.  
 Since the lines are very similar in length, values should be roughly identical.  
-If any line shows a value drastically different from the average, it may indicate a problem.  
-![MPAtoCIC_WordAlignmentDelay_Hybrid](../images/OTtesting/PS/MPAtoCIC_WordAlignmentDelay_Hybrid.png)
+If any line shows a value drastically different from the average, it may indicate a problem.
+
+![MPAtoCIC_WordAlignmentDelay_Hybrid](./OTtesting/PS/MPAtoCIC_WordAlignmentDelay_Hybrid.png)
 
 These plots are not used for debugging or QA; they are mainly to store the values chosen. Unlike previous scans, this one only scans a single phase, so there is just one working point for each line.
 
@@ -314,7 +319,7 @@ This is the last step of the MPA - CIC alignment. It is more relevant for PS mod
 
 Since all MPAs and lines are synchronized, only one of the chip and lines is set to send a pattern and used for the measurement of the BX0 delay. The BX0 delay is measured between a Resync and the reception of the pattern in the CIC. This basically aligns the lines with the 20MHz clock.
 
-![CICBX0AlignmentDelay_Hybrid](../images/OTtesting/PS/CICBX0AlignmentDelay_Hybrid.png)
+![CICBX0AlignmentDelay_Hybrid](./OTtesting/PS/CICBX0AlignmentDelay_Hybrid.png)
 
 An empty plot shows that the alignment fails. This could be due to a problem on the MPA/MPA line chosen for the alignment or on a problem in the CIC.
 
@@ -343,7 +348,7 @@ Then, in the firmware, we adjust the delay applied to each packet and verify whe
 
 This process involves scanning delay values from 0 to 7 — corresponding to the eight possible packets — to find the correct delay that ensures the first interpreted packet is indeed the first one in the sequence.  
 
-![Board_BestStubPackageDelay_OpticalGroup](../images/OTtesting/common/Board_BestStubPackageDelay_OpticalGroup.png)
+![Board_BestStubPackageDelay_OpticalGroup](./OTtesting/common/Board_BestStubPackageDelay_OpticalGroup.png)
 
 On the y-axis, we show the right hybrid and the left hybrid.  
 For each, we display a single number that indicates which stub package delay was chosen.  
@@ -355,18 +360,19 @@ If you do see an issue in this plot, it most likely indicates a problem elsewher
 
 This concludes the alignment section.
 
-##### OTverifyCICdataWord - Hybrid
+##### OTverifyCICdataWord - Hybrid {#otverifycicdataword---hybrid}
 
 At this point, all chips are aligned: the CIC is synced with the LpGBT, the MPA data are correctly decoded by both the FPGA and the CIC, and all chips are communicating. The final step is to check the connection quality between the MPA and CIC.
 We set the MPA to send a specific pattern and check if the received data matches. The resulting plots show cumulative errors for all stub lines and Level-1 lines together. At this stage, we cannot pinpoint which line caused an issue without additional, more time-consuming steps, so we just look at a combined value.
 
-Stub tested bits, showed below, are higher because their pattern matching is done in firmware, while Level-1 errors are computed in software, which takes longer. 
-![MPAtoCIC_PatternMatchingTestedBits_Hybrid](../images/OTtesting/PS/MPAtoCIC_PatternMatchingTestedBits_Hybrid.png)
+Stub tested bits, showed below, are higher because their pattern matching is done in firmware, while Level-1 errors are computed in software, which takes longer.
+
+![MPAtoCIC_PatternMatchingTestedBits_Hybrid](./OTtesting/PS/MPAtoCIC_PatternMatchingTestedBits_Hybrid.png)
 
 Small error rates (around 0.01–0.1%) are normal and not a concern. Large errors, e.g., 20%, would indicate a real problem.
 
 
-![MPAtoCIC_PatternMatchingErrorRate_Hybrid](../images/OTtesting/PS/MPAtoCIC_PatternMatchingErrorRate_Hybrid.png)
+![MPAtoCIC_PatternMatchingErrorRate_Hybrid](./OTtesting/PS/MPAtoCIC_PatternMatchingErrorRate_Hybrid.png)
 
 
 
@@ -389,11 +395,12 @@ These are just some of the technical details involved.
 
 Stub tested bits, showed below as clusters since they will be interpreted as stubs byt the MPA, are higher because their pattern matching is done in firmware, while Level-1 errors are computed in software, which takes longer. 
 
-![SSAtoMPA_PatternMatchingTestedBits_Hybrid](../images/OTtesting/PS/SSAtoMPA_PatternMatchingTestedBits_Hybrid.png)
+![SSAtoMPA_PatternMatchingTestedBits_Hybrid](./OTtesting/PS/SSAtoMPA_PatternMatchingTestedBits_Hybrid.png)
 
 
 Small error rates (around 0.01–0.1%) are normal and not a concern. Large errors, e.g., 20%, would indicate a real problem. Examples of known issues are shown below.
-![SSAtoMPA_PatternMatchingErrorRate_Hybrid](../images/OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_Hybrid.png)
+
+![SSAtoMPA_PatternMatchingErrorRate_Hybrid](./OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_Hybrid.png)
 
 As before, <span style="color:red;font-weight:bold;"> all these communications go through a wirebond pair. So if you observe errors (100% error rate) on these lines, you should inspect the wirebonds</span>.
 This is crucial because, on the strip side, you can simply monitor the noise, whereas on the pixel side you are communicating with a chip. Therefore, <span style="color:red;font-weight:bold;">you need to run all the verification steps that help identify issues in the wirebonds between the MPA and the hybrid</span>.
@@ -403,10 +410,11 @@ This is crucial because, on the strip side, you can simply monitor the noise, wh
 
 Example of a missing wirebond, 100% error rate for one chip and line. [This debug script](../../pythonUtils/ModuleNoiseAnalyzer.py) will help you identify the wirebond number. When inspecting the wirebonds, remember that wirebond 12 for the bandgap is never connected.
 
-![SSAtoMPA_PatternMatchingErrorRate_Hybrid_missingWirebond](../images/OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_missingWirebond.png)
+![SSAtoMPA_PatternMatchingErrorRate_Hybrid_missingWirebond](./OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_missingWirebond.png)
 
 The one below is a known issue not yet understood. Please report if you observe it!
-![SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem](../images/OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem.png)
+
+![SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem](./OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem.png)
 
 </details>
 
@@ -428,12 +436,16 @@ All oscillators are controlled and read through I²C registers. A configuration 
 In summary, the ring oscillator test is included for completeness and historical reasons, but it is not currently used to diagnose module failures.
 
 Here two example plots for MPA
-![MPA_RingOscillatorDelayCounts_Hybrid](../images/OTtesting/PS/MPA_RingOscillatorDelayCounts_Hybrid.png)
-![MPA_RingOscillatorInverterCounts_Hybrid](../images/OTtesting/PS/MPA_RingOscillatorInverterCounts_Hybrid.png)
+
+![MPA_RingOscillatorDelayCounts_Hybrid](./OTtesting/PS/MPA_RingOscillatorDelayCounts_Hybrid.png)
+
+![MPA_RingOscillatorInverterCounts_Hybrid](./OTtesting/PS/MPA_RingOscillatorInverterCounts_Hybrid.png)
 
 And here for SSA
-![SSA_RingOscillatorDelayCounts_Hybrid](../images/OTtesting/PS/SSA_RingOscillatorDelayCounts_Hybrid.png)
-![SSA_RingOscillatorInverterCounts_Hybrid](../images/OTtesting/PS/SSA_RingOscillatorInverterCounts_Hybrid.png)
+
+![SSA_RingOscillatorDelayCounts_Hybrid](./OTtesting/PS/SSA_RingOscillatorDelayCounts_Hybrid.png)
+
+![SSA_RingOscillatorInverterCounts_Hybrid](./OTtesting/PS/SSA_RingOscillatorInverterCounts_Hybrid.png)
 
 ##### PedestalEqualization, "Trimming" (quick test) - Chip
 
@@ -449,17 +461,20 @@ This approach is fine for spotting clearly noisy or clearly quiet channels (whic
 
 For each chip, two plots are produced. SSA results are shown as 1D distributions; all channels are in one block. MPA are displayed as a 2D map, which makes the spatial distribution easier to inspect.
 
-Offset (local threshold) that equalizes the channel to the target. Valid offset values range from 0 to 31. Channels stuck at 0 or 31 indicate the allowed range was not sufficient to correct the channel. 
-![ChannelOffsetValues_SSA_quick](../images/OTtesting/PS/ChannelOffsetValues_SSA_quick.png)
-![2DChannelOffsetValues_MPA_quick](../images/OTtesting/PS/2DChannelOffsetValues_MPA_quick.png)
+Offset (local threshold) that equalizes the channel to the target. Valid offset values range from 0 to 31. Channels stuck at 0 or 31 indicate the allowed range was not sufficient to correct the channel.
+
+![ChannelOffsetValues_SSA_quick](./OTtesting/PS/ChannelOffsetValues_SSA_quick.png)
+
+![2DChannelOffsetValues_MPA_quick](./OTtesting/PS/2DChannelOffsetValues_MPA_quick.png)
 
 
 Occupancy at the chosen threshold (target ≈ 50%)
 Ideally, every channel reaches ~50% occupancy once properly trimmed.
 In the occupancy plot, channels far from 50% (close to 0% or close to 100%) indicate the trimming failed.
 
-![ChannelOccupancyAfterOffsetEqualization_SSA_quick](../images/OTtesting/PS/ChannelOccupancyAfterOffsetEqualization_SSA_quick.png)
-![2DChannelOccupancyAfterOffsetEqualization_MPA_quick](../images/OTtesting/PS/2DChannelOccupancyAfterOffsetEqualization_MPA_quick.png)
+![ChannelOccupancyAfterOffsetEqualization_SSA_quick](./OTtesting/PS/ChannelOccupancyAfterOffsetEqualization_SSA_quick.png)
+
+![2DChannelOccupancyAfterOffsetEqualization_MPA_quick](./OTtesting/PS/2DChannelOccupancyAfterOffsetEqualization_MPA_quick.png)
 
 
 
@@ -486,20 +501,28 @@ Three plots are saved per each chip type.
 Two plots show the pedestal (per channel and as a cumulative distribution) to evaluate the uniformity of the trimming procedure. If the trimming succeeded the distribution is very narrow.
 
 SSA plots:
-![ChannelPedestal_SSA_full](../images/OTtesting/PS/ChannelPedestal_SSA_full.png)
-![PedestalDistribution_SSA_full](../images/OTtesting/PS/PedestalDistribution_SSA_full.png)
+
+![ChannelPedestal_SSA_full](./OTtesting/PS/ChannelPedestal_SSA_full.png)
+
+![PedestalDistribution_SSA_full](./OTtesting/PS/PedestalDistribution_SSA_full.png)
 
 
 
 MPA plots:
-![ChannelPedestal_MPA_full](../images/OTtesting/PS/ChannelPedestal_MPA_full.png)
-![PedestalDistribution_MPA_full](../images/OTtesting/PS/PedestalDistribution_MPA_full.png)
+
+![ChannelPedestal_MPA_full](./OTtesting/PS/ChannelPedestal_MPA_full.png)
+
+![PedestalDistribution_MPA_full](./OTtesting/PS/PedestalDistribution_MPA_full.png)
 
 Offset (local threshold) that equalizes the channel to the target. Valid offset values range from 0 to 31. Channels stuck at 0 or 31 indicate the allowed range was not sufficient to correct the channel.
+
 SSA: 
-![ChannelTrimBit_SSA_full](../images/OTtesting/PS/ChannelTrimBit_SSA_full.png)
+
+![ChannelTrimBit_SSA_full](./OTtesting/PS/ChannelTrimBit_SSA_full.png)
+
 MPA:
-![ChannelTrimBit_MPA_full](../images/OTtesting/PS/ChannelTrimBit_MPA_full.png)
+
+![ChannelTrimBit_MPA_full](./OTtesting/PS/ChannelTrimBit_MPA_full.png)
 
 ##### PedeNoise - Hybrid, Chip, Channel
 
@@ -511,18 +534,23 @@ The S-Curve distribution is saved for each channel and shown below for one examp
 On the X-axis there is the applied threshold in VcTh units (1 VcTh unit =  94 electrons for MPAs and 250 electrons for SSAs). Lower VcTh correspond to lower thresholds. On the Y-axis there is the occpuncy. Each S-curve is fitted individually. From this fit, the Gaussian component of the convolution allows extraction of the noise, represented by the width of the Gaussian. The underlying step function from the convolution corresponds to the pedestal, which is measured at around 50% occupancy. This measurement is performed without injection, so the pedestal obtained reflects the actual baseline of the system.
 
 SSA:
-![SCurve_1channel_SSA](../images/OTtesting/PS/SCurve_1channel_SSA.png)
+
+![SCurve_1channel_SSA](./OTtesting/PS/SCurve_1channel_SSA.png)
+
 MPA:
-![SCurve_1channel_MPA](../images/OTtesting/PS/SCurve_1channel_MPA.png)
+
+![SCurve_1channel_MPA](./OTtesting/PS/SCurve_1channel_MPA.png)
 
 At the chip level, a 2D summary plot is stored summarizing the S-curve of all channels. Each plot shows channels on the x-axis, thresholds on the y-axis, and occupancy on the z-axis, with each line representing a single channel.
 
 SSA:
-![SCurve_SSA](../images/OTtesting/PS/SCurve_SSA.png)
+
+![SCurve_SSA](./OTtesting/PS/Scurve_SSA.png)
 
 MPA:
 For the 2D plots, you have both columns and rows. The 1D representation is simply obtained by taking each row and placing it after the previous one. In other words, you read the pixels from left to right across a row, then move to the next row and again go from left to right, and so on.
-![SCurve_MPA](../images/OTtesting/PS/SCurve_MPA.png)
+
+![SCurve_MPA](./OTtesting/PS/Scurve_MPA.png)
 
 <details>
   <summary>Known issues</summary>
@@ -531,7 +559,7 @@ For the strip sensor only (plots taken from 2S modules):
 
 Broken wirebond or disconnected bump bond can show up as a compressed S-curve for a specific channel.
 
-![SCurve_Chip_buggy](../images/OTtesting/2S/SCurve_Chip_buggy.png)
+![SCurve_Chip_buggy](./OTtesting/2S/SCurve_Chip_buggy.png)
 
 Another know issues is when horizontal stripes are present. This is a communication issue affecting the whole module. Example will be added when found again.
 
@@ -542,50 +570,62 @@ Another know issues is when horizontal stripes are present. This is a communicat
 From the S-Curve, the pulse height for every channel can be extracted. The cumulative distribution of the pulse height should appear very sharp, while failures would show as long tails or outliers.
 
 SSA:
-![PulseHeightDistribution_SSA](../images/OTtesting/PS/PulseHeightDistribution_SSA.png)
+
+![PulseHeightDistribution_SSA](./OTtesting/PS/PulseHeightDistribution_SSA.png)
 
 MPA:
-![PulseHeightDistribution_MPA](../images/OTtesting/PS/PulseHeightDistribution_MPA.png)
+
+![PulseHeightDistribution_MPA](./OTtesting/PS/PulseHeightDistribution_MPA.png)
 
 The channel pedestal plot shows the pedestal for each channel, revealing a very uniform distribution across all channels within a few VcTh, corresponding to a width of a few hundred electrons.
 
 SSA:
-![ChannelPulseHeight_SSA](../images/OTtesting/PS/ChannelPulseHeight_SSA.png)
+
+![ChannelPulseHeight_SSA](./OTtesting/PS/ChannelPulseHeight_SSA.png)
 
 MPA:
-![ChannelPulseHeight_MPA](../images/OTtesting/PS/ChannelPulseHeight_MPA.png)
+
+![ChannelPulseHeight_MPA](./OTtesting/PS/ChannelPulseHeight_MPA.png)
 
 
 Similar distribution are also shown for the noise.
 
 SSA:
 
-![NoiseDistribution_SSA](../images/OTtesting/PS/NoiseDistribution_SSA.png)
-![ChannelNoise_SSA](../images/OTtesting/PS/ChannelNoise_SSA.png)
+![NoiseDistribution_SSA](./OTtesting/PS/NoiseDistribution_SSA.png)
+
+![ChannelNoise_SSA](./OTtesting/PS/ChannelNoise_SSA.png)
 
 MPA:
-![NoiseDistribution_MPA](../images/OTtesting/PS/NoiseDistribution_MPA.png)
-![ChannelNoise_MPA](../images/OTtesting/PS/ChannelNoise_MPA.png)
+![NoiseDistribution_MPA](./OTtesting/PS/NoiseDistribution_MPA.png)
+
+![ChannelNoise_MPA](./OTtesting/PS/ChannelNoise_MPA.png)
 
 In this case, we also have the 2D distribution.
 This view is more informative because you can immediately see that the noise is larger at the edges. The reason is that the pixels near the edges are physically larger.
 Another detail you may notice is that the two leftmost columns always have the same value.
 This is because the leftmost and rightmost channels do not actually exist—they are duplicated entries. The duplication is done to simplify the matching to the strip side.
 In reality, the MPA does not have 120 distinct pixel columns. It has only 118 real columns, but the edge columns are duplicated so that the data structure still appears to have 120 columns. That is why you see 120 columns in the plots even though the number of physical columns is smaller.
-![2DChannelNoise_MPA](../images/OTtesting/PS/2DChannelNoise_MPA.png)
+
+![2DChannelNoise_MPA](./OTtesting/PS/2DChannelNoise_MPA.png)
 
 There are there very similar distributions summarizing the performance at the hybrid level.
 
 Strips:
-![StripNoiseDistribution_Hybrid](../images/OTtesting/PS/StripNoiseDistribution_Hybrid.png)
+
+![StripNoiseDistribution_Hybrid](./OTtesting/PS/StripNoiseDistribution_Hybrid.png)
+
 Higher noise toward the POH (SSA0 on right hybrid and SSA7 on left hybrid) is expected.
-![StripChannelNoise_Hybrid](../images/OTtesting/PS/StripChannelNoise_Hybrid.png)
+
+![StripChannelNoise_Hybrid](./OTtesting/PS/StripChannelNoise_Hybrid.png)
 
 
 
 Pixels:
-![PixelNoiseDistribution_Hybrid](../images/OTtesting/PS/PixelNoiseDistribution_Hybrid.png)
-![PIxelChannelNoise_Hybrid](../images/OTtesting/PS/PixelChannelNoise_Hybrid.png)
+
+![PixelNoiseDistribution_Hybrid](./OTtesting/PS/PixelNoiseDistribution_Hybrid.png)
+
+![PIxelChannelNoise_Hybrid](./OTtesting/PS/PixelChannelNoise_Hybrid.png)
 
 
 
@@ -593,13 +633,16 @@ Pixels:
   <summary>Known issues</summary>
 
 A group of channel with high noise may indicate a scratch on the sensor.
-![StripChannelNoise_Scratch](../images/OTtesting/2S/StripChannelNoise_Scratch.png)
+
+![StripChannelNoise_Scratch](./OTtesting/2S/StripChannelNoise_Scratch.png)
 
 A channel with low noise could indicate a broken wirebond. Below 2 a broken bumpbond.
-![StripChannelNoise_brokenBonds](../images/OTtesting/2S/StripChannelNoise_brokenBonds.png)
+
+![StripChannelNoise_brokenBonds](./OTtesting/2S/StripChannelNoise_brokenBonds.png)
 
 Groups of broken channels in the center of CBC can indicate that sparking occurred.
-![StripChannelNoise_Sparking](../images/OTtesting/2S/StripChannelNoise_Sparking.png)
+
+![StripChannelNoise_Sparking](./OTtesting/2S/StripChannelNoise_Sparking.png)
 
 If the HV is not applied, a very high noise is shown over both hybrids and sensors.
 </details>
@@ -613,14 +656,18 @@ To use synchronous counting correctly, we must ensure that the sampling occurs a
 Injection tests are performed by scanning the injection delay and measuring, for each delay, the threshold corresponding to 50% occupancy—where the input signal equals the comparator threshold—allowing reconstruction of the full signal distribution as a function of time.
 
 SSA:
-![ThresholdVsDelayScan_SSA](../images/OTtesting/PS/ThresholdVsDelayScan_SSA.png)
+
+![ThresholdVsDelayScan_SSA](./OTtesting/PS/ThresholdVsDelayScan_SSA.png)
+
 MPA:
-![ThresholdVsDelayScan_MPA](../images/OTtesting/PS/ThresholdVsDelayScan_MPA.png)
+
+![ThresholdVsDelayScan_MPA](./OTtesting/PS/ThresholdVsDelayScan_MPA.png)
+
 At this stage, the working point can be determined by setting the injection delay at the signal peak, which in first approximation is independent of the injected charge, ensuring that the signal always crosses the threshold at the same instant; the distance from the pedestal is then adjusted—typically five times the measured pedestal noise from the previous calibration—to suppress pedestal-induced noise and precisely define the working point.
 
-![BestThresholdAndDelay_SSA](../images/OTtesting/PS/BestThresholdAndDelay_SSA.png)
+![BestThresholdAndDelay_SSA](./OTtesting/PS/BestThresholdAndDelay_SSA.png)
 
-![BestThresholdAndDelay_MPA](../images/OTtesting/PS/BestThresholdAndDelay_MPA.png)
+![BestThresholdAndDelay_MPA](./OTtesting/PS/BestThresholdAndDelay_MPA.png)
 
 From this point onward, each injection measurement is performed using the identified injection delay and threshold, ensuring that subsequent tests are properly configured so that any injected charge is read at the correct value.
 
@@ -631,22 +678,32 @@ The occupancy is measured for different injection charges to establish a referen
 Five different measurements are performed, corresponding to five different plots. Three examples are shown, for no injection and one for some injected charge.
 
 The one below is without injection.
+
 SSA:
-![ChannelOccupancy_Injection_0.000_MIP_SSA](../images/OTtesting/PS/ChannelOccupancy_Injection_0.000_MIP_SSA.png)
+
+![ChannelOccupancy_Injection_0.000_MIP_SSA](./OTtesting/PS/ChannelOccupancy_Injection_0.000_MIP_SSA.png)
+
 MPA:
-![ChannelOccupancy_Injection_0.000_MIP_MPA](../images/OTtesting/PS/ChannelOccupancy_Injection_0.000_MIP_MPA.png)
+
+![ChannelOccupancy_Injection_0.000_MIP_MPA](./OTtesting/PS/ChannelOccupancy_Injection_0.000_MIP_MPA.png)
 
 The occupancy is measured for each chip, and although some slight activity may appear, the threshold is set to five times the noise, so almost no signal is expected except for very small fluctuations (that may be more visible in log scale).
 
 Then, injections are performed at different charge levels — for example, a quarter of a MIP, which corresponds to roughly the same level as the threshold set at five times the noise, yielding about 50% efficiency. This value indicates that a signal equivalent to a quarter of a MIP produces a 50% detection probability. Measuring lower charges is important to study cluster size and improve spatial resolution. Subsequent plots show the occupancy for each channel at 0.25, 0.5, 1, and 2 MIPs, allowing identification of potential issues. The inspection of these results is automated by potato, which flags problematic modules; manual inspection is mainly needed for those flagged as bad. Since each CBC chip behaves slightly differently, occupancy maps are produced per CBC and per channel, enabling the identification of noisy or inefficient channels, such as those with damaged comparators, although new modules typically show very few such cases.
 
 SSA:
-![ChannelOccupancy_Injection_0.250_MIP_SSA](../images/OTtesting/PS/ChannelOccupancy_Injection_0.250_MIP_SSA.png)
-![ChannelOccupancy_Injection_1.000_MIP_SSA](../images/OTtesting/PS/ChannelOccupancy_Injection_1.000_MIP_SSA.png)
+
+![ChannelOccupancy_Injection_0.250_MIP_SSA](./OTtesting/PS/ChannelOccupancy_Injection_0.250_MIP_SSA.png)
+
+![ChannelOccupancy_Injection_1.000_MIP_SSA](./OTtesting/PS/ChannelOccupancy_Injection_1.000_MIP_SSA.png)
+
 MPA:
+
 The inefficiency in the edge pixels are not real. They are a result of the large double pixels.
-![ChannelOccupancy_Injection_0.250_MIP_MPA](../images/OTtesting/PS/ChannelOccupancy_Injection_0.250_MIP_MPA.png)
-![ChannelOccupancy_Injection_1.000_MIP_SSA](../images/OTtesting/PS/ChannelOccupancy_Injection_1.000_MIP_MPA.png)
+
+![ChannelOccupancy_Injection_0.250_MIP_MPA](./OTtesting/PS/ChannelOccupancy_Injection_0.250_MIP_MPA.png)
+
+![ChannelOccupancy_Injection_1.000_MIP_SSA](./OTtesting/PS/ChannelOccupancy_Injection_1.000_MIP_MPA.png)
 
 
 ##### OTPScommonNoise - OpticalGroup, Hybrid, Chip
@@ -670,33 +727,43 @@ For now we keep both methods—occupancy-driven and 3σ noise—just as we do fo
 
 Here the hits on one chip are shown. It shows the distribution of events vs. number of hits on that chip.
 Occupancy is low by construction because the PS cannot reach high hit multiplicity.
+
 SSA:
-![CommonNoiseHits_OccupancyDriven_SSA](../images/OTtesting/PS/CommonNoiseHits_OccupancyDriven_Chip_SSA.png)
+
+![CommonNoiseHits_OccupancyDriven_SSA](./OTtesting/PS/CommonNoiseHits_OccupancyDriven_Chip_SSA.png)
+
 MPA:
-![CommonNoiseHits_OccupancyDriven_MPA](../images/OTtesting/PS/CommonNoiseHits_OccupancyDriven_Chip_MPA.png)
+
+![CommonNoiseHits_OccupancyDriven_MPA](./OTtesting/PS/CommonNoiseHits_OccupancyDriven_Chip_MPA.png)
 
 - Now we show distributions at the hybrid level
 
 
 Here we look at the distribution of the number of hits per event across the entire hybrid for strips and pixels. The hybrid-level 1D hit distributions show the number of events as a function of the number of hits for pixels and strips separately. Both occupancy-driven and 3σ versions exist. The pixel side often shows a slightly higher tail, while the strip side falls off quickly at low hit counts due to cluster-size limits.
-![CommonNoiseHitsStrip_OccupancyDriven_Hybrid](../images/OTtesting/PS/CommonNoiseHitsStrip_OccupancyDriven_Hybrid.png)
-![CommonNoiseHitsPixel_OccupancyDriven_Hybrid](../images/OTtesting/PS/CommonNoiseHitsPixel_OccupancyDriven_Hybrid.png)
+
+![CommonNoiseHitsStrip_OccupancyDriven_Hybrid](./OTtesting/PS/CommonNoiseHitsStrip_OccupancyDriven_Hybrid.png)
+
+![CommonNoiseHitsPixel_OccupancyDriven_Hybrid](./OTtesting/PS/CommonNoiseHitsPixel_OccupancyDriven_Hybrid.png)
 
 We also have common noise correlation plots for each SSA-MPA pair. The chip-to-chip correlation plots display the number of hits in the SSA versus the number of hits in the MPA for each event, with the z-axis showing how many events populate each combination. These plots allow you to see correlated behaviour between the pixel and strip chips within the same module.
-![SSAtoMPA_CommonNoiseCorrelation_OccupancyDriven_Hybrid](../images/OTtesting/PS/SSAtoMPA_CommonNoiseCorrelation_OccupancyDriven_Hybrid.png)
+
+![SSAtoMPA_CommonNoiseCorrelation_OccupancyDriven_Hybrid](./OTtesting/PS/SSAtoMPA_CommonNoiseCorrelation_OccupancyDriven_Hybrid.png)
 
 And the correlation at the hybrid level. At the hybrid level, the 2D correlation plots use the number of strip hits on the x-axis and the number of pixel hits on the y-axis, with the number of events shown on the z-axis. These give a global view of correlations across the entire hybrid
-![CommonNoiseStripPixelCorrelation_OccupancyDriven_Hybrid](../images/OTtesting/PS/CommonNoiseStripPixelCorrelation_OccupancyDriven_Hybrid.png)
+
+![CommonNoiseStripPixelCorrelation_OccupancyDriven_Hybrid](./OTtesting/PS/CommonNoiseStripPixelCorrelation_OccupancyDriven_Hybrid.png)
 
 
 - OpticalGroup/Module level distributions
 
-![CommonNoiseHitsStrip_OccupancyDriven_OG](../images/OTtesting/PS/CommonNoiseHitsStrip_OccupancyDriven_OG.png)
-![CommonNoiseHitsPixel_OccupancyDriven_OG](../images/OTtesting/PS/CommonNoiseHitsPixel_OccupancyDriven_OG.png)
+![CommonNoiseHitsStrip_OccupancyDriven_OG](./OTtesting/PS/CommonNoiseHitsStrip_OccupancyDriven_OG.png)
+
+![CommonNoiseHitsPixel_OccupancyDriven_OG](./OTtesting/PS/CommonNoiseHitsPixel_OccupancyDriven_OG.png)
 
 
 And the correlation at the hybrid level:
-![CommonNoiseStripPixelCorrelation_OccupancyDriven_OG](../images/OTtesting/PS/CommonNoiseStripPixelCorrelation_OccupancyDriven_OG.png)
+
+![CommonNoiseStripPixelCorrelation_OccupancyDriven_OG](./OTtesting/PS/CommonNoiseStripPixelCorrelation_OccupancyDriven_OG.png)
 
 
 These results are harder to interpret, reflecting the true behavior of the module, so if any unusual tails or unexpected noise appear in the pedenoise results, these plots should be checked to identify possible anomalies by comparing them with reference common noise plots from other modules to confirm that the noise distribution matches expectations.
@@ -713,11 +780,11 @@ Between the SSA and MPA there is no real fine phase control: only two possible p
 
 The first plot shows the number of tested bits for every configuration, and each line corresponds to a different MPA. 
 
-![SSAtoMPA_SamplingEdgeTestedBits_SSA_SLVScurrent_4_Hybrid](../images/OTtesting/PS/SSAtoMPA_SamplingEdgeTestedBits_SSA_SLVScurrent_4_Hybrid.png)
+![SSAtoMPA_SamplingEdgeTestedBits_SSA_SLVScurrent_4_Hybrid](./OTtesting/PS/SSAtoMPA_SamplingEdgeTestedBits_SSA_SLVScurrent_4_Hybrid.png)
 
 The second plot shows the error rate for the same configurations—again grouped by rising edge, falling edge, and the three possible bit offsets for each. For a good module you expect that, for each horizontal line (each line of each MPA), at least one configuration yields zero errors.
 
-![SSAtoMPA_SamplingEdgeErrorRate_SSA_SLVScurrent_4_Hybrid](../images/OTtesting/PS/SSAtoMPA_SamplingEdgeErrorRate_SSA_SLVScurrent_4_Hybrid.png)
+![SSAtoMPA_SamplingEdgeErrorRate_SSA_SLVScurrent_4_Hybrid](./OTtesting/PS/SSAtoMPA_SamplingEdgeErrorRate_SSA_SLVScurrent_4_Hybrid.png)
 
 Each configuration is independent, so the MPAs do not all need to use the same clock edge or offset; as long as every MPA has at least one valid setting, the module is considered good.
 
@@ -731,8 +798,9 @@ In the plots, the y-axis shows the direction of the communication: one set of li
 This is also the reason why we must include the bit-shift tests. When switching from rising-edge sampling to falling-edge sampling, some SSAs still work correctly, but the valid working point is shifted by one bit. For each communication direction, at least one valid configuration is required, and in practice there are often two. This is likely because the two SSAs are physically close, making the communication relatively forgiving.
 Overall, this procedure verifies the lateral communication between neighboring SSAs and ensures that every pair has at least one reliable operating point.
 
-![SSAtoSSA_SamplingEdgeTestedBits_SSA_SLVScurrent_4_Hybrid](../images/OTtesting/PS/SSAtoSSA_SamplingEdgeTestedBits_SSA_SLVScurrent_4_Hybrid.png)
-![SSAtoSSA_SamplingEdgeErrorRate_SSA_SLVScurrent_4_Hybrid](../images/OTtesting/PS/SSAtoSSA_SamplingEdgeErrorRate_SSA_SLVScurrent_4_Hybrid.png)
+![SSAtoSSA_SamplingEdgeTestedBits_SSA_SLVScurrent_4_Hybrid](./OTtesting/PS/SSAtoSSA_SamplingEdgeTestedBits_SSA_SLVScurrent_4_Hybrid.png)
+
+![SSAtoSSA_SamplingEdgeErrorRate_SSA_SLVScurrent_4_Hybrid](./OTtesting/PS/SSAtoSSA_SamplingEdgeErrorRate_SSA_SLVScurrent_4_Hybrid.png)
 
 
 ##### OTCICtoLpGBTecv - Hybrid
@@ -740,11 +808,13 @@ The CIC-to-LpGBT ECV studies the transmission between the CIC and LpGBT by varyi
 
 
 This plot shows, on the Y axis, the line ID corresponding to each transmission line, and on the X axis, the manually selected LpGBT sampling phase, which ranges from 0 to 14. The phase is varied manually rather than letting the LpGBT automatically adjust it, in order to explore also regions where the LpGBT cannot properly sample the incoming data. The Z axis represents the number of tested bits, with the stub pattern matched in firmware for speed, while the Level-1 pattern matching is performed in the software, resulting in longer scan times and fewer tested bits.
-![CICtoLpGBT_PatternMatchingTestedBits_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid](../images/OTtesting/PS/CICtoLpGBT_PatternMatchingTestedBits_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid.png)
+
+![CICtoLpGBT_PatternMatchingTestedBits_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid](./OTtesting/PS/CICtoLpGBT_PatternMatchingTestedBits_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid.png)
 
 
 In the plot below the Z axis represents the number of errors. Some lines are expected not to work properly, since sampling may occur when the incoming data from the CIC are transitioning, leading to bit misinterpretation. The quality of a module is therefore evaluated by the width of the phase range over which correct data transmission is achieved.
-![CICtoLpGBT_PatternMatchingErrorRate_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid](../images/OTtesting/PS/CICtoLpGBT_PatternMatchingErrorRate_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid.png)
+
+![CICtoLpGBT_PatternMatchingErrorRate_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid](./OTtesting/PS/CICtoLpGBT_PatternMatchingErrorRate_CIC_SLVScurrent_5_LpGBT_Clock_Polarity_0_Clock_Strength_7_Hybrid.png)
 
 Many versions of the above plots are stored for the various values and combinations of the current used by the CIC to drive the data (SLVS strenght, from 1 to 5), the LpGBT clock polarity, and the CIC clock drive strength (from 1 to 7).
 
@@ -756,11 +826,11 @@ The second complication is that the CIC receives 48 input lines from each group 
 For each phyport, we configure the MPAs to inject a known pattern, set the CIC into bypass mode, and then scan the LpGBT phase to find a working region. The resulting plots are stored in the directory for “LpGBT for CIC bypass” and include both the number of tested bits and the bit-error rate. We also store the “best phase,” defined as the central value of the largest continuous phase region with zero errors.
 The test-bit plots show, for each phase of the LpGBT, how many bits were received, and the error-rate plots indicate where errors occur. 
 
-![LpGBTforCICbypass_PhaseScanTestedBits_phyPort0_Hybrid](../images/OTtesting/PS/LpGBTforCICbypass_PhaseScanTestedBits_phyPort0_Hybrid.png)
+![LpGBTforCICbypass_PhaseScanTestedBits_phyPort0_Hybrid](./OTtesting/PS/LpGBTforCICbypass_PhaseScanTestedBits_phyPort0_Hybrid.png)
 
 In the error-rate plot, the regions with no errors mark the usable phases, and we select the nominal operating phase in the center of the widest such region. 
 
-![LpGBTforCICbypass_PhaseScanBitErrorRate_phyPort1_Hybrid](../images/OTtesting/PS/LpGBTforCICbypass_PhaseScanBitErrorRate_phyPort1_Hybrid.png)
+![LpGBTforCICbypass_PhaseScanBitErrorRate_phyPort1_Hybrid](./OTtesting/PS/LpGBTforCICbypass_PhaseScanBitErrorRate_phyPort1_Hybrid.png)
 
 These plots are mainly auxiliary: they allow you to diagnose problems later on by checking whether any anomaly was already visible at the bypass-mode stage.
 Since each phyport has a different optimal phase, this entire procedure must be repeated for all phyports. After completing this scan, we have a reliable phase setting for each group of lines. At that point, we can safely run the full link-validation tests between the MPAs and the CIC in bypass mode, using injected patterns from the MPAs and verifying their integrity through the CIC.
@@ -771,11 +841,12 @@ The final step of the electrical chain validation focuses on the link between th
 
 The plots follow the same format as before, with the phase on the x-axis and the line ID on the y-axis, showing all MPAs and their corresponding lines. Phases 2 and 3 are absent because they are not functional on the CIC and are therefore skipped. As usual, the number of tests is smaller for the Level-1 data since those checks are performed in software—still around 10⁵ to ensure sufficient statistics without excessive runtime. 
 
-![MPAtoCIC_PhaseScanTestedBits_MPA_SLVScurrent_1_Hybrid](../images/OTtesting/PS/MPAtoCIC_PhaseScanTestedBits_MPA_SLVScurrent_1_Hybrid.png)
+![MPAtoCIC_PhaseScanTestedBits_MPA_SLVScurrent_1_Hybrid](./OTtesting/PS/MPAtoCIC_PhaseScanTestedBits_MPA_SLVScurrent_1_Hybrid.png)
 
 The corresponding error-rate plots show that most channels exhibit a broad phase region with zero errors, indicating a stable and well-aligned communication between the MPA and the CIC.
 
-![MPAtoCIC_PhaseScanErrorRate_MPA_SLVScurrent_1_Hybrid](../images/OTtesting/PS/MPAtoCIC_PhaseScanErrorRate_MPA_SLVScurrent_1_Hybrid.png)
+![MPAtoCIC_PhaseScanErrorRate_MPA_SLVScurrent_1_Hybrid](./OTtesting/PS/MPAtoCIC_PhaseScanErrorRate_MPA_SLVScurrent_1_Hybrid.png)
+
 The Level-1 channels occasionally show issues in the pattern matching due to imperfect data sampling, leading to rare misreads and preventing a 100% match rate. While this is not a major concern, improvements are being explored, though the underlying sampling mechanism makes it difficult to fully eliminate. The plots clearly show that non-working phases have much higher error rates—around 45% compared to below 0.2% in well-aligned regions. As before, the results are shown for four different current settings, all displaying similar behavior.
 
 
@@ -786,26 +857,30 @@ The LpGBT offers multiple PRBS modes (listed in its manual), and in this test, o
 Because of limited FPGA resources, the test is run sequentially, one line at a time, and results are kept separate to help identify and debug potential issues. Since the test runs at the LpGBT level, all results are stored in the optical view.
 The first plot shows the bit error rate phase scan. This step is mostly a technical procedure, as the LpGBT generates the bit error rate pattern from a clock source whose phase can be adjusted. Certain phases prevent the LpGBT from correctly interpreting its own pattern, so a quick scan is performed to identify the valid working phases. 
 
-![BERTerrorRatePhaseScan_OpticalGroup](../images/OTtesting/PS/BERTerrorRatePhaseScan_OpticalGroup.png)
-![BERTtestedBitsCounterPhaseScan_OpticalGroup](../images/OTtesting/PS/BERTtesteBitCounterPhaseScan_OpticalGroup.png)
+![BERTerrorRatePhaseScan_OpticalGroup](./OTtesting/PS/BERTerrorRatePhaseScan_OpticalGroup.png)
+
+![BERTtestedBitsCounterPhaseScan_OpticalGroup](./OTtesting/PS/BERTtesteBitCounterPhaseScan_OpticalGroup.png)
 
 Once a stable phase is found, it is stored as the best phase. This step ensures that the LpGBT is in a proper transmission state and avoids generating fake bit errors unrelated to the actual link between the module and the FC7. After determining the correct phase, the real bit error rate test can be performed.
 
-![BERTbestPhase_OpticalGroup](../images/OTtesting/PS/BERTbestPhase_OpticalGroup.png)
+![BERTbestPhase_OpticalGroup](./OTtesting/PS/BERTbestPhase_OpticalGroup.png)
 
 As for the other plots, there are two levels of information: one plot shows the number of tested bits, which reaches approximately 10¹⁰ bits and appears fairly uniform. The distribution is roughly symmetric because the two hybrids are tested in parallel, meaning that when the stub number two on the right hybrid is tested, the corresponding stub number two on the left hybrid is tested as well, resulting in similar counts. The exact number of tested bits is not strictly controlled, since only a minimum threshold is set and the system runs until that is exceeded, so small variations are expected and not concerning.
-![BERTtestedBitsCounter_OpticalGroup](../images/OTtesting/PS/BERTtesteBitCounter_OpticalGroup.png)
+
+![BERTtestedBitsCounter_OpticalGroup](./OTtesting/PS/BERTtesteBitCounter_OpticalGroup.png)
 
 The key plot is the bit error rate, which measures the stability of the link while remaining split by line. Under normal conditions, the bit error rate is expected to be zero. Summing across all lines corresponds to about 10¹¹–10¹² tested bits, and the expected bit error rate is below 10⁻¹²–10⁻¹³. Testing up to 10¹³ bits would require several hours, so the procedure uses a lower value for practicality. During development, modules tested up to 10¹³ bits showed no errors, confirming the link stability. Therefore, the standard validation relies on about 10¹¹ tested bits per run, which provides sufficient confidence in link performance while keeping testing time reasonable.
-![BERTerrorRate_OpticalGroup](../images/OTtesting/PS/BERTerrorRate_OpticalGroup.png)
+
+![BERTerrorRate_OpticalGroup](./OTtesting/PS/BERTerrorRate_OpticalGroup.png)
 
 The forward error correction (FEC) counter provides complementary information to the bit error rate by tracking how many bits were flipped during transmission but successfully corrected by the FEC mechanism, which can fix up to five flipped bits per packet. Although a zero bit error rate indicates no uncorrected errors, nonzero FEC counts can still reveal link instabilities. The firmware records the number of corrected bits, and this information is stored cumulatively for the entire LpGBT packet, resulting in a single value for both hybrids. The results remain separated by line since each line is tested independently due to firmware resource limits, but they can be summed to assess overall behavior. The plot reports counts rather than percentages because the total number of transmitted packets is not precisely known, though it can be approximated from the test duration and total bits processed. Consistent factor counts across lines suggest stable communication, while localized or irregular counts may indicate transient link issues.
-![FECerrorCounter_OpticalGroup](../images/OTtesting/PS/FECerrorCounter_OpticalGroup.png)
+
+![FECerrorCounter_OpticalGroup](./OTtesting/PS/FECerrorCounter_OpticalGroup.png)
 
 ##### OTRegisterTester - Hybrid
 This test checks the stability of the I2C communication by repeatedly writing and reading specific registers on both the CBCs and the CIC. A known pattern is written and read back, then its inverse is written and read back, and this cycle is repeated about a thousand times. The results are summarized in a single plot showing the read and write efficiency for each of the eight CBCs and the CIC, with one plot per hybrid. The expected outcome is a consistent 100% efficiency, as the CIC I2C communication is typically very stable. For the CBCs, register page flipping that is known to cause instabilities is avoided to ensure meaningful results. The goal is not to test the general chip performance but to identify possible I2C instabilities specific to the module, which could originate from issues in the connectors between the FEH and SEH if deviations are observed.
 
-![RegisterMatchingEfficiency_Hybrid](../images/OTtesting/PS/RegisterMatchingEfficiency_Hybrid.png)
+![RegisterMatchingEfficiency_Hybrid](./OTtesting/PS/RegisterMatchingEfficiency_Hybrid.png)
 
 
 ### Monitoring  
@@ -822,61 +897,76 @@ The first monitored quantity is VDD, one of the digital supply voltages used by 
 The plots shown here were taken at the same time as the result files from before, although the exact timing isn’t critical — the key point is that even during data taking, you shouldn’t see large fluctuations.
 In most cases, these plots provide an immediate indication of any structural problem with the module. If you notice values significantly higher or lower than 1.2 V, it could point to a major issue. Small spikes in the distribution aren’t a concern — the ADC isn’t perfect and sometimes gives slightly delayed readings. These single-point deviations can be ignored, but if the voltage stays persistently high or low over time, that’s a sign of a potential problem.
 
-![D_B(0)_LpGBT_DQM_VDD_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VDD_OpticalGroup(0).png)
+![D_B(0)_LpGBT_DQM_VDD_OpticalGroup(0)](./OTtesting/common/D_B(0)_LpGBT_DQM_VDD_OpticalGroup(0).png)
 
 
 Another monitored voltage is shown here, which is essentially the same supply as the previous one. The difference sgould be that they correspond to two separate internal blocks of the LpGBT that each require their own instance of the same voltage to operate.
-![D_B(0)_LpGBT_DQM_VDDA_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VDDA_OpticalGroup(0).png)
+
+![D_B(0)_LpGBT_DQM_VDDA_OpticalGroup(0)](./OTtesting/common/D_B(0)_LpGBT_DQM_VDDA_OpticalGroup(0).png)
 
 Then we have the temperature measurement, which comes from the internal temperature sensor of the LpGBT. You can see a gradual warm-up, as this test was performed in the KIT box where the temperature is not tightly controlled. These temperature values are already calibrated using information provided by the LpGBT group in the configuration file mentioned earlier, which includes the calibration constants for the internal sensor, so the measurement should be quite reliable. 
-![D_B(0)_LpGBT_DQM_LpGBTtemp_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_LpGBTtemp_OpticalGroup(0).png)
+
+![D_B(0)_LpGBT_DQM_LpGBTtemp_OpticalGroup(0)](./OTtesting/common/D_B(0)_LpGBT_DQM_LpGBTtemp_OpticalGroup(0).png)
 
 
 There are also a few additional monitored quantities, ADC0 and ADC3, which are inputs to the LpGBT coming from the two hybrids. These values are controlled by the CIC, which can output an analog signal to monitor internal information. At the moment, nothing specific is configured on these channels since enabling them would require activating one CBC at a time, so they are included mainly for completeness. They can be safely ignored for now, although they may become useful in future studies; currently, they are simply connected to undefined signals, so while their values may fluctuate, they do not carry meaningful information.
-![D_B(0)_LpGBT_DQM_ADC0_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_ADC0_OpticalGroup(0).png) 
-![D_B(0)_LpGBT_DQM_ADC3_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_ADC3_OpticalGroup(0).png) 
+
+![D_B(0)_LpGBT_DQM_ADC0_OpticalGroup(0)](./OTtesting/common/D_B(0)_LpGBT_DQM_ADC0_OpticalGroup(0).png) 
+
+![D_B(0)_LpGBT_DQM_ADC3_OpticalGroup(0)](./OTtesting/common/D_B(0)_LpGBT_DQM_ADC3_OpticalGroup(0).png) 
 
 There is another monitored quantity showing the voltage on the left hybrid, which should be around 1.25 V. There isn’t a separate measurement for the right hybrid due to limited inputs, but the assumption is that both hybrids get the same voltage from the DC-DC converter. In practice, the measured voltage is slightly lower, which has been consistent across all tested modules. Minor fluctuations can be ignored.
-![D_B(0)_LpGBT_DQM_1V25_Left_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_1V25_Left_OpticalGroup(0).png) 
+
+![D_B(0)_LpGBT_DQM_1V25_Left_OpticalGroup(0)](./OTtesting/common/D_B(0)_LpGBT_DQM_1V25_Left_OpticalGroup(0).png) 
 
 This is the input voltage coming from the power supply, which is usually set around 10.5 V. The measured voltage may be slightly lower, possibly due to cable drops, filtering, or uncertainties in the voltage divider used for measurement. The module itself is quite resilient, so only significant deviations—well below the nominal voltage, e.g., down to 8 V—would cause concern. Minor differences are not critical.
-![D_B(0)_LpGBT_DQM_VIN_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VIN_OpticalGroup(0).png) 
+
+![D_B(0)_LpGBT_DQM_VIN_OpticalGroup(0)](./OTtesting/common/D_B(0)_LpGBT_DQM_VIN_OpticalGroup(0).png) 
 
 The next monitored parameter is the sensor temperature.
 Each sensor includes an NTC (Negative Temperature Coefficient) resistor, meaning its resistance decreases as temperature increases. In other words, higher temperatures correspond to lower resistances and therefore to higher measured voltages (since a fixed current is injected through the resistor).
 The system injects a known current through the NTC and reads the resulting voltage drop to estimate the temperature. The specific resistor monitored here is the one placed on the top sensor — on the high-voltage side of the module, where two connections are available, one of which is the temperature sensor. Thus, this measurement represents the temperature of the top sensor.
-![D_B(0)_LpGBT_DQM_SensorTemp_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_SensorTemp_OpticalGroup(0).png) 
+
+![D_B(0)_LpGBT_DQM_SensorTemp_OpticalGroup(0)](./OTtesting/common/D_B(0)_LpGBT_DQM_SensorTemp_OpticalGroup(0).png) 
 
 Then there is the measurement of the current related to the VTRx+ receiver. The VTRx+ receives incoming light through a fiber, and a photodiode inside converts this optical signal into an electrical current used for data transmission. The measured current corresponds to the diode’s response — sometimes referred to as the RSSI (received signal strength indicator) — which represents the amount of light collected by the diode.
 For now, this measurement is mostly stable and not particularly informative, but it can become useful in the future. With radiation damage, the photodiode’s efficiency is expected to decrease, meaning the same amount of incoming light would generate a smaller current. Monitoring this evolution can therefore help track radiation effects on the VTRx+ performance.
 During production testing, this parameter is not critical, but it is kept for completeness and possible long-term monitoring.
-![D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0).png)
+
+![D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0)](./OTtesting/common/D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0).png)
 
 The last two quantities monitored are the temperature sensors from the bPOLs.
 The bPOL is the chip that in the DC-DC converter converts the voltage provided to the module to the needed voltages for the chips on the module. There are two bPOL one for the conversion 12 (in reality we supply 10.5) -> 2.5 and one for the conversion 2.5 -> 1.2. We have two stages because the VTRX needs 2.5 volts.
 Each bPOL has a temperature sensor but they are not calibrated. The slope is precise but the offset is not. So the absulute value is not correct but the variations are accurate.
 For example, if one is not well connected, one of the sensors may show a quite different value.
 
-![D_B(0)_LpGBT_DQM_BPOL12Vtemp_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0).png)
-![D_B(0)_LpGBT_DQM_BPOL2V5temp_OpticalGroup(0)](../images/OTtesting/common/D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0).png)
+![D_B(0)_LpGBT_DQM_BPOL12Vtemp_OpticalGroup(0)](./OTtesting/common/D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0).png)
+
+![D_B(0)_LpGBT_DQM_BPOL2V5temp_OpticalGroup(0)](./OTtesting/common/D_B(0)_LpGBT_DQM_VTRxLeakageCurr_OpticalGroup(0).png)
 
 #### SSA and MPA - Chip
 The next type of information we record for both the SSA and the MPA are the analog and digital voltages. The analog voltage is typically around 1.2–1.3 V, while the digital voltage should be close to (but slightly above) 1 V. So far these quantities have behaved as expected, but they may become useful indicators in failure scenarios—for example if a component breaks, one might observe a sudden drop or abnormal behavior. In practice, if the chip does not receive enough power, other issues usually appear very clearly.
 
 SSA:
-![D_B(0)SSA_DQM_AVDD](../images/OTtesting/PS/SSA_DQM_AVDD.png)
-![D_B(0)SSA_DQM_DVDD](../images/OTtesting/PS/SSA_DQM_DVDD.png)
+
+![D_B(0)SSA_DQM_AVDD](./OTtesting/PS/SSA_DQM_AVDD.png)
+
+![D_B(0)SSA_DQM_DVDD](./OTtesting/PS/SSA_DQM_DVDD.png)
 
 MPA:
-![D_B(0)MPA_DQM_AVDD](../images/OTtesting/PS/MPA_DQM_AVDD.png)
-![D_B(0)MPA_DQM_DVDD](../images/OTtesting/PS/MPA_DQM_DVDD.png)
+
+![D_B(0)MPA_DQM_AVDD](./OTtesting/PS/MPA_DQM_AVDD.png)
+
+![D_B(0)MPA_DQM_DVDD](./OTtesting/PS/MPA_DQM_DVDD.png)
 
 We also monitor the temperature. Calibrations are only available for MPAs, so only relative variations can be trusted for SSAs. The true temperature is likely higher than what is shown, as the calibrations were performed over long periods without cooling. Until the proper calibration is available, the absolute values should not be interpreted literally.
 
 SSA:
-![SSA_DQM_temp](../images/OTtesting/PS/SSA_DQM_temp.png)
+
+![SSA_DQM_temp](./OTtesting/PS/SSA_DQM_temp.png)
 
 MPA:
-![MPA_DQM_temp](../images/OTtesting/PS/MPA_DQM_temp.png)
+
+![MPA_DQM_temp](./OTtesting/PS/MPA_DQM_temp.png)
 
 These are all the parameters currently monitored during the measurements performed with the Ph2_ACF.

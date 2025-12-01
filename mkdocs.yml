@@ -43,6 +43,8 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
 
+use_directory_urls: false
+
 plugins:
   - search
   - git-revision-date-localized:
@@ -61,6 +63,8 @@ markdown_extensions:
       anchor_linenums: true
   - pymdownx.superfences
   - tables
+  - toc:
+      permalink: "#"
 
 extra_javascript:
   - javascript/config.js
@@ -120,5 +124,7 @@ nav:
       - 'Outer Tracker': outerTracker/index.md
       - 'Firmware naming conventions': outerTracker/firmware.md
       - '2S module': outerTracker/2SConfiguration.md
+      - '2S testing': outerTracker/2Stesting.md
+      - 'PS testing': outerTracker/PStesting.md
   
     - 'Interesting links': interesting_links/index.md
