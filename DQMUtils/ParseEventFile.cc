@@ -104,7 +104,11 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
 
     
     if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) { fillEventTreePS(tree, theBoard, theData, currentEventStart); }
-    else if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S) { fillEventTree2S(tree, theBoard, theData, currentEventStart, theFileHeader.fCICeventType == CICeventType::Sparsified); }
+    else if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S) 
+    {
+        if(theFileHeader.fCICeventType == CICeventType::Sparsified) fillEventTree2Ssparsified(tree, theBoard, theData, currentEventStart); 
+        else fillEventTree2Sunsparsified(tree, theBoard, theData, currentEventStart);
+    }
     else
     {
         LOG(ERROR) << ERROR_FORMAT << "ParseEventFile::parseFile -> Unsupported FrontEndType for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
@@ -133,7 +137,7 @@ void ParseEventFile::fillEventTreePS(TTree* tree, const BeBoard* theBoard, const
         std::vector<uint32_t> theEventData(theData.begin() + currentEventStart, theData.begin() + currentEventStart + eventSize);
         D19cCic2Event         theEventParsed(theBoard, theEventData, true);
 
-        theBoardEventPS.fHybrideventList.clear();
+        theBoardEventPS.fHybridEventList.clear();
         theBoardEventPS.fBoardEventInfo = theEventParsed.getBoardEventInfo();
 
         for(auto theOpticalGroup: *theBoard)
@@ -168,7 +172,7 @@ void ParseEventFile::fillEventTreePS(TTree* tree, const BeBoard* theBoard, const
                         theHybridL1EventPS.fMPAeventList.push_back(theMPAL1Event);
                     }
                 }
-                theBoardEventPS.fHybrideventList.push_back(theHybridL1EventPS);
+                theBoardEventPS.fHybridEventList.push_back(theHybridL1EventPS);
             }
         }
 
@@ -178,7 +182,7 @@ void ParseEventFile::fillEventTreePS(TTree* tree, const BeBoard* theBoard, const
     }
 }
 
-void ParseEventFile::fillEventTree2S(TTree* tree, const BeBoard* theBoard, const std::vector<uint32_t>& theData, size_t currentEventStart, bool isSparsified)
+void ParseEventFile::fillEventTree2Ssparsified(TTree* tree, const BeBoard* theBoard, const std::vector<uint32_t>& theData, size_t currentEventStart)
 {
     size_t theDataSize = theData.size();
 
@@ -190,9 +194,9 @@ void ParseEventFile::fillEventTree2S(TTree* tree, const BeBoard* theBoard, const
         size_t eventSize = (theData.at(currentEventStart) & 0xFFFF) * 4;
         if(currentEventStart + eventSize >= theDataSize) break;
         std::vector<uint32_t> theEventData(theData.begin() + currentEventStart, theData.begin() + currentEventStart + eventSize);
-        D19cCic2Event         theEventParsed(theBoard, theEventData, isSparsified);
+        D19cCic2Event         theEventParsed(theBoard, theEventData, true);
         
-        theBoardEvent2S.fHybrideventList.clear();
+        theBoardEvent2S.fHybridEventList.clear();
         theBoardEvent2S.fBoardEventInfo = theEventParsed.getBoardEventInfo();
         
         for(auto theOpticalGroup: *theBoard)
@@ -214,7 +218,53 @@ void ParseEventFile::fillEventTree2S(TTree* tree, const BeBoard* theBoard, const
                     for(auto theStubHandler: theEventParsed.StubVector(theHybrid->getId(), theChip->getId())) { theCBCL1Event.fStubList.push_back(theStubHandler.fStub); }
                     theHybridL1Event2S.fCBCeventList.push_back(theCBCL1Event);
                 }
-                theBoardEvent2S.fHybrideventList.push_back(theHybridL1Event2S);
+                theBoardEvent2S.fHybridEventList.push_back(theHybridL1Event2S);
+            }
+        }
+        
+        tree->Fill();
+
+        currentEventStart += eventSize;
+    }
+}
+
+void ParseEventFile::fillEventTree2Sunsparsified(TTree* tree, const BeBoard* theBoard, const std::vector<uint32_t>& theData, size_t currentEventStart)
+{
+    size_t theDataSize = theData.size();
+
+    BoardEvent2SUnsparsified theBoardEvent2S;
+    tree->Branch("BoardEvent2SUnsparsified", &theBoardEvent2S);
+
+    while(currentEventStart < theDataSize)
+    {
+        size_t eventSize = (theData.at(currentEventStart) & 0xFFFF) * 4;
+        if(currentEventStart + eventSize >= theDataSize) break;
+        std::vector<uint32_t> theEventData(theData.begin() + currentEventStart, theData.begin() + currentEventStart + eventSize);
+        D19cCic2Event         theEventParsed(theBoard, theEventData, false);
+        
+        theBoardEvent2S.fHybridEventList.clear();
+        theBoardEvent2S.fBoardEventInfo = theEventParsed.getBoardEventInfo();
+        
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                HybridEvent2SUnsparsified theHybridL1Event2S;
+                theHybridL1Event2S.fHybridL1EventInfo = theEventParsed.getHybridL1EventInfoHandler(theHybrid->getId()).fHybridL1EventInfo;
+                
+                for(auto theChip: *theHybrid)
+                {
+                    CBCeventUnsparsified theCBCL1Event;
+                    theCBCL1Event.fChipEventInfo.fChipId             = theChip->getId();
+                    theCBCL1Event.fChipEventInfo.fIsL1ErrorFlagSet   = theEventParsed.IsL1ErrorSet(theHybrid->getId(), theChip->getId());
+                    theCBCL1Event.fChipEventInfo.fIsStubErrorFlagSet = theEventParsed.IsStubErrorSet(theHybrid->getId(), theChip->getId());
+                    
+                    theCBCL1Event.fCBCL1EventInfo = theEventParsed.getCBCL1EventInfoHandler(theHybrid->getId(), theChip->getId()).fCBCL1EventInfo;
+                    
+                    for(auto theStubHandler: theEventParsed.StubVector(theHybrid->getId(), theChip->getId())) { theCBCL1Event.fStubList.push_back(theStubHandler.fStub); }
+                    theHybridL1Event2S.fCBCeventList.push_back(theCBCL1Event);
+                }
+                theBoardEvent2S.fHybridEventList.push_back(theHybridL1Event2S);
             }
         }
         

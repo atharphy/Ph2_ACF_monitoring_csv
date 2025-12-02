@@ -137,6 +137,7 @@
         <Setting name ="OTPhysics_SaveRawData">1</Setting>
     <Setting name="OTPhysics_UserTriggerRate">5</Setting> <!-- in kHz -->
     <Setting name="OTPhysics_InjectionType">5</Setting> <!-- 0 - no injection, 1 - noise injection, 2 - pulse injection -->
+    <Setting name="OTPhysics_SparsificationEnabled">1</Setting>
 
 </Settings>
 

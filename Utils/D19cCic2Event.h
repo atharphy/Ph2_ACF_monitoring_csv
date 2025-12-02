@@ -103,18 +103,15 @@ struct HybridL1EventInfoHandler
     HybridL1EventInfo fHybridL1EventInfo;
 };
 
-struct CBCL1EventInfo
+struct CBCL1EventInfoHandler
 {
-    CBCL1EventInfo() {}
+    CBCL1EventInfoHandler() {}
     void                    parseData(std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9>::const_iterator dataStart, size_t bitStart = 0);
-    uint8_t                 fErrorCode{0};
-    uint16_t                fPipelineAddress{0};
-    uint16_t                fL1id{0};
-    std::array<uint32_t, 8> fRawData{0, 0, 0, 0, 0, 0, 0, 0};
     inline bool             isChannelHit(uint8_t channel) const;
     std::vector<uint8_t>    getChannelHitList() const;
     inline uint8_t          countNumberOfHits() const;
     void                    print() const;
+    CBCL1EventInfo          fCBCL1EventInfo;
 };
 
 struct HybridStubEventInfo
@@ -270,6 +267,7 @@ class D19cCic2Event : public Event
   public:
     void                     print();
     HybridL1EventInfoHandler getHybridL1EventInfoHandler(uint8_t pHybridId);
+    CBCL1EventInfoHandler getCBCL1EventInfoHandler(uint8_t pHybridId, uint8_t pReadoutChipId);
 
     /*!
      * \brief Get the bunch value

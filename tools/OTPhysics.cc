@@ -19,10 +19,11 @@ void OTPhysics::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
-    fSaveRawData               = this->findValueInSettings<double>("OTPhysics_SaveRawData", 1);
-    uint8_t theUserTriggerRate = this->findValueInSettings<double>("OTPhysics_UserTriggerRate", 10);
-    uint8_t injectionType      = this->findValueInSettings<double>("OTPhysics_InjectionType", 2); // 0 - no injection, 1 - noise injection, 2 - pulse injection
-    
+    fSaveRawData                  = this->findValueInSettings<double>("OTPhysics_SaveRawData", 1);
+    uint8_t theUserTriggerRate    = this->findValueInSettings<double>("OTPhysics_UserTriggerRate", 5);
+    uint8_t injectionType         = this->findValueInSettings<double>("OTPhysics_InjectionType", 0); // 0 - no injection, 1 - noise injection, 2 - pulse injection
+    bool    sparsificationEnabled = this->findValueInSettings<double>("OTPhysics_SparsificationEnabled", 1) > 0;
+
     uint8_t theTriggerSource   = 0xF;
 
     switch (injectionType)
@@ -91,7 +92,7 @@ void OTPhysics::ConfigureCalibration()
 
         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_ctrl.fast_command_block.control.load_config", 0x1);
 
-        setSparsification(theBoard, true);
+        setSparsification(theBoard, sparsificationEnabled);
         if(injectionType == 1 || injectionType == 2)
         {
             for(auto theOpticalGroup: *theBoard)
