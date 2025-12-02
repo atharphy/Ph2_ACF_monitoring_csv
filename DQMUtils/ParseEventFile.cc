@@ -39,7 +39,8 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
     bool        isHeaderPresent = theFileHandler.getHeader(theFileHeader);
     if(isHeaderPresent)
     {
-        auto toHex = [](uint32_t value) {
+        auto toHex = [](uint32_t value)
+        {
             std::ostringstream oss;
             oss << std::hex << std::setw(8) << std::setfill('0') << std::uppercase << value;
             return oss.str();
@@ -58,40 +59,28 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
         theBeId.Write("fBeId");
 
         std::string theEventTypeString = "UNKNOWN";
-        switch (theFileHeader.fEventType)
+        switch(theFileHeader.fEventType)
         {
-        case EventType::VR:
-            theEventTypeString = "VR";
-            break;
-        case EventType::ZS:
-            theEventTypeString = "ZS";
-            break;
-        
-        default:
-            break;
+        case EventType::VR: theEventTypeString = "VR"; break;
+        case EventType::ZS: theEventTypeString = "ZS"; break;
+
+        default: break;
         }
-        
+
         TObjString theEventType(theEventTypeString.c_str());
         theEventType.Write("fEventType");
 
         std::string theCICeventTypeString = "UNKNOWN";
-        switch (theFileHeader.fCICeventType)
+        switch(theFileHeader.fCICeventType)
         {
-        case CICeventType::Sparsified:
-            theCICeventTypeString = "Sparsified";
-            break;
-        case CICeventType::Unsparsified:
-            theCICeventTypeString = "Unsparsified";
-            break;
+        case CICeventType::Sparsified: theCICeventTypeString = "Sparsified"; break;
+        case CICeventType::Unsparsified: theCICeventTypeString = "Unsparsified"; break;
         }
 
         TObjString theCICeventType(theCICeventTypeString.c_str());
         theCICeventType.Write("fCICeventType");
     }
-    else
-    {
-        LOG(WARNING) << WARNING_FORMAT << "ParseEventFile::parseFile -> No valid header found for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
-    }
+    else { LOG(WARNING) << WARNING_FORMAT << "ParseEventFile::parseFile -> No valid header found for Run " << fRunNumber << " Board " << theBoard->getId() << RESET; }
 
     auto theData = theFileHandler.readFile();
     if(theData.size() == 0)
@@ -102,24 +91,25 @@ bool ParseEventFile::parseBoardFile(const BeBoard* theBoard)
 
     size_t currentEventStart = (isHeaderPresent ? FileHeader::fHeaderSize : 0);
 
-    
     if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTrackerPS) { fillEventTreePS(tree, theBoard, theData, currentEventStart); }
-    else if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S) 
+    else if(theBoard->getFirstObject()->getFrontEndType() == FrontEndType::OuterTracker2S)
     {
-        if(theFileHeader.fCICeventType == CICeventType::Sparsified) fillEventTree2Ssparsified(tree, theBoard, theData, currentEventStart); 
-        else fillEventTree2Sunsparsified(tree, theBoard, theData, currentEventStart);
+        if(theFileHeader.fCICeventType == CICeventType::Sparsified)
+            fillEventTree2Ssparsified(tree, theBoard, theData, currentEventStart);
+        else
+            fillEventTree2Sunsparsified(tree, theBoard, theData, currentEventStart);
     }
     else
     {
         LOG(ERROR) << ERROR_FORMAT << "ParseEventFile::parseFile -> Unsupported FrontEndType for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
         return false;
     }
-    
+
     tree->Write();
     file->Close();
     LOG(INFO) << BOLDYELLOW << "Parsing completed for Run " << fRunNumber << " Board " << theBoard->getId() << RESET;
     LOG(INFO) << BOLDGREEN << "TTree file created: " << rootFileName << RESET;
-    
+
     return true;
 }
 
@@ -195,33 +185,33 @@ void ParseEventFile::fillEventTree2Ssparsified(TTree* tree, const BeBoard* theBo
         if(currentEventStart + eventSize >= theDataSize) break;
         std::vector<uint32_t> theEventData(theData.begin() + currentEventStart, theData.begin() + currentEventStart + eventSize);
         D19cCic2Event         theEventParsed(theBoard, theEventData, true);
-        
+
         theBoardEvent2S.fHybridEventList.clear();
         theBoardEvent2S.fBoardEventInfo = theEventParsed.getBoardEventInfo();
-        
+
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
                 HybridEvent2S theHybridL1Event2S;
                 theHybridL1Event2S.fHybridL1EventInfo = theEventParsed.getHybridL1EventInfoHandler(theHybrid->getId()).fHybridL1EventInfo;
-                
+
                 for(auto theChip: *theHybrid)
                 {
                     CBCevent theCBCL1Event;
                     theCBCL1Event.fChipEventInfo.fChipId             = theChip->getId();
                     theCBCL1Event.fChipEventInfo.fIsL1ErrorFlagSet   = theEventParsed.IsL1ErrorSet(theHybrid->getId(), theChip->getId());
                     theCBCL1Event.fChipEventInfo.fIsStubErrorFlagSet = theEventParsed.IsStubErrorSet(theHybrid->getId(), theChip->getId());
-                    
+
                     for(auto theCluster: theEventParsed.getClusters(theHybrid->getId(), theChip->getId())) { theCBCL1Event.fClusterList.push_back(theCluster.fCluster2S); }
-                    
+
                     for(auto theStubHandler: theEventParsed.StubVector(theHybrid->getId(), theChip->getId())) { theCBCL1Event.fStubList.push_back(theStubHandler.fStub); }
                     theHybridL1Event2S.fCBCeventList.push_back(theCBCL1Event);
                 }
                 theBoardEvent2S.fHybridEventList.push_back(theHybridL1Event2S);
             }
         }
-        
+
         tree->Fill();
 
         currentEventStart += eventSize;
@@ -241,33 +231,33 @@ void ParseEventFile::fillEventTree2Sunsparsified(TTree* tree, const BeBoard* the
         if(currentEventStart + eventSize >= theDataSize) break;
         std::vector<uint32_t> theEventData(theData.begin() + currentEventStart, theData.begin() + currentEventStart + eventSize);
         D19cCic2Event         theEventParsed(theBoard, theEventData, false);
-        
+
         theBoardEvent2S.fHybridEventList.clear();
         theBoardEvent2S.fBoardEventInfo = theEventParsed.getBoardEventInfo();
-        
+
         for(auto theOpticalGroup: *theBoard)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
                 HybridEvent2SUnsparsified theHybridL1Event2S;
                 theHybridL1Event2S.fHybridL1EventInfo = theEventParsed.getHybridL1EventInfoHandler(theHybrid->getId()).fHybridL1EventInfo;
-                
+
                 for(auto theChip: *theHybrid)
                 {
                     CBCeventUnsparsified theCBCL1Event;
                     theCBCL1Event.fChipEventInfo.fChipId             = theChip->getId();
                     theCBCL1Event.fChipEventInfo.fIsL1ErrorFlagSet   = theEventParsed.IsL1ErrorSet(theHybrid->getId(), theChip->getId());
                     theCBCL1Event.fChipEventInfo.fIsStubErrorFlagSet = theEventParsed.IsStubErrorSet(theHybrid->getId(), theChip->getId());
-                    
+
                     theCBCL1Event.fCBCL1EventInfo = theEventParsed.getCBCL1EventInfoHandler(theHybrid->getId(), theChip->getId()).fCBCL1EventInfo;
-                    
+
                     for(auto theStubHandler: theEventParsed.StubVector(theHybrid->getId(), theChip->getId())) { theCBCL1Event.fStubList.push_back(theStubHandler.fStub); }
                     theHybridL1Event2S.fCBCeventList.push_back(theCBCL1Event);
                 }
                 theBoardEvent2S.fHybridEventList.push_back(theHybridL1Event2S);
             }
         }
-        
+
         tree->Fill();
 
         currentEventStart += eventSize;

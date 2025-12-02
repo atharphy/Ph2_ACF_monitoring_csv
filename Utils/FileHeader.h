@@ -46,7 +46,7 @@ class FileHeader
                const uint32_t&   pBeId,
                const uint32_t&   pNchip,
                const uint32_t&   pEventSize,
-               EventType         pEventType = EventType::VR,
+               EventType         pEventType    = EventType::VR,
                CICeventType      pCICeventType = CICeventType::Sparsified)
         : fType(pType), fVersionMajor(pFWMajor), fVersionMinor(pFWMinor), fBeId(pBeId), fNchip(pNchip), fEventSize(pEventSize), fEventType(pEventType), fCICeventType(pCICeventType), fValid(true)
     {

@@ -24,20 +24,19 @@ void OTPhysics::ConfigureCalibration()
     uint8_t injectionType         = this->findValueInSettings<double>("OTPhysics_InjectionType", 0); // 0 - no injection, 1 - noise injection, 2 - pulse injection
     bool    sparsificationEnabled = this->findValueInSettings<double>("OTPhysics_SparsificationEnabled", 1) > 0;
 
-    uint8_t theTriggerSource   = 0xF;
+    uint8_t theTriggerSource = 0xF;
 
-    switch (injectionType)
+    switch(injectionType)
     {
     case 0 || 1:
         theTriggerSource = 3; // User-Defined Frequency
         break;
-    
+
     case 2:
         theTriggerSource = 6; // Test Pulse Trigger
         break;
 
-    default:
-        break;
+    default: break;
     }
 
     std::vector<std::pair<std::string, uint32_t>> boardRegisterVector;
@@ -45,47 +44,45 @@ void OTPhysics::ConfigureCalibration()
     boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
     boardRegisterVector.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0});
     boardRegisterVector.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0});
-    
+
     if(injectionType == 2) setFWTestPulse(true);
-    
+
     for(auto theBoard: *fDetectorContainer)
-    { 
+    {
         fBeBoardInterface->WriteBoardMultReg(theBoard, boardRegisterVector);
-        if(theTriggerSource == 3)
-        {
-            fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.user_trigger_frequency", theUserTriggerRate);
-        }
+        if(theTriggerSource == 3) { fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.user_trigger_frequency", theUserTriggerRate); }
         else if(theTriggerSource == 6)
         {
             std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]" << std::endl;
             // this cannot be changed otherwise latency changes
-            uint32_t delayAfterTestPulse = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
-            uint32_t currentDelayAfterFastReset = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset");
-            uint32_t minimumDelayAfterFastReset = 20;
+            uint32_t delayAfterTestPulse         = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse");
+            uint32_t currentDelayAfterFastReset  = fBeBoardInterface->ReadBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset");
+            uint32_t minimumDelayAfterFastReset  = 20;
             uint32_t minimumDelayBeforeNextPulse = 20;
-            uint32_t clockFrequency = 40e3; // in kHz
-            uint32_t numberOfClockCyclesBudget = clockFrequency / theUserTriggerRate; // in clock cycles (40 MHz clock)
+            uint32_t clockFrequency              = 40e3;                                // in kHz
+            uint32_t numberOfClockCyclesBudget   = clockFrequency / theUserTriggerRate; // in clock cycles (40 MHz clock)
             uint32_t newDelayAfterFastReset;
             uint32_t newDelayBeforeNextPulse;
             if(numberOfClockCyclesBudget < minimumDelayAfterFastReset + minimumDelayBeforeNextPulse + delayAfterTestPulse)
             {
                 std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]" << std::endl;
-                newDelayAfterFastReset = minimumDelayAfterFastReset;
+                newDelayAfterFastReset  = minimumDelayAfterFastReset;
                 newDelayBeforeNextPulse = minimumDelayBeforeNextPulse;
-                LOG(WARNING) << WARNING_FORMAT << "Requested trigger rate too high for test pulse injection. Trigger rate reduced to " << clockFrequency / ( minimumDelayAfterFastReset + minimumDelayBeforeNextPulse + delayAfterTestPulse) << RESET;
+                LOG(WARNING) << WARNING_FORMAT << "Requested trigger rate too high for test pulse injection. Trigger rate reduced to "
+                             << clockFrequency / (minimumDelayAfterFastReset + minimumDelayBeforeNextPulse + delayAfterTestPulse) << RESET;
             }
             else if(numberOfClockCyclesBudget < currentDelayAfterFastReset + minimumDelayBeforeNextPulse + delayAfterTestPulse)
             {
                 std::cout << __PRETTY_FUNCTION__ << "[" << __LINE__ << "]" << std::endl;
-                newDelayAfterFastReset = numberOfClockCyclesBudget - minimumDelayBeforeNextPulse - delayAfterTestPulse;
+                newDelayAfterFastReset  = numberOfClockCyclesBudget - minimumDelayBeforeNextPulse - delayAfterTestPulse;
                 newDelayBeforeNextPulse = minimumDelayBeforeNextPulse;
             }
             else
             {
-                newDelayAfterFastReset = currentDelayAfterFastReset;
+                newDelayAfterFastReset  = currentDelayAfterFastReset;
                 newDelayBeforeNextPulse = numberOfClockCyclesBudget - currentDelayAfterFastReset - delayAfterTestPulse;
             }
-            
+
             fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_fast_reset", newDelayAfterFastReset);
             fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", newDelayBeforeNextPulse);
         }
@@ -105,11 +102,8 @@ void OTPhysics::ConfigureCalibration()
                         {
                             if(injectionType == 1)
                             {
-                                std::vector<Cluster> theClusterList {};
-                                if(theChip->getId() % 8 == 2)
-                                {
-                                    theClusterList.push_back(Cluster(10, 10, 1));
-                                }
+                                std::vector<Cluster> theClusterList{};
+                                if(theChip->getId() % 8 == 2) { theClusterList.push_back(Cluster(10, 10, 1)); }
                                 static_cast<PSInterface*>(fReadoutChipInterface)->injectNoiseClusters(theChip, theClusterList);
                             }
                             else if(injectionType == 2)
@@ -137,7 +131,7 @@ void OTPhysics::ConfigureCalibration()
                         {
                             if(injectionType == 1)
                             {
-                                std::vector<std::pair<uint8_t, uint8_t>> theClusterAddressAndWidthVector {};
+                                std::vector<std::pair<uint8_t, uint8_t>> theClusterAddressAndWidthVector{};
                                 if(theChip->getId() == 2)
                                 {
                                     theClusterAddressAndWidthVector.push_back({10, 1});
@@ -150,8 +144,9 @@ void OTPhysics::ConfigureCalibration()
                             else if(injectionType == 2)
                             {
                                 uint16_t bottomChannelIndex = 5;
-                                uint16_t bottomChannel = bottomChannelIndex * 2;;
-                                uint16_t topChannel = bottomChannel + 1;
+                                uint16_t bottomChannel      = bottomChannelIndex * 2;
+                                ;
+                                uint16_t                                    topChannel    = bottomChannel + 1;
                                 std::shared_ptr<ChannelGroup<1, NCHANNELS>> theCbcChannel = std::make_shared<ChannelGroup<1, NCHANNELS>>();
                                 theCbcChannel->disableAllChannels();
                                 theCbcChannel->enableChannel(0, bottomChannel);
@@ -166,7 +161,6 @@ void OTPhysics::ConfigureCalibration()
             }
         }
     }
-
 
 #ifdef __USE_ROOT__
     fDQMHistogramOTPhysics.book(fResultFile, *fDetectorContainer, fSettingsMap);

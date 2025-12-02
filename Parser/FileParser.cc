@@ -187,7 +187,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
     uint8_t cReset = convertAnyInt(pBeBordNode.attribute(BEBOARD_LINKRESET_ATTRIBUTE_NAME).value());
     cBeBoard->setLinkReset(cReset);
 
-    uint8_t cEnableSparsification = convertAnyInt(pBeBordNode.attribute(BEBOARD_ENABLESPARSIFICATION_ATTRIBUTE_NAME).value());
+    uint8_t cEnableSparsification                        = convertAnyInt(pBeBordNode.attribute(BEBOARD_ENABLESPARSIFICATION_ATTRIBUTE_NAME).value());
     cBeBoard->getSparsificationFlagHandler().fSparsified = bool(cEnableSparsification);
 
     std::string cComment = (pBeBordNode.attribute(BEBOARD_COMMENT_ATTRIBUTE_NAME) ? pBeBordNode.attribute(BEBOARD_COMMENT_ATTRIBUTE_NAME).value() : "");

@@ -146,7 +146,7 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // reconfigure sparsification + FEs enabled in this CIC
-    setSparsification(pBoard,false);
+    setSparsification(pBoard, false);
     size_t cIndx = 0;
 
     for(auto cOpticalGroup: *pBoard)
@@ -503,7 +503,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // reconfigure sparsification
     // this->enableTestPulse(false);
     LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Resetting Sparsification" << RESET;
-    setSparsification(pBoard,false);
+    setSparsification(pBoard, false);
 
     // set everything back to original values .. like I wasn't here
     // reset fast command registers

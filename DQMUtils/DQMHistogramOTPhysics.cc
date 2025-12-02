@@ -8,17 +8,15 @@
 
 using namespace Ph2_HwDescription;
 
-void DQMHistogramOTPhysics::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) 
+void DQMHistogramOTPhysics::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     std::string theFullRootFileName = std::string(std::getenv("PH2ACF_BASE_DIR")) + "/" + theOutputFile->GetName();
-    auto extractRunNumber = [](const std::string& path) -> int
+    auto        extractRunNumber    = [](const std::string& path) -> int
     {
-        std::regex re("_(\\d+)(?=/)");
+        std::regex  re("_(\\d+)(?=/)");
         std::smatch match;
 
-        if (std::regex_search(path, match, re)) {
-            return std::stoi(match[1]);
-        }
+        if(std::regex_search(path, match, re)) { return std::stoi(match[1]); }
         return 0;
     };
 

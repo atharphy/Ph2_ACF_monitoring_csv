@@ -1126,7 +1126,7 @@ void D19cFWInterface::ChipTrigger() { fFastCommandInterface->SendGlobalL1A(); }
 // bool D19cFWInterface::Bx0Alignment(uint16_t pLinkId)
 bool D19cFWInterface::Bx0Alignment()
 {
-    bool     cSuccess   = false;
+    bool cSuccess = false;
     // send a resync and reset readout
     bool    cWait     = true;
     uint8_t cAttempts = 0;

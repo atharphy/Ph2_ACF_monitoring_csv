@@ -25,11 +25,11 @@
 
 namespace Ph2_System
 {
-    class SystemController;
+class SystemController;
 }
 namespace Ph2_Parser
 {
-    class FileParser;
+class FileParser;
 }
 /*!
  * \namespace Ph2_HwDescription
@@ -46,16 +46,16 @@ using BeBoardRegMap = std::map<std::string, BeBoardRegItem>; /*!< Map containing
  */
 class SparsificationFlagHandler
 {
-    public:
-        SparsificationFlagHandler() = default;
-        ~SparsificationFlagHandler() = default;
-    
-        bool getFlag() const { return fSparsified; }
-    
-    private:
-        bool fSparsified = false;
-        friend class Ph2_System::SystemController; 
-        friend class Ph2_Parser::FileParser;
+  public:
+    SparsificationFlagHandler()  = default;
+    ~SparsificationFlagHandler() = default;
+
+    bool getFlag() const { return fSparsified; }
+
+  private:
+    bool fSparsified = false;
+    friend class Ph2_System::SystemController;
+    friend class Ph2_Parser::FileParser;
 };
 
 class BeBoard : public BoardContainer
@@ -225,23 +225,23 @@ class BeBoard : public BoardContainer
     FrontEndType                        fFrontEndType;
     std::unique_ptr<pugi::xml_document> createRegisterPugiDocument() const;
 
-    ConditionDataSet*  fCondDataSet;
-    bool               fOptical{false};
-    bool               fConfigureCDCE{false};
-    uint32_t           fClockRateCDCE{320};
-    uint8_t            fResetLink{1};
-    uint16_t           fStubOffset{0};
-    uint8_t            fReset{0};
-    std::string        fComment{""};
-    bool               fToConfigure{true};
-    
+    ConditionDataSet* fCondDataSet;
+    bool              fOptical{false};
+    bool              fConfigureCDCE{false};
+    uint32_t          fClockRateCDCE{320};
+    uint8_t           fResetLink{1};
+    uint16_t          fStubOffset{0};
+    uint8_t           fReset{0};
+    std::string       fComment{""};
+    bool              fToConfigure{true};
+
     std::string fConnectionId{""};
     std::string fConnectionUri{""};
     std::string fAddressTable{""};
 
     SparsificationFlagHandler fSparsificationFlagHandler;
-    
-    private:
+
+  private:
     /*!
      * \brief Load RegMap from a file
      * \param filename

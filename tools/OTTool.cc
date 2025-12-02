@@ -99,7 +99,7 @@ void OTTool::Prepare()
         LOG(DEBUG) << BOLDYELLOW << " Sparsification: " << +cSparsified << RESET;
         setSparsification(cBoard, cSparsified);
     }
-   
+
     // clear map of modified registers
     // probably this should be a container per board
     // since we should be able to mix different types of boards

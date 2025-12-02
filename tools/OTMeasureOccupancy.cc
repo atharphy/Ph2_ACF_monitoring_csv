@@ -120,10 +120,7 @@ void OTMeasureOccupancy::prepareOccupancyMeasurement2S()
     setChannelGroupHandler(theChannelGroupHandler);
 
     // Setting sparsification for simplicity
-    for(auto theBoard: *fDetectorContainer)
-    {
-        setSparsification(theBoard, false);
-    }
+    for(auto theBoard: *fDetectorContainer) { setSparsification(theBoard, false); }
 
     setSameDac("TestPulsePotNodeSel", calPulseValue); // injected charge
     bool injectPulse       = fCBCtestPulseValue != 0;

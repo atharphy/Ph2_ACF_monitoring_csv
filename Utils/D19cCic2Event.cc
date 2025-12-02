@@ -69,13 +69,13 @@ void StripClusterPSHandler::print() const { std::cout << "First strip = " << +fS
 
 void HybridL1EventInfoHandler::parseData(std::vector<uint32_t>::const_iterator dataStart, bool is2S)
 {
-    fHybridL1EventInfo.fErrorCode             = (*(dataStart) >> 24) & 0xF;
-    fHybridL1EventInfo.fHybridId              = (*(dataStart) >> 16) & 0xFF;
-    fHybridL1EventInfo.fChipId                = (*(dataStart) >> 12) & 0xF;
-    fHybridL1EventInfo.fChipType              = (*(dataStart + 1) >> 12) & 0xF;
-    fHybridL1EventInfo.fFrameDelay            = *(dataStart + 1) & 0xFFF;
-    fHybridL1EventInfo.fStatusBits            = *(dataStart + 2) >> 23;
-    fHybridL1EventInfo.fL1counter             = (*(dataStart + 2) >> 14) & 0x1FF;
+    fHybridL1EventInfo.fErrorCode  = (*(dataStart) >> 24) & 0xF;
+    fHybridL1EventInfo.fHybridId   = (*(dataStart) >> 16) & 0xFF;
+    fHybridL1EventInfo.fChipId     = (*(dataStart) >> 12) & 0xF;
+    fHybridL1EventInfo.fChipType   = (*(dataStart + 1) >> 12) & 0xF;
+    fHybridL1EventInfo.fFrameDelay = *(dataStart + 1) & 0xFFF;
+    fHybridL1EventInfo.fStatusBits = *(dataStart + 2) >> 23;
+    fHybridL1EventInfo.fL1counter  = (*(dataStart + 2) >> 14) & 0x1FF;
     if(is2S)
     {
         fHybridL1EventInfo.fNumberOfStripClusters = (*(dataStart + 2)) & 0x7F;
@@ -86,7 +86,7 @@ void HybridL1EventInfoHandler::parseData(std::vector<uint32_t>::const_iterator d
         fHybridL1EventInfo.fNumberOfStripClusters = (*(dataStart + 2) >> 7) & 0x7F;
         fHybridL1EventInfo.fNumberOfPixelClusters = *(dataStart + 2) & 0x7F;
     }
-    fHybridL1EventInfo.fIsCICErrorFlagSet     = ((fHybridL1EventInfo.fStatusBits & 0x1) == 0x1);
+    fHybridL1EventInfo.fIsCICErrorFlagSet = ((fHybridL1EventInfo.fStatusBits & 0x1) == 0x1);
 }
 
 void HybridL1EventInfoHandler::print() const
@@ -248,9 +248,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list,
     fLocalData = std::move(list);
 }
 
-D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list) : D19cCic2Event(pBoard, list, pBoard->getSparsification())
-{
-}
+D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list) : D19cCic2Event(pBoard, list, pBoard->getSparsification()) {}
 
 void D19cCic2Event::decodeEvent()
 {
@@ -967,7 +965,7 @@ CBCL1EventInfoHandler D19cCic2Event::getCBCL1EventInfoHandler(uint8_t pHybridId,
     decodeEvent();
     auto theChip = fDecodedL1Event.getChip(pHybridId / 2, pHybridId, pReadoutChipId);
     return theChip->getSummary<CBCL1EventInfoHandler>();
-} 
+}
 
 BoardEventInfo D19cCic2Event::getBoardEventInfo()
 {
@@ -975,29 +973,28 @@ BoardEventInfo D19cCic2Event::getBoardEventInfo()
     return fBoardEventInfo;
 }
 
-uint32_t  D19cCic2Event::GetBunch() 
+uint32_t D19cCic2Event::GetBunch()
 {
     decodeEvent();
     return fBoardEventInfo.fBunch;
 }
 
-uint32_t  D19cCic2Event::GetEventCount() 
+uint32_t D19cCic2Event::GetEventCount()
 {
     decodeEvent();
     return fBoardEventInfo.fEventCount;
 }
 
-uint32_t  D19cCic2Event::GetTDC() 
+uint32_t D19cCic2Event::GetTDC()
 {
     decodeEvent();
     return fBoardEventInfo.fTDC;
 }
 
-uint32_t  D19cCic2Event::GetExternalTriggerId() 
+uint32_t D19cCic2Event::GetExternalTriggerId()
 {
     decodeEvent();
     return fBoardEventInfo.fExternalTriggerID;
 }
-
 
 } // namespace Ph2_HwInterface

@@ -967,7 +967,8 @@ void SystemController::initializeWriteFileHandler()
         uint32_t cFWMajor = (cFWWord & 0xFFFF0000) >> 16;
         uint32_t cFWMinor = (cFWWord & 0x0000FFFF);
 
-        FileHeader cHeader(cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType(), (cBoard->getSparsification() ? CICeventType::Sparsified : CICeventType::Unsparsified));
+        FileHeader cHeader(
+            cBoardTypeString, cFWMajor, cFWMinor, cBeId, cNChip, cNEventSize32, cBoard->getEventType(), (cBoard->getSparsification() ? CICeventType::Sparsified : CICeventType::Unsparsified));
 
         std::stringstream cBeBoardString;
         cBeBoardString << "_Board" << std::setw(3) << std::setfill('0') << cBeId;
@@ -1325,10 +1326,7 @@ void SystemController::setSparsification(BeBoard* theBoard, bool enable)
     theBoard->getSparsificationFlagHandler().fSparsified = enable;
     for(auto theOpticalGroup: *theBoard)
     {
-        for(auto theHybrid: *theOpticalGroup)
-        {
-            fCicInterface->SetSparsification(static_cast<OuterTrackerHybrid*>(theHybrid)->fCic, enableValue);
-        }
+        for(auto theHybrid: *theOpticalGroup) { fCicInterface->SetSparsification(static_cast<OuterTrackerHybrid*>(theHybrid)->fCic, enableValue); }
     }
 }
 
