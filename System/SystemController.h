@@ -353,6 +353,7 @@ class SystemController
     void setInterfaceInitialization(uint8_t pCnfg) { fInitializeInterfaces = pCnfg; }
     void disableAllChannels(bool forceDoIt = false);
     void DumpRegisters();
+    void setSparsification(Ph2_HwDescription::BeBoard* theBoard, bool enable);
 
   private:
     void SetFuture(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& pData, uint32_t pNevents, BoardType pType);

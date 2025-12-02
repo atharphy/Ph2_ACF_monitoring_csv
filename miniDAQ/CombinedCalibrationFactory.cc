@@ -48,7 +48,6 @@
 #include "tools/PedestalEqualization.h"
 #include "tools/PedestalEqualizationPSAtPedestal.h"
 #include "tools/PedestalEqualizationPSFullScan.h"
-#include "tools/Physics2S.h"
 #include "tools/RD53ClockDelay.h"
 #include "tools/RD53Gain.h"
 #include "tools/RD53GainOptimization.h"
@@ -60,6 +59,7 @@
 #include "tools/RD53ThrAdjustment.h"
 #include "tools/RD53ThrEqualization.h"
 #include "tools/RD53ThrMinimization.h"
+#include "tools/TestPSEvents.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
 
@@ -297,8 +297,6 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTinjectionOccupancyScan,
              OTCMNoise>("2S Module", "2SnoiseTests");
 
-    Register<Physics2S>("2S Module", "physics2s");
-
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTalignLpGBTinputsForBypass, OTChipToCICecv>("2S Module", "2Secv");
 
     // PS specific calibrations
@@ -447,6 +445,14 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
              OTPScommonNoise>("PS Module", "PScommonnoise");
 
     Register<OTalignBoardDataWord, OTalignStubPackage, OTPScommonNoise>("PS Module", "PScommonnoisenocalib");
+
+    Register<OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTCICBX0Alignment,
+             //  OTalignStubPackage,
+             TestPSEvents>("PS Module", "testPSevents");
 
     // reduced test set for DEE integration
     Register<OTlpGBTID>("DEE Integration", "LPGBTID");

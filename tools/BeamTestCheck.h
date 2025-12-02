@@ -120,7 +120,6 @@ class BeamTestCheck : public OTTool
     void        PrepareForExternal(Ph2_HwDescription::BeBoard* pBoard);
     void        PrepareForTLU(Ph2_HwDescription::BeBoard* pBoard);
     void        ScanLatency(Ph2_HwDescription::BeBoard* pBoard, uint8_t pContinuousReadout);
-    void        ScanThreshold(Ph2_HwDescription::BeBoard* pBoard);
     void        UpdateClusterContainers(Ph2_HwDescription::BeBoard* pBoard, const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pIndx);
     void        ProcessEvents(Ph2_HwDescription::BeBoard* pBoard);
     void        Count(const std::vector<Ph2_HwInterface::Event*> pEvents, size_t pTriggerId, uint8_t pFillCorrelations = 0, uint8_t pPrintOut = 0);

@@ -23,6 +23,14 @@
 #include <stdint.h>
 #include <vector>
 
+namespace Ph2_System
+{
+class SystemController;
+}
+namespace Ph2_Parser
+{
+class FileParser;
+}
 /*!
  * \namespace Ph2_HwDescription
  * \brief Namespace regrouping all the hardware description
@@ -36,6 +44,20 @@ using BeBoardRegMap = std::map<std::string, BeBoardRegItem>; /*!< Map containing
  * \brief Read/Write BeBoard's registers on a file, handles a register map and handles a vector of Hybrid which are
  * connected to the BeBoard
  */
+class SparsificationFlagHandler
+{
+  public:
+    SparsificationFlagHandler()  = default;
+    ~SparsificationFlagHandler() = default;
+
+    bool getFlag() const { return fSparsified; }
+
+  private:
+    bool fSparsified = false;
+    friend class Ph2_System::SystemController;
+    friend class Ph2_Parser::FileParser;
+};
+
 class BeBoard : public BoardContainer
 {
   public:
@@ -147,9 +169,9 @@ class BeBoard : public BoardContainer
 
     void updateCondData(uint32_t& pTDCVal);
 
-    void setSparsification(bool cSparsified) { fSparsifed = cSparsified; }
+    bool getSparsification() const { return fSparsificationFlagHandler.getFlag(); }
 
-    bool getSparsification() const { return fSparsifed; }
+    SparsificationFlagHandler& getSparsificationFlagHandler() { return fSparsificationFlagHandler; }
 
     void    setLinkReset(uint8_t pReset) { fResetLink = pReset; }
     uint8_t getLinkReset() const { return fResetLink; }
@@ -206,7 +228,6 @@ class BeBoard : public BoardContainer
     ConditionDataSet* fCondDataSet;
     bool              fOptical{false};
     bool              fConfigureCDCE{false};
-    bool              fSparsifed{false};
     uint32_t          fClockRateCDCE{320};
     uint8_t           fResetLink{1};
     uint16_t          fStubOffset{0};
@@ -217,6 +238,8 @@ class BeBoard : public BoardContainer
     std::string fConnectionId{""};
     std::string fConnectionUri{""};
     std::string fAddressTable{""};
+
+    SparsificationFlagHandler fSparsificationFlagHandler;
 
   private:
     /*!

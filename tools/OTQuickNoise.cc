@@ -77,7 +77,7 @@ void OTQuickNoise::TakeData()
                         uint32_t chipOffset_module = (cHybrid->getId() * NCHANNELS * NCHIPS_OT) + (cChip->getId() * NCHANNELS);
                         for(uint32_t iCh = 0; iCh < NCHANNELS + 1; iCh++)
                         {
-                            if(cEvent->DataBit(cHybrid->getId(), cChip->getId(), 0, iCh)) { hits[chipOffset_module + iCh] += 1; }
+                            if(static_cast<D19cCic2Event*>(cEvent)->DataBit(cHybrid->getId(), cChip->getId(), 0, iCh)) { hits[chipOffset_module + iCh] += 1; }
                         }
                     }
                 }

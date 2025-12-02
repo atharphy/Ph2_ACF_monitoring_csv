@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="1">
+  <BeBoard Id="0" boardType="D19C" eventType="VR"  linkReset="1" boardReset="1" configure="1" enableSparsification="1">
     <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.1.80:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" /> 
     <configuration file_name="${PH2ACF_BASE_DIR}/settings/BeBoardFiles/uDTC_registers_PS.xml"/>
     <CDCE configure="0" clockRate="320"/>
@@ -24,7 +24,7 @@
                 <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode -->
                 <SamplingDelay   stripCoarse="0" stripFine="0" pixelCoarse="0" pixelFine="0"/> <!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
                 <InjectedCharge  stripCharge="200" pixelCharge="200"/> <!-- in DAC units for each chip type - their electron value is different though! -->
-                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" driveStrength="3" edgeSelect="1"/>
+                <CIC2 enableBend="1" enableLastLine="1" driveStrength="3" edgeSelect="1"/>
             </Global>
 
             <SSA2_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
@@ -60,7 +60,7 @@
                 <HipLogic        stripCut="1" pixelCut="0"/> <!-- HipCut defines the max number of clock cycles with a hit in level mode, 0 means disabled for pixels -->
                 <SamplingDelay   stripCoarse="1" stripFine="0" pixelCoarse="0" pixelFine="0"/><!-- Coarse delay for sampling [when in edge mode] in units of 3.12 ns --><!-- Fine delay for sample [when in edge mode] in units of 200 ps -->
                 <InjectedCharge  stripCharge="200" pixelCharge="200"/> <!-- in DAC units for each chip type - their electron value is different though! -->
-                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" driveStrength="3" edgeSelect="1"/> 
+                <CIC2 enableBend="1" enableLastLine="1" driveStrength="3" edgeSelect="1"/> 
             </Global>
 
             
@@ -110,7 +110,7 @@
     <Setting name="PSmoduleTriggerLatency">180</Setting>
     <Setting name="PSmoduleStubWindow">32</Setting>
 
-    <Setting name="SaveRawData">1</Setting>
+    <Setting name="OTPScommonNoise_SaveRawData">0</Setting>
 
     <!--PedestalEqualization-->
     <Setting name="HoleMode">0</Setting>
@@ -326,8 +326,9 @@
 
     <Setting name="OTPatternCheckerHelper_NumberOfBits">1E10</Setting>
 
-    <Setting name="OTPhysics_TriggerSource">3</Setting> <!-- 1 -> L1, 2 -> Stubs, 3 -> User-Defined Frequency, 4 -> TLU, 5 -> Ext Trigger (DIO5), 6 -> Test Pulse Trigger -->
+    <Setting name ="OTPhysics_SaveRawData">1</Setting>
     <Setting name="OTPhysics_UserTriggerRate">5</Setting> <!-- in kHz -->
+    <Setting name="OTPhysics_InjectionType">5</Setting> <!-- 0 - no injection, 1 - noise injection, 2 - pulse injection -->
 
 </Settings>
 

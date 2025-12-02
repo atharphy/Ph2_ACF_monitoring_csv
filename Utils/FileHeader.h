@@ -27,17 +27,18 @@ class FileHeader
   public:
     static const uint32_t fHeaderSize = 12;
 
-    std::string fType;
-    uint32_t    fVersionMajor;
-    uint32_t    fVersionMinor;
-    uint32_t    fBeId;
-    uint32_t    fNchip;
-    uint32_t    fEventSize;
-    EventType   fEventType;
-    bool        fValid;
+    std::string  fType;
+    uint32_t     fVersionMajor;
+    uint32_t     fVersionMinor;
+    uint32_t     fBeId;
+    uint32_t     fNchip;
+    uint32_t     fEventSize;
+    EventType    fEventType;
+    CICeventType fCICeventType;
+    bool         fValid;
 
   public:
-    FileHeader() : fType(""), fVersionMajor(0), fVersionMinor(0), fBeId(0), fNchip(0), fEventSize(0), fEventType(EventType::VR), fValid(false) {}
+    FileHeader() : fType(""), fVersionMajor(0), fVersionMinor(0), fBeId(0), fNchip(0), fEventSize(0), fEventType(EventType::VR), fCICeventType(CICeventType::Sparsified), fValid(false) {}
 
     FileHeader(const std::string pType,
                const uint32_t&   pFWMajor,
@@ -45,8 +46,9 @@ class FileHeader
                const uint32_t&   pBeId,
                const uint32_t&   pNchip,
                const uint32_t&   pEventSize,
-               EventType         pEventType = EventType::VR)
-        : fType(pType), fVersionMajor(pFWMajor), fVersionMinor(pFWMinor), fBeId(pBeId), fNchip(pNchip), fEventSize(pEventSize), fEventType(pEventType), fValid(true)
+               EventType         pEventType    = EventType::VR,
+               CICeventType      pCICeventType = CICeventType::Sparsified)
+        : fType(pType), fVersionMajor(pFWMajor), fVersionMinor(pFWMinor), fBeId(pBeId), fNchip(pNchip), fEventSize(pEventSize), fEventType(pEventType), fCICeventType(pCICeventType), fValid(true)
     {
     }
 
@@ -80,7 +82,7 @@ class FileHeader
         cVec.push_back(fVersionMinor);
 
         cVec.push_back(HEADER_SEPARATOR);
-        cVec.push_back((uint32_t(fEventType) & 0x3) << 30 | (fBeId & 0x000003FF));
+        cVec.push_back(((uint32_t(fEventType) & 0x3) << 30) | ((uint32_t(fCICeventType) & 0x1) << 29) | (fBeId & 0x000003FF));
         cVec.push_back(fNchip);
 
         cVec.push_back(HEADER_SEPARATOR);
@@ -119,9 +121,10 @@ class FileHeader
             fVersionMajor = pVec.at(4);
             fVersionMinor = pVec.at(5);
 
-            uint32_t cEventTypeId = (pVec.at(7) & 0xC0000000) >> 30;
-            fBeId                 = pVec.at(7) & 0x000003FF;
-            fNchip                = pVec.at(8);
+            uint32_t cEventTypeId    = (pVec.at(7) & 0xC0000000) >> 30;
+            uint32_t cCICeventTypeId = (pVec.at(7) & 0x20000000) >> 29;
+            fBeId                    = pVec.at(7) & 0x000003FF;
+            fNchip                   = pVec.at(8);
 
             fEventSize = pVec.at(10);
             fValid     = true;
@@ -132,6 +135,11 @@ class FileHeader
                 fEventType = EventType::ZS;
             else
                 fEventType = EventType::VR;
+
+            if(cCICeventTypeId == 0)
+                fCICeventType = CICeventType::Sparsified;
+            else if(cCICeventTypeId == 1)
+                fCICeventType = CICeventType::Unsparsified;
 
             std::string cEventTypeString;
 

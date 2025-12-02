@@ -151,6 +151,12 @@ enum class EventType
     VRPCTestAdapter = 5 // VirginRaw with IT PortCard test adapter
 };
 
+enum class CICeventType
+{
+    Sparsified   = 0,
+    Unsparsified = 1
+};
+
 #define NUMBER_OF_CIC_PORTS 8
 #define NUMBER_OF_LINES_PER_CIC_PORTS 6
 #define NUMBER_OF_LINES_PER_CIC_PHY_PORTS 4

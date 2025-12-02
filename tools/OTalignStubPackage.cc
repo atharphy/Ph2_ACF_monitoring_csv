@@ -159,7 +159,7 @@ bool OTalignStubPackage::AlignStubPackage()
                     for(auto theHybrid: *theOpticalGroup)
                     {
                         auto& eventBxIdVector           = theBunchCrossingIdContainer.getHybrid(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId())->getSummary<std::vector<uint16_t>>();
-                        eventBxIdVector.at(eventNumber) = theEvent->BxId(theHybrid->getId());
+                        eventBxIdVector.at(eventNumber) = static_cast<D19cCic2Event*>(theEvent)->BxId(theHybrid->getId());
                         if(eventNumber > numberOfEventsToSkip)
                         {
                             auto& bxIdDifferenceVector =

@@ -36,7 +36,6 @@
 #include "DQMUtils/DQMHistogramPedestalEqualizationPSAtPedestal.h"
 #include "DQMUtils/DQMMetadataIT.h"
 #include "DQMUtils/DQMMetadataOT.h"
-#include "DQMUtils/Physics2SHistograms.h"
 #include "DQMUtils/RD53ClockDelayHistograms.h"
 #include "DQMUtils/RD53DataReadbackOptimizationHistograms.h"
 #include "DQMUtils/RD53GainHistograms.h"
@@ -314,8 +313,6 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTinjectionDelayOptimization,
              DQMHistogramOTinjectionOccupancyScan,
              DQMHistogramOTCMNoise>("2SnoiseTests");
-
-    Register<DQMMetadataOT, Physics2SHistograms>("physics2s");
 
     Register<DQMMetadataOT,
              DQMHistogramOTalignLpGBTinputs,

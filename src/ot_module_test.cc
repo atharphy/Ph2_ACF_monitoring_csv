@@ -23,7 +23,6 @@
 #include "tools/PSPixelAlive.h"
 #include "tools/PedeNoise.h"
 #include "tools/PedestalEqualization.h"
-#include "tools/PhaseScan.h"
 #include "tools/RegisterTester.h"
 #include "tools/StubBackEndAlignment.h"
 #include <cstring>
@@ -1031,14 +1030,6 @@ int main(int argc, char* argv[])
         cLatencyScan.Inherit(&cTool);
         cLatencyScan.Initialize();
         cLatencyScan.ScanLatency();
-
-        if(cmd.foundOption("phaseScan"))
-        {
-            PhaseScan cPhaseScan;
-            cPhaseScan.Inherit(&cTool);
-            cPhaseScan.Initialize();
-            cPhaseScan.ScanPhase();
-        }
     }
     // measure noise on FE chips
     if(cmd.foundOption("measurePedeNoise") && !cmd.foundOption("read")) // S-curves

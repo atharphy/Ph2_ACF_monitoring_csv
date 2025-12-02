@@ -35,7 +35,7 @@ class D19cPSEventAS : public Event
         return cFeMapping[pReadoutChipId];
     }
 
-    BoardDataContainer fTheOccupancyContainer;
+    std::unique_ptr<BoardDataContainer> fTheOccupancyContainer;
 };
 
 } // namespace Ph2_HwInterface

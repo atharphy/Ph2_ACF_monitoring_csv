@@ -133,7 +133,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
       ########
       # ROOT #
       ########
-      find_package(ROOT COMPONENTS RHTTP)
+      find_package(ROOT COMPONENTS RHTTP RIO Tree)
       if(ROOT_FOUND)
         # Check for THttpServer
         if(EXISTS ${ROOT_RHTTP_LIBRARY})
@@ -258,6 +258,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     add_subdirectory(NetworkUtils)
     add_subdirectory(MessageUtils/cpp)
     add_subdirectory(Parser)
+    add_subdirectory(EventContainer)
 
     message("--     ${BoldRed}#### Don't forget to set the path and ld_library_path by sourcing setup.sh before running ###${Reset}")
 

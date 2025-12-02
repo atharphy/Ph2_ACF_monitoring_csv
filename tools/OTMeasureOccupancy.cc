@@ -120,18 +120,7 @@ void OTMeasureOccupancy::prepareOccupancyMeasurement2S()
     setChannelGroupHandler(theChannelGroupHandler);
 
     // Setting sparsification for simplicity
-    for(auto theBoard: *fDetectorContainer)
-    {
-        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 0);
-        for(auto theOpticalGroup: *theBoard)
-        {
-            for(auto theHybrid: *theOpticalGroup)
-            {
-                auto cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                fCicInterface->SetSparsification(cCic, 0);
-            }
-        }
-    }
+    for(auto theBoard: *fDetectorContainer) { setSparsification(theBoard, false); }
 
     setSameDac("TestPulsePotNodeSel", calPulseValue); // injected charge
     bool injectPulse       = fCBCtestPulseValue != 0;

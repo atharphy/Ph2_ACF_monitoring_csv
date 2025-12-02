@@ -172,7 +172,7 @@ void OTCMNoise::TakeData(float fThreshold)
                         for(auto cChip: *cHybrid)
                         {
                             uint32_t chipOffset_module = (cHybrid->getId() * NCHANNELS * NCHIPS_OT) + (cChip->getId() * NCHANNELS);
-                            auto     hit_vec           = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                            auto     hit_vec           = static_cast<D19cCic2Event*>(cEvent)->GetHits(cHybrid->getId(), cChip->getId());
                             uint32_t cEventHitsEven    = 0;
                             uint32_t cEventHitsOdd     = 0;
                             for(auto hit: hit_vec)
