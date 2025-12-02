@@ -187,8 +187,8 @@
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithoutInjection"> 1000000</Setting>
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithInjection"> 1000</Setting>
     <Setting name ="OTPhysics_SaveRawData">1</Setting>
-    <Setting name="OTPhysics_TriggerSource">3</Setting> <!-- 1 -> L1, 2 -> Stubs, 3 -> User-Defined Frequency, 4 -> TLU, 5 -> Ext Trigger (DIO5), 6 -> Test Pulse Trigger -->
     <Setting name="OTPhysics_UserTriggerRate">5</Setting> <!-- in kHz -->
+    <Setting name="OTPhysics_InjectionType">5</Setting> <!-- 0 - no injection, 1 - noise injection, 2 - pulse injection -->
 
 </Settings>
 
