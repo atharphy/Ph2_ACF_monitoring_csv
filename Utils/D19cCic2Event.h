@@ -242,7 +242,7 @@ class D19cCic2Event : public Event
     static BoardDataContainer                            fDecodedL1Event;
     static BoardDataContainer                            fDecodedStubEvent;
     static std::array<uint32_t, NUMBER_OF_CIC_PORTS * 9> fTheChipDataVector;
-    static bool                                          ifAreDecodedEventContainersReady;
+    static bool                                          fAreDecodedEventContainersReady;
     static uintptr_t                                     fLastEventDecodedPointer;
     BoardEventInfo                                       fBoardEventInfo;
 

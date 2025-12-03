@@ -180,10 +180,10 @@ void StubHandler::print() const
     std::cout << " Bend = " << +fStub.fBend << std::endl;
 }
 
-bool      D19cCic2Event::ifAreDecodedEventContainersReady = false;
-bool      D19cCic2Event::fIs2S                            = true;
-bool      D19cCic2Event::fIsSparsified                    = true;
-uintptr_t D19cCic2Event::fLastEventDecodedPointer         = reinterpret_cast<uintptr_t>(nullptr);
+bool      D19cCic2Event::fAreDecodedEventContainersReady = false;
+bool      D19cCic2Event::fIs2S                           = true;
+bool      D19cCic2Event::fIsSparsified                   = true;
+uintptr_t D19cCic2Event::fLastEventDecodedPointer        = reinterpret_cast<uintptr_t>(nullptr);
 
 BoardDataContainer                            D19cCic2Event::fDecodedL1Event    = BoardDataContainer();
 BoardDataContainer                            D19cCic2Event::fDecodedStubEvent  = BoardDataContainer();
@@ -196,14 +196,14 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list,
     bool localIsSparsified = localIs2S ? isSparsified : true;
     if(fIs2S != localIs2S || fIsSparsified != localIsSparsified)
     {
-        fIsSparsified                    = localIsSparsified;
-        fIs2S                            = localIs2S;
-        ifAreDecodedEventContainersReady = false;
+        fIsSparsified                   = localIsSparsified;
+        fIs2S                           = localIs2S;
+        fAreDecodedEventContainersReady = false;
         fDecodedL1Event.reset();
         fDecodedStubEvent.reset();
     }
 
-    if(!ifAreDecodedEventContainersReady)
+    if(!fAreDecodedEventContainersReady)
     {
         if(fIs2S)
         {
@@ -242,7 +242,7 @@ D19cCic2Event::D19cCic2Event(const BeBoard* pBoard, std::vector<uint32_t>& list,
         if(fIs2S) { ContainerFactory::copyAndInitStructure<EmptyContainer, ClusterCollection<StubHandler, 3>, HybridStubEventInfo, EmptyContainer, EmptyContainer>(*pBoard, fDecodedStubEvent); }
         else { ContainerFactory::copyAndInitStructure<EmptyContainer, ClusterCollection<StubHandler, 5>, HybridStubEventInfo, EmptyContainer, EmptyContainer>(*pBoard, fDecodedStubEvent); }
 
-        ifAreDecodedEventContainersReady = true;
+        fAreDecodedEventContainersReady = true;
     }
 
     fLocalData = std::move(list);

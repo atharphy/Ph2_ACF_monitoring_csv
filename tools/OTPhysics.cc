@@ -28,7 +28,8 @@ void OTPhysics::ConfigureCalibration()
 
     switch(injectionType)
     {
-    case 0 || 1:
+    case 0:
+    case 1:
         theTriggerSource = 3; // User-Defined Frequency
         break;
 
