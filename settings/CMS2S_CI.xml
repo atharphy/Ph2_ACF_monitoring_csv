@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <BeBoard Id="0" boardType="D19C" eventType="VR2S" linkReset="1" boardReset="1" configure="1">
+  <BeBoard Id="0" boardType="D19C" eventType="VR2S"  linkReset="1" boardReset="1" configure="1" enableSparsification="0">
     <!-- B598 skeleton -->
     <connection id="board" uri="chtcp-2.0://ph2acf-02.cern.ch:10203?target=192.168.0.71:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <configuration file_name="${PH2ACF_BASE_DIR}/settings/BeBoardFiles/uDTC_registers_2S.xml"/>
@@ -133,7 +133,13 @@
 
     <Setting name="OTChipToCICecv_NumberOfTestedBits"> 1e6</Setting>
     <Setting name="OTChipToCICecv_NumberOfTestedBitsL12S"> 1e5</Setting>
-    <Setting name="OTChipToCICecv_ListOfCBCslvsCurrents"> 0, 8, 14</Setting></Settings>
+    <Setting name="OTChipToCICecv_ListOfCBCslvsCurrents"> 0, 8, 14</Setting>
+        <Setting name ="OTPhysics_SaveRawData">1</Setting>
+    <Setting name="OTPhysics_UserTriggerRate">5</Setting> <!-- in kHz -->
+    <Setting name="OTPhysics_InjectionType">5</Setting> <!-- 0 - no injection, 1 - noise injection, 2 - pulse injection -->
+    <Setting name="OTPhysics_SparsificationEnabled">1</Setting>
+
+</Settings>
 
 <CommunicationSettings>
     <DQM               ip="127.0.0.1" port="6000" enableConnection="1"/>

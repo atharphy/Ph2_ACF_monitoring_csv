@@ -1,5 +1,6 @@
 #include "TApplication.h"
 #include "TROOT.h"
+#include "Utils/SLinkEvent.h"
 #include "Utils/Timer.h"
 #include "Utils/argvparser.h"
 #include "tools/StubQuickCheck.h"

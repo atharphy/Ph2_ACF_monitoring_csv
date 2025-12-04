@@ -11,7 +11,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     # Boost also needs to be linked
     #    include_directories(${Boost_INCLUDE_DIRS})
     #link_directories(${Boost_LIBRARY_DIRS})
-    set(LIBS ${LIBS} ${Boost_ANY_LIBRARY} ${Boost_ITERATOR_LIBRARY} boost_serialization Ph2_Parser Ph2_Utils)
+    set(LIBS ${LIBS} ${Boost_ANY_LIBRARY} ${Boost_ITERATOR_LIBRARY} boost_serialization Ph2_Parser Ph2_Utils Ph2_EventDict)
 
     # Find root and link against it
     if(${ROOT_FOUND})
@@ -32,7 +32,6 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     file(GLOB SOURCES *.cc)
     add_library(Ph2_DQMUtils STATIC ${SOURCES})
     TARGET_LINK_LIBRARIES(Ph2_DQMUtils ${LIBS})
-
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/RootUtils *.cc)
 

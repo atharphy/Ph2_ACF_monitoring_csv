@@ -21,7 +21,8 @@ D19cPSEventAS::D19cPSEventAS(const BeBoard* pBoard, const std::vector<uint32_t>&
 
 void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pData)
 {
-    ContainerFactory::copyAndInitChannel<uint16_t>(*pBoard, fTheOccupancyContainer);
+    fTheOccupancyContainer = std::make_unique<BoardDataContainer>();
+    ContainerFactory::copyAndInitChannel<uint16_t>(*pBoard, *fTheOccupancyContainer);
     if(fEnableFastReadout)
     {
         size_t numberOfParsedOpticalGroups = 0;
@@ -56,7 +57,7 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
                         uint8_t chipId = getChipIdMapped(theHybrid->getId(), (counterPacket >> 15) & 0x7) + (pixelRow < 16 ? 8 : 0);
                         try
                         {
-                            fTheOccupancyContainer.getChip(theOpticalGroup->getId(), theHybrid->getId(), chipId)->getChannel<uint16_t>(pixelRow % 16, pixelCol) = rawCounterData - 1;
+                            fTheOccupancyContainer->getChip(theOpticalGroup->getId(), theHybrid->getId(), chipId)->getChannel<uint16_t>(pixelRow % 16, pixelCol) = rawCounterData - 1;
                         }
                         catch(const std::exception& e)
                         {
@@ -69,7 +70,7 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
         }
 
         // Last and first pixel not present in the fast readout, but by construction must have the same entries of the neighbour
-        for(auto theOpticalGroup: fTheOccupancyContainer)
+        for(auto theOpticalGroup: *fTheOccupancyContainer)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
@@ -87,7 +88,7 @@ void D19cPSEventAS::Set(const BeBoard* pBoard, const std::vector<uint32_t>& pDat
     else
     {
         size_t dataIndex = 0;
-        for(auto theOpticalGroup: fTheOccupancyContainer)
+        for(auto theOpticalGroup: *fTheOccupancyContainer)
         {
             for(auto theHybrid: *theOpticalGroup)
             {
@@ -122,7 +123,7 @@ void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, cons
     ChipDataContainer* theChipEventContainer;
     try
     {
-        theChipEventContainer = fTheOccupancyContainer.getChip(hybridId / 2, hybridId, chipContainer->getId());
+        theChipEventContainer = fTheOccupancyContainer->getChip(hybridId / 2, hybridId, chipContainer->getId());
     }
     catch(const std::exception& e)
     {
@@ -141,7 +142,7 @@ void D19cPSEventAS::fillChipDataContainer(ChipDataContainer* chipContainer, cons
 
 uint32_t D19cPSEventAS::GetNHits(uint8_t pHybridId, uint8_t pChipId)
 {
-    const auto& theChipEventChannelVector = fTheOccupancyContainer.getChip(pHybridId / 2, pHybridId % 2, pChipId)->getChannelContainer<uint16_t>();
+    const auto& theChipEventChannelVector = fTheOccupancyContainer->getChip(pHybridId / 2, pHybridId % 2, pChipId)->getChannelContainer<uint16_t>();
     return std::accumulate(theChipEventChannelVector->begin(), theChipEventChannelVector->end(), 0);
 }
 } // namespace Ph2_HwInterface

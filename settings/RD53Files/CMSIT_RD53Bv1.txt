@@ -364,10 +364,11 @@ RADSENS_IDEAL_FACTOR_ANA  0x1A9         0d1000                  0d1036          
 RADSENS_IDEAL_FACTOR_DIG  0x1AA         0d1000                  0d1035                             16
 TEMPSENS_OFFSET_TOP       0x1AB         0d350                   0d350                              16
 TEMPSENS_OFFSET_BOTTOM    0x1AC         0d350                   0d350                              16
-SAMPLE_N_TIMES            0x1AD         0d10                    0d10                               16
-WAIT_MUX_CONFIG           0x1AE         0d100                   0d100                              16
-VREF_ADC                  0x1AF         0d800                   0d800                              12
-INJ_CAP                   0x1B0         0d80                    0d80                               16
+SAMPLE_N_TIMES            0x1AD         0d1                     0d1                                16
+SAMPLE_NTC_SLOPE          0x1AE         0d10                    0d10                               16
+WAIT_MUX_CONFIG           0x1AF         0d100                   0d100                              16
+VREF_ADC                  0x1B0         0d800                   0d800                              12
+INJ_CAP                   0x1B1         0d80                    0d80                               16
 
 GatedHITOR_0_CNT          0x200         0b0                     0b0                                16
 GatedHITOR_1_CNT          0x201         0b0                     0b0                                16

@@ -151,6 +151,12 @@ enum class EventType
     VRPCTestAdapter = 5 // VirginRaw with IT PortCard test adapter
 };
 
+enum class CICeventType
+{
+    Sparsified   = 0,
+    Unsparsified = 1
+};
+
 #define NUMBER_OF_CIC_PORTS 8
 #define NUMBER_OF_LINES_PER_CIC_PORTS 6
 #define NUMBER_OF_LINES_PER_CIC_PHY_PORTS 4
@@ -171,6 +177,6 @@ enum class EventType
 
 #define L1_UNSPARSFIED_BLOCK_SIZE_2S 11
 
-#define SSA_NOISE_SIGMA_SCALE_FACTOR 0.8 // based on the measurement at FNAL
+#define SSA_NOISE_SIGMA_SCALE_FACTOR 0.75 // based on the measurement at FNAL
 
 #endif

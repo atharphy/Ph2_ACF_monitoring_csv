@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
-  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="1">
+  <BeBoard Id="0" boardType="D19C" eventType="VR"  linkReset="1" boardReset="1" configure="1" enableSparsification="1">
     <connection id="board" uri="chtcp-2.0://localhost:10203?target=192.168.0.6:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <configuration file_name="${PH2ACF_BASE_DIR}/settings/BeBoardFiles/uDTC_registers_PS.xml"/>
     <CDCE configure="0" clockRate="320"/>
@@ -17,7 +16,7 @@
         <VTRx Id="0" configFile="VTRx.txt"/>
         <Hybrid Id="0" enable="1" reset="1" invertClock="0">
             <Global>                 
-                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" driveStrength="3" edgeSelect="1"/>
+                <CIC2 enableBend="1" enableLastLine="1" driveStrength="3" edgeSelect="1"/>
             </Global>
 
             <SSA2_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
@@ -46,7 +45,7 @@
         
         <Hybrid Id="1" enable="1" reset="1" invertClock="0">
             <Global>                 
-                <CIC2 enableBend="1" enableLastLine="1" enableSparsification="1" driveStrength="3" edgeSelect="0"/>
+                <CIC2 enableBend="1" enableLastLine="1" driveStrength="3" edgeSelect="0"/>
             </Global>
 
             <SSA2_Files path="${PH2ACF_BASE_DIR}/settings/SSAFiles/" />
@@ -95,7 +94,7 @@
     <Setting name="PSmoduleTriggerLatency">180</Setting>
     <Setting name="PSmoduleStubWindow">32</Setting>
 
-    <Setting name="SaveRawData">1</Setting>
+    <Setting name="OTPScommonNoise_SaveRawData">0</Setting>
 
     <!--PedestalEqualization-->
     <Setting name="HoleMode">0</Setting>
@@ -299,6 +298,10 @@
     <Setting name="OTBitErrorRateTest_NumberOfBits">1E10</Setting>
 
     <Setting name="OTPatternCheckerHelper_NumberOfBits">1E10</Setting>
+
+    <Setting name ="OTPhysics_SaveRawData">1</Setting>
+    <Setting name="OTPhysics_UserTriggerRate">5</Setting> <!-- in kHz -->
+    <Setting name="OTPhysics_InjectionType">5</Setting> <!-- 0 - no injection, 1 - noise injection, 2 - pulse injection -->
 
 </Settings>
 

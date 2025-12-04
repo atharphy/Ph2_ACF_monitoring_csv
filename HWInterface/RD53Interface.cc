@@ -306,7 +306,7 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
     this->setBoard(pChip->getBeBoardId());
     std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
 
-    const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%]
+    const float measError = 4.0; // @CONST@ Measurement error due to MonitorConfig resolution [%]
     float       value;
     bool        isCurrentNotVoltage;
     uint32_t    observable = getADCobservable(observableName, isCurrentNotVoltage);
@@ -325,8 +325,6 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
             LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << observableName << BOLDBLUE << ": " << BOLDYELLOW << std::setprecision(3) << value << " +/- " << value * measError / 100 << BOLDBLUE
                       << (isCurrentNotVoltage == true ? " uA" : " V") << std::setprecision(-1) << RESET;
     }
-
-    // std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::SUPERDEEPSLEEP)); // @TMP@
 
     return value;
 }

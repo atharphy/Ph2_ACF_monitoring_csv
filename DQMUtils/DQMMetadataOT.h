@@ -11,6 +11,7 @@ class DQMMetadataOT : public DQMMetadata
 
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) override;
 
+    void fillFWcompilationTimestamp(const DetectorDataContainer& theFWcompilationTimestampContainer);
     void fillCICFuseId(const DetectorDataContainer& theCICFuseIdContainer);
     void fillCICConfiguration(const DetectorDataContainer& theCICConfigurationContainer, bool initialValue);
     void fillIsReadoutChipCalibrated(const DetectorDataContainer& theReadoutChipIsCalibratedContainer);
@@ -20,6 +21,7 @@ class DQMMetadataOT : public DQMMetadata
     void reset(void) override;
 
   private:
+    DetectorDataContainer fFWcompilationTimestampContainer;
     DetectorDataContainer fCICFuseIdContainer;
     DetectorDataContainer fInitialCICConfigurationContainer;
     DetectorDataContainer fFinalCICConfigurationContainer;

@@ -153,8 +153,9 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
     int          cSyncLoss           = 0;
     for(auto cEvent: pEvents)
     {
-        auto                  cEventCount = cEvent->GetEventCount();
-        auto                  cTDC        = cEvent->GetTDC();
+        auto                  theD19cCic2Event = static_cast<D19cCic2Event*>(cEvent);
+        auto                  cEventCount      = theD19cCic2Event->GetEventCount();
+        auto                  cTDC             = theD19cCic2Event->GetTDC();
         std::vector<uint32_t> cBxIds(0);
 
         LOG(DEBUG) << BOLDBLUE << "Event " << +cEventCount << " --- TDC  " << +cTDC << RESET;
@@ -168,7 +169,7 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                 TH2D* cStubInformation    = static_cast<TH2D*>(getHist(cHybrid, Form("StubInformation")));
                 TH2D* cStubHitCorrelation = static_cast<TH2D*>(getHist(cHybrid, Form("StubHitCorrelation")));
 
-                auto cBxId = cEvent->BxId(cHybrid->getId());
+                auto cBxId = theD19cCic2Event->BxId(cHybrid->getId());
                 LOG(DEBUG) << BOLDBLUE << "FE" << +cHybrid->getId() << " BxId " << +cBxId << RESET;
                 if(std::find(cBxIds.begin(), cBxIds.end(), cBxId) == cBxIds.end()) cBxIds.push_back(cBxId);
 
@@ -182,14 +183,14 @@ void StubQuickCheck::StubCheck(BeBoard* pBoard, const std::vector<Event*> pEvent
                         if(cHybrid->getId() == cOtherHybrid->getId()) continue;
 
                         TH2D* cBxCorrelation = static_cast<TH2D*>(getHist(cHybrid, Form("BxId_CIC%d", cOtherHybrid->getId())));
-                        cBxCorrelation->Fill(cBxId, cEvent->BxId(cOtherHybrid->getId()));
+                        cBxCorrelation->Fill(cBxId, theD19cCic2Event->BxId(cOtherHybrid->getId()));
                     }
                 }
 
                 for(auto cChip: *cHybrid)
                 {
-                    auto cHits  = cEvent->GetHits(cHybrid->getId(), cChip->getId());
-                    auto cStubs = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cChip->getId());
+                    auto cHits  = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
+                    auto cStubs = theD19cCic2Event->StubVector(cHybrid->getId(), cChip->getId());
 
                     // quick cut on exactly one hit in each layer
                     if(cHits.size() > 2) continue;

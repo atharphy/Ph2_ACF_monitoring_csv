@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <HwDescription>
-  <!-- <BeBoard Id="0" boardType="D19C" eventType="VR"> -->
-  <BeBoard Id="0" boardType="D19C" eventType="VR" linkReset="1" boardReset="1" configure="1">
+  <BeBoard Id="0" boardType="D19C" eventType="VR"  linkReset="1" boardReset="1" configure="1" enableSparsification="1">
     <connection id="board" uri="chtcp-2.0://ph2acf-02.cern.ch:10203?target=192.168.0.42:50001" address_table="file://${PH2ACF_BASE_DIR}/settings/address_tables/uDTC_OT_address_table.xml" />
     <configuration file_name="${PH2ACF_BASE_DIR}/settings/BeBoardFiles/uDTC_registers_PS.xml"/>
     <CDCE configure="0" clockRate="320"/>
@@ -47,7 +46,7 @@
     <Setting name="PSmoduleTriggerLatency">180</Setting>
     <Setting name="PSmoduleStubWindow">32</Setting>
 
-    <Setting name="SaveRawData">1</Setting>
+    <Setting name="OTPScommonNoise_SaveRawData">0</Setting>
     <!--PedestalEqualization-->
     <Setting name="Nevents">1000</Setting>
     <Setting name="HoleMode">0</Setting>
@@ -187,6 +186,9 @@
     <Setting name="OTinjectionOccupancyScan_ListOfInjectedPulses"> 0, 0.25, 0.5, 1., 2.</Setting> <!-- MIP units -->
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithoutInjection"> 1000000</Setting>
     <Setting name="OTinjectionOccupancyScan_NumberOfEventsWithInjection"> 1000</Setting>
+    <Setting name ="OTPhysics_SaveRawData">1</Setting>
+    <Setting name="OTPhysics_UserTriggerRate">5</Setting> <!-- in kHz -->
+    <Setting name="OTPhysics_InjectionType">5</Setting> <!-- 0 - no injection, 1 - noise injection, 2 - pulse injection -->
 
 </Settings>
 

@@ -71,6 +71,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     # Find source files
     file(GLOB SOURCES *.cc)
+    list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/RunController.cc")
     add_library(Ph2_miniDAQ STATIC ${SOURCES})
     target_link_libraries(Ph2_miniDAQ Ph2_Tools CACTUS::headers)
 

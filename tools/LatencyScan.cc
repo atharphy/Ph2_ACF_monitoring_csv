@@ -17,13 +17,6 @@ LatencyScan::~LatencyScan() {}
 
 void LatencyScan::Initialize()
 {
-    // check sparsification
-    for(auto cBoard: *fDetectorContainer)
-    {
-        bool cSparsified = (fBeBoardInterface->ReadBoardReg(cBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable") == 1);
-        cBoard->setSparsification(cSparsified);
-    }
-
     ReadoutChip* cFirstReadoutChip = static_cast<ReadoutChip*>(fDetectorContainer->getFirstObject()->getFirstObject()->getFirstObject()->getFirstObject());
     bool         cWithCBC          = (cFirstReadoutChip->getFrontEndType() == FrontEndType::CBC3);
     bool         cWithPSv2         = (cFirstReadoutChip->getFrontEndType() == FrontEndType::SSA2 || cFirstReadoutChip->getFrontEndType() == FrontEndType::MPA2);
@@ -105,7 +98,8 @@ void LatencyScan::MeasureTriggerTDC()
 
         for(auto& cEvent: events)
         {
-            uint8_t cTDCVal = cEvent->GetTDC();
+            auto    theD19cCic2Event = static_cast<D19cCic2Event*>(cEvent);
+            uint8_t cTDCVal          = theD19cCic2Event->GetTDC();
             LOG(INFO) << "TDC Val is " << cTDCVal;
 
             if(theBoard->getBoardType() == BoardType::D19C)
@@ -120,8 +114,8 @@ void LatencyScan::MeasureTriggerTDC()
                     cTDCVal -= cTDCShiftValue;
             }
             if(cTDCVal >= fTDCBins)
-                LOG(INFO) << "ERROR, TDC value not within expected range - normalized value is " << +cTDCVal << " - original Value was " << +cEvent->GetTDC() << "; not considering this Event!"
-                          << std::endl;
+                LOG(INFO) << "ERROR, TDC value not within expected range - normalized value is " << +cTDCVal << " - original Value was " << +theD19cCic2Event->GetTDC()
+                          << "; not considering this Event!" << std::endl;
             else
             {
                 // Board level value, just fill the first optical group & hybrid with the value for streaming simplicity
@@ -265,7 +259,8 @@ void LatencyScan::ScanLatency()
                     } // hybrid
                 } // optical group
                 // start at the beginning + trigger id in burst
-                auto cEventIter = cEvents.begin() + cTriggerId;
+                auto cEventIter       = cEvents.begin() + cTriggerId;
+                auto theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
                 // calculate occupancy for each
                 DetectorDataContainer* theOccupancyContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
                 fDetectorDataContainer                       = theOccupancyContainer;
@@ -277,7 +272,7 @@ void LatencyScan::ScanLatency()
                 size_t cNEventsThisTriggerId                 = 0;
                 do {
                     if(cEventIter >= cEvents.end()) break;
-                    uint8_t cTDCVal = (*cEventIter)->GetTDC();
+                    uint8_t cTDCVal = theD19cCic2Event->GetTDC();
                     for(auto cOpticalGroup: *cBoard)
                     {
                         auto& cOccOG = cOccBrd->getObject(cOpticalGroup->getId());
@@ -291,9 +286,9 @@ void LatencyScan::ScanLatency()
 
                                 if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                 {
-                                    auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                                    auto cHits = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
 
-                                    LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
+                                    LOG(DEBUG) << BOLDBLUE << "Event#" << theD19cCic2Event->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
 
                                     cTotalHits += cHits.size();
                                     for(auto cHit: cHits)
@@ -314,20 +309,20 @@ void LatencyScan::ScanLatency()
                                 }
                                 else
                                 {
-                                    auto cPclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetPixelClusters(cHybrid->getId(), cChip->getId());
-                                    auto cSclstrs = static_cast<D19cCic2Event*>((*cEventIter))->GetStripClusters(cHybrid->getId(), cChip->getId());
+                                    auto cPclstrs = theD19cCic2Event->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                                    auto cSclstrs = theD19cCic2Event->GetStripClusters(cHybrid->getId(), cChip->getId());
 
                                     cTotalHitsS0 += cPclstrs.size();
                                     cTotalHitsS1 += cSclstrs.size();
                                     if(cPclstrs.size() > 0 && cSclstrs.size() > 0)
-                                        LOG(DEBUG) << BOLDBLUE << "\t\t\t\t Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId << " Chip#" << +cChip->getId() % 8 << " "
+                                        LOG(DEBUG) << BOLDBLUE << "\t\t\t\t Event#" << theD19cCic2Event->GetEventCount() << " Trigger#" << +cTriggerId << " Chip#" << +cChip->getId() % 8 << " "
                                                    << +cPclstrs.size() << " P-clusters " << +cSclstrs.size() << " S-clusters." << RESET;
                                     for(auto& cPclstr: cPclstrs)
                                     {
                                         if(cSclstrs.size() > 0)
-                                            LOG(DEBUG) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cPclstr.fAddress << " col " << +cPclstr.fZpos << " width "
-                                                       << +cPclstr.fWidth << RESET;
-                                        for(uint8_t cId = 0; cId < (cPclstr.fWidth); cId++)
+                                            LOG(DEBUG) << BOLDBLUE << "\tHit in Pixel ASIC" << +cChip->getId() % 8 << " row " << +cPclstr.fPixelClusterPS.fAddress << " col "
+                                                       << +cPclstr.fPixelClusterPS.fZpos << " width " << +cPclstr.fPixelClusterPS.fWidth << RESET;
+                                        for(uint8_t cId = 0; cId < (cPclstr.fPixelClusterPS.fWidth); cId++)
                                         {
                                             cHitContainer.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -336,14 +331,15 @@ void LatencyScan::ScanLatency()
                                                 ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()
                                                 .at(cTDCVal) += 1;
                                             // auto& cOccChip = cOccHybrid->getObject(cChip->getId());
-                                            // cOccChip->getChannel<Occupancy>(cPclstr.fZpos, cPclstr.fAddress + cId).fOccupancy++;
+                                            // cOccChip->getChannel<Occupancy>(cPclstr.fPixelClusterPS.fZpos, cPclstr.fPixelClusterPS.fAddress + cId).fOccupancy++;
                                         }
                                     }
                                     for(auto& cSclstr: cSclstrs)
                                     {
                                         if(cPclstrs.size() > 0)
-                                            LOG(DEBUG) << BOLDYELLOW << "\tHit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cSclstr.fAddress << " width " << +cSclstr.fWidth << RESET;
-                                        for(uint8_t cId = 0; cId < (cSclstr.fWidth); cId++)
+                                            LOG(DEBUG) << BOLDYELLOW << "\tHit in Strip ASIC" << +cChip->getId() % 8 << " row " << +cSclstr.fStripClusterPS.fAddress << " width "
+                                                       << +cSclstr.fStripClusterPS.fWidth << RESET;
+                                        for(uint8_t cId = 0; cId < (cSclstr.fStripClusterPS.fWidth); cId++)
                                         {
                                             cHitContainer.getObject(cBoard->getId())
                                                 ->getObject(cOpticalGroup->getId())
@@ -352,7 +348,7 @@ void LatencyScan::ScanLatency()
                                                 ->getSummary<GenericDataArray<uint16_t, VECSIZE>>()
                                                 .at(cTDCVal) += 1;
                                             // auto& cOccChip = cOccHybrid->getObject(cChip->getId()-cNMPAs);
-                                            // cOccChip->getChannel<Occupancy>(0, cSclstr.fAddress + cId).fOccupancy++;
+                                            // cOccChip->getChannel<Occupancy>(0, cSclstr.fStripClusterPS.fAddress + cId).fOccupancy++;
                                         }
                                     }
                                 }
@@ -526,7 +522,8 @@ void LatencyScan::StubLatencyScan()
                 size_t cMatchedStubs = 0;
                 do {
                     if(cEventIter >= cEvents.end()) break;
-                    auto cEventCount = (*cEventIter)->GetEventCount();
+                    auto theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
+                    auto cEventCount      = theD19cCic2Event->GetEventCount();
                     for(auto cOpticalGroup: *cBoard)
                     {
                         for(auto cHybrid: *cOpticalGroup)
@@ -535,7 +532,7 @@ void LatencyScan::StubLatencyScan()
                             // static_cast<OuterTrackerHybrid*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId()))->fCic; if(cCic !=
                             // NULL)
                             // {
-                            //     auto cBx = (*cEventIter)->BxId(cHybrid->getId());
+                            //     auto cBx = theD19cCic2Event->BxId(cHybrid->getId());
                             //     if(cEventCount % cDebugOut == 0) LOG(INFO) << BOLDBLUE << "\t\t..Hybrid " << +cHybrid->getId() << " BxID " << +cBx << RESET;
                             // }
 
@@ -546,11 +543,11 @@ void LatencyScan::StubLatencyScan()
                                 if(cChip->getFrontEndType() == FrontEndType::CBC3)
                                 {
                                     // first check for hits
-                                    auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                                    auto cHits = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
                                     for(auto cHit: cHits) { LOG(DEBUG) << BOLDGREEN << "\t\t\tEvent#" << cEventCount << " CBC#" << +cChip->getId() << " hit in channel " << +cHit.second << RESET; }
                                     auto                 cReadoutChipInterface = static_cast<CbcInterface*>(fReadoutChipInterface);
                                     std::vector<uint8_t> cBendLUT              = cReadoutChipInterface->readLUT(cChip);
-                                    auto                 cStubs                = static_cast<D19cCic2Event*>((*cEventIter))->StubVector(cHybrid->getId(), cChip->getId());
+                                    auto                 cStubs                = theD19cCic2Event->StubVector(cHybrid->getId(), cChip->getId());
                                     cAnyStubs += cStubs.size();
                                     cAnyHits += cHits.size();
                                     if(cHits.size() == 0) continue;
@@ -599,13 +596,13 @@ void LatencyScan::StubLatencyScan()
                                 }
                                 else if(cChip->getFrontEndType() == FrontEndType::SSA2)
                                 {
-                                    auto cStubs = static_cast<D19cCic2Event*>((*cEventIter))->StubVector(cHybrid->getId(), cChip->getId());
+                                    auto cStubs = theD19cCic2Event->StubVector(cHybrid->getId(), cChip->getId());
                                     cNStubs     = cStubs.size();
                                 }
                                 else if(cChip->getFrontEndType() == FrontEndType::MPA2)
                                 {
-                                    auto cStubs = static_cast<D19cCic2Event*>((*cEventIter))->StubVector(cHybrid->getId(), cChip->getId());
-                                    auto cHits  = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
+                                    auto cStubs = theD19cCic2Event->StubVector(cHybrid->getId(), cChip->getId());
+                                    auto cHits  = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
                                     cNStubs     = cStubs.size();
                                     LOG(DEBUG) << BOLDGREEN << "cNStubs" << cNStubs << "," << cHits.size() << " hits in this event... " << RESET;
                                 }
@@ -914,7 +911,7 @@ int LatencyScan::countStubs(Hybrid* pFe, Event* pEvent, std::string pHistName, u
 
     for(auto cCbc: *pFe)
     {
-        if(pEvent->StubBit(pFe->getId(), cCbc->getId())) cStubCounter += static_cast<D19cCic2Event*>(pEvent)->StubVector(pFe->getId(), cCbc->getId()).size();
+        if(static_cast<D19cCic2Event*>(pEvent)->StubBit(pFe->getId(), cCbc->getId())) cStubCounter += static_cast<D19cCic2Event*>(pEvent)->StubVector(pFe->getId(), cCbc->getId()).size();
     }
     int   cBin        = cTmpHist->FindBin(pParameter);
     float cBinContent = cTmpHist->GetBinContent(cBin);

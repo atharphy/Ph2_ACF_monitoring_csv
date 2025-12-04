@@ -102,7 +102,7 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
                 {
                     if(cHybrid->getId() > 0) continue;
 
-                    auto cBx = (int)cEvent->BxId(cHybrid->getId());
+                    auto cBx = (int)static_cast<D19cCic2Event*>(cEvent)->BxId(cHybrid->getId());
                     if(cBxIds.size() > 0)
                     {
                         int cBxDifference = (cNRollOvers)*cMaxBxCounter + (cBxIds[cBxIds.size() - 1] % cMaxBxCounter);
@@ -146,8 +146,7 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
     fBeBoardInterface->WriteBoardMultReg(pBoard, cRegVec);
 
     // reconfigure sparsification + FEs enabled in this CIC
-    LOG(INFO) << BOLDMAGENTA << "StubBackEndAlignment::FindPackageDelay Resetting Sparsification" << RESET;
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
+    setSparsification(pBoard, false);
     size_t cIndx = 0;
 
     for(auto cOpticalGroup: *pBoard)
@@ -155,7 +154,6 @@ bool StubBackEndAlignment::FindPackageDelay(BeBoard* pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
             auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            fCicInterface->SetSparsification(cCic, cSparsified);
             fCicInterface->WriteChipReg(cCic, "FE_ENABLE", cFeEnableRegs[cIndx]);
             cIndx++;
         }
@@ -173,16 +171,6 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // auto     cSetting1  = fSettingsMap.find("StubAlignmentScanStart");
     uint32_t cScanStart = 100;
     LOG(INFO) << BOLDMAGENTA << "DNEN" << RESET;
-
-    // sparsification of
-    bool cSparsified = pBoard->getSparsification();
-    if(cSparsified)
-        LOG(INFO) << BOLDMAGENTA << "StubBackEndAlignment::FindStubLatency Sparsification on " << RESET;
-    else
-        LOG(INFO) << BOLDMAGENTA << "StubBackEndAlignment::FindStubLatency Sparsification off " << RESET;
-
-    LOG(INFO) << GREEN << "Trying to find stub latency finding in the back-end" << RESET;
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
 
     // read back original masks
     bool cWithPS = false;
@@ -392,7 +380,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                                 LOG(DEBUG) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cMult) << " MPA" << +cChip->getId() << " found " << cSclus.size() << " S clusters and "
                                            << cPclus.size() << " P clusters in L1 data." << RESET;
                             }
-                            size_t cNHitsThisFE = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId()).size();
+                            size_t cNHitsThisFE = static_cast<D19cCic2Event*>(*cEventIter)->GetHits(cHybrid->getId(), cChip->getId()).size();
                             cNHitsPerHybrid += cNHitsThisFE;
                             cNHits += cNHitsThisFE;
                             // if( cNHitsThisFE > 0 )
@@ -443,23 +431,25 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             size_t                     cNStubsFound = 0;
             for(auto cEvent: cEvents)
             {
+                auto theD19cCic2Event = static_cast<D19cCic2Event*>(cEvent);
                 for(auto cOpticalGroup: *pBoard)
                 {
                     for(auto cHybrid: *cOpticalGroup)
                     {
-                        auto   cBx              = (int)cEvent->BxId(cHybrid->getId());
+                        auto   cBx              = (int)theD19cCic2Event->BxId(cHybrid->getId());
                         size_t cNstubsThisHybrd = 0;
                         for(auto cChip: *cHybrid)
                         {
                             if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
-                            if(cEvent->GetHits(cHybrid->getId(), cChip->getId()).size() == 0) continue;
+                            if(theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId()).size() == 0) continue;
 
-                            auto cStubs = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cChip->getId());
+                            auto cStubs = theD19cCic2Event->StubVector(cHybrid->getId(), cChip->getId());
                             cNstubsThisHybrd += cStubs.size();
                             cNStubsFound += cStubs.size();
                         } // Chips
                         if(cNstubsThisHybrd > 0)
-                            LOG(INFO) << BOLDMAGENTA << "Event#" << +cEvent->GetEventCount() << " found " << +cNstubsThisHybrd << " stubs in CIC#" << +cHybrid->getId() << " BxId is " << +cBx << RESET;
+                            LOG(INFO) << BOLDMAGENTA << "Event#" << +theD19cCic2Event->GetEventCount() << " found " << +cNstubsThisHybrd << " stubs in CIC#" << +cHybrid->getId() << " BxId is " << +cBx
+                                      << RESET;
                     } // hybrids
                 } // OGs
             } // events
@@ -487,6 +477,7 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
             const std::vector<Event*>& cEvents = this->GetEvents();
             for(auto cEvent: cEvents)
             {
+                auto theD19cCic2Event = static_cast<D19cCic2Event*>(cEvent);
                 for(auto cOpticalGroup: *pBoard)
                 {
                     for(auto cHybrid: *cOpticalGroup)
@@ -495,12 +486,12 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
                         {
                             if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
 
-                            auto cStubs = static_cast<D19cCic2Event*>(cEvent)->StubVector(cHybrid->getId(), cChip->getId());
-                            auto cHits  = cEvent->GetHits(cHybrid->getId(), cChip->getId());
+                            auto cStubs = theD19cCic2Event->StubVector(cHybrid->getId(), cChip->getId());
+                            auto cHits  = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
                             if((int)(cHits.size()) > 0 && (int)cStubs.size() > 0)
                             {
-                                LOG(INFO) << BOLDGREEN << "Event#" << +cEvent->GetEventCount() << " ... found " << cHits.size() << " hits in FE#" << +cChip->getId() << " and " << +cStubs.size()
-                                          << " stubs." << RESET;
+                                LOG(INFO) << BOLDGREEN << "Event#" << +theD19cCic2Event->GetEventCount() << " ... found " << cHits.size() << " hits in FE#" << +cChip->getId() << " and "
+                                          << +cStubs.size() << " stubs." << RESET;
                             }
                         } // Chips
                     } // hybrids
@@ -512,15 +503,8 @@ bool StubBackEndAlignment::FindStubLatency(BeBoard* pBoard)
     // reconfigure sparsification
     // this->enableTestPulse(false);
     LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Resetting Sparsification" << RESET;
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", (int)cSparsified);
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            fCicInterface->SetSparsification(cCic, cSparsified);
-        } // hybrids
-    } // OG
+    setSparsification(pBoard, false);
+
     // set everything back to original values .. like I wasn't here
     // reset fast command registers
     LOG(INFO) << BOLDMAGENTA << "BackEndAlignment::FindStubLatency Resetting BeBoards regs back to their original values" << RESET;

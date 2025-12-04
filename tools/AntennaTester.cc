@@ -13,7 +13,7 @@ struct HistogramFiller : public HwDescriptionVisitor
 
     void visit(Chip& pCbc)
     {
-        std::vector<bool> cDataBitVector = fEvent->DataBitVector(pCbc.getHybridId(), pCbc.getId());
+        std::vector<bool> cDataBitVector = static_cast<D19cCic2Event*>(fEvent)->DataBitVector(pCbc.getHybridId(), pCbc.getId());
 
         for(uint32_t cId = 0; cId < NCHANNELS; cId++)
         {

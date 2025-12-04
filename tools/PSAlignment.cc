@@ -463,7 +463,7 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                                 // std::cout << "fAddress "<<+pc.fAddress<<std::endl;
                                                 // std::cout << "fWidth "<<+pc.fWidth<< std::endl;
                                                 // std::cout << "fZpos "<<+pc.fZpos << std::endl;
-                                                if((cCol) == pc.fAddress and (cRow - 1) == pc.fZpos)
+                                                if((cCol) == pc.fPixelClusterPS.fAddress and (cRow - 1) == pc.fPixelClusterPS.fZpos)
                                                 {
                                                     // std::cout << "PIXPASS"<< std::endl;
 
@@ -475,8 +475,8 @@ bool PSAlignment::AlignL1Inputs(BeBoard* pBoard)
                                                 // std::cout << "-------------------------------STRIPS-------------------------------"<< std::endl;
                                                 // std::cout << "fAddress? "<<+sc.fAddress<<std::endl;
                                                 // std::cout << "fWidth "<<+sc.fWidth<< std::endl;
-                                                // std::cout << "fMip "<<+sc.fMip << std::endl<< std::endl;
-                                                if((cCol) == sc.fAddress and sc.fMip == 1)
+                                                // std::cout << "fIsHIP "<<+sc.fIsHIP << std::endl<< std::endl;
+                                                if((cCol) == sc.fStripClusterPS.fAddress and sc.fStripClusterPS.fIsHIP)
                                                 {
                                                     // std::cout << "STRIPPASS"<< std::endl;
                                                     MatchNSclustot += 1;
@@ -507,11 +507,11 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
 {
     struct
     {
-        bool operator()(PixelClusterPS a, PixelClusterPS b) const { return a.fAddress < b.fAddress; }
+        bool operator()(PixelClusterPSHandler a, PixelClusterPSHandler b) const { return a.fPixelClusterPS.fAddress < b.fPixelClusterPS.fAddress; }
     } customSortPclus;
     struct
     {
-        bool operator()(StripClusterPS a, StripClusterPS b) const { return a.fAddress < b.fAddress; }
+        bool operator()(StripClusterPSHandler a, StripClusterPSHandler b) const { return a.fStripClusterPS.fAddress < b.fStripClusterPS.fAddress; }
     } customSortSclus;
 
     // setting edge select for raw input
@@ -549,14 +549,16 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
             // start at the beginning + trigger id in burst
             for(size_t cTriggerId = 0; cTriggerId < cTriggerMult + 1; cTriggerId++)
             {
-                size_t cMatchedEvents = 0;
-                auto   cEventIter     = cEvents.begin() + cTriggerId;
+                size_t cMatchedEvents   = 0;
+                auto   cEventIter       = cEvents.begin() + cTriggerId;
+                auto   theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
+                ;
                 do {
                     if(cEventIter >= cEvents.end()) break;
                     bool cNmatch = true;
                     bool cFmatch = true;
-                    auto cPclus  = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(pChip->getHybridId(), pChip->getId());
-                    auto cSclus  = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(pChip->getHybridId(), pChip->getId());
+                    auto cPclus  = theD19cCic2Event->GetPixelClusters(pChip->getHybridId(), pChip->getId());
+                    auto cSclus  = theD19cCic2Event->GetStripClusters(pChip->getHybridId(), pChip->getId());
                     LOG(DEBUG) << BOLDMAGENTA << "\t\t found " << cPclus.size() << " P clusters and " << cSclus.size() << " S clusters" << RESET;
                     // sort P clusters by row
                     std::sort(cPclus.begin(), cPclus.end(), customSortPclus);
@@ -575,12 +577,12 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
                             for(auto cPcluster: cPclus)
                             {
                                 if(cMatchFound) continue;
-                                cMatchFound = (cPcluster.fAddress == cInjection.fRow) && (cPcluster.fZpos == cInjection.fColumn);
+                                cMatchFound = (cPcluster.fPixelClusterPS.fAddress == cInjection.fRow) && (cPcluster.fPixelClusterPS.fZpos == cInjection.fColumn);
                                 if(cMatchFound)
                                 {
                                     PixelClusterPS cMtchdPclstr;
-                                    cMtchdPclstr.fAddress = cPcluster.fAddress;
-                                    cMtchdPclstr.fZpos    = cPcluster.fZpos;
+                                    cMtchdPclstr.fAddress = cPcluster.fPixelClusterPS.fAddress;
+                                    cMtchdPclstr.fZpos    = cPcluster.fPixelClusterPS.fZpos;
                                     cMtchdPclstrs.push_back(cMtchdPclstr);
                                 }
                             }
@@ -594,7 +596,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
                             for(auto cScluster: cSclus)
                             {
                                 if(cMatchFound) continue;
-                                cMatchFound = (cScluster.fAddress == cInjection.fRow);
+                                cMatchFound = (cScluster.fStripClusterPS.fAddress == cInjection.fRow);
                                 if(cMatchFound)
                                 {
                                     StripClusterPS cMtchdSclstr;
@@ -607,7 +609,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
 
                         if(cFmatch)
                         {
-                            LOG(INFO) << BOLDGREEN << "\t\t Trigger#" << +cTriggerId << " Event#" << (*cEventIter)->GetEventCount() << " in a burst of " << (1 + cTriggerMult) << " MPA"
+                            LOG(INFO) << BOLDGREEN << "\t\t Trigger#" << +cTriggerId << " Event#" << theD19cCic2Event->GetEventCount() << " in a burst of " << (1 + cTriggerMult) << " MPA"
                                       << +pChip->getId() << " found " << cSclus.size() << " matched S clusters and " << cPclus.size() << " matched P clusters in L1 data.  L1 input sampling phase is  "
                                       << +cPhase << " Rx40 delay is " << +cWord << RESET;
                             for(uint8_t cMatchId = 0; cMatchId < cMtchdSclstrs.size(); cMatchId++)
@@ -618,7 +620,7 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignL1(ReadoutChip* pChip
                         }
                     }
                     // if( cNmatch && cFmatch )
-                    //     LOG (INFO) << BOLDGREEN << "Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId
+                    //     LOG (INFO) << BOLDGREEN << "Event#" << theD19cCic2Event->GetEventCount() << " Trigger#" << +cTriggerId
                     //         << " in a burst of " << (1+ cTriggerMult)
                     //         << " number of S-clusters match is " << +cNmatch
                     //         << " full S-cluster match is " << +cFmatch
@@ -644,11 +646,11 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs(ReadoutChip* pC
 {
     struct
     {
-        bool operator()(PixelClusterPS a, PixelClusterPS b) const { return a.fAddress < b.fAddress; }
+        bool operator()(PixelClusterPSHandler a, PixelClusterPSHandler b) const { return a.fPixelClusterPS.fAddress < b.fPixelClusterPS.fAddress; }
     } customSortPclus;
     struct
     {
-        bool operator()(StripClusterPS a, StripClusterPS b) const { return a.fAddress < b.fAddress; }
+        bool operator()(StripClusterPSHandler a, StripClusterPSHandler b) const { return a.fStripClusterPS.fAddress < b.fStripClusterPS.fAddress; }
     } customSortSclus;
     // struct
     // {
@@ -701,15 +703,16 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs(ReadoutChip* pC
                     auto   cEventIter       = cEvents.begin() + cTriggerId;
                     size_t cMatchedEventsL1 = 0;
                     size_t cNchecked        = 0;
+                    auto   theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
                     do {
                         if(cEventIter >= cEvents.end()) break;
-                        auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(pChip->getHybridId(), pChip->getId());
-                        auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(pChip->getHybridId(), pChip->getId());
+                        auto cPclus = theD19cCic2Event->GetPixelClusters(pChip->getHybridId(), pChip->getId());
+                        auto cSclus = theD19cCic2Event->GetStripClusters(pChip->getHybridId(), pChip->getId());
                         // sort P clusters by row
                         std::sort(cPclus.begin(), cPclus.end(), customSortPclus);
                         // sort S clusters by row
                         std::sort(cSclus.begin(), cSclus.end(), customSortSclus);
-                        auto cStubs = static_cast<D19cCic2Event*>(*cEventIter)->StubVector(pChip->getHybridId(), pChip->getId());
+                        auto cStubs = theD19cCic2Event->StubVector(pChip->getHybridId(), pChip->getId());
                         cMatchedEventsL1 += (cPclus.size() == pInjections.size() && cSclus.size() == pInjections.size()) ? 1 : 0;
                         bool cNmatch = true;
                         if(cCheckL1)
@@ -719,9 +722,9 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignStubs(ReadoutChip* pC
                                        << " correct numnber of S and P clusters." << RESET;
                         }
                         if(cStubs.size() == pInjections.size() && cNmatch)
-                            LOG(DEBUG) << BOLDGREEN << "Trigger#" << +cTriggerId << " Event#" << (*cEventIter)->GetEventCount() << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId()
-                                       << " found " << cSclus.size() << " S clusters and " << cPclus.size() << " P clusters in L1 data from MPA#" << +pChip->getId() << " also have " << +cStubs.size()
-                                       << " stbs." << RESET;
+                            LOG(DEBUG) << BOLDGREEN << "Trigger#" << +cTriggerId << " Event#" << theD19cCic2Event->GetEventCount() << " in a burst of " << (1 + cTriggerMult) << " MPA"
+                                       << +pChip->getId() << " found " << cSclus.size() << " S clusters and " << cPclus.size() << " P clusters in L1 data from MPA#" << +pChip->getId() << " also have "
+                                       << +cStubs.size() << " stbs." << RESET;
                         // print stubs if they are there
                         if(cNmatch)
                         {
@@ -824,31 +827,32 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignChip(ReadoutChip* pCh
                 auto   cEventIter     = cEvents.begin() + cTriggerId;
                 do {
                     if(cEventIter >= cEvents.end()) break;
-                    bool cNmatch = true;
-                    bool cFmatch = true;
-                    auto cPclus  = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(pChip->getHybridId(), pChip->getId());
-                    auto cSclus  = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(pChip->getHybridId(), pChip->getId());
-                    cNmatch      = cNmatch && (cSclus.size() == pInjections.size() && cPclus.size() == pInjections.size());
-                    cFmatch      = cNmatch;
+                    auto theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
+                    bool cNmatch          = true;
+                    bool cFmatch          = true;
+                    auto cPclus           = theD19cCic2Event->GetPixelClusters(pChip->getHybridId(), pChip->getId());
+                    auto cSclus           = theD19cCic2Event->GetStripClusters(pChip->getHybridId(), pChip->getId());
+                    cNmatch               = cNmatch && (cSclus.size() == pInjections.size() && cPclus.size() == pInjections.size());
+                    cFmatch               = cNmatch;
                     if(cNmatch)
                     {
                         LOG(DEBUG) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId() << " found " << cSclus.size() << " S clusters and "
                                    << cPclus.size() << " P clusters in L1 data from MPA#" << +pChip->getId() << RESET;
                         for(size_t cIndx = 0; cIndx < pInjections.size(); cIndx++)
                         {
-                            cFmatch = cFmatch && (cPclus[cIndx].fAddress == cSclus[cIndx].fAddress);
-                            if((cPclus[cIndx].fAddress == cSclus[cIndx].fAddress))
-                                LOG(DEBUG) << BOLDGREEN << "Exact match found " << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress << " column " << +cPclus[cIndx].fZpos << " width is "
-                                           << +cPclus[cIndx].fWidth << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
-                                           << RESET;
+                            cFmatch = cFmatch && (cPclus[cIndx].fPixelClusterPS.fAddress == cSclus[cIndx].fStripClusterPS.fAddress);
+                            if((cPclus[cIndx].fPixelClusterPS.fAddress == cSclus[cIndx].fStripClusterPS.fAddress))
+                                LOG(DEBUG) << BOLDGREEN << "Exact match found " << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fPixelClusterPS.fAddress << " column "
+                                           << +cPclus[cIndx].fPixelClusterPS.fZpos << " width is " << +cPclus[cIndx].fPixelClusterPS.fWidth << BOLDCYAN << " S-cluster in row "
+                                           << +cSclus[cIndx].fStripClusterPS.fAddress << " column " << (0) << " width is " << +cSclus[cIndx].fStripClusterPS.fWidth << RESET;
                             else
-                                LOG(DEBUG) << BOLDRED << "Exact match not found " << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fAddress << " column " << +cPclus[cIndx].fZpos << " width is "
-                                           << +cPclus[cIndx].fWidth << BOLDCYAN << " S-cluster in row " << +cSclus[cIndx].fAddress << " column " << (0) << " width is " << +cSclus[cIndx].fWidth
-                                           << RESET;
+                                LOG(DEBUG) << BOLDRED << "Exact match not found " << BOLDYELLOW << " P-cluster in row " << +cPclus[cIndx].fPixelClusterPS.fAddress << " column "
+                                           << +cPclus[cIndx].fPixelClusterPS.fZpos << " width is " << +cPclus[cIndx].fPixelClusterPS.fWidth << BOLDCYAN << " S-cluster in row "
+                                           << +cSclus[cIndx].fStripClusterPS.fAddress << " column " << (0) << " width is " << +cSclus[cIndx].fStripClusterPS.fWidth << RESET;
                         }
                     }
                     // if( cNmatch && cFmatch )
-                    //     LOG (INFO) << BOLDGREEN << "Event#" << (*cEventIter)->GetEventCount() << " Trigger#" << +cTriggerId
+                    //     LOG (INFO) << BOLDGREEN << "Event#" << theD19cCic2Event->GetEventCount() << " Trigger#" << +cTriggerId
                     //         << " in a burst of " << (1+ cTriggerMult)
                     //         << " number of S-clusters match is " << +cNmatch
                     //         << " full S-cluster match is " << +cFmatch
@@ -912,14 +916,15 @@ std::vector<std::pair<uint8_t, uint8_t>> PSAlignment::AlignChip(ReadoutChip* pCh
                     LOG(INFO) << BOLDMAGENTA << "LatencyRx320 for stubs of " << +cPhase << " ReTime of " << +cRetime << RESET;
                     for(size_t cTriggerId = 0; cTriggerId < (1 + cTriggerMult); cTriggerId++)
                     {
-                        size_t cMatchedEvents = 0;
-                        auto   cEventIter     = cEvents.begin() + cTriggerId;
+                        size_t cMatchedEvents   = 0;
+                        auto   cEventIter       = cEvents.begin() + cTriggerId;
+                        auto   theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
                         do {
                             if(cEventIter >= cEvents.end()) break;
                             bool cNmatch = true;
-                            auto cPclus  = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(pChip->getHybridId(), pChip->getId());
-                            auto cSclus  = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(pChip->getHybridId(), pChip->getId());
-                            auto cStubs  = static_cast<D19cCic2Event*>(*cEventIter)->StubVector(pChip->getHybridId(), pChip->getId());
+                            auto cPclus  = theD19cCic2Event->GetPixelClusters(pChip->getHybridId(), pChip->getId());
+                            auto cSclus  = theD19cCic2Event->GetStripClusters(pChip->getHybridId(), pChip->getId());
+                            auto cStubs  = theD19cCic2Event->StubVector(pChip->getHybridId(), pChip->getId());
                             cNmatch      = cNmatch && (cStubs.size() == pInjections.size() && cPclus.size() == pInjections.size() && cSclus.size() == pInjections.size());
                             if(cStubs.size() != 0 && cNmatch)
                                 LOG(INFO) << BOLDBLUE << "Trigger#" << +cTriggerId << " in a burst of " << (1 + cTriggerMult) << " MPA" << +pChip->getId() << " found " << cSclus.size()
@@ -1029,6 +1034,7 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
             size_t cMatchedEvents = 0;
             do {
                 if(cEventIter >= cEvents.end()) break;
+                auto theD19cCic2Event  = static_cast<D19cCic2Event*>(*cEventIter);
                 bool cAllEventsMatched = true;
                 for(auto cOpticalReadout: *pBoard)
                 {
@@ -1047,25 +1053,25 @@ bool PSAlignment::FindLatency(BeBoard* pBoard, uint8_t pChipId, std::vector<Inje
                             if(cChip->getFrontEndType() == FrontEndType::SSA2) continue;
                             if(cChip->getId() % 8 != pChipId) continue;
 
-                            auto cPclusters = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cChip->getHybridId(), cChip->getId());
+                            auto cPclusters = theD19cCic2Event->GetPixelClusters(cChip->getHybridId(), cChip->getId());
                             for(auto cInjection: pInjections)
                             {
                                 bool cMatchFound = false;
                                 for(auto cPcluster: cPclusters)
                                 {
                                     if(cMatchFound) continue;
-                                    cMatchFound = (cPcluster.fAddress == cInjection.fRow) && (cPcluster.fZpos == cInjection.fColumn);
+                                    cMatchFound = (cPcluster.fPixelClusterPS.fAddress == cInjection.fRow) && (cPcluster.fPixelClusterPS.fZpos == cInjection.fColumn);
                                     if(cMatchFound)
                                     {
-                                        LOG(INFO) << BOLDGREEN << "\t\t Trigger#" << +cTriggerId << " Event#" << (*cEventIter)->GetEventCount() << " in a burst of " << (1 + cTriggerMult) << " MPA"
+                                        LOG(INFO) << BOLDGREEN << "\t\t Trigger#" << +cTriggerId << " Event#" << theD19cCic2Event->GetEventCount() << " in a burst of " << (1 + cTriggerMult) << " MPA"
                                                   << +cChip->getId() << " found " << cPclusters.size() << " P clusters."
                                                   << " Match for injection in " << +cInjection.fRow << " , " << +cInjection.fColumn << RESET;
                                     }
                                     else
-                                        LOG(DEBUG) << BOLDRED << "\t\t Trigger#" << +cTriggerId << " Event#" << (*cEventIter)->GetEventCount() << " in a burst of " << (1 + cTriggerMult) << " MPA"
+                                        LOG(DEBUG) << BOLDRED << "\t\t Trigger#" << +cTriggerId << " Event#" << theD19cCic2Event->GetEventCount() << " in a burst of " << (1 + cTriggerMult) << " MPA"
                                                    << +cChip->getId() << " found " << cPclusters.size() << " P clusters."
-                                                   << " not a match for injection in " << +cInjection.fRow << " , " << +cInjection.fColumn << " -- " << +cPcluster.fAddress << " , " << +cPcluster.fZpos
-                                                   << RESET;
+                                                   << " not a match for injection in " << +cInjection.fRow << " , " << +cInjection.fColumn << " -- " << +cPcluster.fPixelClusterPS.fAddress << " , "
+                                                   << +cPcluster.fPixelClusterPS.fZpos << RESET;
                                 }
                                 cAllEventsMatched = cAllEventsMatched && cMatchFound;
                             }
@@ -1428,17 +1434,17 @@ bool PSAlignment::AlignInputs(BeBoard* pBoard, uint8_t pChipId)
 
     return cOneFoundForAll;
 }
-bool PSAlignment::CheckL1Data(ClusterCollection<PixelClusterPS, 32> pPClusters, ClusterCollection<StripClusterPS, 32> pSClusters, std::vector<Injection> pInjections)
+bool PSAlignment::CheckL1Data(ClusterCollection<PixelClusterPSHandler, 32> pPClusters, ClusterCollection<StripClusterPSHandler, 32> pSClusters, std::vector<Injection> pInjections)
 {
     bool cFmatch = true;
 
     struct
     {
-        bool operator()(PixelClusterPS a, PixelClusterPS b) const { return a.fAddress < b.fAddress; }
+        bool operator()(PixelClusterPSHandler a, PixelClusterPSHandler b) const { return a.fPixelClusterPS.fAddress < b.fPixelClusterPS.fAddress; }
     } customSortPclus;
     struct
     {
-        bool operator()(StripClusterPS a, StripClusterPS b) const { return a.fAddress < b.fAddress; }
+        bool operator()(StripClusterPSHandler a, StripClusterPSHandler b) const { return a.fStripClusterPS.fAddress < b.fStripClusterPS.fAddress; }
     } customSortSclus;
 
     // sort P clusters by row
@@ -1455,12 +1461,12 @@ bool PSAlignment::CheckL1Data(ClusterCollection<PixelClusterPS, 32> pPClusters, 
         for(auto cPcluster: pPClusters)
         {
             if(cMatchFound) continue;
-            cMatchFound = (cPcluster.fAddress == cInjection.fRow) && (cPcluster.fZpos == cInjection.fColumn);
+            cMatchFound = (cPcluster.fPixelClusterPS.fAddress == cInjection.fRow) && (cPcluster.fPixelClusterPS.fZpos == cInjection.fColumn);
             if(cMatchFound)
             {
                 PixelClusterPS cMtchdPclstr;
-                cMtchdPclstr.fAddress = cPcluster.fAddress;
-                cMtchdPclstr.fZpos    = cPcluster.fZpos;
+                cMtchdPclstr.fAddress = cPcluster.fPixelClusterPS.fAddress;
+                cMtchdPclstr.fZpos    = cPcluster.fPixelClusterPS.fZpos;
                 cMtchdPclstrs.push_back(cMtchdPclstr);
             }
         }
@@ -1474,7 +1480,7 @@ bool PSAlignment::CheckL1Data(ClusterCollection<PixelClusterPS, 32> pPClusters, 
         for(auto cScluster: pSClusters)
         {
             if(cMatchFound) continue;
-            cMatchFound = (cScluster.fAddress == cInjection.fRow);
+            cMatchFound = (cScluster.fStripClusterPS.fAddress == cInjection.fRow);
             if(cMatchFound)
             {
                 StripClusterPS cMtchdSclstr;
@@ -1578,11 +1584,11 @@ bool PSAlignment::CheckFullMatch(ReadoutChip* pChip, const std::vector<Event*>& 
     bool cCheckL1 = true;
     struct
     {
-        bool operator()(PixelClusterPS a, PixelClusterPS b) const { return a.fAddress < b.fAddress; }
+        bool operator()(PixelClusterPSHandler a, PixelClusterPSHandler b) const { return a.fPixelClusterPS.fAddress < b.fPixelClusterPS.fAddress; }
     } customSortPclus;
     struct
     {
-        bool operator()(StripClusterPS a, StripClusterPS b) const { return a.fAddress < b.fAddress; }
+        bool operator()(StripClusterPSHandler a, StripClusterPSHandler b) const { return a.fStripClusterPS.fAddress < b.fStripClusterPS.fAddress; }
     } customSortSclus;
     // struct
     // {
@@ -1596,13 +1602,14 @@ bool PSAlignment::CheckFullMatch(ReadoutChip* pChip, const std::vector<Event*>& 
     size_t cNchecked        = 0;
     do {
         if(cEventIter >= pEvents.end()) break;
-        auto cPclus = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(pChip->getHybridId(), pChip->getId());
-        auto cSclus = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(pChip->getHybridId(), pChip->getId());
+        auto theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
+        auto cPclus           = theD19cCic2Event->GetPixelClusters(pChip->getHybridId(), pChip->getId());
+        auto cSclus           = theD19cCic2Event->GetStripClusters(pChip->getHybridId(), pChip->getId());
         // sort P clusters by row
         std::sort(cPclus.begin(), cPclus.end(), customSortPclus);
         // sort S clusters by row
         std::sort(cSclus.begin(), cSclus.end(), customSortSclus);
-        auto cStubs = static_cast<D19cCic2Event*>(*cEventIter)->StubVector(pChip->getHybridId(), pChip->getId());
+        auto cStubs = theD19cCic2Event->StubVector(pChip->getHybridId(), pChip->getId());
         LOG(DEBUG) << BOLDBLUE << "\t\t..Read-back " << +cStubs.size() << " stubs from MPA#" << +pChip->getId() << RESET;
         cMatchedEventsL1 += (cPclus.size() == pInjections.size() && cSclus.size() == pInjections.size()) ? 1 : 0;
         bool cNmatch = true;
@@ -1614,7 +1621,7 @@ bool PSAlignment::CheckFullMatch(ReadoutChip* pChip, const std::vector<Event*>& 
                        << " correct numnber of S and P clusters." << RESET;
         }
         if(cStubs.size() == pInjections.size() && cNmatch)
-            LOG(DEBUG) << BOLDGREEN << "Trigger#" << +pTriggerId << " Event#" << (*cEventIter)->GetEventCount() << " in a burst of " << (1 + pTriggerMult) << " MPA" << +pChip->getId() << " found "
+            LOG(DEBUG) << BOLDGREEN << "Trigger#" << +pTriggerId << " Event#" << theD19cCic2Event->GetEventCount() << " in a burst of " << (1 + pTriggerMult) << " MPA" << +pChip->getId() << " found "
                        << cSclus.size() << " S clusters and " << cPclus.size() << " P clusters in L1 data from MPA#" << +pChip->getId() << " also have " << +cStubs.size() << " stbs." << RESET;
         // print stubs if they are there
         if(cNmatch)
