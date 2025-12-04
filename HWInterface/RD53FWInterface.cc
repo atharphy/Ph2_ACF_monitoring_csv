@@ -1697,7 +1697,6 @@ std::vector<double> RD53FWInterface::RunBERtest(bool                            
 // # 640 Mbit/s   = 1 #
 // # 320 Mbit/s   = 2 #
 // ####################
-//"user.ctrl_regs.PRBS_checker.error_cntr_sel"
 {
     const double bitPerFrame      = 32. * std::pow(2, frontendSpeed); // Bits per frame
     const double fps              = 1.28e9 / bitPerFrame;             // Frames per second: 32-bit frame @ 1.28 Gbit/s, 64-bit frame @ 640 Mbit/s, 128-bit frame @ 320 Mbit/s

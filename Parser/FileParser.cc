@@ -1540,7 +1540,7 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             // ###################
             // # Specific for IT #
             // ###################
-            const std::string RxGroupsConfig = cChild.attribute("RxGroups").as_string("0000");
+            const std::string RxGroupsConfig = cChild.attribute("RxGroups").as_string("NNN1");
             if((RxGroupsConfig.size() != NCHIPLANES) || (strcmp(RxGroupsConfig.c_str(), "NNNN") == 0))
                 throw std::runtime_error("The \"RxGroups\" attribute of RD53 should contain 4 characters ('0' up to '9', or 'N', but not all 'N')");
             auto                    cRxGroups = parseString<uint8_t, NCHIPLANES>(RxGroupsConfig);
@@ -1592,7 +1592,7 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
     const uint32_t    chipLane    = theChipNode.attribute("Lane").as_uint();
     const int64_t     eFuseCode   = (theChipNode.attribute("eFuseCode") ? theChipNode.attribute("eFuseCode").as_int() : 0);
     const int64_t     IrefCode    = (theChipNode.attribute("IrefCode") ? theChipNode.attribute("IrefCode").as_int() : 0);
-    const std::string cRxGroups   = theChipNode.attribute("RxGroups").as_string("0000");
+    const std::string cRxGroups   = theChipNode.attribute("RxGroups").as_string("NNN1");
     const uint8_t     cRxChannel  = (theChipNode.attribute("RxChannel") ? theChipNode.attribute("RxChannel").as_uint() : 0);
     const uint8_t     cRxPolarity = theChipNode.attribute("RxPolarity").as_uint();
     const uint8_t     cTxGroup    = theChipNode.attribute("TxGroup").as_uint();

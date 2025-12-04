@@ -78,13 +78,14 @@
               ToT6to4Mapping         =      "0"
               ToTDualEdgeCount       =      "0"
 
-              RESISTORI2V            =   "5000"
+              RESISTORI2V            =   "4990"
               NTCBETA                =   "3435"
               RNTCAT25C              =  "10000"
               ADC_OFFSET_VOLT        =     "63"
               ADC_MAXIMUM_VOLT       =    "839"
               TEMPSENS_IDEAL_FACTOR  =   "1225"
-              SAMPLE_N_TIMES         =     "10"
+              SAMPLE_N_TIMES         =      "1"
+              SAMPLE_NTC_SLOPE       =     "10"
               WAIT_MUX_CONFIG        =    "100"
               VREF_ADC               =    "800"
               INJ_CAP                =     "80"
@@ -370,7 +371,8 @@
       <MonitoringElement device="RD53"  register="TEMPSENS_ANA_SLDO"    enable="1"/>
       <MonitoringElement device="RD53"  register="TEMPSENS_DIG_SLDO"    enable="1"/>
       <MonitoringElement device="RD53"  register="TEMPSENS_CENTER"      enable="1"/>
-      <MonitoringElement device="RD53"  register="INTERNAL_NTC"         enable="1"/>
+      <MonitoringElement device="RD53"  register="INTERNAL_NTC_REL"     enable="1"/>
+      <MonitoringElement device="RD53"  register="INTERNAL_NTC_ABS"     enable="1"/>
 
       <MonitoringElement device="LpGBT" register="ADC4"                 enable="0"/>
       <MonitoringElement device="LpGBT" register="ADC7"                 enable="0"/>
