@@ -257,19 +257,12 @@ void OTinjectionDelayOptimization::prepareInjectionDelayScan2S()
     setChannelGroupHandler(theChannelGroupHandler);
 
     this->setTestAllChannels(false);
-    // Setting sparsification for simplicity
+
+    // Disable sparsification for simplicity
     for(auto theBoard: *fDetectorContainer)
     {
-        fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 0);
+        setSparsification(theBoard, false);
         fBeBoardInterface->WriteBoardReg(theBoard, "fc7_daq_cnfg.fast_command_block.test_pulse.delay_after_test_pulse", fInitialLatency - 1);
-        for(auto theOpticalGroup: *theBoard)
-        {
-            for(auto theHybrid: *theOpticalGroup)
-            {
-                auto cCic = static_cast<OuterTrackerHybrid*>(theHybrid)->fCic;
-                fCicInterface->SetSparsification(cCic, 0);
-            }
-        }
     }
 
     setSameDac("HitOr", 1);                                                                 // using logical OR

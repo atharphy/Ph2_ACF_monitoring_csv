@@ -14,7 +14,7 @@ struct HistogramFiller : public HwDescriptionVisitor
     void visit(ChipContainer* pCbc)
     {
         ReadoutChip*      theCbc         = static_cast<ReadoutChip*>(pCbc);
-        std::vector<bool> cDataBitVector = fEvent->DataBitVector(theCbc->getHybridId(), theCbc->getId());
+        std::vector<bool> cDataBitVector = static_cast<D19cCic2Event*>(fEvent)->DataBitVector(theCbc->getHybridId(), theCbc->getId());
 
         for(uint32_t cId = 0; cId < NCHANNELS; cId++)
         {
@@ -256,7 +256,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, Event* pEvent, uint16_t pVal
                 uint32_t cbcEventCounter = 0;
                 for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
                 {
-                    if ( pEvent->DataBit( cCbc->getHybridId(), cCbc->getId(), 0, cId ) )
+                    if ( static_cast<D19cCic2Event*>(pEvent)->DataBit( cCbc->getHybridId(), cCbc->getId(), 0, cId ) )
                     {
                         sCurveHist->Fill( pValue );
                         cHitCounter++;
@@ -272,7 +272,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, Event* pEvent, uint16_t pVal
                 {
                     // for ( uint32_t cId = 0; cId < NCHANNELS; cId++ )
                     //{
-                    // if ( pEvent->DataBit ( cCbc->getHybridId(), cCbc->getId(), 0, cId ) )
+                    // if ( static_cast<D19cCic2Event*>(pEvent)->DataBit ( cCbc->getHybridId(), cCbc->getId(), 0, cId ) )
                     //{
                     // cScurve->second->Fill ( pValue );
                     // cHitCounter++;
@@ -280,7 +280,7 @@ uint32_t HybridTester::fillSCurves(BeBoard* pBoard, Event* pEvent, uint16_t pVal
                     //}
                     // experimental
 
-                    auto cHits = pEvent->GetHits(cHybrid->getId(), cCbc->getId());
+                    auto cHits = static_cast<D19cCic2Event*>(pEvent)->GetHits(cHybrid->getId(), cCbc->getId());
                     cHitCounter += cHits.size();
 
                     for(__attribute__((unused)) auto cHit: cHits) cScurve->second->Fill(pValue);

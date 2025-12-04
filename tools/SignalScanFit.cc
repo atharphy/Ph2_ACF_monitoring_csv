@@ -237,7 +237,7 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                             TProfile* cClusterSizeOdd     = static_cast<TProfile*>(getHist(cCbc, "Cbc_ClusterSize_odd"));
                             TH2D*     cClusters2DEvenHist = dynamic_cast<TH2D*>(getHist(cCbc, "Cbc_Clusters2D_even"));
                             TH2D*     cClusters2DOddHist  = dynamic_cast<TH2D*>(getHist(cCbc, "Cbc_Clusters2D_odd"));
-                            auto      cHits               = cEvent->GetHits(cHybrid->getId(), cCbc->getId());
+                            auto      cHits               = static_cast<D19cCic2Event*>(cEvent)->GetHits(cHybrid->getId(), cCbc->getId());
                             LOG(DEBUG) << BOLDBLUE << "Found " << +cHits.size() << " hits in CBC" << +cCbc->getId() << RESET;
                             for(auto cId: cHits)
                             {
@@ -257,21 +257,21 @@ void SignalScanFit::ScanSignal(int pSignalScanLength)
                             // Now fill the ClusterWidth per VCth plots:
                             for(auto& cCluster: cClusters)
                             {
-                                double cClusterSize = cCluster.fClusterWidth;
-                                cVcthClusters->Fill(cClusterSize, cCluster.fClusterWidth); // Cluster size counter
+                                double cClusterSize = cCluster.fCluster2S.fWidth;
+                                cVcthClusters->Fill(cClusterSize, cCluster.fCluster2S.fWidth); // Cluster size counter
                                 uint32_t cStrip = cCluster.getBaricentre() * 2 + cCbc->getId() * 127 * 2;
                                 LOG(DEBUG) << BOLDBLUE << "\t " << cClusterSize << " strip cluster found with center in strip " << cStrip << " [half-strips] of sensor " << +cCluster.getSensor()
                                            << RESET;
                                 if(cCluster.getSensor() == 0)
                                 {
-                                    if(cCluster.fClusterWidth == 1) cClustersS0->Fill(cStrip, cVCth);
+                                    if(cCluster.fCluster2S.fWidth == 1) cClustersS0->Fill(cStrip, cVCth);
                                     cClustersEvenHist->Fill(cVCth);
                                     cClusterSizeEven->Fill(cVCth, cClusterSize);
                                     cClusters2DEvenHist->Fill(cVCth, cClusterSize);
                                 }
                                 else if(cCluster.getSensor() == 1)
                                 {
-                                    if(cCluster.fClusterWidth == 1) cClustersS1->Fill(cStrip, cVCth);
+                                    if(cCluster.fCluster2S.fWidth == 1) cClustersS1->Fill(cStrip, cVCth);
                                     cClustersOddHist->Fill(cVCth);
                                     cClusterSizeOdd->Fill(cVCth, cClusterSize);
                                     cClusters2DOddHist->Fill(cVCth, cClusterSize);

@@ -91,9 +91,10 @@ void FileDumper::dumpBoardConfigurationFile(pugi::xml_node theMotherNode, BeBoar
     else
         throw std::runtime_error("FileDumper error: Event type not recognized");
 
-    theBoardNode.append_attribute(BEBOARD_LINKRESET_ATTRIBUTE_NAME)  = (theBoard->getLinkReset() > 0) ? "1" : "0";
-    theBoardNode.append_attribute(BEBOARD_BOARDRESET_ATTRIBUTE_NAME) = (theBoard->getReset() > 0) ? "1" : "0";
-    theBoardNode.append_attribute(BEBOARD_CONFIGURE_ATTRIBUTE_NAME)  = (theBoard->getToConfigure() > 0) ? "1" : "0";
+    theBoardNode.append_attribute(BEBOARD_LINKRESET_ATTRIBUTE_NAME)            = (theBoard->getLinkReset() > 0) ? "1" : "0";
+    theBoardNode.append_attribute(BEBOARD_BOARDRESET_ATTRIBUTE_NAME)           = (theBoard->getReset() > 0) ? "1" : "0";
+    theBoardNode.append_attribute(BEBOARD_CONFIGURE_ATTRIBUTE_NAME)            = (theBoard->getToConfigure() > 0) ? "1" : "0";
+    theBoardNode.append_attribute(BEBOARD_ENABLESPARSIFICATION_ATTRIBUTE_NAME) = (theBoard->getSparsification()) ? "1" : "0";
 
     pugi::xml_node theBoardConnectionNode                                                    = theBoardNode.append_child(BEBOARD_CONNECTION_NODE_NAME);
     theBoardConnectionNode.append_attribute(BEBOARD_CONNECTION_ID_ATTRIBUTE_NAME)            = theBoard->getConnectionId().c_str();

@@ -14,6 +14,7 @@ class MetadataHandlerOT : public MetadataHandler
     void fillFinalConditionsHardwareSpecific() override;
 
   private:
+    void fillFWcompilationTimestampContainer(DetectorDataContainer& theFWcompilationTimestampContainer);
     void fillCICFuseIdContainer(DetectorDataContainer& theCICFuseIdContainer);
     void fillCICConfigurationContainer(DetectorDataContainer& theCICConfigurationContainer);
     void fillIsReadoutChipCalibratedContainer(DetectorDataContainer& theReadoutChipIsCalibratedContainer);

@@ -300,28 +300,6 @@ void BeamTestCheck::CheckWithExternal(uint8_t pContinuousReadout)
 
     // validate
     Validate();
-
-    // for(auto cBoard: *fDetectorContainer)
-    // {
-    //     // prepare injection
-    //     PrepareForExternal(cBoard);
-    //     LOG (INFO) << "External check with " << fNevents << " -- continuous readout set to " << +pContinuousReadout << RESET;
-
-    //     // if(pContinuousReadout == 1) ContinuousReadout(cBoard);
-    //     // else ReadNEvents(cBoard, fNevents);
-
-    //     // // process events
-    //     // //ProcessEvents(cBoard);
-    //     // // scan the latency - find best hit latency
-    //     ScanLatency(cBoard, pContinuousReadout);
-    //     // scan the threshold, record number of hits; cluster occupancy
-    //     // ScanThreshold(cBoard);
-    // }
-    // #ifdef __USE_ROOT__
-    //     fDQMHistogrammer.fillLatencyPlots(fLatencyContainerS0, fLatencyContainerS1);
-    //     fDQMHistogrammer.fillStubLatencyPlots(fStubLatencyContainer);
-    //     fDQMHistogrammer.fillTriggerTDCPlots(fTDCContainer);
-    // #endif
 }
 void BeamTestCheck::ValidateExternal()
 {
@@ -359,6 +337,7 @@ void BeamTestCheck::UpdateClusterContainers(BeBoard* pBoard, const std::vector<E
         auto cEventIter = pEvents.begin() + cTriggerId;
         do {
             if(cEventIter >= pEvents.end()) break;
+            auto theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
             for(auto cOpticalGroup: *pBoard)
             {
                 auto& cClusterOccupancyOG   = cClusterOccupancy->getObject(cOpticalGroup->getId());
@@ -386,14 +365,14 @@ void BeamTestCheck::UpdateClusterContainers(BeBoard* pBoard, const std::vector<E
                         // auto  cThreshold = fReadoutChipInterface->ReadChipReg(cChip,"Threshold");
 
                         // zero
-                        if((*cEventIter)->GetEventCount() == cTriggerId)
+                        if(theD19cCic2Event->GetEventCount() == cTriggerId)
                         {
                             cClusterOccupancyC->getSummary<GenericDataArray<float, VECSIZE>>().at(pIndx)   = 0;
                             cClusterOccupancyCS0->getSummary<GenericDataArray<float, VECSIZE>>().at(pIndx) = 0;
                             cClusterOccupancyCS1->getSummary<GenericDataArray<float, VECSIZE>>().at(pIndx) = 0;
                         }
 
-                        auto   cClusters    = static_cast<D19cCic2Event*>((*cEventIter))->getClusters(cHybrid->getId(), cChip->getId());
+                        auto   cClusters    = theD19cCic2Event->getClusters(cHybrid->getId(), cChip->getId());
                         size_t cNClustersS0 = 0;
                         size_t cNClustersS1 = 0;
                         for(auto cCluster: cClusters)
@@ -441,133 +420,6 @@ void BeamTestCheck::UpdateClusterContainers(BeBoard* pBoard, const std::vector<E
             } // chip vector
         } // hybrid vector
     } // optical group vector
-}
-void BeamTestCheck::ScanThreshold(BeBoard* pBoard)
-{
-    bool cSparsified = pBoard->getSparsification();
-    // make sure I am in un-sparsified mode
-    LOG(INFO) << BOLDGREEN << "Setting sparsification OFF" << RESET;
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 0);
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            fCicInterface->SetSparsification(cCic, 0);
-        }
-    }
-
-    float cLimit      = 0.075;
-    float cBreakCount = 5;
-    // first set latency - off
-    uint16_t cOffLatency = fOptimalLatency - 20;
-    LOG(INFO) << BOLDGREEN << "Setting trigger latency to " << cOffLatency << " [off latency]" << RESET;
-    setSameDacBeBoard(pBoard, "TriggerLatency", cOffLatency);
-    fBeBoardInterface->ChipReSync(pBoard);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    // find pedestal
-    DetectorDataContainer cContainerOffLatency;
-    fDetectorDataContainer = &cContainerOffLatency;
-    ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, *fDetectorDataContainer);
-    bitWiseScan("Threshold", fNevents, 0.75);
-    for(auto cOpticalGroup: *pBoard) // for on opticalGroup - begin
-    {
-        for(auto cHybrid: *cOpticalGroup) // for on hybrid - begin
-        {
-            for(auto cChip: *cHybrid) // for on chip - begin
-            {
-                uint16_t cThreshold = fReadoutChipInterface->ReadChipReg(cChip, "Threshold");
-                fPedestalContainer.getObject(pBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = cThreshold;
-
-                LOG(INFO) << BOLDMAGENTA << "Off-latency... 50 percent occupancy level on chip#" << +cChip->getId() << "FE#" << cHybrid->getId() << " found for a threshold of " << cThreshold << RESET;
-            } // for on chip - end
-        } // for on hybrid - end
-    } // for on opticalGroup - end
-
-    // make sure in sparisified mode for this
-    LOG(INFO) << BOLDGREEN << "Setting sparsification ON" << RESET;
-    pBoard->setSparsification(true);
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", 1);
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            fCicInterface->SetSparsification(cCic, 1);
-        }
-    }
-
-    // back to on latency - scan till all zero
-    LOG(INFO) << BOLDGREEN << "Setting trigger latency to " << fOptimalLatency << " [on latency]" << RESET;
-    setSameDacBeBoard(pBoard, "TriggerLatency", fOptimalLatency);
-    fBeBoardInterface->ChipReSync(pBoard);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    int    cOffset          = 0;
-    size_t cLimitReached    = 0;
-    float  cTargetOccupancy = 0.0;
-    LOG(INFO) << BOLDGREEN << "Scanning threshold until all zeros reached" << RESET;
-    std::vector<uint16_t> cThresholdOffsets(0);
-    fThStep = 0;
-    do {
-        // update threshold
-        for(auto cOpticalGroup: *pBoard) // for on opticalGroup - begin
-        {
-            for(auto cHybrid: *cOpticalGroup) // for on hybrid - begin
-            {
-                for(auto cChip: *cHybrid) // for on chip - begin
-                {
-                    uint16_t cThreshold =
-                        fPedestalContainer.getObject(pBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-                    fReadoutChipInterface->WriteChipReg(cChip, "Threshold", cThreshold + cOffset);
-                    if(fThStep % 10 == 0) LOG(INFO) << BOLDBLUE << "Threshold on Chip" << +cChip->getId() << " on Hybrid" << +cHybrid->getId() << " Vcth is " << (cThreshold + cOffset) << RESET;
-                } // for on chip - end
-            } // for on hybrid - end
-        } // for on opticalGroup - end
-
-        // measure BeBoard occupancy
-        DetectorDataContainer* cOccContainer = fRecycleBin.get(&ContainerFactory::copyAndInitStructure<Occupancy>, Occupancy());
-        fDetectorDataContainer               = cOccContainer;
-        measureBeBoardData(pBoard->getId(), fNevents);
-        // figure out if zero was reached on all chips
-        /*for(auto cOpticalGroup: *fDetectorDataContainer->getObject(pBoard->getId()))
-        {
-            for(auto cHybrid: *cOpticalGroup)
-            {
-                for(auto cChip: *cHybrid)
-                {
-                    // update counters
-                    auto& cOccThisChip = cChip->getSummary<Occupancy, Occupancy>().fOccupancy;
-                    LOG (INFO) << BOLDBLUE << "\t.. Occupancy on Chip" << +cChip->getId() << " on Hybrid" << +cHybrid->getId()
-                        << " is " << cOccThisChip
-                        << RESET;
-                }//chip
-            }// hybrid
-        }//OG
-        */
-        float cGlbOcc = cOccContainer->getSummary<Occupancy, Occupancy>().fOccupancy;
-        if(fThStep % 10 == 0) LOG(INFO) << BOLDBLUE << "ThScan [Step#" << +cOffset << "] global occupancy is " << cGlbOcc << RESET;
-        bool cLimitFound = std::fabs(cGlbOcc - cTargetOccupancy) <= cLimit;
-
-        // update cluster occupancy for this threshold
-        const std::vector<Event*>& pEvents = this->GetEvents();
-        UpdateClusterContainers(pBoard, pEvents, std::fabs(cOffset));
-
-        cLimitReached += (cLimitFound) ? 1 : 0;
-        cThresholdOffsets.push_back(cOffset);
-        cOffset -= 1;
-        fThStep++;
-    } while(cLimitReached < cBreakCount);
-
-    // make sure sparsification is reset
-    fBeBoardInterface->WriteBoardReg(pBoard, "fc7_daq_cnfg.physical_interface_block.cic.2s_sparsified_enable", cSparsified);
-    for(auto cOpticalGroup: *pBoard)
-    {
-        for(auto cHybrid: *cOpticalGroup)
-        {
-            auto& cCic = static_cast<OuterTrackerHybrid*>(cHybrid)->fCic;
-            fCicInterface->SetSparsification(cCic, cSparsified);
-        }
-    }
 }
 void BeamTestCheck::ScanL1Latency(uint8_t pContinuousReadout)
 {
@@ -1050,21 +902,22 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
         auto cMaxEventsToProc = (fNevents >= 10000) ? 10000 : fNevents;
         do {
             if(cEventIter >= pEvents.end()) break;
+            auto theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
 
-            static_cast<D19cCic2Event*>(*cEventIter)->decodeEvent();
+            theD19cCic2Event->decodeEvent();
 
-            uint8_t cTDCVal = (*cEventIter)->GetTDC();
+            uint8_t cTDCVal = theD19cCic2Event->GetTDC();
             fTDCContainer.getObject(cBrdIndx)->getSummary<GenericDataArray<uint16_t, TDCBINS>>().at(cTDCVal)++;
 
             for(auto cOpticalGroup: *cBoard)
             {
                 for(auto cHybrid: *cOpticalGroup)
                 {
-                    // auto              cL1IdCIC  = static_cast<D19cCic2Event*>(*cEventIter)->L1Id(cHybrid->getId(), 0);
-                    auto cL1Status = static_cast<D19cCic2Event*>(*cEventIter)->L1Status(cHybrid->getId());
-                    auto cBxId     = (*cEventIter)->BxId(cHybrid->getId());
-                    auto cStubStat = static_cast<D19cCic2Event*>(*cEventIter)->StubStatus(cHybrid->getId());
-                    LOG(DEBUG) << BOLDYELLOW << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status "
+                    // auto              cL1IdCIC  = theD19cCic2Event->L1Id(cHybrid->getId(), 0);
+                    auto cL1Status = theD19cCic2Event->L1Status(cHybrid->getId());
+                    auto cBxId     = theD19cCic2Event->BxId(cHybrid->getId());
+                    auto cStubStat = theD19cCic2Event->StubStatus(cHybrid->getId());
+                    LOG(DEBUG) << BOLDYELLOW << "Event#" << theD19cCic2Event->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status "
                                << std::bitset<8>(cStubStat) << RESET;
                     auto&                cOccHybrid = fDetectorDataContainer->getObject(cBrdIndx)->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId());
                     std::vector<uint8_t> cIndices(0);
@@ -1121,38 +974,38 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         // if its a CBC .. look for events with exactly 2 clusters
                         if(cChip->getFrontEndType() == FrontEndType::MPA2)
                         {
-                            auto cStripClusters = static_cast<D19cCic2Event*>(*cEventIter)->GetStripClusters(cHybrid->getId(), cChip->getId());
-                            auto cPxlClusters   = static_cast<D19cCic2Event*>(*cEventIter)->GetPixelClusters(cHybrid->getId(), cChip->getId());
+                            auto cStripClusters = theD19cCic2Event->GetStripClusters(cHybrid->getId(), cChip->getId());
+                            auto cPxlClusters   = theD19cCic2Event->GetPixelClusters(cHybrid->getId(), cChip->getId());
                             if(cStripClusters.size() == cPxlClusters.size() && cPxlClusters.size() == 1) // events with exactly one cluster in each sensor
                             {
                                 double cCenterOfMassP = 0;
                                 bool   cSingles       = true;
                                 for(auto cPxlCluster: cPxlClusters)
                                 {
-                                    uint32_t cRow = cPxlCluster.fZpos;
-                                    uint32_t cCol = cPxlCluster.fAddress;
-                                    if(cPxlCluster.fWidth != 1)
+                                    uint32_t cRow = cPxlCluster.fPixelClusterPS.fZpos;
+                                    uint32_t cCol = cPxlCluster.fPixelClusterPS.fAddress;
+                                    if(cPxlCluster.fPixelClusterPS.fWidth != 1)
                                     {
                                         cSingles = false;
                                         continue;
                                     }
                                     cClusterContainerS0->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
-                                    for(uint8_t cOff = 0; cOff < cPxlCluster.fWidth; cOff++) cCenterOfMassP += cPxlCluster.fAddress + cOff;
-                                    cCenterOfMassP /= (cPxlCluster.fWidth);
+                                    for(uint8_t cOff = 0; cOff < cPxlCluster.fPixelClusterPS.fWidth; cOff++) cCenterOfMassP += cPxlCluster.fPixelClusterPS.fAddress + cOff;
+                                    cCenterOfMassP /= (cPxlCluster.fPixelClusterPS.fWidth);
                                 }
                                 double cCenterOfMassS = 0;
                                 for(auto cStrpCluster: cStripClusters)
                                 {
                                     uint32_t cRow = 0;
-                                    uint32_t cCol = cStrpCluster.fAddress;
-                                    if(cStrpCluster.fWidth != 0)
+                                    uint32_t cCol = cStrpCluster.fStripClusterPS.fAddress;
+                                    if(cStrpCluster.fStripClusterPS.fWidth != 0)
                                     {
                                         cSingles = false;
                                         continue;
                                     }
                                     cClusterContainerS1->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getChannel<Occupancy>(cRow, cCol).fOccupancy++;
-                                    for(uint8_t cOff = 0; cOff < cStrpCluster.fWidth; cOff++) cCenterOfMassS += cStrpCluster.fAddress + cOff;
-                                    cCenterOfMassS /= (cStrpCluster.fWidth);
+                                    for(uint8_t cOff = 0; cOff < cStrpCluster.fStripClusterPS.fWidth; cOff++) cCenterOfMassS += cStrpCluster.fStripClusterPS.fAddress + cOff;
+                                    cCenterOfMassS /= (cStrpCluster.fStripClusterPS.fWidth);
                                 }
                                 // cSingles = cSingles && (cTDCVal == 3 );
                                 // cSingles = cSingles && (cTDCVal < 2 || cTDCVal > 4 );
@@ -1170,16 +1023,16 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                                 cBend                       = (std::fabs(cDifference) <= 3.5) ? cDifference : 7.0;
                                 double            cDiffIndx = (cBend - (-7.5)) / 0.5;
                                 std::stringstream cOut;
-                                cOut << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status " << std::bitset<8>(cStubStat)
-                                     << " Hybrid#" << +cHybrid->getId() << " Chip# " << +cChip->getId() << " found " << +cStubs.size() << " stubs"
+                                cOut << "Event#" << theD19cCic2Event->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status "
+                                     << std::bitset<8>(cStubStat) << " Hybrid#" << +cHybrid->getId() << " Chip# " << +cChip->getId() << " found " << +cStubs.size() << " stubs"
                                      << " and exactly 1 cluster in each of S0 + S1 "
                                      << " center of mass P-Cluster " << cCenterOfMassP << " center of mass S-Cluster " << cCenterOfMassS << " bend from clusters is " << cBend << " [ Id is "
                                      << cDiffIndx << " ]\n";
                                 for(auto cPxlCluster: cPxlClusters)
                                 {
-                                    uint32_t cRow = cPxlCluster.fZpos;
-                                    uint32_t cCol = cPxlCluster.fAddress - 1;
-                                    if(cPxlCluster.fWidth != 0) continue;
+                                    uint32_t cRow = cPxlCluster.fPixelClusterPS.fZpos;
+                                    uint32_t cCol = cPxlCluster.fPixelClusterPS.fAddress - 1;
+                                    if(cPxlCluster.fPixelClusterPS.fWidth != 0) continue;
                                     cOut << "\t\t\t\t\t.. P cluster  - row " << cRow << " column " << cCol << "\n";
                                 }
                                 bool cStubFound = (cStubs.size() > 0);
@@ -1213,7 +1066,7 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                             }
                         }
                         if(pPrint)
-                            LOG(DEBUG) << BOLDYELLOW << "Event#" << (*cEventIter)->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status "
+                            LOG(DEBUG) << BOLDYELLOW << "Event#" << theD19cCic2Event->GetEventCount() << " BxId " << +cBxId << " L1 Status " << std::bitset<9>(cL1Status) << " Stub Status "
                                        << std::bitset<8>(cStubStat) << " Hybrid#" << +cHybrid->getId() << " Chip# " << +cChip->getId() << " found " << +cStubs.size() << " stubs." << RESET;
                         auto& cLUT = cBendLUT.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<std::vector<uint8_t>>();
                         // loop over stubs and count
@@ -1277,8 +1130,9 @@ void BeamTestCheck::Count(const std::vector<Event*> pEvents, size_t pTriggerId, 
                         LOG(DEBUG) << BOLDYELLOW << "MPA#" << +cChip->getId() << " SSA Id " << +cSSAId << RESET;
 
                         // loop over hits and count
-                        auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                        if(cHits.size() > 0) LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << " Chip#" << +(cChip->getId() % 8) << "   " << +cHits.size() << " hits." << RESET;
+                        auto cHits = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
+                        if(cHits.size() > 0)
+                            LOG(DEBUG) << BOLDBLUE << "Event#" << theD19cCic2Event->GetEventCount() << " Chip#" << +(cChip->getId() % 8) << "   " << +cHits.size() << " hits." << RESET;
                         for(auto cHit: cHits)
                         {
                             auto& cOccChip = cOccHybrid->getObject(cChip->getId());
@@ -1600,10 +1454,11 @@ void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinuousReadout)
             int cRefHits = 0;
             do {
                 if(cEventIter >= cEvents.end()) break;
-                uint8_t cTDCVal = (*cEventIter)->GetTDC();
+                auto    theD19cCic2Event = static_cast<D19cCic2Event*>(*cEventIter);
+                uint8_t cTDCVal          = theD19cCic2Event->GetTDC();
                 cTDCContainer->getSummary<GenericDataArray<uint16_t, VECSIZE>>().at(cTDCVal)++;
 
-                //(*cEventIter)->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup());
+                // theD19cCic2Event->fillDataContainer(cOccBrd, fChannelGroupHandler->allChannelGroup());
                 for(auto cOpticalGroup: *pBoard)
                 {
                     auto& cOccOG = cOccBrd->getObject(cOpticalGroup->getId());
@@ -1615,8 +1470,8 @@ void BeamTestCheck::ScanLatency(BeBoard* pBoard, uint8_t pContinuousReadout)
                         {
                             if(cChip->getFrontEndType() != FrontEndType::CBC3) continue;
 
-                            auto cHits = (*cEventIter)->GetHits(cHybrid->getId(), cChip->getId());
-                            LOG(DEBUG) << BOLDBLUE << "Event#" << (*cEventIter)->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
+                            auto cHits = theD19cCic2Event->GetHits(cHybrid->getId(), cChip->getId());
+                            LOG(DEBUG) << BOLDBLUE << "Event#" << theD19cCic2Event->GetEventCount() << "Chip#" << +cChip->getId() % 8 << " " << +cHits.size() << " hits." << RESET;
                             cTotalHits += cHits.size();
                             for(auto cHit: cHits)
                             {

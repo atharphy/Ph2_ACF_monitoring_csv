@@ -5,3 +5,5 @@ This guide is split into the following sections:
 - [General](general/index.md) - Basic setup instructions to install Ph2_ACF and dependencies
 - [Inner Tracker](innerTracker/index.md) - Specific information on the Inner Tracker subsystem
 - [Outer Tracker](outerTracker/index.md) - Specific information on the Outer Tracker subsystem
+    - [2S modules testing](outerTracker/2Stesting.md)
+    - [PS modules testing](outerTracker/PStesting.md)

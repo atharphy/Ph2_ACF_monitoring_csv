@@ -28,6 +28,7 @@ class D19cTriggerInterface : public TriggerInterface
     bool     WaitForNTriggers(uint32_t pNTriggers) override;
     bool     SendNTriggers(uint32_t pNTriggers) override;
     void     PrintStatus() override;
+    uint32_t getNumberOfTriggerCounter() override;
 
   private:
     void TriggerConfiguration();
