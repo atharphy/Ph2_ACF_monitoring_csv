@@ -1009,16 +1009,21 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // #########################################################################
         // # Scan from 0 to saturation to compute ADC volt independent temperature #
         // #########################################################################
-        const uint16_t       step = maxADCval / nSteps;
+        const uint16_t       step    = maxADCval / nSteps;
+        const uint16_t       regSize = RD53Shared::setBits(pRD53RegMap.at("MonitorConfig").fBitSize - 1);
         std::vector<int32_t> ntcVoltVec;
         std::vector<int32_t> ntcCurrVec;
         std::vector<int32_t> ntcADCVec;
-        for(uint16_t i = 0; i < nSteps; i++)
+        for(uint16_t i = 1; i < nSteps; i++)
         {
             RD53BInterface::readNTCvoltCurr(pChip, step * i, ntcVolt, ntcCurr);
-            ntcVoltVec.push_back(ntcVolt);
-            ntcCurrVec.push_back(ntcCurr);
-            ntcADCVec.push_back(step * i);
+            if((ntcVolt > 0) && (ntcVolt < regSize) && (ntcCurr > 0) && (ntcCurr < regSize))
+            {
+                ntcVoltVec.push_back(ntcVolt);
+                ntcCurrVec.push_back(ntcCurr);
+                ntcADCVec.push_back(step * i);
+                LOG(DEBUG) << "DAC_NTC: " << step * i << " NTC Volt: " << ntcVolt << " NTC Curr: " << ntcCurr << RESET;
+            }
         }
 
         // ########################
