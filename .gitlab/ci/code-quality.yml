@@ -46,7 +46,6 @@ quality:clang-format:
     - mkdir -p ${REPORTS_PATH}
   script:
     - yum install -y clang-tools-extra git git-lfs which
-    - curl -LO https://raw.githubusercontent.com/Sarcasm/run-clang-format/master/run-clang-format.py
     - CLANG_FORMAT_EXE=${CI_PROJECT_DIR}/.gitlab/ci/scripts/run-clang-format.py
     - export PATCHFILE=clang-format-${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}.patch
     - echo ARTIFACTS_DIR/PATCHFILE is ${ARTIFACTS_DIR}/${PATCHFILE}
