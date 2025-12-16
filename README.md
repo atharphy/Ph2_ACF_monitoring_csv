@@ -32,7 +32,7 @@ pv sdgoldenimage.img | sudo dd of=/dev/mmcblk0
 
 ##
 ### The `Ph2_ACF` software
-Installation of the software is documented at <https://ph2acf.docs.cern.ch/general/ph2acf_install/>
+Installation of the software is documented at <https://ph2acf.docs.cern.ch/general/ph2acf_install.html>
 
 
 ##
