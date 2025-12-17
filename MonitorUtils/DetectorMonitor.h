@@ -52,6 +52,7 @@ class DetectorMonitor
     std::future<void> fMonitorFuture;
 
     int fMaximumStopTentatives = 100;
+    int fLoopWaitTimeMs        = 100;
 };
 
 #endif

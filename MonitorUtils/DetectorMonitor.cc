@@ -66,9 +66,17 @@ void DetectorMonitor::operator()()
         {
             fIsMonitorRunning = true;
             runMonitor();
+            if(!fEnableMonitor) // Stop monitoring immediately
+                continue;
         }
         else { fIsMonitorRunning = false; }
-        std::this_thread::sleep_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs));
+
+        int waitTime = fDetectorMonitorConfig.fSleepTimeMs;
+        while(waitTime > 0 && fKeepRunning && (fIsMonitorRunning || !fEnableMonitor)) // Start first loop ~immediately with ::startMonitoring
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(fLoopWaitTimeMs));
+            waitTime -= fLoopWaitTimeMs;
+        }
     }
 }
 
@@ -99,25 +107,37 @@ std::string DetectorMonitor::getMonitorFileName()
 
 void DetectorMonitor::waitForMonitorToStop()
 {
-    int cCounter = 0;
-    while((fMonitorFuture.wait_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs)) != std::future_status::ready) & (cCounter < fMaximumStopTentatives))
+    int waitTime  = fMaximumStopTentatives * fDetectorMonitorConfig.fSleepTimeMs;
+    int printTime = -1;
+    while(fMonitorFuture.wait_for(std::chrono::milliseconds(fLoopWaitTimeMs)) != std::future_status::ready && waitTime > 0)
     {
-        LOG(INFO) << GREEN << "\t--> Waiting for monitoring to be completed..." << RESET;
-        cCounter++;
+        if(printTime < 0)
+        {
+            LOG(INFO) << GREEN << "\t--> Waiting for monitoring to be completed..." << RESET;
+            printTime = 10000;
+        }
+        waitTime -= fLoopWaitTimeMs;
+        printTime -= fLoopWaitTimeMs;
     }
-    if(cCounter >= fMaximumStopTentatives) throw std::runtime_error("Failed to stop monitoring process");
+    if(waitTime <= 0) throw std::runtime_error("Failed to stop monitoring process");
 }
 
 void DetectorMonitor::pauseMonitoring()
 {
     fEnableMonitor = false;
 
-    int cCounter = 0;
-    while(fIsMonitorRunning & (cCounter < fMaximumStopTentatives))
+    int waitTime  = fMaximumStopTentatives * fDetectorMonitorConfig.fSleepTimeMs;
+    int printTime = -1;
+    while(fIsMonitorRunning && waitTime > 0)
     {
-        LOG(INFO) << GREEN << "\t--> Waiting for monitoring to pause..." << RESET;
-        cCounter++;
-        std::this_thread::sleep_for(std::chrono::milliseconds(fDetectorMonitorConfig.fSleepTimeMs));
+        if(printTime < 0)
+        {
+            LOG(INFO) << GREEN << "\t--> Waiting for monitoring to pause..." << RESET;
+            printTime = 10000;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(fLoopWaitTimeMs));
+        waitTime -= fLoopWaitTimeMs;
+        printTime -= fLoopWaitTimeMs;
     }
-    if(cCounter >= fMaximumStopTentatives) throw std::runtime_error("Failed to pause monitoring process");
+    if(waitTime <= 0) throw std::runtime_error("Failed to pause monitoring process");
 }
