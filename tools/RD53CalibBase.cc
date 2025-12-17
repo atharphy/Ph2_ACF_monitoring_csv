@@ -42,7 +42,11 @@ void CalibBase::Stop()
         if((this->fResultFile != nullptr) && (this->fResultFile->IsOpen())) splitHistoFile(this->fResultFile);
         if((this->fDetectorMonitor != nullptr) && (this->fDetectorMonitor->getMonitorFile() != nullptr) && (this->fDetectorMonitor->getMonitorFile()->IsOpen()))
         {
+            fDetectorMonitor->stopRunning();
+            fDetectorMonitor->waitForMonitorToStop();
+
             this->fDetectorMonitor->getMonitorFile()->Write();
+            this->fDetectorMonitor->getMonitorFile()->Flush();
             splitHistoFile(this->fDetectorMonitor->getMonitorFile());
         }
     }
