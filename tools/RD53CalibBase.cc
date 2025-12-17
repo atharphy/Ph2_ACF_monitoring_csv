@@ -44,7 +44,6 @@ void CalibBase::Stop()
         {
             fDetectorMonitor->stopRunning();
             fDetectorMonitor->waitForMonitorToStop();
-
             this->fDetectorMonitor->getMonitorFile()->Write();
             this->fDetectorMonitor->getMonitorFile()->Flush();
             splitHistoFile(this->fDetectorMonitor->getMonitorFile());
