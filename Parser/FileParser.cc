@@ -148,7 +148,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
     else
     {
         LOG(ERROR) << BOLDRED << "Error: Unknown Board Type: " << cBoardType << " - aborting!" << RESET;
-        std::string errorstring = "Unknown Board Type " + cBoardType;
+        std::string errorstring = "Unknown Board Type: " + cBoardType;
         throw Exception(errorstring.c_str());
         exit(EXIT_FAILURE);
     }
@@ -235,12 +235,12 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
         }
     }
 
-    // Iterate the OpticalGroup node
+    // #################################
+    // # Iterate the OpticalGroup node #
+    // #################################
     cBeBoard->setOptical(false);
     for(pugi::xml_node pOpticalGroupNode = pBeBordNode.child(OPTICALGROUP_NODE_NAME); pOpticalGroupNode; pOpticalGroupNode = pOpticalGroupNode.next_sibling())
-    {
-        if(static_cast<std::string>(pOpticalGroupNode.name()) == OPTICALGROUP_NODE_NAME) { parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os); }
-    }
+        if(static_cast<std::string>(pOpticalGroupNode.name()) == OPTICALGROUP_NODE_NAME) parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os);
 
     pugi::xml_node cSLinkNode = pBeBordNode.child("SLink");
     parseSLink(cSLinkNode, cBeBoard, os);
@@ -879,7 +879,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
 {
     bool cEnable = pHybridNode.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool();
 
-    if(cEnable)
+    if(cEnable == true)
     {
         os << BOLDBLUE << "|       |"
            << "----" << pHybridNode.name() << " --> " << BOLDBLUE << pHybridNode.first_attribute().name() << ": " << BOLDYELLOW << pHybridNode.attribute(COMMON_ID_ATTRIBUTE_NAME).value() << BOLDBLUE
@@ -1529,7 +1529,10 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
         std::string cChildName = cChild.name();
         if(cChildName.find(CHIP_FILES_APPEND_NODE_NAME) != std::string::npos) continue;
 
-        if(cChildName.find(RD53_NODE_NAME) != std::string::npos)
+        // #################################################
+        // # Check of the chip is RD53 and if it's enabled #
+        // #################################################
+        if((cChildName.find(RD53_NODE_NAME) != std::string::npos) && (!(cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME)) || (cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool() == true)))
         {
             for(pugi::xml_node theChild: cChild.children())
             {

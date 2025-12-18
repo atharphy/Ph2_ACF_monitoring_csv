@@ -122,7 +122,7 @@ void SCurveHistograms::fillOccupancy(const DetectorDataContainer& OccupancyConta
                             if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISGOOD)
                             {
                                 double occupancy = cChip->getChannel<OccupancyAndPh>(row, col).fOccupancy;
-                                double error     = fabs(occupancy - effFunc.ClopperPearson(nEvents, occupancy * nEvents, ERROR_CL, (occupancy < 0.5 ? true : false)));
+                                double error     = fabs(occupancy - effFunc.ClopperPearson(nEvents, (occupancy > 1 ? 1 : occupancy) * nEvents, ERROR_CL, (occupancy < 0.5 ? true : false)));
                                 hOcc2D->Fill(DELTA_VCAL, occupancy + hOcc2D->GetYaxis()->GetBinWidth(1) / 2.);
                                 hOcc3D->SetBinContent(col + 1, row + 1, hOcc3D->GetZaxis()->FindBin(DELTA_VCAL), occupancy);
                                 hOcc3D->SetBinError(col + 1, row + 1, hOcc3D->GetZaxis()->FindBin(DELTA_VCAL), error);

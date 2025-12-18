@@ -979,7 +979,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         uint16_t       maxADC       = RD53Shared::setBits(pRD53RegMap.at("DAC_NTC").fBitSize);
         uint16_t       midADC       = (minADC + maxADC) / 2;
         const uint16_t numberOfBits = floor(log2(maxADC - minADC + 1) + 1);
-        const uint16_t maxVal       = maxADC;
+        const uint16_t maxVal       = RD53Shared::setBits(pRD53RegMap.at("MonitorConfig").fBitSize - 1);
         uint16_t       maxADCval    = 0;
         uint16_t       it           = 0;
         uint16_t       nSteps       = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
@@ -1013,12 +1013,16 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         std::vector<int32_t> ntcVoltVec;
         std::vector<int32_t> ntcCurrVec;
         std::vector<int32_t> ntcADCVec;
-        for(uint16_t i = 0; i < nSteps; i++)
+        for(uint16_t i = 1; i < nSteps; i++)
         {
             RD53BInterface::readNTCvoltCurr(pChip, step * i, ntcVolt, ntcCurr);
-            ntcVoltVec.push_back(ntcVolt);
-            ntcCurrVec.push_back(ntcCurr);
-            ntcADCVec.push_back(step * i);
+            if((ntcVolt > 0) && (ntcVolt < maxVal) && (ntcCurr > 0) && (ntcCurr < maxVal))
+            {
+                ntcVoltVec.push_back(ntcVolt);
+                ntcCurrVec.push_back(ntcCurr);
+                ntcADCVec.push_back(step * i);
+                LOG(DEBUG) << "DAC_NTC: " << step * i << " NTC Volt: " << ntcVolt << " NTC Curr: " << ntcCurr << RESET;
+            }
         }
 
         // ########################

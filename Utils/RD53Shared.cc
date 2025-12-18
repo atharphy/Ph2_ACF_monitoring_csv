@@ -39,9 +39,8 @@ size_t RD53Shared::countBitsOne(size_t num)
 
 void RD53Shared::resetDefaultFloat() { std::cout.setf(std::ios_base::fmtflags(0), std::ios_base::floatfield); }
 
-std::string RD53Shared::gitInfo(const std::string& what)
+bool RD53Shared::gitInfo(const std::string& what, std::string& outputStr)
 {
-    std::string myString;
     std::string base(std::getenv("PH2ACF_BASE_DIR"));
     std::string cd("cd " + base + "; ");
 
@@ -52,10 +51,13 @@ std::string RD53Shared::gitInfo(const std::string& what)
     // system(std::string(cd + "git describe --tag --abbrev=0 >> git.log").c_str());
 
     std::ifstream gitFile(base + "/git.log");
-    gitFile >> myString;
+    gitFile >> outputStr;
     gitFile.close();
 
     system(std::string(cd + "rm git.log").c_str());
 
-    return myString;
+    std::transform(outputStr.begin(), outputStr.end(), outputStr.begin(), ::tolower);
+    if((outputStr.find("error") != std::string::npos) || (outputStr.find("fatal") != std::string::npos) || (outputStr.find("abort") != std::string::npos)) return false;
+
+    return true;
 }

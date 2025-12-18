@@ -111,7 +111,11 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t cL12FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l12_type");
     uint32_t cL08FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l8_type");
 
-    LOG(INFO) << BOLDBLUE << "\t--> SW commit number : " << BOLDYELLOW << RD53Shared::gitInfo("commit") << BOLDBLUE << " -- SW tag : " << BOLDYELLOW << RD53Shared::gitInfo("tag") << RESET;
+    std::string gitCommit, gitTag;
+    if((RD53Shared::gitInfo("commit", gitCommit) == false) || (RD53Shared::gitInfo("tag", gitTag) == false))
+        LOG(WARNING) << BOLDRED << "\t--> Unable to find git commit/tag ... skipping this step" << RESET;
+    else
+        LOG(INFO) << BOLDBLUE << "\t--> SW commit number : " << BOLDYELLOW << gitCommit << BOLDBLUE << " -- SW tag : " << BOLDYELLOW << gitTag << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor << BOLDBLUE << " -- Date (yy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/"
               << cFWday << BOLDBLUE << " -- Time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Link type : " << BOLDYELLOW << (cLinkType == 0 ? "electrical" : "optical") << BOLDBLUE << " -- Optical speed : " << BOLDYELLOW
