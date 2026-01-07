@@ -24,6 +24,7 @@ void VoltageTuning::ConfigureCalibration()
     toleranceDig = this->findValueInSettings<double>("VDDDTrimTolerance", 0.02);
     toleranceAna = this->findValueInSettings<double>("VDDATrimTolerance", 0.02);
     doDisplay    = this->findValueInSettings<double>("DisplayHisto");
+    doUpdateChip = this->findValueInSettings<double>("UpdateChipCfg");
 }
 
 void VoltageTuning::Running()
@@ -227,9 +228,8 @@ void VoltageTuning::run()
                         // # Final values #
                         // ################
 
-                        auto finalDecimal = (vddaNewSetting << nBitsDig) | vdddNewSetting;
-
-                        RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM", finalDecimal);
+                        RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM_DIG", vdddNewSetting);
+                        RD53ChipInterface->WriteChipReg(cChip, "VOLTAGE_TRIM_ANA", vddaNewSetting);
 
                         auto finalVDDD = RD53ChipInterface->ReadChipMonitor(cChip, VDDDreg, true) * CONVERSIONfactor;
                         auto finalVDDA = RD53ChipInterface->ReadChipMonitor(cChip, VDDAreg, true) * CONVERSIONfactor;
@@ -328,6 +328,8 @@ void VoltageTuning::run()
 
 void VoltageTuning::draw(bool saveData)
 {
+    if(saveData == true) CalibBase::saveChipRegisters(doUpdateChip);
+
 #ifdef __USE_ROOT__
     TApplication* myApp = nullptr;
 

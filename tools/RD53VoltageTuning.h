@@ -68,6 +68,7 @@ class VoltageTuning : public CalibBase
     float toleranceDig;
     float toleranceAna;
     bool  doDisplay;
+    bool  doUpdateChip;
 };
 
 #endif
