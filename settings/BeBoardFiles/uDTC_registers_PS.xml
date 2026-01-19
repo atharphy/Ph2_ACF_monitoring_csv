@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <BeBoardRegister>
-	<Register name="clock_source">3</Register>
 	<Register name="clock_source_u7">15</Register>
 	<Register name="clock_source_u8">3</Register>
 	<Register name="coax_select">1</Register>
