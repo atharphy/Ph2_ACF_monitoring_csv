@@ -11,14 +11,14 @@ and rarpd responds with their IP address if it finds it in the ethers database (
 There is currently no `rarpd` package available specifically for AlmaLinux 9.
 However, the Fedora version can be used and is available from
 <https://pkgs.org/download/rarpd>.
-Make sure to choose Fedora 39 and `x86_64`.
+Make sure to choose Fedora 42 and `x86_64`.
 Direct download link:
-<https://dl.fedoraproject.org/pub/fedora/linux/releases/39/Everything/x86_64/os/Packages/r/rarpd-ss981107-63.fc39.x86_64.rpm>
+<https://rpmfind.net/linux/fedora/linux/releases/42/Everything/x86_64/os/Packages/r/rarpd-ss981107-68.fc42.x86_64.rpm>
 
 Install the downloaded `RPM` file (replace file name if needed):
 
 ```shell
-sudo rpm -i rarpd-ss981107-63.fc39.x86_64.rpm
+sudo rpm -i rarpd-ss981107-68.fc42.x86_64.rpm
 ```
 
 ## Configuring rarpd for FC7
