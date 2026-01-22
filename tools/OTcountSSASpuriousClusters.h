@@ -20,7 +20,7 @@
 class PatternMatcher;
 namespace Ph2_HwInterface
 {
-    class D19cFWInterface;
+class D19cFWInterface;
 }
 
 class OTcountSSASpuriousClusters : public Tool
@@ -47,22 +47,20 @@ class OTcountSSASpuriousClusters : public Tool
     std::map<int, uint8_t> fBendingToCode{{0, 7}};
     uint32_t               fNumberOfEvents;
 
-    std::vector<Cluster>                produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed);
-    std::vector<Cluster>                produceStripClusterList();
-    void                                setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA);
-    void                                setStripOffsetParameters(Ph2_HwDescription::ReadoutChip* theSSA);
-    void                                prepareForStubInjection(Ph2_HwDescription::BeBoard* theBoard);
-    DetectorDataContainer               fStubMissingCountContainer;
-    std::vector<Cluster>                fListOfInjectedStrips;
-    
-    void                                   fillHistograms();
-    void                                   injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t numberOfBytesInSinglePacket, const std::vector<Stub>& listOfStubs);
-    std::vector<std::vector<Stub>>         createPSstubList();
-    void                                   runIntegrityTest();
-    void                                   runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
-    uint8_t                                prepareCICforStubIntegrityTest(Ph2_HwDescription::Hybrid* theHybrid, uint8_t chipId);
+    std::vector<Cluster>  produceMatchingPixelClusterList(uint8_t stubRow, uint8_t stubSeed);
+    std::vector<Cluster>  produceStripClusterList();
+    void                  setStubLogicParameters(Ph2_HwDescription::ReadoutChip* theMPA);
+    void                  setStripOffsetParameters(Ph2_HwDescription::ReadoutChip* theSSA);
+    void                  prepareForStubInjection(Ph2_HwDescription::BeBoard* theBoard);
+    DetectorDataContainer fStubMissingCountContainer;
+    std::vector<Cluster>  fListOfInjectedStrips;
 
-
+    void                           fillHistograms();
+    void                           injectStubsPS(Ph2_HwDescription::ReadoutChip* theMPA, uint8_t numberOfBytesInSinglePacket, const std::vector<Stub>& listOfStubs);
+    std::vector<std::vector<Stub>> createPSstubList();
+    void                           runIntegrityTest();
+    void                           runStubIntegrityTest(Ph2_HwDescription::BeBoard* theBoard, Ph2_HwInterface::D19cFWInterface* theFWInterface);
+    uint8_t                        prepareCICforStubIntegrityTest(Ph2_HwDescription::Hybrid* theHybrid, uint8_t chipId);
 
 #ifdef __USE_ROOT__
     // Calibration is not running on the SoC: Histogrammer is handeld by the calibration itself

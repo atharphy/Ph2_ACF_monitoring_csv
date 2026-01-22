@@ -18,7 +18,6 @@
 #include "tools/OTCMNoise.h"
 #include "tools/OTChipToCICecv.h"
 #include "tools/OTCicBypassTest.h"
-#include "tools/OTcountSSASpuriousClusters.h"
 #include "tools/OTLightTransmission.h"
 #include "tools/OTLpGBTEyeOpeningTest.h"
 #include "tools/OTMeasureOccupancy.h"
@@ -37,6 +36,7 @@
 #include "tools/OTalignLpGBTinputs.h"
 #include "tools/OTalignLpGBTinputsForBypass.h"
 #include "tools/OTalignStubPackage.h"
+#include "tools/OTcountSSASpuriousClusters.h"
 #include "tools/OTinjectionDelayOptimization.h"
 #include "tools/OTinjectionOccupancyScan.h"
 #include "tools/OTlpGBTID.h"
@@ -302,15 +302,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
 
     // PS specific calibrations
 
-
-    Register<TuneLpGBTVref,
-             OTalignLpGBTinputs,
-             OTalignBoardDataWord,
-             OTCICphaseAlignment,
-             OTCICwordAlignment,
-             OTCICBX0Alignment,
-             OTalignStubPackage,
-             OTcountSSASpuriousClusters>("Outer Tracker", "SSAspuriousClusters");
+    Register<TuneLpGBTVref, OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, OTcountSSASpuriousClusters>(
+        "Outer Tracker", "SSAspuriousClusters");
 
     Register<TuneLpGBTVref,
              OTVTRxLightYieldScan,

@@ -44,17 +44,10 @@ void DQMHistogramOTcountSSASpuriousClusters::fillStubMissingCountContainer(Detec
 
                 auto thePatternMatchingEfficiencyVector = hybrid->getSummary<GenericDataArray<float, 8>>();
 
-                TH1F* missingStubHistogram = fStubMissingCountContainer.getObject(board->getId())
-                                                 ->getObject(opticalGroup->getId())
-                                                 ->getObject(hybrid->getId())
-                                                 ->getSummary<HistContainer<TH1F>>()
-                                                 .fTheHistogram;
+                TH1F* missingStubHistogram =
+                    fStubMissingCountContainer.getObject(board->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
 
-
-                for(size_t cLineId = 0; cLineId < 8; cLineId++)
-                {
-                    missingStubHistogram->SetBinContent(cLineId + 1, thePatternMatchingEfficiencyVector.at(cLineId));
-                }
+                for(size_t cLineId = 0; cLineId < 8; cLineId++) { missingStubHistogram->SetBinContent(cLineId + 1, thePatternMatchingEfficiencyVector.at(cLineId)); }
             }
         }
     }
@@ -83,8 +76,7 @@ bool DQMHistogramOTcountSSASpuriousClusters::fill(std::string& inputStream)
     {
         // std::cout << "Matched OTverifyMPASSAdataWord PatternMatchingEfficiency!!!!\n";
         DetectorDataContainer theDetectorData =
-            thePatternMatchinEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 8>, EmptyContainer>(
-                fDetectorContainer);
+            thePatternMatchinEfficiencyContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, GenericDataArray<float, 8>, EmptyContainer>(fDetectorContainer);
         fillStubMissingCountContainer(theDetectorData);
         return true;
     }

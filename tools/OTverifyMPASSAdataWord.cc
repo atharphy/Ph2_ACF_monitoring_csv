@@ -143,13 +143,13 @@ void OTverifyMPASSAdataWord::setStripOffsetParameters(Ph2_HwDescription::Readout
         if(theSSA->getId() == 0)
         {
             auto theStripOffsetByte0 = fReadoutChipInterface->ReadChipReg(theSSA, "StripOffset_byte0");
-            theStripOffsetByte0 = (theStripOffsetByte0 & 0x7) | (0x10 << 3);
+            theStripOffsetByte0      = (theStripOffsetByte0 & 0x7) | (0x10 << 3);
             fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte0", theStripOffsetByte0);
         }
-        else if (theSSA->getId() == 7)
+        else if(theSSA->getId() == 7)
         {
             auto theStripOffsetByte3 = fReadoutChipInterface->ReadChipReg(theSSA, "StripOffset_byte3");
-            theStripOffsetByte3 = (theStripOffsetByte3 & 0x80) | (0x0F << 2);
+            theStripOffsetByte3      = (theStripOffsetByte3 & 0x80) | (0x0F << 2);
             fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte3", theStripOffsetByte3);
         }
     }

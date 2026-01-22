@@ -20,7 +20,7 @@ void OTcountSSASpuriousClusters::Initialise(void)
 {
     fRegisterHelper->takeSnapshot();
     // free the registers in case any
-    fNumberOfEvents     = findValueInSettings<double>("OTcountSSASpuriousClusters_NumberOfEvents", 1e6);
+    fNumberOfEvents = findValueInSettings<double>("OTcountSSASpuriousClusters_NumberOfEvents", 1e6);
 
     ContainerFactory::copyAndInitHybrid<GenericDataArray<float, 8>>(*fDetectorContainer, fStubMissingCountContainer);
 
@@ -79,7 +79,7 @@ void OTcountSSASpuriousClusters::runStubIntegrityTest(BeBoard* theBoard, D19cFWI
 
     prepareForStubInjection(theBoard);
 
-    bool                           is10G      = (static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theBoard->getFirstObject()->flpGBT) == 10);
+    bool                           is10G = (static_cast<D19clpGBTInterface*>(flpGBTInterface)->GetChipRate(theBoard->getFirstObject()->flpGBT) == 10);
     std::vector<std::vector<Stub>> stubInformationList;
     uint8_t                        numberOfBytesInSinglePacket;
 
@@ -121,9 +121,8 @@ void OTcountSSASpuriousClusters::runStubIntegrityTest(BeBoard* theBoard, D19cFWI
         {
             uint32_t currentNumberOfEvents = uint32_t(numberOfEventsPerBurst);
             if(burstNumbers == 1) currentNumberOfEvents = lastBurstNumberOfEvents;
-            
-            if(Tool::ifUseReadNEvents())
-                Tool::ReadNEvents(fDetectorContainer->getObject(theBoard->getId()), currentNumberOfEvents);
+
+            if(Tool::ifUseReadNEvents()) Tool::ReadNEvents(fDetectorContainer->getObject(theBoard->getId()), currentNumberOfEvents);
             // Loop over Events from this Acquisition
             const std::vector<Event*>& eventList = Tool::GetEvents();
             for(auto theOpticalGroup: *theBoard)
@@ -131,7 +130,8 @@ void OTcountSSASpuriousClusters::runStubIntegrityTest(BeBoard* theBoard, D19cFWI
                 for(auto theHybrid: *theOpticalGroup)
                 {
                     float& theMissingClusterCounter = fStubMissingCountContainer.getHybrid(theHybrid->getBeBoardId(), theHybrid->getOpticalGroupId(), theHybrid->getId())
-                    ->getSummary<GenericDataArray<float, 8>>().at(stubPatternCounter);
+                                                          ->getSummary<GenericDataArray<float, 8>>()
+                                                          .at(stubPatternCounter);
                     for(auto event: eventList)
                     {
                         auto chipStubVector = static_cast<D19cCic2Event*>(event)->StubVector(theHybrid->getId(), chipId + 8);
@@ -156,10 +156,7 @@ void OTcountSSASpuriousClusters::runStubIntegrityTest(BeBoard* theBoard, D19cFWI
         {
             for(auto theHybrid: *theOpticalGroup)
             {
-                for(auto& theValue: theHybrid->getSummary<GenericDataArray<float, 8>>())
-                {
-                    theValue = float((fNumberOfEvents - theValue)/fNumberOfEvents);
-                }
+                for(auto& theValue: theHybrid->getSummary<GenericDataArray<float, 8>>()) { theValue = float((fNumberOfEvents - theValue) / fNumberOfEvents); }
             }
         }
     }
@@ -179,7 +176,6 @@ uint8_t OTcountSSASpuriousClusters::prepareCICforStubIntegrityTest(Hybrid* theHy
 
     return chipIdForCIC;
 }
-
 
 void OTcountSSASpuriousClusters::fillHistograms()
 {
@@ -233,13 +229,13 @@ void OTcountSSASpuriousClusters::setStripOffsetParameters(Ph2_HwDescription::Rea
         if(theSSA->getId() == 0)
         {
             auto theStripOffsetByte0 = fReadoutChipInterface->ReadChipReg(theSSA, "StripOffset_byte0");
-            theStripOffsetByte0 = (theStripOffsetByte0 & 0x7) | (0x10 << 3);
+            theStripOffsetByte0      = (theStripOffsetByte0 & 0x7) | (0x10 << 3);
             fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte0", theStripOffsetByte0);
         }
-        else if (theSSA->getId() == 7)
+        else if(theSSA->getId() == 7)
         {
             auto theStripOffsetByte3 = fReadoutChipInterface->ReadChipReg(theSSA, "StripOffset_byte3");
-            theStripOffsetByte3 = (theStripOffsetByte3 & 0x80) | (0x0F << 2);
+            theStripOffsetByte3      = (theStripOffsetByte3 & 0x80) | (0x0F << 2);
             fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte3", theStripOffsetByte3);
         }
     }
