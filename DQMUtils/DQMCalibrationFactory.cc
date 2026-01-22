@@ -12,6 +12,7 @@
 #include "DQMUtils/DQMHistogramOTCMNoise.h"
 #include "DQMUtils/DQMHistogramOTChipToCICecv.h"
 #include "DQMUtils/DQMHistogramOTCicBypassTest.h"
+#include "DQMUtils/DQMHistogramOTcountSSASpuriousClusters.h"
 #include "DQMUtils/DQMHistogramOTLpGBTEyeOpeningTest.h"
 #include "DQMUtils/DQMHistogramOTMeasureOccupancy.h"
 #include "DQMUtils/DQMHistogramOTPSADCCalibration.h"
@@ -324,6 +325,15 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTChipToCICecv>("2Secv");
 
     // PS specific calibrations
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTCICBX0Alignment,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTcountSSASpuriousClusters>("SSAspuriousClusters");
 
     Register<DQMMetadataOT,
              DQMHistogramOTVTRxLightYieldScan,

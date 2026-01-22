@@ -18,6 +18,7 @@
 #include "tools/OTCMNoise.h"
 #include "tools/OTChipToCICecv.h"
 #include "tools/OTCicBypassTest.h"
+#include "tools/OTcountSSASpuriousClusters.h"
 #include "tools/OTLightTransmission.h"
 #include "tools/OTLpGBTEyeOpeningTest.h"
 #include "tools/OTMeasureOccupancy.h"
@@ -300,6 +301,16 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTalignLpGBTinputsForBypass, OTChipToCICecv>("2S Module", "2Secv");
 
     // PS specific calibrations
+
+
+    Register<TuneLpGBTVref,
+             OTalignLpGBTinputs,
+             OTalignBoardDataWord,
+             OTCICphaseAlignment,
+             OTCICwordAlignment,
+             OTCICBX0Alignment,
+             OTalignStubPackage,
+             OTcountSSASpuriousClusters>("Outer Tracker", "SSAspuriousClusters");
 
     Register<TuneLpGBTVref,
              OTVTRxLightYieldScan,
