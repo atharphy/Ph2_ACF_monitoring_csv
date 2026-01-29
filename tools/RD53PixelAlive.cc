@@ -177,7 +177,7 @@ void PixelAlive::run()
                                 // ################
                                 this->SetTestPulse(false);
                                 this->fMaskChannelsFromOtherGroups = false;
-                                this->measureData(10, 10);
+                                this->measureData(NINJECT_DATAINTEGRITY, NINJECT_DATAINTEGRITY);
 
                                 // #####################
                                 // # Compute next step #
@@ -216,7 +216,7 @@ void PixelAlive::run()
                                             CalibBase::setSinglePixel(cChip, row, col, true, true);
                                             this->SetTestPulse(false);
                                             this->fMaskChannelsFromOtherGroups = false;
-                                            this->measureData(10, 10);
+                                            this->measureData(NINJECT_DATAINTEGRITY, NINJECT_DATAINTEGRITY);
                                             CalibBase::setSinglePixel(cChip, row, col, false, false);
                                             testedPixels++;
 

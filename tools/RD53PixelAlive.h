@@ -21,7 +21,8 @@ typedef bool PixelAliveHistograms;
 // #############
 // # CONSTANTS #
 // #############
-#define NPIXELS_PRINTOUT 216 // Number of tested pixels before next printout
+#define NPIXELS_PRINTOUT 216     // Number of tested pixels before next printout
+#define NINJECT_DATAINTEGRITY 10 // Number of injectiont to test data integrity
 
 // #########################
 // # PixelAlive test suite #
