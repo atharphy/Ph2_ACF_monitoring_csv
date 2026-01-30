@@ -1,9 +1,10 @@
 /*!
   \file                  RD53VoltageTuning.cc
-  \brief                 Implementaion of Bit Error Rate test
-  \author                Mauro DINARDO
+  \brief                 Implementaion of Voltage Tuning procedure
+  \author                Yuta TAKAHASHI
   \version               1.0
-  \date                  28/06/18
+  \date                  03/05/21
+  Support:               email to Yuta.Takahashi@cern.ch
   Support:               email to mauro.dinardo@cern.ch
 */
 

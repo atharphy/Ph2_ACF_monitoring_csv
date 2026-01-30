@@ -21,6 +21,7 @@ const size_t          RD53B::NROWS   = 336;
 const size_t          RD53B::NCOLS   = 432;
 const RD53::FrontEnd  RD53B::RD53Bv1 = {"RD53Bv1",
                                         {"DAC_GDAC_M_LIN", "DAC_GDAC_L_LIN", "DAC_GDAC_R_LIN"},
+                                        {"DAC_PREAMP_L_LIN", "DAC_PREAMP_R_LIN", "DAC_PREAMP_TR_LIN", "DAC_PREAMP_TL_LIN", "DAC_PREAMP_T_LIN", "DAC_PREAMP_M_LIN"},
                                         "DAC_KRUM_CURR_LIN",
                                         "TriggerConfig",
                                         "DAC_LDAC_LIN",
@@ -56,6 +57,7 @@ const RD53::FrontEnd  RD53B::RD53Bv1 = {"RD53Bv1",
                                         {"EN_CORE_COL_0", "EN_CORE_COL_1", "EN_CORE_COL_2", "EN_CORE_COL_3"}};
 const RD53::FrontEnd  RD53B::RD53Bv2 = {"RD53Bv2",
                                         {"DAC_GDAC_M_LIN", "DAC_GDAC_L_LIN", "DAC_GDAC_R_LIN"},
+                                        {"DAC_PREAMP_L_LIN", "DAC_PREAMP_R_LIN", "DAC_PREAMP_TR_LIN", "DAC_PREAMP_TL_LIN", "DAC_PREAMP_T_LIN", "DAC_PREAMP_M_LIN"},
                                         "DAC_KRUM_CURR_LIN",
                                         "TriggerConfig",
                                         "DAC_LDAC_LIN",

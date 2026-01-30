@@ -19,6 +19,7 @@ const size_t          RD53A::NROWS       = 192;
 const size_t          RD53A::NCOLS       = 400;
 const RD53::FrontEnd  RD53A::SYNC        = {"SYNC",
                                             {"VTH_SYNC"},
+                                            {"IBIASP1_SYNC", "IBIASP2_SYNC"},
                                             "IBIAS_KRUM_SYNC",
                                             "LATENCY_CONFIG",
                                             "",
@@ -49,6 +50,7 @@ const RD53::FrontEnd  RD53A::SYNC        = {"SYNC",
                                             {"EN_CORE_COL_SYNC"}};
 const RD53::FrontEnd  RD53A::LIN         = {"LIN",
                                             {"Vthreshold_LIN"},
+                                            {"PA_IN_BIAS_LIN"},
                                             "KRUM_CURR_LIN",
                                             "LATENCY_CONFIG",
                                             "LDAC_LIN",
@@ -79,6 +81,7 @@ const RD53::FrontEnd  RD53A::LIN         = {"LIN",
                                             {"EN_CORE_COL_LIN_1", "EN_CORE_COL_LIN_2"}};
 const RD53::FrontEnd  RD53A::DIFF        = {"DIFF",
                                             {"VTH1_DIFF"},
+                                            {"PRMP_DIFF"},
                                             "VFF_DIFF",
                                             "LATENCY_CONFIG",
                                             "",

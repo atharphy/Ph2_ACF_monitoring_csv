@@ -154,6 +154,7 @@ class RD53 : public ReadoutChip
     {
         const char*                     name;
         const std::vector<const char*>  thresholdRegs;
+        const std::vector<const char*>  preampRegs;
         const char*                     gainReg;
         const char*                     latencyReg;
         const char*                     TDACGainReg;
