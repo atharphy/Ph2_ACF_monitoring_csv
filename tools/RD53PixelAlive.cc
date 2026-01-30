@@ -150,6 +150,13 @@ void PixelAlive::run()
                         size_t                          badPixelsCounterChip = 0;
                         std::map<std::string, uint16_t> regValueMap;
 
+                        // ##################################
+                        // # Set threshold to maximum value #
+                        // ##################################
+                        LOG(INFO) << GREEN << "Setting maximum threshold for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                  << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                        for(auto reg: frontEnd->thresholdRegs) fReadoutChipInterface->WriteChipReg(cChip, reg, RD53Shared::setBits(cChip->getNumberOfBits(reg)));
+
                         LOG(INFO) << GREEN << "Results for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "]" << RESET;
 
@@ -231,7 +238,14 @@ void PixelAlive::run()
                                                     break;
                                                 }
 
-                                            if((statusGood == false) || (RD53Event::decodedEvents.size() == 0))
+                                            if((statusGood == false) || (RD53Event::decodedEvents.size() == 0) ||
+                                               (localOccContainer->getObject(cBoard->getId())
+                                                    ->getObject(cOpticalGroup->getId())
+                                                    ->getObject(cHybrid->getId())
+                                                    ->getObject(cChip->getId())
+                                                    ->getChannel<OccupancyAndPh>(row, col)
+                                                    .fOccupancy != 0))
+
                                             {
                                                 if(doDataIntegrity == 2)
                                                 {
@@ -289,6 +303,13 @@ void PixelAlive::run()
                         if(((doDataIntegrity == 2) || (doDataIntegrity == 3)) && (badPixelsCounterChip != 0))
                             LOG(WARNING) << BOLDRED << "\t--> Found " << BOLDYELLOW << badPixelsCounterChip << BOLDRED << " bad pixel(s) in this chip --> masked" << RESET;
                         LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
+                        // ##################################
+                        // # Set threshold to default value #
+                        // ##################################
+                        LOG(INFO) << GREEN << "Setting threshold to default value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                  << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                        for(auto reg: frontEnd->thresholdRegs) fReadoutChipInterface->WriteChipReg(cChip, reg, cChip->getRegMap()[reg].fDefValue);
                     }
 
             // #######################
