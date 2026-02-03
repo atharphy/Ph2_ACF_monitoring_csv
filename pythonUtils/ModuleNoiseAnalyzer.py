@@ -290,10 +290,10 @@ def analyze_PS_file(root_path: str):
                 else:
                     write_lines([prob_fh], ["  None"])
 
-                # Pattern-Match details (SSA↔MPA↔CIC)
+                # Pattern-Match details (SSA↔MPA↔CIC). These are input ports from MPA documentation
                 write_lines([prob_fh], ["Pattern-Match Details:"])
                 cluster_wirebond_map = {
-                    "0": {"port": 0, "wirebonds": (38, 39)},
+                    "0": {"port": 0, "wirebonds": (38, 39)}, 
                     "1": {"port": 1, "wirebonds": (41, 42)},
                     "2": {"port": 2, "wirebonds": (44, 45)},
                     "3": {"port": 3, "wirebonds": (47, 48)},
@@ -303,8 +303,7 @@ def analyze_PS_file(root_path: str):
                     "7": {"port": 7, "wirebonds": (59, 60)},
                 }
 
-                for substr, descr in (("SSAtoMPA_PatternMatchingErrorRate", "SSA -> MPA"),
-                                      ("MPAtoCIC_PatternMatchingErrorRate", "MPA -> CIC")):
+                for substr, descr in (("SSAtoMPA_PatternMatchingErrorRate", "SSA -> MPA"),("MPAtoCIC_PatternMatchingErrorRate", "MPA -> CIC")):
                     hist2d = find_histogram(hybrid_dir, substr)
                     if not hist2d or hist2d.GetDimension() != 2:
                         continue
@@ -316,7 +315,7 @@ def analyze_PS_file(root_path: str):
                     for xb in range(1, nx + 1):
                         for yb in range(1, ny + 1):
                             err_rate = hist2d.GetBinContent(xb, yb)
-                            if err_rate <= 0.5:
+                            if err_rate <= 0.20: #20% error rate threshold.
                                 continue
 
                             mpa_id = int(xax.GetBinCenter(xb))
@@ -338,7 +337,7 @@ def analyze_PS_file(root_path: str):
                                     else:
                                         write_lines([prob_fh], [f"              Unknown cluster {cl}"])
                             else:
-                                write_lines([prob_fh], [f"              Check wirebonds #72–#88 on MPA ID {mpa_id}"])
+                                write_lines([prob_fh], [f"              Check wirebonds #72–#88 on MPA ID {mpa_id}"]) #MPA->CIC output ports are much harder to trace. Defaulting to all output ports. 
 
                     if not any_written:
                         write_lines([prob_fh], [f"  {descr}: None"])
@@ -356,14 +355,14 @@ def analyze_PS_file(root_path: str):
 
 def parse_args():
     p = argparse.ArgumentParser(description="Analyze the newest 2S/PS ROOT file under a directory, or use the one you pass explicitly.")
-    p.add_argument("-d", "-s", "-dir", "-search", "--search-dir", default=".", help="Directory to search for 2S/PS ROOT files when none is given. Will auto-detect the newest file in the search dir (default: current directory)")
+    p.add_argument("-d", "-s", "-dir", "-search", "--search-dir", default=".", help="Directory to search for 2S/PS ROOT files when none is given. Will auto-detect the newest root file in the search dir (default: current directory)")
     p.add_argument("-f", "-file", "--rootfile", nargs="?", help="Path to an explicit .root file. Use if you want to override auto-detection feature.")
     return p.parse_args()
 
 
 def autodetect_root_file(search_dir: str) -> str:
     """
-    Find the most-recent .root file under search_dir. Module type is determined from Info/Module_ID metadata.
+    Find the most-recent *.root file under search_dir. Module type is determined from Info/Module_ID metadata.
     """
     candidates: List[str] = []
 
