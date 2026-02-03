@@ -39,12 +39,15 @@ class RD53BMuxReader : public CalibBase
     void draw(bool saveData = true) override;
 
     void analyze();
+    void configure(const std::string & args);
 
   private:
     void fillHisto() override;
 
   protected:
     int theCurrentRun;
+    std::vector<std::string> muxlist;
+    bool use_wlt_calibration;
 };
 
 #endif

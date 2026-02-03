@@ -9,6 +9,11 @@
 
 #include "RD53BMuxReader.h"
 #include "Utils/ContainerSerialization.h"
+#include <regex>
+
+using std::cregex_iterator;
+using std::regex;
+
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -39,6 +44,67 @@ void RD53BMuxReader::Stop()
     RD53RunProgress::reset();
 }
 
+void RD53BMuxReader::configure(const std::string & args){
+  // see HWInterface/RD53BInterface.cc
+    std::vector<std::string> all = {
+      "Iref", "NTC_VOLT",
+      "ANA_IN_CURR", "ANA_SHUNT_CURR", "DIG_IN_CURR", "DIG_SHUNT_CURR",
+      "VIND", "VINA","VDDD", "VDDA","VOFS","VrefA","VrefD","Vref_CORE", "Vref_PRE",
+      "POLY_TEMPSENS_TOP", "POLY_TEMPSENS_BOTTOM",
+      "TEMPSENS_ANA_SLDO", "TEMPSENS_DIG_SLDO", "TEMPSENS_CENTER", "RADSENS_ANA_SLDO", "RADSENS_DIG_SLDO", "RADSENS_CENTER",
+      "VCAL_HI", "VCAL_MED", "LIN_FE_REF_KRUMCURR", "LIN_FE_GDAC_MAIN","LIN_FE_GDAC_LEFT", "LIN_FE_GDAC_RIGHT",
+      "LIN_FE_PREAMP_MAIN", "LIN_FE_PREAMP_LEFT", "LIN_FE_PREAMP_RIGHT", "LIN_FE_PREAMP_TOP_LEFT", "LIN_FE_PREAMP_TOP", "LIN_FE_PREAMP_TOP_RIGHT",
+      "ANA_GND_0", "ANA_GND_1",	"ANA_GND_2", "ANA_GND_3", "ANA_GND_4", "ANA_GND_5", "ANA_GND_6", "ANA_GND_7", "ANA_GND_8", "ANA_GND_9", "ANA_GND_10", "ANA_GND_11",
+      "HIGH_Z"
+    };
+    std::vector<std::string> default_adc= {
+      "VIND", "VINA","VDDD", "VDDA","VOFS",
+      "ANA_IN_CURR", "ANA_SHUNT_CURR", "DIG_IN_CURR", "DIG_SHUNT_CURR"
+    };
+
+    muxlist.clear();
+    use_wlt_calibration = true;
+    
+    if (args == ""){
+      for(size_t i=0; i< default_adc.size(); i++){
+	muxlist.push_back(default_adc[i]);
+      }
+      return;
+    }
+    
+    // comma separated string, split
+    std::vector<std::string> v;
+    std::stringstream ss(args);
+
+    while (ss.good()) {
+      std::string arg;
+       getline(ss, arg, ',');
+       if (arg == "default"){
+	 for(size_t i=0; i< default_adc.size(); i++){
+	   muxlist.push_back(default_adc[i]);
+	 }
+       }else if (arg=="no_wlt_calibration"){
+	 use_wlt_calibration = false;
+       }else{
+	 // assume it's an ADC name
+	 if (arg.find("*") == std::string::npos){
+	   // standard match
+	   muxlist.push_back(arg);
+	 }else{
+	   //wildcard
+	   const auto pattern = std::regex_replace(arg, std::regex(R"(\*)"), ".*");
+	   regex re("^" + pattern + "$");
+	   for(size_t i=0; i< all.size(); i++){
+	     const auto  adc = all[i];
+	     if (std::regex_match(adc, re)){
+		 muxlist.push_back(adc);
+	     }
+	   }	 
+	 }
+       }
+    }
+}
+
 void RD53BMuxReader::localConfigure(const std::string& histoFileName, int currentRun)
 {
     LOG(INFO) << GREEN << "[RD53BMuxReader::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET;
@@ -49,37 +115,6 @@ void RD53BMuxReader::run()
     auto chipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
 
     CalibBase::prepareChipQueryForEnDis("chipSubset"); //  ??
-    std::vector<std::string> muxlist = {"Iref",
-                                        "NTC_VOLT",
-                                        "ANA_IN_CURR",
-                                        "ANA_SHUNT_CURR",
-                                        "DIG_IN_CURR",
-                                        "DIG_SHUNT_CURR",
-                                        "VIND",
-                                        "VINA",
-                                        "VDDD",
-                                        "VDDA",
-                                        "VOFS",
-                                        "VrefA",
-                                        "VrefD",
-                                        "Vref_CORE",
-                                        "Vref_PRE",
-                                        "POLY_TEMPSENS_TOP",
-                                        "POLY_TEMPSENS_BOTTOM",
-                                        "TEMPSENS_ANA_SLDO",
-                                        "TEMPSENS_DIG_SLDO",
-                                        "TEMPSENS_CENTER",
-                                        "RADSENS_ANA_SLDO",
-                                        "RADSENS_DIG_SLDO",
-                                        "RADSENS_CENTER",
-                                        "VCAL_HI",
-                                        "VCAL_MED",
-                                        "LIN_FE_REF_KRUMCURR",
-                                        "LIN_FE_GDAC_MAIN",
-                                        "LIN_FE_GDAC_LEFT",
-                                        "LIN_FE_GDAC_RIGHT"
-
-    };
     const float              R_IMUX  = 4.99;  // kOhm, R17(ABCD) on TEPX hdis
     const float              V_REF   = 0.845; // TEPX  84.5 k x Iref x 2.5, nominal according to RD53B manual
     // =>  the factor appearing in all current measurements, V_REF / 4096 / R_IMUX
@@ -98,31 +133,43 @@ void RD53BMuxReader::run()
                               << +cChip->getId() << RESET;
                     chip_ids.push_back(cChip->getId());
                     float Icroc = 0;
-
-                    // "calibrate" the current measurement offset, assuming the ntc dac has no offset
-                    float        x_sum = 0, y_sum = 0, x2_sum = 0, xy_sum = 0;
-                    unsigned int n = 0;
-                    for(unsigned int idac = 10; idac < 100; idac += 10)
-                    {
+		    
+		    float offset = 0;
+		    float slope  = V_REF / 4096;
+		    
+		    if (use_wlt_calibration){
+		      offset = cChip->getRegItem("ADC_OFFSET_VOLT").fValue * 1e-4; // [V] sic  
+		      slope = (cChip->getRegItem("ADC_MAXIMUM_VOLT").fValue * 1e-3 -  offset) / 4096.; // [V/ADC];
+		      if(use_wlt_calibration){
+			LOG(INFO) << "applying wlt calibration    slope = " << std::setw(8) << std::setprecision(3) << slope*1e3 << " (mV/ADC),   offset =" << offset*1e3 << " (mV)";
+		      }
+		    }else{
+		      // "calibrate" the current measurement offset, assuming the ntc dac has no offset
+		      float        x_sum = 0, y_sum = 0, x2_sum = 0, xy_sum = 0;
+		      unsigned int n = 0;
+		      for(unsigned int idac = 10; idac < 100; idac += 10)
+			{
                         chipInterface->WriteChipReg(cChip, "DAC_NTC", idac);
                         const auto adc = chipInterface->ReadChipADC(cChip, "NTC_CURR");
                         if((adc > 0) && (adc < 4096))
-                        {
+			  {
                             n += 1;
                             x_sum += idac;
                             y_sum += adc;
                             x2_sum += idac * idac;
                             xy_sum += adc * idac;
-                        }
-                    }
-                    float offset = (x2_sum * y_sum - x_sum * xy_sum) / (x2_sum * n - x_sum * x_sum);
-                    chipInterface->WriteChipReg(cChip, "DAC_NTC", 100); // back to the default value
-                    if(offset > 50)
-                    {
-                        LOG(INFO) << "ignoring offset " << offset;
-                        offset = 0;
-                    }
-
+			  }
+			}
+		      float legacy_offset = (x2_sum * y_sum - x_sum * xy_sum) / (x2_sum * n - x_sum * x_sum);
+		      offset = -legacy_offset / slope; 
+		      chipInterface->WriteChipReg(cChip, "DAC_NTC", 100); // back to the default value
+		      if(offset > 50)
+			{
+			  LOG(INFO) << "ignoring offset " << offset;
+			  offset = 0;
+			}
+		    }
+		    
                     // raw ADC: for a list of "observables" see RD53BInterface::getADCobservable  in HWInterface/RD53BInterface.cc
                     const auto sampleNtimes                    = cChip->getRegItem("SAMPLE_N_TIMES").fValue;
                     cChip->getRegItem("SAMPLE_N_TIMES").fValue = 1; // local averaging
@@ -176,46 +223,44 @@ void RD53BMuxReader::run()
                             }
                         }
 
-                        float value = adc_mean * V_REF / 4096; // nominal 12 bit ADC
-
-                        std::string unit = "  ";
+                        //float value = adc_mean * V_REF / 4096; // nominal 12 bit ADC
+			float value = adc_mean * slope + offset;
+                        std::string unit = "V ";
                         if(mux == "Iref")
                         {
-                            value = (adc_mean - offset) * V_REF / 4096 / R_IMUX * 1e3;
-                            unit  = "uA";
+			  value *= 1e3 / R_IMUX;
+			  unit  = "uA";
                         }
                         else if((mux == "ANA_IN_CURR") || (mux == "DIG_IN_CURR"))
                         {
-                            value = 21.0 * (adc_mean - offset) * V_REF / 4096 / R_IMUX; // scale factor from RD53B manual, table 27
-                            unit  = "A ";
-                            Icroc += value;
+			  value *= 21.0 / R_IMUX;
+			  unit  = "A ";
+			  if (value > 0){
+			    Icroc += value;
+			  }
                         }
                         else if((mux == "ANA_SHUNT_CURR") || (mux == "DIG_SHUNT_CURR"))
                         {
-                            if(adc_mean > 0)
-                            {
-                                value = 21.52 * (adc_mean - offset) * V_REF / 4096 / R_IMUX; // scale factor from RD53B manual, table 27
-                            }
-                            else { value = 0; }
-                            unit = "A ";
+			  value *= 21.52 / R_IMUX;
+			  unit = "A ";
                         }
                         else if((mux == "VINA") || (mux == "VIND") || (mux == "VOFS"))
                         {
-                            value = 4 * adc_mean * V_REF / 4096;
-                            unit  = "V ";
+			  value *= 4;
+			  unit  = "V ";
                         }
                         else if((mux == "VDDA") || (mux == "VDDD"))
                         {
-                            value = 2 * adc_mean * V_REF / 4096;
-                            unit  = "V ";
+			  value *= 2;
+			  unit  = "V ";
                         }
-                        else
+                        else if(mux.rfind("LIN_FE_PREAMP", 0) == 0)
                         {
-                            value = adc_mean * V_REF / 4096;
-                            unit  = "V ";
+			  value *= 1/R_IMUX;  // factor not known to me at this point
+			  unit  = "A "; 
                         }
-
-                        LOG(INFO) << BOLDBLUE << std::setw(20) << mux << " ADC = " << BOLDYELLOW << line.str() << "  |   " << std::setw(7) << std::setprecision(1) << adc_mean << "   " << std::setw(9)
+			
+                        LOG(INFO) << BOLDBLUE << std::setw(24) << mux << " ADC = " << BOLDYELLOW << line.str() << "  |   " << std::setw(7) << std::setprecision(1) << adc_mean << "   " << std::setw(9)
                                   << std::setprecision(3) << value << " " << unit << RESET;
                         summary[mux].push_back(make_pair(value, unit));
                     } // mux list
