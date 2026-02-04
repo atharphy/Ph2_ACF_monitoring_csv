@@ -217,7 +217,7 @@ int main(int argc, char** argv)
         // ##################
         if(reset == true)
         {
-            for(const auto cBoard: *mySysCntr.fDetectorContainer) static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getId()])->ResetSequence(cBoard);
+            mySysCntr.ResetSequence();
             exit(EXIT_SUCCESS);
         }
 

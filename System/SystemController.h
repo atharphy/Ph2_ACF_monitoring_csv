@@ -352,6 +352,7 @@ class SystemController
 
     void setInterfaceInitialization(uint8_t pCnfg) { fInitializeInterfaces = pCnfg; }
     void disableAllChannels(bool forceDoIt = false);
+    void ResetSequence();
     void DumpRegisters();
     void setSparsification(Ph2_HwDescription::BeBoard* theBoard, bool enable);
 

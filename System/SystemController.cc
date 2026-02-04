@@ -1264,6 +1264,11 @@ void SystemController::disableAllChannels(bool forceDoIt)
                     for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
 }
 
+void SystemController::ResetSequence()
+{
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetSequence(cBoard);
+}
+
 void SystemController::DumpRegisters()
 {
     // #################################################
