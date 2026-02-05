@@ -48,6 +48,7 @@ class RD53BInterface : public RD53Interface
     uint16_t GetPixelConfig(const Ph2_HwDescription::pixelMask& mask, uint16_t row, uint16_t col);
     uint16_t GetPixelConfigMask(const Ph2_HwDescription::pixelMask& mask, uint16_t row, uint16_t col);
     uint16_t GetPixelConfigTDAC(const Ph2_HwDescription::pixelMask& mask, uint16_t row, uint16_t col);
+    void     SendGlobalPulseFromCfg(Ph2_HwDescription::Chip* pChip);
     void     SendGlobalPulse(Ph2_HwDescription::Chip* pChip, uint16_t route, uint16_t pulseDuration);
     void     SendChipCommandsWithSync(Ph2_HwDescription::RD53* pRD53, const std::vector<uint16_t>& cmdStream);
     void     ResetCoreColumns(Ph2_HwDescription::RD53* pRD53);

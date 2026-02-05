@@ -95,6 +95,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     }
     if(doWriteClkDataDelay == true) RD53BInterface::WriteClockDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
 
+    // ########################
+    // # Sending Global Pulse #
+    // ########################
+    RD53BInterface::SendGlobalPulseFromCfg(pChip);
+
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
@@ -718,13 +723,34 @@ void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
 
+void RD53BInterface::SendGlobalPulseFromCfg(Chip* pChip)
+{
+    // #####################################
+    // # Programming Global Pulse register #
+    // #####################################
+    bool        doWriteGlobalPulseConf = false;
+    const auto& pRD53RegMap            = pChip->getRegMap();
+    const auto& theMap                 = static_cast<RD53*>(pChip)->getFEtype()->GlobalPulseConfMap;
+
+    for(auto ele: theMap)
+    {
+        auto cRegItem = pRD53RegMap.find(ele.first);
+        if((cRegItem != pRD53RegMap.end()) && (cRegItem->second.fPrmptCfg == true))
+        {
+            doWriteGlobalPulseConf = true;
+            pChip->getRegItem("GlobalPulseConf").fDefValue |= cRegItem->second.fDefValue;
+        }
+    }
+
+    if(doWriteGlobalPulseConf == true) RD53BInterface::SendGlobalPulse(pChip, pChip->getRegItem("GlobalPulseConf").fDefValue, pChip->getRegItem("GlobalPulseWidth").fDefValue);
+}
+
 void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulseDuration)
 {
     this->setBoard(pChip->getBeBoardId());
 
     std::vector<uint16_t> cmdStream;
-    auto                  pRD53  = static_cast<RD53*>(pChip);
-    const auto&           theMap = pRD53->getFEtype()->GlobalPulseConfMap;
+    const auto&           theMap = static_cast<RD53*>(pChip)->getFEtype()->GlobalPulseConfMap;
 
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
