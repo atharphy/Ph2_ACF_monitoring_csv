@@ -412,7 +412,7 @@ Example of a missing wirebond, 100% error rate for one chip and line. [This debu
 
 ![SSAtoMPA_PatternMatchingErrorRate_Hybrid_missingWirebond](./OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_missingWirebond.png)
 
-The one below is a known issue not yet understood. Please report if you observe it!
+The one below is a known issue due the hybrid design leaving the SSA0 left lateral input and the SSA7 right lateral input floating. See [here](https://indico.cern.ch/event/1642446/contributions/6908086/attachments/3214472/5726208/PSclusterIssuesUnderstood.pdf) for more info.
 
 ![SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem](./OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem.png)
 
