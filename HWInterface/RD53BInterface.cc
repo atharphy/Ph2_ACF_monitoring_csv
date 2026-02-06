@@ -29,7 +29,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ######################
     // # Reset Core Columns #
     // ######################
-    RD53BInterface::ResetCoreColumns(pRD53);
+    RD53BInterface::ResetCoreColumns(pChip);
 
     // ##############
     // # Field data #
@@ -414,11 +414,13 @@ uint16_t RD53BInterface::GetPixelConfigTDAC(const pixelMask& mask, uint16_t row,
     return bits::pack<5, 5>(mask.TDAC[row + RD53B::NROWS * (col + 1)], mask.TDAC[row + RD53B::NROWS * (col + 0)]);
 }
 
-void RD53BInterface::ResetCoreColumns(RD53* pRD53)
+void RD53BInterface::ResetCoreColumns(Chip* pChip)
 // #############################################################################
 // # This function causes a fluctuation of the current consumption of the chip #
 // #############################################################################
 {
+    auto pRD53 = static_cast<RD53*>(pChip);
+
     for(auto suffix: {"_0", "_1", "_2"})
     {
         for(int i = 0; i < 2; i++)
