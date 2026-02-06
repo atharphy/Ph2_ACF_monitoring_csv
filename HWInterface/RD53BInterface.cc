@@ -108,48 +108,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
-    const std::set<std::string> registerBlackList            = {"RESISTORI2V",
-                                                                "NTCBETA",
-                                                                "RNTCAT25C",
-                                                                "ADC_OFFSET_VOLT",
-                                                                "ADC_MAXIMUM_VOLT",
-                                                                "TEMPSENS_IDEAL_FACTOR",
-                                                                "TEMPSENS_IDEAL_FACTOR_ANA",
-                                                                "TEMPSENS_IDEAL_FACTOR_DIG",
-                                                                "RADSENS_IDEAL_FACTOR",
-                                                                "RADSENS_IDEAL_FACTOR_ANA",
-                                                                "RADSENS_IDEAL_FACTOR_DIG",
-                                                                "TEMPSENS_OFFSET_TOP",
-                                                                "TEMPSENS_OFFSET_BOTTOM",
-                                                                "SAMPLE_N_TIMES",
-                                                                "SAMPLE_NTC_SLOPE",
-                                                                "WAIT_MUX_CONFIG",
-                                                                "VREF_ADC",
-                                                                "INJ_CAP"}; // @CONST@
-    const std::set<std::string> registerWhiteList            = {"DAC_PREAMP_L_LIN",
-                                                                "DAC_PREAMP_R_LIN",
-                                                                "DAC_PREAMP_TL_LIN",
-                                                                "DAC_PREAMP_TR_LIN",
-                                                                "DAC_PREAMP_T_LIN",
-                                                                "DAC_PREAMP_M_LIN",
-                                                                "DAC_FC_LIN",
-                                                                "DAC_KRUM_CURR_LIN",
-                                                                "DAC_REF_KRUM_LIN",
-                                                                "DAC_COMP_LIN",
-                                                                "DAC_COMP_TA_LIN",
-                                                                "DAC_GDAC_L_LIN",
-                                                                "DAC_GDAC_R_LIN",
-                                                                "DAC_GDAC_M_LIN",
-                                                                "DAC_LDAC_LIN"}; // @CONST@
-
-    for(auto& cRegItem: pRD53RegMap)
-        if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&
-            (registerClkDataDelayList.find(cRegItem.first) == registerClkDataDelayList.end()) && (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())) ||
-           (registerWhiteList.find(cRegItem.first) != registerWhiteList.end()))
-            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
-        else if((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) != registerBlackList.end()))
-            pChip->getRegItem(cRegItem.first).fValue = cRegItem.second.fDefValue;
+    WriteRegsFromCfg(pChip, pVerify);
 
     // #################################################
     // # Important values to be checked before running #
@@ -764,6 +723,55 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdStream, pChip->getHybridId());
 
     std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
+}
+
+void RD53BInterface::WriteRegsFromCfg(Chip* pChip, bool pVerify, bool writeAll)
+{
+    auto&                       pRD53RegMap                  = pChip->getRegMap();
+    const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
+    const std::set<std::string> registerClkDataDelayList     = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"};                                           // @CONST@
+    const std::set<std::string> registerBlackList            = {"RESISTORI2V",
+                                                                "NTCBETA",
+                                                                "RNTCAT25C",
+                                                                "ADC_OFFSET_VOLT",
+                                                                "ADC_MAXIMUM_VOLT",
+                                                                "TEMPSENS_IDEAL_FACTOR",
+                                                                "TEMPSENS_IDEAL_FACTOR_ANA",
+                                                                "TEMPSENS_IDEAL_FACTOR_DIG",
+                                                                "RADSENS_IDEAL_FACTOR",
+                                                                "RADSENS_IDEAL_FACTOR_ANA",
+                                                                "RADSENS_IDEAL_FACTOR_DIG",
+                                                                "TEMPSENS_OFFSET_TOP",
+                                                                "TEMPSENS_OFFSET_BOTTOM",
+                                                                "SAMPLE_N_TIMES",
+                                                                "SAMPLE_NTC_SLOPE",
+                                                                "WAIT_MUX_CONFIG",
+                                                                "VREF_ADC",
+                                                                "INJ_CAP"}; // @CONST@
+    const std::set<std::string> registerWhiteList            = {"DAC_PREAMP_L_LIN",
+                                                                "DAC_PREAMP_R_LIN",
+                                                                "DAC_PREAMP_TL_LIN",
+                                                                "DAC_PREAMP_TR_LIN",
+                                                                "DAC_PREAMP_T_LIN",
+                                                                "DAC_PREAMP_M_LIN",
+                                                                "DAC_FC_LIN",
+                                                                "DAC_KRUM_CURR_LIN",
+                                                                "DAC_REF_KRUM_LIN",
+                                                                "DAC_COMP_LIN",
+                                                                "DAC_COMP_TA_LIN",
+                                                                "DAC_GDAC_L_LIN",
+                                                                "DAC_GDAC_R_LIN",
+                                                                "DAC_GDAC_M_LIN",
+                                                                "DAC_LDAC_LIN"}; // @CONST@
+
+    for(auto& cRegItem: pRD53RegMap)
+        if(((cRegItem.second.fPrmptCfg == true) &&
+            ((writeAll == true) || ((registerBlackList.find(cRegItem.first) == registerBlackList.end()) && (registerClkDataDelayList.find(cRegItem.first) == registerClkDataDelayList.end()) &&
+                                    (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())))) ||
+           (registerWhiteList.find(cRegItem.first) != registerWhiteList.end()))
+            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
+        else if((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) != registerBlackList.end()))
+            pChip->getRegItem(cRegItem.first).fValue = cRegItem.second.fDefValue;
 }
 
 // ###########################

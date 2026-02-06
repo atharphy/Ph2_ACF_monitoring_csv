@@ -381,6 +381,10 @@ class ReadoutChipInterface : public ChipInterface
     }
 
     virtual void DumpChipRegisters(Ph2_HwDescription::ReadoutChip* pChip) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
+    virtual void WriteRegsFromCfg(Ph2_HwDescription::Chip* pChip, bool pVerify = true, bool writeAll = false)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    }
 
     /*!
      * \brief Monitoring memeber functions
