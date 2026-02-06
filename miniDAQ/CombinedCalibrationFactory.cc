@@ -39,6 +39,7 @@
 #include "tools/OTcountSSASpuriousClusters.h"
 #include "tools/OTinjectionDelayOptimization.h"
 #include "tools/OTinjectionOccupancyScan.h"
+#include "tools/OTTimeCorrelations.h"
 #include "tools/OTlpGBTID.h"
 #include "tools/OTverifyBoardDataWord.h"
 #include "tools/OTverifyCICdataWord.h"
@@ -114,6 +115,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignBoardDataWord, OTMeasureOccupancy>("Outer Tracker", "measureOccupancy");
 
     Register<OTalignBoardDataWord, OTinjectionOccupancyScan>("Outer Tracker", "injectionOccupancyScan");
+
+    Register<OTalignBoardDataWord, OTTimeCorrelations>("Outer Tracker", "timeCorrelations");
 
     Register<TuneLpGBTVref,
              OTalignLpGBTinputs,

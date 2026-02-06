@@ -27,6 +27,7 @@
 #include "DQMUtils/DQMHistogramOTalignLpGBTinputsForBypass.h"
 #include "DQMUtils/DQMHistogramOTalignStubPackage.h"
 #include "DQMUtils/DQMHistogramOTcountSSASpuriousClusters.h"
+#include "DQMUtils/DQMHistogramOTTimeCorrelation.h"
 #include "DQMUtils/DQMHistogramOTinjectionDelayOptimization.h"
 #include "DQMUtils/DQMHistogramOTinjectionOccupancyScan.h"
 #include "DQMUtils/DQMHistogramOTverifyBoardDataWord.h"
