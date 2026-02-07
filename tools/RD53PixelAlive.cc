@@ -190,7 +190,7 @@ void PixelAlive::run()
                                 // # Compute next step #
                                 // #####################
                                 bool statusGood = true;
-                                for(const auto& ev: RD53Event::decodedEvents)
+                                for(const auto& ev: RD53Event::GetRefDecodedEvents())
                                     if(ev.eventStatus != RD53FWEvtEncoder::GOOD)
                                     {
                                         statusGood = false;
@@ -199,7 +199,7 @@ void PixelAlive::run()
 
                                 size_t badPixelsCounterCoreCol = 0;
                                 size_t testedPixels            = 0;
-                                if(((doDataIntegrity == 2) || (doDataIntegrity == 3)) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0)))
+                                if(((doDataIntegrity == 2) || (doDataIntegrity == 3)) && ((statusGood == false) || (RD53Event::GetRefDecodedEvents().size() == 0)))
                                 {
                                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                     this->fReadoutChipInterface->MaskAllChannels(cChip, true);
@@ -231,14 +231,14 @@ void PixelAlive::run()
                                             // # Compute next step #
                                             // #####################
                                             statusGood = true;
-                                            for(const auto& ev: RD53Event::decodedEvents)
+                                            for(const auto& ev: RD53Event::GetRefDecodedEvents())
                                                 if(ev.eventStatus != RD53FWEvtEncoder::GOOD)
                                                 {
                                                     statusGood = false;
                                                     break;
                                                 }
 
-                                            if((statusGood == false) || (RD53Event::decodedEvents.size() == 0) ||
+                                            if((statusGood == false) || (RD53Event::GetRefDecodedEvents().size() == 0) ||
                                                (localOccContainer->getObject(cBoard->getId())
                                                     ->getObject(cOpticalGroup->getId())
                                                     ->getObject(cHybrid->getId())
@@ -270,7 +270,7 @@ void PixelAlive::run()
                                     static_cast<RD53*>(cChip)->copyMaskFromDefault("en hb");
                                 }
 
-                                if(((doDataIntegrity == 1) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0))) ||
+                                if(((doDataIntegrity == 1) && ((statusGood == false) || (RD53Event::GetRefDecodedEvents().size() == 0))) ||
                                    (badPixelsCounterCoreCol == (RD53Shared::firstChip->getNRows() * RD53Constants::NROW_CORE)))
                                 {
                                     regValueMap[regName] ^= 1 << i;

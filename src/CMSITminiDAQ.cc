@@ -234,7 +234,7 @@ int main(int argc, char** argv)
         // # Read binary file #
         // ####################
         else if(binaryFile != "")
-            readBinaryData(binaryFile, mySysCntr, RD53Event::decodedEvents);
+            readBinaryData(binaryFile, mySysCntr, RD53Event::GetRefDecodedEvents());
     }
     else
     {

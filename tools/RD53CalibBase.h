@@ -52,6 +52,7 @@ class CalibBase : public Tool
     void    WriteBroadcastChipReg(const std::string& regName, const uint16_t value);
     void    SilentRunning(bool doSilentRunning);
     void    SetInjectionType(RD53Shared::INJtype injType);
+    size_t  TotalFEchips();
 
     void Stop() override;
     void ConfigureCalibration() override;

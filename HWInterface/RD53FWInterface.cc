@@ -720,14 +720,14 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // ##################
         // # Error checking #
         // ##################
-        RD53Event::decodedEvents.clear();
+        RD53Event::ClearDecodedEvents();
         uint32_t status = 0;
 
         // ###################
         // # Decoding events #
         // ###################
-        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status, RD53FWInterface::silentRunning); // Decode events with multiple threads
-        // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status, RD53FWInterface::silentRunning); // Decode events with a single thread
+        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::GetRefDecodedEvents(), status, RD53FWInterface::silentRunning); // Decode events with multiple threads
+        // RD53Event::DecodeEvents(pData, RD53Event::GetRefDecodedEvents(), {}, status, RD53FWInterface::silentRunning); // Decode events with a single thread
 
         if((RD53FWInterface::silentRunning == false) && (RD53Event::EvtErrorHandler(status) == false))
         {
@@ -736,12 +736,12 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
             continue;
         }
 
-        if(RD53Event::decodedEvents.size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
+        if(RD53Event::GetRefDecodedEvents().size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
         {
             NtrialsNevents++;
             if(RD53FWInterface::silentRunning == false)
                 LOG(ERROR) << BOLDRED << "Sent " << BOLDYELLOW << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << BOLDRED
-                           << " triggers, but collected " << BOLDYELLOW << RD53Event::decodedEvents.size() << BOLDRED << " events" << BOLDYELLOW << " --> retry" << RESET;
+                           << " triggers, but collected " << BOLDYELLOW << RD53Event::GetRefDecodedEvents().size() << BOLDRED << " events" << BOLDYELLOW << " --> retry" << RESET;
             retry = true;
             continue;
         }
