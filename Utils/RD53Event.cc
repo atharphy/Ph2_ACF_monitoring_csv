@@ -334,7 +334,7 @@ bool RD53Event::EvtErrorHandler(uint32_t status)
 void RD53Event::CheckPresenceOfChips(std::vector<RD53Event>& events, uint32_t& eventStatus, const size_t totalFEchips)
 {
     for(auto& evt: events)
-        if(evt.chip_events.size() != totalFEchips)
+        if(evt.chip_events.size() < totalFEchips)
         {
             evt.eventStatus |= RD53FWEvtEncoder::MISSCHIP;
             eventStatus |= RD53FWEvtEncoder::MISSCHIP;
