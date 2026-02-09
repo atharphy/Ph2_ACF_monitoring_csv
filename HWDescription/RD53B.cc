@@ -148,7 +148,12 @@ std::map<std::string, RD53::SpecialRegInfo> RD53B::specialRegMap = {{"CDR_CONFIG
                                                                     {"GP_LVDS_OUT_1", {"GP_LVDS_ROUTE_0", 6}},
                                                                     {"GP_LVDS_OUT_2", {"GP_LVDS_ROUTE_1", 0}},
                                                                     {"GP_LVDS_OUT_3", {"GP_LVDS_ROUTE_1", 6}},
-                                                                    {"GP_LVDS_EN_OUT", {"OUTPUT_PAD_CONFIG", 3}}};
+                                                                    {"GP_LVDS_EN_OUT", {"OUTPUT_PAD_CONFIG", 3}},
+
+                                                                    {"MON_ADC_TRIM", {"MON_ADC", 0}},
+                                                                    {"Vref_IN", {"MON_ADC", 6}},
+                                                                    {"Vref_Rsens_Bot", {"MON_ADC", 7}},
+                                                                    {"Vref_Rsens_Top", {"MON_ADC", 8}}};
 
 RD53B::RD53B(const FrontEndType& frontEndType,
              uint8_t             pBeId,

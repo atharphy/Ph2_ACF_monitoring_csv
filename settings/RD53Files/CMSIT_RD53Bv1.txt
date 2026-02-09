@@ -159,7 +159,7 @@ MonitorConfig             0x6E          0b0111111111111         0b0111111111111 
 ErrWngMask                0x6F          0b0                     0b0                                 8
 MON_SENS_SLDO             0x70          0b0                     0b0                                12
 MON_SENS_ACB              0x71          0b0                     0b0                                 6
-MON_ADC                   0x72          0b000010000             0b000010000                         9
+MON_ADC                   0x72          0b001000000             0b001000000                         9
 DAC_NTC                   0x73          0d100                   0d100                              10
 HITOR_MASK_3              0x74          0b0                     0b0                                 6
 HITOR_MASK_2              0x75          0b0                     0b0                                16
