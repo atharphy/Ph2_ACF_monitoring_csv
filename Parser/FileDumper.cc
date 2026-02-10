@@ -277,8 +277,8 @@ void FileDumper::dumpChipConfigurationFile(pugi::xml_node theMotherNode, Readout
     theReadoutChipNode.append_attribute(CHIP_PEDESTAL_ATTRIBUTE_NAME)     = std::to_string(theReadoutChip->getAveragePedestal()).c_str();
     if(theReadoutChip->getFrontEndType() == FrontEndType::SSA2 || theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
     {
-        theReadoutChipNode.append_attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME)          = std::to_string(theReadoutChip->getADCSlopeCalibrationValue("ADC_SLOPE")).c_str();
-        theReadoutChipNode.append_attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME)         = std::to_string(theReadoutChip->getADCSlopeCalibrationValue("ADC_OFFSET")).c_str();
+        theReadoutChipNode.append_attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME)  = std::to_string(theReadoutChip->getADCSlopeCalibrationValue("ADC_SLOPE")).c_str();
+        theReadoutChipNode.append_attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME) = std::to_string(theReadoutChip->getADCSlopeCalibrationValue("ADC_OFFSET")).c_str();
     }
 }
 
