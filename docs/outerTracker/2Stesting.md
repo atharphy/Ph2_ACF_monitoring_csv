@@ -454,6 +454,11 @@ Groups of broken channels in the center of CBC can indicate that sparking occurr
 ![StripChannelNoise_Sparking](./OTtesting/2S/StripChannelNoise_Sparking.png)
 
 If the HV is not applied, a very high noise is shown over both hybrids and sensors.
+
+The one below are symptoms of the CBC corrupted offset register, documented [here](https://indico.cern.ch/event/1185050/contributions/4979272/attachments/2486219/4269980/cooperstein_CBCI2CIrrad_28july.pdf)
+
+![CBCbufferCorruption](./OTtesting/2S/CBCbufferCorruption.png)
+
 </details>
 
 ##### OTinjectionDelayOptimization - Chip
