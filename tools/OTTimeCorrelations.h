@@ -2,8 +2,8 @@
  *
  * \file OTTimeCorrelations.h
  * \brief OTTimeCorrelations class
- * \author [Your Name]
- * \date [Date]
+ * \author Carmen Selicato
+ * \date 01/02/26
  *
  */
 
@@ -35,10 +35,9 @@ class OTTimeCorrelations : public Tool
     void setIterationSettings(size_t iteration);
 
   private:
-    unsigned int getDataFromBoards();
     std::vector<float> theDelayBetweenTriggers{0, 1};
     std::vector<float> theThresholdSigma{3.0, 3.0};
-    std::vector<float> theNTriggerPerBurst{4, 4}; // type
+    std::vector<float> theNTriggerPerBurst{4, 4};
     std::vector<float> theAverageFrequency{400, 400};
     
 #ifdef __USE_ROOT__
@@ -50,6 +49,7 @@ class OTTimeCorrelations : public Tool
     uint32_t fNeventsConf = 1000; // value read from config file
     uint32_t fNevents = 1000;
     std::string iterationSettingsName;
+    bool fSaveRawData;
 
 };
 

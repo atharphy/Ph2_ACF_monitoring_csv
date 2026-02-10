@@ -11,7 +11,7 @@
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
-std::string OTTimeCorrelations::fCalibrationDescription = "Measure time correlations";
+std::string OTTimeCorrelations::fCalibrationDescription = "Make time correlation plots for list of settings";
 
 OTTimeCorrelations::OTTimeCorrelations() : Tool() {}
 
@@ -63,15 +63,14 @@ void OTTimeCorrelations::ConfigureCalibration()
     fNeventsConf = this->findValueInSettings<double>("OTTimeCorrelations_Nevents", 1000);
     LOG(INFO) << "Read fNeventsConf from config file: " << fNeventsConf;
 
-    // uint8_t theTriggerSource = this->findValueInSettings<double>("OTTimeCorrelations_TriggerSource", 3); // not really needed
-    // uint8_t theUserTriggerRate = this->findValueInSettings<double>("OTTimeCorrelations_UserTriggerRate", 400); // not really needed
-
     theThresholdSigma = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_ThresholdSigma", "3.0, 3.0"));
     theNTriggerPerBurst = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_NTriggersPerBurst", "4, 4"));
     theDelayBetweenTriggers = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_DelayBetweenTriggers", "0, 1"));
     theAverageFrequency = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_AverageFrequency", "400, 400"));
     
-    // TODO: check if the sizes match: if they do not, don't run
+    fSaveRawData = this->findValueInSettings<double>("OTTimeCorrelations_SaveRawData", 1);
+
+    // check if the sizes match: if they do not, don't run
     if ( (theThresholdSigma.size() != theNTriggerPerBurst.size()) ||
          (theThresholdSigma.size() != theDelayBetweenTriggers.size()) ||
          (theThresholdSigma.size() != theAverageFrequency.size()) )
@@ -85,14 +84,14 @@ void OTTimeCorrelations::Running()
 {
     LOG(INFO) << "[OTTimeCorrelations::Running] Starting";
 
-    // if(fSaveRawData == true)
-    // {
+    if(fSaveRawData == true)
+    {
         char      runString[7];
         const int theRunNumber = Tool::fRunNumber;
         sprintf(runString, "%06d", theRunNumber);
         this->addFileHandler(fDirectoryName + "/run_" + runString + ".raw", 'w');
         this->initializeWriteFileHandler();
-    // }
+    }
 
     // Reset readout
     for(auto theBoard: *fDetectorContainer)
@@ -118,20 +117,6 @@ void OTTimeCorrelations::Running()
 
     for(size_t iteration = 0; iteration < theDelayBetweenTriggers.size(); ++iteration)
     {
-        // // Reset readout
-        // for(auto theBoard: *fDetectorContainer)
-        // {
-        //     auto theFWInterface      = static_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(fDetectorContainer->getObject((theBoard)->getId())));
-        //     auto theReadoutInterface = theFWInterface->getL1ReadoutInterface();
-        //     theReadoutInterface->ResetReadout();
-        // }
-        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    
-        // // Resync chips
-        // for(const auto cBoard: *fDetectorContainer) static_cast<D19cFWInterface*>(this->fBeBoardFWMap[static_cast<BeBoard*>(cBoard)->getId()])->ChipReSync();
-        // SystemController::Start(theStartInfo);
-
-
         // iterate over settings
         LOG(INFO) << BOLDYELLOW << " Starting iteration " << iteration << RESET;  
         OTTimeCorrelationStripData::reset();   
@@ -153,103 +138,107 @@ void OTTimeCorrelations::Running()
                   << "  triggerDelay: " << triggerDelay
                   << "  fNevents: " << fNevents; 
 
-        for (auto theBoard : *fDetectorContainer) {
-            uint32_t nToRead = std::min(readSize, fNevents - collectedEvents);
+        // Loop to read events in batches until we reach fNevents
+        while (collectedEvents < fNeventsConf) {
+            uint32_t nToRead;
+            if (triggerDelay > 0) {
+                nToRead = std::min(readSize, fNeventsConf - collectedEvents);}
+            else {
+                nToRead = std::min(readSize, fNevents - collectedEvents/triggerPerBurst);}
 
-            LOG(INFO) << "  triggerPerBurst: " << triggerPerBurst 
-                      << "  requesting nToRead: " << nToRead; 
-            ReadNEvents(theBoard, nToRead);
-        }
+            for (auto theBoard : *fDetectorContainer) {
+                LOG(INFO) << "  triggerPerBurst: " << triggerPerBurst 
+                          << "  requesting nToRead: " << nToRead; 
+                ReadNEvents(theBoard, nToRead);
+            }
 
-        // Stop();
+            // Process all collected events
+            const std::vector<Event*>& events = GetEvents();
+            collectedEvents += events.size();
+            LOG(INFO) << "Collected events: " << collectedEvents << " / " << fNeventsConf;
+            int ev_error_count = 0;
+            int tot_ev = 0;
 
-        const std::vector<Event*>& events = GetEvents();
-        collectedEvents += events.size();
-        std::cout << "Collected events: " << collectedEvents << " / " << fNevents << std::endl;
-
-        int ev_error_count = 0;
-        int tot_ev = 0;
-
-        // loop over events
-        for (const auto& event : events)
-        {
-            // decode the event and fill the custom structure
-            auto ev = static_cast<D19cCic2Event*>(event);
-            std::vector<int> stripsOn;
-            std::vector<int> pixelsOn;
-
-            for(auto board: *fDetectorContainer)
+            // loop over events
+            for (const auto& event : events)
             {
-                for(auto opticalGroup: *board)
-                {
-                    for(auto hybrid: *opticalGroup)
-                    {
-                        for(auto chip: *hybrid)
-                        {
-                            tot_ev+=1;
-                            // printout to check error codes
-                            if (ev->IsL1ErrorSet(hybrid->getId(), chip->getId()) != 0){
-                                ev_error_count+=1;
-                                // auto bunchId = ev->GetBunch();
-                                // std::string type = (chip->getFrontEndType() == FrontEndType::SSA2)  ? "SSA" : "MPA";
-                                // LOG(INFO) << "      IsL1ErrorSet: " << (int)ev->IsL1ErrorSet(hybrid->getId(), chip->getId())
-                                //           << " hybrid: " << (int)hybrid->getId()
-                                //           << " chip: " << chip->getId()
-                                //           << " type: " << type
-                                //           << " BX: " << bunchId;
-                                if(chip->getFrontEndType() == FrontEndType::SSA2){
-                                    ChipErrorData::ssaErrors[(int)chip->getId()%8] += 1;
-                                }
-                                else {
-                                    ChipErrorData::mpaErrors[(int)chip->getId()%8] += 1;
-                                }
-                            }
+                // decode the event and fill the custom structure
+                auto ev = static_cast<D19cCic2Event*>(event);
+                std::vector<int> stripsOn;
+                std::vector<int> pixelsOn;
 
-                            auto hits = ev->GetHits(hybrid->getId(), chip->getId());
-                            if(chip->getFrontEndType() == FrontEndType::SSA2)
+                for(auto board: *fDetectorContainer)
+                {
+                    for(auto opticalGroup: *board)
+                    {
+                        for(auto hybrid: *opticalGroup)
+                        {
+                            for(auto chip: *hybrid)
                             {
-                              for(auto& hit : hits) {
-                                auto second = hit.second;
-                                int stripNumber = (hybrid->getId()%2) * 960 + chip->getId() * 120 + second;
-                                stripsOn.push_back(stripNumber);
-                              }
-                            } else if (chip->getFrontEndType() == FrontEndType::MPA2) 
-                            {
-                              for(auto& hit : hits) {
-                                auto second = hit.second;
-                                int pixelNumber = (hybrid->getId()%2) * 960 + (chip->getId()%8) * 120 + second;
-                                pixelsOn.push_back(pixelNumber);
+                                tot_ev+=1;
+                                // printout to check error codes
+                                if (ev->IsL1ErrorSet(hybrid->getId(), chip->getId()) != 0){
+                                    ev_error_count+=1;
+                                    // auto bunchId = ev->GetBunch();
+                                    // std::string type = (chip->getFrontEndType() == FrontEndType::SSA2)  ? "SSA" : "MPA";
+                                    // LOG(INFO) << "      IsL1ErrorSet: " << (int)ev->IsL1ErrorSet(hybrid->getId(), chip->getId())
+                                    //           << " hybrid: " << (int)hybrid->getId()
+                                    //           << " chip: " << chip->getId()
+                                    //           << " type: " << type
+                                    //           << " BX: " << bunchId;
+                                    if(chip->getFrontEndType() == FrontEndType::SSA2){
+                                        ChipErrorData::ssaErrors[(int)chip->getId()%8] += 1;
+                                    }
+                                    else {
+                                        ChipErrorData::mpaErrors[(int)chip->getId()%8] += 1;
+                                    }
+                                }
+
+                                auto hits = ev->GetHits(hybrid->getId(), chip->getId());
+                                if(chip->getFrontEndType() == FrontEndType::SSA2)
+                                {
+                                  for(auto& hit : hits) {
+                                    auto second = hit.second;
+                                    int stripNumber = (hybrid->getId()%2) * 960 + chip->getId() * 120 + second;
+                                    stripsOn.push_back(stripNumber);
+                                  }
+                                } else if (chip->getFrontEndType() == FrontEndType::MPA2) 
+                                {
+                                  for(auto& hit : hits) {
+                                    auto second = hit.second;
+                                    int pixelNumber = (hybrid->getId()%2) * 960 + (chip->getId()%8) * 120 + second;
+                                    pixelsOn.push_back(pixelNumber);
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            auto bunchId = ev->GetBunch();
+                auto bunchId = ev->GetBunch();
 
-            std::sort(stripsOn.begin(), stripsOn.end()); // may not be necessary
-            theStripData.stripData = stripsOn; // vector containing hit strip numbers
-            
-            std::sort(pixelsOn.begin(), pixelsOn.end());
-            pixelsOn.erase(std::unique(pixelsOn.begin(), pixelsOn.end()), pixelsOn.end()); // remove duplicates 
-            
-            thePixelData.pixelData = pixelsOn; // vector containing hit pixel numbers
-            // update BX in the data structures
-            OTTimeCorrelationConfig::updateBX(bunchId);
+                std::sort(stripsOn.begin(), stripsOn.end()); // may not be necessary
+                theStripData.stripData = stripsOn; // vector containing hit strip numbers
 
-            OTTimeCorrelationStripData::update();
+                std::sort(pixelsOn.begin(), pixelsOn.end());
+                pixelsOn.erase(std::unique(pixelsOn.begin(), pixelsOn.end()), pixelsOn.end()); // remove duplicates 
 
-            OTTimeCorrelationStripData::compute_same_tcorr();
-            OTTimeCorrelationStripData::compute_min_hits();
-            OTTimeCorrelationStripData::compute_3D_corr();
+                thePixelData.pixelData = pixelsOn; // vector containing hit pixel numbers
+                // update BX in the data structures
+                OTTimeCorrelationConfig::updateBX(bunchId);
 
-            OTTimeCorrelationPixelData::update();
+                OTTimeCorrelationStripData::update();
 
-            OTTimeCorrelationPixelData::compute_same_tcorr();     
-            OTTimeCorrelationPixelData::compute_min_hits();
-            OTTimeCorrelationPixelData::compute_3D_corr();
-            // LOG(INFO) << "DEBUG: Strips found: " << theStripData.stripData.size() << " | Pixels found: " << thePixelData.pixelData.size();
+                OTTimeCorrelationStripData::compute_same_tcorr();
+                OTTimeCorrelationStripData::compute_min_hits();
+                OTTimeCorrelationStripData::compute_3D_corr();
+
+                OTTimeCorrelationPixelData::update();
+
+                OTTimeCorrelationPixelData::compute_same_tcorr();     
+                OTTimeCorrelationPixelData::compute_min_hits();
+                OTTimeCorrelationPixelData::compute_3D_corr();
+                // LOG(INFO) << "DEBUG: Strips found: " << theStripData.stripData.size() << " | Pixels found: " << thePixelData.pixelData.size();
 #ifdef __USE_ROOT__
     fDQMHistogramOTTimeCorrelation.fillSSAData(theStripData, triggerPerBurst, triggerDelay, iterationSettingsName);
     fDQMHistogramOTTimeCorrelation.fillMPAData(thePixelData, triggerPerBurst, triggerDelay, iterationSettingsName);
@@ -257,13 +246,11 @@ void OTTimeCorrelations::Running()
 #endif  
             // LOG(INFO) << "----------------------------------------";
           
-        }           
-    
-// #ifdef __USE_ROOT__
-//     fDQMHistogramOTTimeCorrelation.fillErrorHist(chipErrors, triggerPerBurst, triggerDelay, iterationSettingsName);
-// #endif 
+        }
     LOG(INFO) << "Chips with errors are: "<<ev_error_count<<"/"<<tot_ev<<" = "<<(float)ev_error_count/tot_ev*100<<"%"; 
-
+           
+    }     
+   
     }
     Stop();
 }
@@ -272,15 +259,6 @@ void OTTimeCorrelations::Stop()
 {
     LOG(INFO) << "[OTTimeCorrelations::Stop] Stopping";
     Tool::Stop();
-}
-
-// ... existing code ...
-
-unsigned int OTTimeCorrelations::getDataFromBoards()
-{
-    unsigned int dataSize = 0;
-    for(const auto cBoard: *fDetectorContainer) { dataSize += SystemController::ReadData(static_cast<BeBoard*>(cBoard), false); }
-    return dataSize;
 }
 
 void OTTimeCorrelations::SetTriggerSource(uint8_t pTriggerSource)
@@ -300,14 +278,12 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     std::vector<std::pair<std::string, uint32_t>> boardRegisterVector;              
     // set the appropriate values based on the config
-    uint8_t theTriggerSource = 3;
     if (theNTriggerPerBurst.at(iteration)>1) 
     {
         OTTimeCorrelationConfig::setN((size_t)theNTriggerPerBurst.at(iteration)/2);
         if (theDelayBetweenTriggers.at(iteration)>0)
         {
-            LOG(INFO) << BOLDYELLOW <<  "Version: guido" << RESET;
-            // fw di guido
+            LOG(INFO) << BOLDYELLOW <<  "Version: triggers in burst with variable delay" << RESET;
             // compute delay between pullses based on avg freq
             auto delay = (40000*theNTriggerPerBurst.at(iteration))/theAverageFrequency.at(iteration) - theNTriggerPerBurst.at(iteration)*(theDelayBetweenTriggers.at(iteration)+1); // not sure
             LOG(INFO) << "Delay before next pulse: " << delay
@@ -315,29 +291,30 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
             boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", delay});   
             boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.consecutive_delay_between_trigger", theDelayBetweenTriggers.at(iteration)});   
             boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.consecutive_triggers_per_burst", theNTriggerPerBurst.at(iteration)-2});
-            theTriggerSource = 8;
+            SetTriggerSource(8);
             fNevents = fNeventsConf; 
             OTTimeCorrelationConfig::setTriggerDelay(theDelayBetweenTriggers.at(iteration));
         }
         else
         {
-            LOG(INFO) << BOLDYELLOW << "Version: trigger_multiplicity" << RESET;
+            LOG(INFO) << BOLDYELLOW << "Version: consecutive triggers in burst" << RESET;
             boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", theNTriggerPerBurst.at(iteration)-1});
             boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", theAverageFrequency.at(iteration)/theNTriggerPerBurst.at(iteration)});
-            theTriggerSource = 3;
+            SetTriggerSource(3);
             fNevents = fNeventsConf/theNTriggerPerBurst.at(iteration); 
             OTTimeCorrelationConfig::setTriggerDelay(0); // they can only be consecutive
         }
     }
     else {
-        LOG(INFO) << BOLDYELLOW << "Version: cont" << RESET;
+        LOG(INFO) << BOLDYELLOW << "Version: single trigger" << RESET;
         boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", theNTriggerPerBurst.at(iteration)-1});
         boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", theAverageFrequency.at(iteration)});
-        fNeventsConf = fNeventsConf; 
+        SetTriggerSource(3);
+        fNevents = fNeventsConf; 
         // memory depth has default value because OTTimeCorrelationConfig::reset() is called at the beginning of each iteration, but it can be set here if needed
     }
     
-    boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", theTriggerSource});
+    // boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", theTriggerSource});
     boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.triggers_to_accept", 0});
     boardRegisterVector.push_back({"fc7_daq_cnfg.tlu_block.tlu_enabled", 0});
     boardRegisterVector.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0});
@@ -350,7 +327,6 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
     OTTimeCorrelationConfig::setTriggerPerBurst(theNTriggerPerBurst.at(iteration));    
 
     LOG(INFO) << "Configuring OTTimeCorrelations with Nevents: " << fNevents 
-              << "  TriggerSource: " << int(theTriggerSource) 
               << "  ThresholdSigma: " << theThresholdSigma.at(iteration)
               << "  NTriggerPerBurst: " << int(theNTriggerPerBurst.at(iteration))
               << "  DelayBetweenTriggers: " << int(theDelayBetweenTriggers.at(iteration))
