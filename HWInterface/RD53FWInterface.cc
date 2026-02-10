@@ -105,11 +105,13 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t cFWminute  = RegManager::ReadReg("user.stat_regs.fw_date.minute");
     uint32_t cFWseconds = RegManager::ReadReg("user.stat_regs.fw_date.seconds");
 
-    uint32_t cLinkType   = RegManager::ReadReg("user.stat_regs.global_reg.link_type");
-    uint32_t cOptSpeed   = RegManager::ReadReg("user.stat_regs.global_reg.optical_speed");
-    uint32_t cFEtype     = RegManager::ReadReg("user.stat_regs.global_reg.front_end_type");
-    uint32_t cL12FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l12_type");
-    uint32_t cL08FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l8_type");
+    uint32_t cLinkType     = RegManager::ReadReg("user.stat_regs.global_reg.link_type");
+    uint32_t cOptSpeed     = RegManager::ReadReg("user.stat_regs.global_reg.optical_speed");
+    uint32_t cFEtype       = RegManager::ReadReg("user.stat_regs.global_reg.front_end_type");
+    uint32_t cL08FMCtype   = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l8_type");
+    uint32_t cL08OptoLinks = RegManager::ReadReg("user.stat_regs.global_reg.optical_links_l8");
+    uint32_t cL12FMCtype   = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l12_type");
+    uint32_t cL12OptoLinks = RegManager::ReadReg("user.stat_regs.global_reg.optical_links_l12");
 
     std::string gitCommit, gitTag;
     if((RD53Shared::gitInfo("commit", gitCommit) == false) || (RD53Shared::gitInfo("tag", gitTag) == false))
@@ -120,8 +122,12 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
               << cFWday << BOLDBLUE << " -- Time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Link type : " << BOLDYELLOW << (cLinkType == 0 ? "electrical" : "optical") << BOLDBLUE << " -- Optical speed : " << BOLDYELLOW
               << (cOptSpeed == 0 ? "10 Gbit/s" : "5 Gbit/s") << BOLDBLUE << " -- Frontend type : " << BOLDYELLOW << (cFEtype == 1 ? "RD53A" : "RD53B") << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> L12 FMC type : " << BOLDYELLOW << cL12FMCtype << BOLDBLUE << " -- L08 FMC type : " << BOLDYELLOW << cL08FMCtype << BOLDBLUE
+    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "L08" << BOLDBLUE << " FMC type : " << BOLDYELLOW << cL08FMCtype << BOLDBLUE
               << " (1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=Unspecified)" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t\t--> Number of optical links (if applicable) : " << BOLDYELLOW << cL08OptoLinks << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "L12" << BOLDBLUE << " FMC type : " << BOLDYELLOW << cL12FMCtype << BOLDBLUE
+              << " (1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=Unspecified)" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t\t--> Number of optical links (if applicable) : " << BOLDYELLOW << cL12OptoLinks << RESET;
 
     if(cFEtype == 2) RegManager::WriteReg("user.ctrl_regs.reset_reg.enable_sync_word", 1);
 
@@ -1212,8 +1218,11 @@ void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, uint8_t ModuleId, uint8_t
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
 void RD53FWInterface::SetOptoLinkVersion(bool version) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.lpgbt_version", version); }
 
-float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
+float RD53FWInterface::GetSFPParameter(const OpticalGroup* pOpticalGroup, std::string parameter, int channel)
 {
+    __attribute__((unused)) const uint8_t L8{8};   // @CONST@
+    __attribute__((unused)) const uint8_t L12{12}; // @CONST@
+
     int  nAttempts = 0, error = 0;
     bool timeOut = false;
 
@@ -1230,6 +1239,7 @@ float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
     else if(parameter == "raw")
         RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 96);
 
+    RegManager::WriteReg("user.ctrl_regs.lpgbt_1.fmc_sel", pOpticalGroup->getFMCId() == L8 ? 0 : 1);
     RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.channel_number", channel);
     RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.enable", 1);
 

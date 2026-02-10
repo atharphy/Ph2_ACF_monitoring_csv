@@ -86,7 +86,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void SetOptoLinkVersion(bool version) override;
     // #############################
     void  ResetSequence(Ph2_HwDescription::BeBoard* pBoard);
-    float GetSFPParameter(std::string parameter, int channel);
+    float GetSFPParameter(const Ph2_HwDescription::OpticalGroup* pOpticalGroup, std::string parameter, int channel);
 
     uint16_t ReadAutoreadReg(const uint8_t hybridId, const uint8_t chipId, const std::string& which);
     void     ConfigurePCTestAdapter(const std::string& config);
