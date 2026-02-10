@@ -41,6 +41,7 @@ public:
     inline static int    triggerDelay = 0;
     inline static size_t minHitsThreshold = 50;
     inline static int    currentBurstSize = 1;
+    inline static bool   isNewBurst = false;
 
     static void updateBX(int newBX) {
       if (currentBX == -1) { //first ev after reset
@@ -60,8 +61,9 @@ public:
       // LOG(INFO)<<"Difference is "<< diff;
       if ((diff)== triggerDelay+1) { // it's the same burst
         currentBurstSize+=1;
+        isNewBurst = false;
       } else {
-        // TODO: check if it also works for cont mode
+          isNewBurst = true;
         // it's a new one: check if last one had the right number of triggers
         if (currentBurstSize!=triggerPerBurst) {
           LOG(ERROR) << RED << "Mismatch in desired bunch size ("<<triggerPerBurst
@@ -80,6 +82,7 @@ public:
       triggerDelay = 0;
       minHitsThreshold = 50;
       currentBurstSize = 1;
+      isNewBurst = false;
     }
     static size_t& getN()               { return memoryDepth; }
     static int&    getTriggerPerBurst() { return triggerPerBurst; }
@@ -145,23 +148,15 @@ class OTTimeCorrelationDataBase: public OTTimeCorrelationConfig
       // update the memory with the new event data
       auto& mem = getMemory();
 
-      // TODO: can be moved to the base class (so it's done once)
-      // compare bx count IF in burst mode
-      if (getTriggerPerBurst()>1) {
-        // the counter is reset, so it has to be taken into account
-        auto reset = 65536;
-        int diff = (currentBX - previousBX + reset) % reset;
-        if (diff<=0) {std::cout <<"diff is <0 : "<< previousBX << std::endl;}
-        if (previousBX != -1 && diff > (getTriggerDelay()+1)) {
-            // it's a different bunch: empty the deque
-            mem.clear();
-            LOG(DEBUG) << "Different BX detected, resetting memory.";
-        }
+      if(isNewBurst){
+        mem.clear();
+        LOG(DEBUG) << "New burst detected, resetting memory.";
+        isNewBurst = false;
       }
 
       if (mem.size() >= getN()) { // remove the first element if max depth is reached
           mem.pop_front();
-          }
+      }
       
       mem.push_back(data);
     }
