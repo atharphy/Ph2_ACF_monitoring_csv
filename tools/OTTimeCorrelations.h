@@ -39,18 +39,17 @@ class OTTimeCorrelations : public Tool
     std::vector<float> theThresholdSigma{3.0, 3.0};
     std::vector<float> theNTriggerPerBurst{4, 4};
     std::vector<float> theAverageFrequency{400, 400};
-    
+
 #ifdef __USE_ROOT__
     DQMHistogramOTTimeCorrelation fDQMHistogramOTTimeCorrelation;
 #endif
 
   protected:
     unsigned int fTotalDataSize = 0;
-    uint32_t fNeventsConf = 1000; // value read from config file
-    uint32_t fNevents = 1000;
-    std::string iterationSettingsName;
-    bool fSaveRawData;
-
+    uint32_t     fNeventsConf   = 1000; // value read from config file
+    uint32_t     fNevents       = 1000;
+    std::string  iterationSettingsName;
+    bool         fSaveRawData;
 };
 
 #endif

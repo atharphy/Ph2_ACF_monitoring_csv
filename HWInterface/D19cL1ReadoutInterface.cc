@@ -251,10 +251,10 @@ bool D19cL1ReadoutInterface::ReadEvents(const BeBoard* pBoard)
         // auto cHandshake = fTheRegManager->ReadReg("fc7_daq_cnfg.readout_block.global.data_handshake_enable");
         // write number of triggers to accept
         // in the handshake mode offset is cleared after each handshake
-        auto cMultiplicity = fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
-        fNEvents           = fNEvents * (cMultiplicity + 1);
-        fTriggerInterface->SetNTriggersToAccept(fNEvents);
-        fTheRegManager->WriteReg("fc7_daq_cnfg.readout_block.packet_nbr", fNEvents - 1);
+        auto     cMultiplicity = fTheRegManager->ReadReg("fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity");
+        uint32_t cNEvents      = fNEvents * (cMultiplicity + 1);
+        fTriggerInterface->SetNTriggersToAccept(cNEvents);
+        fTheRegManager->WriteReg("fc7_daq_cnfg.readout_block.packet_nbr", cNEvents - 1);
         // LOG(DEBUG) << BOLDYELLOW << "D19cL1ReadoutInterface::ReadEvents asking for " << fNEvents << " events handshake mode is currently " << cHandshake << RESET;
 
         // reset readout
