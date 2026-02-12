@@ -699,7 +699,7 @@ void RD53BInterface::SendGlobalPulseFromCfg(Chip* pChip)
         if((cRegItem != pRD53RegMap.end()) && (cRegItem->second.fPrmptCfg == true))
         {
             doWriteGlobalPulseConf = true;
-            pChip->getRegItem("GlobalPulseConf").fDefValue |= cRegItem->second.fDefValue;
+            pChip->getRegItem("GlobalPulseConf").fDefValue |= ele.second;
         }
     }
 
@@ -716,6 +716,11 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
     RD53BCmd::serialize(RD53BCmd::GlobalPulse{pChip->getId()}, cmdStream);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdStream, pChip->getHybridId());
+
+    std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
+
+    cmdStream.clear();
     RD53BInterface::PackWriteCommand(pChip,
                                      "GlobalPulseConf",
                                      (theMap.find("RstAuroraV1") != theMap.end() ? theMap.find("RstAuroraV1")->second : 0) |
@@ -723,8 +728,6 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
                                          (theMap.find("RstBCIDCnt") != theMap.end() ? theMap.find("RstBCIDCnt")->second : 0),
                                      cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdStream, pChip->getHybridId());
-
-    std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
 }
 
 void RD53BInterface::WriteRegsFromCfg(Chip* pChip, bool pVerify, bool writeAll)
