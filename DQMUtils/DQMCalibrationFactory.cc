@@ -26,6 +26,7 @@
 #include "DQMUtils/DQMHistogramOTalignLpGBTinputs.h"
 #include "DQMUtils/DQMHistogramOTalignLpGBTinputsForBypass.h"
 #include "DQMUtils/DQMHistogramOTalignStubPackage.h"
+#include "DQMUtils/DQMHistogramOTcountSSASpuriousClusters.h"
 #include "DQMUtils/DQMHistogramOTinjectionDelayOptimization.h"
 #include "DQMUtils/DQMHistogramOTinjectionOccupancyScan.h"
 #include "DQMUtils/DQMHistogramOTverifyBoardDataWord.h"
@@ -324,6 +325,15 @@ DQMCalibrationFactory::DQMCalibrationFactory()
              DQMHistogramOTChipToCICecv>("2Secv");
 
     // PS specific calibrations
+
+    Register<DQMMetadataOT,
+             DQMHistogramOTalignLpGBTinputs,
+             DQMHistogramOTalignBoardDataWord,
+             DQMHistogramOTCICphaseAlignment,
+             DQMHistogramOTCICwordAlignment,
+             DQMHistogramOTCICBX0Alignment,
+             DQMHistogramOTalignStubPackage,
+             DQMHistogramOTcountSSASpuriousClusters>("SSAspuriousClusters");
 
     Register<DQMMetadataOT,
              DQMHistogramOTVTRxLightYieldScan,

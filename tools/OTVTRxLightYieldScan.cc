@@ -90,9 +90,24 @@ void OTVTRxLightYieldScan::scanVTRxLightYield()
                 D19cFWInterface* theFWinterface = dynamic_cast<D19cFWInterface*>(fBeBoardInterface->getFirmwareInterface(theBoard));
                 for(auto theOpticalGroup: *theBoard)
                 {
-                    fVTRxInterface->WriteChipMultReg(theOpticalGroup->fVTRx, theRegisterValues, false);
+                    bool     registersWritten       = false;
+                    uint16_t numberOfAttempts       = 0;
+                    uint16_t maximumAllowedAttempts = 10;
+                    while(!registersWritten)
+                    {
+                        registersWritten = fVTRxInterface->WriteChipMultReg(theOpticalGroup->fVTRx, theRegisterValues, true);
+                        if(++numberOfAttempts >= maximumAllowedAttempts) break;
+                    }
                     usleep(10000);
-                    float VTRxLightYieldRX                                                                                     = theFWinterface->GetSFPParameter(theOpticalGroup, "RX");
+                    float VTRxLightYieldRX;
+                    if(numberOfAttempts == maximumAllowedAttempts)
+                    {
+                        VTRxLightYieldRX = -1;
+                        continue;
+                    }
+                    else
+                        VTRxLightYieldRX = theFWinterface->GetSFPParameter(theOpticalGroup, "RX");
+
                     theOpticalPowerContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<float>() = VTRxLightYieldRX;
                     if(fOfStream != nullptr)
                     {

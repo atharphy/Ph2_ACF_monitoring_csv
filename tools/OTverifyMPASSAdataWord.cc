@@ -137,6 +137,22 @@ void OTverifyMPASSAdataWord::setStripOffsetParameters(Ph2_HwDescription::Readout
     std::vector<std::pair<std::string, uint16_t>> stripOffsetRegisters{{"StripOffset_byte0", 0}, {"StripOffset_byte1", 0}, {"StripOffset_byte2", 0}, {"StripOffset_byte3", 0}};
 
     fReadoutChipInterface->WriteChipMultReg(theSSA, stripOffsetRegisters);
+
+    if(theSSA->getId() == 0 || theSSA->getId() == 7)
+    {
+        if(theSSA->getId() == 0)
+        {
+            auto theStripOffsetByte0 = fReadoutChipInterface->ReadChipReg(theSSA, "StripOffset_byte0");
+            theStripOffsetByte0      = (theStripOffsetByte0 & 0x7) | (0x10 << 3);
+            fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte0", theStripOffsetByte0);
+        }
+        else if(theSSA->getId() == 7)
+        {
+            auto theStripOffsetByte3 = fReadoutChipInterface->ReadChipReg(theSSA, "StripOffset_byte3");
+            theStripOffsetByte3      = (theStripOffsetByte3 & 0x80) | (0x0F << 2);
+            fReadoutChipInterface->WriteChipReg(theSSA, "StripOffset_byte3", theStripOffsetByte3);
+        }
+    }
 }
 
 void OTverifyMPASSAdataWord::prepareForStubInjection(Ph2_HwDescription::BeBoard* theBoard)

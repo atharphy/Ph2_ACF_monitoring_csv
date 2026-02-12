@@ -72,8 +72,8 @@ def update_hybrid_hist(hyb_hist, hist_name_pattern):
 					theBin = linearizeRowAndColumns(row, col) + COLUMNS * int(chip_dir.GetName().split("_")[-1])
 				if "MPA" in chip_dir.GetName(): 
 					theBin = linearizeRowAndColumns(row, col) + COLUMNS * 16 * (int(chip_dir.GetName().split("_")[-1]) - 8)
-				hyb_hist.SetBinContent(theBin, noise)
-				hyb_hist.SetBinError(theBin, noise_error)
+				hyb_hist.SetBinContent(theBin + 1, noise)
+				hyb_hist.SetBinError(theBin + 1, noise_error)
 			else:
 				hyb_hist.Fill(noise)
 	
@@ -124,12 +124,12 @@ def update_chip_hist(chip_hist, hist_name_pattern):
 					chip_hist.SetBinError(col +1, row + 1, noise_error)
 				else:
 					theBin = linearizeRowAndColumns(row, col)
-					chip_hist.SetBinContent(theBin, noise)
-					chip_hist.SetBinError(theBin, noise_error)
+					chip_hist.SetBinContent(theBin + 1, noise)
+					chip_hist.SetBinError(theBin + 1, noise_error)
 			else:
 				theBin = linearizeRowAndColumns(row, col)
-				chip_hist.SetBinContent(theBin, pulseheight)
-				chip_hist.SetBinError(theBin, pulseheight_error)
+				chip_hist.SetBinContent(theBin + 1, pulseheight)
+				chip_hist.SetBinError(theBin + 1, pulseheight_error)
 		else:
 			if "Noise" in hist_name_pattern:
 				chip_hist.Fill(noise)

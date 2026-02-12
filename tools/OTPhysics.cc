@@ -206,6 +206,7 @@ void OTPhysics::Running()
     while(fKeepRunning)
     {
         fTotalDataSize += getDataFromBoards();
+        if(fTotalDataSize > 1e6) fKeepRunning = false;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
@@ -230,7 +231,7 @@ void OTPhysics::Stop()
     fRegisterHelper->restoreSnapshot();
 
 #ifdef __USE_ROOT__
-    fDQMHistogramOTPhysics.process();
+    if(fSaveRawData) fDQMHistogramOTPhysics.process();
 #endif
 }
 
