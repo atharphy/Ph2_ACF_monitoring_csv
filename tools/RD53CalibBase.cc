@@ -357,6 +357,17 @@ void CalibBase::SetInjectionType(RD53Shared::INJtype injType)
     CalibBase::WriteBroadcastChipReg("DIGITAL_INJ_EN", ((injType == RD53Shared::INJtype::Digital) || (injType == RD53Shared::INJtype::SelfTrigger)));
 }
 
+size_t CalibBase::TotalFEchips()
+{
+    size_t nChips = 0;
+
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup) nChips += cHybrid->size();
+
+    return nChips;
+}
+
 void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)
 {
     theCurrentRun = currentRun;

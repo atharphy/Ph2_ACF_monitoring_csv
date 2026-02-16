@@ -36,6 +36,7 @@
 #include "tools/OTalignLpGBTinputs.h"
 #include "tools/OTalignLpGBTinputsForBypass.h"
 #include "tools/OTalignStubPackage.h"
+#include "tools/OTcountSSASpuriousClusters.h"
 #include "tools/OTinjectionDelayOptimization.h"
 #include "tools/OTinjectionOccupancyScan.h"
 #include "tools/OTlpGBTID.h"
@@ -300,6 +301,9 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICtoLpGBTecv, OTalignLpGBTinputsForBypass, OTChipToCICecv>("2S Module", "2Secv");
 
     // PS specific calibrations
+
+    Register<TuneLpGBTVref, OTalignLpGBTinputs, OTalignBoardDataWord, OTCICphaseAlignment, OTCICwordAlignment, OTCICBX0Alignment, OTalignStubPackage, OTcountSSASpuriousClusters>(
+        "Outer Tracker", "SSAspuriousClusters");
 
     Register<TuneLpGBTVref,
              OTVTRxLightYieldScan,

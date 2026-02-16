@@ -70,7 +70,7 @@ void readBinaryData(const std::string& binaryFile, SystemController& mySysCntr, 
 
     RD53Event::ForkDecodingThreads();
 
-    LOG(INFO) << BOLDMAGENTA << "@@@ Decoding binary data file @@@" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Decoding binary data file @@@\x1b[0m" << RESET;
     mySysCntr.addFileHandler(binaryFile, 'r');
     LOG(INFO) << BOLDBLUE << "\t--> Data are being readout from binary file" << RESET;
     mySysCntr.readFile(data, 0);
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
     // #############################
     CommandLineProcessing::ArgvParser cmd;
 
-    cmd.setIntroductoryDescription("@@@ CMSIT Middleware System Test Application @@@");
+    cmd.setIntroductoryDescription("\x1b[5m@@@ CMSIT Middleware System Test Application @@@\x1b[0m");
 
     cmd.setHelpOption("h", "help", "Print this help page");
 
@@ -217,7 +217,7 @@ int main(int argc, char** argv)
         // ##################
         if(reset == true)
         {
-            for(const auto cBoard: *mySysCntr.fDetectorContainer) static_cast<RD53FWInterface*>(mySysCntr.fBeBoardFWMap[cBoard->getId()])->ResetSequence(cBoard);
+            mySysCntr.ResetSequence();
             exit(EXIT_SUCCESS);
         }
 
@@ -226,7 +226,7 @@ int main(int argc, char** argv)
         // ##########################################
         else if(dumpRegs == true)
         {
-            LOG(INFO) << BOLDMAGENTA << "@@@ Dumping frontend registers @@@" << RESET;
+            LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Dumping frontend registers @@@\x1b[0m" << RESET;
             mySysCntr.DumpRegisters();
         }
 
@@ -234,19 +234,19 @@ int main(int argc, char** argv)
         // # Read binary file #
         // ####################
         else if(binaryFile != "")
-            readBinaryData(binaryFile, mySysCntr, RD53Event::decodedEvents);
+            readBinaryData(binaryFile, mySysCntr, RD53Event::GetRefDecodedEvents());
     }
     else
     {
         // #######################
         // # Initialize Hardware #
         // #######################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Initializing the Hardware @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Initializing the Hardware @@@\x1b[0m" << RESET;
         ConfigureInfo theConfigureInfo;
         theConfigureInfo.setConfigurationFiles(configFile, calibSettingsFile);
         theConfigureInfo.setCalibrationName(whichCalib);
         mySysCntr.Configure(theConfigureInfo, !skipcfg);
-        LOG(INFO) << BOLDMAGENTA << "@@@ Hardware initialization done @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Hardware initialization done @@@\x1b[0m" << RESET;
     }
 
     LOG(INFO) << RESET;
@@ -259,7 +259,7 @@ int main(int argc, char** argv)
         // ###################
         // # Run LatencyScan #
         // ###################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Latency scan @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Latency scan @@@\x1b[0m" << RESET;
 
         std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Latency");
         Latency     la;
@@ -274,7 +274,7 @@ int main(int argc, char** argv)
         // ##################################
         // # Run Data Readback Optimization #
         // ##################################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Data Readback Optimization @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Data Readback Optimization @@@\x1b[0m" << RESET;
 
         std::string              fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_DataReadbackOptimization");
         DataReadbackOptimization dro;
@@ -288,7 +288,7 @@ int main(int argc, char** argv)
         // ##################
         // # Run PixelAlive #
         // ##################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing PixelAlive scan @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing PixelAlive scan @@@\x1b[0m" << RESET;
 
         std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_PixelAlive");
         PixelAlive  pa;
@@ -347,7 +347,7 @@ int main(int argc, char** argv)
         // #############
         // # Run Noise #
         // #############
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Noise scan @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Noise scan @@@\x1b[0m" << RESET;
 
         std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_NoiseScan");
         PixelAlive  pa;
@@ -362,7 +362,7 @@ int main(int argc, char** argv)
         // ##############
         // # Run SCurve #
         // ##############
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing SCurve scan @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing SCurve scan @@@\x1b[0m" << RESET;
 
         std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_SCurve");
         SCurve      sc;
@@ -377,7 +377,7 @@ int main(int argc, char** argv)
         // ############
         // # Run Gain #
         // ############
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Gain scan @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Gain scan @@@\x1b[0m" << RESET;
 
         std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_Gain");
         Gain        ga;
@@ -392,7 +392,7 @@ int main(int argc, char** argv)
         // #########################
         // # Run Gain Optimization #
         // #########################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Gain Optimization @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Gain Optimization @@@\x1b[0m" << RESET;
 
         std::string      fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_GainOptimization");
         GainOptimization go;
@@ -407,7 +407,7 @@ int main(int argc, char** argv)
         // ##############################
         // # Run Threshold Equalization #
         // ##############################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Threshold Equalization @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Threshold Equalization @@@\x1b[0m" << RESET;
 
         std::string     fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrEqualization");
         ThrEqualization te;
@@ -422,7 +422,7 @@ int main(int argc, char** argv)
         // ##############################
         // # Run Threshold Minimization #
         // ##############################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Threshold Minimization @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Threshold Minimization @@@\x1b[0m" << RESET;
 
         std::string     fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrMinimization");
         ThrMinimization tm;
@@ -437,7 +437,7 @@ int main(int argc, char** argv)
         // ##############################
         // # Run Threshold Minimization #
         // ##############################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Threshold Adjustment @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Threshold Adjustment @@@\x1b[0m" << RESET;
 
         std::string   fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ThrAdjustment");
         ThrAdjustment ta;
@@ -452,7 +452,7 @@ int main(int argc, char** argv)
         // #######################
         // # Run Injection Delay #
         // #######################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Injection Delay scan @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Injection Delay scan @@@\x1b[0m" << RESET;
 
         std::string    fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_InjectionDelay");
         InjectionDelay id;
@@ -467,7 +467,7 @@ int main(int argc, char** argv)
         // ###################
         // # Run Clock Delay #
         // ###################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Clock Delay scan @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Clock Delay scan @@@\x1b[0m" << RESET;
 
         std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_ClockDelay");
         ClockDelay  cd;
@@ -482,7 +482,7 @@ int main(int argc, char** argv)
         // ################
         // # Run BER test #
         // ################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Bit Error Rate test @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Bit Error Rate test @@@\x1b[0m" << RESET;
 
         std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_BERtest");
         BERtest     bt;
@@ -496,7 +496,7 @@ int main(int argc, char** argv)
         // ######################
         // # Run Voltage Tuning #
         // ######################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Voltage Tuning @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Voltage Tuning @@@\x1b[0m" << RESET;
 
         std::string   fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_VoltageTuning");
         VoltageTuning vt;
@@ -511,7 +511,7 @@ int main(int argc, char** argv)
         // ############################
         // # Run Generic DAC-DAC Scan #
         // ############################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Generic DAC-DAC scan @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Generic DAC-DAC scan @@@\x1b[0m" << RESET;
 
         std::string       fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_GenericDacDac");
         GenericDacDacScan gs;
@@ -526,7 +526,7 @@ int main(int argc, char** argv)
         // #############################
         // # Run VTRx Light Yield Scan #
         // #############################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing VTRx Light Yield scan @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing VTRx Light Yield scan @@@\x1b[0m" << RESET;
 
         std::string        fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_VTRxScan");
         VTRxLightYieldScan vs;
@@ -541,7 +541,7 @@ int main(int argc, char** argv)
         // ##############################
         // # Run LpGBT Eye Opening Scan #
         // ##############################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing LpGBT Eye Opening scan @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing LpGBT Eye Opening scan @@@\x1b[0m" << RESET;
 
         std::string     fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_LpGBTeyeScan");
         LpGBTeyeOpening es;
@@ -556,7 +556,7 @@ int main(int argc, char** argv)
         // ###############
         // # Run Physics #
         // ###############
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Physics data taking @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Physics data taking @@@\x1b[0m" << RESET;
 
         Physics ph;
         ph.Inherit(&mySysCntr);
@@ -597,7 +597,7 @@ int main(int argc, char** argv)
         // ######################
         // # Run EUDAQ producer #
         // ######################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing EUDAQ data taking @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing EUDAQ data taking @@@\x1b[0m" << RESET;
 
         gROOT->SetBatch(true);
 
@@ -704,7 +704,7 @@ int main(int argc, char** argv)
     if(theFileOut.is_open() == true) theFileOut << RD53Shared::fromInt2Str(runNumber) << std::endl;
     theFileOut.close();
 
-    LOG(INFO) << BOLDMAGENTA << "@@@ End of CMSIT miniDAQ @@@" << RESET;
+    LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ End of CMSIT miniDAQ @@@\x1b[0m" << RESET;
 
     return EXIT_SUCCESS;
 }

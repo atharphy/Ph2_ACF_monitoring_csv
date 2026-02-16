@@ -185,6 +185,7 @@
       <node id="active_link"           mask="0x07800000"      permission="rw"      description="select link for slow control (only one lpgbt at a time for now)" />
       <node id="lpgbt_version"         mask="0x08000000"      permission="rw"      description="Version of the lpGBT chip. 0=lpGBTv0(default), 1=lpGBTv1" />
       <node id="fec_cntr_clear"        mask="0x10000000"      permission="rw"      description="Reset counter for FEC monitoring" />
+      <node id="fmc_sel"               mask="0x20000000"      permission="rw"      description="Select FMC slot for VTRx Scan" />
     </node>
 
     <node id="lpgbt_2"               address="0x00000016"     permission="rw"      description="Signals for Slow Control of lpgbt">
@@ -278,6 +279,8 @@
       <node id="fmc_l8_type"           mask="0x00003800"      permission="r"       description="Type of FMC board plugged at L8 slot. 1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=unspecified" />
       <node id="dio5_not_ready"        mask="0x00004000"      permission="r"       description="Still configuring the dio5 thresholds." />
       <node id="dio5_error"            mask="0x00008000"      permission="r"       description="Error when configuring dio5 thresholds via i2c" />
+      <node id="optical_links_l8"      mask="0x0003C000"      permission="r"       description="Nb of Optical links in L8 FMC slot" />
+      <node id="optical_links_l12"     mask="0x003C0000"      permission="r"       description="Nb of Optical links in L12 FMC slot" />
     </node>
 
     <node id="slow_cmd"             address="0x00000003"      permission="r"       description="Clk_rate_tool output, for debugging purpose only">

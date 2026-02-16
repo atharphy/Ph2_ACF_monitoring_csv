@@ -454,6 +454,11 @@ Groups of broken channels in the center of CBC can indicate that sparking occurr
 ![StripChannelNoise_Sparking](./OTtesting/2S/StripChannelNoise_Sparking.png)
 
 If the HV is not applied, a very high noise is shown over both hybrids and sensors.
+
+The one below are symptoms of the CBC corrupted offset register, documented [here](https://indico.cern.ch/event/1185050/contributions/4979272/attachments/2486219/4269980/cooperstein_CBCI2CIrrad_28july.pdf)
+
+![CBCbufferCorruption](./OTtesting/2S/CBCbufferCorruption.png)
+
 </details>
 
 ##### OTinjectionDelayOptimization - Chip
@@ -474,17 +479,36 @@ The occupancy is measured for different injection charges to establish a referen
 
 Five different measurements are performed, corresponding to five different plots. Three examples are shown, for no injection and one for some injected charge.
 
-The one below is without injection.
+The one below is without injection, and is shown in log scale.
 
-![ChannelOccupancy_Injection_0.000_MIP_Chip](./OTtesting/2S/ChannelOccupancy_Injection_0.000_MIP_Chip_Chip.png)
+![ChannelOccupancy_Injection_0.000_MIP_Chip](./OTtesting/2S/ChannelOccupancy_Injection_0.000_MIP_Chip_log.png)
 
 The occupancy is measured for each chip, and although some slight activity may appear, the threshold is set to five times the noise, so almost no signal is expected except for very small fluctuations (that may be more visible in log scale).
+
+<details>
+  <summary>Known issues</summary>
+
+It may happen that the occupancy is higher than expected, as shown below.
+
+![ChannelOccupancy_Injection_0.000_MIP_Chip_log_highoccupancy](./OTtesting/2S/ChannelOccupancy_Injection_0.000_MIP_Chip_log_highoccupancy.png)
+
+It may be useful to check the S-curves to understand if it is a real effect, as shown below: The S-curve has a long tail.
+
+![SCurve_longtail](./OTtesting/2S/SCurve_longtail.png)
+
+If this happens please check the grounding of your test setup.
+
+</details>
+
 
 Then, injections are performed at different charge levels — for example, a quarter of a MIP, which corresponds to roughly the same level as the threshold set at five times the noise, yielding about 50% efficiency. This value indicates that a signal equivalent to a quarter of a MIP produces a 50% detection probability. Measuring lower charges is important to study cluster size and improve spatial resolution. Subsequent plots show the occupancy for each channel at 0.25, 0.5, 1, and 2 MIPs, allowing identification of potential issues. The inspection of these results is automated by potato, which flags problematic modules; manual inspection is mainly needed for those flagged as bad. Since each CBC chip behaves slightly differently, occupancy maps are produced per CBC and per channel, enabling the identification of noisy or inefficient channels, such as those with damaged comparators, although new modules typically show very few such cases.
 
 ![ChannelOccupancy_Injection_0.250_MIP_Chip](./OTtesting/2S/ChannelOccupancy_Injection_0.250_MIP_Chip.png)
 
 ![ChannelOccupancy_Injection_1.000_MIP_Chip](./OTtesting/2S/ChannelOccupancy_Injection_1.000_MIP_Chip.png)
+
+
+
 
 ##### OTCMNoise (Common Noise) - OpticalGroup, Hybrid, Chip
 The common mode noise test checks whether there is any correlation in the noise across different channels of the same chip.

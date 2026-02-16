@@ -39,6 +39,7 @@ class RD53AInterface : public RD53Interface
 
     std::pair<std::string, uint16_t> SetSpecialRegister(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
     uint16_t                         GetSpecialRegisterValue(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
+    void                             WriteRegsFromCfg(Ph2_HwDescription::Chip* pChip, bool pVerify = true, bool writeAll = false) override;
     // #############################
 
   private:
