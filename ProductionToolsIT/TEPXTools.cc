@@ -103,7 +103,7 @@ int main(int argc, char** argv)
     bool        reset             = cmd.foundOption("reset") == true ? true : false;
     bool        dumpRegs          = cmd.foundOption("dump") == true ? true : false;
     std::string muxreader_arg     = cmd.foundOption("adc") == true ? cmd.optionValue("adc") : "";
-    
+
     if(cmd.foundOption("capture") == true)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
     else if(cmd.foundOption("replay") == true)
@@ -178,7 +178,7 @@ int main(int argc, char** argv)
 
         std::string    fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_MuxReader");
         RD53BMuxReader mux;
-	mux.configure(muxreader_arg);
+        mux.configure(muxreader_arg);
         mux.Inherit(&mySysCntr);
         mux.localConfigure(fileName, runNumber);
         mux.run();
