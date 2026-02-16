@@ -1655,9 +1655,9 @@ std::pair<int, float> D19cFWInterface::GetSFPParameter(std::string parameter, in
     if(parameter == "raw") this->WriteReg("fc7_daq_cnfg.SFP_DDMI.regAddress", 96);
     this->WriteReg("fc7_daq_cnfg.sfp_ddmi.channel_number", channel);
     this->WriteReg("fc7_daq_cnfg.sfp_ddmi.enable", 1);
-    int  error = 0, timer_sfp = 0;
-    float result = 0;
-    bool time_out = false;
+    int   error = 0, timer_sfp = 0;
+    float result   = 0;
+    bool  time_out = false;
     while(this->ReadReg("fc7_daq_stat.sfp_ddmi_status.busy_" + mezzanine))
     {
         this->WriteReg("fc7_daq_cnfg.sfp_ddmi.enable", 0);
@@ -1736,8 +1736,7 @@ float D19cFWInterface::GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOptic
     channelNumber = 3 - channelNumber % 4 + 4 * (channelNumber / 4);
 
     std::pair<int, float> theErrorResultPair = GetSFPParameter(parameter, channelNumber, isL8);
-    if( theErrorResultPair.first != 0 ) 
-        LOG(ERROR) << ERROR_FORMAT << "Error occurred on OpticalGroup " << theOpticalGroup->getId() << RESET;
+    if(theErrorResultPair.first != 0) LOG(ERROR) << ERROR_FORMAT << "Error occurred on OpticalGroup " << theOpticalGroup->getId() << RESET;
     return theErrorResultPair.second;
 }
 
