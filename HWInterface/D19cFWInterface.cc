@@ -1672,7 +1672,7 @@ float D19cFWInterface::GetSFPParameter(std::string parameter, int channel, bool 
     }
     // std::this_thread::sleep_for(std::chrono::seconds(1));
     error = this->ReadReg("fc7_daq_stat.sfp_ddmi_status.error_" + mezzanine);
-    if(error) { LOG(ERROR) << ERROR_FORMAT << "Error occurred during communication with the SFP. The error code is: " << error << RESET; }
+    if(error) { LOG(ERROR) << ERROR_FORMAT << "Error occurred during communication with the SFP of OpticalGroup " << channel << ". The error code is: " << error << RESET; }
     else if(error == 0 && time_out == true)
     {
         if(parameter == "T") LOG(DEBUG) << "Time out in reading the temperature of the SFP for channel " << channel << "." << RESET;
