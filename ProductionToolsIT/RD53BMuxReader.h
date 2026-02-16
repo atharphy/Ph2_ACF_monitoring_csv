@@ -10,7 +10,9 @@
 #ifndef RD53BMuxReader_H
 #define RD53BMuxReader_H
 
+#include "../HWInterface/RD53Interface.h"
 #include "../tools/RD53CalibBase.h"
+#include "HWDescription/RD53.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/RD53VoltageTuningHistograms.h"
@@ -39,12 +41,25 @@ class RD53BMuxReader : public CalibBase
     void draw(bool saveData = true) override;
 
     void analyze();
+    void configure(const std::string& args);
+
+    struct adc_result
+    {
+        float       value;
+        float       error;
+        std::string line;
+    };
+
+    adc_result get_adc(Ph2_HwInterface::RD53Interface* chipInterface, Ph2_HwDescription::ReadoutChip* chip, const std::string& name, size_t nsample);
 
   private:
     void fillHisto() override;
 
   protected:
-    int theCurrentRun;
+    int                      theCurrentRun;
+    std::vector<std::string> muxlist;
+    bool                     use_wlt_calibration;
+    bool                     read_temperatures;
 };
 
 #endif
