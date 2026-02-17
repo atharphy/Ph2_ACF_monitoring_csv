@@ -342,7 +342,7 @@ float RD53Interface::convertADC2VorI(ReadoutChip* pChip, uint32_t value, bool is
 // ######################################
 {
     // ################################################################################
-    // # resistorI2V   = 0.01-0.005 [MOhm] Resistor for current to voltage conversion #
+    // # resistorI2V   = 0.01-0.005 [MOhm] Resistor for voltage to current conversion #
     // # ADCoffset     =  63 [1/10 mV]     Offset due to ground shift                 #
     // # actualVrefADC = 839 [mV]          Lower than VrefADC due to parasitics       #
     // ################################################################################

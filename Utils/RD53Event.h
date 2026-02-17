@@ -75,8 +75,9 @@ const uint32_t TRGTAG_ER1 = 0x00000020; // Event status Trigger tag mismatch
 const uint32_t TRGTAG_ER2 = 0x00000040; // Event status Trigger tag single bit-flip
 const uint32_t TRGTAG_ER3 = 0x00000080; // Event status Trigger tag Unrecognized tag symbol
 const uint32_t NOFRHEADER = 0x00000100; // Event status No frame header found in data
-const uint32_t MISSCHIP   = 0x00000200; // Event status Chip data are missing
-const uint32_t CORRUPTED  = 0x00000400; // Event status Corrupted event
+const uint32_t MISSCHIPDA = 0x00000200; // Event status Chip data are missing
+const uint32_t MISSCHIP   = 0x00000400; // Event status Missing chip
+const uint32_t CORRUPTED  = 0x00000800; // Event status Corrupted event
 } // namespace RD53FWEvtEncoder
 
 namespace Ph2_HwInterface
@@ -150,9 +151,12 @@ class RD53Event : public Ph2_HwInterface::Event
     static void JoinDecodingThreads();
     static void DecodeEventsMultiThreads(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, uint32_t& eventStatus, bool silentRunning = false);
     static void DecodeEvents(const std::vector<uint32_t>& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint32_t& eventStatus, bool silentRunning = false);
-    static bool EvtErrorHandler(uint32_t status);
     static void PrintEvents(const std::vector<RD53Event>& events, const std::vector<uint32_t>& pData = {});
-    static bool MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events);
+    static bool EvtErrorHandler(uint32_t status);
+    static void CheckPresenceOfChips(std::vector<RD53Event>& events, uint32_t& eventStatus, const size_t totalFEchips);
+    static void ClearDecodedEvents() { RD53Event::decodedEvents.clear(); }
+    static std::vector<RD53Event>& GetRefDecodedEvents() { return RD53Event::decodedEvents; }
+    static bool                    MakeNtuple(const std::string& fileName, const std::vector<RD53Event>& events);
 
     // ################
     // # Event format #
@@ -166,13 +170,14 @@ class RD53Event : public Ph2_HwInterface::Event
     uint32_t                   eventStatus = RD53FWEvtEncoder::GOOD;
     std::vector<RD53ChipEvent> chip_events;
 
+    static bool weakCheckDataStatus;
+
+  private:
     // ########################################
     // # Vector containing the decoded events #
     // ########################################
     static std::vector<RD53Event> decodedEvents;
-    static bool                   weakCheckDataStatus;
 
-  private:
     bool        isHittedChip(uint8_t hybrid_id, uint8_t chip_id, size_t& chipIndx) const;
     static int  lane2chipId(const Ph2_HwDescription::BeBoard* pBoard, uint8_t hybrid_id, uint8_t chip_lane);
     static void decoderThread(std::vector<uint32_t>*& data, std::vector<RD53Event>& events, const std::vector<size_t>& eventStart, uint32_t& eventStatus, std::atomic<bool>& workDone);

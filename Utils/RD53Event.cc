@@ -250,9 +250,15 @@ bool RD53Event::EvtErrorHandler(uint32_t status)
         isGood = false;
     }
 
-    if(status & RD53FWEvtEncoder::MISSCHIP)
+    if(status & RD53FWEvtEncoder::MISSCHIPDA)
     {
         LOG(ERROR) << BOLDRED << "Chip data are missing " << BOLDYELLOW << "--> retry" << RESET;
+        isGood = false;
+    }
+
+    if(status & RD53FWEvtEncoder::MISSCHIP)
+    {
+        LOG(ERROR) << BOLDRED << "Missing chip " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 
@@ -323,6 +329,16 @@ bool RD53Event::EvtErrorHandler(uint32_t status)
     if(status & RD53EvtEncoder::CHIPTRUNC_TIMEOUT) LOG(ERROR) << BOLDRED << "Truncation occurred due to readout timeout" << BOLDYELLOW << "--> no retry" << RESET;
 
     return isGood;
+}
+
+void RD53Event::CheckPresenceOfChips(std::vector<RD53Event>& events, uint32_t& eventStatus, const size_t totalFEchips)
+{
+    for(auto& evt: events)
+        if(evt.chip_events.size() < totalFEchips)
+        {
+            evt.eventStatus |= RD53FWEvtEncoder::MISSCHIP;
+            eventStatus |= RD53FWEvtEncoder::MISSCHIP;
+        }
 }
 
 bool RD53Event::findEventStarts(const std::vector<uint32_t>& data, std::vector<size_t>& eventStarts, uint32_t& eventStatus)
@@ -629,7 +645,7 @@ RD53Event RD53Event::DecodeRD53AEvent(const uint32_t* data, size_t n32bitsWords)
 
     if(index != n32bitsWords - dummy_size * NWORDS_DDR3)
     {
-        evt.eventStatus |= RD53FWEvtEncoder::MISSCHIP;
+        evt.eventStatus |= RD53FWEvtEncoder::MISSCHIPDA;
         return evt;
     }
 
@@ -772,7 +788,7 @@ size_t RD53Event::DecodeRD53BEvents(const uint32_t* data, std::vector<RD53Event>
             // ####################
             RD53B::decodeChipData(event_bits.pop_slice(chipEvt.l1a_size * NWORDS_DDR3 * RD53FWEvtEncoder::NBIT_EVT_WORD - 64), chipEvt, options);
             evt.eventStatus |= chipEvt.eventStatus;
-            if((chipEvt.eventStatus & (RD53FWEvtEncoder::MISSCHIP | RD53EvtEncoder::CHIPNS_WAS0 | RD53EvtEncoder::CHIPNS_WAS1)) != 0) break;
+            if((chipEvt.eventStatus & (RD53FWEvtEncoder::MISSCHIPDA | RD53EvtEncoder::CHIPNS_WAS0 | RD53EvtEncoder::CHIPNS_WAS1)) != 0) break;
             evt.chip_events.push_back(std::move(chipEvt));
         }
 

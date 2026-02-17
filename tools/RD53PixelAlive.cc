@@ -150,6 +150,13 @@ void PixelAlive::run()
                         size_t                          badPixelsCounterChip = 0;
                         std::map<std::string, uint16_t> regValueMap;
 
+                        // ##################################
+                        // # Set threshold to maximum value #
+                        // ##################################
+                        LOG(INFO) << GREEN << "Setting maximum threshold for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                  << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                        for(auto reg: frontEnd->thresholdRegs) fReadoutChipInterface->WriteChipReg(cChip, reg, RD53Shared::setBits(cChip->getNumberOfBits(reg)));
+
                         LOG(INFO) << GREEN << "Results for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                                   << +cChip->getId() << RESET << GREEN << "]" << RESET;
 
@@ -177,13 +184,13 @@ void PixelAlive::run()
                                 // ################
                                 this->SetTestPulse(false);
                                 this->fMaskChannelsFromOtherGroups = false;
-                                this->measureData(10, 10);
+                                this->measureData(NINJECT_DATAINTEGRITY, NINJECT_DATAINTEGRITY);
 
                                 // #####################
                                 // # Compute next step #
                                 // #####################
                                 bool statusGood = true;
-                                for(const auto& ev: RD53Event::decodedEvents)
+                                for(const auto& ev: RD53Event::GetRefDecodedEvents())
                                     if(ev.eventStatus != RD53FWEvtEncoder::GOOD)
                                     {
                                         statusGood = false;
@@ -192,7 +199,7 @@ void PixelAlive::run()
 
                                 size_t badPixelsCounterCoreCol = 0;
                                 size_t testedPixels            = 0;
-                                if(((doDataIntegrity == 2) || (doDataIntegrity == 3)) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0)))
+                                if(((doDataIntegrity == 2) || (doDataIntegrity == 3)) && ((statusGood == false) || (RD53Event::GetRefDecodedEvents().size() == 0)))
                                 {
                                     static_cast<RD53Interface*>(this->fReadoutChipInterface)->InitRD53Uplinks(cChip);
                                     this->fReadoutChipInterface->MaskAllChannels(cChip, true);
@@ -216,7 +223,7 @@ void PixelAlive::run()
                                             CalibBase::setSinglePixel(cChip, row, col, true, true);
                                             this->SetTestPulse(false);
                                             this->fMaskChannelsFromOtherGroups = false;
-                                            this->measureData(10, 10);
+                                            this->measureData(NINJECT_DATAINTEGRITY, NINJECT_DATAINTEGRITY);
                                             CalibBase::setSinglePixel(cChip, row, col, false, false);
                                             testedPixels++;
 
@@ -224,14 +231,21 @@ void PixelAlive::run()
                                             // # Compute next step #
                                             // #####################
                                             statusGood = true;
-                                            for(const auto& ev: RD53Event::decodedEvents)
+                                            for(const auto& ev: RD53Event::GetRefDecodedEvents())
                                                 if(ev.eventStatus != RD53FWEvtEncoder::GOOD)
                                                 {
                                                     statusGood = false;
                                                     break;
                                                 }
 
-                                            if((statusGood == false) || (RD53Event::decodedEvents.size() == 0))
+                                            if((statusGood == false) || (RD53Event::GetRefDecodedEvents().size() == 0) ||
+                                               (localOccContainer->getObject(cBoard->getId())
+                                                    ->getObject(cOpticalGroup->getId())
+                                                    ->getObject(cHybrid->getId())
+                                                    ->getObject(cChip->getId())
+                                                    ->getChannel<OccupancyAndPh>(row, col)
+                                                    .fOccupancy != 0))
+
                                             {
                                                 if(doDataIntegrity == 2)
                                                 {
@@ -256,7 +270,7 @@ void PixelAlive::run()
                                     static_cast<RD53*>(cChip)->copyMaskFromDefault("en hb");
                                 }
 
-                                if(((doDataIntegrity == 1) && ((statusGood == false) || (RD53Event::decodedEvents.size() == 0))) ||
+                                if(((doDataIntegrity == 1) && ((statusGood == false) || (RD53Event::GetRefDecodedEvents().size() == 0))) ||
                                    (badPixelsCounterCoreCol == (RD53Shared::firstChip->getNRows() * RD53Constants::NROW_CORE)))
                                 {
                                     regValueMap[regName] ^= 1 << i;
@@ -289,6 +303,13 @@ void PixelAlive::run()
                         if(((doDataIntegrity == 2) || (doDataIntegrity == 3)) && (badPixelsCounterChip != 0))
                             LOG(WARNING) << BOLDRED << "\t--> Found " << BOLDYELLOW << badPixelsCounterChip << BOLDRED << " bad pixel(s) in this chip --> masked" << RESET;
                         LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+
+                        // ##################################
+                        // # Set threshold to default value #
+                        // ##################################
+                        LOG(INFO) << GREEN << "Setting threshold to default value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                                  << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                        for(auto reg: frontEnd->thresholdRegs) fReadoutChipInterface->WriteChipReg(cChip, reg, cChip->getRegMap()[reg].fDefValue);
                     }
 
             // #######################

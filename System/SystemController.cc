@@ -1113,11 +1113,11 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
     // ####################
     if(pType == BoardType::RD53)
     {
-        uint32_t status;
+        uint32_t status = 0;
         fEventList.clear();
-        if(RD53Event::decodedEvents.size() == 0) RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status);
-        RD53Event::addBoardInfo2Events(pBoard, RD53Event::decodedEvents);
-        for(auto& evt: RD53Event::decodedEvents) fEventList.push_back(&evt);
+        if(RD53Event::GetRefDecodedEvents().size() == 0) RD53Event::DecodeEventsMultiThreads(pData, RD53Event::GetRefDecodedEvents(), status);
+        RD53Event::addBoardInfo2Events(pBoard, RD53Event::GetRefDecodedEvents());
+        for(auto& evt: RD53Event::GetRefDecodedEvents()) fEventList.push_back(&evt);
     }
     // ####################
     // # Decoding OT data #
@@ -1262,6 +1262,11 @@ void SystemController::disableAllChannels(bool forceDoIt)
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid) fReadoutChipInterface->MaskAllChannels(cChip, true);
+}
+
+void SystemController::ResetSequence()
+{
+    for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetSequence(cBoard);
 }
 
 void SystemController::DumpRegisters()

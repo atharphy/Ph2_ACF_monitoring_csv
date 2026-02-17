@@ -126,7 +126,7 @@ class lpGBTInterface : public ChipInterface
     uint8_t GetRxPhase(Ph2_HwDescription::Chip* pChip, uint8_t pGroup, uint8_t pChannel);
     bool    IsRxLocked(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
     uint8_t GetRxDllStatus(Ph2_HwDescription::Chip* pChip, uint8_t pGroup);
-    uint8_t GetSFPchannel(const Ph2_HwDescription::OpticalGroup* pOpticalGroup);
+    uint8_t GetSFPchannel(const Ph2_HwDescription::OpticalGroup* pOpticalGroup) { return 3 - pOpticalGroup->getId() % 4 + 4 * (pOpticalGroup->getId() / 4); }
 
     // ########################
     // # LpGBT GPIO functions #

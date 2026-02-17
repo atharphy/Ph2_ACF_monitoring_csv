@@ -120,7 +120,7 @@ void VTRxLightYieldScan::run()
                     float value = 0;
                     try
                     {
-                        value = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter("RX", flpGBTInterface->GetSFPchannel(cOpticalGroup));
+                        value = static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->GetSFPParameter(cOpticalGroup, "RX", flpGBTInterface->GetSFPchannel(cOpticalGroup));
                     }
                     catch(uhal::exception::BitsSetWhichAreForbiddenByBitMask& e)
                     {
