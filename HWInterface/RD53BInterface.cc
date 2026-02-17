@@ -1139,7 +1139,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // ###########################
         // # Compute the temperature #
         // ###########################
-        float temperature = pChip->getRegItem("REFTEMP").fValue + VRtoT(slopePoly * pChip->getRegItem("RESISTORI2V").fValue);
+        float temperature = pChip->getRegItem("REFTEMP").fValue + VRtoT(slopePoly * 1e6 * pChip->getRegItem("RESISTORI2V").fValue / 1e3);
 
         // #########################
         // # Restore initial value #
