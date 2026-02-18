@@ -108,7 +108,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    WriteRegsFromCfg(pChip, pVerify);
+    RD53BInterface::WriteRegsFromCfg(pChip, pVerify);
 
     // #################################################
     // # Important values to be checked before running #
@@ -690,7 +690,7 @@ void RD53BInterface::SendGlobalPulseFromCfg(Chip* pChip)
     // # Programming Global Pulse register #
     // #####################################
     bool        doWriteGlobalPulseConf = false;
-    const auto& pRD53RegMap            = pChip->getRegMap();
+    auto&       pRD53RegMap            = pChip->getRegMap();
     const auto& theMap                 = static_cast<RD53*>(pChip)->getFEtype()->GlobalPulseConfMap;
 
     for(auto ele: theMap)
@@ -698,7 +698,8 @@ void RD53BInterface::SendGlobalPulseFromCfg(Chip* pChip)
         auto cRegItem = pRD53RegMap.find(ele.first);
         if((cRegItem != pRD53RegMap.end()) && (cRegItem->second.fPrmptCfg == true))
         {
-            doWriteGlobalPulseConf = true;
+            doWriteGlobalPulseConf     = true;
+            cRegItem->second.fPrmptCfg = false;
             pChip->getRegItem("GlobalPulseConf").fDefValue |= ele.second;
         }
     }
