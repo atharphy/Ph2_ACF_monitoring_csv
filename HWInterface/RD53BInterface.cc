@@ -737,8 +737,8 @@ void RD53BInterface::WriteRegsFromCfg(Chip* pChip, bool pVerify, bool writeAll)
     const std::set<std::string> registerClkDataDelayList     = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"};                                           // @CONST@
     const std::set<std::string> registerBlackList            = {"RESISTORI2V",                                                                                            // [Ohm]
                                                                 "REFTEMP",                                                                                                // [C]
-                                                                "R_MEAS_TOP",                                                                                             // [Ohm]
-                                                                "R_MEAS_BOTTOM",                                                                                          // [Ohm]
+                                                                "RES_MEAS_TOP",                                                                                           // [Ohm]
+                                                                "RES_MEAS_BOTTOM",                                                                                        // [Ohm]
                                                                 "NTCBETA",                                                                                                // [N.A.]
                                                                 "RNTCAT25C",                                                                                              // [Ohm]
                                                                 "ADC_OFFSET_VOLT",                                                                                        // [mV]
@@ -981,8 +981,8 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         {"RADSENS_CENTER", "RADSENS_IDEAL_FACTOR"},
         {"POLY_REL_TEMPSENS_TOP", "TEMPSENS_OFFSET_TOP"},
         {"POLY_REL_TEMPSENS_BOTTOM", "TEMPSENS_OFFSET_BOTTOM"},
-        {"POLY_ABS_TEMPSENS_TOP", "R_MEAS_TOP"},
-        {"POLY_ABS_TEMPSENS_BOTTOM", "R_MEAS_BOTTOM"},
+        {"POLY_ABS_TEMPSENS_TOP", "RES_MEAS_TOP"},
+        {"POLY_ABS_TEMPSENS_BOTTOM", "RES_MEAS_BOTTOM"},
         {"INTERNAL_NTC_VOLT", ""},
         {"INTERNAL_NTC_REL", ""},
         {"INTERNAL_NTC_ABS", ""},
@@ -1089,7 +1089,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     else if(type.find("POLY_ABS") != std::string::npos)
     {
         const uint16_t saveADC   = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
-        const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip);
+        const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip, type);
         const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1);
         uint16_t       nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
         uint16_t       ntcVolt   = 0;
@@ -1109,8 +1109,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
                 ntcCurrVec.push_back(ntcCurr);
                 bool     isCurrentNotVoltage;
                 uint32_t observable = RD53BInterface::getADCobservable(type.find("POLY_ABS_TEMPSENS_TOP") ? "ANA_GND_1" : "ANA_GND_0", isCurrentNotVoltage);
-                polyVec.push_back(RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data)) -
-                                  RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, observable)));
+                polyVec.push_back(RD53BInterface::measureADC(pChip, data) - RD53BInterface::measureADC(pChip, observable));
                 LOG(DEBUG) << "DAC_NTC: " << step * i << " NTC Volt: " << ntcVolt << " NTC Curr: " << ntcCurr << RESET;
             }
         }
@@ -1139,7 +1138,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // ###########################
         // # Compute the temperature #
         // ###########################
-        float temperature = pChip->getRegItem("REFTEMP").fValue + VRtoT(slopePoly * 1e6 * pChip->getRegItem("RESISTORI2V").fValue / 1e3);
+        float temperature = pChip->getRegItem("REFTEMP").fValue + VRtoT(slopePoly * pChip->getRegItem("RESISTORI2V").fValue / 1e3);
 
         // #########################
         // # Restore initial value #
@@ -1182,7 +1181,7 @@ void RD53BInterface::readNTCvoltCurr(ReadoutChip* pChip, uint16_t dacNTC, uint16
     ntcCurr = RD53Interface::ReadChipADC(pChip, "NTC_CURR");
 }
 
-uint16_t RD53BInterface::maxADCatSaturation(ReadoutChip* pChip)
+uint16_t RD53BInterface::maxADCatSaturation(ReadoutChip* pChip, const std::string& type)
 {
     auto&          pRD53RegMap  = pChip->getRegMap();
     uint16_t       minADC       = 0;
@@ -1194,14 +1193,16 @@ uint16_t RD53BInterface::maxADCatSaturation(ReadoutChip* pChip)
     uint16_t       it           = 0;
     uint16_t       ntcVolt      = 0;
     uint16_t       ntcCurr      = 0;
+    uint16_t       typeVal      = 0;
 
     // ################################
     // # Find ADC value at saturation #
     // ################################
     RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
+    if(type != "") typeVal = RD53Interface::ReadChipADC(pChip, type);
     while(it <= numberOfBits)
     {
-        if((ntcVolt < maxVal) && (ntcCurr < maxVal))
+        if((ntcVolt < maxVal) && (ntcCurr < maxVal) && (typeVal < maxVal))
         {
             minADC    = midADC;
             maxADCval = midADC;
@@ -1211,6 +1212,8 @@ uint16_t RD53BInterface::maxADCatSaturation(ReadoutChip* pChip)
         midADC = (minADC + maxADC) / 2;
 
         RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
+        if(type != "") typeVal = RD53Interface::ReadChipADC(pChip, type);
+
         it++;
     }
 
