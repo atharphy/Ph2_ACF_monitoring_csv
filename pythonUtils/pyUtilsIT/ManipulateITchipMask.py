@@ -63,7 +63,7 @@ def ArgParser():
 
     parser.add_argument('-f', '--inFile',      dest = 'inFile',      type = str, help = 'Chip cfg file',          required = True,  default = '')
     parser.add_argument('-o', '--outFile',     dest = 'outFile',     type = str, help = 'Output file name',       required = True,  default = '')
-    parser.add_argument('-m', '--maskFile',    dest = 'maskFile',    type = str, help = 'Used defined mask file', required = False, default = '')
+    parser.add_argument('-m', '--maskFile',    dest = 'maskFile',    type = str, help = 'User defined mask file', required = False, default = '')
     parser.add_argument('-p', '--patternType', dest = 'patternType', type = str, help = 'Pattern type: coupled or decoupled', required = False, default = '')
     parser.add_argument('-g', '--groupNumber', dest = 'groupNumber', type = int, help = 'Group number',           required = False, default = 0)
 
