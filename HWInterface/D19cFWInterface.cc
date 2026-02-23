@@ -1643,7 +1643,7 @@ void D19cFWInterface::ConfigureFCMDBram(std::vector<uint8_t> pFastCommands)
     LOG(DEBUG) << BOLDBLUE << "Configuring FCMD BRAM from sw..... done" << RESET;
 }
 
-float D19cFWInterface::GetSFPParameter(std::string parameter, int channel, bool isL8)
+std::pair<int, float> D19cFWInterface::GetSFPParameter(std::string parameter, int channel, bool isL8)
 {
     std::string mezzanine = isL8 ? "l8" : "l12";
 
@@ -1655,8 +1655,9 @@ float D19cFWInterface::GetSFPParameter(std::string parameter, int channel, bool 
     if(parameter == "raw") this->WriteReg("fc7_daq_cnfg.SFP_DDMI.regAddress", 96);
     this->WriteReg("fc7_daq_cnfg.sfp_ddmi.channel_number", channel);
     this->WriteReg("fc7_daq_cnfg.sfp_ddmi.enable", 1);
-    int  error = 0, timer_sfp = 0;
-    bool time_out = false;
+    int   error = 0, timer_sfp = 0;
+    float result   = 0;
+    bool  time_out = false;
     while(this->ReadReg("fc7_daq_stat.sfp_ddmi_status.busy_" + mezzanine))
     {
         this->WriteReg("fc7_daq_cnfg.sfp_ddmi.enable", 0);
@@ -1683,7 +1684,7 @@ float D19cFWInterface::GetSFPParameter(std::string parameter, int channel, bool 
     }
     else
     {
-        float result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_" + mezzanine);
+        result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_" + mezzanine);
 
         if(parameter == "T")
         {
@@ -1711,9 +1712,9 @@ float D19cFWInterface::GetSFPParameter(std::string parameter, int channel, bool 
             LOG(DEBUG) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
         }
         else if(parameter == "raw") { LOG(DEBUG) << "The SFP's output for channel " << channel << " is " << result << RESET; }
-        return result;
+        return std::make_pair(error, result);
     }
-    return error;
+    return std::make_pair(error, result);
 }
 
 float D19cFWInterface::GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOpticalGroup, std::string parameter)
@@ -1734,7 +1735,9 @@ float D19cFWInterface::GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOptic
 
     channelNumber = 3 - channelNumber % 4 + 4 * (channelNumber / 4);
 
-    return GetSFPParameter(parameter, channelNumber, isL8);
+    std::pair<int, float> theErrorResultPair = GetSFPParameter(parameter, channelNumber, isL8);
+    if(theErrorResultPair.first != 0) LOG(ERROR) << ERROR_FORMAT << "Error occurred on OpticalGroup " << theOpticalGroup->getId() << RESET;
+    return theErrorResultPair.second;
 }
 
 void D19cFWInterface::vtrxHardReset(Ph2_HwDescription::OpticalGroup* theOpticalGroup)
