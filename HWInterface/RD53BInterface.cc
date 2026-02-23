@@ -108,7 +108,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    WriteRegsFromCfg(pChip, pVerify);
+    RD53BInterface::WriteRegsFromCfg(pChip, pVerify);
 
     // #################################################
     // # Important values to be checked before running #
@@ -690,7 +690,7 @@ void RD53BInterface::SendGlobalPulseFromCfg(Chip* pChip)
     // # Programming Global Pulse register #
     // #####################################
     bool        doWriteGlobalPulseConf = false;
-    const auto& pRD53RegMap            = pChip->getRegMap();
+    auto&       pRD53RegMap            = pChip->getRegMap();
     const auto& theMap                 = static_cast<RD53*>(pChip)->getFEtype()->GlobalPulseConfMap;
 
     for(auto ele: theMap)
@@ -698,7 +698,8 @@ void RD53BInterface::SendGlobalPulseFromCfg(Chip* pChip)
         auto cRegItem = pRD53RegMap.find(ele.first);
         if((cRegItem != pRD53RegMap.end()) && (cRegItem->second.fPrmptCfg == true))
         {
-            doWriteGlobalPulseConf = true;
+            doWriteGlobalPulseConf     = true;
+            cRegItem->second.fPrmptCfg = false;
             pChip->getRegItem("GlobalPulseConf").fDefValue |= ele.second;
         }
     }
@@ -735,24 +736,27 @@ void RD53BInterface::WriteRegsFromCfg(Chip* pChip, bool pVerify, bool writeAll)
     auto&                       pRD53RegMap                  = pChip->getRegMap();
     const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
     const std::set<std::string> registerClkDataDelayList     = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"};                                           // @CONST@
-    const std::set<std::string> registerBlackList            = {"RESISTORI2V",
-                                                                "NTCBETA",
-                                                                "RNTCAT25C",
-                                                                "ADC_OFFSET_VOLT",
-                                                                "ADC_MAXIMUM_VOLT",
-                                                                "TEMPSENS_IDEAL_FACTOR",
-                                                                "TEMPSENS_IDEAL_FACTOR_ANA",
-                                                                "TEMPSENS_IDEAL_FACTOR_DIG",
-                                                                "RADSENS_IDEAL_FACTOR",
-                                                                "RADSENS_IDEAL_FACTOR_ANA",
-                                                                "RADSENS_IDEAL_FACTOR_DIG",
-                                                                "TEMPSENS_OFFSET_TOP",
-                                                                "TEMPSENS_OFFSET_BOTTOM",
-                                                                "SAMPLE_N_TIMES",
-                                                                "SAMPLE_NTC_SLOPE",
-                                                                "WAIT_MUX_CONFIG",
-                                                                "VREF_ADC",
-                                                                "INJ_CAP"}; // @CONST@
+    const std::set<std::string> registerBlackList            = {"RESISTORI2V",                                                                                            // [Ohm]
+                                                                "REFTEMP",                                                                                                // [C]
+                                                                "RES_MEAS_TOP",                                                                                           // [Ohm]
+                                                                "RES_MEAS_BOTTOM",                                                                                        // [Ohm]
+                                                                "NTCBETA",                                                                                                // [N.A.]
+                                                                "RNTCAT25C",                                                                                              // [Ohm]
+                                                                "ADC_OFFSET_VOLT",                                                                                        // [mV]
+                                                                "ADC_MAXIMUM_VOLT",                                                                                       // [mV]
+                                                                "TEMPSENS_IDEAL_FACTOR",                                                                                  // [N.A.]
+                                                                "TEMPSENS_IDEAL_FACTOR_ANA",                                                                              // [N.A.]
+                                                                "TEMPSENS_IDEAL_FACTOR_DIG",                                                                              // [N.A.]
+                                                                "RADSENS_IDEAL_FACTOR",                                                                                   // [N.A.]
+                                                                "RADSENS_IDEAL_FACTOR_ANA",                                                                               // [N.A.]
+                                                                "RADSENS_IDEAL_FACTOR_DIG",                                                                               // [N.A.]
+                                                                "TEMPSENS_OFFSET_TOP",                                                                                    // [mV]
+                                                                "TEMPSENS_OFFSET_BOTTOM",                                                                                 // [mV]
+                                                                "SAMPLE_N_TIMES",                                                                                         // [n]
+                                                                "SAMPLE_NTC_SLOPE",                                                                                       // [n]
+                                                                "WAIT_MUX_CONFIG",                                                                                        // [ms]
+                                                                "VREF_ADC",                                                                                               // [mV]
+                                                                "INJ_CAP"};                                                                                               // @CONST@
     const std::set<std::string> registerWhiteList            = {"DAC_PREAMP_L_LIN",
                                                                 "DAC_PREAMP_R_LIN",
                                                                 "DAC_PREAMP_TL_LIN",
@@ -826,8 +830,10 @@ int RD53BInterface::getADCobservable(const std::string& observableName, bool& is
                                                                           {"NTC_VOLT", 0x02},
                                                                           {"Vref_CAL_DAC", 0x03},
                                                                           {"VDDA_CAPMEASURE", 0x04},
-                                                                          {"POLY_TEMPSENS_TOP", 0x05},
-                                                                          {"POLY_TEMPSENS_BOTTOM", 0x06},
+                                                                          {"POLY_REL_TEMPSENS_TOP", 0x05},
+                                                                          {"POLY_REL_TEMPSENS_BOTTOM", 0x06},
+                                                                          {"POLY_ABS_TEMPSENS_TOP", 0x05},
+                                                                          {"POLY_ABS_TEMPSENS_BOTTOM", 0x06},
                                                                           {"VCAL_HI", 0x07},
                                                                           {"VCAL_MD", 0x08},
                                                                           {"LIN_FE_REF_KRUMCURR", 0x09},
@@ -959,10 +965,10 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     // #####################
     const float       T0C              = 273.15;                                      // [Kelvin]
     const float       T25C             = 298.15;                                      // [Kelvin]
-    const float       R25C             = pChip->getRegItem("RNTCAT25C").fValue / 1e3; // [Ohm]
+    const float       R25C             = pChip->getRegItem("RNTCAT25C").fValue / 1e3; // [kOhm]
     const float       kb               = 1.38064852e-23;                              // [J/K]
     const float       e                = 1.6021766208e-19;                            // [C]
-    const float       temperatureCoeff = 0.22e-2;                                     // By circuit design [dR/dT]
+    const float       temperatureCoeff = 0.22e-2;                                     // By circuit design [dR/R(or dV/V) / dT]
     const float       biasIratio       = 15;                                          // By circuit design
     const int         nDEM             = 16;                                          // Dynamic Element Matching
     const std::string regName          = (type.find("CENTER") != std::string::npos ? "MON_SENS_ACB" : "MON_SENS_SLDO");
@@ -974,8 +980,10 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         {"RADSENS_ANA_SLDO", "RADSENS_IDEAL_FACTOR_ANA"},
         {"RADSENS_DIG_SLDO", "RADSENS_IDEAL_FACTOR_DIG"},
         {"RADSENS_CENTER", "RADSENS_IDEAL_FACTOR"},
-        {"POLY_TEMPSENS_TOP", "TEMPSENS_OFFSET_TOP"},
-        {"POLY_TEMPSENS_BOTTOM", "TEMPSENS_OFFSET_BOTTOM"},
+        {"POLY_REL_TEMPSENS_TOP", "TEMPSENS_OFFSET_TOP"},
+        {"POLY_REL_TEMPSENS_BOTTOM", "TEMPSENS_OFFSET_BOTTOM"},
+        {"POLY_ABS_TEMPSENS_TOP", "RES_MEAS_TOP"},
+        {"POLY_ABS_TEMPSENS_BOTTOM", "RES_MEAS_BOTTOM"},
         {"INTERNAL_NTC_VOLT", ""},
         {"INTERNAL_NTC_REL", ""},
         {"INTERNAL_NTC_ABS", ""},
@@ -988,12 +996,13 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         return -HUGE_VALF; // Unphysically low temperature as error
     }
 
-    const float idealityFactor = (iterator->second != "" ? pChip->getRegItem(iterator->second).fValue / 1e3 : 0);
+    const float idealityFactor = (iterator->second != "" ? pChip->getRegItem(iterator->second).fValue / 1e3 : 0); // [kOhm]
     uint16_t    sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
     float       valueLow  = 0;
     float       valueHigh = 0;
 
-    auto RtoT = [&](float resistance) { return 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; };
+    auto RtoT  = [&](float resistance) { return 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; }; // [Celsius]
+    auto VRtoT = [&](float voltOrRes) { return (voltOrRes / idealityFactor - 1.) / temperatureCoeff; };    // [Celsius]
 
     if(type.find("INTERNAL_NTC_REL") != std::string::npos)
     {
@@ -1013,37 +1022,12 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     }
     else if(type.find("INTERNAL_NTC_ABS") != std::string::npos)
     {
-        auto&          pRD53RegMap  = pChip->getRegMap();
-        uint16_t       minADC       = 0;
-        uint16_t       maxADC       = RD53Shared::setBits(pRD53RegMap.at("DAC_NTC").fBitSize);
-        uint16_t       midADC       = (minADC + maxADC) / 2;
-        const uint16_t numberOfBits = floor(log2(maxADC - minADC + 1) + 1);
-        const uint16_t maxVal       = RD53Shared::setBits(pRD53RegMap.at("MonitorConfig").fBitSize - 1);
-        uint16_t       maxADCval    = 0;
-        uint16_t       it           = 0;
-        uint16_t       nSteps       = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
-        const uint16_t saveADC      = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
-        uint16_t       ntcVolt      = 0;
-        uint16_t       ntcCurr      = 0;
-
-        // #################################
-        // # Find ADC value for saturation #
-        // #################################
-        RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
-        while(it <= numberOfBits)
-        {
-            if((ntcVolt < maxVal) && (ntcCurr < maxVal))
-            {
-                minADC    = midADC;
-                maxADCval = midADC;
-            }
-            else
-                maxADC = midADC;
-            midADC = (minADC + maxADC) / 2;
-
-            RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
-            it++;
-        }
+        const uint16_t saveADC   = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
+        const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip);
+        const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1);
+        uint16_t       nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
+        uint16_t       ntcVolt   = 0;
+        uint16_t       ntcCurr   = 0;
 
         // #########################################################################
         // # Scan from 0 to saturation to compute ADC volt independent temperature #
@@ -1057,9 +1041,9 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
             RD53BInterface::readNTCvoltCurr(pChip, step * i, ntcVolt, ntcCurr);
             if((ntcVolt > 0) && (ntcVolt < maxVal) && (ntcCurr > 0) && (ntcCurr < maxVal))
             {
+                ntcADCVec.push_back(step * i);
                 ntcVoltVec.push_back(ntcVolt);
                 ntcCurrVec.push_back(ntcCurr);
-                ntcADCVec.push_back(step * i);
                 LOG(DEBUG) << "DAC_NTC: " << step * i << " NTC Volt: " << ntcVolt << " NTC Curr: " << ntcCurr << RESET;
             }
         }
@@ -1067,9 +1051,9 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // ########################
         // # Compute the averages #
         // ########################
-        float avgVolt = (ntcVoltVec.size() != 0 ? reduce(ntcVoltVec.begin(), ntcVoltVec.end()) / ntcVoltVec.size() : 0);
-        float avgCurr = (ntcCurrVec.size() != 0 ? reduce(ntcCurrVec.begin(), ntcCurrVec.end()) / ntcCurrVec.size() : 0);
-        float avgADC  = (ntcADCVec.size() != 0 ? reduce(ntcADCVec.begin(), ntcADCVec.end()) / ntcADCVec.size() : 0);
+        float avgVolt = (ntcVoltVec.size() != 0 ? std::reduce(ntcVoltVec.begin(), ntcVoltVec.end(), 0.) / ntcVoltVec.size() : 0);
+        float avgCurr = (ntcCurrVec.size() != 0 ? std::reduce(ntcCurrVec.begin(), ntcCurrVec.end(), 0.) / ntcCurrVec.size() : 0);
+        float avgADC  = (ntcADCVec.size() != 0 ? std::reduce(ntcADCVec.begin(), ntcADCVec.end(), 0.) / ntcADCVec.size() : 0);
         std::for_each(ntcVoltVec.begin(), ntcVoltVec.end(), [avgVolt](auto& e) { e -= avgVolt; });
         std::for_each(ntcCurrVec.begin(), ntcCurrVec.end(), [avgCurr](auto& e) { e -= avgCurr; });
         std::for_each(ntcADCVec.begin(), ntcADCVec.end(), [avgADC](auto& e) { e -= avgADC; });
@@ -1077,9 +1061,9 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // ######################
         // # Compute the slopes #
         // ######################
-        float slopeVolt = std::inner_product(ntcADCVec.begin(), ntcADCVec.end(), ntcVoltVec.begin(), 0);
-        float slopeCurr = std::inner_product(ntcADCVec.begin(), ntcADCVec.end(), ntcCurrVec.begin(), 0);
-        float slopeADC  = std::inner_product(ntcADCVec.begin(), ntcADCVec.end(), ntcADCVec.begin(), 0);
+        float slopeVolt = std::inner_product(ntcADCVec.begin(), ntcADCVec.end(), ntcVoltVec.begin(), 0.);
+        float slopeCurr = std::inner_product(ntcADCVec.begin(), ntcADCVec.end(), ntcCurrVec.begin(), 0.);
+        float slopeADC  = std::inner_product(ntcADCVec.begin(), ntcADCVec.end(), ntcADCVec.begin(), 0.);
         slopeVolt /= slopeADC;
         slopeCurr /= slopeADC;
 
@@ -1096,10 +1080,71 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
 
         return temperature;
     }
-    else if(type.find("POLY") != std::string::npos)
+    else if(type.find("POLY_REL") != std::string::npos)
     {
-        float voltage     = RD53Interface::convertADC2VorI(pChip, measureADC(pChip, data));
-        float temperature = (voltage / idealityFactor - 1) / temperatureCoeff; // [Celsius]
+        float voltage     = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
+        float temperature = VRtoT(voltage);
+
+        return temperature;
+    }
+    else if(type.find("POLY_ABS") != std::string::npos)
+    {
+        const uint16_t saveADC   = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
+        const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip, type);
+        const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1);
+        uint16_t       nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
+        uint16_t       ntcVolt   = 0;
+        uint16_t       ntcCurr   = 0;
+
+        // #########################################################################
+        // # Scan from 0 to saturation to compute ADC volt independent temperature #
+        // #########################################################################
+        const uint16_t     step = maxADCval / nSteps;
+        std::vector<float> ntcCurrVec;
+        std::vector<float> polyVec;
+        for(uint16_t i = 1; i < nSteps; i++)
+        {
+            RD53BInterface::readNTCvoltCurr(pChip, step * i, ntcVolt, ntcCurr);
+            if((ntcVolt > 0) && (ntcVolt < maxVal) && (ntcCurr > 0) && (ntcCurr < maxVal))
+            {
+                ntcCurrVec.push_back(ntcCurr);
+                bool     isCurrentNotVoltage;
+                uint32_t observable = RD53BInterface::getADCobservable(type.find("POLY_ABS_TEMPSENS_TOP") ? "ANA_GND_1" : "ANA_GND_0", isCurrentNotVoltage);
+                polyVec.push_back(RD53BInterface::measureADC(pChip, data) - RD53BInterface::measureADC(pChip, observable));
+                LOG(DEBUG) << "DAC_NTC: " << step * i << " NTC Volt: " << ntcVolt << " NTC Curr: " << ntcCurr << RESET;
+            }
+        }
+
+        // ####################
+        // # Compute the sums #
+        // ####################
+        float sumPolyVec = std::reduce(polyVec.begin(), polyVec.end(), 0.);
+        float sumCurr    = std::reduce(ntcCurrVec.begin(), ntcCurrVec.end(), 0.);
+
+        // ##################################
+        // # Compute the sum of the squares #
+        // ##################################
+        float sumSq = std::accumulate(ntcCurrVec.begin(), ntcCurrVec.end(), 0., [](float total, float e) { return total + e * e; });
+
+        // ##########################
+        // # Compute scalar product #
+        // ##########################
+        float scalarPoly = std::inner_product(polyVec.begin(), polyVec.end(), ntcCurrVec.begin(), 0.);
+
+        // #####################
+        // # Compute the slope #
+        // #####################
+        float slopePoly = (ntcCurrVec.size() != 0 ? (ntcCurrVec.size() * scalarPoly - sumCurr * sumPolyVec) / (ntcCurrVec.size() * sumSq - sumCurr * sumCurr) : 0);
+
+        // ###########################
+        // # Compute the temperature #
+        // ###########################
+        float temperature = pChip->getRegItem("REFTEMP").fValue + VRtoT(slopePoly * pChip->getRegItem("RESISTORI2V").fValue / 1e3);
+
+        // #########################
+        // # Restore initial value #
+        // #########################
+        RD53Interface::WriteChipReg(pChip, "DAC_NTC", saveADC);
 
         return temperature;
     }
@@ -1135,6 +1180,45 @@ void RD53BInterface::readNTCvoltCurr(ReadoutChip* pChip, uint16_t dacNTC, uint16
     RD53Interface::WriteChipReg(pChip, "DAC_NTC", dacNTC);
     ntcVolt = RD53Interface::ReadChipADC(pChip, "NTC_VOLT");
     ntcCurr = RD53Interface::ReadChipADC(pChip, "NTC_CURR");
+}
+
+uint16_t RD53BInterface::maxADCatSaturation(ReadoutChip* pChip, const std::string& type)
+{
+    auto&          pRD53RegMap  = pChip->getRegMap();
+    uint16_t       minADC       = 0;
+    uint16_t       maxADC       = RD53Shared::setBits(pRD53RegMap.at("DAC_NTC").fBitSize);
+    uint16_t       midADC       = (minADC + maxADC) / 2;
+    const uint16_t numberOfBits = floor(log2(maxADC - minADC + 1) + 1);
+    const uint16_t maxVal       = RD53Shared::setBits(pRD53RegMap.at("MonitorConfig").fBitSize - 1);
+    uint16_t       maxADCval    = 0;
+    uint16_t       it           = 0;
+    uint16_t       ntcVolt      = 0;
+    uint16_t       ntcCurr      = 0;
+    uint16_t       typeVal      = 0;
+
+    // ################################
+    // # Find ADC value at saturation #
+    // ################################
+    RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
+    if(type != "") typeVal = RD53Interface::ReadChipADC(pChip, type);
+    while(it <= numberOfBits)
+    {
+        if((ntcVolt < maxVal) && (ntcCurr < maxVal) && (typeVal < maxVal))
+        {
+            minADC    = midADC;
+            maxADCval = midADC;
+        }
+        else
+            maxADC = midADC;
+        midADC = (minADC + maxADC) / 2;
+
+        RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
+        if(type != "") typeVal = RD53Interface::ReadChipADC(pChip, type);
+
+        it++;
+    }
+
+    return maxADCval;
 }
 
 } // namespace Ph2_HwInterface

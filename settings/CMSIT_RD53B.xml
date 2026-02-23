@@ -79,6 +79,7 @@
               ToTDualEdgeCount       =      "0"
 
               RESISTORI2V            =   "4990"
+              REFTEMP                =     "25"
               NTCBETA                =   "3435"
               RNTCAT25C              =  "10000"
               ADC_OFFSET_VOLT        =     "63"
@@ -358,29 +359,31 @@
   <MonitoringSettings>
     <Monitoring type="RD53B" enable="0" silentRunning="0">
       <MonitoringSleepTime> 1000 </MonitoringSleepTime>
-      <MonitoringElement device="RD53"  register="VINA"                 enable="1"/>
-      <MonitoringElement device="RD53"  register="VDDA"                 enable="1"/>
-      <MonitoringElement device="RD53"  register="ANA_IN_CURR"          enable="1"/>
-      <MonitoringElement device="RD53"  register="VIND"                 enable="1"/>
-      <MonitoringElement device="RD53"  register="VDDD"                 enable="1"/>
-      <MonitoringElement device="RD53"  register="DIG_IN_CURR"          enable="1"/>
-      <MonitoringElement device="RD53"  register="Iref"                 enable="1"/>
-      <MonitoringElement device="RD53"  register="POLY_TEMPSENS_TOP"    enable="1"/>
-      <MonitoringElement device="RD53"  register="POLY_TEMPSENS_BOTTOM" enable="1"/>
-      <MonitoringElement device="RD53"  register="TEMPSENS_ANA_SLDO"    enable="1"/>
-      <MonitoringElement device="RD53"  register="TEMPSENS_DIG_SLDO"    enable="1"/>
-      <MonitoringElement device="RD53"  register="TEMPSENS_CENTER"      enable="1"/>
-      <MonitoringElement device="RD53"  register="INTERNAL_NTC_REL"     enable="1"/>
-      <MonitoringElement device="RD53"  register="INTERNAL_NTC_ABS"     enable="1"/>
+      <MonitoringElement device="RD53"  register="VINA"                     enable="1"/>
+      <MonitoringElement device="RD53"  register="VDDA"                     enable="1"/>
+      <MonitoringElement device="RD53"  register="ANA_IN_CURR"              enable="1"/>
+      <MonitoringElement device="RD53"  register="VIND"                     enable="1"/>
+      <MonitoringElement device="RD53"  register="VDDD"                     enable="1"/>
+      <MonitoringElement device="RD53"  register="DIG_IN_CURR"              enable="1"/>
+      <MonitoringElement device="RD53"  register="Iref"                     enable="1"/>
+      <MonitoringElement device="RD53"  register="POLY_REL_TEMPSENS_TOP"    enable="1"/>
+      <MonitoringElement device="RD53"  register="POLY_REL_TEMPSENS_BOTTOM" enable="1"/>
+      <MonitoringElement device="RD53"  register="POLY_ABS_TEMPSENS_TOP"    enable="1"/>
+      <MonitoringElement device="RD53"  register="POLY_ABS_TEMPSENS_BOTTOM" enable="1"/>
+      <MonitoringElement device="RD53"  register="TEMPSENS_ANA_SLDO"        enable="1"/>
+      <MonitoringElement device="RD53"  register="TEMPSENS_DIG_SLDO"        enable="1"/>
+      <MonitoringElement device="RD53"  register="TEMPSENS_CENTER"          enable="1"/>
+      <MonitoringElement device="RD53"  register="INTERNAL_NTC_REL"         enable="1"/>
+      <MonitoringElement device="RD53"  register="INTERNAL_NTC_ABS"         enable="1"/>
 
-      <MonitoringElement device="LpGBT" register="ADC4"                 enable="0"/>
-      <MonitoringElement device="LpGBT" register="ADC7"                 enable="0"/>
-      <MonitoringElement device="LpGBT" register="TEMP"                 enable="0"/>
-      <MonitoringElement device="LpGBT" register="VDDTX"                enable="0"/>
-      <MonitoringElement device="LpGBT" register="VDDRX"                enable="0"/>
-      <MonitoringElement device="LpGBT" register="VDDA"                 enable="0"/>
-      <MonitoringElement device="LpGBT" register="VDD"                  enable="0"/>
-      <MonitoringElement device="LpGBT" register="PUSMStatus"           enable="0"/>
+      <MonitoringElement device="LpGBT" register="ADC4"                     enable="0"/>
+      <MonitoringElement device="LpGBT" register="ADC7"                     enable="0"/>
+      <MonitoringElement device="LpGBT" register="TEMP"                     enable="0"/>
+      <MonitoringElement device="LpGBT" register="VDDTX"                    enable="0"/>
+      <MonitoringElement device="LpGBT" register="VDDRX"                    enable="0"/>
+      <MonitoringElement device="LpGBT" register="VDDA"                     enable="0"/>
+      <MonitoringElement device="LpGBT" register="VDD"                      enable="0"/>
+      <MonitoringElement device="LpGBT" register="PUSMStatus"               enable="0"/>
     </Monitoring>
   </MonitoringSettings>
 

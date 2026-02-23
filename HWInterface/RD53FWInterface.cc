@@ -240,7 +240,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ###########################
     uint32_t inputClk = RegManager::ReadReg("user.stat_regs.clkin_rate");
     uint32_t gtxClk   = RegManager::ReadReg("user.stat_regs.gtx_refclk_rate");
-    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz"
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "Input clock frequency (could either be internal or external, ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz"
               << std::setprecision(-1) << RESET;
     if(fabs(inputClk / 1000. - 40) > clkSafeMargin)
     {
