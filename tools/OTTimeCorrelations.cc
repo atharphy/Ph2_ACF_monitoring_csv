@@ -127,6 +127,8 @@ void OTTimeCorrelations::Running()
         setIterationSettings(iteration);
 
         uint32_t collectedEvents = 0;
+        uint32_t iter_ev_error_count = 0;
+        uint32_t iter_tot_ev = 0;
         uint32_t triggerPerBurst = OTTimeCorrelationConfig::getTriggerPerBurst();
         uint32_t readSize        = std::floor(65535 / triggerPerBurst);
         uint32_t triggerDelay    = OTTimeCorrelationConfig::getTriggerDelay();
@@ -144,7 +146,10 @@ void OTTimeCorrelations::Running()
 
             for(auto theBoard: *fDetectorContainer)
             {
-                LOG(INFO) << "  triggerPerBurst: " << triggerPerBurst << "  requesting nToRead: " << nToRead;
+                if (nToRead == 0) {
+                    break;}
+                // LOG(INFO) << "  triggerPerBurst: " << triggerPerBurst << "  requesting nToRead: " << nToRead;
+                // LOG(INFO) << "Collected events: " << collectedEvents << " / " << fNeventsConf;
                 ReadNEvents(theBoard, nToRead);
             }
 
@@ -242,9 +247,15 @@ void OTTimeCorrelations::Running()
 #endif
                 // LOG(INFO) << "----------------------------------------";
             }
-            LOG(INFO) << "Chips with errors are: " << ev_error_count << "/" << tot_ev << " = " << (float)ev_error_count / tot_ev * 100 << "%";
-            LOG(INFO) << "Bursts with wrong size are: " << OTTimeCorrelationConfig::mismatchedBursts << "/" << OTTimeCorrelationConfig::totBursts << " = "
-                      << (float)OTTimeCorrelationConfig::mismatchedBursts / OTTimeCorrelationConfig::totBursts * 100 << "%";
+            iter_ev_error_count += ev_error_count;
+            iter_tot_ev += tot_ev;
+        }
+
+        LOG(INFO) << "Iteration summary - chips with errors: " << iter_ev_error_count << "/" << iter_tot_ev << " = "
+                  << (iter_tot_ev > 0 ? (float)iter_ev_error_count / iter_tot_ev * 100 : 0) << "%";
+        if(OTTimeCorrelationConfig::getTriggerPerBurst() > 1 ) {
+        LOG(INFO) << "Iteration summary - bursts with wrong size: " << OTTimeCorrelationConfig::mismatchedBursts << "/" << OTTimeCorrelationConfig::totBursts << " = "
+                  << (OTTimeCorrelationConfig::totBursts > 0 ? (float)OTTimeCorrelationConfig::mismatchedBursts / OTTimeCorrelationConfig::totBursts * 100 : 0) << "%";
         }
     }
     Stop();
@@ -305,7 +316,7 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
         boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", theAverageFrequency.at(iteration)});
         SetTriggerSource(3);
         fNevents = fNeventsConf;
-        // memory depth has default value because OTTimeCorrelationConfig::reset() is called at the beginning of each iteration, but it can be set here if needed
+        OTTimeCorrelationConfig::setN(100);
     }
 
     // boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", theTriggerSource});

@@ -34,20 +34,20 @@ struct TS3DCorrelationResult
 class OTTimeCorrelationConfig
 {
   public:
-    inline static int    currentBX        = -1;
-    inline static int    previousBX       = -1;
+    inline static uint32_t    currentBX        = 0xFFFFFFFF;
+    inline static uint32_t    previousBX       = 0xFFFFFFFF;
     inline static size_t memoryDepth      = 8;
     inline static int    triggerPerBurst  = 16;
-    inline static int    triggerDelay     = 0;
+    inline static uint32_t    triggerDelay     = 0;
     inline static size_t minHitsThreshold = 50;
     inline static int    currentBurstSize = 1;
     inline static bool   isNewBurst       = false;
     inline static int    totBursts        = 0;
     inline static int    mismatchedBursts = 0;
 
-    static void updateBX(int newBX)
+    static void updateBX(uint32_t newBX)
     {
-        if(currentBX == -1)
+        if(currentBX == 0xFFFFFFFF)
         { // first ev after reset
             // currentBX = newBX;
             previousBX       = currentBX;
@@ -58,36 +58,45 @@ class OTTimeCorrelationConfig
 
         previousBX      = currentBX;
         currentBX       = newBX;
-        const int reset = 65536;
-        int       diff  = (currentBX - previousBX + reset) % reset;
-        // check that the number of triggers in burst is the correct one
-        // 1. difference between tgrs in the same burst should be del+1
-        // LOG(INFO)<<"Difference is "<< diff;
-        if((diff) == triggerDelay + 1)
-        { // it's the same burst
-            currentBurstSize += 1;
-            isNewBurst = false;
+        // uint32_t reset = 0xFFFFFFFF; // assuming 32-bit counter
+        uint32_t diff = currentBX - previousBX;
+        if (currentBX<previousBX){
+            LOG(INFO)<<"pr. bx: "<<previousBX<<" cur. bx: "<<currentBX<<" diff: "<<diff;
+            // diff += reset;
         }
-        else
-        {
-            isNewBurst = true;
-            totBursts += 1;
-            // it's a new one: check if last one had the right number of triggers
-            if(currentBurstSize != triggerPerBurst)
-            {
-                mismatchedBursts += 1;
-                // LOG(ERROR) << RED << "Mismatch in desired bunch size ("<<triggerPerBurst
-                // <<")and actual size ("<<currentBurstSize<<")."<<RESET;
-                // throw std::runtime_error("mismatch in burst size");
+        // check that the number of triggers in burst is the correct one
+        // difference between tgrs in the same burst should be del+1
+        // LOG(INFO)<<"Difference is "<< diff;
+        if(getTriggerPerBurst() > 1 ){ // only check if we are in multi-trigger mode
+            if((diff) == triggerDelay + 1)
+            { // it's the same burst
+                currentBurstSize += 1;
+                isNewBurst = false;
             }
-            // reset counter
-            currentBurstSize = 1;
+            else
+            {
+                isNewBurst = true;
+                totBursts += 1;
+                // it's a new one: check if last one had the right number of triggers
+                if(currentBurstSize != triggerPerBurst)
+                {
+                    mismatchedBursts += 1;
+                    // LOG(ERROR) << RED << "Mismatch in desired bunch size ("<<triggerPerBurst
+                    // <<")and actual size ("<<currentBurstSize<<")."<<RESET;
+                    LOG(ERROR) << RED << "Desired size: "<<triggerPerBurst
+                    <<" size: "<<currentBurstSize<<" bx: "<<currentBX<<RESET;
+
+                    // throw std::runtime_error("mismatch in burst size");
+                }
+                // reset counter
+                currentBurstSize = 1;
+            }
         }
     }
     static void reset()
     {
-        currentBX        = -1;
-        previousBX       = -1;
+        currentBX        = 0xFFFFFFFF;
+        previousBX       = 0xFFFFFFFF;
         memoryDepth      = 8;
         triggerPerBurst  = 16;
         triggerDelay     = 0;
@@ -99,7 +108,7 @@ class OTTimeCorrelationConfig
     }
     static size_t& getN() { return memoryDepth; }
     static int&    getTriggerPerBurst() { return triggerPerBurst; }
-    static int&    getTriggerDelay() { return triggerDelay; }
+    static uint32_t&    getTriggerDelay() { return triggerDelay; }
     static size_t& getMinHits() { return minHitsThreshold; }
 
     static int nSlices() { return (memoryDepth >= 9) ? 9 : (int)memoryDepth; }
@@ -186,7 +195,7 @@ class OTTimeCorrelationDataBase : public OTTimeCorrelationConfig
         // update the memory with the new event data
         auto& mem = getMemory();
 
-        if(isNewBurst)
+        if(getTriggerPerBurst() > 1 && isNewBurst)
         {
             mem.clear();
             LOG(DEBUG) << "New burst detected, resetting memory.";
@@ -312,7 +321,7 @@ class OTTimeCorrelationDataBase : public OTTimeCorrelationConfig
                 {
                     lastBW3DCorr.ch_0.push_back(cx);
                     lastBW3DCorr.ch_1.push_back(cy);
-                    int rev_idx = (int)((S - 1) - idx);
+                    int rev_idx = (int)((depth3D - 1) - idx);
                     lastBW3DCorr.indexes.push_back(rev_idx);
                 }
             }
