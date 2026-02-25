@@ -8,7 +8,6 @@
 */
 
 #include "RD53ThrAdjustment.h"
-#include "Utils/ContainerSerialization.h"
 
 #include <boost/range/combine.hpp>
 
@@ -123,13 +122,18 @@ void ThrAdjustment::run()
     // ############################
     // # Fill threshold container #
     // ############################
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theThrContainer);
+    ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theThrContainer);
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
-                    theThrContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                        static_cast<RD53*>(cChip)->getReg(frontEnd->thresholdRegs[0]);
+                    for(unsigned int i = 0u; i < frontEnd->thresholdRegs.size(); i++)
+                        theThrContainer.getObject(cBoard->getId())
+                            ->getObject(cOpticalGroup->getId())
+                            ->getObject(cHybrid->getId())
+                            ->getObject(cChip->getId())
+                            ->getSummary<std::vector<uint16_t>>()
+                            .push_back(static_cast<RD53*>(cChip)->getReg(frontEnd->thresholdRegs[i]));
 
     // ################
     // # Error report #
@@ -162,8 +166,12 @@ void ThrAdjustment::analyze()
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
-                    LOG(INFO) << GREEN << "Global threshold for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << +cChip->getId() << RESET << GREEN << "] is " << BOLDYELLOW << cChip->getSummary<uint16_t>() << RESET;
+                {
+                    LOG(INFO) << GREEN << "Global threshold(s) for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
+                              << "/" << +cChip->getId() << RESET << GREEN << "] is(are)" << RESET;
+                    for(unsigned int i = 0u; i < frontEnd->thresholdRegs.size(); i++)
+                        LOG(INFO) << GREEN << "\t--> " << frontEnd->thresholdRegs[i] << " = " << BOLDYELLOW << cChip->getSummary<std::vector<uint16_t>>()[i] << RESET;
+                }
 }
 
 void ThrAdjustment::fillHisto()

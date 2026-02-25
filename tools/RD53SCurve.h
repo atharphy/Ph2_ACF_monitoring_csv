@@ -15,8 +15,6 @@
 #include "Utils/ContainerRecycleBin.h"
 #include "Utils/ThresholdAndNoise.h"
 
-#include <algorithm>
-
 #ifdef __USE_ROOT__
 #include "DQMUtils/RD53SCurveHistograms.h"
 #else
