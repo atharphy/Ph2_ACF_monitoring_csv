@@ -132,17 +132,11 @@ void DQMHistogramOTTimeCorrelation::fillErrorHist(const ChipErrorData& errorData
                 TH1F* theHistogram = opticalGroup->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 theHistogram->SetTitle(Form("MPA chip errors Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
 
-                for(const auto& [chipId, errorCount]: errorData.mpaErrors)
-                {
-                    theHistogram->SetBinContent(chipId + 1, errorCount);
-                }
+                for(const auto& [chipId, errorCount]: errorData.mpaErrors) { theHistogram->SetBinContent(chipId + 1, errorCount); }
             }
         }
     }
-    else
-    {
-        LOG(WARNING) << "No MPA error histograms found for suffix: " << suffix;
-    }
+    else { LOG(WARNING) << "No MPA error histograms found for suffix: " << suffix; }
 
     if(fSSAErrorHistogramsMap.count(suffix))
     {
@@ -152,17 +146,11 @@ void DQMHistogramOTTimeCorrelation::fillErrorHist(const ChipErrorData& errorData
             {
                 TH1F* theHistogram = opticalGroup->getSummary<HistContainer<TH1F>>().fTheHistogram;
                 theHistogram->SetTitle(Form("SSA chip errors Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-                for(const auto& [chipId, errorCount]: errorData.ssaErrors)
-                {
-                    theHistogram->SetBinContent(chipId + 1, errorCount);
-                }
+                for(const auto& [chipId, errorCount]: errorData.ssaErrors) { theHistogram->SetBinContent(chipId + 1, errorCount); }
             }
         }
     }
-    else
-    {
-        LOG(WARNING) << "No SSA error histograms found for suffix: " << suffix;
-    }
+    else { LOG(WARNING) << "No SSA error histograms found for suffix: " << suffix; }
 }
 
 void DQMHistogramOTTimeCorrelation::fillSSAData(const OTTimeCorrelationStripData& sData, uint32_t trgBurst, uint32_t trgDel, std::string suffix)
@@ -180,18 +168,12 @@ void DQMHistogramOTTimeCorrelation::fillSSAData(const OTTimeCorrelationStripData
 
                 for(size_t i = 0; i < stripData.size(); ++i)
                 {
-                    for(size_t j = 0; j < stripData.size(); ++j)
-                    {
-                        theHistogram->Fill(stripData[i], stripData[j]);
-                    }
+                    for(size_t j = 0; j < stripData.size(); ++j) { theHistogram->Fill(stripData[i], stripData[j]); }
                 }
             }
         }
     }
-    else
-    {
-        LOG(WARNING) << "No histograms found for suffix: " << suffix;
-    }
+    else { LOG(WARNING) << "No histograms found for suffix: " << suffix; }
 
     if(fSameStripFWTCorrSSAHistogramsMap.count(suffix))
     {
@@ -203,17 +185,11 @@ void DQMHistogramOTTimeCorrelation::fillSSAData(const OTTimeCorrelationStripData
                 theHistogram->SetTitle(Form("FW strip time correlations Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
 
                 auto& lastCorr = OTTimeCorrelationStripData::getLastFWCorrelation();
-                for(size_t i = 0; i < lastCorr.channels.size(); ++i)
-                {
-                    theHistogram->Fill(lastCorr.channels[i], lastCorr.indexes[i]);
-                }
+                for(size_t i = 0; i < lastCorr.channels.size(); ++i) { theHistogram->Fill(lastCorr.channels[i], lastCorr.indexes[i]); }
             }
         }
     }
-    else
-    {
-        LOG(WARNING) << "No histograms found for suffix: " << suffix;
-    }
+    else { LOG(WARNING) << "No histograms found for suffix: " << suffix; }
 
     if(fSameStripBWTCorrSSAHistogramsMap.count(suffix))
     {
@@ -229,10 +205,7 @@ void DQMHistogramOTTimeCorrelation::fillSSAData(const OTTimeCorrelationStripData
             }
         }
     }
-    else
-    {
-        LOG(WARNING) << "No histograms found for suffix: " << suffix;
-    }
+    else { LOG(WARNING) << "No histograms found for suffix: " << suffix; }
 
     if(!fMinHitsFWSSAHistogramsMap.count(suffix) || !fMinHitsBWSSAHistogramsMap.count(suffix) || !f3DTSFWCorrSSAHistogramsMap.count(suffix) || !f3DTSBWCorrSSAHistogramsMap.count(suffix))
     {
@@ -266,10 +239,7 @@ void DQMHistogramOTTimeCorrelation::fillSSAData(const OTTimeCorrelationStripData
         }
     }
 
-    if(!f3DTSFWCorrSSAHistogramsMap.count(suffix) || !f3DTSBWCorrSSAHistogramsMap.count(suffix))
-    {
-        LOG(WARNING) << "No histograms found for suffix: " << suffix;
-    }
+    if(!f3DTSFWCorrSSAHistogramsMap.count(suffix) || !f3DTSBWCorrSSAHistogramsMap.count(suffix)) { LOG(WARNING) << "No histograms found for suffix: " << suffix; }
     else
     {
         for(auto board: f3DTSFWCorrSSAHistogramsMap.at(suffix))
@@ -371,10 +341,7 @@ void DQMHistogramOTTimeCorrelation::fillMPAData(const OTTimeCorrelationPixelData
             }
         }
     }
-    else
-    {
-        LOG(WARNING) << "No histograms found for suffix: " << suffix;
-    }
+    else { LOG(WARNING) << "No histograms found for suffix: " << suffix; }
 
     // Time Correlation FW/BW (Pixel)
     if(fSamePixelFWTCorrMPAHistogramsMap.count(suffix))
@@ -391,10 +358,7 @@ void DQMHistogramOTTimeCorrelation::fillMPAData(const OTTimeCorrelationPixelData
             }
         }
     }
-    else
-    {
-        LOG(WARNING) << "No histograms found for suffix: " << suffix;
-    }
+    else { LOG(WARNING) << "No histograms found for suffix: " << suffix; }
 
     if(fSamePixelBWTCorrMPAHistogramsMap.count(suffix))
     {
@@ -410,10 +374,7 @@ void DQMHistogramOTTimeCorrelation::fillMPAData(const OTTimeCorrelationPixelData
             }
         }
     }
-    else
-    {
-        LOG(WARNING) << "No histograms found for suffix: " << suffix;
-    }
+    else { LOG(WARNING) << "No histograms found for suffix: " << suffix; }
 
     // Min Hits FW/BW (Pixel)
     if(fMinHitsFWMPAHistogramsMap.count(suffix) && fMinHitsBWMPAHistogramsMap.count(suffix))
@@ -443,10 +404,7 @@ void DQMHistogramOTTimeCorrelation::fillMPAData(const OTTimeCorrelationPixelData
             }
         }
     }
-    else
-    {
-        LOG(WARNING) << "No histograms found for suffix: " << suffix;
-    }
+    else { LOG(WARNING) << "No histograms found for suffix: " << suffix; }
 
     // 3D Time and Space Correlation (Pixel)
     if(f3DTSFWCorrMPAHistogramsMap.count(suffix))
@@ -463,10 +421,7 @@ void DQMHistogramOTTimeCorrelation::fillMPAData(const OTTimeCorrelationPixelData
             }
         }
     }
-    else
-    {
-        LOG(WARNING) << "No histograms found for suffix: " << suffix;
-    }
+    else { LOG(WARNING) << "No histograms found for suffix: " << suffix; }
 
     if(f3DTSBWCorrMPAHistogramsMap.count(suffix))
     {
@@ -482,10 +437,7 @@ void DQMHistogramOTTimeCorrelation::fillMPAData(const OTTimeCorrelationPixelData
             }
         }
     }
-    else
-    {
-        LOG(WARNING) << "No histograms found for suffix: " << suffix;
-    }
+    else { LOG(WARNING) << "No histograms found for suffix: " << suffix; }
 
     // 2D Slices (Pixel)
     if(fTSCorrSliceFWMPAMap.count(suffix) && fTSCorrSliceBWMPAMap.count(suffix))
@@ -538,8 +490,5 @@ void DQMHistogramOTTimeCorrelation::fillMPAData(const OTTimeCorrelationPixelData
             }
         }
     }
-    else
-    {
-        LOG(WARNING) << "No histograms found for suffix: " << suffix;
-    }
+    else { LOG(WARNING) << "No histograms found for suffix: " << suffix; }
 }

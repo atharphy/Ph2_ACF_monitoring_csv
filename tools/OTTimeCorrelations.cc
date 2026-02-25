@@ -126,12 +126,12 @@ void OTTimeCorrelations::Running()
 
         setIterationSettings(iteration);
 
-        uint32_t collectedEvents = 0;
+        uint32_t collectedEvents     = 0;
         uint32_t iter_ev_error_count = 0;
-        uint32_t iter_tot_ev = 0;
-        uint32_t triggerPerBurst = OTTimeCorrelationConfig::getTriggerPerBurst();
-        uint32_t readSize        = std::floor(65535 / triggerPerBurst);
-        uint32_t triggerDelay    = OTTimeCorrelationConfig::getTriggerDelay();
+        uint32_t iter_tot_ev         = 0;
+        uint32_t triggerPerBurst     = OTTimeCorrelationConfig::getTriggerPerBurst();
+        uint32_t readSize            = std::floor(65535 / triggerPerBurst);
+        uint32_t triggerDelay        = OTTimeCorrelationConfig::getTriggerDelay();
 
         if(triggerDelay > 0) { readSize = readSize * triggerPerBurst; }
 
@@ -146,8 +146,7 @@ void OTTimeCorrelations::Running()
 
             for(auto theBoard: *fDetectorContainer)
             {
-                if (nToRead == 0) {
-                    break;}
+                if(nToRead == 0) { break; }
                 // LOG(INFO) << "  triggerPerBurst: " << triggerPerBurst << "  requesting nToRead: " << nToRead;
                 // LOG(INFO) << "Collected events: " << collectedEvents << " / " << fNeventsConf;
                 ReadNEvents(theBoard, nToRead);
@@ -251,11 +250,11 @@ void OTTimeCorrelations::Running()
             iter_tot_ev += tot_ev;
         }
 
-        LOG(INFO) << "Iteration summary - chips with errors: " << iter_ev_error_count << "/" << iter_tot_ev << " = "
-                  << (iter_tot_ev > 0 ? (float)iter_ev_error_count / iter_tot_ev * 100 : 0) << "%";
-        if(OTTimeCorrelationConfig::getTriggerPerBurst() > 1 ) {
-        LOG(INFO) << "Iteration summary - bursts with wrong size: " << OTTimeCorrelationConfig::mismatchedBursts << "/" << OTTimeCorrelationConfig::totBursts << " = "
-                  << (OTTimeCorrelationConfig::totBursts > 0 ? (float)OTTimeCorrelationConfig::mismatchedBursts / OTTimeCorrelationConfig::totBursts * 100 : 0) << "%";
+        LOG(INFO) << "Iteration summary - chips with errors: " << iter_ev_error_count << "/" << iter_tot_ev << " = " << (iter_tot_ev > 0 ? (float)iter_ev_error_count / iter_tot_ev * 100 : 0) << "%";
+        if(OTTimeCorrelationConfig::getTriggerPerBurst() > 1)
+        {
+            LOG(INFO) << "Iteration summary - bursts with wrong size: " << OTTimeCorrelationConfig::mismatchedBursts << "/" << OTTimeCorrelationConfig::totBursts << " = "
+                      << (OTTimeCorrelationConfig::totBursts > 0 ? (float)OTTimeCorrelationConfig::mismatchedBursts / OTTimeCorrelationConfig::totBursts * 100 : 0) << "%";
         }
     }
     Stop();
@@ -307,6 +306,8 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
             SetTriggerSource(3);
             fNevents = fNeventsConf / theNTriggerPerBurst.at(iteration);
             OTTimeCorrelationConfig::setTriggerDelay(0); // they can only be consecutive
+            LOG(INFO) << "Delay before next pulse: " << 40000 * theNTriggerPerBurst.at(iteration) / theAverageFrequency.at(iteration)
+                      << " AverageFrequency in BX: " << 40000 / theAverageFrequency.at(iteration);
         }
     }
     else

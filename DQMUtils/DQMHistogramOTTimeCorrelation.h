@@ -34,16 +34,17 @@ struct TS3DCorrelationResult
 class OTTimeCorrelationConfig
 {
   public:
-    inline static uint32_t    currentBX        = 0xFFFFFFFF;
-    inline static uint32_t    previousBX       = 0xFFFFFFFF;
-    inline static size_t memoryDepth      = 8;
-    inline static int    triggerPerBurst  = 16;
-    inline static uint32_t    triggerDelay     = 0;
-    inline static size_t minHitsThreshold = 50;
-    inline static int    currentBurstSize = 1;
-    inline static bool   isNewBurst       = false;
-    inline static int    totBursts        = 0;
-    inline static int    mismatchedBursts = 0;
+    inline static uint32_t currentBX        = 0xFFFFFFFF;
+    inline static uint32_t previousBX       = 0xFFFFFFFF;
+    inline static size_t   memoryDepth      = 8;
+    inline static int      triggerPerBurst  = 16;
+    inline static uint32_t triggerDelay     = 0;
+    inline static size_t   minHitsThreshold = 50;
+    inline static int      currentBurstSize = 1;
+    inline static bool     isNewBurst       = false;
+    inline static int      totBursts        = 0;
+    inline static int      mismatchedBursts = 0;
+    inline static int      last_wrong_bx    = 0;
 
     static void updateBX(uint32_t newBX)
     {
@@ -56,18 +57,19 @@ class OTTimeCorrelationConfig
             return;
         }
 
-        previousBX      = currentBX;
-        currentBX       = newBX;
-        // uint32_t reset = 0xFFFFFFFF; // assuming 32-bit counter
-        uint32_t diff = currentBX - previousBX;
-        if (currentBX<previousBX){
-            LOG(INFO)<<"pr. bx: "<<previousBX<<" cur. bx: "<<currentBX<<" diff: "<<diff;
-            // diff += reset;
-        }
+        previousBX = currentBX;
+        currentBX  = newBX;
+        // actual BX spacing should be 16 bits
+        constexpr uint32_t bxMask = 0xFFFF;
+        uint32_t           prevBX = previousBX & bxMask;
+        uint32_t           currBX = currentBX & bxMask;
+        uint32_t           diff   = (currBX >= prevBX) ? (currBX - prevBX) : ((bxMask - prevBX) + currBX + 1);
+
         // check that the number of triggers in burst is the correct one
         // difference between tgrs in the same burst should be del+1
         // LOG(INFO)<<"Difference is "<< diff;
-        if(getTriggerPerBurst() > 1 ){ // only check if we are in multi-trigger mode
+        if(getTriggerPerBurst() > 1)
+        { // only check if we are in multi-trigger mode
             if((diff) == triggerDelay + 1)
             { // it's the same burst
                 currentBurstSize += 1;
@@ -81,11 +83,9 @@ class OTTimeCorrelationConfig
                 if(currentBurstSize != triggerPerBurst)
                 {
                     mismatchedBursts += 1;
-                    // LOG(ERROR) << RED << "Mismatch in desired bunch size ("<<triggerPerBurst
-                    // <<")and actual size ("<<currentBurstSize<<")."<<RESET;
-                    LOG(ERROR) << RED << "Desired size: "<<triggerPerBurst
-                    <<" size: "<<currentBurstSize<<" bx: "<<currentBX<<RESET;
-
+                    LOG(ERROR) << RED << "Desired size: " << triggerPerBurst << " size: " << currentBurstSize << "; masked bx: " << currBX << " bx: " << currentBX << ", diff w prev wrong "
+                               << currBX - last_wrong_bx << RESET;
+                    last_wrong_bx = currBX;
                     // throw std::runtime_error("mismatch in burst size");
                 }
                 // reset counter
@@ -105,11 +105,12 @@ class OTTimeCorrelationConfig
         isNewBurst       = false;
         totBursts        = 0;
         mismatchedBursts = 0;
+        last_wrong_bx    = 0;
     }
-    static size_t& getN() { return memoryDepth; }
-    static int&    getTriggerPerBurst() { return triggerPerBurst; }
-    static uint32_t&    getTriggerDelay() { return triggerDelay; }
-    static size_t& getMinHits() { return minHitsThreshold; }
+    static size_t&   getN() { return memoryDepth; }
+    static int&      getTriggerPerBurst() { return triggerPerBurst; }
+    static uint32_t& getTriggerDelay() { return triggerDelay; }
+    static size_t&   getMinHits() { return minHitsThreshold; }
 
     static int nSlices() { return (memoryDepth >= 9) ? 9 : (int)memoryDepth; }
 
