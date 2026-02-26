@@ -457,7 +457,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
                             (minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
                              maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) /
                             2;
-        CalibBase::downloadNewDACvalues(midDACcontainer, {regName.c_str()});
+        CalibBase::downloadNewDACvalues({&midDACcontainer}, {regName.c_str()});
 
         // ################
         // # Run analysis #
@@ -513,7 +513,7 @@ void ThrEqualization::bitWiseScanGlobal(const std::string& regName, float target
     // # Download new DAC values #
     // ###########################
     LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    CalibBase::downloadNewDACvalues(bestDACcontainer, {regName.c_str()}, false, true, 0);
+    CalibBase::downloadNewDACvalues({&bestDACcontainer}, {regName.c_str()}, false, true, 0);
 
     // #################################
     // # Reset masks to default values #
