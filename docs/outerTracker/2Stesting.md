@@ -124,13 +124,12 @@ For the modulation, when you increase it, you decrease the power. The reason is 
 
 If the power in the x and y direction is not changing, something is going on with the driver controller. Moreover, the optical power that you receive might be lower in case you have some damage on the fibers - less obvious and this will be handled by potato. Very likely you will see other problems.
 
-<details>
-  <summary>Known issues</summary>
+###### ⚠️ Known Issues
 
-A distribution like the one below may be due to a problematic SFP connector on the FC7 or dirt in the fibers.
+A distribution like the one below may be due to a problematic   SFP connector on the FC7 or dirt in the fibers.
 
 ![VTRx_LightYieldScan_buggy](./OTtesting/common/VTRx_LightYieldScan_buggy.png)
-</details>
+
 
 
 ##### OTLpGBTEyeOpeningTest - OpticalGroup
@@ -393,17 +392,13 @@ At the chip level, a 2D summary plot is stored summarizing the S-curve of all ch
 
 ![SCurve_Chip](./OTtesting/2S/SCurve_Chip.png)
 
-<details>
-  <summary>Known issues</summary>
+###### ⚠️ Known issues
+  Broken wirebond or disconnected bump bond can show up as a compressed S-curve for a specific channel. If the issues appears in cold and disappears at room temperature it may be the CBC known issue of the corrupted offset register.
 
-Broken wirebond or disconnected bump bond can show up as a compressed S-curve for a specific channel. If the issues appears in cold and disappears at room temperature it may be the CBC known issue of the corrupted offset register.
+  ![SCurve_Chip_buggy](./OTtesting/2S/SCurve_Chip_buggy.png)
 
-![SCurve_Chip_buggy](./OTtesting/2S/SCurve_Chip_buggy.png)
+  Another know issues is when horizontal stripes are present. This is a communication issue affecting the whole module. Example will be added when found again.
 
-Another know issues is when horizontal stripes are present. This is a communication issue affecting the whole module. Example will be added when found again.
-
-
-</details>
 
 
 From the S-Curve, the pedestal for every channel can be extracted. The cumulative distribution of the pedestal should appear very sharp, while failures would show as long tails or outliers.
@@ -438,28 +433,27 @@ The bottom sensor has a higher noise compared to the top because of longer trace
 
 ![StripChannelNoiseBottom](./OTtesting/2S/StripChannelNoiseBottom.png)
 
-<details>
-  <summary>Known issues</summary>
+###### ⚠️ Known issues
 
-A group of channel with high noise may indicate a scratch on the sensor.
+  A group of channel with high noise may indicate a scratch on the sensor.
 
-![StripChannelNoise_Scratch](./OTtesting/2S/StripChannelNoise_Scratch.png)
+  ![StripChannelNoise_Scratch](./OTtesting/2S/StripChannelNoise_Scratch.png)
 
-A channel with low noise could indicate a broken wirebond. Below 2 a broken bumpbond.
+  A channel with low noise could indicate a broken wirebond. Below 2 a broken bumpbond.
 
-![StripChannelNoise_brokenBons](./OTtesting/2S/StripChannelNoise_brokenBonds.png)
+  ![StripChannelNoise_brokenBons](./OTtesting/2S/StripChannelNoise_brokenBonds.png)
 
-Groups of broken channels in the center of CBC can indicate that sparking occurred.
+  Groups of broken channels in the center of CBC can indicate that sparking occurred.
 
-![StripChannelNoise_Sparking](./OTtesting/2S/StripChannelNoise_Sparking.png)
+  ![StripChannelNoise_Sparking](./OTtesting/2S/ StripChannelNoise_Sparking.png)
 
-If the HV is not applied, a very high noise is shown over both hybrids and sensors.
+  If the HV is not applied, a very high noise is shown over both  hybrids and sensors.
 
-The one below are symptoms of the CBC corrupted offset register, documented [here](https://indico.cern.ch/event/1185050/contributions/4979272/attachments/2486219/4269980/cooperstein_CBCI2CIrrad_28july.pdf)
+  The one below are symptoms of the CBC corrupted offset  register, documented [here](https://indico.cern.ch/event/  1185050/contributions/4979272/attachments/2486219/4269980/  cooperstein_CBCI2CIrrad_28july.pdf)
 
-![CBCbufferCorruption](./OTtesting/2S/CBCbufferCorruption.png)
+  ![CBCbufferCorruption](./OTtesting/2S/CBCbufferCorruption.png)
 
-</details>
+
 
 ##### OTinjectionDelayOptimization - Chip
 
@@ -485,20 +479,17 @@ The one below is without injection, and is shown in log scale.
 
 The occupancy is measured for each chip, and although some slight activity may appear, the threshold is set to five times the noise, so almost no signal is expected except for very small fluctuations (that may be more visible in log scale).
 
-<details>
-  <summary>Known issues</summary>
+###### ⚠️ Known issues
 
-It may happen that the occupancy is higher than expected, as shown below.
+It may happen that the occupancy is higher than expected, as  shown below.
 
-![ChannelOccupancy_Injection_0.000_MIP_Chip_log_highoccupancy](./OTtesting/2S/ChannelOccupancy_Injection_0.000_MIP_Chip_log_highoccupancy.png)
+![ChannelOccupancy_Injection_0.000_MIP_Chip_log_highoccupancy]  (./OTtesting/2S/ChannelOccupancy_Injection_0. 000_MIP_Chip_log_highoccupancy.png)
 
-It may be useful to check the S-curves to understand if it is a real effect, as shown below: The S-curve has a long tail.
+  It may be useful to check the S-curves to understand if it is   a real effect, as shown below: The S-curve has a long tail.
 
-![SCurve_longtail](./OTtesting/2S/SCurve_longtail.png)
+  ![SCurve_longtail](./OTtesting/2S/SCurve_longtail.png)
 
-If this happens please check the grounding of your test setup.
-
-</details>
+  If this happens please check the grounding of your test setup.
 
 
 Then, injections are performed at different charge levels — for example, a quarter of a MIP, which corresponds to roughly the same level as the threshold set at five times the noise, yielding about 50% efficiency. This value indicates that a signal equivalent to a quarter of a MIP produces a 50% detection probability. Measuring lower charges is important to study cluster size and improve spatial resolution. Subsequent plots show the occupancy for each channel at 0.25, 0.5, 1, and 2 MIPs, allowing identification of potential issues. The inspection of these results is automated by potato, which flags problematic modules; manual inspection is mainly needed for those flagged as bad. Since each CBC chip behaves slightly differently, occupancy maps are produced per CBC and per channel, enabling the identification of noisy or inefficient channels, such as those with damaged comparators, although new modules typically show very few such cases.
