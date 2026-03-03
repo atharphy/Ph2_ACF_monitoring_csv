@@ -181,6 +181,7 @@ void ThrMinimization::fillHisto()
 void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames, float target, float threshold, int16_t relStartValue, uint16_t amplitudeValue)
 {
     float          tmp = 0;
+    int16_t        relStopValue = relStartValue + amplitudeValue + 1;
     uint16_t       init;
     const size_t   totalPixels  = RD53Shared::firstChip->getNRows() * RD53Shared::firstChip->getNCols();
     const uint16_t numberOfBits = floor(log2(amplitudeValue + 1) + 1);
@@ -189,15 +190,29 @@ void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames
     DetectorDataContainer midDACcontainer;
     DetectorDataContainer maxDACcontainer;
 
-    DetectorDataContainer bestDACcontainer;
+    ContainerFactory::copyAndInitChip<int16_t>(*fDetectorContainer, minDACcontainer, relStartValue);
+    ContainerFactory::copyAndInitChip<int16_t>(*fDetectorContainer, midDACcontainer);
+    ContainerFactory::copyAndInitChip<int16_t>(*fDetectorContainer, maxDACcontainer, relStopValue);
+
+    std::vector<DetectorDataContainer*> originalDACcontainer;
+    std::vector<DetectorDataContainer*> downloadDACcontainer;
+
+    std::vector<DetectorDataContainer*> bestDACcontainer;
     DetectorDataContainer bestContainer;
 
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, minDACcontainer);
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midDACcontainer);
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer);
-
-    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
     ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp);
+
+    for([[maybe_unused]] const auto& regName: regNames)
+    {
+        originalDACcontainer.push_back(new DetectorDataContainer);
+        ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *originalDACcontainer.back());
+
+        downloadDACcontainer.push_back(new DetectorDataContainer);
+        ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *downloadDACcontainer.back());
+
+        bestDACcontainer.push_back(new DetectorDataContainer);
+        ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *bestDACcontainer.back(), init = 0);
+    }
 
     // ####################################
     // # Compute startValue and stopValue #
@@ -206,14 +221,9 @@ void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
-                    for(const auto& regName: regNames)
-                    {
-                        minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                            static_cast<RD53*>(cChip)->getReg(regName) + relStartValue;
-                        maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                            minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
-                            amplitudeValue + 1;
-                    }
+                    for(auto [regName, original]: boost::combine(regNames, originalDACcontainer))
+                        original->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                            static_cast<RD53*>(cChip)->getReg(regName);
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -224,11 +234,19 @@ void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                        midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                            (minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
-                             maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) /
-                            2;
-        CalibBase::downloadNewDACvalues({&midDACcontainer}, regNames);
+                    {
+                        midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int16_t>() =
+                            std::floor((minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int16_t>() +
+                                        maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int16_t>()) /
+                                       2.);
+                        for(auto [original, download]: boost::combine(originalDACcontainer, downloadDACcontainer))
+                        {
+                            download->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                original->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
+                                midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int16_t>();
+                        }
+                    }
+        CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames);
 
         // ################
         // # Run analysis #
@@ -273,19 +291,20 @@ void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames
                         {
                             bestContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = newValue;
 
-                            bestDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                            for(auto [download, best]: boost::combine(downloadDACcontainer, bestDACcontainer))
+                                best->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                                    download->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                         }
 
                         if((newValue < target) && (maskedPixels < threshold))
 
-                            maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                            maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int16_t>() =
+                                midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int16_t>();
 
                         else
 
-                            minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                                midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+                            minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int16_t>() =
+                                midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int16_t>();
                     }
     }
 
@@ -293,7 +312,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames
     // # Download new DAC values #
     // ###########################
     LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    CalibBase::downloadNewDACvalues({&bestDACcontainer}, regNames, false, true, 0);
+    CalibBase::downloadNewDACvalues(bestDACcontainer, regNames, false, true, 0);
 
     // ################
     // # Run analysis #
