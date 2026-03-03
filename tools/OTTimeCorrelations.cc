@@ -137,6 +137,10 @@ void OTTimeCorrelations::Running()
 
         LOG(INFO) << "  collectedEvents: " << collectedEvents << "  readSize: " << readSize << "  triggerDelay: " << triggerDelay << "  fNevents: " << fNevents;
 
+        // loop over events
+        TStopwatch eventLoopTimer;
+        eventLoopTimer.Reset();
+
         // Loop to read events in batches until we reach fNevents
         while(collectedEvents < fNeventsConf)
         {
@@ -162,6 +166,7 @@ void OTTimeCorrelations::Running()
             // loop over events
             for(const auto& event: events)
             {
+                eventLoopTimer.Start(false);
                 // decode the event and fill the custom structure
                 auto             ev = static_cast<D19cCic2Event*>(event);
                 std::vector<int> stripsOn;
@@ -214,6 +219,7 @@ void OTTimeCorrelations::Running()
                         }
                     }
                 }
+                eventLoopTimer.Stop();
 
                 auto bunchId = ev->GetBunch();
 
@@ -243,13 +249,18 @@ void OTTimeCorrelations::Running()
                 fDQMHistogramOTTimeCorrelation.fillSSAData(theStripData, triggerPerBurst, triggerDelay, iterationSettingsName);
                 fDQMHistogramOTTimeCorrelation.fillMPAData(thePixelData, triggerPerBurst, triggerDelay, iterationSettingsName);
                 fDQMHistogramOTTimeCorrelation.fillErrorHist(chipErrors, triggerPerBurst, triggerDelay, iterationSettingsName);
+                fDQMHistogramOTTimeCorrelation.fill2DhistSlices(theStripData, thePixelData, triggerPerBurst, triggerDelay, iterationSettingsName);
+                // fDQMHistogramOTTimeCorrelation.fill3Dhistograms(theStripData, thePixelData, triggerPerBurst, triggerDelay, iterationSettingsName);
 #endif
                 // LOG(INFO) << "----------------------------------------";
             }
+            LOG(INFO) << "Event loop time: " << eventLoopTimer.RealTime() << " s (CPU: " << eventLoopTimer.CpuTime() << " s)";
             iter_ev_error_count += ev_error_count;
             iter_tot_ev += tot_ev;
         }
-
+#ifdef __USE_ROOT__
+                fDQMHistogramOTTimeCorrelation.reportTimingStats();
+#endif        
         LOG(INFO) << "Iteration summary - chips with errors: " << iter_ev_error_count << "/" << iter_tot_ev << " = " << (iter_tot_ev > 0 ? (float)iter_ev_error_count / iter_tot_ev * 100 : 0) << "%";
         if(OTTimeCorrelationConfig::getTriggerPerBurst() > 1)
         {
