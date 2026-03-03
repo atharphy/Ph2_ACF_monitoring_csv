@@ -27,9 +27,8 @@ void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
     for(const auto& reg: frontEnd->thresholdRegs) hThresholds.emplace_back(reg, "Threshold", rangeThreshold, 0, rangeThreshold);
     for(const auto& [hThr, reg]: boost::combine(hThresholds, frontEnd->thresholdRegs))
     {
-        std::shared_ptr<DetectorDataContainer> ThrPtr(new DetectorDataContainer);
-        bookChipImplementer(theOutputFile, theDetectorStructure, *ThrPtr, hThr, reg, "Entries");
-        Thresholds.push_back(ThrPtr);
+        Thresholds.push_back(std::make_shared<DetectorDataContainer>());
+        bookChipImplementer(theOutputFile, theDetectorStructure, *Thresholds.back(), hThr, reg, "Entries");
     }
 
     AreHistoBooked = true;

@@ -180,29 +180,27 @@ void ThrMinimization::fillHisto()
 
 void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames, float target, float threshold, int16_t relStartValue, uint16_t amplitudeValue)
 {
-    float          tmp = 0;
+    float          tmp          = 0;
     int16_t        relStopValue = relStartValue + amplitudeValue + 1;
-    uint16_t       init;
+    uint16_t       init         = 0;
     const size_t   totalPixels  = RD53Shared::firstChip->getNRows() * RD53Shared::firstChip->getNCols();
     const uint16_t numberOfBits = floor(log2(amplitudeValue + 1) + 1);
 
     DetectorDataContainer minDACcontainer;
     DetectorDataContainer midDACcontainer;
     DetectorDataContainer maxDACcontainer;
+    DetectorDataContainer bestContainer;
+
+    std::vector<DetectorDataContainer*> originalDACcontainer;
+    std::vector<DetectorDataContainer*> downloadDACcontainer;
+    std::vector<DetectorDataContainer*> bestDACcontainer;
 
     ContainerFactory::copyAndInitChip<int16_t>(*fDetectorContainer, minDACcontainer, relStartValue);
     ContainerFactory::copyAndInitChip<int16_t>(*fDetectorContainer, midDACcontainer);
     ContainerFactory::copyAndInitChip<int16_t>(*fDetectorContainer, maxDACcontainer, relStopValue);
-
-    std::vector<DetectorDataContainer*> originalDACcontainer;
-    std::vector<DetectorDataContainer*> downloadDACcontainer;
-
-    std::vector<DetectorDataContainer*> bestDACcontainer;
-    DetectorDataContainer bestContainer;
-
     ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp);
 
-    for([[maybe_unused]] const auto& regName: regNames)
+    for(unsigned int i = 0; i < regNames.size(); i++)
     {
         originalDACcontainer.push_back(new DetectorDataContainer);
         ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *originalDACcontainer.back());
@@ -211,7 +209,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames
         ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *downloadDACcontainer.back());
 
         bestDACcontainer.push_back(new DetectorDataContainer);
-        ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *bestDACcontainer.back(), init = 0);
+        ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *bestDACcontainer.back(), init);
     }
 
     // ####################################
@@ -324,4 +322,15 @@ void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames
     // # Reset masks to default values #
     // #################################
     CalibBase::copyMaskFromDefault("en in");
+
+    // ###################
+    // # Free the memory #
+    // ###################
+    for(unsigned int i = 0; i < regNames.size(); i++)
+    {
+        delete(downloadDACcontainer[i]);
+        delete(originalDACcontainer[i]);
+    }
+    downloadDACcontainer.clear();
+    originalDACcontainer.clear();
 }

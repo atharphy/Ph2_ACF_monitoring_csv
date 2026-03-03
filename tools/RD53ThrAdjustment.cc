@@ -210,13 +210,11 @@ void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, 
 
     for(unsigned int i = 0; i < regNames.size(); i++)
     {
-        DetectorDataContainer* tmpCont1(new DetectorDataContainer);
-        ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *tmpCont1);
-        downloadDACcontainer.push_back(tmpCont1);
+        downloadDACcontainer.push_back(new DetectorDataContainer);
+        ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *downloadDACcontainer.back());
 
-        DetectorDataContainer* tmpCont2(new DetectorDataContainer);
-        ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *tmpCont2);
-        originalDACcontainer.push_back(tmpCont2);
+        originalDACcontainer.push_back(new DetectorDataContainer);
+        ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, *originalDACcontainer.back());
     }
 
     for(const auto cBoard: *fDetectorContainer)
@@ -460,6 +458,8 @@ void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, 
         delete(downloadDACcontainer[i]);
         delete(originalDACcontainer[i]);
     }
+    downloadDACcontainer.clear();
+    originalDACcontainer.clear();
 }
 
 void ThrAdjustment::establishStartingPoint(DetectorDataContainer& chargeContainer)
