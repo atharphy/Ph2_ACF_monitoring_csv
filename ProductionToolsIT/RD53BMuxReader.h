@@ -51,6 +51,7 @@ class RD53BMuxReader : public CalibBase
     };
 
     adc_result get_adc(Ph2_HwInterface::RD53Interface* chipInterface, Ph2_HwDescription::ReadoutChip* chip, const std::string& name, size_t nsample);
+    float      measure_adc_offset(Ph2_HwInterface::RD53Interface* chipInterface, Ph2_HwDescription::ReadoutChip* chip, size_t nsample);
 
   private:
     void fillHisto() override;
@@ -59,6 +60,7 @@ class RD53BMuxReader : public CalibBase
     int                      theCurrentRun;
     std::vector<std::string> muxlist;
     bool                     use_wlt_calibration;
+    bool                     do_adc_offset_measurement;
     bool                     read_temperatures;
 };
 
