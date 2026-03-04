@@ -148,7 +148,7 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
     else
     {
         LOG(ERROR) << BOLDRED << "Error: Unknown Board Type: " << cBoardType << " - aborting!" << RESET;
-        std::string errorstring = "Unknown Board Type " + cBoardType;
+        std::string errorstring = "Unknown Board Type: " + cBoardType;
         throw Exception(errorstring.c_str());
         exit(EXIT_FAILURE);
     }
@@ -235,12 +235,12 @@ void FileParser::parseBeBoard(pugi::xml_node pBeBordNode, DetectorContainer* pDe
         }
     }
 
-    // Iterate the OpticalGroup node
+    // #################################
+    // # Iterate the OpticalGroup node #
+    // #################################
     cBeBoard->setOptical(false);
     for(pugi::xml_node pOpticalGroupNode = pBeBordNode.child(OPTICALGROUP_NODE_NAME); pOpticalGroupNode; pOpticalGroupNode = pOpticalGroupNode.next_sibling())
-    {
-        if(static_cast<std::string>(pOpticalGroupNode.name()) == OPTICALGROUP_NODE_NAME) { parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os); }
-    }
+        if(static_cast<std::string>(pOpticalGroupNode.name()) == OPTICALGROUP_NODE_NAME) parseOpticalGroupContainer(pOpticalGroupNode, cBeBoard, os);
 
     pugi::xml_node cSLinkNode = pBeBordNode.child("SLink");
     parseSLink(cSLinkNode, cBeBoard, os);
@@ -879,7 +879,7 @@ void FileParser::parseHybridContainer(pugi::xml_node pHybridNode, OpticalGroup* 
 {
     bool cEnable = pHybridNode.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool();
 
-    if(cEnable)
+    if(cEnable == true)
     {
         os << BOLDBLUE << "|       |"
            << "----" << pHybridNode.name() << " --> " << BOLDBLUE << pHybridNode.first_attribute().name() << ": " << BOLDYELLOW << pHybridNode.attribute(COMMON_ID_ATTRIBUTE_NAME).value() << BOLDBLUE
@@ -1529,7 +1529,10 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
         std::string cChildName = cChild.name();
         if(cChildName.find(CHIP_FILES_APPEND_NODE_NAME) != std::string::npos) continue;
 
-        if(cChildName.find(RD53_NODE_NAME) != std::string::npos)
+        // #################################################
+        // # Check of the chip is RD53 and if it's enabled #
+        // #################################################
+        if((cChildName.find(RD53_NODE_NAME) != std::string::npos) && (!(cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME)) || (cChild.attribute(COMMON_ENABLE_ATTRIBUTE_NAME).as_bool() == true)))
         {
             for(pugi::xml_node theChild: cChild.children())
             {
@@ -1540,7 +1543,7 @@ void FileParser::parseHybridToLpGBT(pugi::xml_node pHybridNode, Ph2_HwDescriptio
             // ###################
             // # Specific for IT #
             // ###################
-            const std::string RxGroupsConfig = cChild.attribute("RxGroups").as_string("0000");
+            const std::string RxGroupsConfig = cChild.attribute("RxGroups").as_string("NNN1");
             if((RxGroupsConfig.size() != NCHIPLANES) || (strcmp(RxGroupsConfig.c_str(), "NNNN") == 0))
                 throw std::runtime_error("The \"RxGroups\" attribute of RD53 should contain 4 characters ('0' up to '9', or 'N', but not all 'N')");
             auto                    cRxGroups = parseString<uint8_t, NCHIPLANES>(RxGroupsConfig);
@@ -1592,7 +1595,7 @@ void FileParser::parseRD53(pugi::xml_node theChipNode, Hybrid* cHybrid, std::str
     const uint32_t    chipLane    = theChipNode.attribute("Lane").as_uint();
     const int64_t     eFuseCode   = (theChipNode.attribute("eFuseCode") ? theChipNode.attribute("eFuseCode").as_int() : 0);
     const int64_t     IrefCode    = (theChipNode.attribute("IrefCode") ? theChipNode.attribute("IrefCode").as_int() : 0);
-    const std::string cRxGroups   = theChipNode.attribute("RxGroups").as_string("0000");
+    const std::string cRxGroups   = theChipNode.attribute("RxGroups").as_string("NNN1");
     const uint8_t     cRxChannel  = (theChipNode.attribute("RxChannel") ? theChipNode.attribute("RxChannel").as_uint() : 0);
     const uint8_t     cRxPolarity = theChipNode.attribute("RxPolarity").as_uint();
     const uint8_t     cTxGroup    = theChipNode.attribute("TxGroup").as_uint();
@@ -1810,8 +1813,6 @@ void FileParser::setChipADCParameters(pugi::xml_node pChipNode, Ph2_HwDescriptio
 {
     if(pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME)) cChip->setADCSlopeCalibrationValue("ADC_SLOPE", pChipNode.attribute(CHIP_ADC_SLOPE_ATTRIBUTE_NAME).as_float());
     if(pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME)) cChip->setADCSlopeCalibrationValue("ADC_OFFSET", pChipNode.attribute(CHIP_ADC_OFFSET_ATTRIBUTE_NAME).as_float());
-    if(pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME)) cChip->setADCSlopeCalibrationValue("TEMP_SLOPE", pChipNode.attribute(CHIP_TEMPERATURE_SLOPE_ATTRIBUTE_NAME).as_float());
-    if(pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME)) cChip->setADCSlopeCalibrationValue("TEMP_OFFSET", pChipNode.attribute(CHIP_TEMPERATURE_OFFSET_ATTRIBUTE_NAME).as_float());
 }
 
 } // namespace Ph2_Parser

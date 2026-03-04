@@ -88,8 +88,7 @@
               NTCBETA                =  "3435"
               ADC_OFFSET_VOLT        =    "63"
               ADC_MAXIMUM_VOLT       =   "839"
-              TEMPSENS_IDEAL_FACTOR  =  "1225"
-              SAMPLE_N_TIMES         =    "10"
+              SAMPLE_N_TIMES         =     "1"
               VREF_ADC               =   "900"
               INJ_CAP                =    "85"
               />

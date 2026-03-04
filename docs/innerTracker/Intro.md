@@ -2,7 +2,7 @@
 
 ## Recommended software and firmware versions
 
-- Software git branch / tag : `Dev` / `v6-21`
+- Software git branch / tag : `Dev` / `v6-27`
 - Firmware tag: `v5-00`
 
 ## Important webpages and information
@@ -37,3 +37,9 @@ while for Felis use <https://gitlab.cern.ch/sdemares/felis/>.
 
 - Program to generate enable/injection patterns for x-talk studies: `pyUtilsIT/ManipulateITchipMask.py`
 - Mask converter from `Ph2_ACF` to `Alki's` code: `pyUtilsIT/ConvertPh2ACFMask2Alkis.py`
+
+### Readout chip manuals
+
+RD53A: https://cds.cern.ch/record/2287593
+RD53B (RD53Bv1): https://cds.cern.ch/record/2665301
+RD53C (RD53Bv2): https://cds.cern.ch/record/2890222

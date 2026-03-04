@@ -12,6 +12,11 @@
 
 workflow:
     rules:
+    - exists:
+        - mkdocs.yml
+        - docs/**/*
+      variables:
+        GIT_LFS_SKIP_SMUDGE: "0"
     - if: $CI_MERGE_REQUEST_ID || $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_BRANCH == "Dev"
       when: always
     - if: '$CI_PIPELINE_SOURCE == "push"'

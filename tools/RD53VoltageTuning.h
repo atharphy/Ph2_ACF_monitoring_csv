@@ -1,6 +1,6 @@
 /*!
   \file                  RD53VoltageTuning.h
-  \brief                 Implementaion of Voltage Tuning
+  \brief                 Header of Voltage Tuning procedure
   \author                Yuta TAKAHASHI
   \version               1.0
   \date                  03/05/21
@@ -68,6 +68,7 @@ class VoltageTuning : public CalibBase
     float toleranceDig;
     float toleranceAna;
     bool  doDisplay;
+    bool  doUpdateChip;
 };
 
 #endif

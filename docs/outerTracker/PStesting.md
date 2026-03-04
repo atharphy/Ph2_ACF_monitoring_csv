@@ -141,13 +141,12 @@ For the modulation, when you increase it, you decrease the power. The reason is 
 
 If the power in the x and y direction is not changing, something is going on with the driver controller. Moreover, the optical power that you receive might be lower in case you have some damage on the fibers - less obvious and this will be handled by potato. Very likely you will see other problems.
 
-<details>
-  <summary>Known issues</summary>
+###### ⚠️ Known issues
 
-A distribution like the one below may be due to a problematic SFP connector on the FC7 or dirt in the fibers.
+  A distribution like the one below may be due to a problematic   SFP connector on the FC7 or dirt in the fibers.
 
-![VTRx_LightYieldScan_buggy](./OTtesting/common/VTRx_LightYieldScan_buggy.png)
-</details>
+  ![VTRx_LightYieldScan_buggy](./OTtesting/common/VTRx_LightYieldScan_buggy.png)
+
 
 
 ##### OTLpGBTEyeOpeningTest - OpticalGroup
@@ -405,18 +404,16 @@ Small error rates (around 0.01–0.1%) are normal and not a concern. Large error
 As before, <span style="color:red;font-weight:bold;"> all these communications go through a wirebond pair. So if you observe errors (100% error rate) on these lines, you should inspect the wirebonds</span>.
 This is crucial because, on the strip side, you can simply monitor the noise, whereas on the pixel side you are communicating with a chip. Therefore, <span style="color:red;font-weight:bold;">you need to run all the verification steps that help identify issues in the wirebonds between the MPA and the hybrid</span>.
 
-<details>
-  <summary>Known issues</summary>
+###### ⚠️ Known issues
 
-Example of a missing wirebond, 100% error rate for one chip and line. [This debug script](../../pythonUtils/ModuleNoiseAnalyzer.py) will help you identify the wirebond number. When inspecting the wirebonds, remember that wirebond 12 for the bandgap is never connected.
+  Example of a missing wirebond, 100% error rate for one chip   and line. [This debug script](../../pythonUtils/  ModuleNoiseAnalyzer.py) will help you identify the wirebond   number. When inspecting the wirebonds, remember that wirebond   12 for the bandgap is never connected.
 
-![SSAtoMPA_PatternMatchingErrorRate_Hybrid_missingWirebond](./OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_missingWirebond.png)
+  ![SSAtoMPA_PatternMatchingErrorRate_Hybrid_missingWirebond](./  OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_missingWirebond. png)
 
-The one below is a known issue not yet understood. Please report if you observe it!
+  The one below is a known issue due the hybrid design leaving  the SSA0 left lateral input and the SSA7 right lateral input   floating. See [here](https://indico.cern.ch/event/1642446/  contributions/6908086/attachments/3214472/5726208/  PSclusterIssuesUnderstood.pdf) for more info.
 
-![SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem](./OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem.png)
+  ![SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem](./OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem.png)
 
-</details>
 
 ##### OTPSringOscillatorTest - Hybrid
 
@@ -552,19 +549,16 @@ For the 2D plots, you have both columns and rows. The 1D representation is simpl
 
 ![SCurve_MPA](./OTtesting/PS/Scurve_MPA.png)
 
-<details>
-  <summary>Known issues</summary>
+###### ⚠️ Known issues
 
-For the strip sensor only (plots taken from 2S modules):
+  For the strip sensor only (plots taken from 2S modules):
 
-Broken wirebond or disconnected bump bond can show up as a compressed S-curve for a specific channel.
+  Broken wirebond or disconnected bump bond can show up as a  compressed S-curve for a specific channel.
 
-![SCurve_Chip_buggy](./OTtesting/2S/SCurve_Chip_buggy.png)
+  ![SCurve_Chip_buggy](./OTtesting/2S/SCurve_Chip_buggy.png)
 
-Another know issues is when horizontal stripes are present. This is a communication issue affecting the whole module. Example will be added when found again.
+  Another know issues is when horizontal stripes are present. This is a communication issue affecting the whole module. Example will be added when found again.
 
-
-</details>
 
 
 From the S-Curve, the pulse height for every channel can be extracted. The cumulative distribution of the pulse height should appear very sharp, while failures would show as long tails or outliers.
@@ -629,23 +623,22 @@ Pixels:
 
 
 
-<details>
-  <summary>Known issues</summary>
+###### ⚠️ Known issues
 
-A group of channel with high noise may indicate a scratch on the sensor.
+  A group of channel with high noise may indicate a scratch on  the sensor.
 
-![StripChannelNoise_Scratch](./OTtesting/2S/StripChannelNoise_Scratch.png)
+  ![StripChannelNoise_Scratch](./OTtesting/2S/  StripChannelNoise_Scratch.png)
 
-A channel with low noise could indicate a broken wirebond. Below 2 a broken bumpbond.
+  A channel with low noise could indicate a broken wirebond.  Below 2 a broken bumpbond.
 
-![StripChannelNoise_brokenBonds](./OTtesting/2S/StripChannelNoise_brokenBonds.png)
+  ![StripChannelNoise_brokenBonds](./OTtesting/2S/  StripChannelNoise_brokenBonds.png)
 
-Groups of broken channels in the center of CBC can indicate that sparking occurred.
+  Groups of broken channels in the center of CBC can indicate   that sparking occurred.
 
-![StripChannelNoise_Sparking](./OTtesting/2S/StripChannelNoise_Sparking.png)
+  ![StripChannelNoise_Sparking](./OTtesting/2S/ StripChannelNoise_Sparking.png)
 
-If the HV is not applied, a very high noise is shown over both hybrids and sensors.
-</details>
+  If the HV is not applied, a very high noise is shown over both hybrids and sensors.
+
 
 ##### OTinjectionDelayOptimization - Chip
 Up to this point, all our tests used asynchronous injection, so we didn’t need to worry about injection delay or latency. You simply inject a charge, and the counter registers whenever the signal crosses the comparator threshold.

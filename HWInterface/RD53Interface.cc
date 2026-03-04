@@ -306,7 +306,7 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
     this->setBoard(pChip->getBeBoardId());
     std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
 
-    const float measError = 4.0; // Current or Voltage measurement error due to MonitorConfig resolution [%]
+    const float measError = 4.0; // @CONST@ Measurement error due to MonitorConfig resolution [%]
     float       value;
     bool        isCurrentNotVoltage;
     uint32_t    observable = getADCobservable(observableName, isCurrentNotVoltage);
@@ -326,8 +326,6 @@ float RD53Interface::ReadChipMonitor(ReadoutChip* pChip, const std::string& obse
                       << (isCurrentNotVoltage == true ? " uA" : " V") << std::setprecision(-1) << RESET;
     }
 
-    // std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::SUPERDEEPSLEEP)); // @TMP@
-
     return value;
 }
 
@@ -344,7 +342,7 @@ float RD53Interface::convertADC2VorI(ReadoutChip* pChip, uint32_t value, bool is
 // ######################################
 {
     // ################################################################################
-    // # resistorI2V   = 0.01-0.005 [MOhm] Resistor for current to voltage conversion #
+    // # resistorI2V   = 0.01-0.005 [MOhm] Resistor for voltage to current conversion #
     // # ADCoffset     =  63 [1/10 mV]     Offset due to ground shift                 #
     // # actualVrefADC = 839 [mV]          Lower than VrefADC due to parasitics       #
     // ################################################################################

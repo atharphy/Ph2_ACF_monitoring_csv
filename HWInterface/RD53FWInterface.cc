@@ -105,19 +105,29 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     uint32_t cFWminute  = RegManager::ReadReg("user.stat_regs.fw_date.minute");
     uint32_t cFWseconds = RegManager::ReadReg("user.stat_regs.fw_date.seconds");
 
-    uint32_t cLinkType   = RegManager::ReadReg("user.stat_regs.global_reg.link_type");
-    uint32_t cOptSpeed   = RegManager::ReadReg("user.stat_regs.global_reg.optical_speed");
-    uint32_t cFEtype     = RegManager::ReadReg("user.stat_regs.global_reg.front_end_type");
-    uint32_t cL12FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l12_type");
-    uint32_t cL08FMCtype = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l8_type");
+    uint32_t cLinkType     = RegManager::ReadReg("user.stat_regs.global_reg.link_type");
+    uint32_t cOptSpeed     = RegManager::ReadReg("user.stat_regs.global_reg.optical_speed");
+    uint32_t cFEtype       = RegManager::ReadReg("user.stat_regs.global_reg.front_end_type");
+    uint32_t cL08FMCtype   = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l8_type");
+    uint32_t cL08OptoLinks = RegManager::ReadReg("user.stat_regs.global_reg.optical_links_l8");
+    uint32_t cL12FMCtype   = RegManager::ReadReg("user.stat_regs.global_reg.fmc_l12_type");
+    uint32_t cL12OptoLinks = RegManager::ReadReg("user.stat_regs.global_reg.optical_links_l12");
 
-    LOG(INFO) << BOLDBLUE << "\t--> SW commit number : " << BOLDYELLOW << RD53Shared::gitInfo("commit") << BOLDBLUE << " -- SW tag : " << BOLDYELLOW << RD53Shared::gitInfo("tag") << RESET;
+    std::string gitCommit, gitTag;
+    if((RD53Shared::gitInfo("commit", gitCommit) == false) || (RD53Shared::gitInfo("tag", gitTag) == false))
+        LOG(WARNING) << BOLDRED << "\t--> Unable to find git commit/tag ... skipping this step" << RESET;
+    else
+        LOG(INFO) << BOLDBLUE << "\t--> SW commit number : " << BOLDYELLOW << gitCommit << BOLDBLUE << " -- SW tag : " << BOLDYELLOW << gitTag << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> FW version : " << BOLDYELLOW << cVersionMajor << "." << cVersionMinor << BOLDBLUE << " -- Date (yy/mm/dd) : " << BOLDYELLOW << cFWyear << "/" << cFWmonth << "/"
               << cFWday << BOLDBLUE << " -- Time (hour:minute:sec) : " << BOLDYELLOW << cFWhour << ":" << cFWminute << ":" << cFWseconds << RESET;
     LOG(INFO) << BOLDBLUE << "\t--> Link type : " << BOLDYELLOW << (cLinkType == 0 ? "electrical" : "optical") << BOLDBLUE << " -- Optical speed : " << BOLDYELLOW
               << (cOptSpeed == 0 ? "10 Gbit/s" : "5 Gbit/s") << BOLDBLUE << " -- Frontend type : " << BOLDYELLOW << (cFEtype == 1 ? "RD53A" : "RD53B") << RESET;
-    LOG(INFO) << BOLDBLUE << "\t--> L12 FMC type : " << BOLDYELLOW << cL12FMCtype << BOLDBLUE << " -- L08 FMC type : " << BOLDYELLOW << cL08FMCtype << BOLDBLUE
+    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "L08" << BOLDBLUE << " FMC type : " << BOLDYELLOW << cL08FMCtype << BOLDBLUE
               << " (1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=Unspecified)" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t\t--> Number of optical links (if applicable) : " << BOLDYELLOW << cL08OptoLinks << RESET;
+    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << "L12" << BOLDBLUE << " FMC type : " << BOLDYELLOW << cL12FMCtype << BOLDBLUE
+              << " (1=KSU, 2=CERN, 3=DIO5, 4=OPTO, 5=FERMI, 7=NONE, 0=Unspecified)" << RESET;
+    LOG(INFO) << BOLDBLUE << "\t\t--> Number of optical links (if applicable) : " << BOLDYELLOW << cL12OptoLinks << RESET;
 
     if(cFEtype == 2) RegManager::WriteReg("user.ctrl_regs.reset_reg.enable_sync_word", 1);
 
@@ -230,7 +240,7 @@ void RD53FWInterface::ConfigureBoard(const BeBoard* pBoard)
     // ###########################
     uint32_t inputClk = RegManager::ReadReg("user.stat_regs.clkin_rate");
     uint32_t gtxClk   = RegManager::ReadReg("user.stat_regs.gtx_refclk_rate");
-    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "Input clock frequency (could be either internal or external, should be ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz"
+    LOG(INFO) << GREEN << std::fixed << std::setprecision(3) << "Input clock frequency (could either be internal or external, ~40 MHz): " << BOLDYELLOW << inputClk / 1000. << " MHz"
               << std::setprecision(-1) << RESET;
     if(fabs(inputClk / 1000. - 40) > clkSafeMargin)
     {
@@ -716,14 +726,14 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
         // ##################
         // # Error checking #
         // ##################
-        RD53Event::decodedEvents.clear();
+        RD53Event::ClearDecodedEvents();
         uint32_t status = 0;
 
         // ###################
         // # Decoding events #
         // ###################
-        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::decodedEvents, status, RD53FWInterface::silentRunning); // Decode events with multiple threads
-        // RD53Event::DecodeEvents(pData, RD53Event::decodedEvents, {}, status, RD53FWInterface::silentRunning); // Decode events with a single thread
+        RD53Event::DecodeEventsMultiThreads(pData, RD53Event::GetRefDecodedEvents(), status, RD53FWInterface::silentRunning); // Decode events with multiple threads
+        // RD53Event::DecodeEvents(pData, RD53Event::GetRefDecodedEvents(), {}, status, RD53FWInterface::silentRunning); // Decode events with a single thread
 
         if((RD53FWInterface::silentRunning == false) && (RD53Event::EvtErrorHandler(status) == false))
         {
@@ -732,12 +742,12 @@ void RD53FWInterface::ReadNEvents(BeBoard* pBoard, uint32_t pNEvents, std::vecto
             continue;
         }
 
-        if(RD53Event::decodedEvents.size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
+        if(RD53Event::GetRefDecodedEvents().size() != RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration))
         {
             NtrialsNevents++;
             if(RD53FWInterface::silentRunning == false)
                 LOG(ERROR) << BOLDRED << "Sent " << BOLDYELLOW << RD53FWInterface::localCfgFastCmd.n_triggers * (1 + RD53FWInterface::localCfgFastCmd.trigger_duration) << BOLDRED
-                           << " triggers, but collected " << BOLDYELLOW << RD53Event::decodedEvents.size() << BOLDRED << " events" << BOLDYELLOW << " --> retry" << RESET;
+                           << " triggers, but collected " << BOLDYELLOW << RD53Event::GetRefDecodedEvents().size() << BOLDRED << " events" << BOLDYELLOW << " --> retry" << RESET;
             retry = true;
             continue;
         }
@@ -1208,8 +1218,11 @@ void RD53FWInterface::SetUpLinkMapping(uint8_t RxLink, uint8_t ModuleId, uint8_t
 void RD53FWInterface::selectLink(const uint8_t pLinkId, uint32_t pWait_ms) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.active_link", pLinkId); }
 void RD53FWInterface::SetOptoLinkVersion(bool version) { RegManager::WriteReg("user.ctrl_regs.lpgbt_1.lpgbt_version", version); }
 
-float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
+float RD53FWInterface::GetSFPParameter(const OpticalGroup* pOpticalGroup, std::string parameter, int channel)
 {
+    __attribute__((unused)) const uint8_t L8{8};   // @CONST@
+    __attribute__((unused)) const uint8_t L12{12}; // @CONST@
+
     int  nAttempts = 0, error = 0;
     bool timeOut = false;
 
@@ -1226,6 +1239,7 @@ float RD53FWInterface::GetSFPParameter(std::string parameter, int channel)
     else if(parameter == "raw")
         RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.reg_address", 96);
 
+    RegManager::WriteReg("user.ctrl_regs.lpgbt_1.fmc_sel", pOpticalGroup->getFMCId() == L8 ? 0 : 1);
     RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.channel_number", channel);
     RegManager::WriteReg("user.ctrl_regs.cnfg_sfp_monitoring.enable", 1);
 
@@ -1697,7 +1711,6 @@ std::vector<double> RD53FWInterface::RunBERtest(bool                            
 // # 640 Mbit/s   = 1 #
 // # 320 Mbit/s   = 2 #
 // ####################
-//"user.ctrl_regs.PRBS_checker.error_cntr_sel"
 {
     const double bitPerFrame      = 32. * std::pow(2, frontendSpeed); // Bits per frame
     const double fps              = 1.28e9 / bitPerFrame;             // Frames per second: 32-bit frame @ 1.28 Gbit/s, 64-bit frame @ 640 Mbit/s, 128-bit frame @ 320 Mbit/s

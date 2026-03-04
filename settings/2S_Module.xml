@@ -85,7 +85,8 @@
     <Setting name="NoiseMeasurementLimit">10</Setting>
     <Setting name="NeventsForValidation">100000</Setting>
     <Setting name="MaskingThreshold">0.001</Setting>
-    <!-- <Setting name="PedeNoise_MinThreshold">375</Setting>
+    <!-- <Setting name="PedeNoise_UseFixRange">1</Setting>
+    <Setting name="PedeNoise_MinThreshold">375</Setting>
     <Setting name="PedeNoise_MaxThreshold">750</Setting> -->
 
     <!-- <Setting name="PedestalEqualization_PulseAmplitude">70</Setting>

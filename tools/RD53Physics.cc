@@ -38,6 +38,11 @@ void Physics::ConfigureCalibration()
     ContainerFactory::copyAndInitStructure<OccupancyAndPh, GenericDataVector>(*fDetectorContainer, theOccContainer);
     ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theBCIDContainer);
     ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theTrgIDContainer);
+
+    // ##################################
+    // # Count total number of FE chips #
+    // ##################################
+    totalFEchips = CalibBase::TotalFEchips();
 }
 
 void Physics::Running()
@@ -150,7 +155,7 @@ void Physics::run()
 
     while(Tool::fKeepRunning == true)
     {
-        RD53Event::decodedEvents.clear();
+        RD53Event::ClearDecodedEvents();
         Physics::analyze();
         Physics::draw(false);
 
@@ -169,11 +174,11 @@ void Physics::run()
             }
 
         theGuard.lock();
-        genericEvtConverter(RD53Event::decodedEvents);
+        genericEvtConverter(RD53Event::GetRefDecodedEvents());
         theGuard.unlock();
-        numberOfEventsPerRun += RD53Event::decodedEvents.size();
+        numberOfEventsPerRun += RD53Event::GetRefDecodedEvents().size();
 
-        if((RD53Event::decodedEvents.size() != 0) && (numberOfEventsPerRun % PRINTeventsEVERY == 0))
+        if((RD53Event::GetRefDecodedEvents().size() != 0) && (numberOfEventsPerRun % PRINTeventsEVERY == 0))
             LOG(INFO) << BOLDBLUE << "\t--> Total number of recorded bunch crossings up to now: " << BOLDYELLOW << numberOfEventsPerRun << RESET;
 
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
@@ -204,7 +209,11 @@ void Physics::analyze(bool doReadBinary)
         size_t dataSize = 0;
 
         if(doReadBinary == false)
-            dataSize = SystemController::ReadData(cBoard, true);
+        {
+            uint32_t eventStatus = 0;
+            dataSize             = SystemController::ReadData(cBoard, true);
+            RD53Event::CheckPresenceOfChips(RD53Event::GetRefDecodedEvents(), eventStatus, Physics::totalFEchips);
+        }
         else
         {
             dataSize = 1;

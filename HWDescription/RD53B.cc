@@ -21,6 +21,7 @@ const size_t          RD53B::NROWS   = 336;
 const size_t          RD53B::NCOLS   = 432;
 const RD53::FrontEnd  RD53B::RD53Bv1 = {"RD53Bv1",
                                         {"DAC_GDAC_M_LIN", "DAC_GDAC_L_LIN", "DAC_GDAC_R_LIN"},
+                                        {"DAC_PREAMP_L_LIN", "DAC_PREAMP_R_LIN", "DAC_PREAMP_TR_LIN", "DAC_PREAMP_TL_LIN", "DAC_PREAMP_T_LIN", "DAC_PREAMP_M_LIN"},
                                         "DAC_KRUM_CURR_LIN",
                                         "TriggerConfig",
                                         "DAC_LDAC_LIN",
@@ -56,6 +57,7 @@ const RD53::FrontEnd  RD53B::RD53Bv1 = {"RD53Bv1",
                                         {"EN_CORE_COL_0", "EN_CORE_COL_1", "EN_CORE_COL_2", "EN_CORE_COL_3"}};
 const RD53::FrontEnd  RD53B::RD53Bv2 = {"RD53Bv2",
                                         {"DAC_GDAC_M_LIN", "DAC_GDAC_L_LIN", "DAC_GDAC_R_LIN"},
+                                        {"DAC_PREAMP_L_LIN", "DAC_PREAMP_R_LIN", "DAC_PREAMP_TR_LIN", "DAC_PREAMP_TL_LIN", "DAC_PREAMP_T_LIN", "DAC_PREAMP_M_LIN"},
                                         "DAC_KRUM_CURR_LIN",
                                         "TriggerConfig",
                                         "DAC_LDAC_LIN",
@@ -146,7 +148,12 @@ std::map<std::string, RD53::SpecialRegInfo> RD53B::specialRegMap = {{"CDR_CONFIG
                                                                     {"GP_LVDS_OUT_1", {"GP_LVDS_ROUTE_0", 6}},
                                                                     {"GP_LVDS_OUT_2", {"GP_LVDS_ROUTE_1", 0}},
                                                                     {"GP_LVDS_OUT_3", {"GP_LVDS_ROUTE_1", 6}},
-                                                                    {"GP_LVDS_EN_OUT", {"OUTPUT_PAD_CONFIG", 3}}};
+                                                                    {"GP_LVDS_EN_OUT", {"OUTPUT_PAD_CONFIG", 3}},
+
+                                                                    {"MON_ADC_TRIM", {"MON_ADC", 0}},
+                                                                    {"Vref_IN", {"MON_ADC", 6}},
+                                                                    {"Vref_Rsens_Bot", {"MON_ADC", 7}},
+                                                                    {"Vref_Rsens_Top", {"MON_ADC", 8}}};
 
 RD53B::RD53B(const FrontEndType& frontEndType,
              uint8_t             pBeId,

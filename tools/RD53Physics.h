@@ -84,6 +84,7 @@ class Physics : public CalibBase
     bool doUpdateChip;
     bool saveBinaryData;
 
+    size_t               totalFEchips;
     size_t               numberOfEventsPerRun;
     std::recursive_mutex theMtx;
     evtConvType          genericEvtConverter;

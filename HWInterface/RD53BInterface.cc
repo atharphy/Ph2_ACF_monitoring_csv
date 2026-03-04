@@ -29,7 +29,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ######################
     // # Reset Core Columns #
     // ######################
-    RD53BInterface::ResetCoreColumns(pRD53);
+    RD53BInterface::ResetCoreColumns(pChip);
 
     // ##############
     // # Field data #
@@ -95,6 +95,11 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     }
     if(doWriteClkDataDelay == true) RD53BInterface::WriteClockDataDelay(pChip, pChip->getRegItem("CLK_DATA_DELAY").fValue);
 
+    // ########################
+    // # Sending Global Pulse #
+    // ########################
+    RD53BInterface::SendGlobalPulseFromCfg(pChip);
+
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
@@ -103,47 +108,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
-    const std::set<std::string> registerBlackList            = {"RESISTORI2V",
-                                                                "NTCBETA",
-                                                                "RNTCAT25C",
-                                                                "ADC_OFFSET_VOLT",
-                                                                "ADC_MAXIMUM_VOLT",
-                                                                "TEMPSENS_IDEAL_FACTOR",
-                                                                "TEMPSENS_IDEAL_FACTOR_ANA",
-                                                                "TEMPSENS_IDEAL_FACTOR_DIG",
-                                                                "RADSENS_IDEAL_FACTOR",
-                                                                "RADSENS_IDEAL_FACTOR_ANA",
-                                                                "RADSENS_IDEAL_FACTOR_DIG",
-                                                                "TEMPSENS_OFFSET_TOP",
-                                                                "TEMPSENS_OFFSET_BOTTOM",
-                                                                "SAMPLE_N_TIMES",
-                                                                "WAIT_MUX_CONFIG",
-                                                                "VREF_ADC",
-                                                                "INJ_CAP"}; // @CONST@
-    const std::set<std::string> registerWhiteList            = {"DAC_PREAMP_L_LIN",
-                                                                "DAC_PREAMP_R_LIN",
-                                                                "DAC_PREAMP_TL_LIN",
-                                                                "DAC_PREAMP_TR_LIN",
-                                                                "DAC_PREAMP_T_LIN",
-                                                                "DAC_PREAMP_M_LIN",
-                                                                "DAC_FC_LIN",
-                                                                "DAC_KRUM_CURR_LIN",
-                                                                "DAC_REF_KRUM_LIN",
-                                                                "DAC_COMP_LIN",
-                                                                "DAC_COMP_TA_LIN",
-                                                                "DAC_GDAC_L_LIN",
-                                                                "DAC_GDAC_R_LIN",
-                                                                "DAC_GDAC_M_LIN",
-                                                                "DAC_LDAC_LIN"}; // @CONST@
-
-    for(auto& cRegItem: pRD53RegMap)
-        if(((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) == registerBlackList.end()) &&
-            (registerClkDataDelayList.find(cRegItem.first) == registerClkDataDelayList.end()) && (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())) ||
-           (registerWhiteList.find(cRegItem.first) != registerWhiteList.end()))
-            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
-        else if((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) != registerBlackList.end()))
-            pChip->getRegItem(cRegItem.first).fValue = cRegItem.second.fDefValue;
+    RD53BInterface::WriteRegsFromCfg(pChip, pVerify);
 
     // #################################################
     // # Important values to be checked before running #
@@ -178,7 +143,8 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###################################
     // # Programmig pixel cell registers #
     // ###################################
-    RD53BInterface::WriteRD53Mask(pRD53, false, true);
+    pRD53->copyMaskFromDefault();
+    RD53BInterface::WriteRD53Mask(pRD53, false, false);
 
     return true;
 }
@@ -448,11 +414,13 @@ uint16_t RD53BInterface::GetPixelConfigTDAC(const pixelMask& mask, uint16_t row,
     return bits::pack<5, 5>(mask.TDAC[row + RD53B::NROWS * (col + 1)], mask.TDAC[row + RD53B::NROWS * (col + 0)]);
 }
 
-void RD53BInterface::ResetCoreColumns(RD53* pRD53)
+void RD53BInterface::ResetCoreColumns(Chip* pChip)
 // #############################################################################
 // # This function causes a fluctuation of the current consumption of the chip #
 // #############################################################################
 {
+    auto pRD53 = static_cast<RD53*>(pChip);
+
     for(auto suffix: {"_0", "_1", "_2"})
     {
         for(int i = 0; i < 2; i++)
@@ -716,17 +684,44 @@ void RD53BInterface::SendBoardClear(const BeBoard* pBoard)
     std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
 }
 
+void RD53BInterface::SendGlobalPulseFromCfg(Chip* pChip)
+{
+    // #####################################
+    // # Programming Global Pulse register #
+    // #####################################
+    bool        doWriteGlobalPulseConf = false;
+    auto&       pRD53RegMap            = pChip->getRegMap();
+    const auto& theMap                 = static_cast<RD53*>(pChip)->getFEtype()->GlobalPulseConfMap;
+
+    for(auto ele: theMap)
+    {
+        auto cRegItem = pRD53RegMap.find(ele.first);
+        if((cRegItem != pRD53RegMap.end()) && (cRegItem->second.fPrmptCfg == true))
+        {
+            doWriteGlobalPulseConf     = true;
+            cRegItem->second.fPrmptCfg = false;
+            pChip->getRegItem("GlobalPulseConf").fDefValue |= ele.second;
+        }
+    }
+
+    if(doWriteGlobalPulseConf == true) RD53BInterface::SendGlobalPulse(pChip, pChip->getRegItem("GlobalPulseConf").fDefValue, pChip->getRegItem("GlobalPulseWidth").fDefValue);
+}
+
 void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulseDuration)
 {
     this->setBoard(pChip->getBeBoardId());
 
     std::vector<uint16_t> cmdStream;
-    auto                  pRD53  = static_cast<RD53*>(pChip);
-    const auto&           theMap = pRD53->getFEtype()->GlobalPulseConfMap;
+    const auto&           theMap = static_cast<RD53*>(pChip)->getFEtype()->GlobalPulseConfMap;
 
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
     RD53BCmd::serialize(RD53BCmd::GlobalPulse{pChip->getId()}, cmdStream);
+    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdStream, pChip->getHybridId());
+
+    std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
+
+    cmdStream.clear();
     RD53BInterface::PackWriteCommand(pChip,
                                      "GlobalPulseConf",
                                      (theMap.find("RstAuroraV1") != theMap.end() ? theMap.find("RstAuroraV1")->second : 0) |
@@ -734,8 +729,58 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
                                          (theMap.find("RstBCIDCnt") != theMap.end() ? theMap.find("RstBCIDCnt")->second : 0),
                                      cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdStream, pChip->getHybridId());
+}
 
-    std::this_thread::sleep_for(std::chrono::nanoseconds(static_cast<int>((pulseDuration + 1.) / RD53Constants::ACCELERATOR_CLK * 1000.)));
+void RD53BInterface::WriteRegsFromCfg(Chip* pChip, bool pVerify, bool writeAll)
+{
+    auto&                       pRD53RegMap                  = pChip->getRegMap();
+    const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
+    const std::set<std::string> registerClkDataDelayList     = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"};                                           // @CONST@
+    const std::set<std::string> registerBlackList            = {"RESISTORI2V",                                                                                            // [Ohm]
+                                                                "REFTEMP",                                                                                                // [C]
+                                                                "RES_MEAS_TOP",                                                                                           // [Ohm]
+                                                                "RES_MEAS_BOTTOM",                                                                                        // [Ohm]
+                                                                "NTCBETA",                                                                                                // [N.A.]
+                                                                "RNTCAT25C",                                                                                              // [Ohm]
+                                                                "ADC_OFFSET_VOLT",                                                                                        // [mV]
+                                                                "ADC_MAXIMUM_VOLT",                                                                                       // [mV]
+                                                                "TEMPSENS_IDEAL_FACTOR",                                                                                  // [N.A.]
+                                                                "TEMPSENS_IDEAL_FACTOR_ANA",                                                                              // [N.A.]
+                                                                "TEMPSENS_IDEAL_FACTOR_DIG",                                                                              // [N.A.]
+                                                                "RADSENS_IDEAL_FACTOR",                                                                                   // [N.A.]
+                                                                "RADSENS_IDEAL_FACTOR_ANA",                                                                               // [N.A.]
+                                                                "RADSENS_IDEAL_FACTOR_DIG",                                                                               // [N.A.]
+                                                                "TEMPSENS_OFFSET_TOP",                                                                                    // [mV]
+                                                                "TEMPSENS_OFFSET_BOTTOM",                                                                                 // [mV]
+                                                                "SAMPLE_N_TIMES",                                                                                         // [n]
+                                                                "SAMPLE_NTC_SLOPE",                                                                                       // [n]
+                                                                "WAIT_MUX_CONFIG",                                                                                        // [ms]
+                                                                "VREF_ADC",                                                                                               // [mV]
+                                                                "INJ_CAP"};                                                                                               // @CONST@
+    const std::set<std::string> registerWhiteList            = {"DAC_PREAMP_L_LIN",
+                                                                "DAC_PREAMP_R_LIN",
+                                                                "DAC_PREAMP_TL_LIN",
+                                                                "DAC_PREAMP_TR_LIN",
+                                                                "DAC_PREAMP_T_LIN",
+                                                                "DAC_PREAMP_M_LIN",
+                                                                "DAC_FC_LIN",
+                                                                "DAC_KRUM_CURR_LIN",
+                                                                "DAC_REF_KRUM_LIN",
+                                                                "DAC_COMP_LIN",
+                                                                "DAC_COMP_TA_LIN",
+                                                                "DAC_GDAC_L_LIN",
+                                                                "DAC_GDAC_R_LIN",
+                                                                "DAC_GDAC_M_LIN",
+                                                                "DAC_LDAC_LIN"}; // @CONST@
+
+    for(auto& cRegItem: pRD53RegMap)
+        if(((cRegItem.second.fPrmptCfg == true) &&
+            ((writeAll == true) || ((registerBlackList.find(cRegItem.first) == registerBlackList.end()) && (registerClkDataDelayList.find(cRegItem.first) == registerClkDataDelayList.end()) &&
+                                    (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())))) ||
+           (registerWhiteList.find(cRegItem.first) != registerWhiteList.end()))
+            RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
+        else if((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) != registerBlackList.end()))
+            pChip->getRegItem(cRegItem.first).fValue = cRegItem.second.fDefValue;
 }
 
 // ###########################
@@ -745,7 +790,8 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
 int RD53BInterface::getADCobservable(const std::string& observableName, bool& isCurrentNotVoltage, bool silentRunning)
 // ############################################
 // # Possible observable name values are also #
-// # - INTERNAL_NTC                           #
+// # - INTERNAL_NTC_REL                       #
+// # - INTERNAL_NTC_ABS                       #
 // # - INTERNAL_NTC_VOLT                      #
 // ############################################
 {
@@ -784,8 +830,10 @@ int RD53BInterface::getADCobservable(const std::string& observableName, bool& is
                                                                           {"NTC_VOLT", 0x02},
                                                                           {"Vref_CAL_DAC", 0x03},
                                                                           {"VDDA_CAPMEASURE", 0x04},
-                                                                          {"POLY_TEMPSENS_TOP", 0x05},
-                                                                          {"POLY_TEMPSENS_BOTTOM", 0x06},
+                                                                          {"POLY_REL_TEMPSENS_TOP", 0x05},
+                                                                          {"POLY_REL_TEMPSENS_BOTTOM", 0x06},
+                                                                          {"POLY_ABS_TEMPSENS_TOP", 0x05},
+                                                                          {"POLY_ABS_TEMPSENS_BOTTOM", 0x06},
                                                                           {"VCAL_HI", 0x07},
                                                                           {"VCAL_MD", 0x08},
                                                                           {"LIN_FE_REF_KRUMCURR", 0x09},
@@ -821,10 +869,16 @@ int RD53BInterface::getADCobservable(const std::string& observableName, bool& is
                                                                           {"VrefD", 0x27}};
 
     auto search = currentMultiplexer.find(observableName);
-    if(observableName == "INTERNAL_NTC")
+    if(observableName == "INTERNAL_NTC_REL")
     {
         currentObservable   = currentMultiplexer.find("NTC_CURR")->second;
         voltageObservable   = voltageMultiplexer.find("I_MUX")->second;
+        isCurrentNotVoltage = true;
+    }
+    else if(observableName == "INTERNAL_NTC_ABS")
+    {
+        currentObservable   = currentMultiplexer.find("NTC_CURR")->second;
+        voltageObservable   = voltageMultiplexer.find("NTC_VOLT")->second;
         isCurrentNotVoltage = true;
     }
     else if(observableName == "INTERNAL_NTC_VOLT")
@@ -868,7 +922,6 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     // After the muxes have been configured, some time has to pass before the voltage is stable (RC circuit)
     // The amount of time depends on the particular signal and on the capacitance connected to VMUX/IMUX
     // 100 ms should be enough to properly sample all voltages from VMUX on UZH SCCs and on modules (22 nF)
-    // On Bonn SCCs (100 nF), 100 ms are too short for RADSENS, and should be raised to 500 ms
     std::this_thread::sleep_for(std::chrono::milliseconds(waitMuxConfig));
 
     // ########################################################
@@ -912,10 +965,10 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     // #####################
     const float       T0C              = 273.15;                                      // [Kelvin]
     const float       T25C             = 298.15;                                      // [Kelvin]
-    const float       R25C             = pChip->getRegItem("RNTCAT25C").fValue / 1e3; // [Ohm]
+    const float       R25C             = pChip->getRegItem("RNTCAT25C").fValue / 1e3; // [kOhm]
     const float       kb               = 1.38064852e-23;                              // [J/K]
     const float       e                = 1.6021766208e-19;                            // [C]
-    const float       temperatureCoeff = 0.22e-2;                                     // By circuit design [dR/dT]
+    const float       temperatureCoeff = 0.22e-2;                                     // By circuit design [dR/R(or dV/V) / dT]
     const float       biasIratio       = 15;                                          // By circuit design
     const int         nDEM             = 16;                                          // Dynamic Element Matching
     const std::string regName          = (type.find("CENTER") != std::string::npos ? "MON_SENS_ACB" : "MON_SENS_SLDO");
@@ -927,10 +980,13 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         {"RADSENS_ANA_SLDO", "RADSENS_IDEAL_FACTOR_ANA"},
         {"RADSENS_DIG_SLDO", "RADSENS_IDEAL_FACTOR_DIG"},
         {"RADSENS_CENTER", "RADSENS_IDEAL_FACTOR"},
-        {"POLY_TEMPSENS_TOP", "TEMPSENS_OFFSET_TOP"},
-        {"POLY_TEMPSENS_BOTTOM", "TEMPSENS_OFFSET_BOTTOM"},
+        {"POLY_REL_TEMPSENS_TOP", "TEMPSENS_OFFSET_TOP"},
+        {"POLY_REL_TEMPSENS_BOTTOM", "TEMPSENS_OFFSET_BOTTOM"},
+        {"POLY_ABS_TEMPSENS_TOP", "RES_MEAS_TOP"},
+        {"POLY_ABS_TEMPSENS_BOTTOM", "RES_MEAS_BOTTOM"},
         {"INTERNAL_NTC_VOLT", ""},
-        {"INTERNAL_NTC", ""},
+        {"INTERNAL_NTC_REL", ""},
+        {"INTERNAL_NTC_ABS", ""},
     };
 
     const auto iterator = observableToCalibrationConstant.find(type);
@@ -940,31 +996,155 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         return -HUGE_VALF; // Unphysically low temperature as error
     }
 
-    const float idealityFactor = (iterator->second != "" ? pChip->getRegItem(iterator->second).fValue / 1e3 : 0);
+    const float idealityFactor = (iterator->second != "" ? pChip->getRegItem(iterator->second).fValue / 1e3 : 0); // [kOhm]
     uint16_t    sensorConfigData; // Enable[5], DEM[4:1], SEL_BIAS[0] (x2 ... 10 bit in total for the sensors in each sensor config register)
     float       valueLow  = 0;
     float       valueHigh = 0;
 
-    if(type.find("INTERNAL_NTC") != std::string::npos)
+    auto RtoT  = [&](float resistance) { return 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; }; // [Celsius]
+    auto VRtoT = [&](float voltOrRes) { return (voltOrRes / idealityFactor - 1.) / temperatureCoeff; };    // [Celsius]
+
+    if(type.find("INTERNAL_NTC_REL") != std::string::npos)
     {
         bool     isCurrentNotVoltage;
         uint32_t observable = RD53BInterface::getADCobservable("INTERNAL_NTC_VOLT", isCurrentNotVoltage);
         float    voltage    = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, observable));
-        observable          = RD53BInterface::getADCobservable("INTERNAL_NTC", isCurrentNotVoltage);
+        observable          = RD53BInterface::getADCobservable("INTERNAL_NTC_REL", isCurrentNotVoltage);
         float current       = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, observable), true);
 
         // ###############################################
         // # Calculate temperature with NTC Beta formula #
         // ###############################################
-        float resistance  = 1e3 * voltage / (current != 0 ? current : 1);           // [kOhm]
-        float temperature = 1. / (1. / T25C + log(resistance / R25C) / beta) - T0C; // [Celsius]
+        float resistance  = 1e3 * voltage / (current != 0 ? current : 1); // [kOhm]
+        float temperature = RtoT(resistance);                             // [Celsius]
 
         return temperature;
     }
-    else if(type.find("POLY") != std::string::npos)
+    else if(type.find("INTERNAL_NTC_ABS") != std::string::npos)
     {
-        float voltage     = RD53Interface::convertADC2VorI(pChip, measureADC(pChip, data));
-        float temperature = (voltage / idealityFactor - 1) / temperatureCoeff; // [Celsius]
+        const uint16_t saveADC   = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
+        const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip);
+        const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1);
+        uint16_t       nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
+        uint16_t       ntcVolt   = 0;
+        uint16_t       ntcCurr   = 0;
+
+        // #########################################################################
+        // # Scan from 0 to saturation to compute ADC volt independent temperature #
+        // #########################################################################
+        const uint16_t       step = maxADCval / nSteps;
+        std::vector<int32_t> ntcVoltVec;
+        std::vector<int32_t> ntcCurrVec;
+        std::vector<int32_t> ntcADCVec;
+        for(uint16_t i = 1; i < nSteps; i++)
+        {
+            RD53BInterface::readNTCvoltCurr(pChip, step * i, ntcVolt, ntcCurr);
+            if((ntcVolt > 0) && (ntcVolt < maxVal) && (ntcCurr > 0) && (ntcCurr < maxVal))
+            {
+                ntcADCVec.push_back(step * i);
+                ntcVoltVec.push_back(ntcVolt);
+                ntcCurrVec.push_back(ntcCurr);
+                LOG(DEBUG) << "DAC_NTC: " << step * i << " NTC Volt: " << ntcVolt << " NTC Curr: " << ntcCurr << RESET;
+            }
+        }
+
+        // ########################
+        // # Compute the averages #
+        // ########################
+        float avgVolt = (ntcVoltVec.size() != 0 ? std::reduce(ntcVoltVec.begin(), ntcVoltVec.end(), 0.) / ntcVoltVec.size() : 0);
+        float avgCurr = (ntcCurrVec.size() != 0 ? std::reduce(ntcCurrVec.begin(), ntcCurrVec.end(), 0.) / ntcCurrVec.size() : 0);
+        float avgADC  = (ntcADCVec.size() != 0 ? std::reduce(ntcADCVec.begin(), ntcADCVec.end(), 0.) / ntcADCVec.size() : 0);
+        std::for_each(ntcVoltVec.begin(), ntcVoltVec.end(), [avgVolt](auto& e) { e -= avgVolt; });
+        std::for_each(ntcCurrVec.begin(), ntcCurrVec.end(), [avgCurr](auto& e) { e -= avgCurr; });
+        std::for_each(ntcADCVec.begin(), ntcADCVec.end(), [avgADC](auto& e) { e -= avgADC; });
+
+        // ######################
+        // # Compute the slopes #
+        // ######################
+        float slopeVolt = std::inner_product(ntcADCVec.begin(), ntcADCVec.end(), ntcVoltVec.begin(), 0.);
+        float slopeCurr = std::inner_product(ntcADCVec.begin(), ntcADCVec.end(), ntcCurrVec.begin(), 0.);
+        float slopeADC  = std::inner_product(ntcADCVec.begin(), ntcADCVec.end(), ntcADCVec.begin(), 0.);
+        slopeVolt /= slopeADC;
+        slopeCurr /= slopeADC;
+
+        // ###########################
+        // # Compute the temperature #
+        // ###########################
+        float resistance  = pChip->getRegItem("RESISTORI2V").fValue * slopeVolt / slopeCurr * 1e-3; // [kOhm]
+        float temperature = RtoT(resistance);                                                       // [Celsius]
+
+        // #########################
+        // # Restore initial value #
+        // #########################
+        RD53Interface::WriteChipReg(pChip, "DAC_NTC", saveADC);
+
+        return temperature;
+    }
+    else if(type.find("POLY_REL") != std::string::npos)
+    {
+        float voltage     = RD53Interface::convertADC2VorI(pChip, RD53BInterface::measureADC(pChip, data));
+        float temperature = VRtoT(voltage);
+
+        return temperature;
+    }
+    else if(type.find("POLY_ABS") != std::string::npos)
+    {
+        const uint16_t saveADC   = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
+        const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip, type);
+        const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1);
+        uint16_t       nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
+        uint16_t       ntcVolt   = 0;
+        uint16_t       ntcCurr   = 0;
+
+        // #########################################################################
+        // # Scan from 0 to saturation to compute ADC volt independent temperature #
+        // #########################################################################
+        const uint16_t     step = maxADCval / nSteps;
+        std::vector<float> ntcCurrVec;
+        std::vector<float> polyVec;
+        for(uint16_t i = 1; i < nSteps; i++)
+        {
+            RD53BInterface::readNTCvoltCurr(pChip, step * i, ntcVolt, ntcCurr);
+            if((ntcVolt > 0) && (ntcVolt < maxVal) && (ntcCurr > 0) && (ntcCurr < maxVal))
+            {
+                ntcCurrVec.push_back(ntcCurr);
+                bool     isCurrentNotVoltage;
+                uint32_t observable = RD53BInterface::getADCobservable(type.find("POLY_ABS_TEMPSENS_TOP") ? "ANA_GND_1" : "ANA_GND_0", isCurrentNotVoltage);
+                polyVec.push_back(RD53BInterface::measureADC(pChip, data) - RD53BInterface::measureADC(pChip, observable));
+                LOG(DEBUG) << "DAC_NTC: " << step * i << " NTC Volt: " << ntcVolt << " NTC Curr: " << ntcCurr << RESET;
+            }
+        }
+
+        // ####################
+        // # Compute the sums #
+        // ####################
+        float sumPolyVec = std::reduce(polyVec.begin(), polyVec.end(), 0.);
+        float sumCurr    = std::reduce(ntcCurrVec.begin(), ntcCurrVec.end(), 0.);
+
+        // ##################################
+        // # Compute the sum of the squares #
+        // ##################################
+        float sumSq = std::accumulate(ntcCurrVec.begin(), ntcCurrVec.end(), 0., [](float total, float e) { return total + e * e; });
+
+        // ##########################
+        // # Compute scalar product #
+        // ##########################
+        float scalarPoly = std::inner_product(polyVec.begin(), polyVec.end(), ntcCurrVec.begin(), 0.);
+
+        // #####################
+        // # Compute the slope #
+        // #####################
+        float slopePoly = (ntcCurrVec.size() != 0 ? (ntcCurrVec.size() * scalarPoly - sumCurr * sumPolyVec) / (ntcCurrVec.size() * sumSq - sumCurr * sumCurr) : 0);
+
+        // ###########################
+        // # Compute the temperature #
+        // ###########################
+        float temperature = pChip->getRegItem("REFTEMP").fValue + VRtoT(slopePoly * pChip->getRegItem("RESISTORI2V").fValue / 1e3);
+
+        // #########################
+        // # Restore initial value #
+        // #########################
+        RD53Interface::WriteChipReg(pChip, "DAC_NTC", saveADC);
 
         return temperature;
     }
@@ -993,6 +1173,52 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     RD53Interface::WriteChipReg(pChip, "MON_SENS_SLDO", 0);
 
     return e / (idealityFactor * kb * log(biasIratio)) * (valueHigh - valueLow) / nDEM - T0C;
+}
+
+void RD53BInterface::readNTCvoltCurr(ReadoutChip* pChip, uint16_t dacNTC, uint16_t& ntcVolt, uint16_t& ntcCurr)
+{
+    RD53Interface::WriteChipReg(pChip, "DAC_NTC", dacNTC);
+    ntcVolt = RD53Interface::ReadChipADC(pChip, "NTC_VOLT");
+    ntcCurr = RD53Interface::ReadChipADC(pChip, "NTC_CURR");
+}
+
+uint16_t RD53BInterface::maxADCatSaturation(ReadoutChip* pChip, const std::string& type)
+{
+    auto&          pRD53RegMap  = pChip->getRegMap();
+    uint16_t       minADC       = 0;
+    uint16_t       maxADC       = RD53Shared::setBits(pRD53RegMap.at("DAC_NTC").fBitSize);
+    uint16_t       midADC       = (minADC + maxADC) / 2;
+    const uint16_t numberOfBits = floor(log2(maxADC - minADC + 1) + 1);
+    const uint16_t maxVal       = RD53Shared::setBits(pRD53RegMap.at("MonitorConfig").fBitSize - 1);
+    uint16_t       maxADCval    = 0;
+    uint16_t       it           = 0;
+    uint16_t       ntcVolt      = 0;
+    uint16_t       ntcCurr      = 0;
+    uint16_t       typeVal      = 0;
+
+    // ################################
+    // # Find ADC value at saturation #
+    // ################################
+    RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
+    if(type != "") typeVal = RD53Interface::ReadChipADC(pChip, type);
+    while(it <= numberOfBits)
+    {
+        if((ntcVolt < maxVal) && (ntcCurr < maxVal) && (typeVal < maxVal))
+        {
+            minADC    = midADC;
+            maxADCval = midADC;
+        }
+        else
+            maxADC = midADC;
+        midADC = (minADC + maxADC) / 2;
+
+        RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
+        if(type != "") typeVal = RD53Interface::ReadChipADC(pChip, type);
+
+        it++;
+    }
+
+    return maxADCval;
 }
 
 } // namespace Ph2_HwInterface

@@ -46,7 +46,6 @@ quality:clang-format:
     - mkdir -p ${REPORTS_PATH}
   script:
     - yum install -y clang-tools-extra git git-lfs which
-    - curl -LO https://raw.githubusercontent.com/Sarcasm/run-clang-format/master/run-clang-format.py
     - CLANG_FORMAT_EXE=${CI_PROJECT_DIR}/.gitlab/ci/scripts/run-clang-format.py
     - export PATCHFILE=clang-format-${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}.patch
     - echo ARTIFACTS_DIR/PATCHFILE is ${ARTIFACTS_DIR}/${PATCHFILE}
@@ -57,12 +56,12 @@ quality:clang-format:
         ${CLANG_FORMAT_EXE} -i -r . || true
         git config --global user.email "${GITLAB_USER_EMAIL}"
         git config --global user.name "${GITLAB_USER_NAME}"
-        git commit -am "Apply clang-format for ${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}"
+        git commit -am "Apply clang-format for ${GITLAB_USER_LOGIN}-${CI_COMMIT_REF_SLUG}-job-${CI_JOB_ID}" || true
         git format-patch ${CI_COMMIT_SHORT_SHA} --stdout > ${ARTIFACTS_DIR}/${PATCHFILE}
     - NUMBER_OF_LINES=$(sed -n '$=' ${ARTIFACTS_DIR}/${PATCHFILE})
     - cat ${ARTIFACTS_DIR}/${PATCHFILE}
     - echo ${NUMBER_OF_LINES}
-    - if [ ${NUMBER_OF_LINES} = 0 ]; then
+    - if [ "${NUMBER_OF_LINES}" = "" ]; then
     -   echo "No changes to be made!"
     - else
     -   echo "Patch file with changes is in ${ARTIFACTS_DIR}/${PATCHFILE}" 
