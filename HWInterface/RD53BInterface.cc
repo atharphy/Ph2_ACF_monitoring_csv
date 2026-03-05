@@ -36,12 +36,14 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ##############
     if(RD53Interface::WriteChipReg(pChip, "DataConcentratorConf", 0, pVerify) == false)
     {
-        const auto& theMap = pRD53->getFEtype()->GlobalPulseConfMap;
-        RD53BInterface::SendGlobalPulse(
-            pChip, (theMap.find("RstAuroraV1") != theMap.end() ? theMap.find("RstAuroraV1")->second : 0) | (theMap.find("RstAuroraV2") != theMap.end() ? theMap.find("RstAuroraV2")->second : 0), 10);
+        const auto& theGlobalPulseMap = pRD53->getFEtype()->GlobalPulseConfMap;
         RD53BInterface::SendGlobalPulse(pChip,
-                                        (theMap.find("RstSerializerV1") != theMap.end() ? theMap.find("RstSerializerV1")->second : 0) |
-                                            (theMap.find("RstSerializerV2") != theMap.end() ? theMap.find("RstSerializerV2")->second : 0),
+                                        (theGlobalPulseMap.find("RstAuroraV1") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstAuroraV1")->second : 0) |
+                                            (theGlobalPulseMap.find("RstAuroraV2") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstAuroraV2")->second : 0),
+                                        10);
+        RD53BInterface::SendGlobalPulse(pChip,
+                                        (theGlobalPulseMap.find("RstSerializerV1") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstSerializerV1")->second : 0) |
+                                            (theGlobalPulseMap.find("RstSerializerV2") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstSerializerV2")->second : 0),
                                         10);
         std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::AURORASLEEP));
     }
@@ -163,8 +165,8 @@ void RD53BInterface::InitRD53Downlink(const BeBoard* pBoard)
 void RD53BInterface::InitRD53Uplinks(Chip* pChip)
 {
     this->setBoard(pChip->getBeBoardId());
-    auto        pRD53  = static_cast<RD53*>(pChip);
-    const auto& theMap = pRD53->getFEtype()->GlobalPulseConfMap;
+    auto        pRD53             = static_cast<RD53*>(pChip);
+    const auto& theGlobalPulseMap = pRD53->getFEtype()->GlobalPulseConfMap;
 
     RD53Interface::WriteChipReg(pChip, "SER_SEL_OUT", RD53Constants::PATTERN_AURORA, false);
     // # bits 7-8: SerSelOut3[1:0]
@@ -213,11 +215,13 @@ void RD53BInterface::InitRD53Uplinks(Chip* pChip)
     // #######################
     // # Reset communication #
     // #######################
-    RD53BInterface::SendGlobalPulse(
-        pChip, (theMap.find("RstAuroraV1") != theMap.end() ? theMap.find("RstAuroraV1")->second : 0) | (theMap.find("RstAuroraV2") != theMap.end() ? theMap.find("RstAuroraV2")->second : 0), 10);
     RD53BInterface::SendGlobalPulse(pChip,
-                                    (theMap.find("RstSerializerV1") != theMap.end() ? theMap.find("RstSerializerV1")->second : 0) |
-                                        (theMap.find("RstSerializerV2") != theMap.end() ? theMap.find("RstSerializerV2")->second : 0),
+                                    (theGlobalPulseMap.find("RstAuroraV1") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstAuroraV1")->second : 0) |
+                                        (theGlobalPulseMap.find("RstAuroraV2") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstAuroraV2")->second : 0),
+                                    10);
+    RD53BInterface::SendGlobalPulse(pChip,
+                                    (theGlobalPulseMap.find("RstSerializerV1") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstSerializerV1")->second : 0) |
+                                        (theGlobalPulseMap.find("RstSerializerV2") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstSerializerV2")->second : 0),
                                     10);
     std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::AURORASLEEP));
 
@@ -261,8 +265,8 @@ void RD53BInterface::InitRD53Uplinks(Chip* pChip)
     if(pRD53->laneConfig.isPrimary == true)
     {
         RD53BInterface::SendGlobalPulse(pChip,
-                                        (theMap.find("RstDataMerging") != theMap.end() ? theMap.find("RstDataMerging")->second : 0) |
-                                            (theMap.find("RstDataPath") != theMap.end() ? theMap.find("RstDataPath")->second : 0),
+                                        (theGlobalPulseMap.find("RstDataMerging") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstDataMerging")->second : 0) |
+                                            (theGlobalPulseMap.find("RstDataPath") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstDataPath")->second : 0),
                                         10);
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
     }
@@ -691,9 +695,9 @@ void RD53BInterface::SendGlobalPulseFromCfg(Chip* pChip)
     // #####################################
     bool        doWriteGlobalPulseConf = false;
     auto&       pRD53RegMap            = pChip->getRegMap();
-    const auto& theMap                 = static_cast<RD53*>(pChip)->getFEtype()->GlobalPulseConfMap;
+    const auto& theGlobalPulseMap      = static_cast<RD53*>(pChip)->getFEtype()->GlobalPulseConfMap;
 
-    for(auto ele: theMap)
+    for(auto ele: theGlobalPulseMap)
     {
         auto cRegItem = pRD53RegMap.find(ele.first);
         if((cRegItem != pRD53RegMap.end()) && (cRegItem->second.fPrmptCfg == true))
@@ -712,7 +716,7 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
     this->setBoard(pChip->getBeBoardId());
 
     std::vector<uint16_t> cmdStream;
-    const auto&           theMap = static_cast<RD53*>(pChip)->getFEtype()->GlobalPulseConfMap;
+    const auto&           theGlobalPulseMap = static_cast<RD53*>(pChip)->getFEtype()->GlobalPulseConfMap;
 
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseConf", route, cmdStream);
     RD53BInterface::PackWriteCommand(pChip, "GlobalPulseWidth", pulseDuration, cmdStream);
@@ -724,9 +728,9 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
     cmdStream.clear();
     RD53BInterface::PackWriteCommand(pChip,
                                      "GlobalPulseConf",
-                                     (theMap.find("RstAuroraV1") != theMap.end() ? theMap.find("RstAuroraV1")->second : 0) |
-                                         (theMap.find("RstSerializerV1") != theMap.end() ? theMap.find("RstSerializerV1")->second : 0) |
-                                         (theMap.find("RstBCIDCnt") != theMap.end() ? theMap.find("RstBCIDCnt")->second : 0),
+                                     (theGlobalPulseMap.find("RstAuroraV1") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstAuroraV1")->second : 0) |
+                                         (theGlobalPulseMap.find("RstSerializerV1") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstSerializerV1")->second : 0) |
+                                         (theGlobalPulseMap.find("RstBCIDCnt") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstBCIDCnt")->second : 0),
                                      cmdStream);
     static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdStream, pChip->getHybridId());
 }
@@ -734,6 +738,7 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
 void RD53BInterface::WriteRegsFromCfg(Chip* pChip, bool pVerify, bool writeAll)
 {
     auto&                       pRD53RegMap                  = pChip->getRegMap();
+    auto&                       theGlobalPulseMap            = static_cast<RD53*>(pChip)->getFEtype()->GlobalPulseConfMap;
     const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
     const std::set<std::string> registerClkDataDelayList     = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"};                                           // @CONST@
     const std::set<std::string> registerBlackList            = {"RESISTORI2V",                                                                                            // [Ohm]
@@ -756,7 +761,7 @@ void RD53BInterface::WriteRegsFromCfg(Chip* pChip, bool pVerify, bool writeAll)
                                                                 "SAMPLE_NTC_SLOPE",                                                                                       // [n]
                                                                 "WAIT_MUX_CONFIG",                                                                                        // [ms]
                                                                 "VREF_ADC",                                                                                               // [mV]
-                                                                "INJ_CAP"};                                                                                               // @CONST@
+                                                                "INJ_CAP"};                                                                                               // [0.1xfF]
     const std::set<std::string> registerWhiteList            = {"DAC_PREAMP_L_LIN",
                                                                 "DAC_PREAMP_R_LIN",
                                                                 "DAC_PREAMP_TL_LIN",
@@ -775,8 +780,9 @@ void RD53BInterface::WriteRegsFromCfg(Chip* pChip, bool pVerify, bool writeAll)
 
     for(auto& cRegItem: pRD53RegMap)
         if(((cRegItem.second.fPrmptCfg == true) &&
-            ((writeAll == true) || ((registerBlackList.find(cRegItem.first) == registerBlackList.end()) && (registerClkDataDelayList.find(cRegItem.first) == registerClkDataDelayList.end()) &&
-                                    (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end())))) ||
+            ((writeAll == true) ||
+             ((registerBlackList.find(cRegItem.first) == registerBlackList.end()) && (registerClkDataDelayList.find(cRegItem.first) == registerClkDataDelayList.end()) &&
+              (registerPreEmphasisWhiteList.find(cRegItem.first) == registerPreEmphasisWhiteList.end()) && (theGlobalPulseMap.find(cRegItem.first) == theGlobalPulseMap.end())))) ||
            (registerWhiteList.find(cRegItem.first) != registerWhiteList.end()))
             RD53Interface::WriteChipReg(pChip, cRegItem.first, cRegItem.second.fDefValue, pVerify);
         else if((cRegItem.second.fPrmptCfg == true) && (registerBlackList.find(cRegItem.first) != registerBlackList.end()))
@@ -910,8 +916,8 @@ int RD53BInterface::getADCobservable(const std::string& observableName, bool& is
 uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
 {
     this->setBoard(pChip->getBeBoardId());
-    auto        pRD53  = static_cast<RD53*>(pChip);
-    const auto& theMap = pRD53->getFEtype()->GlobalPulseConfMap;
+    auto        pRD53             = static_cast<RD53*>(pChip);
+    const auto& theGlobalPulseMap = pRD53->getFEtype()->GlobalPulseConfMap;
 
     const uint16_t sampleNtimes  = pChip->getRegItem("SAMPLE_N_TIMES").fValue;
     const uint16_t waitMuxConfig = pChip->getRegItem("WAIT_MUX_CONFIG").fValue; // [ms]
@@ -931,8 +937,8 @@ uint32_t RD53BInterface::measureADC(ReadoutChip* pChip, uint32_t data)
     uint16_t counter = 0;
     for(auto i = 0u; i < sampleNtimes; i++)
     {
-        RD53BInterface::SendGlobalPulse(pChip, theMap.find("RstADC") != theMap.end() ? theMap.find("RstADC")->second : 0, 1);
-        RD53BInterface::SendGlobalPulse(pChip, theMap.find("ADCstatConversion") != theMap.end() ? theMap.find("ADCstatConversion")->second : 0, 1);
+        RD53BInterface::SendGlobalPulse(pChip, theGlobalPulseMap.find("RstADC") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("RstADC")->second : 0, 1);
+        RD53BInterface::SendGlobalPulse(pChip, theGlobalPulseMap.find("ADCstatConversion") != theGlobalPulseMap.end() ? theGlobalPulseMap.find("ADCstatConversion")->second : 0, 1);
         std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Wait for end of conversion (at least 358.4 us according to manual)
         const uint16_t val = RD53Interface::ReadChipReg(pChip, "MonitoringDataADC");
         if(val != 0)
