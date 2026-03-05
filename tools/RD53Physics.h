@@ -14,6 +14,7 @@
 #include "HWInterface/RD53FWInterface.h"
 #include "RD53CalibBase.h"
 #include "Utils/RD53Shared.h"
+#include "Utils/StartInfo.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/RD53PhysicsHistograms.h"

@@ -8,8 +8,6 @@
 */
 
 #include "RD53Physics.h"
-#include "Utils/ContainerSerialization.h"
-#include "Utils/StartInfo.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;

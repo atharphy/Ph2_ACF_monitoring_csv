@@ -108,7 +108,12 @@ void CalibBase::saveChipRegisters(bool doUpdateChip)
         }
 }
 
-void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const std::vector<const char*>& regNames, bool silentDownload, bool checkAgainst, int value, bool doNotDownload)
+void CalibBase::downloadNewDACvalues(const std::vector<DetectorDataContainer*>& DACcontainers,
+                                     const std::vector<const char*>&            regNames,
+                                     bool                                       silentDownload,
+                                     bool                                       checkAgainst,
+                                     int                                        value,
+                                     bool                                       doNotDownload)
 {
     const auto            chipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
     std::vector<uint16_t> chipCommandList;
@@ -124,25 +129,19 @@ void CalibBase::downloadNewDACvalues(DetectorDataContainer& DACcontainer, const 
                 chipCommandList.clear();
 
                 for(const auto cChip: *cHybrid)
-                    for(const auto& regName: regNames)
+                    for(const auto& [container, regName]: boost::combine(DACcontainers, regNames))
                     {
-                        if(((checkAgainst == true) &&
-                            (DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() != value)) ||
-                           (checkAgainst == false))
+                        const auto& fromContainer =
+                            container->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
+
+                        if(((checkAgainst == true) && (fromContainer != value)) || (checkAgainst == false))
                         {
-                            chipInterface->PackWriteCommand(
-                                cChip,
-                                regName,
-                                DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>(),
-                                chipCommandList,
-                                true);
+                            chipInterface->PackWriteCommand(cChip, regName, fromContainer, chipCommandList, true);
 
                             if(silentDownload == false)
                                 LOG(INFO) << BOLDMAGENTA << ">>> " << (checkAgainst == true ? "Best " : "") << BOLDYELLOW << regName << BOLDMAGENTA
                                           << " value for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                                          << +cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW
-                                          << DACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()
-                                          << BOLDMAGENTA << " <<<" << RESET;
+                                          << +cChip->getId() << RESET << BOLDMAGENTA << "] = " << RESET << BOLDYELLOW << fromContainer << BOLDMAGENTA << " <<<" << RESET;
                         }
                         else
                         {
