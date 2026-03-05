@@ -104,7 +104,7 @@ This uses TCP protocol instead of UDP which accounts for packet loss but decreas
 
 
 ##
-### Support, suggestions
+### Support & suggestions
 For any support/suggestions, send an email to fabio.raveraSPAMNOT@cern.ch, mauro.dinardoSPAMNOT@cern.ch
 
 
@@ -115,7 +115,5 @@ For any support/suggestions, send an email to fabio.raveraSPAMNOT@cern.ch, mauro
 
 ##
 ### Outer Tracker Suggested Tags
-
-Firmware tag: v3-03
-
-Ph2_ACF tag: v6-25
+- Firmware tag: v3-03
+- Ph2_ACF tag: v6-25

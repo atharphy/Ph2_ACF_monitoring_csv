@@ -9,7 +9,6 @@
 */
 
 #include "RD53ThresholdHistograms.h"
-#include "Utils/ContainerSerialization.h"
 
 using namespace Ph2_HwDescription;
 
@@ -24,8 +23,13 @@ void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
     auto           frontEnd       = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2);
     const uint16_t rangeThreshold = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits(frontEnd->thresholdRegs[0])) + 1;
 
-    auto hThreshold = CanvasContainer<TH1F>("Threshold", "Threshold", rangeThreshold, 0, rangeThreshold);
-    bookChipImplementer(theOutputFile, theDetectorStructure, Threshold, hThreshold, "Threshold", "Entries");
+    std::vector<CanvasContainer<TH1F>> hThresholds;
+    for(const auto& reg: frontEnd->thresholdRegs) hThresholds.emplace_back(reg, "Threshold", rangeThreshold, 0, rangeThreshold);
+    for(const auto& [hThr, reg]: boost::combine(hThresholds, frontEnd->thresholdRegs))
+    {
+        Thresholds.push_back(std::make_shared<DetectorDataContainer>());
+        bookChipImplementer(theOutputFile, theDetectorStructure, *Thresholds.back(), hThr, reg, "Entries");
+    }
 
     AreHistoBooked = true;
 }
@@ -36,7 +40,7 @@ bool ThresholdHistograms::fill(std::string& inputStream)
 
     if(theContainerSerialization.attachDeserializer(inputStream))
     {
-        DetectorDataContainer fDetectorData = theContainerSerialization.deserializeChipContainer<EmptyContainer, uint16_t>(fDetectorContainer);
+        DetectorDataContainer fDetectorData = theContainerSerialization.deserializeChipContainer<EmptyContainer, std::vector<uint16_t>>(fDetectorContainer);
         ThresholdHistograms::fill(fDetectorData);
         return true;
     }
@@ -45,6 +49,8 @@ bool ThresholdHistograms::fill(std::string& inputStream)
 
 void ThresholdHistograms::fill(const DetectorDataContainer& DataContainer)
 {
+    auto frontEnd = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2);
+
     for(const auto cBoard: DataContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -52,15 +58,22 @@ void ThresholdHistograms::fill(const DetectorDataContainer& DataContainer)
                 {
                     if(cChip->hasSummary() == false) continue;
 
-                    auto* hThreshold = Threshold.getObject(cBoard->getId())
-                                           ->getObject(cOpticalGroup->getId())
-                                           ->getObject(cHybrid->getId())
-                                           ->getObject(cChip->getId())
-                                           ->getSummary<CanvasContainer<TH1F>>()
-                                           .fTheHistogram;
+                    for(unsigned int i = 0u; i < frontEnd->thresholdRegs.size(); i++)
+                    {
+                        auto* hThreshold = Thresholds.at(i)
+                                               ->getObject(cBoard->getId())
+                                               ->getObject(cOpticalGroup->getId())
+                                               ->getObject(cHybrid->getId())
+                                               ->getObject(cChip->getId())
+                                               ->getSummary<CanvasContainer<TH1F>>()
+                                               .fTheHistogram;
 
-                    hThreshold->Fill(cChip->getSummary<uint16_t>());
+                        hThreshold->Fill(cChip->getSummary<std::vector<uint16_t>>().at(i));
+                    }
                 }
 }
 
-void ThresholdHistograms::process() { drawChip<TH1F>(Threshold); }
+void ThresholdHistograms::process()
+{
+    for(auto& ThrPtr: Thresholds) drawChip<TH1F>(*ThrPtr);
+}

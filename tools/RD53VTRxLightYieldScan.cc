@@ -8,7 +8,7 @@
 */
 
 #include "RD53VTRxLightYieldScan.h"
-#include "Utils/ContainerSerialization.h"
+
 #include <boost/multiprecision/number.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>

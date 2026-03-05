@@ -13,6 +13,9 @@
 
 #include "DQMHistogramBase.h"
 #include "Utils/ContainerFactory.h"
+#include "Utils/ContainerSerialization.h"
+
+#include <boost/range/combine.hpp>
 
 #include <TH1F.h>
 
@@ -31,7 +34,7 @@ class ThresholdHistograms : public DQMHistogramBase
   private:
     DetectorContainer* fDetectorContainer;
 
-    DetectorDataContainer Threshold;
+    std::vector<std::shared_ptr<DetectorDataContainer>> Thresholds;
 };
 
 #endif
