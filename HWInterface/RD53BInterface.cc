@@ -738,7 +738,7 @@ void RD53BInterface::SendGlobalPulse(Chip* pChip, uint16_t route, uint16_t pulse
 void RD53BInterface::WriteRegsFromCfg(Chip* pChip, bool pVerify, bool writeAll)
 {
     auto&                       pRD53RegMap                  = pChip->getRegMap();
-    auto&                       theGlobalPulseMap            = static_cast<RD53*>(pChip)->getFEtype()->GlobalPulseConfMap;
+    const auto&                 theGlobalPulseMap            = static_cast<RD53*>(pChip)->getFEtype()->GlobalPulseConfMap;
     const std::set<std::string> registerPreEmphasisWhiteList = {"CML_CONFIG_SER_EN_TAP", "CML_CONFIG_SER_INV_TAP", "DAC_CML_BIAS_0", "DAC_CML_BIAS_1", "DAC_CML_BIAS_2"}; // @CONST@
     const std::set<std::string> registerClkDataDelayList     = {"CLK_DATA_DELAY", "CLK_DATA_DELAY_DATA", "CLK_DATA_DELAY_CLK"};                                           // @CONST@
     const std::set<std::string> registerBlackList            = {"RESISTORI2V",                                                                                            // [Ohm]
