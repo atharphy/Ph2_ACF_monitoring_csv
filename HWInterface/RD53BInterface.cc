@@ -1031,7 +1031,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         const uint16_t saveADC   = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
         const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip);
         const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1);
-        uint16_t       nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
+        const uint16_t nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
         uint16_t       ntcVolt   = 0;
         uint16_t       ntcCurr   = 0;
 
@@ -1098,14 +1098,14 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         const uint16_t saveADC   = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
         const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip, type);
         const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1);
-        uint16_t       nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
+        const uint16_t nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
         uint16_t       ntcVolt   = 0;
         uint16_t       ntcCurr   = 0;
 
         // #########################################################################
         // # Scan from 0 to saturation to compute ADC volt independent temperature #
         // #########################################################################
-        const uint16_t     step = maxADCval / nSteps;
+        const uint16_t     step = maxADCval / 2 / nSteps;
         std::vector<float> ntcCurrVec;
         std::vector<float> polyADCvec;
         for(uint16_t i = 1; i < nSteps; i++)
