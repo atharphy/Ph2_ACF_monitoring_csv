@@ -1107,16 +1107,17 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // #########################################################################
         const uint16_t     step = maxADCval / nSteps;
         std::vector<float> ntcCurrVec;
-        std::vector<float> polyVec;
+        std::vector<float> polyADCvec;
         for(uint16_t i = 1; i < nSteps; i++)
         {
             RD53BInterface::readNTCvoltCurr(pChip, step * i, ntcVolt, ntcCurr);
-            if((ntcVolt > 0) && (ntcVolt < maxVal) && (ntcCurr > 0) && (ntcCurr < maxVal))
+            const uint16_t polyADC = RD53BInterface::measureADC(pChip, data);
+            if((polyADC > 0) && (polyADC < maxADCval / 2) && (ntcVolt > 0) && (ntcVolt < maxVal) && (ntcCurr > 0) && (ntcCurr < maxVal))
             {
                 ntcCurrVec.push_back(ntcCurr);
                 bool     isCurrentNotVoltage;
-                uint32_t observable = RD53BInterface::getADCobservable(type.find("POLY_ABS_TEMPSENS_TOP") ? "ANA_GND_1" : "ANA_GND_0", isCurrentNotVoltage);
-                polyVec.push_back(RD53BInterface::measureADC(pChip, data) - RD53BInterface::measureADC(pChip, observable));
+                uint32_t observable = RD53BInterface::getADCobservable(type.find("POLY_ABS_TEMPSENS_TOP") != std::string::npos ? "ANA_GND_1" : "ANA_GND_0", isCurrentNotVoltage);
+                polyADCvec.push_back(polyADC - RD53BInterface::measureADC(pChip, observable));
                 LOG(DEBUG) << "DAC_NTC: " << step * i << " NTC Volt: " << ntcVolt << " NTC Curr: " << ntcCurr << RESET;
             }
         }
@@ -1124,7 +1125,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // ####################
         // # Compute the sums #
         // ####################
-        float sumPolyVec = std::reduce(polyVec.begin(), polyVec.end(), 0.);
+        float sumPolyVec = std::reduce(polyADCvec.begin(), polyADCvec.end(), 0.);
         float sumCurr    = std::reduce(ntcCurrVec.begin(), ntcCurrVec.end(), 0.);
 
         // ##################################
@@ -1135,7 +1136,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // ##########################
         // # Compute scalar product #
         // ##########################
-        float scalarPoly = std::inner_product(polyVec.begin(), polyVec.end(), ntcCurrVec.begin(), 0.);
+        float scalarPoly = std::inner_product(polyADCvec.begin(), polyADCvec.end(), ntcCurrVec.begin(), 0.);
 
         // #####################
         // # Compute the slope #
