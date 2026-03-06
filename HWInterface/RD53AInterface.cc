@@ -49,7 +49,7 @@ bool RD53AInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // ###############################
     // # Programmig global registers #
     // ###############################
-    WriteRegsFromCfg(pChip, pVerify);
+    RD53AInterface::WriteRegsFromCfg(pChip, pVerify);
 
     // ###################################
     // # Programmig pixel cell registers #
