@@ -423,32 +423,30 @@ void RD53BInterface::ResetCoreColumns(Chip* pChip)
 // # This function causes a fluctuation of the current consumption of the chip #
 // #############################################################################
 {
-    auto pRD53 = static_cast<RD53*>(pChip);
+    auto                                            pRD53       = static_cast<RD53*>(pChip);
+    const std::unordered_map<std::string, uint16_t> suffix2Bits = {{"_0", 0x5555}, {"_1", 0x5555}, {"_2", 0x5555}, {"_3", 0x15}};
 
-    for(auto suffix: {"_0", "_1", "_2"})
+    for(auto suffix: {"_0", "_1", "_2", "_3"})
     {
         for(int i = 0; i < 2; i++)
         {
-            const uint16_t value = 0x5555 << i;
+            const uint16_t value = suffix2Bits.at(suffix) << i;
 
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, value, false);
             RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, value, false);
             RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
+
+            // ###########################
+            // # Not sure this is needed # @TMP@
+            // ###########################
+            if(pRD53->getFEtype()->name == std::string("RD53Bv2"))
+                RD53BInterface::SendGlobalPulse(pRD53, pRD53->getFEtype()->GlobalPulseConfMap.at("RstDataPath"), pChip->getRegItem("GlobalPulseWidth").fDefValue);
+            else
+                RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
         }
         RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL_RESET") + suffix, 0, false);
         RD53Interface::WriteChipReg(pRD53, std::string("EN_CORE_COL") + suffix, 0, false);
     }
-
-    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0x2A, false);
-    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0x2A, false);
-    RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
-
-    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0x15, false);
-    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0x15, false);
-    RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()});
-
-    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_RESET_3", 0, false);
-    RD53Interface::WriteChipReg(pRD53, "EN_CORE_COL_3", 0, false);
 }
 
 void RD53BInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, size_t theRow, size_t theCol)
