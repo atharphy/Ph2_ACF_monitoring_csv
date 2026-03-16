@@ -43,7 +43,6 @@ void RD53BMuxReader::Stop()
     RD53RunProgress::reset();
 }
 
-//
 RD53BMuxReader::adc_result RD53BMuxReader::get_adc(Ph2_HwInterface::RD53Interface* chipInterface, Ph2_HwDescription::ReadoutChip* chip, const std::string& name, size_t nsample)
 {
     unsigned int       sum_adc = 0;
@@ -88,12 +87,7 @@ RD53BMuxReader::adc_result RD53BMuxReader::get_adc(Ph2_HwInterface::RD53Interfac
     }
 
     if(n_valid > 0) { return {adc_mean, adc_rms, line.str()}; }
-    else
-    {
-        // std::cout << "get_adc   for mux " << name << "  nsmaple=" << nsample << "   # values = " << adc_values.size() << std::endl;
-        //  for(const auto v: adc_values) { std::cout << v << std::endl; }
-        return {0, 0, ""};
-    }
+    else { return {0, 0, ""}; }
 }
 
 float RD53BMuxReader::measure_adc_offset(Ph2_HwInterface::RD53Interface* chipInterface, Ph2_HwDescription::ReadoutChip* chip, size_t nsample)
@@ -107,6 +101,7 @@ float RD53BMuxReader::measure_adc_offset(Ph2_HwInterface::RD53Interface* chipInt
         usleep(100000);
         const auto  adc_result = get_adc(chipInterface, chip, "NTC_CURR", nsample);
         const float adc        = adc_result.value;
+        // const auto adc = chipInterface->ReadChipADC(chip, "NTC_CURR");
 
         if((adc > 0) && (adc < 4096))
         {
@@ -184,6 +179,7 @@ void RD53BMuxReader::configure(const std::string& args)
     use_wlt_calibration       = true;
     do_adc_offset_measurement = true;
     read_temperatures         = false; // override by adding 'temperatures' to the adc list
+    do_poly_test              = false; // override by adding 'polytest' to the adc list
 
     if(args == "")
     {
@@ -205,6 +201,7 @@ void RD53BMuxReader::configure(const std::string& args)
         }
         else if(arg == "no_wlt_calibration") { use_wlt_calibration = false; }
         else if(arg == "temperatures") { read_temperatures = true; }
+        else if(arg == "polytest") { do_poly_test = true; }
         else if(std::find(all.begin(), all.end(), arg) != all.end()) { muxlist.push_back(arg); }
         else
         {
@@ -266,7 +263,6 @@ void RD53BMuxReader::run()
                     LOG(INFO) << GREEN << "[RD53BMuxReader::run]  board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
                               << +cChip->getId() << RESET;
                     chip_ids.push_back(cChip->getId());
-
                     float Icroc  = 0;
                     float offset = 0;
                     float slope  = V_REF / 4096;
@@ -349,16 +345,13 @@ void RD53BMuxReader::run()
                     if(read_temperatures) // test
                     {
                         // read poly sensor ntc style (simplified, temporary)
-                        float const R_ref = 4.99; // TEPX HDI
-                        // float const R_poly_27C = 11.07;   // 10.8;    //  kOhm : nominal, should come from WLT
-                        float const TC_poly        = 0.22e-2; //  0.22 %/C
-                        float const R_poly_top_27C = cChip->getRegItem("RES_MEAS_TOP").fValue / 1e3;
-                        float const R_poly_bot_27C = cChip->getRegItem("RES_MEAS_BOTTOM").fValue / 1e3;
-                        // R(T) = R(27 C) * (1+ TC * (T-27))
-                        // R(T)/R(27C) = 1  +  TC * (T-27)
-                        // T = 27 + (R(T)/R(27C) -1 )/ TC
-                        const unsigned int dac_1 = 100;
-                        const unsigned int dac_2 = 400;
+                        float const        R_ref              = 4.99;    // TEPX HDI
+                        float const        TC_poly            = 0.22e-2; //  0.22 %/C
+                        float const        R_poly_top_reftemp = cChip->getRegItem("RES_MEAS_TOP").fValue / 1e3;
+                        float const        R_poly_bot_reftemp = cChip->getRegItem("RES_MEAS_BOTTOM").fValue / 1e3;
+                        float const        reftemp            = cChip->getRegItem("REFTEMP").fValue;
+                        const unsigned int dac_1              = 100;
+                        const unsigned int dac_2              = 400;
 
                         chipInterface->WriteChipReg(cChip, "DAC_NTC", dac_1);
                         usleep(1000000);
@@ -378,15 +371,14 @@ void RD53BMuxReader::run()
 
                         const float R_poly_top = float(poly_top_2 - poly_top_1 - rgnd_top_2 + rgnd_top_1) / float(ref_adc_2 - ref_adc_1) * R_ref;
                         const float R_poly_bot = float(poly_bot_2 - poly_bot_1 - rgnd_bot_2 + rgnd_bot_1) / float(ref_adc_2 - ref_adc_1) * R_ref;
-                        const float T_poly_top = 27.0 + (R_poly_top / R_poly_top_27C - 1.0) / TC_poly;
-                        const float T_poly_bot = 27.0 + (R_poly_bot / R_poly_bot_27C - 1.0) / TC_poly;
-                        /*
-                                    LOG(INFO) << "ref    " << ref_adc_2 << " " << ref_adc_1 << RESET;
-                                    LOG(INFO) << "top    " << poly_top_2 << " - " << rgnd_top_2 << "    " << poly_top_1 << " - " << rgnd_top_1 << "   R= " << std::setprecision(3) << R_poly_top
-                                              << "   R27C= " << std::setprecision(3) << R_poly_top_27C << "   T=" << T_poly_top << " C" << RESET;
-                                    LOG(INFO) << "bottom " << poly_bot_2 << " - " << rgnd_bot_2 << "    " << poly_bot_1 << " - " << rgnd_bot_1 << "   R= " << std::setprecision(3) << R_poly_bot
-                                              << "   R27C= " << std::setprecision(3) << R_poly_bot_27C << "   T=" << T_poly_bot << " C" << RESET;
-                        */
+                        const float T_poly_top = reftemp + (R_poly_top / R_poly_top_reftemp - 1.0) / TC_poly;
+                        const float T_poly_bot = reftemp + (R_poly_bot / R_poly_bot_reftemp - 1.0) / TC_poly;
+
+                        LOG(INFO) << "ref    " << ref_adc_2 << " " << ref_adc_1 << RESET;
+                        LOG(INFO) << "top    " << poly_top_2 << " - " << rgnd_top_2 << "    " << poly_top_1 << " - " << rgnd_top_1 << "   R= " << std::setprecision(3) << R_poly_top
+                                  << "   Rref= " << std::setprecision(3) << R_poly_top_reftemp << "   T=" << T_poly_top << " C" << RESET;
+                        LOG(INFO) << "bottom " << poly_bot_2 << " - " << rgnd_bot_2 << "    " << poly_bot_1 << " - " << rgnd_bot_1 << "   R= " << std::setprecision(3) << R_poly_bot
+                                  << "   Rref= " << std::setprecision(3) << R_poly_bot_reftemp << "   T=" << T_poly_bot << " C" << RESET;
 
                         summary["POLY_TEMPSENS_TOP_T"].push_back(std::make_pair(T_poly_top, "C "));
                         summary["POLY_TEMPSENS_BOTTOM_T"].push_back(std::make_pair(T_poly_bot, "C "));

@@ -60,8 +60,9 @@ class RD53BMuxReader : public CalibBase
     int                      theCurrentRun;
     std::vector<std::string> muxlist;
     bool                     use_wlt_calibration;
-    bool                     do_adc_offset_measurement;
     bool                     read_temperatures;
+    bool                     do_adc_offset_measurement;
+    bool                     do_poly_test;
 };
 
 #endif
