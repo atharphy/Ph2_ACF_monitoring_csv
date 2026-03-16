@@ -270,7 +270,7 @@ bool CalibBase::shiftEnable(size_t indx)
     const auto            chipInterface = static_cast<RD53Interface*>(this->fReadoutChipInterface);
     std::vector<uint16_t> chipCommandList;
     std::vector<uint32_t> hybridCommandList;
-    bool                  isDetectorEmpty = false;
+    bool                  isDetectorEmpty = true;
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -299,7 +299,7 @@ bool CalibBase::shiftEnable(size_t indx)
                     chipInterface->EnDisChip(static_cast<RD53*>(cHybrid->at(indx - 1)), chipCommandList, false);
                 }
 
-                isDetectorEmpty |= (cHybrid->size() == 0);
+                isDetectorEmpty &= (cHybrid->size() == 0);
 
                 chipInterface->PackHybridCommands(cBoard, chipCommandList, cHybrid->getId(), hybridCommandList);
             }
