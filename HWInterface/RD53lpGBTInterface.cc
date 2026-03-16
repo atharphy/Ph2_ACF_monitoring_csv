@@ -143,30 +143,25 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
     fBoardFW->SetOptoLinkVersion(cChipVersion > 0);
     LOG(INFO) << GREEN << "LpGBT version: " << BOLDYELLOW << (cChipVersion == 0 ? "LpGBT-v0" : (cChipVersion == 1 ? "LpGBT-v1" : "LpGBT-v2")) << RESET;
 
-    // #########################
-    // # Configure PLL and DLL #
-    // #########################
-    this->WriteChipReg(pChip, "LDConfigH", 1 << 5, false);
-    this->WriteChipReg(pChip, "EPRXLOCKFILTER", 0x55, false);
-    this->WriteChipReg(pChip, "EPRXDllConfig", 1 << 6 | 1 << 4 | 1 << 2, false);
-    this->WriteChipReg(pChip, "PSDllConfig", 5 << 4 | 1 << 2 | 1, false);
-    this->WriteChipReg(pChip, "POWERUP2", 1 << 2 | 1 << 1, false);
-
-    // #####################
-    // # Check PUSM status #
-    // #####################
-    uint8_t      PUSMStatus = this->GetPUSMStatus(pChip);
-    unsigned int nAttempts  = 0;
-    while((PUSMStatus != revertedPUSMStatusMap["READY"]) && (nAttempts < RD53Shared::MAXATTEMPTS))
-    {
+    // ################################################
+    // # Configure PLL and DLL, and check PUSM status #
+    // ################################################
+    uint8_t      PUSMStatus;
+    unsigned int nAttempts = 0;
+    do {
+        this->WriteChipReg(pChip, "LDConfigH", 1 << 5, false);
+        this->WriteChipReg(pChip, "EPRXLOCKFILTER", 0x55, false);
+        this->WriteChipReg(pChip, "EPRXDllConfig", 1 << 6 | 1 << 4 | 1 << 2, false);
+        this->WriteChipReg(pChip, "PSDllConfig", 5 << 4 | 1 << 2 | 1, false);
+        this->WriteChipReg(pChip, "POWERUP2", 1 << 2 | 1 << 1, false);
         PUSMStatus = this->GetPUSMStatus(pChip);
-        std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::DEEPSLEEP));
+        if(nAttempts > 0) std::this_thread::sleep_for(std::chrono::milliseconds(RD53Shared::SUPERDEEPSLEEP));
         nAttempts++;
-    }
+    } while((PUSMStatus != revertedPUSMStatusMap["READY"]) && (nAttempts < RD53Shared::MAXATTEMPTS));
 
     if(PUSMStatus != revertedPUSMStatusMap["READY"])
     {
-        LOG(ERROR) << BOLDRED << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[cChipVersion][PUSMStatus] << RESET;
+        LOG(ERROR) << BOLDRED << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[cChipVersion][PUSMStatus] << BOLDRED << " (" << BOLDYELLOW << +PUSMStatus << BOLDRED << ")" << RESET;
         return false;
     }
     LOG(INFO) << GREEN << "LpGBT PUSM status: " << BOLDYELLOW << fPUSMStatusMap[cChipVersion][PUSMStatus] << RESET;
