@@ -1,5 +1,4 @@
 # Chip Internal Voltage Tuning
-<sub><sup>Last updated: 16.12.2024</sup></sub>
 
 ## Purpose
 
@@ -7,17 +6,15 @@ The purpose of the Voltage Tuning calibration is to find the optimal digital and
 
 ## Method
 
-Voltage Tuning makes use of chip internal voltage (VDDA and VDDD) monitoring and tries to make the voltages as close to the target as possible (1.2 [1.3] V for both VDDA and VDDD on CROC [RD53A] chips). It scans through the voltage trimming register `VOLTAGE_TRIM`, splitting it into
-`VOLTAGE_TRIM_ANA` and `VOLTAGE_TRIM_DIG` that trim VDDA and VDDD respectively.
+Voltage Tuning makes use of chip internal voltage (VDDA and VDDD) monitoring and tries to make the voltages as close to the target as possible (1.2 [1.3] V for both VDDA and VDDD on CROC [RD53A] chips). It scans through the voltage trimming register `VOLTAGE_TRIM`, splitting it into `VOLTAGE_TRIM_ANA` and `VOLTAGE_TRIM_DIG` that trim VDDA and VDDD respectively.
 
-The scan begins by measuring the digital voltage at the initial `VOLTAGE_TRIM_DIG` value and checking whether it is below or above the target voltage. Then, a sequence of `VOLTAGE_TRIM_DIG` values is generated for the scan, starting from the middle point and going up by 1, if the initial voltage was below the target, or going down by 1 otherwise. The scan stops when the target voltage gets overshot by more than a tolerance value, provided by the user, or the maximum/minimum possible register value is reached. When the scan stops, the register value that provides the voltage closest to the target is given. If the best value is different from the target by more than the given tolerance, the target is then reduced by 2$\times$tolerance and the
-procedure is repeated.
+The scan begins by measuring the digital voltage at the initial `VOLTAGE_TRIM_DIG` value and checking whether it is below or above the target voltage. Then, a sequence of `VOLTAGE_TRIM_DIG` values is generated for the scan, starting from the middle point and going up by 1, if the initial voltage was below the target, or going down by 1 otherwise. The scan stops when the target voltage gets overshot by more than a tolerance value, provided by the user, or the maximum/minimum possible register value is reached. When the scan stops, the register value that provides the voltage closest to the target is given. If the best value is different from the target by more than the given tolerance, the target is then reduced by 2$\times$tolerance and the procedure is repeated.
 
 The same procedure is then followed for the analog voltage. In that case, `VOLTAGE_TRIM_ANA` is tuned to the target VDDA value.
 
 **Scan command:** `voltagetuning`
 
-!!! warning "You have to update the config manually in the xml file"
+!!! note "You have to update the config manually in the xml file"
 	* VDDD: `VOLTAGE_TRIM_DIG`
 	* VDDA: `VOLTAGE_TRIM_ANA`
 
@@ -26,7 +23,7 @@ The same procedure is then followed for the analog voltage. In that case, `VOLTA
 |Name               |Typical value         |Description|
 |-------------------|----------------------|-----------|
 |`VDDDTrimTarget`   |RD53B: 1.2, RD53A: 1.3|Voltage target in volts for VDDD|
-|`VDDATrimTarget`   |RD53B: 1.2, RD53A: 1.3|Voltage target in volts for VDDA|
+|`VDDATrimTarget`   |1.2                   |Voltage target in volts for VDDA|
 |`VDDDTrimTolerance`|0.01                  |Acceptable tolerance in volts for reaching VDDD target|
 |`VDDATrimTolerance`|0.01                  |Acceptable tolerance in volts for reaching VDDA target|
 

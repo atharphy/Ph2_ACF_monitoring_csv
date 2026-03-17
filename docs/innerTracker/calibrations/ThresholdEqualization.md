@@ -1,5 +1,4 @@
 # Threshold Equalization
-<sub><sup>Last updated: 13.12.2024</sup></sub>
 
 ## Purpose
 
@@ -44,7 +43,7 @@ The Threshold Equalization scan can also tune the `DAC_LDAC_LIN` parameter, whic
 
 |Name           |Typical value|Description|
 |---------------|-------------|-----------|
-|`nEvents`      |100          |Number of injections per pixel for each measurement step|
+|`nEvents`      |500          |Number of injections per pixel for each measurement step|
 |`nEvtsBurst`   |=`nEvents`   |Number of events readout from FPGA in one instance|
 |`nTRIGxEvent`  |10           |Number of subsequent triggers sent for each injection |
 |`INJtype`      |1            |Injection type, 1 – analog|

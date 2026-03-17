@@ -1,5 +1,4 @@
 # Noise scan
-<sub><sup>Last updated: 13.12.2024</sup></sub>
 
 ## Purpose
 
@@ -25,7 +24,7 @@ After the scan, the occupancy of each pixel (calculated w.r.t. the total number 
 |`nEvtsBurst`    |1e4          |Number of events readout from FPGA in one instance|
 |`nTRIGxEvent`   |10           |Number of subsequent triggers in one trigger sequence|
 |`INJtype`       |0            |Injection type, 0 – no injections|
-|`OccPerPixel`   |2e-5         |Occupancy threshold above which the pixel is masked|
+|`OccPerPixel`   |1e-4         |Occupancy threshold above which the pixel is masked|
 |`UpdateChipCfg` |1            |Whether to update the chip configuration txt files after the scan|
 
 ## Expected output

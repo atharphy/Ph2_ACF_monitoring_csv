@@ -1,5 +1,4 @@
 # VTRx+ Light Yield Scan
-<sub><sup>Last updated: 07.02.2025</sup></sub>
 
 ## Purpose
 
@@ -24,4 +23,7 @@ The VTRx+ Light Yield Scan performs a 2D measurement by scanning the VTRx+ bias 
 
 ## Expected Output
 #### The light yield diagram
-![LpGBT Eye Opening Diagram](images/vtrxscan/VTRxScan.png){width=400}
+![VTRx+ Light Yield diagram](images/vtrxscan/VTRxScan.png){width=400}
+
+The quality of the plot is also reported in the output terminal (<t style="color: green">GOOD</t>, <t style="color: red">BAD</t>)
+![Terminal output after VTRx+ scan](images/vtrxscan/TerminalOutput.png){width=800}

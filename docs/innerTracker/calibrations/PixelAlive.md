@@ -1,5 +1,4 @@
 # PixelAlive
-<sub><sup>Last updated: 13.12.2024</sup></sub>
 
 ## Purpose
 
@@ -37,8 +36,8 @@ The PixelAlive calibration may also try to get the unresponsive pixels "unstuck"
 |`DoDataIntegrity`|0            |Whether to perform the data integrity test before measurement|
 |`UnstuckPixels`  |0            |Whether the scan should try to unstuck the pixels|
 |`UpdateChipCfg`  |1            |Whether to update the chip configuration txt files after the scan|
-|`"EnLv1Id`       |0            |Whether to enable level 1 trigger ID counting|
-|`"EnBCID`        |0            |Whether to enable Bunch-crossing ID counting|
+|`EnLv1Id`        |0            |Whether to enable level 1 trigger ID counting|
+|`EnBCID`         |0            |Whether to enable Bunch-crossing ID counting|
 
 ## Expected Output
 

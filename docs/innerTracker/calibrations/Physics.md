@@ -1,5 +1,4 @@
 # Physics
-<sub><sup>Last updated: 13.12.2024</sup></sub>
 
 ## Purpose
 
@@ -17,7 +16,7 @@ From the collected data, the Physics scan produces occupancy and ToT histograms.
 
 ## Typical output
 
-Below we proviee an example of the histograms produced by the Physics scan using a radioactive source placed on top of an SCC with HitOR self-trigger enabled.
+Below we proviee an example of the histograms produced by the Physics scan using a radioactive source placed on top of an SCC with HitOr self-trigger enabled.
 
 ### Occupancy
 
@@ -51,31 +50,37 @@ Table below contains the most general relevant parameters for the Physics scan t
 
 There are other relevant parameters that depend on the setup and the type of measurement. Two important examples are given in corresponding tables below.
 
-### HitOR self-trigger
+### HitOr self-trigger
 
-Table below contains the relevant parameters for the Physics scan **using HitOR self-trigger functionality**.
+You can read more about running with self-trigger [here](../SelfTrigger.md).
 
-|Name                |Typical value|Description|
-|--------------------|-------------|-----------|
-|`SelfTriggerEn`     |1            |Whether to enable the self-trigger|
-|`SelfTriggerDelay`  |30           |Delay applied to the HitOR pulse (in bunch crossings)|
-|`TriggerConfig`     |42           |Trigger latency (in bunch crossings), should be $\approx$`SelfTriggerDelay`+12|
-|`EnOutputDataChipId`|SCC$\rightarrow$0, Module$\rightarrow$1|Whether to output the chip ID number in the Aurora 64-bit block|
-|`HitOrPatternLUT`   |0xFFFE       |Each bit represents a unique combination of the four HitOR lanes, 0xFFFE = OR of all combinations|
-|`HIT_SAMPLE_MODE`   |0            |0 – asynchronous, 1 – synchronous sampling mode|
-|`HITOR_MASK_0`      |0            |16-bit number to **disable** core columns 15:0|
-|`HITOR_MASK_1`      |0            |16-bit number to **disable** core columns 31:16|
-|`HITOR_MASK_2`      |0            |16-bit number to **disable** core columns 47:32|
-|`HITOR_MASK_3`      |0            |6-bit number to **disable** core columns 53:48|
-|`trigger_source`    |2            |Choosing the trigger source (2 – an OR of self-trigger and FSM)|
-|`tp_fsm_trigger_en` |0            |Enable (1) or disable (0) triggering from FSM (in `fast_cmd_reg_2`)|
-|`self_trigger_en`   |1            |Whether to enable the self-trigger (in `Aurora_block`)|
+Table below contains the relevant parameters for the Physics scan **using HitOr self-trigger functionality**.
 
-### External HitOR trigger (from FMC)
+|Name                    |Typical value|Description|
+|------------------------|-------------|-----------|
+|`SelfTriggerEn`         | 1           |Whether to enable the self-trigger|
+|`SelfTriggerDelay`      | 30          |Delay applied to the HitOr pulse (in bunch crossings)|
+|`SelfTriggerMultiplier` | 10          |Similar to `nTRIGxEvent`, a number of triggers sent for each HitOr|
+|`SelfTriggerDeadTime`   | 0           |How many bunch crossings to wait after triggering before accepting new HitOr triggers|
+|`TriggerConfig`         | 42          |Trigger latency (in bunch crossings), should be $\approx$`SelfTriggerDelay`+12|
+|`EnOutputDataChipId`    | SCC$\rightarrow$0, Module$\rightarrow$1|Whether to output the chip ID number in the Aurora 64-bit block|
+|`HitOrPatternLUT`       | 0xFFFE      |Each bit represents a unique combination of the four HitOr lanes, 0xFFFE = OR of all combinations|
+|`HIT_SAMPLE_MODE`       | 0           |0 – asynchronous, 1 – synchronous sampling mode|
+|`HITOR_MASK_0`          | 0           |16-bit number to **disable** core columns 15:0|
+|`HITOR_MASK_1`          | 0           |16-bit number to **disable** core columns 31:16|
+|`HITOR_MASK_2`          | 0           |16-bit number to **disable** core columns 47:32|
+|`HITOR_MASK_3`          | 0           |6-bit number to **disable** core columns 53:48|
+|`trigger_source`        | 2           |Choosing the trigger source (2 – an OR of self-trigger and FSM)|
+|`tp_fsm_trigger_en`     | 0           |Enable (1) or disable (0) triggering from FSM (in `fast_cmd_reg_2`)|
+|`self_trigger_en`       | 1           |Whether to enable the self-trigger (in `Aurora_block`)|
+
+### External HitOr trigger (from FMC)
 
 !!! warning This mode works only on Single-Chip Cards (SCCs).
 
-Table below contains the relevant parameters for the Physics scan **using external HitOR trigger**. 
+You can read more about running with external HitOr [here](../ExternalTriggers.md#triggering-on-the-croc-HitOr).
+
+Table below contains the relevant parameters for the Physics scan **using external HitOr trigger**. 
 
 |Name                |Typical value|Description|
 |--------------------|-------------|-----------|
@@ -84,38 +89,11 @@ Table below contains the relevant parameters for the Physics scan **using extern
 |`GP_LVDS_ROUTE_0`   |1821         |Information to direct through GP LVDS lanes 1:0|
 |`GP_LVDS_ROUTE_1`   |1951         |Information to direct through GP LVDS lanes 3:2|
 |`EnOutputDataChipId`|1            |Whether to output the chip ID number in the Aurora 64-bit block|
-|`HitOrPatternLUT`   |0xFFFE       |Each bit represents a unique combination of the four HitOR lanes, 0xFFFE = OR of all combinations|
+|`HitOrPatternLUT`   |0xFFFE       |Each bit represents a unique combination of the four HitOr lanes, 0xFFFE = OR of all combinations|
 |`HIT_SAMPLE_MODE`   |0            |0 – asynchronous, 1 – synchronous sampling mode|
 |`HITOR_MASK_0`      |0            |16-bit number to **disable** core columns 15:0|
 |`HITOR_MASK_1`      |0            |16-bit number to **disable** core columns 31:16|
 |`HITOR_MASK_2`      |0            |16-bit number to **disable** core columns 47:32|
 |`HITOR_MASK_3`      |0            |6-bit number to **disable** core columns 53:48|
-|`trigger_source`    |6            |Choosing the trigger source (6 – HitOR)|
-|`HitOr_enable_l12`  |0            |Set the miniDP slot used for HitOR (0b0001 = leftmost slot)|
-
-An external HitOR trigger can be used by connecting a second DisplayPort-to-Mini-DisplayPort (DP-miniDP) cable to the DP2 slot on the SCC and a bottom row of the miniDP slots on the FMC, as shown in the pictures below (the HitOR cable is shown in orange). The number of the miniDP slot in use must be correctly set in `HitOr_enable_l12` – 0b0001 enables the leftmost slot, 0b0010 enables the second from the left, and so on.
-
-![HitOR Cable SCC](images/physics/HitOR_SCC_colored.jpg){width=350}![HitOR Cable FMC](images/physics/HitOR_FMC_colored.jpg){width=350}
-
-There are 4 general-purpose LVDS lanes through which the HitOR data can be sent. The HitOR information is itself transferred in 4 lanes. To direct the information from the 4 HitOR lanes into the 4 LVDS lanes, one can set `GP_LVDS_ROUTE_0` = 1821 and `GP_LVDS_ROUTE_1` = 1951. However, other numeric combinations also allow the HitOR information to be sent through the LVDS lanes.
-
-`GP_LVDS_ROUTE_0` is a stack of two 6-bit numbers: `GP_LVDS(1)` and `GP_LVDS(0)`. Similarly, `GP_LVDS_ROUTE_1` consists of `GP_LVDS(3)` and `GP_LVDS(2)`. Each of the four `GP_LVDS(*)` (where `*` is `0`, `1`, `2`, or `3`) registers can take a value from 0 to 63 to select a signal source for each LVDS output lane. Numbers 28..31 correspond to HitOR lanes 3..0, and 32 corresponds to a HitOR combination from self-trigger. Thus, one can direct each HitOR lane separately to a different general-purpose LVDS output lane or send the combined value through a single lane.
-
-If we want to send the HitOR lane no. 3 to `GP_LVDS(1)` and HitOR lane no. 2 to `GP_LVDS(0)`, we need to combine the two 6-bit numbers corresponding to 28 and 29 into a single 12-bit number. 28 in binary is `0b011100`, and 29 is `0b011101`. Combining them is `0b011100011101`, which is 1821 in decimal. Similarly, combining 30 (`0b011110`, corresponds to HitOR lane no. 1) and 31 (`0b011111`, corresponds to HitOR lane no. 0) gives 1951 (`0b011110011111`).
-
-Another simple way to find the correct number to enter into `GP_LVDS_ROUTE_*` (where `*` is `0` or `1`) would be multiplying the first number by 64 ($2^6$) and adding the second number: 28$\times$64+29=1821, 30$\times$64+31=1951. The default value for `GP_LVDS_ROUTE_*` in Ph2_ACF is 1495, or a number 23 repeated twice. As explained in the [CROC manual](https://cds.cern.ch/record/2665301), this mode corresponds to "Goes low when low power mode is enabled". This number should be used in case some of the HitOR lanes are not intended to be used or if one decides to use the combination of all HitOR lanes (32) in a single LVDS lane. In that case, one can set, e.g., `GP_LVDS_ROUTE_0`=1504 (23$\times$64+32) and `GP_LVDS_ROUTE_1`=1495 (23$\times$64+23).
-
-A summary of this is given in the tables below.
-
-|Selected signal  |`GP_LVDS(*)` value|
-|-----------------|------------------|
-|HitOR [0]        |31                |
-|HitOR [1]        |30                |
-|HitOR [2]        |29                |
-|HitOR [3]        |28                |
-|HitOR combination|32                |
-
-|Register name    |Explanation                        | |
-|-----------------|-----------------------------------|-|
-|`GP_LVDS_ROUTE_0`|64$\times$`GP_LVDS(1)`+`GP_LVDS(0)`|![LVDS ROUTE 0](images/physics/LVDS_ROUTE_0.png){width=150}|
-|`GP_LVDS_ROUTE_1`|64$\times$`GP_LVDS(3)`+`GP_LVDS(2)`|![LVDS ROUTE 1](images/physics/LVDS_ROUTE_1.png){width=150}|
+|`trigger_source`    |6            |Choosing the trigger source (6 – HitOr)|
+|`HitOr_enable_l12`  |0            |Set the miniDP slot used for HitOr (0b0001 = leftmost slot)|

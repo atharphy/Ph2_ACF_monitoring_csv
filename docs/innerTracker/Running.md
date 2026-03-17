@@ -61,9 +61,10 @@ The run time for this scan as defined in the `<Settings>` section can be overrid
 ```
 More details can be found in the [Physics Scan](calibrations/Physics.md) page.
 
-## EUDAQ mode
+### EUDAQ mode
 
-!!! info "TODO: description"
+This is a special mode to be run in test beams together with external equipment.
+You can read more about it in the [EUDAQ Mode](calibrations/Eudaq.md) page.
 
 ```
 --eudaqRunCtr <value>
@@ -77,8 +78,14 @@ More details can be found in the [Physics Scan](calibrations/Physics.md) page.
 
 ```
 -b <value>, --binary <value>
-    Binary file to decode
+```
 
+The `-b` option allows to read and decode a binary data file (see also `SaveBinaryData` in [XML file](ConfigFile.md)).
+It can be used, but it’s not necessary, in association to [`physics` calibration](calibrations/Physics.md) (option `-c`).
+Moreover, it saves all the information in a ROOT ntuple.  
+  
+
+```
 --capture <value>
     Capture communication with board (extension .bin)
 

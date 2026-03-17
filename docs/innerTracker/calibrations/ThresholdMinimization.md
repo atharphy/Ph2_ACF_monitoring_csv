@@ -1,5 +1,4 @@
 # Threshold Minimization
-<sub><sup>Last updated: 16.12.2024</sup></sub>
 
 ## Purpose
 

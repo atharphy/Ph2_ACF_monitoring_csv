@@ -23,15 +23,21 @@ Find below a list of documented scans and calibrations.
 ## Other
 
 - [BER test](BERTest.md)
-- [Generic DAC-DAC scan](GenericDacDac.md)
-- [Physics](Physics.md)
 - [Data read-back optimisation](DataReadBackOptimisation.md)
 - [LpGBT Eye Diagram Scan](LpGBTeye.md)
 - [VTRx+ Light Yield Scan](VTRxScan.md)
+- [Generic DAC-DAC scan](GenericDacDac.md)
+- [Physics](Physics.md)
+- [EUDAQ mode](Eudaq.md)
 
 ## Additional information/HOWTOs
 
-- [Module Testing](../ModuleTesting.md)
-- [SCC Tuning](../SCCTuning.md)
-- [X-talk Studies](XTalk.md)
 - [Explanation of some IT-related terms](TermExplanations.md)
+- [Config file](../ConfigFile.md)
+- [SCC Tuning](../SCCTuning.md)
+- [Module Testing](../ModuleTesting.md)
+- [X-talk Studies](XTalk.md)
+- [Optical Readout](../OpticalReadout.md)
+- [Self-trigger](../SelfTrigger.md)
+- [External trigger/clock](../ExternalTriggers.md)
+- [Metadata](../Metadata.md)

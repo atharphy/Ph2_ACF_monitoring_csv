@@ -1,5 +1,8 @@
 # FC7 setup
 
+This section explains how to establish communication between the FC7 and your PC.
+For the FC7 firmware setup, please refer to the [`fpgaconfig` section](FPGAcfg.md).
+
 1. Install `wireshark` in order to figure out which is the MAC address of your FC7 board (`sudo yum install wireshark`, then run `sudo tshark -i ethernet_card`, where `ethernet_card` is the name of the ethernet card of your PC to which the FC7 is connected to)
 2. In `/etc/ethers` put `mac_address fc7-1` and in `/etc/hosts` put `192.168.1.80 fc7-1` (increase these numbers for additional FC7 boards)
 3. Restart the network

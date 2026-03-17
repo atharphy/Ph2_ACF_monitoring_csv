@@ -1,5 +1,4 @@
 # Gain Optimization
-<sub><sup>Last updated: 16.12.2024</sup></sub>
 
 ## Purpose
 
@@ -31,7 +30,7 @@ Gain Optimization is derived from [Gain Scan](GainScan.md). It works by repeatin
 |`VCalnsteps`    |20           |Number of points to test between VCalHStart and VCalHStop|
 |`KrumCurrStart` |0            |The lowest `DAC_KRUM_CURR_LIN` register value for the scan|
 |`KrumCurrStop`  |127          |The highest `DAC_KRUM_CURR_LIN` register value for the scan|
-|`targetCharge`  |20000        |Charge (in electrons) at which the average [ToT](TermExplanations.md#time-over-threshold-tot) is 4 std. devs. below 14|
+|`targetCharge`  |10000        |Charge (in electrons) at which the average [ToT](TermExplanations.md#time-over-threshold-tot) is 4 std. devs. below 14|
 
 ## Expected Output
 

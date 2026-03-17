@@ -1,5 +1,4 @@
 # Injection delay scan
-<sub><sup>Last updated: 16.12.2024</sup></sub>
 
 ## Purpose
 
@@ -18,14 +17,11 @@ The optimal injection delay value should be entered into the XML file by hand, b
 * Analog (or digital) injection
 * **RD53A:** Only Linear FE / Fully configurable from config file
 
-!!! warning "You have to update the config manually in the xml file"
+!!! note "You have to update the config manually in the xml file"
 	* Latency:
         * RD53B: `TriggerConfig`
         * RD53A: `LATENCY_CONFIG`
     * Injection delay: `CAL_EDGE_FINE_DELAY`
-
-!!! note "Update of .txt files"
-    In `v4-13` and older versions of `Ph2_ACF`, the received optimal values from this scan are not yet written into the .txt file describing the ROC configurations. This for instance also prevents `dirigent` from being able to update these values to the .xml file. This should be fixed in newer versions
 
 ## Configuration parameters
 
