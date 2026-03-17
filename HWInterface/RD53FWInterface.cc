@@ -1462,7 +1462,7 @@ void RD53FWInterface::InitializeClockGenerator(uint32_t refClockRate, bool useIn
 // ############################
 {
     const uint32_t writeSPI(0x8FA38014);    // Write to SPI @CONST@
-    const uint32_t writeEEPROM(0x8FA38014); // Write to EEPROM @CONST@
+    const uint32_t writeEEPROM(0x0000001F); // Write to EEPROM @CONST@
     uint32_t       SPIregSettings[] = {
         0xEB020320, // OUT0 --> This clock is not used, but it can be used as another GBT clock (160 MHz, LVDS, phase shift 0 deg)
         0xEB020321, // OUT1 --> GBT clock reference: 160 MHz, LVDS, phase shift 0 deg (0xEB820321: 320 MHz, LVDS, phase shift 0 deg)
