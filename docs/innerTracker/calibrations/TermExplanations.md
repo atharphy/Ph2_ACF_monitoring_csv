@@ -1,5 +1,4 @@
 # Term Explanations
-<sub><sup>Last updated: 06.12.2024</sup></sub>
 
 ## Pixel Occupancy
 

@@ -1,5 +1,4 @@
 # Scurve - Threshold scan
-<sub><sup>Last updated: 13.12.2024</sup></sub>
 
 ## Purpose
 
@@ -26,7 +25,7 @@ The S-Curve scan works by injecting a charge into each pixel `nEvents` times and
 |`nTRIGxEvent`   |10           |Number of triggers for each injection|
 |`INJtype`       |1            |Injection type, 1 – analog|
 |`VCalHStart`    |100          |The minimum [`VCAL_HIGH`](TermExplanations.md#calibration-voltage-vcal) value for the scan|
-|`VCalHStop`     |1000         |The maximum [`VCAL_HIGH`](TermExplanations.md#calibration-voltage-vcal) value for the scan|
+|`VCalHStop`     |600          |The maximum [`VCAL_HIGH`](TermExplanations.md#calibration-voltage-vcal) value for the scan|
 |`VCalHnsteps`   |50           |Number of steps for the scan|
 |`DoOnlyNGroups` |0            |How many subsets of pixels (432 pixels per subset) to use (0 for all pixels)|
 
