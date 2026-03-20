@@ -399,8 +399,6 @@ void DQMHistogramOTTimeCorrelation::fillMPAData(const OTTimeCorrelationPixelData
         fStopwatch_MPA_MinHits.Stop();
     }
     else { LOG(WARNING) << "No histograms found for suffix: " << suffix; }
-
-
 }
 
 void DQMHistogramOTTimeCorrelation::fill2DhistSlices(const OTTimeCorrelationStripData& sData, const OTTimeCorrelationPixelData& pData, uint32_t trgBurst, uint32_t trgDel, std::string suffix)
@@ -426,15 +424,11 @@ void DQMHistogramOTTimeCorrelation::fill2DhistSlices(const OTTimeCorrelationStri
                     if(!theHistogram) continue;
 
                     theHistogram->SetTitle(Form("FW TS Slice %d Board %d OG %d, tBurst %d, tDel %d", timeIdx, board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-                    for(const auto& hit: lastFW3D.slices[timeIdx])
-                    {
-                        theHistogram->Fill(hit.first, hit.second);
-                    }
+                    for(const auto& hit: lastFW3D.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second); }
                 }
             }
         }
 
-        
         for(int timeIdx = 0; timeIdx < (int)lastBW3D.slices.size(); ++timeIdx)
         {
             if(timeIdx >= (int)bwSlicesVec.size()) break;
@@ -446,15 +440,12 @@ void DQMHistogramOTTimeCorrelation::fill2DhistSlices(const OTTimeCorrelationStri
                     if(!theHistogram) continue;
 
                     theHistogram->SetTitle(Form("BW TS Slice %d Board %d OG %d, tBurst %d, tDel %d", timeIdx, board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-                    for(const auto& hit: lastBW3D.slices[timeIdx])
-                    {
-                        theHistogram->Fill(hit.first, hit.second);
-                    }
+                    for(const auto& hit: lastBW3D.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second); }
                 }
             }
         }
         fStopwatch_SSA_Slices.Stop();
-    }    
+    }
     else { LOG(WARNING) << "No histograms found for suffix: " << suffix; }
     // 2D Slices (Pixel)
     if(fTSCorrSliceFWMPAMap.count(suffix) && fTSCorrSliceBWMPAMap.count(suffix))
@@ -466,7 +457,6 @@ void DQMHistogramOTTimeCorrelation::fill2DhistSlices(const OTTimeCorrelationStri
         auto& lastFWPixel3D = OTTimeCorrelationPixelData::getLastFW3DCorrelation();
         auto& lastBWPixel3D = OTTimeCorrelationPixelData::getLastBW3DCorrelation();
 
-        
         for(int timeIdx = 0; timeIdx < (int)lastFWPixel3D.slices.size(); ++timeIdx)
         {
             if(timeIdx >= (int)fwSlicesVec.size()) break;
@@ -478,10 +468,7 @@ void DQMHistogramOTTimeCorrelation::fill2DhistSlices(const OTTimeCorrelationStri
                     if(!theHistogram) continue;
 
                     theHistogram->SetTitle(Form("MPA FW TS Slice %d Board %d OG %d, tBurst %d, tDel %d", timeIdx, board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-                    for(const auto& hit: lastFWPixel3D.slices[timeIdx])
-                    {
-                        theHistogram->Fill(hit.first, hit.second);
-                    }
+                    for(const auto& hit: lastFWPixel3D.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second); }
                 }
             }
         }
@@ -497,10 +484,7 @@ void DQMHistogramOTTimeCorrelation::fill2DhistSlices(const OTTimeCorrelationStri
                     if(!theHistogram) continue;
 
                     theHistogram->SetTitle(Form("MPA BW TS Slice %d Board %d OG %d, tBurst %d, tDel %d", timeIdx, board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-                    for(const auto& hit: lastBWPixel3D.slices[timeIdx])
-                    {
-                        theHistogram->Fill(hit.first, hit.second);
-                    }
+                    for(const auto& hit: lastBWPixel3D.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second); }
                 }
             }
         }
@@ -516,7 +500,7 @@ void DQMHistogramOTTimeCorrelation::fill3Dhistograms(const OTTimeCorrelationStri
     else
     {
         fStopwatch_SSA_3D.Start(false);
-        
+
         for(auto board: f3DTSFWCorrSSAHistogramsMap.at(suffix))
         {
             for(auto opticalGroup: *board)
@@ -526,10 +510,7 @@ void DQMHistogramOTTimeCorrelation::fill3Dhistograms(const OTTimeCorrelationStri
                 auto& last3DFW = OTTimeCorrelationStripData::getLastFW3DCorrelation();
                 for(size_t timeIdx = 0; timeIdx < last3DFW.slices.size(); ++timeIdx)
                 {
-                    for(const auto& hit : last3DFW.slices[timeIdx])
-                    {
-                        theHistogram->Fill(hit.first, hit.second, timeIdx);
-                    }
+                    for(const auto& hit: last3DFW.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second, timeIdx); }
                 }
             }
         }
@@ -543,10 +524,7 @@ void DQMHistogramOTTimeCorrelation::fill3Dhistograms(const OTTimeCorrelationStri
                 auto& last3DBW = OTTimeCorrelationStripData::getLastBW3DCorrelation();
                 for(size_t timeIdx = 0; timeIdx < last3DBW.slices.size(); ++timeIdx)
                 {
-                    for(const auto& hit : last3DBW.slices[timeIdx])
-                    {
-                        theHistogram->Fill(hit.first, hit.second, timeIdx);
-                    }
+                    for(const auto& hit: last3DBW.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second, timeIdx); }
                 }
             }
         }
@@ -558,7 +536,7 @@ void DQMHistogramOTTimeCorrelation::fill3Dhistograms(const OTTimeCorrelationStri
     else
     {
         fStopwatch_MPA_3D.Start(false);
-        
+
         for(auto board: f3DTSFWCorrMPAHistogramsMap.at(suffix))
         {
             for(auto opticalGroup: *board)
@@ -568,10 +546,7 @@ void DQMHistogramOTTimeCorrelation::fill3Dhistograms(const OTTimeCorrelationStri
                 auto& last3DFW = OTTimeCorrelationPixelData::getLastFW3DCorrelation();
                 for(size_t timeIdx = 0; timeIdx < last3DFW.slices.size(); ++timeIdx)
                 {
-                    for(const auto& hit : last3DFW.slices[timeIdx])
-                    {
-                        theHistogram->Fill(hit.first, hit.second, timeIdx);
-                    }
+                    for(const auto& hit: last3DFW.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second, timeIdx); }
                 }
             }
         }
@@ -585,10 +560,7 @@ void DQMHistogramOTTimeCorrelation::fill3Dhistograms(const OTTimeCorrelationStri
                 auto& last3DBW = OTTimeCorrelationPixelData::getLastBW3DCorrelation();
                 for(size_t timeIdx = 0; timeIdx < last3DBW.slices.size(); ++timeIdx)
                 {
-                    for(const auto& hit : last3DBW.slices[timeIdx])
-                    {
-                        theHistogram->Fill(hit.first, hit.second, timeIdx);
-                    }
+                    for(const auto& hit: last3DBW.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second, timeIdx); }
                 }
             }
         }
@@ -599,35 +571,35 @@ void DQMHistogramOTTimeCorrelation::fill3Dhistograms(const OTTimeCorrelationStri
 void DQMHistogramOTTimeCorrelation::reportTimingStats()
 {
     // Store all timing values first (before any resets)
-    double ssa_sameev_real = fStopwatch_SSA_SameEv.RealTime();
-    double ssa_sameev_cpu = fStopwatch_SSA_SameEv.CpuTime();
-    double ssa_fwtc_real = fStopwatch_SSA_FWTC.RealTime();
-    double ssa_fwtc_cpu = fStopwatch_SSA_FWTC.CpuTime();
-    double ssa_bwtc_real = fStopwatch_SSA_BWTC.RealTime();
-    double ssa_bwtc_cpu = fStopwatch_SSA_BWTC.CpuTime();
+    double ssa_sameev_real  = fStopwatch_SSA_SameEv.RealTime();
+    double ssa_sameev_cpu   = fStopwatch_SSA_SameEv.CpuTime();
+    double ssa_fwtc_real    = fStopwatch_SSA_FWTC.RealTime();
+    double ssa_fwtc_cpu     = fStopwatch_SSA_FWTC.CpuTime();
+    double ssa_bwtc_real    = fStopwatch_SSA_BWTC.RealTime();
+    double ssa_bwtc_cpu     = fStopwatch_SSA_BWTC.CpuTime();
     double ssa_minhits_real = fStopwatch_SSA_MinHits.RealTime();
-    double ssa_minhits_cpu = fStopwatch_SSA_MinHits.CpuTime();
-    double ssa_3d_real = fStopwatch_SSA_3D.RealTime();
-    double ssa_3d_cpu = fStopwatch_SSA_3D.CpuTime();
-    double ssa_slices_real = fStopwatch_SSA_Slices.RealTime();
-    double ssa_slices_cpu = fStopwatch_SSA_Slices.CpuTime();
+    double ssa_minhits_cpu  = fStopwatch_SSA_MinHits.CpuTime();
+    double ssa_3d_real      = fStopwatch_SSA_3D.RealTime();
+    double ssa_3d_cpu       = fStopwatch_SSA_3D.CpuTime();
+    double ssa_slices_real  = fStopwatch_SSA_Slices.RealTime();
+    double ssa_slices_cpu   = fStopwatch_SSA_Slices.CpuTime();
 
-    double mpa_sameev_real = fStopwatch_MPA_SameEv.RealTime();
-    double mpa_sameev_cpu = fStopwatch_MPA_SameEv.CpuTime();
-    double mpa_fwtc_real = fStopwatch_MPA_FWTC.RealTime();
-    double mpa_fwtc_cpu = fStopwatch_MPA_FWTC.CpuTime();
-    double mpa_bwtc_real = fStopwatch_MPA_BWTC.RealTime();
-    double mpa_bwtc_cpu = fStopwatch_MPA_BWTC.CpuTime();
+    double mpa_sameev_real  = fStopwatch_MPA_SameEv.RealTime();
+    double mpa_sameev_cpu   = fStopwatch_MPA_SameEv.CpuTime();
+    double mpa_fwtc_real    = fStopwatch_MPA_FWTC.RealTime();
+    double mpa_fwtc_cpu     = fStopwatch_MPA_FWTC.CpuTime();
+    double mpa_bwtc_real    = fStopwatch_MPA_BWTC.RealTime();
+    double mpa_bwtc_cpu     = fStopwatch_MPA_BWTC.CpuTime();
     double mpa_minhits_real = fStopwatch_MPA_MinHits.RealTime();
-    double mpa_minhits_cpu = fStopwatch_MPA_MinHits.CpuTime();
-    double mpa_3d_real = fStopwatch_MPA_3D.RealTime();
-    double mpa_3d_cpu = fStopwatch_MPA_3D.CpuTime();
-    double mpa_slices_real = fStopwatch_MPA_Slices.RealTime();
-    double mpa_slices_cpu = fStopwatch_MPA_Slices.CpuTime();
+    double mpa_minhits_cpu  = fStopwatch_MPA_MinHits.CpuTime();
+    double mpa_3d_real      = fStopwatch_MPA_3D.RealTime();
+    double mpa_3d_cpu       = fStopwatch_MPA_3D.CpuTime();
+    double mpa_slices_real  = fStopwatch_MPA_Slices.RealTime();
+    double mpa_slices_cpu   = fStopwatch_MPA_Slices.CpuTime();
 
     // Calculate and log totals
-    double ssa_total_real = ssa_sameev_real + ssa_fwtc_real + ssa_bwtc_real + ssa_minhits_real + ssa_3d_real + ssa_slices_real;
-    double mpa_total_real = mpa_sameev_real + mpa_fwtc_real + mpa_bwtc_real + mpa_minhits_real + mpa_3d_real + mpa_slices_real;
+    double ssa_total_real   = ssa_sameev_real + ssa_fwtc_real + ssa_bwtc_real + ssa_minhits_real + ssa_3d_real + ssa_slices_real;
+    double mpa_total_real   = mpa_sameev_real + mpa_fwtc_real + mpa_bwtc_real + mpa_minhits_real + mpa_3d_real + mpa_slices_real;
     double grand_total_real = ssa_total_real + mpa_total_real;
 
     OTTimeCorrelationStripData::reportComputationTimingStats("Strip Data");
@@ -635,7 +607,7 @@ void DQMHistogramOTTimeCorrelation::reportTimingStats()
 
     // Log header
     LOG(INFO) << "=== Histogram Filling Timing Statistics ===";
-    
+
     // Log SSA timings
     LOG(INFO) << "SSA Same Event Correlation: \t" << ssa_sameev_real << " s (CPU: " << ssa_sameev_cpu << " s)";
     LOG(INFO) << "SSA Forward Time Correlation:\t" << ssa_fwtc_real << " s (CPU: " << ssa_fwtc_cpu << " s)";
@@ -643,7 +615,7 @@ void DQMHistogramOTTimeCorrelation::reportTimingStats()
     LOG(INFO) << "SSA Min Hits Histograms:     \t" << ssa_minhits_real << " s (CPU: " << ssa_minhits_cpu << " s)";
     LOG(INFO) << "SSA 3D Histograms:           \t" << ssa_3d_real << " s (CPU: " << ssa_3d_cpu << " s)";
     LOG(INFO) << "SSA 2D Slice Histograms:     \t" << ssa_slices_real << " s (CPU: " << ssa_slices_cpu << " s)";
-    
+
     // Log MPA timings
     LOG(INFO) << "MPA Same Event Correlation:  \t" << mpa_sameev_real << " s (CPU: " << mpa_sameev_cpu << " s)";
     LOG(INFO) << "MPA Forward Time Correlation:\t" << mpa_fwtc_real << " s (CPU: " << mpa_fwtc_cpu << " s)";
@@ -651,7 +623,7 @@ void DQMHistogramOTTimeCorrelation::reportTimingStats()
     LOG(INFO) << "MPA Min Hits Histograms:     \t" << mpa_minhits_real << " s (CPU: " << mpa_minhits_cpu << " s)";
     LOG(INFO) << "MPA 3D Histograms:           \t" << mpa_3d_real << " s (CPU: " << mpa_3d_cpu << " s)";
     LOG(INFO) << "MPA 2D Slice Histograms:     \t" << mpa_slices_real << " s (CPU: " << mpa_slices_cpu << " s)";
-    
+
     // Log separator and totals
     LOG(INFO) << "----------------------------------------";
     LOG(INFO) << "Total SSA Histogram Filling: \t" << ssa_total_real << " s";

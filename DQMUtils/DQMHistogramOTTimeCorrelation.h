@@ -36,13 +36,15 @@ struct TS3DCorrelationResult
     // time index, pair ic channels hit
     std::vector<std::vector<std::pair<int, int>>> slices;
 
-    void allocate(size_t depth) {
+    void allocate(size_t depth)
+    {
         slices.assign(depth, {});
-        for(auto& v : slices) v.reserve(2000); 
+        for(auto& v: slices) v.reserve(2000);
     }
 
-    void clear() {
-        for(auto& v : slices) v.clear();
+    void clear()
+    {
+        for(auto& v: slices) v.clear();
     }
 };
 
@@ -160,7 +162,7 @@ class OTTimeCorrelationDataBase : public OTTimeCorrelationConfig
         LOG(INFO) << "Same TCorr Comp:  \t" << fStopwatch_SameTCorr.RealTime() << " s (CPU: " << fStopwatch_SameTCorr.CpuTime() << " s)";
         LOG(INFO) << "MinHits Comp:     \t" << fStopwatch_MinHits.RealTime() << " s (CPU: " << fStopwatch_MinHits.CpuTime() << " s)";
         LOG(INFO) << "3D Corr Comp:     \t" << fStopwatch_3DCorr.RealTime() << " s (CPU: " << fStopwatch_3DCorr.CpuTime() << " s)";
-        
+
         double total = fStopwatch_Update.RealTime() + fStopwatch_SameTCorr.RealTime() + fStopwatch_MinHits.RealTime() + fStopwatch_3DCorr.RealTime();
         LOG(INFO) << "Total " << typeName << " Computation: \t" << total << " s";
         LOG(INFO) << "===========================================";
@@ -222,12 +224,16 @@ class OTTimeCorrelationDataBase : public OTTimeCorrelationConfig
 
         getLastFW3DCorrelation().allocate(nSlices());
         getLastBW3DCorrelation().allocate(nSlices());
-        
+
         // Ensure stopwatches are reset to avoid accumulating time since construction
-        fStopwatch_Update.Stop(); fStopwatch_Update.Reset();
-        fStopwatch_SameTCorr.Stop(); fStopwatch_SameTCorr.Reset();
-        fStopwatch_MinHits.Stop(); fStopwatch_MinHits.Reset();
-        fStopwatch_3DCorr.Stop(); fStopwatch_3DCorr.Reset();
+        fStopwatch_Update.Stop();
+        fStopwatch_Update.Reset();
+        fStopwatch_SameTCorr.Stop();
+        fStopwatch_SameTCorr.Reset();
+        fStopwatch_MinHits.Stop();
+        fStopwatch_MinHits.Reset();
+        fStopwatch_3DCorr.Stop();
+        fStopwatch_3DCorr.Reset();
     }
 
     static void update()
@@ -258,7 +264,11 @@ class OTTimeCorrelationDataBase : public OTTimeCorrelationConfig
         auto&        mem = getMemory();
         const size_t S   = mem.size();
 
-        if(S < getN()) { fStopwatch_SameTCorr.Stop(); return; } // if deque not full, return
+        if(S < getN())
+        {
+            fStopwatch_SameTCorr.Stop();
+            return;
+        } // if deque not full, return
 
         auto& lastFWCorr = getLastFWCorrelation();
         auto& lastBWCorr = getLastBWCorrelation();
@@ -309,7 +319,11 @@ class OTTimeCorrelationDataBase : public OTTimeCorrelationConfig
         lastFWHists.clear();
         lastBWHists.clear();
 
-        if(S < getN()) { fStopwatch_MinHits.Stop(); return; }
+        if(S < getN())
+        {
+            fStopwatch_MinHits.Stop();
+            return;
+        }
         // Forward: require first event has enough hits
         if(mem[0].size() > getMinHits())
         {
@@ -327,12 +341,16 @@ class OTTimeCorrelationDataBase : public OTTimeCorrelationConfig
     static void compute_3D_corr()
     {
         fStopwatch_3DCorr.Start(false);
-        auto&        mem          = getMemory();
-        const size_t S            = mem.size();
-        if(S < getN()) { fStopwatch_3DCorr.Stop(); return; }
-        size_t       depth3D      = std::min<size_t>(9, S);
-        auto&        lastFW3DCorr = getLastFW3DCorrelation();
-        auto&        lastBW3DCorr = getLastBW3DCorrelation();
+        auto&        mem = getMemory();
+        const size_t S   = mem.size();
+        if(S < getN())
+        {
+            fStopwatch_3DCorr.Stop();
+            return;
+        }
+        size_t depth3D      = std::min<size_t>(9, S);
+        auto&  lastFW3DCorr = getLastFW3DCorrelation();
+        auto&  lastBW3DCorr = getLastBW3DCorrelation();
         lastFW3DCorr.clear();
         lastBW3DCorr.clear();
 
@@ -348,18 +366,12 @@ class OTTimeCorrelationDataBase : public OTTimeCorrelationConfig
         for(size_t idx = 0; idx < depth3D; ++idx)
         {
             const auto& currEvent = mem[idx];
-            int rev_idx = (int)((depth3D - 1) - idx);
+            int         rev_idx   = (int)((depth3D - 1) - idx);
             for(int cy: currEvent)
-            {            
-                for(int cx: firstEvent)
-                {
-                    lastFW3DCorr.slices[idx].push_back({cx, cy});
-                }
+            {
+                for(int cx: firstEvent) { lastFW3DCorr.slices[idx].push_back({cx, cy}); }
 
-                for(int cx: lastEvent)
-                {
-                    lastBW3DCorr.slices[rev_idx].push_back({cx, cy});
-                }
+                for(int cx: lastEvent) { lastBW3DCorr.slices[rev_idx].push_back({cx, cy}); }
             }
         }
         fStopwatch_3DCorr.Stop();
@@ -448,8 +460,8 @@ class DQMHistogramOTTimeCorrelation : public DQMHistogramBase
     std::map<std::string, std::vector<DetectorDataContainer>> fTSCorrSliceFWSSAMap;              // 2D slice histograms for each z-bin
     std::map<std::string, std::vector<DetectorDataContainer>> fTSCorrSliceBWSSAMap;              // backward 2D slice histograms for each z-bin
     std::map<std::string, DetectorDataContainer>              fStripModuleHitHistograms;         // strip hits per module
-    std::map<std::string, DetectorDataContainer>              fPixelModuleHitHistograms;         // pixel hits per module 
- 
+    std::map<std::string, DetectorDataContainer>              fPixelModuleHitHistograms;         // pixel hits per module
+
     //  containers for optical group histograms for MPA
     std::map<std::string, DetectorDataContainer>              fSameEvCorrMPAHistogramsMap;       // strip correlation in the same event
     std::map<std::string, DetectorDataContainer>              fSamePixelFWTCorrMPAHistogramsMap; // strip with itself time correlation
@@ -466,18 +478,18 @@ class DQMHistogramOTTimeCorrelation : public DQMHistogramBase
     std::map<std::string, DetectorDataContainer> fSSAErrorHistogramsMap; // SSA error histograms
 
     // Stopwatches for timing histogram filling operations
-    TStopwatch fStopwatch_SSA_SameEv;    // SSA Same Event timing
-    TStopwatch fStopwatch_SSA_FWTC;      // SSA FW Time Correlation timing
-    TStopwatch fStopwatch_SSA_BWTC;      // SSA BW Time Correlation timing
-    TStopwatch fStopwatch_SSA_MinHits;   // SSA Min Hits timing
-    TStopwatch fStopwatch_SSA_3D;        // SSA 3D correlation timing
-    TStopwatch fStopwatch_SSA_Slices;    // SSA Slices timing
-    TStopwatch fStopwatch_MPA_SameEv;    // MPA Same Event timing
-    TStopwatch fStopwatch_MPA_FWTC;      // MPA FW Time Correlation timing
-    TStopwatch fStopwatch_MPA_BWTC;      // MPA BW Time Correlation timing
-    TStopwatch fStopwatch_MPA_MinHits;   // MPA Min Hits timing
-    TStopwatch fStopwatch_MPA_3D;        // MPA 3D correlation timing
-    TStopwatch fStopwatch_MPA_Slices;    // MPA Slices timing
+    TStopwatch fStopwatch_SSA_SameEv;  // SSA Same Event timing
+    TStopwatch fStopwatch_SSA_FWTC;    // SSA FW Time Correlation timing
+    TStopwatch fStopwatch_SSA_BWTC;    // SSA BW Time Correlation timing
+    TStopwatch fStopwatch_SSA_MinHits; // SSA Min Hits timing
+    TStopwatch fStopwatch_SSA_3D;      // SSA 3D correlation timing
+    TStopwatch fStopwatch_SSA_Slices;  // SSA Slices timing
+    TStopwatch fStopwatch_MPA_SameEv;  // MPA Same Event timing
+    TStopwatch fStopwatch_MPA_FWTC;    // MPA FW Time Correlation timing
+    TStopwatch fStopwatch_MPA_BWTC;    // MPA BW Time Correlation timing
+    TStopwatch fStopwatch_MPA_MinHits; // MPA Min Hits timing
+    TStopwatch fStopwatch_MPA_3D;      // MPA 3D correlation timing
+    TStopwatch fStopwatch_MPA_Slices;  // MPA Slices timing
 };
 
 #endif

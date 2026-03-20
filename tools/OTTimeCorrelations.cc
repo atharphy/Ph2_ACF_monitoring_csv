@@ -110,10 +110,10 @@ void OTTimeCorrelations::Running()
     SystemController::Start(theStartInfo);
 
     DetectorDataContainer theStripModuleHitContainer;
-    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>(*fDetectorContainer, theStripModuleHitContainer);     
+    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>(*fDetectorContainer, theStripModuleHitContainer);
     DetectorDataContainer thePixelModuleHitContainer;
     ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>(*fDetectorContainer, thePixelModuleHitContainer);
-   
+
     fTotalDataSize = 0;
 
     OTTimeCorrelationStripData theStripData;
@@ -143,27 +143,17 @@ void OTTimeCorrelations::Running()
         LOG(INFO) << "  collectedEvents: " << collectedEvents << "  readSize: " << readSize << "  triggerDelay: " << triggerDelay << "  fNevents: " << fNevents;
 
         // loop over events
-        TStopwatch eventLoopTimer;
-        eventLoopTimer.Reset();
-
-        TStopwatch sortTimer;
-        sortTimer.Reset();
-
-        for(auto theBoard: *fDetectorContainer) {
-        // start iteration data taking: loop to read events in batches until we reach fNeventsConf
+        for(auto theBoard: *fDetectorContainer)
+        {
+            // start iteration data taking: loop to read events in batches until we reach fNeventsConf
             while(collectedEvents < fNeventsConf)
             {
                 uint32_t nToRead;
                 if(triggerDelay > 0) { nToRead = std::min(readSize, fNeventsConf - collectedEvents); }
                 else { nToRead = std::min(readSize, fNevents - collectedEvents / triggerPerBurst); }
 
-                // for(auto theBoard: *fDetectorContainer)
-                // {
                 if(nToRead == 0) { break; }
-                // LOG(INFO) << "  triggerPerBurst: " << triggerPerBurst << "  requesting nToRead: " << nToRead;
-                // LOG(INFO) << "Collected events: " << collectedEvents << " / " << fNeventsConf;
                 ReadNEvents(theBoard, nToRead);
-                // }
 
                 // Process all collected events
                 const std::vector<Event*>& events = GetEvents();
@@ -173,10 +163,9 @@ void OTTimeCorrelations::Running()
                 int tot_ev         = 0;
                 for(auto opticalGroup: *theBoard)
                 {
-                // loop over events
+                    // loop over events
                     for(const auto& event: events)
                     {
-                        eventLoopTimer.Start(false);
                         // decode the event and fill the custom structure
                         auto             ev = static_cast<D19cCic2Event*>(event);
                         std::vector<int> stripsOn;
@@ -184,65 +173,50 @@ void OTTimeCorrelations::Running()
 
                         uint32_t cStripModuleHits = 0;
                         uint32_t cPixelModuleHits = 0;
-                            for(auto hybrid: *opticalGroup)
+                        for(auto hybrid: *opticalGroup)
+                        {
+                            for(auto chip: *hybrid)
                             {
-                                for(auto chip: *hybrid)
+                                tot_ev += 1;
+                                if(ev->IsL1ErrorSet(hybrid->getId(), chip->getId()) != 0)
                                 {
-                                    tot_ev += 1;
-                                    // printout to check error codes
-                                    if(ev->IsL1ErrorSet(hybrid->getId(), chip->getId()) != 0)
-                                    {
-                                        ev_error_count += 1;
-                                        // auto bunchId = ev->GetBunch();
-                                        // std::string type = (chip->getFrontEndType() == FrontEndType::SSA2)  ? "SSA" : "MPA";
-                                        // LOG(INFO) << "      IsL1ErrorSet: " << (int)ev->IsL1ErrorSet(hybrid->getId(), chip->getId())
-                                        //           << " hybrid: " << (int)hybrid->getId()
-                                        //           << " chip: " << chip->getId()
-                                        //           << " type: " << type
-                                        //           << " BX: " << bunchId;
-                                        if(chip->getFrontEndType() == FrontEndType::SSA2) { ChipErrorData::ssaErrors[(int)chip->getId() % 8] += 1; }
-                                        else { ChipErrorData::mpaErrors[(int)chip->getId() % 8] += 1; }
-                                    }
+                                    ev_error_count += 1;
+                                    if(chip->getFrontEndType() == FrontEndType::SSA2) { ChipErrorData::ssaErrors[(int)chip->getId() % 8] += 1; }
+                                    else { ChipErrorData::mpaErrors[(int)chip->getId() % 8] += 1; }
+                                }
 
-                                    auto hits = ev->GetHits(hybrid->getId(), chip->getId());
-                                    uint32_t cEventHits = hits.size();
-                                    if(chip->getFrontEndType() == FrontEndType::SSA2)
+                                auto     hits       = ev->GetHits(hybrid->getId(), chip->getId());
+                                uint32_t cEventHits = hits.size();
+                                if(chip->getFrontEndType() == FrontEndType::SSA2)
+                                {
+                                    for(auto& hit: hits)
                                     {
-                                        for(auto& hit: hits)
-                                        {
-                                            auto second      = hit.second;
-                                            int  stripNumber = (hybrid->getId() % 2) * 960 + chip->getId() * 120 + second;
-                                            stripsOn.push_back(stripNumber);
-                                        }
-                                        cStripModuleHits+= cEventHits;
+                                        auto second      = hit.second;
+                                        int  stripNumber = (hybrid->getId() % 2) * 960 + chip->getId() * 120 + second;
+                                        stripsOn.push_back(stripNumber);
                                     }
-                                    else if(chip->getFrontEndType() == FrontEndType::MPA2)
+                                    cStripModuleHits += cEventHits;
+                                }
+                                else if(chip->getFrontEndType() == FrontEndType::MPA2)
+                                {
+                                    for(auto& hit: hits)
                                     {
-                                        for(auto& hit: hits)
-                                        {
-                                            auto second      = hit.second;
-                                            int  pixelNumber = (hybrid->getId() % 2) * 960 + (chip->getId() % 8) * 120 + second;
-                                            pixelsOn.push_back(pixelNumber);
-                                        }
-                                        cPixelModuleHits+= cEventHits;
+                                        auto second      = hit.second;
+                                        int  pixelNumber = (hybrid->getId() % 2) * 960 + (chip->getId() % 8) * 120 + second;
+                                        pixelsOn.push_back(pixelNumber);
                                     }
+                                    cPixelModuleHits += cEventHits;
                                 }
                             }
-                        
-                        
-                        eventLoopTimer.Stop();
+                        }
 
-                        sortTimer.Start(false);
                         auto bunchId = ev->GetBunch();
 
-                        // std::sort(stripsOn.begin(), stripsOn.end()); // may not be necessary
-                        theStripData.stripData = stripsOn;           // vector containing hit strip numbers
+                        theStripData.stripData = stripsOn; // vector containing hit strip numbers
 
-                        // std::sort(pixelsOn.begin(), pixelsOn.end());
                         pixelsOn.erase(std::unique(pixelsOn.begin(), pixelsOn.end()), pixelsOn.end()); // remove duplicates
 
                         thePixelData.pixelData = pixelsOn; // vector containing hit pixel numbers
-                        sortTimer.Stop();
 
                         // update BX in the data structures
                         OTTimeCorrelationConfig::updateBX(bunchId);
@@ -258,35 +232,36 @@ void OTTimeCorrelations::Running()
                         OTTimeCorrelationPixelData::compute_same_tcorr();
                         OTTimeCorrelationPixelData::compute_min_hits();
                         OTTimeCorrelationPixelData::compute_3D_corr();
-                        // LOG(INFO) << "DEBUG: Strips found: " << theStripData.stripData.size() << " | Pixels found: " << thePixelData.pixelData.size();
-                        
-                        theStripModuleHitContainer.getObject(theBoard->getId())->getObject(opticalGroup->getId())->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>().at(cStripModuleHits) +=
-                            1;
 
-                        thePixelModuleHitContainer.getObject(theBoard->getId())->getObject(opticalGroup->getId())->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>().at(cPixelModuleHits) +=
-                            1;
+                        theStripModuleHitContainer.getObject(theBoard->getId())
+                            ->getObject(opticalGroup->getId())
+                            ->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>()
+                            .at(cStripModuleHits) += 1;
+
+                        thePixelModuleHitContainer.getObject(theBoard->getId())
+                            ->getObject(opticalGroup->getId())
+                            ->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>()
+                            .at(cPixelModuleHits) += 1;
 
 #ifdef __USE_ROOT__
-                fDQMHistogramOTTimeCorrelation.fillSSAData(theStripData, triggerPerBurst, triggerDelay, iterationSettingsName);
-                fDQMHistogramOTTimeCorrelation.fillMPAData(thePixelData, triggerPerBurst, triggerDelay, iterationSettingsName);
-                fDQMHistogramOTTimeCorrelation.fillErrorHist(chipErrors, triggerPerBurst, triggerDelay, iterationSettingsName);
-                fDQMHistogramOTTimeCorrelation.fill2DhistSlices(theStripData, thePixelData, triggerPerBurst, triggerDelay, iterationSettingsName);
-                // fDQMHistogramOTTimeCorrelation.fill3Dhistograms(theStripData, thePixelData, triggerPerBurst, triggerDelay, iterationSettingsName);
+                        fDQMHistogramOTTimeCorrelation.fillSSAData(theStripData, triggerPerBurst, triggerDelay, iterationSettingsName);
+                        fDQMHistogramOTTimeCorrelation.fillMPAData(thePixelData, triggerPerBurst, triggerDelay, iterationSettingsName);
+                        fDQMHistogramOTTimeCorrelation.fillErrorHist(chipErrors, triggerPerBurst, triggerDelay, iterationSettingsName);
+                        fDQMHistogramOTTimeCorrelation.fill2DhistSlices(theStripData, thePixelData, triggerPerBurst, triggerDelay, iterationSettingsName);
+                        // fDQMHistogramOTTimeCorrelation.fill3Dhistograms(theStripData, thePixelData, triggerPerBurst, triggerDelay, iterationSettingsName);
 #endif
                         // LOG(INFO) << "----------------------------------------";
                     } // end of event loop
-                LOG(INFO) << "Event loop time: " << eventLoopTimer.RealTime() << " s (CPU: " << eventLoopTimer.CpuTime() << " s)";
-                LOG(INFO) << "Sorting time: " << sortTimer.RealTime() << " s (CPU: " << sortTimer.CpuTime() << " s)";
-                iter_ev_error_count += ev_error_count;
-                iter_tot_ev += tot_ev;
+                    iter_ev_error_count += ev_error_count;
+                    iter_tot_ev += tot_ev;
                 }
             } // end of data taking while for this setting
         } // end of board loop
 #ifdef __USE_ROOT__
-                fDQMHistogramOTTimeCorrelation.reportTimingStats();
-                fDQMHistogramOTTimeCorrelation.fillModuleHitPlots(theStripModuleHitContainer, true, iterationSettingsName);
-                fDQMHistogramOTTimeCorrelation.fillModuleHitPlots(thePixelModuleHitContainer, false, iterationSettingsName);
-#endif        
+        fDQMHistogramOTTimeCorrelation.reportTimingStats();
+        fDQMHistogramOTTimeCorrelation.fillModuleHitPlots(theStripModuleHitContainer, true, iterationSettingsName);
+        fDQMHistogramOTTimeCorrelation.fillModuleHitPlots(thePixelModuleHitContainer, false, iterationSettingsName);
+#endif
         LOG(INFO) << "Iteration summary - chips with errors: " << iter_ev_error_count << "/" << iter_tot_ev << " = " << (iter_tot_ev > 0 ? (float)iter_ev_error_count / iter_tot_ev * 100 : 0) << "%";
         if(OTTimeCorrelationConfig::getTriggerPerBurst() > 1)
         {
