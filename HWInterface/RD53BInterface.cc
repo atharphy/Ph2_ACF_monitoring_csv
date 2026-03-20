@@ -1027,8 +1027,8 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     else if(type.find("INTERNAL_NTC_ABS") != std::string::npos)
     {
         const uint16_t saveADC   = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
-        const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip);
         const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1);
+        const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip);
         const uint16_t nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
         uint16_t       ntcVolt   = 0;
         uint16_t       ntcCurr   = 0;
@@ -1094,8 +1094,8 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     else if(type.find("POLY_ABS") != std::string::npos)
     {
         const uint16_t saveADC   = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
-        const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip, type);
-        const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1);
+        const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1) / 2; // @CONST@
+        const uint16_t maxADCval = maxVal / 6;                                                                   // @CONST@
         const uint16_t nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
         uint16_t       ntcVolt   = 0;
         uint16_t       ntcCurr   = 0;
@@ -1103,14 +1103,14 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // #########################################################################
         // # Scan from 0 to saturation to compute ADC volt independent temperature #
         // #########################################################################
-        const uint16_t     step = maxADCval / 2 / nSteps;
+        const uint16_t     step = maxADCval / nSteps;
         std::vector<float> ntcCurrVec;
         std::vector<float> polyADCvec;
         for(uint16_t i = 1; i < nSteps; i++)
         {
             RD53BInterface::readNTCvoltCurr(pChip, step * i, ntcVolt, ntcCurr);
             const uint16_t polyADC = RD53BInterface::measureADC(pChip, data);
-            if((polyADC > 0) && (polyADC < maxADCval / 2) && (ntcVolt > 0) && (ntcVolt < maxVal) && (ntcCurr > 0) && (ntcCurr < maxVal))
+            if((polyADC > 0) && (polyADC < maxVal) && (ntcVolt > 0) && (ntcVolt < maxVal) && (ntcCurr > 0) && (ntcCurr < maxVal))
             {
                 ntcCurrVec.push_back(ntcCurr);
                 bool     isCurrentNotVoltage;
