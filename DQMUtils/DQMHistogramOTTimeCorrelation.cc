@@ -13,10 +13,10 @@ DQMHistogramOTTimeCorrelation::~DQMHistogramOTTimeCorrelation() {}
 
 void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
-    this->book(theOutputFile, theDetectorStructure, pSettingsMap, "");
+    this->book(theOutputFile, theDetectorStructure, pSettingsMap, "", 3.);
 }
 
-void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap, std::string suffix)
+void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap, std::string suffix, float sigma)
 {
     fDetectorContainer = &theDetectorStructure;
     fOutputFile        = theOutputFile;
@@ -104,6 +104,29 @@ void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer
     HistContainer<TH1F> hSSAError(("hSSAError" + suffix).c_str(), "SSA chip errors", 8, 0, 8);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fSSAErrorHistogramsMap[suffix], hSSAError);
 
+    // Common noise plots
+    auto getName = [sigma](std::string name)
+    {
+        if(sigma == 0) return Form("%s_OccupancyDriven", name.c_str());
+        return Form("%s_SigmaNoise_%.2f", name.c_str(), sigma);
+    };
+
+    auto getTitle = [sigma](std::string title)
+    {
+        if(sigma == 0) return Form("%s - Occupancy Driven", title.c_str());
+        return Form("%s - Sigma Noise = %.2f", title.c_str(), sigma);
+    };
+
+    HistContainer<TH1F> hStripModuleHits(getName("CommonNoiseHitsStrip"), getTitle("Common noise hits strip"), MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
+    hStripModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits");
+    hStripModuleHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fStripModuleHitHistograms[suffix], hStripModuleHits);
+
+    HistContainer<TH1F> hPixelModuleHits(getName("CommonNoiseHitsPixel"), getTitle("Common noise hits pixel"), MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
+    hPixelModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits");
+    hPixelModuleHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
+    RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fPixelModuleHitHistograms[suffix], hPixelModuleHits);
+
     // Initialize all stopwatches
     fStopwatch_SSA_SameEv.Reset();
     fStopwatch_SSA_FWTC.Reset();
@@ -133,6 +156,27 @@ bool DQMHistogramOTTimeCorrelation::fill(std::string& inputStream)
 void DQMHistogramOTTimeCorrelation::reset()
 {
     // Reset histograms
+}
+
+void DQMHistogramOTTimeCorrelation::fillModuleHitPlots(DetectorDataContainer& theHitData, bool isStrip, std::string suffix)
+{
+    for(auto board: theHitData)
+    {
+        for(auto opticalGroup: *board)
+        {
+            if(!opticalGroup->hasSummary()) continue;
+            if(isStrip)
+            {
+                TH1F* theHistogram = fStripModuleHitHistograms.at(suffix).getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                fillEventsVsHitsHist<MAXCICCHANNELS * 2 + 1>(opticalGroup, *theHistogram);
+            }
+            else
+            {
+                TH1F* theHistogram = fPixelModuleHitHistograms.at(suffix).getObject(board->getId())->getObject(opticalGroup->getId())->getSummary<HistContainer<TH1F>>().fTheHistogram;
+                fillEventsVsHitsHist<MAXCICCHANNELS * 2 + 1>(opticalGroup, *theHistogram);
+            }
+        }
+    }
 }
 
 void DQMHistogramOTTimeCorrelation::fillErrorHist(const ChipErrorData& errorData, uint32_t trgBurst, uint32_t trgDel, std::string suffix)

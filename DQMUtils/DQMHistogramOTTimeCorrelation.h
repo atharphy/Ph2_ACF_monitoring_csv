@@ -12,6 +12,7 @@
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TH3F.h"
+#include "TLegend.h"
 #include "TStopwatch.h"
 #include "Utils/Container.h"
 #include "Utils/D19cCic2Event.h"
@@ -408,7 +409,7 @@ class DQMHistogramOTTimeCorrelation : public DQMHistogramBase
     DQMHistogramOTTimeCorrelation();
     ~DQMHistogramOTTimeCorrelation();
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) override;
-    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap, std::string suffix);
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap, std::string suffix, float sigma);
     void process() override;
     bool fill(std::string& inputStream) override;
     void reset() override;
@@ -420,7 +421,16 @@ class DQMHistogramOTTimeCorrelation : public DQMHistogramBase
     void fill3Dhistograms(const OTTimeCorrelationStripData& sData, const OTTimeCorrelationPixelData& pData, uint32_t trgBurst, uint32_t trgDel, std::string suffix);
     void fill2DhistSlices(const OTTimeCorrelationStripData& sData, const OTTimeCorrelationPixelData& pData, uint32_t trgBurst, uint32_t trgDel, std::string suffix);
 
+    void fillModuleHitPlots(DetectorDataContainer& theHitData, bool isStrip, std::string suffix);
     void reportTimingStats();
+
+    template <size_t T2>
+    void fillEventsVsHitsHist(const BaseDataContainer* ChipContainer, TH1F& theHistogram)
+    {
+        const GenericDataArray<uint32_t, T2>& cDataSummary = ChipContainer->getSummary<GenericDataArray<uint32_t, T2>>();
+        for(uint16_t iChan = 0; iChan < T2; iChan++) { theHistogram.SetBinContent(iChan + 1, cDataSummary.at(iChan)); }
+        theHistogram.Sumw2();
+    }
 
   private:
     DetectorContainer*      fDetectorContainer;
@@ -437,7 +447,9 @@ class DQMHistogramOTTimeCorrelation : public DQMHistogramBase
     std::map<std::string, DetectorDataContainer>              f3DTSBWCorrSSAHistogramsMap;       // time and space corr histograms
     std::map<std::string, std::vector<DetectorDataContainer>> fTSCorrSliceFWSSAMap;              // 2D slice histograms for each z-bin
     std::map<std::string, std::vector<DetectorDataContainer>> fTSCorrSliceBWSSAMap;              // backward 2D slice histograms for each z-bin
-
+    std::map<std::string, DetectorDataContainer>              fStripModuleHitHistograms;         // strip hits per module
+    std::map<std::string, DetectorDataContainer>              fPixelModuleHitHistograms;         // pixel hits per module 
+ 
     //  containers for optical group histograms for MPA
     std::map<std::string, DetectorDataContainer>              fSameEvCorrMPAHistogramsMap;       // strip correlation in the same event
     std::map<std::string, DetectorDataContainer>              fSamePixelFWTCorrMPAHistogramsMap; // strip with itself time correlation
