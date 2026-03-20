@@ -11,7 +11,6 @@
 #include "Utils/ContainerSerialization.h"
 #include <vector>
 
-using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
 // define function for Linear Regression with least mean squares method
@@ -75,6 +74,7 @@ void TEPXQuadNTC::Stop()
 
 void TEPXQuadNTC::localConfigure(const std::string& histoFileName, int currentRun) { LOG(INFO) << GREEN << "[TEPXQuadNTC::localConfigure] Starting run: " << BOLDYELLOW << theCurrentRun << RESET; }
 
+
 float TEPXQuadNTC::TfromR(float RkOhm, const float& R25C, const float& beta)
 {
     const float T0C  = 273.15; // [Kelvin]
@@ -104,98 +104,132 @@ void TEPXQuadNTC::run()
             for(const auto cHybrid: *cOpticalGroup)
             {
                 std::map<int, double> ntc_temp_from_slope_map;
+                std::map<int, float> ntc_temperature_map;
+                std::map<int, float> top_temperature_map;
+                std::map<int, float> bot_temperature_map;
                 for(const auto cChip: *cHybrid)
                 {
-                    float R25NTC = cChip->getRegItem("RNTCAT25C").fValue / 1000.;
-                    float beta   = cChip->getRegItem("NTCBETA").fValue;
-                    LOG(INFO) << GREEN << "[TEPXQuadNTC::run]  board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
-                              << +cChip->getId() << "   R25NTC=" << R25NTC << "   NTCBETA=" << beta << RESET;
-                    if(!((abs(R25NTC - 10.) < 0.001) && (abs(beta - 3380.) < 0.1)) && !((abs(R25NTC - 1.5) < 0.001) && (abs(beta - 3500.) < 0.1)))
+		  float const        TC_poly            = 0.22e-2; //  0.22 %/C
+		  float const        R_poly_top_reftemp = cChip->getRegItem("RES_MEAS_TOP").fValue / 1e3;
+		  float const        R_poly_bot_reftemp = cChip->getRegItem("RES_MEAS_BOTTOM").fValue / 1e3;
+		  float const        reftemp            = cChip->getRegItem("REFTEMP").fValue;
+		  float const R25NTC = cChip->getRegItem("RNTCAT25C").fValue / 1000.;
+		  float beta   = cChip->getRegItem("NTCBETA").fValue;
+		  LOG(INFO) << GREEN << "[TEPXQuadNTC::run]  board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+			    << +cChip->getId() << "   R25NTC=" << R25NTC << "   NTCBETA=" << beta << RESET;
+		  if(!((abs(R25NTC - 10.) < 0.001) && (abs(beta - 3380.) < 0.1)) && !((abs(R25NTC - 1.5) < 0.001) && (abs(beta - 3500.) < 0.1)))
                     {
-                        LOG(WARNING) << RED << "[TEPXQuadNTC::run]  NTC parameters, "
-                                     << "   R25NTC=" << R25NTC << "   NTCBETA=" << beta << ",  do not correspond to a known NTC type." << RESET;
+		      LOG(WARNING) << RED << "[TEPXQuadNTC::run]  NTC parameters, "
+				   << "   R25NTC=" << R25NTC << "   NTCBETA=" << beta << ",  do not correspond to a known NTC type." << RESET;
                     }
-                    // raw ADC: for a list of "observables" see RD53BInterface::getADCobservable  in HWInterface/RD53BInterface.cc
-                    // create arrays to store values of each chip
-                    std::vector<double> ntc_adc_list;
-                    std::vector<double> r_ref_list;
-                    std::vector<double> dac_ntc_list;
+		  // raw ADC: for a list of "observables" see RD53BInterface::getADCobservable  in HWInterface/RD53BInterface.cc
+		  unsigned int adc_max_lin = 2048;    // nonlinearities increase above this adc value
+		  unsigned int adc_min = 500;         // try to reach this adc_value
+		  unsigned int dac_max_lin = 350;     // nonlinearities above this dac value, stop here if adc_min has been reached
+		  unsigned int dac_max = 850;         // never go above thisinitail
+		  unsigned int dac_step  = 50;
+		  
+		  std::vector<std::string> adc_names = {"NTC_CURR", "NTC_VOLT", };
+		  if (fReadPoly){
+		    adc_names.push_back("POLY_ABS_TEMPSENS_TOP");
+		    adc_names.push_back("POLY_ABS_TEMPSENS_BOTTOM");
+		  }
+		  
+		  // adc_names are the inner loop to minimize changing the dac , keep all values
+		  std::map<std::string, std::vector<double>> adc_lists;
+		  std::map<std::string, std::vector<double>> dac_lists;
+		  for (const auto & adc_name : adc_names)
+		    {
+		      adc_lists[adc_name] = std::vector<double>();
+		      dac_lists[adc_name] = std::vector<double>();
+		    }
+		  if(fReadPoly) LOG(INFO) << "  dac    ref    ntc    top bottom" << RESET;  
+		  // acquire data
+		  for(unsigned int dac = dac_step; dac <= dac_max; dac += dac_step)
+		    {
+		      std::stringstream  line;
+		      if(fReadPoly) line << std::setw(5) << dac;
+		      chipInterface->WriteChipReg(cChip, "DAC_NTC", dac);
+		      usleep(100000);
+		      for (const auto & adc_name : adc_names)
+			{
+			  const auto last_adc_value = adc_lists[adc_name].size() > 0 ? adc_lists[adc_name].back() : 0;
+			  if ( (adc_lists[adc_name].size() < 3) || ((dac <= dac_max_lin) && (last_adc_value < adc_max_lin)) ||  (last_adc_value <= adc_min))
+			    {
+			      const auto adc = chipInterface->ReadChipADC(cChip, adc_name);
+			      if (adc > 0)
+				{
+				  adc_lists[adc_name].push_back(adc);
+				  dac_lists[adc_name].push_back(dac);
+				  if(fReadPoly) line << "," << std::setw(6) << adc;
+				}
+			      else{
+				if(fReadPoly) line << ",      ";
+			      }
+			    }
+			  else
+			    {
+			      if(fReadPoly) line << ",      ";
+			    }
+			}
+		      if(fReadPoly) LOG(INFO)  << line.str() << RESET;
+		    }
 
-                    unsigned int num_dac_step  = 5;
-                    unsigned int dac_ntc_step  = 200;
-                    bool         saturation    = true;
-                    unsigned int max_r_ref_adc = 0;
-                    unsigned int max_ntc_adc   = 0;
-                    while((dac_ntc_step > 25) and saturation)
-                    {
-                        const unsigned int dac_ntc = dac_ntc_step * num_dac_step;
-                        unsigned int       numtry  = 0;
-                        while(numtry++ < 5)
-                        {
-                            chipInterface->WriteChipReg(cChip, "DAC_NTC", dac_ntc);
-                            const auto ntc_adc   = chipInterface->ReadChipADC(cChip, "NTC_VOLT");
-                            const auto r_ref_adc = chipInterface->ReadChipADC(cChip, "NTC_CURR");
-                            if((ntc_adc < 4095) && (r_ref_adc < 4095))
-                            {
-                                saturation    = false;
-                                max_r_ref_adc = r_ref_adc;
-                                max_ntc_adc   = ntc_adc;
-                                break;
-                            }
-                        }
-                        dac_ntc_step /= 2;
-                    }
-                    if(saturation) { LOG(WARNING) << "failed to find a working range without saturation"; }
-                    else { LOG(INFO) << "ntc dac step size set to " << dac_ntc_step << "  max dac = " << num_dac_step * dac_ntc_step << "  ref=" << max_r_ref_adc << "  ntc = " << max_ntc_adc; }
 
-                    if(fVerbose) { LOG(INFO) << "DAC     ADC_ntc  ADC_ref    R_ntc (kOhm)  T(R_ntc) (C)"; }
+		  // determine slope, temperatures, the refrence , NTC_CURR, must be the first in the list of adc_names
+		  float slope_to_R = 0;
+		  for(const auto & adc_name : adc_names)
+		    {
+		      float slope = 0;
+		      if (adc_lists[adc_name].size() < 2)
+			{
+			  LOG(INFO) << "Unable to acquire slope for " << adc_name << RESET;
+			  slope = 0;
+			}
+		      else
+			{
+			  const auto fit = LinReg(dac_lists[adc_name], adc_lists[adc_name]);
+			  slope = fit.first;
+			}
 
-                    for(unsigned int step = 1; step <= num_dac_step; step++)
-                    {
-                        unsigned int dac_ntc = step * dac_ntc_step;
-                        chipInterface->WriteChipReg(cChip, "DAC_NTC", dac_ntc);
-                        const auto ntc_adc   = chipInterface->ReadChipADC(cChip, "NTC_VOLT");
-                        const auto r_ref_adc = chipInterface->ReadChipADC(cChip, "NTC_CURR");
-                        if((ntc_adc > 0) && (ntc_adc < 4095) && (r_ref_adc > 0) && (r_ref_adc < 4095))
-                        {
-                            r_ref_list.push_back(r_ref_adc);
-                            ntc_adc_list.push_back(ntc_adc);
-                            dac_ntc_list.push_back(dac_ntc);
-                            if(fVerbose)
-                            {
-                                float R_ntc = fR_ref * ntc_adc / r_ref_adc;
-                                LOG(INFO) << std::fixed << std::setw(4) << dac_ntc << " " << std::fixed << std::setw(8) << ntc_adc << " " << std::fixed << std::setw(8) << r_ref_adc << " "
-                                          << std::fixed << std::setw(12) << std::setprecision(3) << R_ntc << std::fixed << std::setw(12) << std::setprecision(1) << TfromR(R_ntc, R25NTC, beta);
-                            }
-                        }
-                        else { LOG(INFO) << RED << "ERROR reading ntc" << RESET; }
-                    }
+		      if (adc_name == "NTC_CURR")
+			{
+			  if (slope > 0)  slope_to_R = fR_ref / slope;
+			}
+		      else if (adc_name == "NTC_VOLT")
+			{
+			  const auto Rntc = slope * slope_to_R;
+			  ntc_temperature_map[cChip->getId()] = TfromR(Rntc, R25NTC, beta);
+			}
+		      else if(adc_name == "POLY_ABS_TEMPSENS_TOP")
+			{
+			  const float R_poly_top = slope * slope_to_R;
+			  const float T_poly_top = reftemp + (R_poly_top / R_poly_top_reftemp - 1.0) / TC_poly;
+			  top_temperature_map[cChip->getId()] = T_poly_top;
+			}
+		      else if(adc_name == "POLY_ABS_TEMPSENS_BOTTOM")
+			{
+			  const float R_poly_bot = slope * slope_to_R;
+			  const float T_poly_bot = reftemp + (R_poly_bot / R_poly_bot_reftemp - 1.0) / TC_poly;
+			  bot_temperature_map[cChip->getId()] = T_poly_bot;
+			}
+		    } 
 
-                    // for each chip calculate temperature  from slopes of ntc_adc/r_ref_adc values
-                    if(dac_ntc_list.size() > 1)
-                    {
-                        const auto fit_ntc                      = LinReg(dac_ntc_list, ntc_adc_list);
-                        const auto fit_ref                      = LinReg(dac_ntc_list, r_ref_list);
-                        double     R_ntc_slope                  = fR_ref * fit_ntc.first / fit_ref.first;
-                        ntc_temp_from_slope_map[cChip->getId()] = TfromR(R_ntc_slope, R25NTC, beta);
-                        if(fVerbose)
-                        {
-                            LOG(INFO) << "offset  " << std::fixed << std::setw(8) << std::setprecision(2) << fit_ntc.second << " " << std::fixed << std::setw(8) << std::setprecision(2)
-                                      << fit_ref.second << " ";
-                            LOG(INFO) << "slope" << std::fixed << std::setw(8) << std::setprecision(2) << fit_ntc.first << " " << std::fixed << std::setw(8) << std::setprecision(2) << fit_ref.first
-                                      << " " << std::fixed << std::setw(12) << std::setprecision(3) << R_ntc_slope << std::fixed << std::setw(12) << std::setprecision(1)
-                                      << TfromR(R_ntc_slope, R25NTC, beta);
-                        }
-                    }
-                    else
-                    {
-                        ntc_temp_from_slope_map[cChip->getId()] = 99.; // nan("")
-                    }
-                    chipInterface->WriteChipReg(cChip, "DAC_NTC", 100);
-                }
-                LOG(INFO) << "NTC result for ChipID 15-12  (C)   : " << std::setw(8) << std::setprecision(1) << std::fixed << ntc_temp_from_slope_map[15] << std::setw(8) << std::setprecision(1)
-                          << std::fixed << ntc_temp_from_slope_map[14] << std::setw(8) << std::setprecision(1) << std::fixed << ntc_temp_from_slope_map[13] << std::setw(8) << std::setprecision(1)
-                          << std::fixed << ntc_temp_from_slope_map[12];
+		  chipInterface->WriteChipReg(cChip, "DAC_NTC", 100);
+		    
+		}// chip
+		
+                LOG(INFO) << "NTC result for ChipID 15-12  (C)   : " << std::setw(8) << std::setprecision(1) << std::fixed << ntc_temperature_map[15] << std::setw(8) << std::setprecision(1)
+                          << std::fixed << ntc_temperature_map[14] << std::setw(8) << std::setprecision(1) << std::fixed << ntc_temperature_map[13] << std::setw(8) << std::setprecision(1)
+                          << std::fixed << ntc_temperature_map[12];
+		if (fReadPoly){
+		  LOG(INFO) << "BOT result for ChipID 15-12  (C)   : " << std::setw(8) << std::setprecision(1) << std::fixed << bot_temperature_map[15] << std::setw(8) << std::setprecision(1)
+			    << std::fixed << bot_temperature_map[14] << std::setw(8) << std::setprecision(1) << std::fixed << bot_temperature_map[13] << std::setw(8) << std::setprecision(1)
+			    << std::fixed << bot_temperature_map[12];
+		  LOG(INFO) << "TOP result for ChipID 15-12  (C)   : " << std::setw(8) << std::setprecision(1) << std::fixed << top_temperature_map[15] << std::setw(8) << std::setprecision(1)
+			    << std::fixed << top_temperature_map[14] << std::setw(8) << std::setprecision(1) << std::fixed << top_temperature_map[13] << std::setw(8) << std::setprecision(1)
+			    << std::fixed << top_temperature_map[12];
+		}
             }
     // ##################
     // # Reset sequence #
