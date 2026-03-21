@@ -4,6 +4,7 @@
 #include "HWInterface/D19cTriggerInterface.h"
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
+#include "Utils/GenericDataArray.h"
 #include "Utils/StartInfo.h"
 #include "Utils/Utilities.h"
 #include <boost/math/distributions/normal.hpp>
@@ -116,6 +117,7 @@ void OTTimeCorrelations::Running()
 
     fTotalDataSize = 0;
 
+#ifdef __USE_ROOT__
     OTTimeCorrelationStripData theStripData;
     OTTimeCorrelationPixelData thePixelData;
     ChipErrorData              chipErrors;
@@ -243,13 +245,11 @@ void OTTimeCorrelations::Running()
                             ->getSummary<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>()
                             .at(cPixelModuleHits) += 1;
 
-#ifdef __USE_ROOT__
                         fDQMHistogramOTTimeCorrelation.fillSSAData(theStripData, triggerPerBurst, triggerDelay, iterationSettingsName);
                         fDQMHistogramOTTimeCorrelation.fillMPAData(thePixelData, triggerPerBurst, triggerDelay, iterationSettingsName);
                         fDQMHistogramOTTimeCorrelation.fillErrorHist(chipErrors, triggerPerBurst, triggerDelay, iterationSettingsName);
                         fDQMHistogramOTTimeCorrelation.fill2DhistSlices(theStripData, thePixelData, triggerPerBurst, triggerDelay, iterationSettingsName);
                         // fDQMHistogramOTTimeCorrelation.fill3Dhistograms(theStripData, thePixelData, triggerPerBurst, triggerDelay, iterationSettingsName);
-#endif
                         // LOG(INFO) << "----------------------------------------";
                     } // end of event loop
                     iter_ev_error_count += ev_error_count;
@@ -257,11 +257,9 @@ void OTTimeCorrelations::Running()
                 }
             } // end of data taking while for this setting
         } // end of board loop
-#ifdef __USE_ROOT__
         fDQMHistogramOTTimeCorrelation.reportTimingStats();
         fDQMHistogramOTTimeCorrelation.fillModuleHitPlots(theStripModuleHitContainer, true, iterationSettingsName);
         fDQMHistogramOTTimeCorrelation.fillModuleHitPlots(thePixelModuleHitContainer, false, iterationSettingsName);
-#endif
         LOG(INFO) << "Iteration summary - chips with errors: " << iter_ev_error_count << "/" << iter_tot_ev << " = " << (iter_tot_ev > 0 ? (float)iter_ev_error_count / iter_tot_ev * 100 : 0) << "%";
         if(OTTimeCorrelationConfig::getTriggerPerBurst() > 1)
         {
@@ -269,6 +267,8 @@ void OTTimeCorrelations::Running()
                       << (OTTimeCorrelationConfig::totBursts > 0 ? (float)OTTimeCorrelationConfig::mismatchedBursts / OTTimeCorrelationConfig::totBursts * 100 : 0) << "%";
         }
     } // end of iteration setting loop
+#endif
+
     Stop(); // end of acquisition
 }
 
@@ -295,7 +295,9 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
     // set the appropriate values based on the config
     if(theNTriggerPerBurst.at(iteration) > 1)
     {
+#ifdef __USE_ROOT__
         OTTimeCorrelationConfig::setN((size_t)theNTriggerPerBurst.at(iteration) / 2);
+#endif
         if(theDelayBetweenTriggers.at(iteration) > 0)
         {
             LOG(INFO) << BOLDYELLOW << "Version: triggers in burst with variable delay" << RESET;
@@ -308,7 +310,9 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
             boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.misc.trigger_multiplicity", 0});
             SetTriggerSource(8);
             fNevents = fNeventsConf;
+#ifdef __USE_ROOT__
             OTTimeCorrelationConfig::setTriggerDelay(theDelayBetweenTriggers.at(iteration));
+#endif
         }
         else
         {
@@ -317,7 +321,9 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
             boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", theAverageFrequency.at(iteration) / theNTriggerPerBurst.at(iteration)});
             SetTriggerSource(3);
             fNevents = fNeventsConf / theNTriggerPerBurst.at(iteration);
+#ifdef __USE_ROOT__
             OTTimeCorrelationConfig::setTriggerDelay(0); // they can only be consecutive
+#endif
             LOG(INFO) << "Delay before next pulse: " << 40000 * theNTriggerPerBurst.at(iteration) / theAverageFrequency.at(iteration)
                       << " AverageFrequency in BX: " << 40000 / theAverageFrequency.at(iteration);
         }
@@ -329,7 +335,9 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
         boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.user_trigger_frequency", theAverageFrequency.at(iteration)});
         SetTriggerSource(3);
         fNevents = fNeventsConf;
+#ifdef __USE_ROOT__
         OTTimeCorrelationConfig::setN(100);
+#endif
     }
 
     // boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.trigger_source", theTriggerSource});
@@ -342,7 +350,9 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
 
     for(auto theBoard: *fDetectorContainer) { fBeBoardInterface->WriteBoardMultReg(theBoard, boardRegisterVector); }
 
+#ifdef __USE_ROOT__
     OTTimeCorrelationConfig::setTriggerPerBurst(theNTriggerPerBurst.at(iteration));
+#endif
 
     LOG(INFO) << "Configuring OTTimeCorrelations with Nevents: " << fNevents << "  ThresholdSigma: " << theThresholdSigma.at(iteration)
               << "  NTriggerPerBurst: " << int(theNTriggerPerBurst.at(iteration)) << "  DelayBetweenTriggers: " << int(theDelayBetweenTriggers.at(iteration))
