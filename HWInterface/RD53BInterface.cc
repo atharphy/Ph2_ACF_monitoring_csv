@@ -1028,7 +1028,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     {
         const uint16_t saveADC   = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
         const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1);
-        const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip);
+        const uint16_t maxDACval = RD53BInterface::maxDACatSaturation(pChip);
         const uint16_t nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
         uint16_t       ntcVolt   = 0;
         uint16_t       ntcCurr   = 0;
@@ -1036,7 +1036,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // #########################################################################
         // # Scan from 0 to saturation to compute ADC volt independent temperature #
         // #########################################################################
-        const uint16_t       step = maxADCval / nSteps;
+        const uint16_t       step = maxDACval / nSteps;
         std::vector<int32_t> ntcVoltVec;
         std::vector<int32_t> ntcCurrVec;
         std::vector<int32_t> ntcADCVec;
@@ -1095,7 +1095,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     {
         const uint16_t saveADC   = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
         const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1) / 2; // @CONST@
-        const uint16_t maxADCval = maxVal / 6;                                                                   // @CONST@
+        const uint16_t maxDACval = maxVal / 6;                                                                   // @CONST@
         const uint16_t nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
         uint16_t       ntcVolt   = 0;
         uint16_t       ntcCurr   = 0;
@@ -1103,14 +1103,14 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // #########################################################################
         // # Scan from 0 to saturation to compute ADC volt independent temperature #
         // #########################################################################
-        const uint16_t     step = maxADCval / nSteps;
+        const uint16_t     step = maxDACval / nSteps;
         std::vector<float> ntcCurrVec;
         std::vector<float> polyADCvec;
         for(uint16_t i = 1; i < nSteps; i++)
         {
             RD53BInterface::readNTCvoltCurr(pChip, step * i, ntcVolt, ntcCurr);
             const uint16_t polyADC = RD53BInterface::measureADC(pChip, data);
-            if((polyADC > 0) && (polyADC < maxVal) && (ntcVolt > 0) && (ntcVolt < maxVal) && (ntcCurr > 0) && (ntcCurr < maxVal))
+            if((polyADC > 0) && (polyADC < maxVal) && (ntcCurr > 0) && (ntcCurr < maxVal))
             {
                 ntcCurrVec.push_back(ntcCurr);
                 bool     isCurrentNotVoltage;
@@ -1187,43 +1187,43 @@ void RD53BInterface::readNTCvoltCurr(ReadoutChip* pChip, uint16_t dacNTC, uint16
     ntcCurr = RD53Interface::ReadChipADC(pChip, "NTC_CURR");
 }
 
-uint16_t RD53BInterface::maxADCatSaturation(ReadoutChip* pChip, const std::string& type)
+uint16_t RD53BInterface::maxDACatSaturation(ReadoutChip* pChip, const std::string& type)
 {
     auto&          pRD53RegMap  = pChip->getRegMap();
-    uint16_t       minADC       = 0;
-    uint16_t       maxADC       = RD53Shared::setBits(pRD53RegMap.at("DAC_NTC").fBitSize);
-    uint16_t       midADC       = (minADC + maxADC) / 2;
-    const uint16_t numberOfBits = floor(log2(maxADC - minADC + 1) + 1);
+    uint16_t       minDAC       = 0;
+    uint16_t       maxDAC       = RD53Shared::setBits(pRD53RegMap.at("DAC_NTC").fBitSize);
+    uint16_t       midDAC       = (minDAC + maxDAC) / 2;
+    const uint16_t numberOfBits = floor(log2(maxDAC - minDAC + 1) + 1);
     const uint16_t maxVal       = RD53Shared::setBits(pRD53RegMap.at("MonitorConfig").fBitSize - 1);
-    uint16_t       maxADCval    = 0;
+    uint16_t       maxDACval    = 0;
     uint16_t       it           = 0;
     uint16_t       ntcVolt      = 0;
     uint16_t       ntcCurr      = 0;
     uint16_t       typeVal      = 0;
 
     // ################################
-    // # Find ADC value at saturation #
+    // # Find DAC value at saturation #
     // ################################
-    RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
+    RD53BInterface::readNTCvoltCurr(pChip, midDAC, ntcVolt, ntcCurr);
     if(type != "") typeVal = RD53Interface::ReadChipADC(pChip, type);
     while(it <= numberOfBits)
     {
         if((ntcVolt < maxVal) && (ntcCurr < maxVal) && (typeVal < maxVal))
         {
-            minADC    = midADC;
-            maxADCval = midADC;
+            minDAC    = midDAC;
+            maxDACval = midDAC;
         }
         else
-            maxADC = midADC;
-        midADC = (minADC + maxADC) / 2;
+            maxDAC = midDAC;
+        midDAC = (minDAC + maxDAC) / 2;
 
-        RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
+        RD53BInterface::readNTCvoltCurr(pChip, midDAC, ntcVolt, ntcCurr);
         if(type != "") typeVal = RD53Interface::ReadChipADC(pChip, type);
 
         it++;
     }
 
-    return maxADCval;
+    return maxDACval;
 }
 
 } // namespace Ph2_HwInterface

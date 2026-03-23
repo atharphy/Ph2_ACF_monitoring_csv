@@ -54,7 +54,7 @@ class RD53BInterface : public RD53Interface
     void     SendChipCommandsWithSync(Ph2_HwDescription::RD53* pRD53, const std::vector<uint16_t>& cmdStream);
     void     ResetCoreColumns(Ph2_HwDescription::Chip* pChip);
     void     readNTCvoltCurr(Ph2_HwDescription::ReadoutChip* pChip, uint16_t dacNTC, uint16_t& ntcVolt, uint16_t& ntcCurr);
-    uint16_t maxADCatSaturation(Ph2_HwDescription::ReadoutChip* pChip, const std::string& type = "");
+    uint16_t maxDACatSaturation(Ph2_HwDescription::ReadoutChip* pChip, const std::string& type = "");
 
     // ###########################
     // # Dedicated to monitoring #
