@@ -66,10 +66,10 @@ void OTTimeCorrelations::ConfigureCalibration()
     fNeventsConf = this->findValueInSettings<double>("OTTimeCorrelations_Nevents", 1000);
     LOG(INFO) << "Read fNeventsConf from config file: " << fNeventsConf;
 
-    theThresholdSigma       = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_ThresholdSigma", "3.0, 3.0"));
-    theNTriggerPerBurst     = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_NTriggersPerBurst", "4, 4"));
-    theDelayBetweenTriggers = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_DelayBetweenTriggers", "0, 1"));
-    theAverageFrequency     = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_AverageFrequency", "400, 400"));
+    theThresholdSigma       = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_ListOfThresholdSigma", "3.0, 3.0"));
+    theNTriggerPerBurst     = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_ListOfNTriggersPerBurst", "4, 4"));
+    theDelayBetweenTriggers = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_ListOfDelayBetweenTriggers", "0, 1"));
+    theAverageFrequency     = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_ListOfAverageFrequency", "400, 400"));
 
     fSaveRawData = this->findValueInSettings<double>("OTTimeCorrelations_SaveRawData", 1);
 
