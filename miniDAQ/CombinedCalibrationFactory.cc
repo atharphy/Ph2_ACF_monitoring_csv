@@ -30,6 +30,7 @@
 #include "tools/OTSSAtoMPAecv.h"
 #include "tools/OTSSAtoSSAecv.h"
 #include "tools/OTTemperature.h"
+#include "tools/OTTimeCorrelations.h"
 #include "tools/OTVTRXLightOff.h"
 #include "tools/OTVTRxLightYieldScan.h"
 #include "tools/OTalignBoardDataWord.h"
@@ -114,6 +115,8 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<OTalignBoardDataWord, OTMeasureOccupancy>("Outer Tracker", "measureOccupancy");
 
     Register<OTalignBoardDataWord, OTinjectionOccupancyScan>("Outer Tracker", "injectionOccupancyScan");
+
+    Register<OTalignBoardDataWord, OTTimeCorrelations>("Outer Tracker", "timeCorrelations");
 
     Register<TuneLpGBTVref,
              OTalignLpGBTinputs,
