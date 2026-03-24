@@ -195,7 +195,7 @@ int main(int argc, char** argv)
 
         std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_NTC");
         TEPXQuadNTC ntc;
-	ntc.configure(read_poly);
+        ntc.configure(read_poly);
         ntc.Inherit(&mySysCntr);
         ntc.localConfigure(fileName, runNumber);
         ntc.run();

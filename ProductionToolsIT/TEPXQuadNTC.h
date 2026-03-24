@@ -35,13 +35,12 @@ class TEPXQuadNTC : public CalibBase
     void sendData() override;
 
     void localConfigure(const std::string& histoFileName = "", int currentRun = -1) override;
-  void run() override;
+    void run() override;
     void draw(bool saveData = true) override;
 
     void  analyze();
     float TfromR(float R, const float& R25C, const float& beta);
-    void configure(bool read_poly){ fReadPoly = read_poly;}
-
+    void  configure(bool read_poly) { fReadPoly = read_poly; }
 
   private:
     void         fillHisto() override;
