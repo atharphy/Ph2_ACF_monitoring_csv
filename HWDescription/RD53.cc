@@ -435,10 +435,10 @@ void RD53::enableDefaultPixel(unsigned int row, unsigned int col, bool enable)
 
 void RD53::setPixelMask(unsigned int row, unsigned int col, uint16_t EnInjHitTDAC)
 {
-    fPixelsMask.Enable[row + this->getNRows() * col] = EnInjHitTDAC & 0x01;
-    fPixelsMask.InjEn[row + this->getNRows() * col]  = EnInjHitTDAC & 0x02;
-    fPixelsMask.HitBus[row + this->getNRows() * col] = EnInjHitTDAC & 0x04;
-    fPixelsMask.TDAC[row + this->getNRows() * col]   = EnInjHitTDAC & 0xF8;
+    fPixelsMask.Enable[row + this->getNRows() * col] = (EnInjHitTDAC & 0x01) >> 0;
+    fPixelsMask.InjEn[row + this->getNRows() * col]  = (EnInjHitTDAC & 0x02) >> 1;
+    fPixelsMask.HitBus[row + this->getNRows() * col] = (EnInjHitTDAC & 0x04) >> 2;
+    fPixelsMask.TDAC[row + this->getNRows() * col]   = (EnInjHitTDAC & 0xF8) >> 3;
 }
 
 void     RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixelsMask.InjEn[row + this->getNRows() * col] = inject; }

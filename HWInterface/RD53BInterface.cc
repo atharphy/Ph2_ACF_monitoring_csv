@@ -614,10 +614,7 @@ void RD53BInterface::ReadRD53Mask(RD53* pRD53, int readMode, size_t theRow, size
                     {
                         pRD53->setPixelMask(localRow, localCol + 0, regReadback[i].second & 0x00FF);
                         pRD53->setPixelMask(localRow, localCol + 1, (regReadback[i].second & 0xFF00) >> 8);
-                        std::cout << "Indx: " << i << " -- localRow: " << localRow << " -- localCol: " << localCol + 0 << " -- Value: " << std::hex << (regReadback[i].second & 0x00FF) << std::dec
-                                  << std::endl;
-                        std::cout << "Indx: " << i << " -- localRow: " << localRow << " -- localCol: " << localCol + 1 << " -- Value: " << std::hex << ((regReadback[i].second & 0xFF00) >> 8)
-                                  << std::dec << std::endl;
+
                         localRow--;
                         if(localRow < 0)
                         {
@@ -625,7 +622,6 @@ void RD53BInterface::ReadRD53Mask(RD53* pRD53, int readMode, size_t theRow, size
                             localCol -= 2;
                         }
                     }
-                    std::cout << std::endl;
                 }
             }
     }

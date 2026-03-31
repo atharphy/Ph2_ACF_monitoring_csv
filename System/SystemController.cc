@@ -1272,8 +1272,12 @@ void SystemController::ResetSequence()
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetSequence(cBoard);
 }
 
-void SystemController::DumpRegisters()
+void SystemController::DumpRegisters(unsigned int runNumber)
 {
+    const std::string fromCfgFile   = this->findValueInSettings<std::string>("DataOutputDir", "");
+    const std::string directoryName = fromCfgFile != "" ? fromCfgFile : RD53Shared::RESULTDIR;
+    const bool        doUpdateChip  = this->findValueInSettings<double>("UpdateChipCfg", false);
+
     // #################################################
     // # Dump firmware register content for all boards #
     // #################################################
@@ -1308,7 +1312,7 @@ void SystemController::DumpRegisters()
                 {
                     LOG(INFO) << GREEN << "Readout chip register content for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
                               << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    fReadoutChipInterface->DumpChipRegisters(cChip);
+                    fReadoutChipInterface->DumpChipRegisters(cChip, doUpdateChip, runNumber, directoryName);
                 }
 
     // ######################################################

@@ -227,7 +227,7 @@ int main(int argc, char** argv)
         else if(dumpRegs == true)
         {
             LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Dumping frontend registers @@@\x1b[0m" << RESET;
-            mySysCntr.DumpRegisters();
+            mySysCntr.DumpRegisters(runNumber);
         }
 
         // ####################

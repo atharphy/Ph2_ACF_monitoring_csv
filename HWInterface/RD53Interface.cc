@@ -176,8 +176,9 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
     return true;
 }
 
-void RD53Interface::DumpChipRegisters(ReadoutChip* pChip)
+void RD53Interface::DumpChipRegisters(ReadoutChip* pChip, bool doUpdateChip, unsigned int runNumber, const std::string& directoryName)
 {
+    const std::string fileReg("Run" + RD53Shared::fromInt2Str(runNumber) + "_");
     this->setBoard(pChip->getBeBoardId());
 
     for(auto& cRegItem: pChip->getRegMap())
@@ -186,6 +187,19 @@ void RD53Interface::DumpChipRegisters(ReadoutChip* pChip)
         std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(24) << cRegItem.first << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")"
                   << std::endl;
     }
+
+    LOG(INFO) << BOLDBLUE << "Reading back pixel matrix from [chip = " << BOLDYELLOW << +pChip->getId() << BOLDBLUE << "]... It might take a while" << RESET;
+    ReadRD53Mask(static_cast<RD53*>(pChip), 0);
+
+    // ####################
+    // # Save config file #
+    // ####################
+    if(doUpdateChip == true) pChip->saveRegMap(pChip->getFileName());
+    static_cast<RD53*>(pChip)->saveRegMap(pChip->getFileName(fileReg));
+    std::string command("mv " + pChip->getFileName(fileReg) + " " + directoryName);
+    system(command.c_str());
+    LOG(INFO) << GREEN << "Current calibration saved the configuration file for [chip = " << BOLDYELLOW << +pChip->getId() << RESET << GREEN << "] " << BOLDYELLOW << pChip->getFileName(fileReg)
+              << RESET;
 }
 
 void RD53Interface::EnDisChip(Chip* pChip, std::vector<uint16_t>& chipCommandList, bool enable)

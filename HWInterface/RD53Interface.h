@@ -37,7 +37,7 @@ class RD53Interface : public ReadoutChipInterface
     bool    ConfigureChipOriginalMask(Ph2_HwDescription::ReadoutChip* pChip, bool pVerify = true, uint32_t pBlockSize = 310) override;
     bool    MaskAllChannels(Ph2_HwDescription::ReadoutChip* pChip, bool mask, bool pVerify = true) override;
     bool    maskChannelsAndSetInjectionSchema(Ph2_HwDescription::ReadoutChip* pChip, const std::shared_ptr<ChannelGroupBase> group, bool mask, bool inject, bool pVerify = false) override;
-    void    DumpChipRegisters(Ph2_HwDescription::ReadoutChip* pChip) override;
+    void    DumpChipRegisters(Ph2_HwDescription::ReadoutChip* pChip, bool doUpdateChip, unsigned int runNumber, const std::string& directoryName) override;
     // #############################
 
     // ##################
