@@ -433,6 +433,14 @@ void RD53::enableDefaultPixel(unsigned int row, unsigned int col, bool enable)
         fChipOriginalMask->disableChannel(row, col);
 }
 
+void RD53::setPixelMask(unsigned int row, unsigned int col, uint16_t EnInjHitTDAC)
+{
+    fPixelsMask.Enable[row + this->getNRows() * col] = EnInjHitTDAC & 0x01;
+    fPixelsMask.InjEn[row + this->getNRows() * col]  = EnInjHitTDAC & 0x02;
+    fPixelsMask.HitBus[row + this->getNRows() * col] = EnInjHitTDAC & 0x04;
+    fPixelsMask.TDAC[row + this->getNRows() * col]   = EnInjHitTDAC & 0xF8;
+}
+
 void     RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixelsMask.InjEn[row + this->getNRows() * col] = inject; }
 void     RD53::setTDAC(unsigned int row, unsigned int col, uint8_t TDAC) { fPixelsMask.TDAC[row + this->getNRows() * col] = TDAC; }
 void     RD53::resetTDAC(uint8_t TDAC) { std::fill(fPixelsMask.TDAC.begin(), fPixelsMask.TDAC.end(), TDAC); }

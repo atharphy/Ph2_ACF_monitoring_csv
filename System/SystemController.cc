@@ -1007,9 +1007,9 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo, bool pRe
     fInitialConfigurationFileContent = theConfigureInfo.getConfigFileStream(fConfigurationFileName);
     if(fConfigurationFileName != fSettingsFileName) fInitialConfigurationFileContent += theConfigureInfo.getConfigFileStream(fSettingsFileName);
 
-    // ##################
-    // # Initialization #
-    // ##################
+    // #####################
+    // # Initialization SW #
+    // #####################
     InitializeHw(fConfigurationFileName, fParsedFile);
     InitializeSettings(fSettingsFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
@@ -1025,7 +1025,10 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo, bool pRe
     // ########################################################
     std::cout << fParsedFile.str() << std::endl;
 
-    if(findValueInSettings<double>("SkipConfigureHW", 0) == 0) ConfigureHw(pReInitialize);
+    // #####################
+    // # Initialization HW #
+    // #####################
+    SystemController::ConfigureHw(pReInitialize);
 }
 
 void SystemController::initializeExceptionHandler()

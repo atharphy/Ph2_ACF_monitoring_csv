@@ -124,7 +124,7 @@ bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerify, 
 {
     auto pRD53 = static_cast<RD53*>(pChip);
 
-    WriteRD53Mask(pRD53, false, true);
+    WriteRD53Mask(pRD53, 0, true);
 
     return true;
 }
@@ -138,7 +138,7 @@ bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerify)
     else
         pRD53->enableAllPixels();
 
-    WriteRD53Mask(pRD53, false, false);
+    WriteRD53Mask(pRD53, 0, false);
 
     return true;
 }
@@ -171,7 +171,7 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
     // #########
     // # Apply #
     // #########
-    WriteRD53Mask(pRD53, true, false);
+    WriteRD53Mask(pRD53, 1, false);
 
     return true;
 }
@@ -266,7 +266,7 @@ bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
     for(auto col = 0u; col < pRD53->getNCols(); col++)
         for(auto row = 0u; row < pRD53->getNRows(); row++) pRD53->setTDAC(row, col, pValue.getChannel<uint16_t>(row, col));
 
-    WriteRD53Mask(pRD53, false, false);
+    WriteRD53Mask(pRD53, 0, false);
 
     return true;
 }

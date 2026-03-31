@@ -53,6 +53,7 @@ class RD53Interface : public ReadoutChipInterface
     virtual void PackWriteBroadcastCommand(const Ph2_HwDescription::BeBoard* pBoard, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg = true) = 0;
     virtual void WriteClockDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value)                                                                                                           = 0;
     virtual void WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, int writeMode, bool doDefault, size_t theRow = 0, size_t theCol = 0)                                                            = 0;
+    virtual void ReadRD53Mask(Ph2_HwDescription::RD53* pRD53, int readMode, size_t theRow = 0, size_t theCol = 0)                                                                              = 0;
     virtual void SendBoardClear(const Ph2_HwDescription::BeBoard* pBoard)                                                                                                                      = 0;
     virtual void SendRD53Clear(Ph2_HwDescription::RD53* pRD53)                                                                                                                                 = 0;
 

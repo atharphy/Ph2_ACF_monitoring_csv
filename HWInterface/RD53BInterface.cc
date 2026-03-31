@@ -146,7 +146,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // # Programmig pixel cell registers #
     // ###################################
     pRD53->copyMaskFromDefault();
-    RD53BInterface::WriteRD53Mask(pRD53, false, false);
+    RD53BInterface::WriteRD53Mask(pRD53, 0, false);
 
     return true;
 }
@@ -560,6 +560,95 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
     }
 
     RD53BInterface::SendChipCommandsWithSync(pRD53, commandList);
+
+    // ###########################
+    // # Restore original status #
+    // ###########################
+    RD53Interface::WriteChipReg(pRD53, "PIX_MODE", pixMode);
+}
+
+void RD53BInterface::ReadRD53Mask(RD53* pRD53, int readMode, size_t theRow, size_t theCol)
+// #################################
+// # readMode = 0 --> all pixels   #
+// # readMode = 1 --> single pixel #
+// #################################
+{
+    this->setBoard(pRD53->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
+
+    std::vector<uint16_t> commandList;
+    const uint16_t        REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;
+    const uint16_t        REGION_ROW_ADDR = pRD53->getRegItem("REGION_ROW").fAddress;
+    const uint16_t        PIX_MODE_ADDR   = pRD53->getRegItem("PIX_MODE").fAddress;
+    const uint16_t        PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
+    const uint8_t         chipID          = pRD53->getId();
+
+    // ########################
+    // # Save original status #
+    // ########################
+    auto pixMode = pRD53->getRegMap().find("PIX_MODE")->second.fValue;
+
+    if(readMode == 0)
+    {
+        for(auto col = 0u; col < RD53B::NCOLS; col += 2)
+            for(auto row = 0u; row < RD53B::NROWS; row++)
+            {
+                RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
+                RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, row}, commandList);
+
+                RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
+                RD53BCmd::serialize(RD53BCmd::RdReg{chipID, PIX_PORTAL_ADDR}, commandList);
+
+                if((col * RD53B::NROWS + row + 1) % RD53Constants::MaxNReadSameTime == 0)
+                {
+                    RD53BInterface::SendChipCommandsWithSync(pRD53, commandList);
+                    commandList.clear();
+
+                    // #################################
+                    // # Retrieve from FW memory banks #
+                    // #################################
+                    int  localCol    = col;
+                    int  localRow    = row;
+                    auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pRD53);
+                    for(int i = regReadback.size() - 1; i >= 0; i--)
+                    {
+                        pRD53->setPixelMask(localRow, localCol + 0, regReadback[i].second & 0x00FF);
+                        pRD53->setPixelMask(localRow, localCol + 1, (regReadback[i].second & 0xFF00) >> 8);
+                        std::cout << "Indx: " << i << " -- localRow: " << localRow << " -- localCol: " << localCol + 0 << " -- Value: " << std::hex << (regReadback[i].second & 0x00FF) << std::dec
+                                  << std::endl;
+                        std::cout << "Indx: " << i << " -- localRow: " << localRow << " -- localCol: " << localCol + 1 << " -- Value: " << std::hex << ((regReadback[i].second & 0xFF00) >> 8)
+                                  << std::dec << std::endl;
+                        localRow--;
+                        if(localRow < 0)
+                        {
+                            localRow = RD53B::NROWS - 1;
+                            localCol -= 2;
+                        }
+                    }
+                    std::cout << std::endl;
+                }
+            }
+    }
+    else if(readMode == 1)
+    {
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, theCol / 2}, commandList);
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, theRow}, commandList);
+
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
+        RD53BCmd::serialize(RD53BCmd::RdReg{chipID, PIX_PORTAL_ADDR}, commandList);
+
+        RD53BInterface::SendChipCommandsWithSync(pRD53, commandList);
+
+        // #################################
+        // # Retrieve from FW memory banks #
+        // #################################
+        auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pRD53);
+        for(auto i = 0u; i < regReadback.size(); i++)
+        {
+            pRD53->setPixelMask(theRow, theCol + 0, regReadback[i].second & 0x00FF);
+            pRD53->setPixelMask(theRow, theCol + 1, (regReadback[i].second & 0xFF00) >> 8);
+        }
+    }
 
     // ###########################
     // # Restore original status #
