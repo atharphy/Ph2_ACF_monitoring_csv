@@ -727,9 +727,9 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
 
             for(auto theOpticalGroup: *pBoard)
             {
-                float lighPower = GetSFPParameter(theOpticalGroup, "RX");
-                if(lighPower < 100.)
-                    LOG(ERROR) << ERROR_FORMAT << "Light from VTRx on opticalGroup " << theOpticalGroup->getId() << " is too low (" << lighPower << " uW). Check connection and module" << RESET;
+                float lightPower = GetSFPParameter(theOpticalGroup, "RX").second;
+                if(lightPower < 100.)
+                    LOG(ERROR) << ERROR_FORMAT << "Light from VTRx on opticalGroup " << theOpticalGroup->getId() << " is too low (" << lightPower << " uW). Check VTRX and LV connections on module" << RESET;
             }
             fLinkInterface->GeneralLinkReset(pBoard);
         }
@@ -1676,48 +1676,47 @@ std::pair<int, float> D19cFWInterface::GetSFPParameter(std::string parameter, in
     if(error) { LOG(ERROR) << ERROR_FORMAT << "Error occurred during communication with the SFP. The error code is: " << error << RESET; }
     else if(error == 0 && time_out == true)
     {
-        if(parameter == "T") LOG(DEBUG) << "Time out in reading the temperature of the SFP for channel " << channel << "." << RESET;
-        if(parameter == "V") LOG(DEBUG) << "Time out in reading the SFP's voltage for channel " << channel << "." << RESET;
-        if(parameter == "I") LOG(DEBUG) << "Time out in reading the SFP's bias current for channel " << channel << "." << RESET;
-        if(parameter == "TX") LOG(DEBUG) << "Time out in reading the SFP's transmited power for channel " << channel << "." << RESET;
-        if(parameter == "RX") LOG(DEBUG) << "Time out in reading the SFP's received power for channel " << channel << "." << RESET;
+        if(parameter == "T") LOG(INFO) << "Time out in reading the temperature of the SFP for channel " << channel << "." << RESET;
+        if(parameter == "V") LOG(INFO) << "Time out in reading the SFP's voltage for channel " << channel << "." << RESET;
+        if(parameter == "I") LOG(INFO) << "Time out in reading the SFP's bias current for channel " << channel << "." << RESET;
+        if(parameter == "TX") LOG(INFO) << "Time out in reading the SFP's transmited power for channel " << channel << "." << RESET;
+        if(parameter == "RX") LOG(INFO) << "Time out in reading the SFP's received power for channel " << channel << "." << RESET;
     }
     else
     {
         result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_" + mezzanine);
-
         if(parameter == "T")
         {
             result = result / 256.0;
-            LOG(DEBUG) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
+            LOG(INFO) << "The temperature of the SFP for channel " << channel << " is " << result << " Celsius" << RESET;
         }
         else if(parameter == "V")
         {
             result = result / 10.0;
-            LOG(DEBUG) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
+            LOG(INFO) << "The SFP's voltage for channel " << channel << " is " << result << " miliVolt" << RESET;
         }
         else if(parameter == "I")
         {
             result = result * 0.002;
-            LOG(DEBUG) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
+            LOG(INFO) << "The SFP's bias current for channel " << channel << " is " << result << " miliAmper" << RESET;
         }
         else if(parameter == "TX")
         {
             result = result * 0.1;
-            LOG(DEBUG) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
+            LOG(INFO) << "The SFP's transmited power for channel " << channel << " is " << result << " muWatt" << RESET;
         }
         else if(parameter == "RX")
         {
             result = result * 0.1;
-            LOG(DEBUG) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
+            LOG(INFO) << "The SFP's received power for channel " << channel << " is " << result << " muWatt" << RESET;
         }
-        else if(parameter == "raw") { LOG(DEBUG) << "The SFP's output for channel " << channel << " is " << result << RESET; }
+        else if(parameter == "raw") { LOG(INFO) << "The SFP's output for channel " << channel << " is " << result << RESET; }
         return std::make_pair(error, result);
     }
     return std::make_pair(error, result);
 }
 
-float D19cFWInterface::GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOpticalGroup, std::string parameter)
+std::pair<int, float> D19cFWInterface::GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOpticalGroup, std::string parameter)
 {
     uint32_t fmc2_card_type = ReadReg("fc7_daq_stat.general.info.fmc2_card_type");
     size_t   cLinkOffset    = 0;
@@ -1737,7 +1736,7 @@ float D19cFWInterface::GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOptic
 
     std::pair<int, float> theErrorResultPair = GetSFPParameter(parameter, channelNumber, isL8);
     if(theErrorResultPair.first != 0) LOG(ERROR) << ERROR_FORMAT << "Error occurred on OpticalGroup " << theOpticalGroup->getId() << RESET;
-    return theErrorResultPair.second;
+    return theErrorResultPair;
 }
 
 void D19cFWInterface::vtrxHardReset(Ph2_HwDescription::OpticalGroup* theOpticalGroup)
