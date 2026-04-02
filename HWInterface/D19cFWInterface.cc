@@ -729,7 +729,8 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
             {
                 float lightPower = GetSFPParameter(theOpticalGroup, "RX").second;
                 if(lightPower < 100.)
-                    LOG(ERROR) << ERROR_FORMAT << "Light from VTRx on opticalGroup " << theOpticalGroup->getId() << " is too low (" << lightPower << " uW). Check VTRX and LV connections on module" << RESET;
+                    LOG(ERROR) << ERROR_FORMAT << "Light from VTRx on opticalGroup " << theOpticalGroup->getId() << " is too low (" << lightPower << " uW). Check VTRX and LV connections on module"
+                               << RESET;
             }
             fLinkInterface->GeneralLinkReset(pBoard);
         }
