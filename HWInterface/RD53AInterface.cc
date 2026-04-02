@@ -346,6 +346,87 @@ void RD53AInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
     if(commandList.size() != 0) static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pRD53->getHybridId());
 }
 
+void RD53AInterface::ReadRD53Mask(RD53* pRD53, int readMode, size_t theRow, size_t theCol)
+// #################################
+// # readMode = 0 --> all pixels   #
+// # readMode = 1 --> single pixel #
+// #################################
+{
+    this->setBoard(pRD53->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
+
+    std::vector<uint16_t> commandList;
+    const uint16_t        REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;
+    const uint16_t        REGION_ROW_ADDR = pRD53->getRegItem("REGION_ROW").fAddress;
+    const uint16_t        PIX_MODE_ADDR   = pRD53->getRegItem("PIX_MODE").fAddress;
+    const uint16_t        PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
+    // const uint8_t         highGain        = pRD53->getRegItem("HighGain_LIN").fValue;
+    const uint8_t chipID = pRD53->getId();
+
+    // ##########################
+    // # Disable default config #
+    // ##########################
+    RD53ACmd::serialize(RD53ACmd::WrReg{chipID, pRD53->getRegItem("PIX_DEFAULT_CONFIG").fAddress, 0x0}, commandList);
+
+    if(readMode == 0)
+    {
+        for(auto col = 0u; col < RD53B::NCOLS; col += 2)
+            for(auto row = 0u; row < RD53B::NROWS; row++)
+            {
+                RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_COL_ADDR, theCol / 2}, commandList);
+                RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, theRow}, commandList);
+
+                RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
+                RD53ACmd::serialize(RD53ACmd::RdReg{chipID, PIX_PORTAL_ADDR}, commandList);
+
+                if((col * RD53B::NROWS + row + 1) % RD53Constants::MaxNReadSameTime == 0)
+                {
+                    static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pRD53->getHybridId());
+                    commandList.clear();
+
+                    // #################################
+                    // # Retrieve from FW memory banks #
+                    // #################################
+                    int  localCol    = col;
+                    int  localRow    = row;
+                    auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pRD53);
+                    for(int i = regReadback.size() - 1; i >= 0; i--)
+                    {
+                        pRD53->setPixelMask(localRow, localCol + 0, regReadback[i].second & 0x007F);
+                        pRD53->setPixelMask(localRow, localCol + 1, (regReadback[i].second & 0x7F00) >> 8);
+
+                        localRow--;
+                        if(localRow < 0)
+                        {
+                            localRow = RD53B::NROWS - 1;
+                            localCol -= 2;
+                        }
+                    }
+                }
+            }
+    }
+    else if(readMode == 1)
+    {
+        RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_COL_ADDR, theCol / 2}, commandList);
+        RD53ACmd::serialize(RD53ACmd::WrReg{chipID, REGION_ROW_ADDR, theRow}, commandList);
+
+        RD53ACmd::serialize(RD53ACmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
+        RD53ACmd::serialize(RD53ACmd::RdReg{chipID, PIX_PORTAL_ADDR}, commandList);
+
+        static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pRD53->getHybridId());
+
+        // #################################
+        // # Retrieve from FW memory banks #
+        // #################################
+        auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pRD53);
+        for(auto i = 0u; i < regReadback.size(); i++)
+        {
+            pRD53->setPixelMask(theRow, theCol + 0, regReadback[i].second & 0x007F);
+            pRD53->setPixelMask(theRow, theCol + 1, (regReadback[i].second & 0x7F00) >> 8);
+        }
+    }
+}
+
 void RD53AInterface::PackWriteCommand(Chip* pChip, const std::string& regName, uint16_t data, std::vector<uint16_t>& chipCommandList, bool updateReg)
 {
     RD53ACmd::serialize(RD53ACmd::WrReg{(uint8_t)pChip->getId(), pChip->getRegItem(regName).fAddress, data}, chipCommandList);
