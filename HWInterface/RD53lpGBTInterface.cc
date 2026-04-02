@@ -80,7 +80,7 @@ bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pa
     return writeGood;
 }
 
-int32_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
+int32_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode, const bool updateReg)
 {
     if(pRegNode.find("_I2CVTRxReg") == std::string::npos)
         return RD53lpGBTInterface::ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress);

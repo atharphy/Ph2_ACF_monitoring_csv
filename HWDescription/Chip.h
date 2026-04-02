@@ -15,12 +15,17 @@
 #include "Utils/ConsoleColor.h"
 #include "Utils/Container.h"
 #include "Utils/Exception.h"
+#include "Utils/RD53Shared.h"
 #include "Utils/Visitor.h"
 #include "Utils/easylogging++.h"
 
+#include <cstdio>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <regex>
 #include <set>
+#include <sstream>
 #include <stdint.h>
 #include <string>
 #include <unordered_map>
@@ -35,11 +40,13 @@ class ChannelGroupBase;
 
 namespace Ph2_HwDescription
 {
+
 struct ChipRegMask
 {
     uint8_t fBitShift;
     uint8_t fNbits;
 };
+
 class ChipFuseID // I think this makes sense in chip?
 {
     uint32_t fVal = 0;
@@ -124,6 +131,14 @@ class Chip : public FrontEndDescription
     void saveRegMap(const std::string& fileName);
 
     /*!
+     * \brief Write the registers of the Map in a file and move it in a dedicated directory
+     * \param doUpdateChip
+     * \param runNumber
+     * \param directoryName
+     */
+    void saveRegMapAndMove(bool doUpdateChip, unsigned int runNumber, const std::string& directoryName);
+
+    /*!
      * \brief Prepare a stream with the registers of the Map
      * \return std::stringstream
      */
@@ -186,7 +201,8 @@ class Chip : public FrontEndDescription
         cRegMask          = ~(cRegMask);
         setReg(pReg, (getReg(pReg) & cRegMask) | (pValue << pMask.fBitShift));
     }
-    // retrieve some bits of register
+
+    // Retrieve some bits of register
     uint16_t getRegBits(const std::string& pReg, ChipRegMask pMask)
     {
         uint16_t cMask = 0x0000;

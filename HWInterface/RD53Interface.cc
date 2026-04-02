@@ -91,7 +91,7 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
 }
 
-int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
+int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName, const bool updateReg)
 {
     this->setBoard(pChip->getBeBoardId());
     std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
@@ -111,7 +111,14 @@ int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
         }
         else
+        {
+            // #############################
+            // # Update register in memory #
+            // #############################
+            if(updateReg == true) pChip->setReg(regName, regReadback[0].second);
+
             return regReadback[0].second;
+        }
     }
 
     if(RD53Interface::silentRunning == false)
@@ -178,12 +185,11 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
 
 void RD53Interface::DumpChipRegisters(ReadoutChip* pChip, bool doUpdateChip, unsigned int runNumber, const std::string& directoryName)
 {
-    const std::string fileReg("Run" + RD53Shared::fromInt2Str(runNumber) + "_");
     this->setBoard(pChip->getBeBoardId());
 
     for(auto& cRegItem: pChip->getRegMap())
     {
-        auto value = RD53Interface::ReadChipReg(pChip, cRegItem.first);
+        auto value = RD53Interface::ReadChipReg(pChip, cRegItem.first, true);
         std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(24) << cRegItem.first << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")"
                   << std::endl;
     }
@@ -191,15 +197,8 @@ void RD53Interface::DumpChipRegisters(ReadoutChip* pChip, bool doUpdateChip, uns
     LOG(INFO) << BOLDBLUE << "Reading back pixel matrix from [chip = " << BOLDYELLOW << +pChip->getId() << BOLDBLUE << "]... It might take a while" << RESET;
     ReadRD53Mask(static_cast<RD53*>(pChip), 0);
 
-    // ####################
-    // # Save config file #
-    // ####################
-    if(doUpdateChip == true) pChip->saveRegMap(pChip->getFileName());
-    static_cast<RD53*>(pChip)->saveRegMap(pChip->getFileName(fileReg));
-    std::string command("mv " + pChip->getFileName(fileReg) + " " + directoryName);
-    system(command.c_str());
-    LOG(INFO) << GREEN << "Current calibration saved the configuration file for [chip = " << BOLDYELLOW << +pChip->getId() << RESET << GREEN << "] " << BOLDYELLOW << pChip->getFileName(fileReg)
-              << RESET;
+    pChip->saveRegMapAndMove(doUpdateChip, runNumber, directoryName);
+    LOG(INFO) << BOLDBLUE << "Saved frontend configuration file [chip = " << BOLDYELLOW << +pChip->getId() << BOLDBLUE << "] " << RESET;
 }
 
 void RD53Interface::EnDisChip(Chip* pChip, std::vector<uint16_t>& chipCommandList, bool enable)

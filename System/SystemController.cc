@@ -1283,7 +1283,7 @@ void SystemController::DumpRegisters(unsigned int runNumber)
     // #################################################
     for(const auto cBoard: *fDetectorContainer)
     {
-        LOG(INFO) << GREEN << "Firmware register content for [board = " << BOLDYELLOW << cBoard->getId() << GREEN << "]" << RESET;
+        LOG(INFO) << BOLDBLUE << "Firmware register content for [board = " << BOLDYELLOW << cBoard->getId() << BOLDBLUE << "]" << RESET;
 
         const auto theBeBoardFW = this->fBeBoardFWMap[cBoard->getId()];
         const auto hwInterface  = theBeBoardFW->getHardwareInterface();
@@ -1310,8 +1310,8 @@ void SystemController::DumpRegisters(unsigned int runNumber)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << GREEN << "Readout chip register content for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    LOG(INFO) << BOLDBLUE << "Readout chip register content for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << BOLDBLUE << "]" << RESET;
                     fReadoutChipInterface->DumpChipRegisters(cChip, doUpdateChip, runNumber, directoryName);
                 }
 
@@ -1322,8 +1322,7 @@ void SystemController::DumpRegisters(unsigned int runNumber)
         for(const auto cOpticalGroup: *cBoard)
             if(cOpticalGroup->flpGBT != nullptr)
             {
-                LOG(INFO) << GREEN << "OpticalGroup chip register content for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]"
-                          << RESET;
+                LOG(INFO) << BOLDBLUE << "OpticalGroup chip register content for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << BOLDBLUE << "]" << RESET;
                 flpGBTInterface->DumpChipRegisters(cOpticalGroup->flpGBT);
             }
 }

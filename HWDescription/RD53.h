@@ -16,7 +16,6 @@
 #include "Utils/ConsoleColor.h"
 #include "Utils/Container.h"
 #include "Utils/RD53Event.h"
-#include "Utils/RD53Shared.h"
 
 // ##################
 // # Default values #
@@ -70,7 +69,7 @@ namespace Ph2_HwDescription
 struct pixelMask
 {
     pixelMask() = default;
-    pixelMask(size_t size, bool en, bool hb, bool ie, uint8_t tdac) : Enable(size, en), InjEn(size, ie), HitBus(size, hb), TDAC(size, tdac) {}
+    pixelMask(size_t size, bool en, bool ie, bool hb, uint8_t tdac) : Enable(size, en), InjEn(size, ie), HitBus(size, hb), TDAC(size, tdac) {}
 
     std::vector<bool>    Enable;
     std::vector<bool>    InjEn;
