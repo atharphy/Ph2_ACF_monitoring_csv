@@ -107,7 +107,6 @@ void OTVTRxLightYieldScan::scanVTRxLightYield()
                     }
                     else
                     {
-
                         // It has been observed that often there are issues reading Optical Group 0 with measurements
                         // giving as power values powers of 2, with often 2^16 or 0xFFFF. To avoid checking multiple
                         // power of 2 combinations, multiple measurements are collected for the same bias and modulation point.
@@ -126,36 +125,25 @@ void OTVTRxLightYieldScan::scanVTRxLightYield()
                             auto error  = VTRxLightYieldRXMap.first;
                             auto result = VTRxLightYieldRXMap.second;
                         
-                            uint16_t raw = static_cast<uint16_t>(result * 10);
-                        
-                        
-                            if (theOpticalGroup->getId() == 0) std::cout << "attempt " << attempt
-                                      << " power " << result
-                                      << " error " << error
-                                      << " valueCount " << valueCount
-                                      << std::endl;
-                        
-                            if (error == 0)
+                            uint16_t raw = static_cast<uint16_t>(result * 10); // power measurements divide the raw by 10                       
+                            if (error == 0) // considering only measurements with no reading errors
                             {
                                 powerValues.push_back(raw);
                                 uint16_t masked = raw & 0xFF80;
                                 counts[masked]++;
                                 valueCount++;
                             }
+
                             if (valueCount >= requiredGood)
-                            {
-                                std::cout << "Collected 5 valid measurements\n";
                                 break;
-                            }
-                            
-                        
+
                             if (attempt == maxAttempts)
                             {
                                 LOG(ERROR) << ERROR_FORMAT << " For OpticalGroup " << theOpticalGroup->getId() << " reached maxRetries: Power: "<<  result << "mW and error " << error << RESET;
                             }
                         }
 
-                        // find most popular bin
+                        // find most popular "bin"
                         uint16_t bestValue = 0;
                         int maxCount = 0;
                     
@@ -185,9 +173,6 @@ void OTVTRxLightYieldScan::scanVTRxLightYield()
                         // -------- compute final value --------
                         VTRxLightYieldRX =
                             (std::accumulate(filtered.begin(), filtered.end(), 0.0) / filtered.size())*0.1;
-
-                        std::cout << " final power value " << VTRxLightYieldRX << std::endl;
-
                     }
                     theOpticalPowerContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<float>() = VTRxLightYieldRX;
                     if(fOfStream != nullptr)
