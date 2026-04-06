@@ -342,7 +342,7 @@ void RD53BMuxReader::run()
 
                     cChip->getRegItem("SAMPLE_N_TIMES").fValue = sampleNtimes; // restore the original vaue
 
-                    if(read_temperatures) // test
+                    if(do_poly_test)
                     {
                         // read poly sensor ntc style (simplified, temporary)
                         float const        R_ref              = 4.99;    // TEPX HDI
@@ -351,7 +351,7 @@ void RD53BMuxReader::run()
                         float const        R_poly_bot_reftemp = cChip->getRegItem("RES_MEAS_BOTTOM").fValue / 1e3;
                         float const        reftemp            = cChip->getRegItem("REFTEMP").fValue;
                         const unsigned int dac_1              = 100;
-                        const unsigned int dac_2              = 400;
+                        const unsigned int dac_2              = 350;
 
                         chipInterface->WriteChipReg(cChip, "DAC_NTC", dac_1);
                         usleep(1000000);
