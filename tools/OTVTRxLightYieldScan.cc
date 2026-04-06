@@ -99,15 +99,78 @@ void OTVTRxLightYieldScan::scanVTRxLightYield()
                         if(++numberOfAttempts >= maximumAllowedAttempts) break;
                     }
                     usleep(10000);
-                    float VTRxLightYieldRX;
+                    float VTRxLightYieldRX = 0;
                     if(numberOfAttempts == maximumAllowedAttempts)
                     {
                         VTRxLightYieldRX = -1;
                         continue;
                     }
                     else
-                        VTRxLightYieldRX = theFWinterface->GetSFPParameter(theOpticalGroup, "RX");
+                    {
+                        // It has been observed that often there are issues reading Optical Group 0 with measurements
+                        // giving as power values powers of 2, with often 2^16 or 0xFFFF. To avoid checking multiple
+                        // power of 2 combinations, multiple measurements are collected for the same bias and modulation point.
+                        // Then the measurement are compared excluding the 7 least significant bits to take into account real fluctuations.
+                        // The most common measurement is then chosen.
+                        int requiredGood = 5;
+                        int valueCount   = 0;
+                        int maxAttempts  = 10; // safety limit
 
+                        std::vector<double>     powerValues;
+                        std::map<uint16_t, int> counts;
+                        for(int attempt = 0; attempt < maxAttempts; ++attempt)
+                        {
+                            auto VTRxLightYieldRXMap = theFWinterface->GetSFPParameter(theOpticalGroup, "RX");
+
+                            auto error  = VTRxLightYieldRXMap.first;
+                            auto result = VTRxLightYieldRXMap.second;
+
+                            uint16_t raw = static_cast<uint16_t>(result * 10); // power measurements divide the raw by 10
+                            if(error == 0)                                     // considering only measurements with no reading errors
+                            {
+                                powerValues.push_back(raw);
+                                uint16_t masked = raw & 0xFF80;
+                                counts[masked]++;
+                                valueCount++;
+                            }
+
+                            if(valueCount >= requiredGood) break;
+
+                            if(attempt == maxAttempts)
+                            {
+                                LOG(ERROR) << ERROR_FORMAT << " For OpticalGroup " << theOpticalGroup->getId() << " reached maxRetries: Power: " << result << "mW and error " << error << RESET;
+                            }
+                        }
+
+                        // find most popular "bin"
+                        uint16_t bestValue = 0;
+                        int      maxCount  = 0;
+
+                        for(auto& [val, count]: counts)
+                        {
+                            if(count > maxCount)
+                            {
+                                maxCount  = count;
+                                bestValue = val;
+                            }
+                        }
+                        //  filter original values
+                        std::vector<double> filtered;
+
+                        for(auto val: powerValues)
+                        {
+                            uint16_t raw    = static_cast<uint16_t>(val);
+                            uint16_t masked = raw & 0xFF80;
+
+                            if(masked == bestValue)
+                            {
+                                filtered.push_back(val); // keep ORIGINAL value
+                            }
+                        }
+
+                        // -------- compute final value --------
+                        VTRxLightYieldRX = (std::accumulate(filtered.begin(), filtered.end(), 0.0) / filtered.size()) * 0.1;
+                    }
                     theOpticalPowerContainer.getOpticalGroup(theBoard->getId(), theOpticalGroup->getId())->getSummary<float>() = VTRxLightYieldRX;
                     if(fOfStream != nullptr)
                     {
