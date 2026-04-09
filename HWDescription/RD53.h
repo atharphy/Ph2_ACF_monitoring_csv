@@ -39,7 +39,7 @@ const uint8_t  NWORDS_TO_SYNC   = 30;   // Number of words beforse send a Sync
 const uint8_t  PATTERN_PRBS     = 0xAA; // Start PRBS pattern
 const uint8_t  PATTERN_AURORA   = 0x55; // Start AURORA pattern
 const uint8_t  PATTERN_CLOCK    = 0x00; // Start clock pattern
-const uint16_t MaxNReadSameTime = 336;  // Maximum number of consecutive read commands
+const uint16_t MaxNReadSameTime = 32;   // Maximum number of consecutive read commands
 } // namespace RD53Constants
 
 // #####################
