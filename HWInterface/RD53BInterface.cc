@@ -610,6 +610,7 @@ void RD53BInterface::ReadRD53Mask(RD53* pRD53, int readMode, size_t theRow, size
                     int  localCol    = col;
                     int  localRow    = row;
                     auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pRD53);
+                    static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO();
                     for(int i = regReadback.size() - 1; i >= 0; i--)
                     {
                         pRD53->setPixelMask(localRow, localCol + 0, regReadback[i].second & 0x00FF);
