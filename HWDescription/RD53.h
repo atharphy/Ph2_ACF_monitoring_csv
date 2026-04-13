@@ -39,7 +39,9 @@ const uint8_t  NWORDS_TO_SYNC   = 30;   // Number of words beforse send a Sync
 const uint8_t  PATTERN_PRBS     = 0xAA; // Start PRBS pattern
 const uint8_t  PATTERN_AURORA   = 0x55; // Start AURORA pattern
 const uint8_t  PATTERN_CLOCK    = 0x00; // Start clock pattern
-const uint16_t MaxNReadSameTime = 32;   // Maximum number of consecutive read commands
+const uint16_t MaxNReadSameTime = 32;  // Maximum number of consecutive read commands
+const uint16_t CURRENT_FACTOR  = 21e3; // Conversion factor for the ANA_IN_CURR monitor [uA]
+const uint16_t SHUNT_CURRENT_FACTOR = 21.54e3; // Conversion factor for the ANA_SHUNT_CURR and DIG_SHUNT_CURR monitors [uA]
 } // namespace RD53Constants
 
 // #####################
