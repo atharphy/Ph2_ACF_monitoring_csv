@@ -24,31 +24,27 @@ typedef bool PowerTrimmingHistograms;
 #endif
 
 class PowerTrimming : public CalibBase
-{ 
+{
   public:
     ~PowerTrimming()
     {
-      WriteRootFile();
-      delete histos;
+        WriteRootFile();
+        delete histos;
     }
-    PowerTrimming() : 
-    histos(nullptr), 
-    COMP_CURRENT_mA(0), PREAMP_CURRENT_mA(0), LDAC_CURRENT_mA(0),
-    MAX_PREAMP(1<<8)  , MAX_COMP(1<<10)      , MAX_LDAC(1<<10)   {}
+    PowerTrimming() : histos(nullptr), COMP_CURRENT_mA(0), PREAMP_CURRENT_mA(0), LDAC_CURRENT_mA(0), MAX_PREAMP(1 << 8), MAX_COMP(1 << 10), MAX_LDAC(1 << 10) {}
 
-    void  Running()                  override ;
-    void  Stop()                     override ;
-    void  ConfigureCalibration()     override ;
-    void  sendData()                 override ;
-    void  run()                      override ;
-    void  draw(bool saveData = true) override ;
-    void  localConfigure(const std::string& histoFileName, int currentRun) override;
-    void  analyze() {};
+    void Running() override;
+    void Stop() override;
+    void ConfigureCalibration() override;
+    void sendData() override;
+    void run() override;
+    void draw(bool saveData = true) override;
+    void localConfigure(const std::string& histoFileName, int currentRun) override;
+    void analyze() {};
 
     PowerTrimmingHistograms* histos;
 
   private:
-
     float COMP_CURRENT_mA;
     float PREAMP_CURRENT_mA;
     float LDAC_CURRENT_mA;
@@ -59,8 +55,8 @@ class PowerTrimming : public CalibBase
 
     std::vector<PowerTrimmingData> fPowerTrimmingResults;
 
-    void fillHisto() override;
-    dataType linearScanBottomUp(RD53* chip, const std::vector<std::string>& regNames, uint16_t startValue, uint16_t maxValue, const std::string targetName, float& targetDiff);
+    void     fillHisto() override;
+    dataType linearScanBottomUp(RD53* pChip, const std::vector<std::string>& regNames, uint16_t startValue, uint16_t maxValue, const std::string targetName, float& targetDiff);
 
   protected:
     DetectorDataContainer theComparatorCurrentContainer;

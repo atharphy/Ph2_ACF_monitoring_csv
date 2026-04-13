@@ -16,35 +16,34 @@
 
 #define NBINS_C 1024
 
-struct PowerTrimmingData {
-    float timestamp;
+struct PowerTrimmingData
+{
+    float    timestamp;
     uint16_t bit;
-    float ANA_IN_CURR;
-    float DIG_IN_CURR;
-    float VINA;
-    float VDDA;
-    float VIND;
-    float VDDD;
-    float Iref;
-    float ANA_SHUNT_CURR;
-    float DIG_SHUNT_CURR;
+    float    ANA_IN_CURR;
+    float    DIG_IN_CURR;
+    float    VINA;
+    float    VDDA;
+    float    VIND;
+    float    VDDD;
+    float    Iref;
+    float    ANA_SHUNT_CURR;
+    float    DIG_SHUNT_CURR;
 };
 class PowerTrimmingHistograms : public DQMHistogramBase
 {
   public:
-    PowerTrimmingHistograms() : fDetectorContainer(nullptr) {
-    };
-    ~PowerTrimmingHistograms() {
-    };
+    PowerTrimmingHistograms() : fDetectorContainer(nullptr) {};
+    ~PowerTrimmingHistograms() {};
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
     bool fill(std::string& inputStream) override;
-    void process()                      override;
-    void reset()                        override {};
-    
-    void fillHisto                  (const DetectorDataContainer& dataContainer, const DetectorDataContainer& dataHistogram);
-    void fillComparatorCurrentHisto (const DetectorDataContainer& dataContainer);
+    void process() override;
+    void reset() override {};
+
+    void fillHisto(const DetectorDataContainer& dataContainer, const DetectorDataContainer& dataHistogram);
+    void fillComparatorCurrentHisto(const DetectorDataContainer& dataContainer);
     void fillPreamplifierCurrentHisto(const DetectorDataContainer& dataContainer);
-    void fillLDACCurrentHisto       (const DetectorDataContainer& dataContainer);
+    void fillLDACCurrentHisto(const DetectorDataContainer& dataContainer);
     void fillCustomHistos(const std::vector<PowerTrimmingData>& dataList);
 
     bool AreHistoBooked = false;

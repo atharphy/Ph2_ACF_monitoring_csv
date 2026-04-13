@@ -27,21 +27,21 @@
 // #########################
 namespace RD53Constants
 {
-const uint8_t  ACCELERATOR_CLK  = 40;   // Accelerator clock frequency [MHz]
-const uint8_t  NBIT_MAXREG      = 16;   // Maximum number of bits for a chip register
-const uint8_t  NPIX_REGION      = 4;    // Number of pixels in a region (1x4)
-const uint8_t  NROW_CORE        = 8;    // Number of rows in a core
-const uint8_t  NBIT_ADDR        = 9;    // Number of address bits
-const uint8_t  NBIT_TOT         = 4;    // Number of ToT bits
-const uint8_t  NSYNC_WORDS_S    = 2;    // Number of Sync words for synchronization (S = small)
-const uint8_t  NSYNC_WORDS_L    = 64;   // Number of Sync words for synchronization (L = large)
-const uint8_t  NWORDS_TO_SYNC   = 30;   // Number of words beforse send a Sync
-const uint8_t  PATTERN_PRBS     = 0xAA; // Start PRBS pattern
-const uint8_t  PATTERN_AURORA   = 0x55; // Start AURORA pattern
-const uint8_t  PATTERN_CLOCK    = 0x00; // Start clock pattern
-const uint16_t MaxNReadSameTime = 32;  // Maximum number of consecutive read commands
-const uint16_t CURRENT_FACTOR  = 21e3; // Conversion factor for the ANA_IN_CURR monitor [uA]
-const uint16_t SHUNT_CURRENT_FACTOR = 21.54e3; // Conversion factor for the ANA_SHUNT_CURR and DIG_SHUNT_CURR monitors [uA]
+const uint8_t  ACCELERATOR_CLK   = 40;      // Accelerator clock frequency [MHz]
+const uint8_t  NBIT_MAXREG       = 16;      // Maximum number of bits for a chip register
+const uint8_t  NPIX_REGION       = 4;       // Number of pixels in a region (1x4)
+const uint8_t  NROW_CORE         = 8;       // Number of rows in a core
+const uint8_t  NBIT_ADDR         = 9;       // Number of address bits
+const uint8_t  NBIT_TOT          = 4;       // Number of ToT bits
+const uint8_t  NSYNC_WORDS_S     = 2;       // Number of Sync words for synchronization (S = small)
+const uint8_t  NSYNC_WORDS_L     = 64;      // Number of Sync words for synchronization (L = large)
+const uint8_t  NWORDS_TO_SYNC    = 30;      // Number of words beforse send a Sync
+const uint8_t  PATTERN_PRBS      = 0xAA;    // Start PRBS pattern
+const uint8_t  PATTERN_AURORA    = 0x55;    // Start AURORA pattern
+const uint8_t  PATTERN_CLOCK     = 0x00;    // Start clock pattern
+const uint16_t MaxNReadSameTime  = 32;      // Maximum number of consecutive read commands
+const uint16_t IN_CURR_FACTOR    = 21e3;    // Conversion factor for the ANA_IN_CURR and DIG_IN_CURR monitors [uA]
+const uint16_t SHUNT_CURR_FACTOR = 21.52e3; // Conversion factor for the ANA_SHUNT_CURR and DIG_SHUNT_CURR monitors [uA]
 } // namespace RD53Constants
 
 // #####################

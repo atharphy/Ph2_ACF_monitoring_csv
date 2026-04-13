@@ -21,14 +21,13 @@
 #include "tools/RD53LpGBTeyeOpening.h"
 #include "tools/RD53Physics.h"
 #include "tools/RD53PixelAlive.h"
+#include "tools/RD53PowerTrimming.h"
 #include "tools/RD53SCurve.h"
 #include "tools/RD53ThrAdjustment.h"
 #include "tools/RD53ThrEqualization.h"
 #include "tools/RD53ThrMinimization.h"
 #include "tools/RD53VTRxLightYieldScan.h"
 #include "tools/RD53VoltageTuning.h"
-#include "tools/RD53PowerTrimming.h"
-#include "tools/RD53PowerBenchmark.h"
 
 #ifdef __EUDAQ__
 #include "TROOT.h"
@@ -124,7 +123,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning gendacdac vtrx eye]",
+                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning gendacdac powertrimming vtrx eye]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
