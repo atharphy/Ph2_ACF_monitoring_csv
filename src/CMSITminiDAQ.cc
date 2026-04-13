@@ -27,6 +27,8 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/RD53VTRxLightYieldScan.h"
 #include "tools/RD53VoltageTuning.h"
+#include "tools/RD53PowerTrimming.h"
+#include "tools/RD53PowerBenchmark.h"
 
 #ifdef __EUDAQ__
 #include "TROOT.h"
@@ -505,6 +507,21 @@ int main(int argc, char** argv)
         vt.run();
         vt.analyze();
         vt.draw();
+    }
+    else if(whichCalib == "powertrimming")
+    {
+        // ######################
+        // # Run Power Trimming #
+        // ######################
+        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Power Trimming @@@" << RESET;
+
+        std::string   fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_PowerTrimming");
+        PowerTrimming pt;
+        pt.Inherit(&mySysCntr);
+        pt.localConfigure(fileName, runNumber);
+        pt.run();
+        pt.analyze();
+        pt.draw();
     }
     else if(whichCalib == "gendacdac")
     {
