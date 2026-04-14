@@ -16,22 +16,21 @@
 #include "DQMUtils/RD53PowerTrimmingHistograms.h"
 #else
 typedef bool PowerTrimmingHistograms;
+struct PowerTrimmingData
+{
+    float    timestamp;
+    uint16_t bit;
+    float    ANA_IN_CURR;
+    float    DIG_IN_CURR;
+    float    VINA;
+    float    VDDA;
+    float    VIND;
+    float    VDDD;
+    float    Iref;
+    float    ANA_SHUNT_CURR;
+    float    DIG_SHUNT_CURR;
+};
 #endif
-
-// struct PowerTrimmingData
-// {
-//     float    timestamp;
-//     uint16_t bit;
-//     float    ANA_IN_CURR;
-//     float    DIG_IN_CURR;
-//     float    VINA;
-//     float    VDDA;
-//     float    VIND;
-//     float    VDDD;
-//     float    Iref;
-//     float    ANA_SHUNT_CURR;
-//     float    DIG_SHUNT_CURR;
-// };
 
 class PowerTrimming : public CalibBase
 {
