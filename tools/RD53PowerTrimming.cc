@@ -234,8 +234,7 @@ PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vec
     {
         if(set_value < maxValue)
         {
-            set_value += 100; // @TMP@
-            // set_value++;
+            set_value++;
             LOG(INFO) << BLUE << "\t--> Scanning register value: " << BOLDYELLOW << set_value << RESET;
             std::cout << "\x1b[A";
         }
