@@ -12,14 +12,12 @@
 
 using namespace Ph2_HwDescription;
 
-using dataType = std::vector<std::pair<uint16_t, float>>;
-
 void PowerTrimmingHistograms::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap)
 {
     fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
-    int max_dac = 1024;
+    int max_dac = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("DAC_PREAMP_M_LIN")) + 1;
 
     auto hComparatorCurrent = CanvasContainer<TH1F>("ComparatorCurrent", "I vs. Time", max_dac, 0, max_dac);
     auto hPreampCurrent     = CanvasContainer<TH1F>("PreampCurrent", "I vs. Time", max_dac, 0, max_dac);
@@ -54,9 +52,16 @@ void PowerTrimmingHistograms::book(TFile* theOutputFile, DetectorContainer& theD
 
 bool PowerTrimmingHistograms::fill(std::string& inputStream)
 {
+    ContainerSerialization thePreamplifierCurrentSerialization("PowerTrimmingPreamplifierCurrent");
     ContainerSerialization theComparatorCurrentSerialization("PowerTrimmingComparatorCurrent");
     ContainerSerialization theLDACCurrentSerialization("PowerTrimmingLDACCurrent");
 
+    if(thePreamplifierCurrentSerialization.attachDeserializer(inputStream))
+    {
+        DetectorDataContainer fDetectorData = thePreamplifierCurrentSerialization.deserializeChipContainer<EmptyContainer, dataType>(fDetectorContainer);
+        PowerTrimmingHistograms::fillPreamplifierCurrentHisto(fDetectorData);
+        return true;
+    }
     if(theComparatorCurrentSerialization.attachDeserializer(inputStream))
     {
         DetectorDataContainer fDetectorData = theComparatorCurrentSerialization.deserializeChipContainer<EmptyContainer, dataType>(fDetectorContainer);
@@ -72,10 +77,8 @@ bool PowerTrimmingHistograms::fill(std::string& inputStream)
     return false;
 }
 
-void PowerTrimmingHistograms::fillComparatorCurrentHisto(const DetectorDataContainer& dataContainer) { PowerTrimmingHistograms::fillHisto(dataContainer, theComparatorCurrentContainer); }
-
 void PowerTrimmingHistograms::fillPreamplifierCurrentHisto(const DetectorDataContainer& dataContainer) { PowerTrimmingHistograms::fillHisto(dataContainer, thePreamplifierCurrentContainer); }
-
+void PowerTrimmingHistograms::fillComparatorCurrentHisto(const DetectorDataContainer& dataContainer) { PowerTrimmingHistograms::fillHisto(dataContainer, theComparatorCurrentContainer); }
 void PowerTrimmingHistograms::fillLDACCurrentHisto(const DetectorDataContainer& dataContainer) { PowerTrimmingHistograms::fillHisto(dataContainer, theLDACCurrentContainer); }
 
 void PowerTrimmingHistograms::fillHisto(const DetectorDataContainer& dataContainer, const DetectorDataContainer& dataHistogram)

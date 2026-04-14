@@ -512,7 +512,7 @@ int main(int argc, char** argv)
         // ######################
         // # Run Power Trimming #
         // ######################
-        LOG(INFO) << BOLDMAGENTA << "@@@ Performing Power Trimming @@@" << RESET;
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Power Trimming @@@" << RESET;
 
         std::string   fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_PowerTrimming");
         PowerTrimming pt;

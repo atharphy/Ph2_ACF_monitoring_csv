@@ -9,12 +9,11 @@
 
 #ifndef RD53PowerTrimmingHistograms_H
 #define RD53PowerTrimmingHistograms_H
+
 #include "DQMHistogramBase.h"
 #include "Utils/ContainerFactory.h"
 
 #include <TH1F.h>
-
-#define NBINS_C 1024
 
 struct PowerTrimmingData
 {
@@ -30,19 +29,22 @@ struct PowerTrimmingData
     float    ANA_SHUNT_CURR;
     float    DIG_SHUNT_CURR;
 };
+
 class PowerTrimmingHistograms : public DQMHistogramBase
 {
+    using dataType = std::vector<std::pair<uint16_t, float>>;
+
   public:
     PowerTrimmingHistograms() : fDetectorContainer(nullptr) {};
     ~PowerTrimmingHistograms() {};
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& settingsMap) override;
-    bool fill(std::string& inputStream) override;
     void process() override;
+    bool fill(std::string& inputStream) override;
     void reset() override {};
 
     void fillHisto(const DetectorDataContainer& dataContainer, const DetectorDataContainer& dataHistogram);
-    void fillComparatorCurrentHisto(const DetectorDataContainer& dataContainer);
     void fillPreamplifierCurrentHisto(const DetectorDataContainer& dataContainer);
+    void fillComparatorCurrentHisto(const DetectorDataContainer& dataContainer);
     void fillLDACCurrentHisto(const DetectorDataContainer& dataContainer);
     void fillCustomHistos(const std::vector<PowerTrimmingData>& dataList);
 
@@ -51,8 +53,8 @@ class PowerTrimmingHistograms : public DQMHistogramBase
   private:
     DetectorContainer* fDetectorContainer;
 
-    DetectorDataContainer theComparatorCurrentContainer;
     DetectorDataContainer thePreamplifierCurrentContainer;
+    DetectorDataContainer theComparatorCurrentContainer;
     DetectorDataContainer theLDACCurrentContainer;
 
     DetectorDataContainer hAnaInCurrContainer;
