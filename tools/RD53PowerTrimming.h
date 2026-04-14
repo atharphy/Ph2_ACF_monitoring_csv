@@ -1,6 +1,6 @@
 /*!
   \file                  RD53PowerTrimming.h
-  \brief                 Header of threshold adjustment
+  \brief                 Header of power trimming
   \author                Luca GUZZI
   \version               1.0
   \date                  27/01/26
@@ -32,10 +32,10 @@ struct PowerTrimmingData
 };
 #endif
 
+using dataType = std::vector<std::pair<uint16_t, float>>;
+
 class PowerTrimming : public CalibBase
 {
-    using dataType = std::vector<std::pair<uint16_t, float>>;
-
   public:
     ~PowerTrimming()
     {

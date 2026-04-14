@@ -4,18 +4,17 @@
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
-  Support:               email to mauro.dinardo@cern.ch
+  Support:               email to luca.guzzi@cern.ch
 */
 
 #include "RD53PowerTrimming.h"
+
 #include <chrono>
 #include <fstream>
 #include <iomanip>
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
-
-using dataType = std::vector<std::pair<uint16_t, float>>;
 
 void PowerTrimming::ConfigureCalibration()
 {
@@ -32,7 +31,7 @@ void PowerTrimming::ConfigureCalibration()
     const auto frontEnd = RD53Shared::firstChip->getFEtype();
     if((frontEnd != &RD53B::RD53Bv1) && (frontEnd != &RD53B::RD53Bv2))
     {
-        LOG(ERROR) << BOLDRED << "ThrEqualization cannot be run on non-RD53B FE" << RESET;
+        LOG(ERROR) << BOLDRED << "PowerTrimming cannot be run on non-RD53B FE" << RESET;
         exit(EXIT_FAILURE);
     }
 }
