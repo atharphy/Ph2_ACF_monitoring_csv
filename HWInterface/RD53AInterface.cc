@@ -381,7 +381,7 @@ void RD53AInterface::ReadRD53Mask(RD53* pRD53, int readMode, size_t theRow, size
             for(auto row = 0u; row < RD53A::NROWS; row++) RD53ACmd::serialize(RD53ACmd::RdReg{chipID, PIX_PORTAL_ADDR}, commandList);
 
             static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pRD53->getHybridId());
-            RD53Interface::ReadPixelMaskFromFW(pRD53, RD53A::NROWS - 1, col);
+            RD53Interface::ReadPixelMaskFromFW(pRD53, RD53A::NROWS - 1, col, RD53A::NROWS);
 
             commandList.clear();
         }
@@ -394,7 +394,7 @@ void RD53AInterface::ReadRD53Mask(RD53* pRD53, int readMode, size_t theRow, size
         RD53ACmd::serialize(RD53ACmd::RdReg{chipID, PIX_PORTAL_ADDR}, commandList);
 
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pRD53->getHybridId());
-        RD53Interface::ReadPixelMaskFromFW(pRD53, theCol, theRow);
+        RD53Interface::ReadPixelMaskFromFW(pRD53, theCol, theRow, 1);
     }
 }
 

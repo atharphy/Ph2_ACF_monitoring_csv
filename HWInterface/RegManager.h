@@ -111,6 +111,13 @@ class RegManager
     virtual uint32_t ReadReg(const std::string& pRegNode);
 
     /*!
+     * \brief Read values in stack registers
+     * \param pVecReg : Register stack
+     * \return Vector of values
+     */
+    std::vector<uint32_t> ReadStackReg(const std::vector<std::string>& pVecReg);
+
+    /*!
      * \brief Read a value at a given address
      * \param uAddr 32-bit address
      * \param uMask 32-bit mask

@@ -310,12 +310,12 @@ void RD53Interface::SendHybridCommands(const BeBoard* pBoard, const std::vector<
     static_cast<RD53FWInterface*>(fBoardFW)->SendChipCommands(hybridCommandList);
 }
 
-void RD53Interface::ReadPixelMaskFromFW(Chip* pChip, const int lastRow, const int lastCol)
+void RD53Interface::ReadPixelMaskFromFW(Chip* pChip, const int lastRow, const int lastCol, const size_t Ntimes)
 {
     int  localCol    = lastCol;
     int  localRow    = lastRow;
     auto pRD53       = static_cast<RD53*>(pChip);
-    auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pRD53);
+    auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegistersNtimes(pRD53, Ntimes);
 
     for(int i = regReadback.size() - 1; i >= 0; i--)
     {
