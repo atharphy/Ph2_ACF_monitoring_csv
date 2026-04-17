@@ -587,64 +587,40 @@ void RD53BInterface::ReadRD53Mask(RD53* pRD53, int readMode, size_t theRow, size
     // # Save original status #
     // ########################
     auto pixMode = pRD53->getRegMap().find("PIX_MODE")->second.fValue;
-
     if(readMode == 0)
     {
+        // #####################
+        // # Set autoincrement #
+        // #####################
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x1}, commandList);
+
         for(auto col = 0u; col < RD53B::NCOLS; col += 2)
+        {
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0}, commandList);
             for(auto row = 0u; row < RD53B::NROWS; row++)
             {
-                RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
-                RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, row}, commandList);
-
-                RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
                 RD53BCmd::serialize(RD53BCmd::RdReg{chipID, PIX_PORTAL_ADDR}, commandList);
-
-                if((col * RD53B::NROWS + row + 1) % RD53Constants::MaxNReadSameTime == 0)
-                {
-                    RD53BInterface::SendChipCommandsWithSync(pRD53, commandList);
-                    commandList.clear();
-
-                    // #################################
-                    // # Retrieve from FW memory banks #
-                    // #################################
-                    int  localCol    = col;
-                    int  localRow    = row;
-                    auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pRD53);
-                    static_cast<RD53FWInterface*>(fBoardFW)->ResetReadBkFIFO();
-                    for(int i = regReadback.size() - 1; i >= 0; i--)
-                    {
-                        pRD53->setPixelMask(localRow, localCol + 0, regReadback[i].second & 0x00FF);
-                        pRD53->setPixelMask(localRow, localCol + 1, (regReadback[i].second & 0xFF00) >> 8);
-
-                        localRow--;
-                        if(localRow < 0)
-                        {
-                            localRow = RD53B::NROWS - 1;
-                            localCol -= 2;
-                        }
-                    }
-                }
+                for(auto i = 0; i < RD53Constants::NSYNC_WORDS_S; i++) RD53BCmd::serialize(RD53BCmd::Sync{}, commandList);
+                for(auto i = 0; i < RD53Constants::NPLLLOCK_WORDS; i++) RD53BCmd::serialize(RD53BCmd::PLLlock{}, commandList);
+                for(auto i = 0; i < RD53Constants::NSYNC_WORDS_S; i++) RD53BCmd::serialize(RD53BCmd::Sync{}, commandList);
             }
+
+            static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pRD53->getHybridId());
+            RD53Interface::ReadPixelMaskFromFW(pRD53, RD53B::NROWS - 1, col);
+
+            commandList.clear();
+        }
     }
     else if(readMode == 1)
     {
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, theCol / 2}, commandList);
         RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, theRow}, commandList);
-
-        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
         RD53BCmd::serialize(RD53BCmd::RdReg{chipID, PIX_PORTAL_ADDR}, commandList);
 
         RD53BInterface::SendChipCommandsWithSync(pRD53, commandList);
-
-        // #################################
-        // # Retrieve from FW memory banks #
-        // #################################
-        auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegisters(pRD53);
-        for(auto i = 0u; i < regReadback.size(); i++)
-        {
-            pRD53->setPixelMask(theRow, theCol + 0, regReadback[i].second & 0x00FF);
-            pRD53->setPixelMask(theRow, theCol + 1, (regReadback[i].second & 0xFF00) >> 8);
-        }
+        RD53Interface::ReadPixelMaskFromFW(pRD53, theCol, theRow);
     }
 
     // ###########################
@@ -655,30 +631,24 @@ void RD53BInterface::ReadRD53Mask(RD53* pRD53, int readMode, size_t theRow, size
 
 void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, const std::vector<uint16_t>& cmdStream)
 {
-    // #################################################################################################################################################################
-    // # Compute number of 16-bit words to which we add NSYNC_WORDS sync words every RD53Constants::NWORDS_TO_SYNC:                                                    #
-    // # nWordsPerPacketExclSync + 2 * nWordsPerPacketExclSync / RD53Constants::NWORDS_TO_SYNC = totaNumb16bitWords ( = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO)) #
-    // #################################################################################################################################################################
-    constexpr size_t nWordsPerPacketExclSync = 2 * ((1 << RD53FWconstants::NBIT_SLOWCMD_FIFO) - 1) / (1 + 2. / RD53Constants::NWORDS_TO_SYNC);
-    auto             begin                   = cmdStream.begin();
+    const size_t totaNumb16bitWords = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO);
+    const size_t nWordsWithSync     = RD53Constants::NWORDS_TO_SYNC + RD53Constants::NSYNC_WORDS_S;
 
-    while(begin != cmdStream.end())
+    auto start = cmdStream.begin();
+    while(start != cmdStream.end())
     {
-        size_t                nWordsThisPacketExclSync = std::min(nWordsPerPacketExclSync, size_t(cmdStream.end() - begin));
         std::vector<uint16_t> cmdPacket;
-        cmdPacket.reserve(std::ceil(nWordsThisPacketExclSync + 2. * nWordsThisPacketExclSync / RD53Constants::NWORDS_TO_SYNC));
 
-        auto it = begin;
-        while(it != begin + nWordsThisPacketExclSync)
-        {
-            auto next = std::min(cmdStream.end(), std::min(it + RD53Constants::NWORDS_TO_SYNC, begin + nWordsThisPacketExclSync));
-            std::copy(it, next, std::back_inserter(cmdPacket));
-            it = next;
+        do {
+            auto stop = std::min(cmdStream.end(), start + RD53Constants::NWORDS_TO_SYNC);
+
+            cmdPacket.insert(cmdPacket.end(), start, stop);
             for(auto i = 0; i < RD53Constants::NSYNC_WORDS_S; i++) RD53BCmd::serialize(RD53BCmd::Sync{}, cmdPacket);
-        }
+
+            start = stop;
+        } while((start != cmdStream.end()) && (cmdPacket.size() < (totaNumb16bitWords - nWordsWithSync)));
 
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdPacket, pRD53->getHybridId());
-        begin = it;
     }
 }
 

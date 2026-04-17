@@ -62,6 +62,7 @@ class RD53Interface : public ReadoutChipInterface
     void SendChipCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId);
     void PackHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint16_t>& chipCommandList, int hybridId, std::vector<uint32_t>& hybridCommandList);
     void SendHybridCommands(const Ph2_HwDescription::BeBoard* pBoard, const std::vector<uint32_t>& hybridCommandList);
+    void ReadPixelMaskFromFW(Ph2_HwDescription::Chip* pChip, const int lastRow, const int lastCol);
 
     // ######################################################################################################
     // # SetSpecialRegister                                                                                 #
