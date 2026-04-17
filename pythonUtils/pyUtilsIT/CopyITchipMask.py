@@ -1,7 +1,7 @@
 ##########################################################
 # Program to copy the pixel configuraion from the input  #
 # (*.txt) file to the output (*.txt) file of Ph2_ACF DAQ #
-#by Mauro Dinardo #
+#                                       by Mauro Dinardo #
 ##########################################################
 
 from argparse import ArgumentParser
@@ -21,7 +21,7 @@ def ArgParser():
     if options.toFile:
         print('--> I\'m reading -to- file:', options.toFile)
     if options.outFile:
-        print('--> I\'m reading output file:', options.outFile)
+        print('--> I\'m reading -output- file:', options.outFile)
 
     return options
 

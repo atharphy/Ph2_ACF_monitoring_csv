@@ -641,8 +641,8 @@ void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, const std::vector<uin
 
         do {
             auto stop = std::min(cmdStream.end(), start + RD53Constants::NWORDS_TO_SYNC);
-
             cmdPacket.insert(cmdPacket.end(), start, stop);
+
             for(auto i = 0; i < RD53Constants::NSYNC_WORDS_S; i++) RD53BCmd::serialize(RD53BCmd::Sync{}, cmdPacket);
 
             start = stop;
