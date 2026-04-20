@@ -142,13 +142,13 @@ void PowerTrimming::run()
                     // # PREAMPLIFIER scan #
                     // #####################
                     thePreamplifierCurrentContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<dataType>() =
-                        linearScanBottomUp(theChip, preamp_registers, 0, MAX_PREAMP, "ANA_IN_CURR", PREAMP_CURRENT_mA, COMPdefaultVal);
+                        linearScanBottomUp(theChip, preamp_registers, 0, MAX_PREAMP, PREAMP_CURRENT_mA, COMPdefaultVal);
 
                     // ###################
                     // # COMPARATOR scan #
                     // ###################
                     theComparatorCurrentContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<dataType>() =
-                        linearScanBottomUp(theChip, comp_registers, 0, MAX_COMP, "ANA_IN_CURR", COMP_CURRENT_mA, COMPdefaultVal);
+                        linearScanBottomUp(theChip, comp_registers, 0, MAX_COMP, COMP_CURRENT_mA, COMPdefaultVal);
 
                     // ############################################
                     // # Set TDAC to a set value before LDAC scan #
@@ -160,7 +160,7 @@ void PowerTrimming::run()
                     // # LDAC scan and final unmasking #
                     // #################################
                     theLDACCurrentContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<dataType>() =
-                        linearScanBottomUp(theChip, ldac_registers, 0, MAX_LDAC, "ANA_IN_CURR", LDAC_CURRENT_mA, COMPdefaultVal);
+                        linearScanBottomUp(theChip, ldac_registers, 0, MAX_LDAC, LDAC_CURRENT_mA, COMPdefaultVal);
 
                     fReadoutChipInterface->MaskAllChannels(cChip, false);
                 }
@@ -175,7 +175,7 @@ void PowerTrimming::fillHisto()
     histos->fillPreamplifierCurrentHisto(thePreamplifierCurrentContainer);
     histos->fillComparatorCurrentHisto(theComparatorCurrentContainer);
     histos->fillLDACCurrentHisto(theLDACCurrentContainer);
-    histos->fillCustomHistos(fPowerTrimmingResults);
+    if(doDebug == true) histos->fillCustomHistos(fPowerTrimmingResults);
 #endif
 }
 
@@ -196,13 +196,8 @@ void PowerTrimming::draw(bool saveData)
 #endif
 }
 
-dataType PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
-                                           const std::vector<const char*>& regNames,
-                                           uint16_t                        startValue,
-                                           uint16_t                        maxValue,
-                                           const std::string               targetName,
-                                           float&                          targetDiff,
-                                           const uint16_t                  COMPdefaultVal)
+dataType
+PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vector<const char*>& regNames, uint16_t startValue, uint16_t maxValue, float& targetDiff, const uint16_t COMPdefaultVal)
 {
     std::ofstream outFile;
     dataType      result;
@@ -230,10 +225,12 @@ dataType PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip
     // ############################################
     // # Initial current reading and target setup #
     // ############################################
-    float monitor      = 1.0e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, targetName, true);
-    float target_value = monitor + targetDiff;
-    float set_diff     = target_value - monitor;
-    float pre_diff     = set_diff;
+    float analog_in_curr = 1.0e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_IN_CURR", true);
+    float shunt_in_curr  = 1.0e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
+    float monitor        = analog_in_curr - shunt_in_curr;
+    float target_value   = monitor + targetDiff;
+    float set_diff       = target_value - monitor;
+    float pre_diff       = set_diff;
 
     if(doDebug == true) outFile.open("RD53PowerTrimming_CurrentManager.txt", std::ios_base::app);
 
@@ -255,40 +252,43 @@ dataType PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip
             break;
         }
         WriteChipRegisters(set_value);
-        monitor = 1.e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, targetName, true);
+        analog_in_curr = 1.e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_IN_CURR", true);
+        shunt_in_curr  = 1.e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
+        monitor        = analog_in_curr - shunt_in_curr;
 
-        PowerTrimmingData PTData;
+        if(doDebug == true)
+        {
+            PowerTrimmingData PTData;
 
-        const auto now     = std::chrono::system_clock::now();
-        const auto epoch   = now.time_since_epoch();
-        const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(epoch);
+            const auto now     = std::chrono::system_clock::now();
+            const auto epoch   = now.time_since_epoch();
+            const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(epoch);
 
-        // ##############################################################################
-        // # Read all relevant ADC monitors (Currents and Voltages) at each step of the #
-        // # scan and save them in the result vector and in a txt file for monitoring   #
-        // ##############################################################################
-        PTData.timestamp      = seconds.count();
-        PTData.bit            = set_value;
-        PTData.ANA_IN_CURR    = 1.e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_IN_CURR", true);
-        PTData.DIG_IN_CURR    = 1.e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true);
-        PTData.VINA           = 4.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VINA", true);
-        PTData.VDDA           = 2.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VDDA", true);
-        PTData.VIND           = 4.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VIND", true);
-        PTData.VDDD           = 2.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VDDD", true);
-        PTData.Iref           = fReadoutChipInterface->ReadChipMonitor(pChip, "Iref", true);
-        PTData.ANA_SHUNT_CURR = 1.e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
-        PTData.DIG_SHUNT_CURR = 1.e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_SHUNT_CURR", true);
+            // ##############################################################################
+            // # Read all relevant ADC monitors (Currents and Voltages) at each step of the #
+            // # scan and save them in the result vector and in a txt file for monitoring   #
+            // ##############################################################################
+            PTData.timestamp      = seconds.count();
+            PTData.bit            = set_value;
+            PTData.ANA_IN_CURR    = analog_in_curr;
+            PTData.DIG_IN_CURR    = 1.e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true);
+            PTData.VINA           = 4.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VINA", true);
+            PTData.VDDA           = 2.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VDDA", true);
+            PTData.VIND           = 4.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VIND", true);
+            PTData.VDDD           = 2.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VDDD", true);
+            PTData.Iref           = fReadoutChipInterface->ReadChipMonitor(pChip, "Iref", true);
+            PTData.ANA_SHUNT_CURR = shunt_in_curr;
+            PTData.DIG_SHUNT_CURR = 1.e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_SHUNT_CURR", true);
 
-        fPowerTrimmingResults.push_back(PTData);
+            fPowerTrimmingResults.push_back(PTData);
 
-        monitor = 1.e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, targetName, true);
+            auto t  = std::time(nullptr);
+            auto lt = *std::localtime(&t);
 
-        auto t  = std::time(nullptr);
-        auto lt = *std::localtime(&t);
-
-        if(outFile.is_open() == true)
-            outFile << std::put_time(&lt, "%H:%M:%S") << "\t" << set_value << "\t" << PTData.ANA_IN_CURR << "\t" << PTData.DIG_IN_CURR << "\t" << PTData.VINA << "\t" << PTData.VDDA << "\t"
-                    << PTData.VIND << "\t" << PTData.VDDD << "\t" << PTData.Iref << "\t" << PTData.ANA_SHUNT_CURR << "\t" << PTData.DIG_SHUNT_CURR << "\n";
+            if(outFile.is_open() == true)
+                outFile << std::put_time(&lt, "%H:%M:%S") << "\t" << set_value << "\t" << PTData.ANA_IN_CURR << "\t" << PTData.DIG_IN_CURR << "\t" << PTData.VINA << "\t" << PTData.VDDA << "\t"
+                        << PTData.VIND << "\t" << PTData.VDDD << "\t" << PTData.Iref << "\t" << PTData.ANA_SHUNT_CURR << "\t" << PTData.DIG_SHUNT_CURR << "\n";
+        }
 
         pre_diff  = set_diff;
         pre_value = set_value;
@@ -306,9 +306,9 @@ dataType PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip
         result.pop_back();
     }
     float digcurr = 1.e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true);
-    LOG(INFO) << GREEN << "Chip " << BOLDYELLOW << pChip->geteFuseCode() << RESET << GREEN << ": scan ended. Found value " << BOLDYELLOW << result.back().first << RESET << GREEN << " with current "
-              << targetName << " = " << BOLDYELLOW << result.back().second << RESET << GREEN << " mA (difference from target = " << set_diff << " mA) Digital current value = " << BOLDYELLOW << digcurr
-              << RESET << GREEN << " mA" << RESET;
+    LOG(INFO) << GREEN << "Chip " << BOLDYELLOW << pChip->geteFuseCode() << RESET << GREEN << ": scan ended. Found value " << BOLDYELLOW << result.back().first << RESET << GREEN
+              << " with current (ANA_IN_CURR - ANA_SHUNT_CURR) = " << BOLDYELLOW << result.back().second << RESET << GREEN << " mA (difference from target = " << set_diff
+              << " mA) Digital current value = " << BOLDYELLOW << digcurr << RESET << GREEN << " mA" << RESET;
 
     // ####################################################################################################
     // # PREAMP requires specific calibration factors depending on the physical area of the matrix region #

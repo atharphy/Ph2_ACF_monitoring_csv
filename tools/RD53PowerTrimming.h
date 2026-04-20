@@ -56,13 +56,7 @@ class PowerTrimming : public CalibBase
 
   private:
     void     fillHisto() override;
-    dataType linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
-                                const std::vector<const char*>& regNames,
-                                uint16_t                        startValue,
-                                uint16_t                        maxValue,
-                                const std::string               targetName,
-                                float&                          targetDiff,
-                                const uint16_t                  COMPdefaultVal);
+    dataType linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vector<const char*>& regNames, uint16_t startValue, uint16_t maxValue, float& targetDiff, const uint16_t COMPdefaultVal);
 
     uint16_t MAX_PREAMP;
     uint16_t MAX_COMP;
