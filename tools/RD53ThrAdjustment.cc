@@ -404,7 +404,6 @@ void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, 
                             if(valueMidL < valueMidH || valueMidH > TARGETEFF)
                             {
                                 // If slope is positive or valueMidH is above TARGETEFF, Global Zero is to the right of midHDAC
-
                                 midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int32_t>() =
                                     midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int32_t>();
                                 outputMidL.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = valueMidH;
@@ -413,7 +412,6 @@ void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, 
                             if(valueMidL >= valueMidH && valueMidL < TARGETEFF)
                             {
                                 // If slope is negative or zero and valueMidL is below TARGETEFF, Global Zero is to the left of midLDAC and we move left, otherwise we move right
-
                                 midHDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int32_t>() =
                                     midLDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int32_t>();
                                 outputMidH.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<float>() = valueMidL;
@@ -437,7 +435,7 @@ void ThrAdjustment::bitWiseScanGlobal(const std::vector<const char*>& regNames, 
     // # Download new DAC values #
     // ###########################
     LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames, false, true, 0);
+    CalibBase::downloadNewDACvalues(downloadDACcontainer, regNames, false, true);
 
     // ################
     // # Run analysis #

@@ -64,6 +64,8 @@ class GainOptimization : public Gain
     // ######################################
     // # Parameters from configuration file #
     // ######################################
+    float  targetCharge;
+    size_t targetToT;
     size_t KrumCurrStart;
     size_t KrumCurrStop;
     bool   doUpdateChip;

@@ -25,6 +25,8 @@ void GainOptimization::ConfigureCalibration()
     // #######################
     // # Retrieve parameters #
     // #######################
+    targetCharge  = this->findValueInSettings<double>("TargetCharge");
+    targetToT     = this->findValueInSettings<double>("TargetToT");
     KrumCurrStart = this->findValueInSettings<double>("KrumCurrStart");
     KrumCurrStop  = this->findValueInSettings<double>("KrumCurrStop");
     doDisplay     = this->findValueInSettings<double>("DisplayHisto");
@@ -237,17 +239,18 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
                                                                            cChip->getChannel<GainFit>(row, col).fSlopeLowQ,
                                                                            cChip->getChannel<GainFit>(row, col).fInterceptHighQ,
                                                                            cChip->getChannel<GainFit>(row, col).fSlopeHighQ},
-                                                                          pRD53->Charge2VCal(this->findValueInSettings<double>("TargetCharge")),
+                                                                          pRD53->Charge2VCal(targetCharge),
                                                                           frontEnd);
                                     avg += ToTatTarget;
                                     stdDev += ToTatTarget * ToTatTarget;
                                     cnt++;
                                 }
-                        avg              = cnt != 0 ? avg / cnt : 0;
-                        stdDev           = (cnt != 0 ? stdDev / cnt : 0) - avg * avg;
-                        stdDev           = (stdDev > 0 ? sqrt(stdDev) : 0);
-                        float  newValue  = avg + NSTDEV * stdDev;
-                        size_t targetToT = frontEnd->maxToTvalue;
+                        avg    = cnt != 0 ? avg / cnt : 0;
+                        stdDev = (cnt != 0 ? stdDev / cnt : 0) - avg * avg;
+                        stdDev = (stdDev > 0 ? sqrt(stdDev) : 0);
+                        // float  newValue  = avg + NSTDEV * stdDev;
+                        float newValue = avg;
+                        // size_t targetToT = frontEnd->maxToTvalue;
 
                         // ########################
                         // # Save best DAC values #
@@ -262,12 +265,9 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
                         }
 
                         if((newValue < targetToT) && (stdDev != 0))
-
                             maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-
                         else
-
                             minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                     }
@@ -277,7 +277,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
     // # Download new DAC values #
     // ###########################
     LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    CalibBase::downloadNewDACvalues({&bestDACcontainer}, {regName.c_str()}, false, true, 0);
+    CalibBase::downloadNewDACvalues({&bestDACcontainer}, {regName.c_str()}, false, true);
 
     // ################
     // # Run analysis #

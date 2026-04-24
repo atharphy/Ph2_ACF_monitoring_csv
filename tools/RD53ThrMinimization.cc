@@ -295,12 +295,9 @@ void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames
                         }
 
                         if((newValue < target) && (maskedPixels < threshold))
-
                             maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int16_t>() =
                                 midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int16_t>();
-
                         else
-
                             minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int16_t>() =
                                 midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<int16_t>();
                     }
@@ -310,7 +307,7 @@ void ThrMinimization::bitWiseScanGlobal(const std::vector<const char*>& regNames
     // # Download new DAC values #
     // ###########################
     LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    CalibBase::downloadNewDACvalues(bestDACcontainer, regNames, false, true, 0);
+    CalibBase::downloadNewDACvalues(bestDACcontainer, regNames, false, true);
 
     // ################
     // # Run analysis #
