@@ -12,13 +12,6 @@
 Ph2_HwDescription::RD53*        RD53Shared::firstChip;
 Ph2_HwInterface::RD53Interface* RD53Shared::chipInterface;
 
-std::string RD53Shared::fromInt2Str(int val)
-{
-    std::stringstream myString;
-    myString << std::setfill('0') << std::setw(6) << val;
-    return myString.str();
-}
-
 std::string RD53Shared::composeFileName(const std::string& configFileName, const std::string& fName2Add)
 {
     std::string output = configFileName;
@@ -48,7 +41,6 @@ bool RD53Shared::gitInfo(const std::string& what, std::string& outputStr)
         system(std::string(cd + "git rev-parse HEAD >> git.log").c_str());
     else if(what == "tag")
         system(std::string(cd + "git describe --tag >> git.log").c_str());
-    // system(std::string(cd + "git describe --tag --abbrev=0 >> git.log").c_str());
 
     std::ifstream gitFile(base + "/git.log");
     gitFile >> outputStr;

@@ -1007,9 +1007,9 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo, bool pRe
     fInitialConfigurationFileContent = theConfigureInfo.getConfigFileStream(fConfigurationFileName);
     if(fConfigurationFileName != fSettingsFileName) fInitialConfigurationFileContent += theConfigureInfo.getConfigFileStream(fSettingsFileName);
 
-    // ##################
-    // # Initialization #
-    // ##################
+    // #####################
+    // # Initialization SW #
+    // #####################
     InitializeHw(fConfigurationFileName, fParsedFile);
     InitializeSettings(fSettingsFileName, fParsedFile);
     theConfigureInfo.setEnabledObjects(fDetectorContainer);
@@ -1025,7 +1025,10 @@ void SystemController::Configure(const ConfigureInfo& theConfigureInfo, bool pRe
     // ########################################################
     std::cout << fParsedFile.str() << std::endl;
 
-    if(findValueInSettings<double>("SkipConfigureHW", 0) == 0) ConfigureHw(pReInitialize);
+    // #####################
+    // # Initialization HW #
+    // #####################
+    SystemController::ConfigureHw(pReInitialize);
 }
 
 void SystemController::initializeExceptionHandler()
@@ -1269,14 +1272,18 @@ void SystemController::ResetSequence()
     for(const auto cBoard: *fDetectorContainer) static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->ResetSequence(cBoard);
 }
 
-void SystemController::DumpRegisters()
+void SystemController::DumpRegisters(unsigned int runNumber)
 {
+    const std::string fromCfgFile   = this->findValueInSettings<std::string>("DataOutputDir", "");
+    const std::string directoryName = fromCfgFile != "" ? fromCfgFile : RD53Shared::RESULTDIR;
+    const bool        doUpdateChip  = this->findValueInSettings<double>("UpdateChipCfg", false);
+
     // #################################################
     // # Dump firmware register content for all boards #
     // #################################################
     for(const auto cBoard: *fDetectorContainer)
     {
-        LOG(INFO) << GREEN << "Firmware register content for [board = " << BOLDYELLOW << cBoard->getId() << GREEN << "]" << RESET;
+        LOG(INFO) << BOLDBLUE << "Firmware register content for [board = " << BOLDYELLOW << cBoard->getId() << BOLDBLUE << "]" << RESET;
 
         const auto theBeBoardFW = this->fBeBoardFWMap[cBoard->getId()];
         const auto hwInterface  = theBeBoardFW->getHardwareInterface();
@@ -1303,9 +1310,9 @@ void SystemController::DumpRegisters()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    LOG(INFO) << GREEN << "Readout chip register content for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
-                              << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
-                    fReadoutChipInterface->DumpChipRegisters(cChip);
+                    LOG(INFO) << BOLDBLUE << "Readout chip register content for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << BOLDBLUE << "]" << RESET;
+                    fReadoutChipInterface->DumpChipRegisters(cChip, doUpdateChip, runNumber, directoryName);
                 }
 
     // ######################################################
@@ -1315,8 +1322,7 @@ void SystemController::DumpRegisters()
         for(const auto cOpticalGroup: *cBoard)
             if(cOpticalGroup->flpGBT != nullptr)
             {
-                LOG(INFO) << GREEN << "OpticalGroup chip register content for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << RESET << GREEN << "]"
-                          << RESET;
+                LOG(INFO) << BOLDBLUE << "OpticalGroup chip register content for [board/opticalGroup = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << BOLDBLUE << "]" << RESET;
                 flpGBTInterface->DumpChipRegisters(cOpticalGroup->flpGBT);
             }
 }

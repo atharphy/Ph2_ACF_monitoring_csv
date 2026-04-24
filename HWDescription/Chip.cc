@@ -10,12 +10,6 @@
 #include "Chip.h"
 #include "Definition.h"
 #include "Utils/ChannelGroupHandler.h"
-#include <cstdio>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <string.h>
 
 namespace Ph2_HwDescription
 {
@@ -133,6 +127,17 @@ void Chip::saveRegMap(const std::string& fileName)
     }
     else
         LOG(ERROR) << BOLDRED << "Error opening file " << BOLDYELLOW << fileName << RESET;
+}
+
+void Chip::saveRegMapAndMove(bool doUpdateChip, unsigned int runNumber, const std::string& directoryName)
+{
+    const std::string fileReg("Run" + RD53Shared::fromInt2Str(runNumber) + "_");
+
+    if(doUpdateChip == true) Chip::saveRegMap(Chip::getFileName());
+    Chip::saveRegMap(Chip::getFileName(fileReg));
+
+    std::string command("mv " + Chip::getFileName(fileReg) + " " + directoryName);
+    system(command.c_str());
 }
 
 void Chip::takeSnapshot()

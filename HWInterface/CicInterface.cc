@@ -214,7 +214,7 @@ bool CicInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<std
     return fBoardFW->MultiRegisterWrite(pChip, cRegItems, pVerify);
 }
 
-int32_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
+int32_t CicInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode, const bool updateReg)
 {
     setBoard(pChip->getBeBoardId());
     // LOG(DEBUG) << BOLDMAGENTA << "CicInterface::ReadChipReg(string) Register " << pRegNode << RESET;

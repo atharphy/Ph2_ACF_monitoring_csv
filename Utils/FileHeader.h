@@ -4,7 +4,7 @@
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
-  Support:               email to mauro.dinard@cern.ch
+  Support:               email to mauro.dinardo@cern.ch
 */
 
 #ifndef FILEHEADER_H

@@ -35,9 +35,9 @@ class RD53BInterface : public RD53Interface
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip, uint8_t version = 1) override;
     uint32_t ReadChipIref(Ph2_HwDescription::Chip* pChip);
     void     WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, int writeMode, bool doDefault, size_t theRow = 0, size_t theCol = 0) override;
+    void     ReadRD53Mask(Ph2_HwDescription::RD53* pRD53, int readMode, size_t theRow = 0, size_t theCol = 0) override;
     void     SendBoardClear(const Ph2_HwDescription::BeBoard* pBoard) override;
     void     SendRD53Clear(Ph2_HwDescription::RD53* pRD53) override { RD53Interface::SendCommand(pRD53, RD53BCmd::Clear{pRD53->getId()}); }
-
     std::pair<std::string, uint16_t> SetSpecialRegister(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
     uint16_t                         GetSpecialRegisterValue(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
     void                             WriteRegsFromCfg(Ph2_HwDescription::Chip* pChip, bool pVerify = true, bool writeAll = false) override;
@@ -54,7 +54,7 @@ class RD53BInterface : public RD53Interface
     void     SendChipCommandsWithSync(Ph2_HwDescription::RD53* pRD53, const std::vector<uint16_t>& cmdStream);
     void     ResetCoreColumns(Ph2_HwDescription::Chip* pChip);
     void     readNTCvoltCurr(Ph2_HwDescription::ReadoutChip* pChip, uint16_t dacNTC, uint16_t& ntcVolt, uint16_t& ntcCurr);
-    uint16_t maxADCatSaturation(Ph2_HwDescription::ReadoutChip* pChip, const std::string& type = "");
+    uint16_t maxDACatSaturation(Ph2_HwDescription::ReadoutChip* pChip, const std::string& type = "");
 
     // ###########################
     // # Dedicated to monitoring #

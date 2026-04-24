@@ -122,6 +122,7 @@ class RD53FWInterface : public BeBoardFWInterface
     void                                       ComposeAndPackChipCommands(const std::vector<uint16_t>& data, int hybridId, std::vector<uint32_t>& commandList);
     bool                                       SendChipCommands(const std::vector<uint32_t>& commandList);
     std::vector<std::pair<uint16_t, uint16_t>> ReadChipRegisters(Ph2_HwDescription::ReadoutChip* pChip);
+    std::vector<std::pair<uint16_t, uint16_t>> ReadChipRegistersNtimes(Ph2_HwDescription::ReadoutChip* pChip, const size_t Ntimes);
 
     enum class TriggerSource : uint32_t
     {

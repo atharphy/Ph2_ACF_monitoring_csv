@@ -258,7 +258,7 @@ bool RD53Event::EvtErrorHandler(uint32_t status)
 
     if(status & RD53FWEvtEncoder::MISSCHIP)
     {
-        LOG(ERROR) << BOLDRED << "Missing chip " << BOLDYELLOW << "--> retry" << RESET;
+        LOG(ERROR) << BOLDRED << "The entire data from one or more chips are missing " << BOLDYELLOW << "--> retry" << RESET;
         isGood = false;
     }
 

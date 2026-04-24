@@ -88,12 +88,17 @@ nav:
       - 'Software setup': innerTracker/SWsetup.md
       - 'FPGA configuration': innerTracker/FPGAcfg.md
       - 'Running Ph2_ACF': innerTracker/Running.md
+      - 'Config files': innerTracker/ConfigFile.md
+      - 'SCC tuning': innerTracker/SCCTuning.md
+      - 'Voltage settings': innerTracker/VoltageSettings.md
+      - 'Monitoring': innerTracker/Monitoring.md
+      - 'Optical Readout': innerTracker/OpticalReadout.md
+      - 'External trigger and clock': innerTracker/ExternalTriggers.md
+      - 'Self-trigger': innerTracker/SelfTrigger.md
+      - 'FMC lane testing': innerTracker/FMCLanes.md
       - 'Module Testing': innerTracker/ModuleTesting.md
-      - 'IT Configuration':
-        - 'Config file': innerTracker/ConfigFile.md
-        - 'Voltage settings': innerTracker/VoltageSettings.md
-        - 'Monitoring': innerTracker/Monitoring.md
-        - 'Optical Readout': innerTracker/OpticalReadout.md
+      - 'Metadata': innerTracker/Metadata.md
+      - 'IT Calibrations': innerTracker/calibrations/index.md
     - 'IT Calibrations':
       - innerTracker/calibrations/index.md
       - 'Scans':
@@ -112,19 +117,19 @@ nav:
         - innerTracker/calibrations/VoltageTuning.md
       - 'Other':
         - innerTracker/calibrations/BERTest.md
+        - innerTracker/calibrations/DataReadBackOptimisation.md
+        - innerTracker/calibrations/LpGBTeye.md
+        - innerTracker/calibrations/VTRxScan.md
         - innerTracker/calibrations/GenericDacDac.md
         - innerTracker/calibrations/Physics.md
-        - innerTracker/calibrations/DataReadBackOptimisation.md
+        - innerTracker/calibrations/Eudaq.md
       - 'Additional information/HOWTOs':
-        - innerTracker/ModuleTesting.md
-        - innerTracker/SCCTuning.md
-        - innerTracker/calibrations/XTalk.md
         - innerTracker/calibrations/TermExplanations.md
+        - innerTracker/calibrations/XTalk.md
     - 'Outer Tracker':
       - 'Outer Tracker': outerTracker/index.md
       - 'Firmware naming conventions': outerTracker/firmware.md
       - '2S module': outerTracker/2SConfiguration.md
       - '2S testing': outerTracker/2Stesting.md
-      - 'PS testing': outerTracker/PStesting.md
-  
+      - 'PS testing': outerTracker/PStesting.md 
     - 'Interesting links': interesting_links/index.md

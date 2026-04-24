@@ -10,9 +10,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     ############
     include_directories(${PROJECT_SOURCE_DIR})
 
-    # Boost also needs to be linked
-    # include_directories(${Boost_INCLUDE_DIRS})
-    # link_directories(${Boost_LIBRARY_DIRS})
+    #################################
+    # Boost also needs to be linked #
+    #################################
     set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY} ${Boost_IOSTREAMS_LIBRARY})
 
     # Find root and link against it
@@ -21,18 +21,22 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         set(LIBS ${LIBS} ${ROOT_LIBRARIES})
     endif()
 
-    # Find source files
+    #####################
+    # Find source files #
+    #####################
     file(GLOB HEADERS *.h)
     file(GLOB SOURCES *.cc)
 
-    # Add the library
+    ###################
+    # Add the library #
+    ###################
     add_library(Ph2_Interface STATIC ${SOURCES} ${HEADERS})
 
     set(LIBS ${LIBS} Ph2_Description NetworkUtils CACTUS::uhal CACTUS::uhal_log boost_regex)
 
     # Check for TestCard USBDriver
     TARGET_LINK_LIBRARIES(Ph2_Interface ${LIBS})
-    #check for TestCard USBDriver
+    # Check for TestCard USBDriver
     if(${PH2_TCUSB_FOUND})
       include_directories(${PH2_TCUSB_INCLUDE_DIRS})
       link_directories(${PH2_TCUSB_LIBRARY_DIRS})
@@ -40,9 +44,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
     endif(${PH2_TCUSB_FOUND})
 
-    #################
-    ## EXECUTABLES ##
-    #################
+    ###############
+    # EXECUTABLES #
+    ###############
 
     file(GLOB BINARIES RELATIVE ${PROJECT_SOURCE_DIR}/HWInterface *.cc)
 

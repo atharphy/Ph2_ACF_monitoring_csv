@@ -1,5 +1,4 @@
 # Gain scan
-<sub><sup>Last updated: 13.12.2024</sup></sub>
 
 ## Purpose
 

@@ -312,7 +312,7 @@ float SSA2Interface::calculateADCLSB(ReadoutChip* pSSA2, float theVrefValue)
 }
 
 // READ REGISTER ON CHIP:
-int32_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode)
+int32_t SSA2Interface::ReadChipReg(Chip* pSSA2, const std::string& pRegNode, const bool updateReg)
 {
     setBoard(pSSA2->getBeBoardId());
     auto                     cRegMap = pSSA2->getRegMap();

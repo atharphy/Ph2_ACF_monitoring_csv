@@ -1,5 +1,4 @@
 # Latency scan
-<sub><sup>Last updated: 13.12.2024</sup></sub>
 
 ## Purpose
 
@@ -15,9 +14,13 @@ The Latency Scan is derived from [PixelAlive](PixelAlive.md). It works by settin
 
 * Analog or digital injection
 
-!!! warning "You have to update the config manually in the xml file"
+!!! note "You have to update the config manually in the xml file"
 	* RD53B: `TriggerConfig`
-	* RD53A: `LATENCY_CONFIG`
+	* RD53A: `LATENCY_CONFIG`  
+    
+    **Once the proper latency is found (latency), you should set:**  
+    `TriggerConfig = latency + floor(nTRIGxEvent / 2)` 
+    Here, `nTRIGxEvent` is not necessarily the one used to perform the Latency scan, but rather the one chosen to be used with all other calibrations.
 
 ## Configuration parameters
 
@@ -25,7 +28,7 @@ The Latency Scan is derived from [PixelAlive](PixelAlive.md). It works by settin
 |---------------|-------------|-----------|
 |`nEvents`      |100          |Number of injections per pixel|
 |`nEvtsBurst`   |=`nEvents`   |Number of events readout from FPGA in one instance|
-|`nTRIGxEvent`  |10           |Number of triggers for each injection (resolution of the latency scan)|
+|`nTRIGxEvent`  |1           |Number of triggers for each injection (resolution of the latency scan)|
 |`INJtype`      |1            |Injection type, 1 – analog, 2 – digital|
 |`LatencyStart` |110          |The minimum latency for the scan|
 |`LatencyStop`  |150          |The maximum latency for the scan|

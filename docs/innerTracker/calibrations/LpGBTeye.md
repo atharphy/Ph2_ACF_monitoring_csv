@@ -1,5 +1,4 @@
 # LpGBT Eye Opening
-<sub><sup>Last updated: 07.02.2025</sup></sub>
 
 ## Purpose
 

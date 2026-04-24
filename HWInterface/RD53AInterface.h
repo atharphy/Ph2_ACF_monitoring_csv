@@ -34,9 +34,9 @@ class RD53AInterface : public RD53Interface
     void     WriteClockDataDelay(Ph2_HwDescription::Chip* pChip, uint16_t value) override;
     uint32_t ReadChipFuseID(Ph2_HwDescription::Chip* pChip, uint8_t version = 1) override { return 0; }
     void     WriteRD53Mask(Ph2_HwDescription::RD53* pRD53, int writeMode, bool doDefault, size_t theRow = 0, size_t theCol = 0) override;
+    void     ReadRD53Mask(Ph2_HwDescription::RD53* pRD53, int readMode, size_t theRow = 0, size_t theCol = 0) override;
     void     SendBoardClear(const Ph2_HwDescription::BeBoard* pBoard) override;
     void     SendRD53Clear(Ph2_HwDescription::RD53* pRD53) override { RD53Interface::SendCommand(pRD53, RD53ACmd::ECR{}); }
-
     std::pair<std::string, uint16_t> SetSpecialRegister(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
     uint16_t                         GetSpecialRegisterValue(std::string regName, uint16_t value, Ph2_HwDescription::ChipRegMap& pRD53RegMap) override;
     void                             WriteRegsFromCfg(Ph2_HwDescription::Chip* pChip, bool pVerify = true, bool writeAll = false) override;

@@ -1,13 +1,27 @@
-# XML configuration file
+# Configuration files
+
+In regular scenarios, running IT tests on Ph2_ACF requires two types configuration files:
+
+1. [**XML configuration file**](#xml-configuration-file):
+    - Describes the testing hardware: backend boards (FC7), hybrids, frontend chips (RD53)
+    - Stores the front-end and back-end register/setting values set by the user
+    - Stores the scan/calibration parameters set by the user
+    - Sets monitoring settings and communication parameters
+    - **Does not get updated by Ph2_ACF** (should be updated manually)
+2. [**txt configuration files**](#txt-configuration-files):
+    - Describe the frontend chips (multiple txt files needed when testing modules/multiple SCC at the same time)
+    - Describe the addresses, default values and bit sizes of the chip registers (XML overrides the txt values)
+    - Configure each pixel of the chip: enable/mask a pixel for the injection/readout/HitOr, set its TDAC (threshold trimming) value
+    - **Get updated automatically by Ph2_ACF** (but can also be edited manually)
+
+## XML configuration file
 
 Main configuration file describing the setup, scan and monitoring settings (can be outsourced in another file):
 
 * `Ph2_ACF/settings/CMSIT_RD53A.xml` for RD53A
 * `Ph2_ACF/settings/CMSIT_RD53B.xml` for RD53B
 
-## Chip definition
-
-!!! info "TODO: module/chip definition"
+### Chip definition
 
 The chip is defined as follows in the XML, followed by the chip settings:
 
@@ -24,18 +38,20 @@ The chip is defined as follows in the XML, followed by the chip settings:
   <RD53Bv2 Id="15" enable="1" Lane="0" eFuseCode = "0" configFile="CMSIT_RD53Bv2.txt" RxGroups="NNN1" RxPolarity="0" TxGroup="2" TxChannel="0" TxPolarity="0" Comment="RD53B 50x50">
   ```
 The corresponding configuration txt files should be copied from the `Ph2_ACF/settings/RD53Files` directory to the working directory and set to the `configFile` setting accordingly.
+Note that for RD53Bv2 chips, the correct `eFuseCode` must be entered from the [database](https://cmsdca.cern.ch/trk_cmsr/construct/parts/).
 
-### Chip monitoring
+For modules, one has to define 2 or 4 chips in the XML file, depending on the module type.
+They are defined exactly the same as written above, only that one has to set a correct `Id` and `Lane` for each chip.
+Typical `Id` and `Lane` mappings can be found [here](ModuleTesting.md#lane-mapping)
 
-The chip **monitoring setup** is described [here](Monitoring.md).
-
-### Data merging
+#### Data merging
 
 ```xml
 <LaneConfig primary="1" 
-            outputLanes="0001" 
-            singleChannelInputs="0000"  <-- [1st ch, 2nd ch, 3d ch, 4th ch]
-            dualChannelInput="0000" />
+            outputLanes="0001"         ⟵ [4th ch, 3rd ch, 2nd ch, 1st ch]
+            singleChannelInputs="0000"
+            dualChannelInput="0000"
+/>
 ```
 
 * primary (1/0): says whether the chip is the master
@@ -50,105 +66,187 @@ The chip **monitoring setup** is described [here](Monitoring.md).
      `dualChannelInput="0101"` ➜ the first and third channels are bonded
 
 !!! info "Running CROC SCCs in KSU hybrid ports 2 and 3"
-    As the Aurora lanes are inversed w.r.t. the RD53A SCC, only CROC lanes 2 and 3 are connected for these connectors.
+    As the Aurora lanes are inverted w.r.t. the RD53A SCC, only CROC lanes 2 and 3 are connected for these connectors.
     Set `outputLanes` to `1234` for this module.
 
-## Settings section
+#### Chip registers
+
+The XML file can configure the readout chip registers.
+**Only the readout chip registers in the XML file will be downloaded to the chip.**
+The only exception are the registers configuring the analog frontend, which are always downloaded to the chip.
+For example:
+1. In the `Settings` section of the XML file, the user writes:  
+```xml
+<Settings
+    VCAL_HIGH = "2000"
+/>
+```
+then, the value 2000 will be downloaded to the chip register `VCAL_HIGH`
+
+2. In the `Settings` section of the XML file the user writes:  
+```xml
+<Settings
+    VCAL_HIGH = ""
+/>
+```
+then, the value present in the [txt file](#txt-configuration-files) will be downloaded to the chip register `VCAL_HIGH`
+
+3. If there is no mention of `VCAL_HIGH` in the `Settings` section of the XML file, then nothing will be downloaded to the `VCAL_HIGH` register
+
+This very same behaviour works also for the Global settings.
+
+**The registers configuring the analog frontend are:**
+
+| RD53A            | CROC                |
+| ---------------- | ------------------- |
+| `PA_IN_BIAS_LIN` | `DAC_PREAMP_L_LIN`  |
+| `FC_BIAS_LIN`    | `DAC_PREAMP_R_LIN`  |
+| `KRUM_CURR_LIN`  | `DAC_PREAMP_TL_LIN` |
+| `LDAC_LIN`       | `DAC_PREAMP_TR_LIN` |
+| `COMP_LIN`       | `DAC_PREAMP_T_LIN`  |
+| `REF_KRUM_LIN`   | `DAC_PREAMP_M_LIN`  |
+| `Vthreshold_LIN` | `DAC_FC_LIN`        |
+|                  | `DAC_KRUM_CURR_LIN` |
+|                  | `DAC_REF_KRUM_LIN`  |
+|                  | `DAC_COMP_LIN`      |
+|                  | `DAC_COMP_TA_LIN`   |
+|                  | `DAC_GDAC_L_LIN`    |
+|                  | `DAC_GDAC_R_LIN`    |
+|                  | `DAC_GDAC_M_LIN`    |
+|                  | `DAC_LDAC_LIN`      |
+
+For CROC chips, some frontend registers have `_L_`, `_R_`, or `_M_` in their names.
+These correspond to different parts of the pixel matrix: `L` corresponds to the two leftmost columns, `R` – to the two rightmost columns, and `M` – to all other pixels. This allows setting different values to the edge columns of the pixel array w.r.t. other columns.
+
+![`L`, `M`, `R` pixel column arrangement](images/L_M_R.png){width=300}
+
+Some registers must be present in the XML file in order to make the chip working properly.
+They are typically under the `Global` settings.
+
+**Compulsory `Global` settings:**
+```xml
+<Global
+    TriggerConfig     = "136"
+    EN_CORE_COL_0     = "65535"
+    EN_CORE_COL_1     = "65535"
+    EN_CORE_COL_2     = "65535"
+    EN_CORE_COL_3     = "63"
+    SEL_CAL_RANGE     = "0"     ➜ choose between 5 (0) or 10 (1) electrons per VCal
+    HIT_SAMPLE_MODE   = "1"     ➜ asynchronous (0) or synchronous (1) hit detection
+    CDR_CONFIG_SEL_PD = "0"     ➜ detect PLL phase on both (0) or one clock edge (1)
+/>
+```
+
+#### Chip monitoring
+
+The chip **monitoring setup** is described [here](Monitoring.md).
+
+### Scan settings
 
 !!! info "Outsourcing scan settings"
     The `<settings>` section of the main XML file can be moved to a separate file to disentagle setup and scan configuration. See `-s` flag in `CMSITminiDAQ`
 
 ```xml
-<Setting name="nEvents">             100 </Setting> 
-<Setting name="nEvtsBurst">          100 </Setting>
+<Setting name="nEvents">     100 </Setting> 
+<Setting name="nEvtsBurst">  100 </Setting>
 ```
 
-### Injection
+#### Injection
 
 ```xml
-<Setting name="nTRIGxEvent">          10 </Setting>
-<Setting name="INJtype">               1 </Setting> --> 0: no injection 
-                                                        1: analog 
-                                                        2: digital 
-                                                        3: custom from txt 
-                                                        4: X-talk coupled pixels (analog) 
-                                                        5: X-talk decoupled pixels (analog)
+<Setting name="nTRIGxEvent"> 10 </Setting> <!-- 0: #bunch crossings readout at every trigger -->
+<Setting name="INJtype">      1 </Setting> <!-- 0: no injection 
+                                                1: analog 
+                                                2: digital 
+                                                3: self-trigger
+                                                4: custom from txt 
+                                                5: X-talk coupled pixels (analog) 
+                                                6: X-talk decoupled pixels (analog) -->
 ```
 
-### Masks and regions
+#### Masks and regions
 
 ```xml
-<Setting name="ResetMask">             0 </Setting>
-<Setting name="ResetTDAC">            -1 </Setting>
-<Setting name="DoDataIntegrity">       0 </Setting>
-
-<Setting name="ROWstart">              0 </Setting>
-<Setting name="ROWstop">             335 </Setting>
-<Setting name="COLstart">              0 </Setting>
-<Setting name="COLstop">             431 </Setting>
+<Setting name="ResetMask">         0 </Setting> <!-- 0: leave mask as is; 1: enable all channels -->
+<Setting name="ResetTDAC">        -1 </Setting> <!-- -1: leave TDAC as is; >=0: set TDAC to value -->
+<Setting name="DoDataIntegrity">   0 </Setting> <!-- Used in Pixelalive -->
+  
+<Setting name="ROWstart">          0 </Setting> <!-- Select interesting region, all the rest is masked -->
+<Setting name="ROWstop">         335 </Setting>
+<Setting name="COLstart">          0 </Setting>
+<Setting name="COLstop">         431 </Setting>
 ```
 
-### Latency scan
+#### Latency scan
+
+Used in [`latency`](calibrations/LatencyScan.md), [`injdelay`](calibrations/InjectionDelayScan.md), and [`clkdelay`](calibrations/ClockDelayScan.md) scans
 
 ```xml
-<Setting name="LatencyStart">          0 </Setting>
-<Setting name="LatencyStop">         511 </Setting>
+<Setting name="LatencyStart">   0 </Setting>
+<Setting name="LatencyStop">  511 </Setting>
 ```
 
-### VCAL settings
+#### VCAL settings
 
-Used in `scurve`, `gain`, `gainopt` and `thradj` calibrations
+Used in [`scurve`](calibrations/SCurve.md), [`gain`](calibrations/GainScan.md), [`gainopt`](calibrations/GainOptimization.md) and [`thradj`](calibrations/ThresholdAdjust.md) calibrations
 
 ```xml
-<Setting name="VCalHstart">          100 </Setting>
-<Setting name="VCalHstop">          1100 </Setting>
-<Setting name="VCalHnsteps">          50 </Setting>
-<Setting name="VCalMED">             100 </Setting>
+<Setting name="VCalHstart">   100 </Setting>
+<Setting name="VCalHstop">   1100 </Setting>
+<Setting name="VCalHnsteps">   50 </Setting>
+<Setting name="VCalMED">      100 </Setting>
 ```
 
-### `Gainopt` calibration
+#### Gain Optimization
+
+Used in [`gainopt`](calibrations/GainOptimization.md) calibration
 
 ```xml
-<Setting name="TargetCharge">      10000 </Setting>
-<Setting name="KrumCurrStart">         0 </Setting>
-<Setting name="KrumCurrStop">        210 </Setting>
+<Setting name="TargetCharge">  10000 </Setting>
+<Setting name="KrumCurrStart">     0 </Setting>
+<Setting name="KrumCurrStop">    210 </Setting>
 ```
 
-### Threshold equalisation
+#### Threshold Equalisation
+
+Used in [`threqu`](calibrations/ThresholdEqualization.md) calibration
 
 ```xml
-<Setting name="TDACGainStart">       140 </Setting>
-<Setting name="TDACGainStop">        140 </Setting>
-<Setting name="TDACGainNSteps">        0 </Setting>
-<Setting name="DoNSteps">              0 </Setting>
-
-<Setting name="ThrStart">            400 </Setting>  <-- used in thrmin and thdadj
-<Setting name="ThrStop">             450 </Setting>  
-<Setting name="TargetThr">          2000 </Setting>  <-- used in thradj calibration
-<Setting name="TargetOcc">          1e-6 </Setting>  <-- used in thrmin calibration
+<Setting name="TDACGainStart">  140 </Setting>
+<Setting name="TDACGainStop">   140 </Setting>
+<Setting name="TDACGainNSteps">   0 </Setting>
+<Setting name="DoNSteps">         0 </Setting>
 ```
 
-* In a `thrmin` run, whose purpose is to find the lowest threshold based on noise occupancy, the
-threshold is lowered within the range `[ThrStart, ThrStop]` in such a way to have an average
-occupancy that meets `TargetOcc`.
+#### Threshold Adjustment and Minimization
 
-### `pixelalive` and noise masking
+Used in [`thradj`](calibrations/ThresholdAdjust.md) and [`thrmin`](calibrations/ThresholdMinimization.md) calibrations
 
 ```xml
-<Setting name="OccPerPixel">        2e-5 </Setting>  
-<Setting name="MaxMaskedPixels">       1 </Setting> 
-<Setting name="UnstuckPixels">         0 </Setting>
+<Setting name="ThrRelStart">      -70 </Setting> <!-- used in thrmin and thdadj -->
+<Setting name="ThrAmplitude">      50 </Setting> <!-- used in thrmin and thdadj -->
+<Setting name="TargetThr">       2000 </Setting> <!-- used in thradj calibration -->
+<Setting name="TargetOcc">       1e-6 </Setting> <!-- used in thrmin calibration -->
+<Setting name="MaxMaskedPixels">    1 </Setting> <!-- used in thrmin calibration -->
 ```
 
-* In a `noise` run, whose purpose is to find noisy
-pixels, any pixel which has an occupancy greater
-than `OccPerPixel` is consequently masked
-* In a `pixelalive` run, whose purpose is to test
-the pixels and find out whether there are dead
-ones, any pixel which has an occupancy smaller
-than `OccPerPixel` is consequently masked
+* In a [`thrmin`](calibrations/ThresholdMinimization.md) run, whose purpose is to find the lowest threshold based on noise occupancy, the threshold is lowered within the range `[ThrStart, ThrStop]` in such a way to have an average occupancy that meets `TargetOcc`
 
-### Voltage tuning (`voltagetuning`)
+#### Pixelalive and Noise masking
+
+Used in [`pixelalive`](calibrations/PixelAlive.md) and [`noise`](calibrations/Noise.md) scans
+
+```xml
+<Setting name="OccPerPixel">   1e-4 </Setting> <!-- used in pixelalive and noise -->
+<Setting name="UnstuckPixels">    0 </Setting> <!-- used in pixelalive -->
+```
+
+* In a [`noise`](calibrations/Noise.md) run, whose purpose is to find noisy pixels, any pixel which has an occupancy greater than `OccPerPixel` is consequently masked
+* In a [`pixelalive`](calibrations/PixelAlive.md) run, whose purpose is to test the pixels and find out whether there are dead ones, any pixel which has an occupancy smaller than `OccPerPixel` is consequently masked
+
+#### Voltage Tuning
+
+Used in [`voltagetuning`](calibrations/VoltageTuning.md) calibration
 
 ```xml
 <Setting name="VDDDTrimTarget">     1.20 </Setting>
@@ -157,34 +255,34 @@ than `OccPerPixel` is consequently masked
 <Setting name="VDDATrimTolerance">  0.02 </Setting>
 ```
 
-### `datarbopt`
+#### Data Readback Optimization
+
+Used in [`datarbopt`](calibrations/DataReadBackOptimisation.md) calibration
 
 ```xml
-<Setting name="TAP0Start">             0 </Setting>
-<Setting name="TAP0Stop">           1023 </Setting>
-<Setting name="TAP1Start">             0 </Setting>
-<Setting name="TAP1Stop">            511 </Setting>
-<Setting name="InvTAP1">               1 </Setting>
-<Setting name="TAP2Start">             0 </Setting>
-<Setting name="TAP2Stop">            511 </Setting>
-<Setting name="InvTAP2">               0 </Setting>
+<Setting name="TAP0Start">    0 </Setting>
+<Setting name="TAP0Stop">  1023 </Setting>
+<Setting name="TAP1Start">    0 </Setting>
+<Setting name="TAP1Stop">   511 </Setting>
+<Setting name="InvTAP1">      1 </Setting>
+<Setting name="TAP2Start">    0 </Setting>
+<Setting name="TAP2Stop">   511 </Setting>
+<Setting name="InvTAP2">      0 </Setting>
 ```
 
-### BERT (`bertest`)
+#### Bit Error Rate Test
+
+Used in [`bertest`](calibrations/BERTest.md) calibration
 
 ```xml
-<Setting name="chain2Test">            0 </Setting>
-<Setting name="byTime">                1 </Setting>
-<Setting name="framesORtime">         10 </Setting>
+<Setting name="chain2Test">    0 </Setting>
+<Setting name="byTime">        1 </Setting>
+<Setting name="framesORtime"> 10 </Setting>
 ```
 
-### `datatransmissiontest`
+#### Generic DAC-DAC scan
 
-```xml
-<Setting name="TargetBER">          1e-5 </Setting>
-```
-
-### `genericdac`
+Used in [`genericdac`](calibrations/GenericDacDac.md) scan
 
 ```xml
 <Setting name="RegNameDAC1"> user.ctrl_regs.fast_cmd_reg_5.delay_after_inject_pulse </Setting>
@@ -197,95 +295,140 @@ than `OccPerPixel` is consequently masked
 <Setting name="StepDAC2">             20 </Setting>
 ```
 
-### Further scan settings
+#### VTRX scan
+
+Used in [`vtrx`](calibrations/VTRxScan.md) scan
 
 ```xml
-<Setting name="DoOnlyNGroups">         0 </Setting>  <-- = 0: run on all injection groups, i.e. on all pix.
-                                                         > 0: run a subset of groups, i.e. subset of pix.
-                                                         useful to speed up scans and calibrations
-<Setting name="DisplayHisto">          0 </Setting>  <--  = 0: don't display histograms on screen
-                                                          = 1: display histograms on screen
-<Setting name="UpdateChipCfg">         1 </Setting>  <--  = 0: don't update chip con g le
-                                                          = 1: update chip con g le
+<Setting name="VTRxBiasStart">        40 </Setting>
+<Setting name="VTRxBiasStop">         56 </Setting>
+<Setting name="VTRxBiasStep">          1 </Setting>
+<Setting name="VTRxModulationStart">  24 </Setting>
+<Setting name="VTRxModulationStop">   40 </Setting>
+<Setting name="VTRxModulationStep">    1 </Setting>
+```
+
+#### LpGBT Eye Opening scan
+
+Used in [`eye`](calibrations/LpGBTeye.md) scan
+
+```xml
+<Setting name="LpGBTattenuation">  0 </Setting>
+```
+
+#### Further scan settings
+
+```xml
+<Setting name="DoOnlyNGroups">  0 </Setting> <!-- = 0: run on all pix.
+                                                  > 0: run a subset of groups
+                                                  useful to speed up scans and calibrations -->
+
+<Setting name="DisplayHisto">   0 </Setting> <!-- = 0: don't display histograms on screen
+                                                  = 1: display histograms on screen -->
+
+<Setting name="UpdateChipCfg">  1 </Setting> <!-- = 0: don't update chip config file
+                                                  = 1: update chip config file -->
+
 <Setting name="DisableChannelsAtExit"> 1 </Setting>
+
+<Setting name="StopIfCommFails"> 1 </Setting> <!-- = 0: don't exit if some AURORA lanes are down
+                                                   = 1: exit if some AURORA lanes are down -->
 ```
 
-### Expert settings
+#### Expert settings
 
 ```xml
-<Setting name="DataOutputDir">           </Setting>
-<Setting name="SaveBinaryData">        0 </Setting>
-<Setting name="nHITxCol">              1 </Setting>
-<Setting name="InjLatency">           32 </Setting>
-<Setting name="nClkDelays">         1300 </Setting>
+<Setting name="ShowRunProgress">       1 </Setting> <!-- whether to show the run progress -->
+
+<Setting name="DoSplitByBoardHybrid">  0 </Setting> <!-- whether to split the ROOT file in sub-files,
+                                                         each containing the data of one Board&Hybrid -->
+
+<Setting name="DataOutputDir">           </Setting> <!-- set the output directory, default = ./Results/ -->
+
+<Setting name="SaveBinaryData">        0 </Setting> <!-- whether to save the raw data in binary format -->
+
+<Setting name="nHITxCol">              1 </Setting> <!-- number of simultaneously injected pixels
+                                                         per column (must be a divider of chip rows) -->
+
+<Setting name="InjLatency">           32 </Setting> <!-- time difference between injection and trigger
+                                                         in terms of 100ns period (up to 4095) -->
+
+<Setting name="nClkDelays">         1300 </Setting> <!-- delay between two consecutive injections
+                                                         in terms of 100 ns period (up to 4095) -->
 ```
 
-* DataOutputDir:   set the output directory for all data. If not specified files will be saved in ./Results/
-* SaveBinaryData = 0: do not save raw data in binary format; SaveBinaryData = 1: save raw data in binary format
-* nHITxCol:        number of simultaneously injected pixels per column (it must be a divider of chip rows)
-* InjLatency:      controls the latency of the injection in terms of 100ns period (up to 4095)
-* nClkDelays:      controls the delay between two consecutive injections in terms of `100 ns` period (up to 4095)
+### Register block
 
-## Trigger and clock settings
+!!! info "Exporting `Register` block"
+    To be noted that the `Register` block can be put in a separate XML file:
+
+    * Add the file name within the `BeBoard` node of your main XML file in this way:
+    ```xml
+    <configuration file_name="RegisterFile.xml"/>
+    ```
+    
+    * The RegisterFile.xml should contain:  
+    ```xml
+    <?xml version="1.0" encoding="utf-8"?> 
+    <BeBoardRegister>
+    ... the Register section ...
+    </BeBoardRegister>
+    ```
+
+#### GTX polarity
 
 ```xml
-       <Register name="fast_cmd_reg_2">
-          <Register name="trigger_source"> 2 </Register>  <-- 1=IPBus
-                                                              2=Test-FSM (default)
-                                                              3=TTC
-                                                              4=TLU (via DIO5 board)
-                                                              5=External
-                                                              6=Hit-Or
-                                                              7=User-defined frequency
-          <Register name="HitOr_enable_l12"> 0 </Register>
-          <!--  -->
-        </Register>
+<Register name="gtx_rx_polarity">
+  <Register name="fmc_l12"> 1024 </Register> <!-- 12-bit number where for each bit
+                                                  0=default value, 1=invert polarity
+                                                  on one of the GTX lanes -->
+
+  <Register name="fmc_l8">     0 </Register> <!-- 8-bit number where for each bit
+                                                  0=default value, 1=invert polarity
+                                                  on one of the GTX lanes -->
+
+  <Register name="cmd_strobe"> 0 </Register> <!-- whether to download new polarity values -->
+</Register>
 ```
 
-* `HitOr_enable_l12`: Enable HitOr port: set trigger_source to proper value then this register, `0b0001` enable HitOr from left-most connector, `0b1000` enable HitOr from right-most connector
+#### Trigger
 
-### Triggering on the CROC HitOr
+```xml
+<Register name="fast_cmd_reg_2">
+  <Register name="trigger_source"> 2 </Register> <!-- 1=IPBus
+                                                      2=Test-FSM (default)
+                                                      3=TTC
+                                                      4=TLU (via DIO5 board)
+                                                      5=External
+                                                      6=Hit-Or
+                                                      7=User-defined frequency -->
+  <Register name="HitOr_enable_l12"> 0 </Register>
+</Register>
+```
 
-!!! info "This works only with SCCs as modules don't have the HitOr connected"
+Important points:
 
-#### Hardware
+* Setting `trigger_source` = 2 can provide not only internal triggers, but the firmware can also send a trigger if a HitOr signal if present. In that case, HitOr signals have to be enabled both in the chip and firmware.
+* `HitOr_enable_l12`: Enable HitOr port on the KSU FMC: set `trigger_source` to proper value then this register, `1` enable HitOr from left-most connector (on the bottom row of MiniDP connectors), `2` enable HitOr from right-most connector
+* You can read more about triggering using HitOr in these sections: [Self-trigger](SelfTrigger.md), [External HitOr trigger](ExternalTriggers.md#triggering-on-the-croc-hitor)
 
-Connect the 2nd DP plug on the SCC (DP2/rightmost connector on Bonn/Zurich SCCs) to one of the first two (from left) connectors on the lower row of the KSU FMC (1st=J5=HitOr_1, 2nd=J8=HitOr_2)
+#### Clock
 
-#### Configuration
+```xml
+<Register name="ext_tlu_reg2">
+  <Register name="tlu_delay"> 0 </Register> <!-- Needed to align TLU trigger tag with FC7 clock
+                                                 (values 0-15 in unit of 1/16 of 40 MHz clk cycle) -->
+</Register>
 
-1. **Set trigger source to HitOr and turn on the correct input DP on the KSU FMC**  
-    Set in the `CMSIT_RD53B.xml` file
+<Register name="reset_reg">
+  <Register name="ext_clk_en"> 0 </Register> <!-- 0=Internal clock (default)
+                                                  1=External Clock -->
+</Register>
+```
 
-    ```xml
-     <Register name="fast_cmd_reg_2">
-             <Register name="trigger_source"> 6 </Register>     <!-- 6 = Hitor input -->
-             <Register name="HitOr_enable_l12"> 1 </Register>   <!-- 1 or 2 = turn on first(HitOr_1, see above) and/or
-                                                                second (HitOr_2) connector -->
-    ```
+You can read more about using external clock [here](ExternalTriggers.md#dio5-and-tlu).
 
-   **warning:** BUG: Specifying the input in binary as suggested in the XML file does not work.
-
-2. **Route the HitOr signals to the 2nd DP connector**  
-    This is specified in `GP_LVDS_ROUTE_0/1`, which are compound registers (two times two 6 bit registers).
-    The assignment table is in the CROC manual in table 29/page 33:  HitOr3 = 28 ... HitOr0 = 31.
-    So to turn on all HitOrs, you have to set the following in the chip configuration
-
-    ```xml
-        GP_LVDS_ROUTE_0 = 1821      <!-- ((28<<6) + 29) -->
-        GP_LVDS_ROUTE_1 = 1951      <!-- ((30<<6) + 31) -->
-    ```
-
-3. **Turn on the HitOr per pixel and column**  
-    * `CMSIT_RD53B.txt`: Set the HITOR bit for all relevant pixels to 1.
-    * `CMSIT_RD53B.xml`: Set the HITOR_MASK_{0..3} to **0** for all columns that you want to **activate**.
-
-4. **Find and adjust the latency (`TriggerConfig`)**  
-
-!!! info "The HitOr is by definition `asynchronous`."
-    Noise masking should only done in the asynchronous mode (`HIT_SAMPLE_MODE` = 0).
-
-### DIO5 and TLU settings
+#### DIO5 and TLU registers
 
 ```xml
         <Register name="ext_tlu_reg1">
@@ -298,28 +441,25 @@ Connect the 2nd DP plug on the SCC (DP2/rightmost connector on Bonn/Zurich SCCs)
           <Register name="dio5_ch4_thr"> 128 </Register>
           <Register name="dio5_ch5_thr"> 128 </Register>
 
-          <Register name="tlu_delay"> 0 </Register> <-- Needed to align TLU trigger tag with FC7 clock
-                                                         (values 0-15 in unit of 1/16 of 40 MHz clk cycle)
+          <Register name="tlu_delay"> 0 </Register> <!-- Needed to align TLU trigger tag with FC7 clock
+                                                         (values 0-15 in unit of 1/16 of 40 MHz clk cycle) -->
         </Register>
 ```
 
-* External triggers must be provided through a lemo cable to the DIO5 FMC board, input
-number 2, in TTL standard, 50 Ohm impedance
-* If using `trigger_source=4` ➜ terminate with 50 Ohm: busy to TLU (DIO5 FMC board
-output number 3) and clk to TLU (DIO5 FMC board output number 1) and use same
-length lemo cables
+You can read more about using DIO5 and TLU [here](ExternalTriggers.md#dio5-and-tlu).
 
-### External clock and triggers for `physics`
+#### External clock and triggers for `physics`
 
 ```xml
 
         <Register name="reset_reg">
-          <Register name="ext_clk_en"> 0 </Register>  <-- 0: (default) internal clock
-                                                          1: external clock
+          <Register name="ext_clk_en"> 0 </Register> <!-- 0: (default) internal clock
+                                                          1: external clock -->
         </Register>
 
         <Register name="fast_cmd_reg_3">
-          <Register name="triggers_to_accept"> 10 </Register>  <--  used in physics: total number of triggers to readout (0 = no limit)
+          <Register name="triggers_to_accept"> 10 </Register> <!-- used in physics: total number of 
+                                                                   triggers to readout (0 = no limit) -->
         </Register>
 
         <Register name="fast_cmd_reg_7">
@@ -328,5 +468,100 @@ length lemo cables
         </Register>
 ```
 
-* External clock must be provided through a lemo cable to the DIO5 FMC board, input number
-5, in TTL standard, 50 Ohm impedance
+You can read more about the `physics` scan [here](calibrations/Physics.md).
+
+## txt configuration files
+
+The configuration file describing each chip in the test setup.
+You will need as many files, as you have chips (e.g., 4 txt files when testing a single quad module).
+The default files can be found here:
+
+* `Ph2_ACF/settings/RD53Files/CMSIT_RD53A.txt` for RD53A
+* `Ph2_ACF/settings/RD53Files/CMSIT_RD53Bv1.txt` for RD53Bv1 (CROCv1)
+* `Ph2_ACF/settings/RD53Files/CMSIT_RD53Bv2.txt` for RD53Bv2 (RD53C/CROCv2)
+
+### txt file structure
+
+The txt files consist of two main parts:
+
+1. Chip register description
+2. Pixel configuration
+
+#### Chip register description
+
+The txt file usually lists all the chip registers, describing their addresses, default values, currently set values, and bit sizes. For example:
+
+```
+*-----------------------------------------------
+* RegName    Addr   Defval    Value     BitSize
+*-----------------------------------------------
+PIX_PORTAL   0x00   0d0       0d0          16
+REGION_COL   0x01   0d0       0d0           8
+REGION_ROW   0x02   0d0       0d0           9
+PIX_MODE     0x03   0b01010   0b01010       5
+. . .
+```
+
+However, these values do not get downloaded to the chip automatically (apart from the analog frontend registers), unless they are also listed in the [XML file](#xml-configuration-file), as described [above](#chip-registers).
+Additionally, the values set in the XML file override the values given in the txt file.
+Therefore, it is generally recommended to set the desired register values in the XML file, and leave the chip register section of the txt file as is.
+Some [IT calibrations](calibrations/index.md) in Ph2_ACF will update the txt file automatically, if necessary.
+
+The most important chip registers were already listed in "[Chip Registers](#chip-registers)" section of the XML file description above.
+
+#### Pixel configuration
+
+The txt file also allows configuring each pixel, more specifically:
+
+* Enable/disable the readout of the pixel (`ENABLE`)
+* Enable/disable the HitOr output of the pixel (`HITBUS`)
+* Enable/disable the injection circuit of the pixel (`INJEN`)
+* Set the TDAC (threshold trimming bits) of the pixel (`TDAC`)
+
+The settings are arranged column-wise:
+
+```
+*---------------------------------------------------------------------------------------------
+PIXELCONFIGURATION
+*---------------------------------------------------------------------------------------------
+COL    000                             ➜ column number
+ENABLE 1,1,1,1,1,1,1,1, . . .          ➜ each number enables a different pixel in this column
+HITBUS 0,0,0,0,0,0,0,0, . . .          ➜ same but for HitOr
+INJEN  0,0,0,0,0,0,0,0, . . .          ➜ same but for injections
+TDAC   16,16,16,16,16,16,16,16, . . .  ➜ same but for TDAC
+
+COL    001
+ENABLE . . .
+. . .
+```
+
+It is technically possible to edit these per-pixel configuration settings to create some interesting injection/readout/trigger patterns.
+E.g., In order to use the [HitOr self-trigger](SelfTrigger.md), all the HITBUS values should be changed to 1 (apart from the masked pixels, otherwise they may still keep producing the triggers).
+However, for more complicated patters, this might become very tedious and is not generally recommended to do by hand. There are scripts available to do this (see next section).
+
+#### Pixel mask manipulation scripts
+
+Some complex masking patterns can be generated using the [`pythonUtils/pyUtilsIT/ManipulateITchipMask.py`](https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF/-/blob/master/pythonUtils/pyUtilsIT/ManipulateITchipMask.py?ref_type=heads) script.
+Using this script, users can specify an enable/injection file of the form:
+```
+row 0 col 130 en 
+row 1 col 130 inj
+row 2 col 130 en 
+
+row 0 col 129 en
+row 1 col 129 en
+row 2 col 129 en
+
+row 0 col 131 en
+row 1 col 131 en
+row 2 col 131 en
+```
+
+Users can also specify the group number, i.e. pattern number among the several possible `(0, NROWS - 1).
+A png image is also saved to show the chosen pattern.
+This is very useful, e.g., for [crosstalk (X-talk) studies](calibrations/XTalk.md).
+
+#### Copying the pixel masks
+
+The pixel masks can be copied from one txt file to another using the [`pythonUtils/pyUtilsIT/CopyITchipMask.py`](https://gitlab.cern.ch/cmsinnertracker/Ph2_ACF/-/blob/master/pythonUtils/pyUtilsIT/CopyITchipMask.py?ref_type=heads) script.
+It allows users to port the pixel mask from, e.g., a txt file from an older version of Ph2_ACF, to a new txt from a newer version of Ph2_ACF where the description of the chip registers may change but the mask description will always stay the same.

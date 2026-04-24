@@ -55,6 +55,8 @@ int main(int argc, char** argv)
     cmd.defineOption("adc", "mux reader control", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("adc", "a");
 
+    cmd.defineOption("poly", "read out polysilicion with ntc", CommandLineProcessing::ArgvParser::NoOptionAttribute);
+
     cmd.defineOption("comment", "Operator comment to be printed to log", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("comment", "m");
 
@@ -103,6 +105,7 @@ int main(int argc, char** argv)
     bool        reset             = cmd.foundOption("reset") == true ? true : false;
     bool        dumpRegs          = cmd.foundOption("dump") == true ? true : false;
     std::string muxreader_arg     = cmd.foundOption("adc") == true ? cmd.optionValue("adc") : "";
+    bool        read_poly         = cmd.foundOption("poly") == true ? true : false;
 
     if(cmd.foundOption("capture") == true)
         RegManager::enableCapture(cmd.optionValue("capture").insert(0, std::string(RD53Shared::RESULTDIR) + "/Run" + RD53Shared::fromInt2Str(runNumber) + "_"));
@@ -148,7 +151,7 @@ int main(int argc, char** argv)
         else if(dumpRegs == true)
         {
             LOG(INFO) << BOLDMAGENTA << "@@@ Dumping frontend registers @@@" << RESET;
-            mySysCntr.DumpRegisters();
+            mySysCntr.DumpRegisters(runNumber);
         }
     }
     else
@@ -192,6 +195,7 @@ int main(int argc, char** argv)
 
         std::string fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_NTC");
         TEPXQuadNTC ntc;
+        ntc.configure(read_poly);
         ntc.Inherit(&mySysCntr);
         ntc.localConfigure(fileName, runNumber);
         ntc.run();

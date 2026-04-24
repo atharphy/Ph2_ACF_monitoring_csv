@@ -1,5 +1,4 @@
 # Data Read Back Optimisation
-<sub><sup>Last updated: 16.12.2024</sup></sub>
 
 ## Purpose
 
@@ -7,13 +6,13 @@ The purpose of the Data Readback Optimization scan is to find the optimal values
 
 ## Method
 
-The Data Readback Optimization scan is derived from [BER Test](BERTest.md). It performs three separate scans: one each for TAP0 (`DAC_CML_BIAS_0`), TAP1 (`DAC_CML_BIAS_1`), and TAP2 (`DAC_CML_BIAS_2`). The range of the TAP* scan is determined by `TAP*Start` and `TAP*Stop` settings (here, `*` can be either 0, 1, or 2), with the number of points always being either 10 or `TAP*Stop`-`TAP*Start`, if `TAP*Stop`-`TAP*Start`<10. At each point of the scan, a BER Test is performed. After the scan finishes, the TAP\* value providing the lowest Bit Error Rate is reported as the best. If there are multiple TAP\* values with the lowest BER, (which is veryoften the case as many points have BER=0), the lowest one is chosen.
+The Data Readback Optimization scan is derived from [BER Test](BERTest.md). It performs three separate scans: one each for TAP0 (`DAC_CML_BIAS_0`), TAP1 (`DAC_CML_BIAS_1`), and TAP2 (`DAC_CML_BIAS_2`). The range of the TAPx scan is determined by `TAPxStart` and `TAPxStop` settings (here, `x` can be either 0, 1, or 2), with the number of points always being either 10 or `TAPxStop`-`TAPxStart`, if `TAPxStop`-`TAPxStart`<10. At each point of the scan, a BER Test is performed. After the scan finishes, the TAPx value providing the lowest Bit Error Rate is reported as the best. If there are multiple TAPx values with the lowest BER, (which is veryoften the case as many points have BER=0), the lowest one is chosen.
 
-The optimal TAP* values should be set by changing the  `DAC_CML_BIAS_*` registers in the XML file by hand.
+The optimal TAPx values should be set by changing the  `DAC_CML_BIAS_x` registers in the XML file by hand.
 
 **Scan command:** `datarbopt`
 
-!!! warning "You have to update the config manually in the xml file"
+!!! note "You have to update the config manually in the xml file"
     * TAP{0,1,2}: `DAC_CML_BIAS_{0,1,2}`
 
 ## Configuration Parameters

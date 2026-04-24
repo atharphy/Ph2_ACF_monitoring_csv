@@ -66,9 +66,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
       set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} $ENV{TCUSBFlag}")
     endif(${PH2_TCUSB_FOUND})
 
-    # Boost also needs to be linked
-    # include_directories(${Boost_INCLUDE_DIRS})
-    # link_directories(${Boost_LIBRARY_DIRS})
+    #################################
+    # Boost also needs to be linked #
+    #################################
     set(LIBS ${LIBS} ${Boost_DATE_TIME_LIBRARY} ${Boost_IOSTREAMS_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE})
 
     #################################

@@ -39,7 +39,7 @@ The portcard with 3 LpGBT should be powered at **10 V** and at most should requi
 ```
 Here, <code><t style="color: CornflowerBlue;">OpticalGroup</t> Id</code> maps the SFP connector.
 
-The code can handle both LpGBT-v0 and LpGBT-v1, transparently to the user. The user just needs to specify the version (`version`) and the appropriate register file (`configFile`) for this LpGBT chip in the following line:
+The code can handle both **LpGBT-v0**, **LpGBT-v1**, and **LpGBT-v2** transparently to the user. The user just needs to specify the version (`version`) and the appropriate register file (`configFile`) for this LpGBT chip in the following line:
 
 <code><t style="color: CornflowerBlue;">&lt;lpGBT</t> Id=<t style="color: MediumSeaGreen;">"0"</t> <b>version=</b><b style="color: MediumSeaGreen;"><u>"1"</u></b>  <b>configFile=</b><b style="color: MediumSeaGreen;"><u>"CMSIT_LpGBTv1.txt"</u></b>...<t style="color: CornflowerBlue;">></t></code>
 
@@ -57,7 +57,7 @@ Further details on how to configure the various adapter boards (FC7 $\leftrighta
 
 ```xml
 <OpticalGroup Id="0" enable="1" FMCId="L12">
-      ...
+      <lpGBT_Files path="${PWD}/" />
       <lpGBT Id="0" version="1" configFile="CMSIT_LpGBTv1.txt" ChipAddress="0x70" RxDataRate="1280" RxHSLPolarity="0" TxDataRate="160" TxHSLPolarity="0">
         <Settings
             EPRX00ChnCntr_phase = "7"
@@ -71,46 +71,67 @@ Further details on how to configure the various adapter boards (FC7 $\leftrighta
 
 Inside this <code><t style="color: CornflowerBlue;">Settings</t></code> section, the user can now put the registers referring to VTRx+ (they are treated as if they were LpGBT registers). A write/read test can be easily performed just by putting in the XML file any of the registers shown below (every write is associated to a read back check):
 ```
-*-------------------------------------------------------------------------------------------------------
+*-------------------------------------------------------------
 * Fake registers
-*-------------------------------------------------------------------------------------------------------
-* RegName                 Addr          Defval            Value                         BitSize
-*-------------------------------------------------------------------------------------------------------
-_I2CVTRxRegGCR            0x300         0d00              0d00                          8
-_I2CVTRxRegSDA            0x302         0d00              0d00                          8
+*-------------------------------------------------------------
+* RegName             Addr      Defval    Value     BitSize
+*-------------------------------------------------------------
+_I2CVTRxRegGCR        0x300     0d00      0d00      8
+_I2CVTRxRegSDA        0x302     0d00      0d00      8
 
-_I2CVTRxRegCH0BIAS        0x303         0d00              0d00                          8
-_I2CVTRxRegCH0MOD         0x304         0d00              0d00                          8
-_I2CVTRxRegCH0EMP         0x305         0d00              0d00                          8
+_I2CVTRxRegCH0BIAS    0x303     0d00      0d00      8
+_I2CVTRxRegCH0MOD     0x304     0d00      0d00      8
+_I2CVTRxRegCH0EMP     0x305     0d00      0d00      8
 
-_I2CVTRxRegCH1BIAS        0x306         0d00              0d00                          8
-_I2CVTRxRegCH1MOD         0x307         0d00              0d00                          8
-_I2CVTRxRegCH1EMP         0x308         0d00              0d00                          8
+_I2CVTRxRegCH1BIAS    0x306     0d00      0d00      8
+_I2CVTRxRegCH1MOD     0x307     0d00      0d00      8
+_I2CVTRxRegCH1EMP     0x308     0d00      0d00      8
 
-_I2CVTRxRegCH2BIAS        0x309         0d00              0d00                          8
-_I2CVTRxRegCH2MOD         0x30A         0d00              0d00                          8
-_I2CVTRxRegCH2EMP         0x30B         0d00              0d00                          8
+_I2CVTRxRegCH2BIAS    0x309     0d00      0d00      8
+_I2CVTRxRegCH2MOD     0x30A     0d00      0d00      8
+_I2CVTRxRegCH2EMP     0x30B     0d00      0d00      8
 
-_I2CVTRxRegCH3BIAS        0x30C         0d00              0d00                          8
-_I2CVTRxRegCH3MOD         0x30D         0d00              0d00                          8
-_I2CVTRxRegCH3EMP         0x30E         0d00              0d00                          8
+_I2CVTRxRegCH3BIAS    0x30C     0d00      0d00      8
+_I2CVTRxRegCH3MOD     0x30D     0d00      0d00      8
+_I2CVTRxRegCH3EMP     0x30E     0d00      0d00      8
 
-_I2CVTRxRegStatus         0x314         0d00              0d00                          8
-_I2CVTRxRegID             0x315         0d00              0d00                          8
+_I2CVTRxRegStatus     0x314     0d00      0d00      8
+_I2CVTRxRegID         0x315     0d00      0d00      8
 
-_I2CVTRxRegUID0           0x316         0d00              0d00                          8
-_I2CVTRxRegUID1           0x317         0d00              0d00                          8
-_I2CVTRxRegUID2           0x318         0d00              0d00                          8
-_I2CVTRxRegUID3           0x319         0d00              0d00                          8
+_I2CVTRxRegUID0       0x316     0d00      0d00      8
+_I2CVTRxRegUID1       0x317     0d00      0d00      8
+_I2CVTRxRegUID2       0x318     0d00      0d00      8
+_I2CVTRxRegUID3       0x319     0d00      0d00      8
 
-_I2CVTRxRegSEU0           0x31A         0d00              0d00                          8
-_I2CVTRxRegSEU1           0x31B         0d00              0d00                          8
-_I2CVTRxRegSEU2           0x31C         0d00              0d00                          8
-_I2CVTRxRegSEU3           0x31D         0d00              0d00                          8
+_I2CVTRxRegSEU0       0x31A     0d00      0d00      8
+_I2CVTRxRegSEU1       0x31B     0d00      0d00      8
+_I2CVTRxRegSEU2       0x31C     0d00      0d00      8
+_I2CVTRxRegSEU3       0x31D     0d00      0d00      8
 
-_I2CMasterID              0x320         0d02              0d02                          8
-_I2CFreq                  0x321         0d02              0d02                          8
-_I2CSlaveAddress          0x322         0d80              0d80                          8
-_I2CRegAddress            0x323         0d00              0d00                          8
+_I2CMasterID          0x320     0d02      0d02      8
+_I2CFreq              0x321     0d02      0d02      8
+_I2CSlaveAddress      0x322     0d80      0d80      8
+_I2CRegAddress        0x323     0d00      0d00      8
 
+```
+
+## Test portcard adapter
+
+1. Use `VRPCTestAdapter` in the `eventType` field of the XML file
+2. Put the path to the configuration file in the `comment` field of the XML file
+3. Run Ph2_ACF with option `-p` (as for program)
+
+The configuration file is in `settings/PortCardTestAdapterFiles/`.
+In the configuration file, there should be something like:
+```
+*--------------
+* Addr  Value
+*--------------
+  0x04  0x03
+  0x05  0x0B
+  0x06  0x0C
+  0x07  0x0D
+  0x08  0x03
+  0x09  0x0B
+...
 ```

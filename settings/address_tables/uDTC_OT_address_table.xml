@@ -88,6 +88,8 @@
                     <node id="delay_after_fast_reset"       address="0x004" description="delay between fast reset and following test pulse command"/>
                     <node id="delay_after_test_pulse"       address="0x005" description="delay after test pulse command before l1a signal sent to readout the data"/>
                     <node id="delay_before_next_pulse"      address="0x006" description="delay before next pulse"/>
+                    <node id="consecutive_delay_between_trigger"   address="0x008" mask="0x0000ffff" description="delay between triggers in Consecutive mode"/>
+                    <node id="consecutive_triggers_per_burst"      address="0x008" mask="0xffff0000" description="number of consecutive triggers"/>
                     <node id="en_fast_reset"        address="0x009" mask="0x00000010" description="enable fast reset in the test pulse sequence"/>
                     <node id="en_test_pulse"        address="0x009" mask="0x00000020" description="enable test pulse in the test pulse sequence"/>
                     <node id="en_l1a"           address="0x009" mask="0x00000040" description="enable l1a in the test pulse sequence"/>

@@ -21,6 +21,7 @@
 #include "DQMUtils/DQMHistogramOTRegisterTester.h"
 #include "DQMUtils/DQMHistogramOTSSAtoMPAecv.h"
 #include "DQMUtils/DQMHistogramOTSSAtoSSAecv.h"
+#include "DQMUtils/DQMHistogramOTTimeCorrelation.h"
 #include "DQMUtils/DQMHistogramOTVTRxLightYieldScan.h"
 #include "DQMUtils/DQMHistogramOTalignBoardDataWord.h"
 #include "DQMUtils/DQMHistogramOTalignLpGBTinputs.h"

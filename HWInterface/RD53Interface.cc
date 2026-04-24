@@ -91,7 +91,7 @@ void RD53Interface::WriteBoardBroadcastChipReg(const BeBoard* pBoard, const std:
         std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2)->VCalSleepTime));
 }
 
-int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
+int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName, const bool updateReg)
 {
     this->setBoard(pChip->getBeBoardId());
     std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
@@ -111,7 +111,14 @@ int32_t RD53Interface::ReadChipReg(Chip* pChip, const std::string& regName)
             std::this_thread::sleep_for(std::chrono::microseconds(RD53Shared::READOUTSLEEP));
         }
         else
+        {
+            // #############################
+            // # Update register in memory #
+            // #############################
+            if(updateReg == true) pChip->setReg(regName, regReadback[0].second);
+
             return regReadback[0].second;
+        }
     }
 
     if(RD53Interface::silentRunning == false)
@@ -124,7 +131,7 @@ bool RD53Interface::ConfigureChipOriginalMask(ReadoutChip* pChip, bool pVerify, 
 {
     auto pRD53 = static_cast<RD53*>(pChip);
 
-    WriteRD53Mask(pRD53, false, true);
+    WriteRD53Mask(pRD53, 0, true);
 
     return true;
 }
@@ -138,7 +145,7 @@ bool RD53Interface::MaskAllChannels(ReadoutChip* pChip, bool mask, bool pVerify)
     else
         pRD53->enableAllPixels();
 
-    WriteRD53Mask(pRD53, false, false);
+    WriteRD53Mask(pRD53, 0, false);
 
     return true;
 }
@@ -171,21 +178,27 @@ bool RD53Interface::maskChannelsAndSetInjectionSchema(ReadoutChip* pChip, const 
     // #########
     // # Apply #
     // #########
-    WriteRD53Mask(pRD53, true, false);
+    WriteRD53Mask(pRD53, 1, false);
 
     return true;
 }
 
-void RD53Interface::DumpChipRegisters(ReadoutChip* pChip)
+void RD53Interface::DumpChipRegisters(ReadoutChip* pChip, bool doUpdateChip, unsigned int runNumber, const std::string& directoryName)
 {
     this->setBoard(pChip->getBeBoardId());
 
     for(auto& cRegItem: pChip->getRegMap())
     {
-        auto value = RD53Interface::ReadChipReg(pChip, cRegItem.first);
-        std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(24) << cRegItem.first << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")"
+        auto value = RD53Interface::ReadChipReg(pChip, cRegItem.first, true);
+        std::cout << "\t--> Register " << std::left << std::setfill(' ') << std::setw(25) << cRegItem.first << " = " << std::setw(8) << std::dec << value << std::hex << "(0x" << value << ")"
                   << std::endl;
     }
+
+    LOG(INFO) << BOLDBLUE << "Reading back pixel matrix from [chip = " << BOLDYELLOW << +pChip->getId() << BOLDBLUE << "]... It might take a while" << RESET;
+    ReadRD53Mask(static_cast<RD53*>(pChip), 0);
+
+    pChip->saveRegMapAndMove(doUpdateChip, runNumber, directoryName);
+    LOG(INFO) << BOLDBLUE << "Saved frontend configuration file [chip = " << BOLDYELLOW << +pChip->getId() << BOLDBLUE << "] " << RESET;
 }
 
 void RD53Interface::EnDisChip(Chip* pChip, std::vector<uint16_t>& chipCommandList, bool enable)
@@ -266,7 +279,7 @@ bool RD53Interface::WriteChipAllLocalReg(ReadoutChip* pChip, const std::string& 
     for(auto col = 0u; col < pRD53->getNCols(); col++)
         for(auto row = 0u; row < pRD53->getNRows(); row++) pRD53->setTDAC(row, col, pValue.getChannel<uint16_t>(row, col));
 
-    WriteRD53Mask(pRD53, false, false);
+    WriteRD53Mask(pRD53, 0, false);
 
     return true;
 }
@@ -295,6 +308,27 @@ void RD53Interface::SendHybridCommands(const BeBoard* pBoard, const std::vector<
     this->setBoard(pBoard->getId());
     std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
     static_cast<RD53FWInterface*>(fBoardFW)->SendChipCommands(hybridCommandList);
+}
+
+void RD53Interface::ReadPixelMaskFromFW(Chip* pChip, const int lastRow, const int lastCol, const size_t Ntimes)
+{
+    int  localCol    = lastCol;
+    int  localRow    = lastRow;
+    auto pRD53       = static_cast<RD53*>(pChip);
+    auto regReadback = static_cast<RD53FWInterface*>(fBoardFW)->ReadChipRegistersNtimes(pRD53, Ntimes);
+
+    for(int i = regReadback.size() - 1; i >= 0; i--)
+    {
+        pRD53->setPixelMask(localRow, localCol + 0, regReadback[i].second & 0x00FF);
+        pRD53->setPixelMask(localRow, localCol + 1, (regReadback[i].second & 0xFF00) >> 8);
+
+        localRow--;
+        if(localRow < 0)
+        {
+            localRow = RD53B::NROWS - 1;
+            localCol -= 2;
+        }
+    }
 }
 
 // ###########################

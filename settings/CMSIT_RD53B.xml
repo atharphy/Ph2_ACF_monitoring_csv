@@ -276,6 +276,7 @@
     <Setting name="VCalMED">             100 </Setting>
 
     <Setting name="TargetCharge">      10000 </Setting>
+    <Setting name="TargetToT">             3 </Setting>
     <Setting name="KrumCurrStart">         0 </Setting>
     <Setting name="KrumCurrStop">        210 </Setting>
 
@@ -326,6 +327,10 @@
     <Setting name="VTRxModulationStart">  24 </Setting>
     <Setting name="VTRxModulationStop">   40 </Setting>
     <Setting name="VTRxModulationStep">    1 </Setting>
+
+    <Setting name="PwTrimPREAMPTarget">  435 </Setting>
+    <Setting name="PwTrimCOMPTarget">    319 </Setting>
+    <Setting name="PwTrimLDACTarget">     58 </Setting>
 
     <Setting name="LpGBTattenuation">      0 </Setting>
 
