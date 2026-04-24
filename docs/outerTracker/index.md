@@ -12,7 +12,7 @@ The configuration of a 2S Module performed by Ph2_ACF is described [here](https:
 - [POTATO](https://indico.cern.ch/event/1416773/#1-potato-installation-and-intr)
 - [Database Dashboard](https://indico.cern.ch/event/1515620/#4-dca-dashboard-tutorial)
 
-##### Test descroption 
+##### Test description 
 
 - [2S testing](2Stesting.md)
 - [PS testing](PStesting.md)

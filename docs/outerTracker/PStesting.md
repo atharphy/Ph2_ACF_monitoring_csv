@@ -133,6 +133,8 @@ This test is performed to verify that we are able to change the VTRX settings to
 
 ![VTRx_LightYieldScan](./OTtesting/common/VTRx_LightYieldScan.png)
 
+It has been observed that often there are issues reading the VTRX light yield, especially on the first enabled Optical Group, with measurements returning power values that are powers of 2, or values with many 1s, often 2^16 (0xFFFF). Starting from Ph2_ACF v6-29, to avoid checking multiple combinations of problematic values, multiple measurements are collected for the same bias and modulation point: 5 measurements without reading errors (but with possible problematic power values). Then the measurements are compared, excluding the 7 least significant bits to take into account real fluctuations. The most common measurements are then averaged to give the final value.
+
 The bias and modulation, shown on the x and y axes of the plot, are two registers of the VTRX that control the laser driver. On the Z axis we have the power in microWatt that is measured by the the SFP connector, the receiver on the FC7.
 
 We obtain the distribution measuring the power varying the bias and modulation.
@@ -143,10 +145,14 @@ If the power in the x and y direction is not changing, something is going on wit
 
 ###### ⚠️ Known issues
 
-  A distribution like the one below may be due to a problematic   SFP connector on the FC7 or dirt in the fibers.
+  A distribution like the one below may be due to a problematic SFP connector on the FC7 or dirt in the fibers.
 
   ![VTRx_LightYieldScan_buggy](./OTtesting/common/VTRx_LightYieldScan_buggy.png)
 
+
+  It has been observed that often there are issues reading the VTRX light yield, especially on the first enabled Optical Group, as shown below. A fix exist starting from Ph2_ACF v6-29.
+
+  ![VTRx_LightYieldScan_readingErrors](./OTtesting/common/VTRXreadingErrors.png)
 
 
 ##### OTLpGBTEyeOpeningTest - OpticalGroup
@@ -408,11 +414,14 @@ This is crucial because, on the strip side, you can simply monitor the noise, wh
 
   Example of a missing wirebond, 100% error rate for one chip   and line. [This debug script](../../pythonUtils/  ModuleNoiseAnalyzer.py) will help you identify the wirebond   number. When inspecting the wirebonds, remember that wirebond   12 for the bandgap is never connected.
 
-  ![SSAtoMPA_PatternMatchingErrorRate_Hybrid_missingWirebond](./  OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_missingWirebond. png)
+  ![SSAtoMPA_PatternMatchingErrorRate_Hybrid_missingWirebond](./OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_missingWirebond.png)
 
-  The one below is a known issue due the hybrid design leaving  the SSA0 left lateral input and the SSA7 right lateral input   floating. See [here](https://indico.cern.ch/event/1642446/  contributions/6908086/attachments/3214472/5726208/  PSclusterIssuesUnderstood.pdf) for more info.
+  The one below is a known issue due the hybrid design leaving  the SSA0 left lateral input and the SSA7 right lateral input floating. See [here](https://indico.cern.ch/event/1642446/contributions/6908086/attachments/3214472/5726208/PSclusterIssuesUnderstood.pdf) for more info.
 
   ![SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem](./OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_Hybrid_clusterProblem.png)
+
+  Another issue has been found in the 10G firmware used during burnin testing in the majority of PS burnin centers leading to errors in the right hybrid as shown below.
+  ![SSAtoMPA_PatternMatchingErrorRate_Hybrid_firmware](./OTtesting/PS/SSAtoMPA_PatternMatchingErrorRate_Hybrid_firmware.png)
 
 
 ##### OTPSringOscillatorTest - Hybrid
