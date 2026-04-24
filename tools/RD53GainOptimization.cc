@@ -247,16 +247,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
                         // #######################
                         // # Build discriminator #
                         // #######################
-                        float  newValue = 0;
-                        size_t cnt      = 0;
-                        for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
-                            for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                                if(cChip->getChannel<OccupancyAndPh>(row, col).fStatus == RD53Shared::ISGOOD)
-                                {
-                                    newValue += cChip->getChannel<OccupancyAndPh>(row, col).fPh;
-                                    cnt++;
-                                }
-                        newValue = (cnt != 0 ? newValue / cnt : 0);
+                        float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fPh;
 
                         // ########################
                         // # Save best DAC values #
