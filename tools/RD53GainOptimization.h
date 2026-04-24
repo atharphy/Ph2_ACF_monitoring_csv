@@ -10,7 +10,7 @@
 #ifndef RD53GainOptimization_H
 #define RD53GainOptimization_H
 
-#include "RD53Gain.h"
+#include "RD53PixelAlive.h"
 
 #ifdef __USE_ROOT__
 #include "DQMUtils/RD53GainOptimizationHistograms.h"
@@ -18,15 +18,10 @@
 typedef bool GainOptimizationHistograms;
 #endif
 
-// #############
-// # CONSTANTS #
-// #############
-#define NSTDEV 4. // Number of standard deviations for gain tolerance
-
 // ################################
 // # Gain optimization test suite #
 // ################################
-class GainOptimization : public Gain
+class GainOptimization : public PixelAlive
 {
   public:
     ~GainOptimization()
@@ -46,7 +41,7 @@ class GainOptimization : public Gain
     {
         uint16_t nIterationsKrumCurr = floor(log2(KrumCurrStop - KrumCurrStart + 1) + 2);
         uint16_t moreIterations      = 1;
-        return Gain::getNumberIterations() * (nIterationsKrumCurr + moreIterations);
+        return PixelAlive::getNumberIterations() * (nIterationsKrumCurr + moreIterations);
     }
 
     void analyze();
@@ -56,7 +51,7 @@ class GainOptimization : public Gain
   private:
     void fillHisto() override;
 
-    void bitWiseScanGlobal(const std::string& regName, uint16_t startValue, uint16_t stopValue);
+    void bitWiseScanGlobal(const std::string& regName, uint16_t startValue, uint16_t stopValue, float targetCharge, uint16_t targetToT);
 
     DetectorDataContainer theKrumCurrContainer;
 
