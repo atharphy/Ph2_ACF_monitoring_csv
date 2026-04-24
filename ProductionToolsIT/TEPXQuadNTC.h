@@ -40,10 +40,12 @@ class TEPXQuadNTC : public CalibBase
 
     void  analyze();
     float TfromR(float R, const float& R25C, const float& beta);
+    void  configure(bool read_poly) { fReadPoly = read_poly; }
 
   private:
     void         fillHisto() override;
     bool         fVerbose;
+    bool         fReadPoly;
     double const fR_ref = 4.99; // reference resistor in kOh
   protected:
     int theCurrentRun;

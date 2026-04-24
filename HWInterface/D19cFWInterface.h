@@ -371,7 +371,7 @@ class D19cFWInterface : public BeBoardFWInterface
     std::pair<int, float> GetSFPParameter(std::string parameter, int channel, bool isL8);
     float                 GetSFPParameter_L8(std::string parameter, int channel) { return GetSFPParameter(parameter, channel, true).second; };
     float                 GetSFPParameter_L12(std::string parameter, int channel) { return GetSFPParameter(parameter, channel, false).second; };
-    float                 GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOpticalGroup, std::string parameter);
+    std::pair<int, float> GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOpticalGroup, std::string parameter);
 
     void vtrxHardReset(Ph2_HwDescription::OpticalGroup* theOpticalGroup);
 

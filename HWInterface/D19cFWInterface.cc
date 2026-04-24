@@ -727,9 +727,10 @@ void D19cFWInterface::ConfigureBoard(const BeBoard* pBoard)
 
             for(auto theOpticalGroup: *pBoard)
             {
-                float lighPower = GetSFPParameter(theOpticalGroup, "RX");
-                if(lighPower < 100.)
-                    LOG(ERROR) << ERROR_FORMAT << "Light from VTRx on opticalGroup " << theOpticalGroup->getId() << " is too low (" << lighPower << " uW). Check connection and module" << RESET;
+                float lightPower = GetSFPParameter(theOpticalGroup, "RX").second;
+                if(lightPower < 100.)
+                    LOG(ERROR) << ERROR_FORMAT << "Light from VTRx on opticalGroup " << theOpticalGroup->getId() << " is too low (" << lightPower << " uW). Check VTRX and LV connections on module"
+                               << RESET;
             }
             fLinkInterface->GeneralLinkReset(pBoard);
         }
@@ -1685,7 +1686,6 @@ std::pair<int, float> D19cFWInterface::GetSFPParameter(std::string parameter, in
     else
     {
         result = this->ReadReg("fc7_daq_stat.sfp_ddmi.data_" + mezzanine);
-
         if(parameter == "T")
         {
             result = result / 256.0;
@@ -1717,7 +1717,7 @@ std::pair<int, float> D19cFWInterface::GetSFPParameter(std::string parameter, in
     return std::make_pair(error, result);
 }
 
-float D19cFWInterface::GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOpticalGroup, std::string parameter)
+std::pair<int, float> D19cFWInterface::GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOpticalGroup, std::string parameter)
 {
     uint32_t fmc2_card_type = ReadReg("fc7_daq_stat.general.info.fmc2_card_type");
     size_t   cLinkOffset    = 0;
@@ -1737,7 +1737,7 @@ float D19cFWInterface::GetSFPParameter(Ph2_HwDescription::OpticalGroup* theOptic
 
     std::pair<int, float> theErrorResultPair = GetSFPParameter(parameter, channelNumber, isL8);
     if(theErrorResultPair.first != 0) LOG(ERROR) << ERROR_FORMAT << "Error occurred on OpticalGroup " << theOpticalGroup->getId() << RESET;
-    return theErrorResultPair.second;
+    return theErrorResultPair;
 }
 
 void D19cFWInterface::vtrxHardReset(Ph2_HwDescription::OpticalGroup* theOpticalGroup)
