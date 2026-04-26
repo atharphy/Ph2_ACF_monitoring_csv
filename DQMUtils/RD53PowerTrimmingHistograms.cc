@@ -17,35 +17,71 @@ void PowerTrimmingHistograms::book(TFile* theOutputFile, DetectorContainer& theD
     fDetectorContainer = &theDetectorStructure;
     RD53Shared::setFirstChip(theDetectorStructure);
 
-    int max_dac = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("DAC_PREAMP_M_LIN")) + 1;
+    // #######################
+    // # Retrieve parameters #
+    // #######################
+    auto           frontEnd = RD53Shared::firstChip->getFEtype(RD53Shared::firstChip->getNCols() / 2, RD53Shared::firstChip->getNCols() / 2);
+    const uint16_t maxVal   = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits("DAC_PREAMP_M_LIN")) + 1;
 
-    auto hComparatorCurrent = CanvasContainer<TH1F>("ComparatorCurrent", "I vs. Time", max_dac, 0, max_dac);
-    auto hPreampCurrent     = CanvasContainer<TH1F>("PreampCurrent", "I vs. Time", max_dac, 0, max_dac);
-    auto hLDACCurrent       = CanvasContainer<TH1F>("LDACCurrent", "I vs. Time", max_dac, 0, max_dac);
+    // #######################
+    // # Standard histograms #
+    // #######################
 
-    bookChipImplementer(theOutputFile, theDetectorStructure, theComparatorCurrentContainer, hComparatorCurrent, "Time (HH:MM:SS)", "Current (mA)");
-    bookChipImplementer(theOutputFile, theDetectorStructure, thePreamplifierCurrentContainer, hPreampCurrent, "Time (HH:MM:SS)", "Current (mA)");
-    bookChipImplementer(theOutputFile, theDetectorStructure, theLDACCurrentContainer, hLDACCurrent, "Time (HH:MM:SS)", "Current (mA)");
+    // ################
+    // # Preamplifier #
+    // ################
+    std::vector<CanvasContainer<TH1F>> hPreampsCurr;
+    for(const auto& regName: frontEnd->preampRegs) hPreampsCurr.emplace_back(regName, "Preamplifier current", maxVal, 0, maxVal);
+    for(const auto& [hPreamp, regName]: boost::combine(hPreampsCurr, frontEnd->preampRegs))
+    {
+        PreamplifiersCurrent.push_back(std::make_shared<DetectorDataContainer>());
+        bookChipImplementer(theOutputFile, theDetectorStructure, *PreamplifiersCurrent.back(), hPreamp, regName, "Entries");
+    }
+    hPreampsCurr.emplace_back("DAC_FC_LIN", "Preamplifier current", maxVal, 0, maxVal);
+    PreamplifiersCurrent.push_back(std::make_shared<DetectorDataContainer>());
+    bookChipImplementer(theOutputFile, theDetectorStructure, *PreamplifiersCurrent.back(), hPreampsCurr.back(), "DAC_FC_LIN", "Entries");
 
-    auto hAna      = CanvasContainer<TH1F>("ANA_IN_CURR", "Analog Current vs Time", max_dac, 0, max_dac);
-    auto hDig      = CanvasContainer<TH1F>("DIG_IN_CURR", "Digital Current vs Time", max_dac, 0, max_dac);
-    auto hVAna     = CanvasContainer<TH1F>("VINA", "VINA vs Time", max_dac, 0, max_dac);
-    auto hVDAna    = CanvasContainer<TH1F>("VDDA", "VDDA vs Time", max_dac, 0, max_dac);
-    auto hVDig     = CanvasContainer<TH1F>("VIND", "VIND vs Time", max_dac, 0, max_dac);
-    auto hVDDig    = CanvasContainer<TH1F>("VDDD", "VDDD vs Time", max_dac, 0, max_dac);
-    auto hIrf      = CanvasContainer<TH1F>("Iref", "Iref vs Time", max_dac, 0, max_dac);
-    auto hAnaShunt = CanvasContainer<TH1F>("ANA_SHUNT_CURR", "Analog Shunt Current vs Time", max_dac, 0, max_dac);
-    auto hDigShunt = CanvasContainer<TH1F>("DIG_SHUNT_CURR", "Digital Shunt Current vs Time", max_dac, 0, max_dac);
+    // ##############
+    // # Comparator #
+    // ##############
+    std::vector<CanvasContainer<TH1F>> hCompsCurr;
+    hCompsCurr.emplace_back("DAC_COMP_LIN", "Comparator current", maxVal, 0, maxVal);
+    hCompsCurr.emplace_back("DAC_COMP_TA_LIN", "Comparator current", maxVal, 0, maxVal);
+    ComparatorsCurrent.push_back(std::make_shared<DetectorDataContainer>());
+    ComparatorsCurrent.push_back(std::make_shared<DetectorDataContainer>());
+    bookChipImplementer(theOutputFile, theDetectorStructure, *ComparatorsCurrent.at(0), hCompsCurr.at(0), "DAC_COMP_LIN", "Entries");
+    bookChipImplementer(theOutputFile, theDetectorStructure, *ComparatorsCurrent.at(1), hCompsCurr.at(1), "DAC_COMP_TA_LIN", "Entries");
 
-    bookChipImplementer(theOutputFile, theDetectorStructure, hAnaInCurrContainer, hAna, "Time (HH:MM:SS)", "Current (mA)");
-    bookChipImplementer(theOutputFile, theDetectorStructure, hDigInCurrContainer, hDig, "Time (HH:MM:SS)", "Current (mA)");
-    bookChipImplementer(theOutputFile, theDetectorStructure, hVINAContainer, hVAna, "Time (HH:MM:SS)", "Voltage (V)");
-    bookChipImplementer(theOutputFile, theDetectorStructure, hVDDAContainer, hVDAna, "Time (HH:MM:SS)", "Voltage (V)");
-    bookChipImplementer(theOutputFile, theDetectorStructure, hVINDContainer, hVDig, "Time (HH:MM:SS)", "Voltage (V)");
-    bookChipImplementer(theOutputFile, theDetectorStructure, hVDDDContainer, hVDDig, "Time (HH:MM:SS)", "Voltage (V)");
-    bookChipImplementer(theOutputFile, theDetectorStructure, hIrefContainer, hIrf, "Time (HH:MM:SS)", "Iref");
-    bookChipImplementer(theOutputFile, theDetectorStructure, hAnaShuntContainer, hAnaShunt, "Time (HH:MM:SS)", "Current (mA)");
-    bookChipImplementer(theOutputFile, theDetectorStructure, hDigShuntContainer, hDigShunt, "Time (HH:MM:SS)", "Current (mA)");
+    // ########
+    // # LDAC #
+    // ########
+    auto hLDACCurrent = CanvasContainer<TH1F>("LDACCurrent", "LDAC current", maxVal, 0, maxVal);
+    bookChipImplementer(theOutputFile, theDetectorStructure, LDACCurrent, hLDACCurrent, "LDAC current", "Entries");
+
+    // ########################
+    // # Debugging histograms #
+    // ########################
+    auto hChipCurrVsTime = CanvasContainer<TH1F>("ChipCurrent", "Total chip current vs Time", maxVal, 0, maxVal);
+    auto hIAnaVsTime     = CanvasContainer<TH1F>("ANA_IN_CURR", "Analog current vs Time", maxVal, 0, maxVal);
+    auto hIDigVsTime     = CanvasContainer<TH1F>("DIG_IN_CURR", "Digital current vs Time", maxVal, 0, maxVal);
+    auto hAnaShuntVsTime = CanvasContainer<TH1F>("ANA_SHUNT_CURR", "Analog Shunt current vs Time", maxVal, 0, maxVal);
+    auto hDigShuntVsTime = CanvasContainer<TH1F>("DIG_SHUNT_CURR", "Digital Shunt current vs Time", maxVal, 0, maxVal);
+    auto hVAnaVsTime     = CanvasContainer<TH1F>("VINA", "VINA vs Time", maxVal, 0, maxVal);
+    auto hVDAnaVsTime    = CanvasContainer<TH1F>("VDDA", "VDDA vs Time", maxVal, 0, maxVal);
+    auto hVDigVsTime     = CanvasContainer<TH1F>("VIND", "VIND vs Time", maxVal, 0, maxVal);
+    auto hVDDigVsTime    = CanvasContainer<TH1F>("VDDD", "VDDD vs Time", maxVal, 0, maxVal);
+    auto hIrfVsTime      = CanvasContainer<TH1F>("Iref", "Iref vs Time", maxVal, 0, maxVal);
+
+    bookChipImplementer(theOutputFile, theDetectorStructure, theChipCurrVsTimeContainer, hChipCurrVsTime, "Time (HH:MM:SS)", "Current (mA)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theAnaInVsTimeContainer, hIAnaVsTime, "Time (HH:MM:SS)", "Current (mA)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theDigInVsTimeContainer, hIDigVsTime, "Time (HH:MM:SS)", "Current (mA)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theAnaShuntVsTimeContainer, hAnaShuntVsTime, "Time (HH:MM:SS)", "Current (mA)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theDigShuntVsTimeContainer, hDigShuntVsTime, "Time (HH:MM:SS)", "Current (mA)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theVINAVsTimeContainer, hVAnaVsTime, "Time (HH:MM:SS)", "Voltage (V)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theVDDAVsTimeContainer, hVDAnaVsTime, "Time (HH:MM:SS)", "Voltage (V)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theVINDVsTimeContainer, hVDigVsTime, "Time (HH:MM:SS)", "Voltage (V)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theVDDDVsTimeContainer, hVDDigVsTime, "Time (HH:MM:SS)", "Voltage (V)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theIrefVsTimeContainer, hIrfVsTime, "Time (HH:MM:SS)", "Iref");
 
     AreHistoBooked = true;
 }
@@ -77,11 +113,7 @@ bool PowerTrimmingHistograms::fill(std::string& inputStream)
     return false;
 }
 
-void PowerTrimmingHistograms::fillPreamplifierCurrentHisto(const DetectorDataContainer& dataContainer) { PowerTrimmingHistograms::fillHisto(dataContainer, thePreamplifierCurrentContainer); }
-void PowerTrimmingHistograms::fillComparatorCurrentHisto(const DetectorDataContainer& dataContainer) { PowerTrimmingHistograms::fillHisto(dataContainer, theComparatorCurrentContainer); }
-void PowerTrimmingHistograms::fillLDACCurrentHisto(const DetectorDataContainer& dataContainer) { PowerTrimmingHistograms::fillHisto(dataContainer, theLDACCurrentContainer); }
-
-void PowerTrimmingHistograms::fillHisto(const DetectorDataContainer& dataContainer, const DetectorDataContainer& dataHistogram)
+void PowerTrimmingHistograms::fillPreamplifierCurrentHisto(const DetectorDataContainer& dataContainer)
 {
     for(const auto cBoard: dataContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -90,21 +122,79 @@ void PowerTrimmingHistograms::fillHisto(const DetectorDataContainer& dataContain
                 {
                     if(cChip->hasSummary() == false) continue;
 
-                    auto* histo = dataHistogram.getObject(cBoard->getId())
+                    for(auto i = 0u; i < PreamplifiersCurrent.size(); i++)
+                    {
+                        auto* histo = PreamplifiersCurrent.at(i)
+                                          ->getObject(cBoard->getId())
+                                          ->getObject(cOpticalGroup->getId())
+                                          ->getObject(cHybrid->getId())
+                                          ->getObject(cChip->getId())
+                                          ->getSummary<CanvasContainer<TH1F>>()
+                                          .fTheHistogram;
+
+                        histo->Fill(cChip->getSummary<std::vector<uint16_t>>().at(i));
+                    }
+
+                    auto* histo = PreamplifiersCurrent.back()
+                                      ->getObject(cBoard->getId())
                                       ->getObject(cOpticalGroup->getId())
                                       ->getObject(cHybrid->getId())
                                       ->getObject(cChip->getId())
                                       ->getSummary<CanvasContainer<TH1F>>()
                                       .fTheHistogram;
 
-                    histo->SetMarkerStyle(20);
-                    histo->SetMarkerSize(0.8);
+                    histo->Fill(cChip->getSummary<std::vector<uint16_t>>().back());
+                }
+}
 
-                    for(auto entry: cChip->getSummary<dataType>())
-                    {
-                        histo->SetBinContent(entry.first + 1, entry.second);
-                        histo->SetBinError(entry.first + 1, 0.0);
-                    }
+void PowerTrimmingHistograms::fillComparatorCurrentHisto(const DetectorDataContainer& dataContainer)
+{
+    for(const auto cBoard: dataContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    if(cChip->hasSummary() == false) continue;
+
+                    auto* histo = ComparatorsCurrent.at(0)
+                                      ->getObject(cBoard->getId())
+                                      ->getObject(cOpticalGroup->getId())
+                                      ->getObject(cHybrid->getId())
+                                      ->getObject(cChip->getId())
+                                      ->getSummary<CanvasContainer<TH1F>>()
+                                      .fTheHistogram;
+
+                    histo->Fill(cChip->getSummary<std::vector<uint16_t>>().at(0));
+
+                    histo = ComparatorsCurrent.at(1)
+                                ->getObject(cBoard->getId())
+                                ->getObject(cOpticalGroup->getId())
+                                ->getObject(cHybrid->getId())
+                                ->getObject(cChip->getId())
+                                ->getSummary<CanvasContainer<TH1F>>()
+                                .fTheHistogram;
+
+                    histo->Fill(cChip->getSummary<std::vector<uint16_t>>().at(1));
+                }
+}
+
+void PowerTrimmingHistograms::fillLDACCurrentHisto(const DetectorDataContainer& dataContainer)
+{
+    for(const auto cBoard: dataContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    if(cChip->hasSummary() == false) continue;
+
+                    auto* histo = LDACCurrent.getObject(cBoard->getId())
+                                      ->getObject(cOpticalGroup->getId())
+                                      ->getObject(cHybrid->getId())
+                                      ->getObject(cChip->getId())
+                                      ->getSummary<CanvasContainer<TH1F>>()
+                                      .fTheHistogram;
+
+                    histo->Fill(cChip->getSummary<uint16_t>());
                 }
 }
 
@@ -117,162 +207,147 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
-                    auto* hAna = hAnaInCurrContainer.getObject(cBoard->getId())
-                                     ->getObject(cOpticalGroup->getId())
-                                     ->getObject(cHybrid->getId())
-                                     ->getObject(cChip->getId())
-                                     ->getSummary<CanvasContainer<TH1F>>()
-                                     .fTheHistogram;
-                    auto* hDig = hDigInCurrContainer.getObject(cBoard->getId())
-                                     ->getObject(cOpticalGroup->getId())
-                                     ->getObject(cHybrid->getId())
-                                     ->getObject(cChip->getId())
-                                     ->getSummary<CanvasContainer<TH1F>>()
-                                     .fTheHistogram;
-                    auto* hVAna = hVINAContainer.getObject(cBoard->getId())
-                                      ->getObject(cOpticalGroup->getId())
-                                      ->getObject(cHybrid->getId())
-                                      ->getObject(cChip->getId())
-                                      ->getSummary<CanvasContainer<TH1F>>()
-                                      .fTheHistogram;
-                    auto* hVDAna = hVDDAContainer.getObject(cBoard->getId())
-                                       ->getObject(cOpticalGroup->getId())
-                                       ->getObject(cHybrid->getId())
-                                       ->getObject(cChip->getId())
-                                       ->getSummary<CanvasContainer<TH1F>>()
-                                       .fTheHistogram;
-                    auto* hVDig = hVINDContainer.getObject(cBoard->getId())
-                                      ->getObject(cOpticalGroup->getId())
-                                      ->getObject(cHybrid->getId())
-                                      ->getObject(cChip->getId())
-                                      ->getSummary<CanvasContainer<TH1F>>()
-                                      .fTheHistogram;
-                    auto* hVDDig = hVDDDContainer.getObject(cBoard->getId())
-                                       ->getObject(cOpticalGroup->getId())
-                                       ->getObject(cHybrid->getId())
-                                       ->getObject(cChip->getId())
-                                       ->getSummary<CanvasContainer<TH1F>>()
-                                       .fTheHistogram;
-                    auto* hIrf = hIrefContainer.getObject(cBoard->getId())
-                                     ->getObject(cOpticalGroup->getId())
-                                     ->getObject(cHybrid->getId())
-                                     ->getObject(cChip->getId())
-                                     ->getSummary<CanvasContainer<TH1F>>()
-                                     .fTheHistogram;
-                    auto* hAnaShunt = hAnaShuntContainer.getObject(cBoard->getId())
+                    auto* hChipCurr = theChipCurrVsTimeContainer.getObject(cBoard->getId())
                                           ->getObject(cOpticalGroup->getId())
                                           ->getObject(cHybrid->getId())
                                           ->getObject(cChip->getId())
                                           ->getSummary<CanvasContainer<TH1F>>()
                                           .fTheHistogram;
-                    auto* hDigShunt = hDigShuntContainer.getObject(cBoard->getId())
-                                          ->getObject(cOpticalGroup->getId())
-                                          ->getObject(cHybrid->getId())
-                                          ->getObject(cChip->getId())
-                                          ->getSummary<CanvasContainer<TH1F>>()
-                                          .fTheHistogram;
-
-                    auto* hComp = theComparatorCurrentContainer.getObject(cBoard->getId())
+                    auto* hIAna = theAnaInVsTimeContainer.getObject(cBoard->getId())
                                       ->getObject(cOpticalGroup->getId())
                                       ->getObject(cHybrid->getId())
                                       ->getObject(cChip->getId())
                                       ->getSummary<CanvasContainer<TH1F>>()
                                       .fTheHistogram;
-                    auto* hPreamp = thePreamplifierCurrentContainer.getObject(cBoard->getId())
+                    auto* hIDig = theDigInVsTimeContainer.getObject(cBoard->getId())
+                                      ->getObject(cOpticalGroup->getId())
+                                      ->getObject(cHybrid->getId())
+                                      ->getObject(cChip->getId())
+                                      ->getSummary<CanvasContainer<TH1F>>()
+                                      .fTheHistogram;
+                    auto* hAnaShunt = theAnaShuntVsTimeContainer.getObject(cBoard->getId())
+                                          ->getObject(cOpticalGroup->getId())
+                                          ->getObject(cHybrid->getId())
+                                          ->getObject(cChip->getId())
+                                          ->getSummary<CanvasContainer<TH1F>>()
+                                          .fTheHistogram;
+                    auto* hDigShunt = theDigShuntVsTimeContainer.getObject(cBoard->getId())
+                                          ->getObject(cOpticalGroup->getId())
+                                          ->getObject(cHybrid->getId())
+                                          ->getObject(cChip->getId())
+                                          ->getSummary<CanvasContainer<TH1F>>()
+                                          .fTheHistogram;
+                    auto* hVinAna = theVINAVsTimeContainer.getObject(cBoard->getId())
                                         ->getObject(cOpticalGroup->getId())
                                         ->getObject(cHybrid->getId())
                                         ->getObject(cChip->getId())
                                         ->getSummary<CanvasContainer<TH1F>>()
                                         .fTheHistogram;
-                    auto* hLDAC = theLDACCurrentContainer.getObject(cBoard->getId())
-                                      ->getObject(cOpticalGroup->getId())
-                                      ->getObject(cHybrid->getId())
-                                      ->getObject(cChip->getId())
-                                      ->getSummary<CanvasContainer<TH1F>>()
-                                      .fTheHistogram;
+                    auto* hVDAna = theVDDAVsTimeContainer.getObject(cBoard->getId())
+                                       ->getObject(cOpticalGroup->getId())
+                                       ->getObject(cHybrid->getId())
+                                       ->getObject(cChip->getId())
+                                       ->getSummary<CanvasContainer<TH1F>>()
+                                       .fTheHistogram;
+                    auto* hVinDig = theVINDVsTimeContainer.getObject(cBoard->getId())
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
+                                        ->getSummary<CanvasContainer<TH1F>>()
+                                        .fTheHistogram;
+                    auto* hVDDig = theVDDDVsTimeContainer.getObject(cBoard->getId())
+                                       ->getObject(cOpticalGroup->getId())
+                                       ->getObject(cHybrid->getId())
+                                       ->getObject(cChip->getId())
+                                       ->getSummary<CanvasContainer<TH1F>>()
+                                       .fTheHistogram;
+                    auto* hIrf = theIrefVsTimeContainer.getObject(cBoard->getId())
+                                     ->getObject(cOpticalGroup->getId())
+                                     ->getObject(cHybrid->getId())
+                                     ->getObject(cChip->getId())
+                                     ->getSummary<CanvasContainer<TH1F>>()
+                                     .fTheHistogram;
 
-                    hAna->SetMarkerStyle(20);
-                    hAna->SetMarkerSize(0.8);
-                    hDig->SetMarkerStyle(20);
-                    hDig->SetMarkerSize(0.8);
-                    hVAna->SetMarkerStyle(20);
-                    hVAna->SetMarkerSize(0.8);
-                    hVDAna->SetMarkerStyle(20);
-                    hVDAna->SetMarkerSize(0.8);
-                    hVDig->SetMarkerStyle(20);
-                    hVDig->SetMarkerSize(0.8);
-                    hVDDig->SetMarkerStyle(20);
-                    hVDDig->SetMarkerSize(0.8);
-                    hIrf->SetMarkerStyle(20);
-                    hIrf->SetMarkerSize(0.8);
+                    hChipCurr->SetMarkerStyle(20);
+                    hChipCurr->SetMarkerSize(0.8);
+                    hIAna->SetMarkerStyle(20);
+                    hIAna->SetMarkerSize(0.8);
+                    hIDig->SetMarkerStyle(20);
+                    hIDig->SetMarkerSize(0.8);
                     hAnaShunt->SetMarkerStyle(20);
                     hAnaShunt->SetMarkerSize(0.8);
                     hDigShunt->SetMarkerStyle(20);
                     hDigShunt->SetMarkerSize(0.8);
+                    hVinAna->SetMarkerStyle(20);
+                    hVinAna->SetMarkerSize(0.8);
+                    hVDAna->SetMarkerStyle(20);
+                    hVDAna->SetMarkerSize(0.8);
+                    hVinDig->SetMarkerStyle(20);
+                    hVinDig->SetMarkerSize(0.8);
+                    hVDDig->SetMarkerStyle(20);
+                    hVDDig->SetMarkerSize(0.8);
+                    hIrf->SetMarkerStyle(20);
+                    hIrf->SetMarkerSize(0.8);
 
                     for(const auto& data: dataList)
                     {
-                        int binX = data.bit + 1;
+                        const uint16_t binX = data.bit + 1;
 
-                        hAna->SetBinContent(binX, data.ANA_IN_CURR);
-                        hDig->SetBinContent(binX, data.DIG_IN_CURR);
-                        hVAna->SetBinContent(binX, data.VINA);
-                        hVDAna->SetBinContent(binX, data.VDDA);
-                        hVDig->SetBinContent(binX, data.VIND);
-                        hVDDig->SetBinContent(binX, data.VDDD);
-                        hIrf->SetBinContent(binX, data.Iref);
+                        hChipCurr->SetBinContent(binX, data.ChipCurrent);
+                        hIAna->SetBinContent(binX, data.ANA_IN_CURR);
+                        hIDig->SetBinContent(binX, data.DIG_IN_CURR);
                         hAnaShunt->SetBinContent(binX, data.ANA_SHUNT_CURR);
                         hDigShunt->SetBinContent(binX, data.DIG_SHUNT_CURR);
+                        hVinAna->SetBinContent(binX, data.VINA);
+                        hVDAna->SetBinContent(binX, data.VDDA);
+                        hVinDig->SetBinContent(binX, data.VIND);
+                        hVDDig->SetBinContent(binX, data.VDDD);
+                        hIrf->SetBinContent(binX, data.Iref);
 
-                        std::string time_str = std::to_string(static_cast<int>(data.timestamp));
+                        const std::string time_str = std::to_string(static_cast<int>(data.timestamp));
 
-                        hAna->GetXaxis()->SetBinLabel(binX, time_str.c_str());
-                        hDig->GetXaxis()->SetBinLabel(binX, time_str.c_str());
-                        hVAna->GetXaxis()->SetBinLabel(binX, time_str.c_str());
-                        hVDAna->GetXaxis()->SetBinLabel(binX, time_str.c_str());
-                        hVDig->GetXaxis()->SetBinLabel(binX, time_str.c_str());
-                        hVDDig->GetXaxis()->SetBinLabel(binX, time_str.c_str());
-                        hIrf->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hChipCurr->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hIAna->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hIDig->GetXaxis()->SetBinLabel(binX, time_str.c_str());
                         hAnaShunt->GetXaxis()->SetBinLabel(binX, time_str.c_str());
                         hDigShunt->GetXaxis()->SetBinLabel(binX, time_str.c_str());
-
-                        if(hComp) hComp->GetXaxis()->SetBinLabel(binX, time_str.c_str());
-                        if(hPreamp) hPreamp->GetXaxis()->SetBinLabel(binX, time_str.c_str());
-                        if(hLDAC) hLDAC->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hVinAna->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hVDAna->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hVinDig->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hVDDig->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hIrf->GetXaxis()->SetBinLabel(binX, time_str.c_str());
                     }
 
-                    int start_bin = dataList.front().bit + 1;
-                    int end_bin   = dataList.back().bit + 1;
+                    const uint16_t start_bin = dataList.front().bit + 1;
+                    const uint16_t end_bin   = dataList.back().bit + 1;
 
-                    hAna->GetXaxis()->SetRangeUser(start_bin, end_bin);
-                    hDig->GetXaxis()->SetRangeUser(start_bin, end_bin);
-                    hVAna->GetXaxis()->SetRangeUser(start_bin, end_bin);
-                    hVDAna->GetXaxis()->SetRangeUser(start_bin, end_bin);
-                    hVDig->GetXaxis()->SetRangeUser(start_bin, end_bin);
-                    hVDDig->GetXaxis()->SetRangeUser(start_bin, end_bin);
-                    hIrf->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hChipCurr->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hIAna->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hIDig->GetXaxis()->SetRangeUser(start_bin, end_bin);
                     hAnaShunt->GetXaxis()->SetRangeUser(start_bin, end_bin);
                     hDigShunt->GetXaxis()->SetRangeUser(start_bin, end_bin);
-
-                    if(hComp) hComp->GetXaxis()->SetRangeUser(start_bin, end_bin);
-                    if(hPreamp) hPreamp->GetXaxis()->SetRangeUser(start_bin, end_bin);
-                    if(hLDAC) hLDAC->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hVinAna->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hVDAna->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hVinDig->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hVDDig->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hIrf->GetXaxis()->SetRangeUser(start_bin, end_bin);
                 }
 }
 
 void PowerTrimmingHistograms::process()
 {
-    drawChip<TH1F>(theComparatorCurrentContainer, "P");
-    drawChip<TH1F>(thePreamplifierCurrentContainer, "P");
-    drawChip<TH1F>(theLDACCurrentContainer, "P");
+    for(auto& PreampCurr: PreamplifiersCurrent) drawChip<TH1F>(*PreampCurr);
+    for(auto& CompCurr: ComparatorsCurrent) drawChip<TH1F>(*CompCurr);
+    drawChip<TH1F>(LDACCurrent);
 
-    drawChip<TH1F>(hAnaInCurrContainer, "P");
-    drawChip<TH1F>(hDigInCurrContainer, "P");
-    drawChip<TH1F>(hVINAContainer, "P");
-    drawChip<TH1F>(hVDDAContainer, "P");
-    drawChip<TH1F>(hVINDContainer, "P");
-    drawChip<TH1F>(hVDDDContainer, "P");
-    drawChip<TH1F>(hIrefContainer, "P");
-    drawChip<TH1F>(hAnaShuntContainer, "P");
-    drawChip<TH1F>(hDigShuntContainer, "P");
+    drawChip<TH1F>(theChipCurrVsTimeContainer, "P");
+    drawChip<TH1F>(theAnaInVsTimeContainer, "P");
+    drawChip<TH1F>(theDigInVsTimeContainer, "P");
+    drawChip<TH1F>(theAnaShuntVsTimeContainer, "P");
+    drawChip<TH1F>(theDigShuntVsTimeContainer, "P");
+    drawChip<TH1F>(theVINAVsTimeContainer, "P");
+    drawChip<TH1F>(theVDDAVsTimeContainer, "P");
+    drawChip<TH1F>(theVINDVsTimeContainer, "P");
+    drawChip<TH1F>(theVDDDVsTimeContainer, "P");
+    drawChip<TH1F>(theIrefVsTimeContainer, "P");
 }

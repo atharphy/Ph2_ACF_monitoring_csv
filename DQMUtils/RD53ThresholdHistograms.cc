@@ -24,11 +24,11 @@ void ThresholdHistograms::book(TFile* theOutputFile, DetectorContainer& theDetec
     const uint16_t rangeThreshold = RD53Shared::setBits(RD53Shared::firstChip->getNumberOfBits(frontEnd->thresholdRegs[0])) + 1;
 
     std::vector<CanvasContainer<TH1F>> hThresholds;
-    for(const auto& reg: frontEnd->thresholdRegs) hThresholds.emplace_back(reg, "Threshold", rangeThreshold, 0, rangeThreshold);
-    for(const auto& [hThr, reg]: boost::combine(hThresholds, frontEnd->thresholdRegs))
+    for(const auto& regName: frontEnd->thresholdRegs) hThresholds.emplace_back(regName, "Threshold", rangeThreshold, 0, rangeThreshold);
+    for(const auto& [hThr, regName]: boost::combine(hThresholds, frontEnd->thresholdRegs))
     {
         Thresholds.push_back(std::make_shared<DetectorDataContainer>());
-        bookChipImplementer(theOutputFile, theDetectorStructure, *Thresholds.back(), hThr, reg, "Entries");
+        bookChipImplementer(theOutputFile, theDetectorStructure, *Thresholds.back(), hThr, regName, "Entries");
     }
 
     AreHistoBooked = true;

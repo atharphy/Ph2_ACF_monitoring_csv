@@ -13,12 +13,15 @@
 #include "DQMHistogramBase.h"
 #include "Utils/ContainerFactory.h"
 
+#include <boost/range/combine.hpp>
+
 #include <TH1F.h>
 
 struct PowerTrimmingData
 {
     float    timestamp;
     uint16_t bit;
+    float    ChipCurrent;
     float    ANA_IN_CURR;
     float    DIG_IN_CURR;
     float    VINA;
@@ -42,7 +45,6 @@ class PowerTrimmingHistograms : public DQMHistogramBase
     bool fill(std::string& inputStream) override;
     void reset() override {};
 
-    void fillHisto(const DetectorDataContainer& dataContainer, const DetectorDataContainer& dataHistogram);
     void fillPreamplifierCurrentHisto(const DetectorDataContainer& dataContainer);
     void fillComparatorCurrentHisto(const DetectorDataContainer& dataContainer);
     void fillLDACCurrentHisto(const DetectorDataContainer& dataContainer);
@@ -53,19 +55,20 @@ class PowerTrimmingHistograms : public DQMHistogramBase
   private:
     DetectorContainer* fDetectorContainer;
 
-    DetectorDataContainer thePreamplifierCurrentContainer;
-    DetectorDataContainer theComparatorCurrentContainer;
-    DetectorDataContainer theLDACCurrentContainer;
+    std::vector<std::shared_ptr<DetectorDataContainer>> PreamplifiersCurrent;
+    std::vector<std::shared_ptr<DetectorDataContainer>> ComparatorsCurrent;
+    DetectorDataContainer                               LDACCurrent;
 
-    DetectorDataContainer hAnaInCurrContainer;
-    DetectorDataContainer hDigInCurrContainer;
-    DetectorDataContainer hVINAContainer;
-    DetectorDataContainer hVDDAContainer;
-    DetectorDataContainer hVINDContainer;
-    DetectorDataContainer hVDDDContainer;
-    DetectorDataContainer hIrefContainer;
-    DetectorDataContainer hAnaShuntContainer;
-    DetectorDataContainer hDigShuntContainer;
+    DetectorDataContainer theChipCurrVsTimeContainer;
+    DetectorDataContainer theAnaInVsTimeContainer;
+    DetectorDataContainer theDigInVsTimeContainer;
+    DetectorDataContainer theAnaShuntVsTimeContainer;
+    DetectorDataContainer theDigShuntVsTimeContainer;
+    DetectorDataContainer theVINAVsTimeContainer;
+    DetectorDataContainer theVDDAVsTimeContainer;
+    DetectorDataContainer theVINDVsTimeContainer;
+    DetectorDataContainer theVDDDVsTimeContainer;
+    DetectorDataContainer theIrefVsTimeContainer;
 };
 
 #endif

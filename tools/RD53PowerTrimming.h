@@ -20,19 +20,18 @@ struct PowerTrimmingData
 {
     float    timestamp;
     uint16_t bit;
+    float    ChipCurrent;
     float    ANA_IN_CURR;
     float    DIG_IN_CURR;
+    float    ANA_SHUNT_CURR;
+    float    DIG_SHUNT_CURR;
     float    VINA;
     float    VDDA;
     float    VIND;
     float    VDDD;
     float    Iref;
-    float    ANA_SHUNT_CURR;
-    float    DIG_SHUNT_CURR;
 };
 #endif
-
-using dataType = std::vector<std::pair<uint16_t, float>>;
 
 class PowerTrimming : public CalibBase
 {
@@ -50,13 +49,13 @@ class PowerTrimming : public CalibBase
     void run() override;
     void draw(bool saveData = true) override;
     void localConfigure(const std::string& histoFileName, int currentRun) override;
-    void analyze() {};
+    void analyze();
 
     PowerTrimmingHistograms* histos;
 
   private:
-    void     fillHisto() override;
-    dataType linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vector<const char*>& regNames, uint16_t startValue, uint16_t maxValue, float& targetDiff, const uint16_t COMPdefaultVal);
+    void fillHisto() override;
+    void linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vector<const char*>& regNames, uint16_t startValue, uint16_t maxValue, float& targetDiff, const uint16_t COMPdefaultVal);
 
     uint16_t MAX_PREAMP;
     uint16_t MAX_COMP;
