@@ -289,9 +289,12 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                     hIrf->SetMarkerStyle(20);
                     hIrf->SetMarkerSize(0.8);
 
+                    double start_time = -1.0;
+                    int step_counter = 0;
+
                     for(const auto& data: dataList)
                     {
-                        const uint16_t binX = data.bit + 1;
+                        const uint16_t binX = step_counter + 1;
 
                         hChipCurr->SetBinContent(binX, data.ChipCurrent);
                         hIAna->SetBinContent(binX, data.ANA_IN_CURR);
@@ -304,7 +307,18 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                         hVDDig->SetBinContent(binX, data.VDDD);
                         hIrf->SetBinContent(binX, data.Iref);
 
-                        const std::string time_str = std::to_string(static_cast<int>(data.timestamp));
+                        if (start_time < 0) {
+                            start_time = data.timestamp;
+                        }
+
+                        int elapsed_seconds = static_cast<int>(data.timestamp - start_time);
+                        int hours = elapsed_seconds / 3600;
+                        int minutes = (elapsed_seconds % 3600) / 60;
+                        int seconds = elapsed_seconds % 60;
+                        
+                        char time_buffer[16];
+                        snprintf(time_buffer, sizeof(time_buffer), "%02d:%02d:%02d", hours, minutes, seconds);
+                        const std::string time_str(time_buffer);
 
                         hChipCurr->GetXaxis()->SetBinLabel(binX, time_str.c_str());
                         hIAna->GetXaxis()->SetBinLabel(binX, time_str.c_str());
@@ -316,10 +330,12 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                         hVinDig->GetXaxis()->SetBinLabel(binX, time_str.c_str());
                         hVDDig->GetXaxis()->SetBinLabel(binX, time_str.c_str());
                         hIrf->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+
+                        step_counter++;
                     }
 
-                    const uint16_t start_bin = dataList.front().bit + 1;
-                    const uint16_t end_bin   = dataList.back().bit + 1;
+                    const uint16_t start_bin = 1;
+                    const uint16_t end_bin   = dataList.size();
 
                     hChipCurr->GetXaxis()->SetRangeUser(start_bin, end_bin);
                     hIAna->GetXaxis()->SetRangeUser(start_bin, end_bin);
