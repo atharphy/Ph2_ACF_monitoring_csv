@@ -1,11 +1,15 @@
 /*!
  * \file DQMOTTimeCorrelation.cc
  * \brief DQM class for OTTimeCorrelations
- * \author [Your Name]
- * \date [Date]
+ * \author Carmen Selicato
+ * \date 01/02/26
  */
 
 #include "DQMUtils/DQMHistogramOTTimeCorrelation.h"
+#include "HWDescription/ReadoutChip.h"
+#include "Utils/Occupancy.h"
+
+using namespace Ph2_HwDescription;
 
 DQMHistogramOTTimeCorrelation::DQMHistogramOTTimeCorrelation() {}
 
@@ -13,10 +17,15 @@ DQMHistogramOTTimeCorrelation::~DQMHistogramOTTimeCorrelation() {}
 
 void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
-    this->book(theOutputFile, theDetectorStructure, pSettingsMap, "", 3.);
+    this->book(theOutputFile, theDetectorStructure, pSettingsMap, "", 3., 3.);
 }
 
-void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap, std::string suffix, float sigma)
+void DQMHistogramOTTimeCorrelation::book(TFile*                         theOutputFile,
+                                         DetectorContainer&             theDetectorStructure,
+                                         const Ph2_Parser::SettingsMap& pSettingsMap,
+                                         std::string                    suffix,
+                                         float                          stripSigma,
+                                         float                          pixelSigma)
 {
     fDetectorContainer = &theDetectorStructure;
     fOutputFile        = theOutputFile;
@@ -105,24 +114,24 @@ void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fSSAErrorHistogramsMap[suffix], hSSAError);
 
     // Common noise plots
-    auto getName = [sigma](std::string name)
+    auto getName = [](std::string name, float sigma)
     {
         if(sigma == 0) return Form("%s_OccupancyDriven", name.c_str());
         return Form("%s_SigmaNoise_%.2f", name.c_str(), sigma);
     };
 
-    auto getTitle = [sigma](std::string title)
+    auto getTitle = [](std::string title, float sigma)
     {
         if(sigma == 0) return Form("%s - Occupancy Driven", title.c_str());
         return Form("%s - Sigma Noise = %.2f", title.c_str(), sigma);
     };
 
-    HistContainer<TH1F> hStripModuleHits(getName("CommonNoiseHitsStrip"), getTitle("Common noise hits strip"), MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
+    HistContainer<TH1F> hStripModuleHits(getName("CommonNoiseHitsStrip", stripSigma), getTitle("Common noise hits strip", stripSigma), MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
     hStripModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits");
     hStripModuleHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fStripModuleHitHistograms[suffix], hStripModuleHits);
 
-    HistContainer<TH1F> hPixelModuleHits(getName("CommonNoiseHitsPixel"), getTitle("Common noise hits pixel"), MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
+    HistContainer<TH1F> hPixelModuleHits(getName("CommonNoiseHitsPixel", pixelSigma), getTitle("Common noise hits pixel", pixelSigma), MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
     hPixelModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits");
     hPixelModuleHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fPixelModuleHitHistograms[suffix], hPixelModuleHits);
@@ -142,6 +151,37 @@ void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer
     fStopwatch_MPA_Slices.Reset();
 }
 
+void DQMHistogramOTTimeCorrelation::bookOccupancyPlots(TFile* theOutputFile, DetectorContainer& theDetectorStructure, std::string suffix, uint32_t events)
+{
+    auto        selectSSAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
+    std::string selectSSAfunctionName = "SelectSSAfunction";
+
+    auto        selectMPAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
+    std::string selectMPAfunctionName = "SelectMPAfunction";
+
+    // SSA occupancy histograms
+    fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
+    HistContainer<TH1F> theSSAoccupancyHistogram(Form("ChannelOccupancy%s", suffix.c_str()), Form("Channel Occupancy%s", suffix.c_str()), NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
+    theSSAoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("Channel");
+    theSSAoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("Occupancy");
+    theSSAoccupancyHistogram.fTheHistogram->SetMaximum(1.2);
+    theSSAoccupancyHistogram.fTheHistogram->SetMinimum(0.5 / events); // to allow go into log mode
+    theSSAoccupancyHistogram.fTheHistogram->SetStats(false);
+    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fOccupancyHistogramContainer[suffix], theSSAoccupancyHistogram);
+    fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
+
+    fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
+    HistContainer<TH2F> theMPAoccupancyHistogram(
+        Form("ChannelOccupancy%s", suffix.c_str()), Form("Channel Occupancy%s", suffix.c_str()), NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
+    theMPAoccupancyHistogram.fTheHistogram->GetXaxis()->SetTitle("Col");
+    theMPAoccupancyHistogram.fTheHistogram->GetYaxis()->SetTitle("Row");
+    theMPAoccupancyHistogram.fTheHistogram->SetMaximum(1.);
+    theMPAoccupancyHistogram.fTheHistogram->SetMinimum(0.5 / events); // to allow go into log mode
+    theMPAoccupancyHistogram.fTheHistogram->SetStats(false);
+    RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, *fDetectorContainer, fOccupancyHistogramContainer[suffix], theMPAoccupancyHistogram);
+    fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
+}
+
 void DQMHistogramOTTimeCorrelation::process()
 {
     // Process histograms if needed
@@ -153,6 +193,40 @@ bool DQMHistogramOTTimeCorrelation::fill(std::string& inputStream)
     return true;
 }
 
+void DQMHistogramOTTimeCorrelation::fillOccupancy(const DetectorDataContainer& theOccupancyContainer, std::string suffix)
+{
+    for(auto theBoard: theOccupancyContainer)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                for(auto theChip: *theHybrid)
+                {
+                    if(!theChip->hasChannelContainer()) continue;
+                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getObject(theChip->getId());
+                    const ChipDataContainer* theChipContainer = fOccupancyHistogramContainer.at(suffix).getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId());
+                    // using TH1F and TH2F inheritance from TH1
+                    TH1* theOccupancyHistogram;
+                    if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
+                        theOccupancyHistogram = theChipContainer->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    else
+                        theOccupancyHistogram = theChipContainer->getSummary<HistContainer<TH1F>>().fTheHistogram;
+
+                    for(uint16_t row = 0; row < theChip->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col < theChip->getNumberOfCols(); ++col)
+                        {
+                            auto theOccupancy = theChip->getChannel<Occupancy>(row, col);
+                            theOccupancyHistogram->SetBinContent(col + 1, row + 1, theOccupancy.fOccupancy);
+                            theOccupancyHistogram->SetBinError(col + 1, row + 1, theOccupancy.fOccupancyError);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 void DQMHistogramOTTimeCorrelation::reset()
 {
     // Reset histograms

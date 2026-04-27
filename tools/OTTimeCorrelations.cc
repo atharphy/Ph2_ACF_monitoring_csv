@@ -5,6 +5,8 @@
 #include "System/RegisterHelper.h"
 #include "Utils/ContainerSerialization.h"
 #include "Utils/GenericDataArray.h"
+#include "Utils/MPAChannelGroupHandler.h"
+#include "Utils/SSAChannelGroupHandler.h"
 #include "Utils/StartInfo.h"
 #include "Utils/Utilities.h"
 #include <boost/math/distributions/normal.hpp>
@@ -20,27 +22,21 @@ OTTimeCorrelations::OTTimeCorrelations() : Tool() {}
 
 OTTimeCorrelations::~OTTimeCorrelations() {}
 
-void OTTimeCorrelations::SetThresholds(float numberOfSigma)
+void OTTimeCorrelations::SetThresholds(float stripSigma, float pixelSigma)
 {
     // Logic adapted from OTPhysics::SetThresholds
-    float theStripSigma;
-    float thePixelSigma;
-    if(numberOfSigma == 0)
+    if(stripSigma == 0 || pixelSigma == 0)
     {
         uint16_t theMaximumChannelNumber  = MAXCICCLUSTERS / 2;
         float    theStripAllowedOccupancy = float(theMaximumChannelNumber) / (NSSACHANNELS * NCHIPS_OT);
         float    thePixelAllowedOccupancy = float(theMaximumChannelNumber) / (NSSACHANNELS * NMPAROWS * NCHIPS_OT);
 
         boost::math::normal gaus(0, 1);
-        theStripSigma = quantile(complement(gaus, theStripAllowedOccupancy));
-        thePixelSigma = quantile(complement(gaus, thePixelAllowedOccupancy));
+        stripSigma = quantile(complement(gaus, theStripAllowedOccupancy));
+        pixelSigma = quantile(complement(gaus, thePixelAllowedOccupancy));
     }
-    else
-    {
-        theStripSigma = numberOfSigma;
-        thePixelSigma = numberOfSigma;
-    }
-    LOG(INFO) << "Setting thresholds with StripSigma: " << theStripSigma << " PixelSigma: " << thePixelSigma;
+
+    LOG(INFO) << "Setting thresholds with StripSigma: " << stripSigma << " PixelSigma: " << pixelSigma;
 
     for(auto pBoard: *fDetectorContainer)
     {
@@ -50,7 +46,7 @@ void OTTimeCorrelations::SetThresholds(float numberOfSigma)
             {
                 for(auto cChip: *cHybrid)
                 {
-                    float theSigma     = (cChip->getFrontEndType() == FrontEndType::SSA2) ? theStripSigma : thePixelSigma;
+                    float theSigma     = (cChip->getFrontEndType() == FrontEndType::SSA2) ? stripSigma : pixelSigma;
                     float theThreshold = cChip->getAveragePedestal() + cChip->getAverageNoise() * theSigma;
                     fReadoutChipInterface->WriteChipReg(cChip, "Threshold", std::round(theThreshold));
                 }
@@ -66,7 +62,8 @@ void OTTimeCorrelations::ConfigureCalibration()
     fNeventsConf = this->findValueInSettings<double>("OTTimeCorrelations_Nevents", 1000);
     LOG(INFO) << "Read fNeventsConf from config file: " << fNeventsConf;
 
-    theThresholdSigma       = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_ListOfThresholdSigma", "3.0, 3.0"));
+    theMPASigma             = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_ListOfMPASigma", "3.0, 3.0"));
+    theSSASigma             = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_ListOfSSASigma", "3.0, 3.0"));
     theNTriggerPerBurst     = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_ListOfNTriggersPerBurst", "4, 4"));
     theDelayBetweenTriggers = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_ListOfDelayBetweenTriggers", "0, 1"));
     theAverageFrequency     = convertStringToFloatList(this->findValueInSettings<std::string>("OTTimeCorrelations_ListOfAverageFrequency", "400, 400"));
@@ -74,7 +71,8 @@ void OTTimeCorrelations::ConfigureCalibration()
     fSaveRawData = this->findValueInSettings<double>("OTTimeCorrelations_SaveRawData", 1);
 
     // check if the sizes match: if they do not, don't run
-    if((theThresholdSigma.size() != theNTriggerPerBurst.size()) || (theThresholdSigma.size() != theDelayBetweenTriggers.size()) || (theThresholdSigma.size() != theAverageFrequency.size()))
+    if((theMPASigma.size() != theNTriggerPerBurst.size()) || (theMPASigma.size() != theSSASigma.size()) || (theSSASigma.size() != theDelayBetweenTriggers.size()) ||
+       (theSSASigma.size() != theAverageFrequency.size()))
     {
         LOG(ERROR) << "Mismatch in sizes of settings vectors! Please check the configuration.";
         throw std::runtime_error("Mismatch in sizes of settings vectors");
@@ -110,10 +108,15 @@ void OTTimeCorrelations::Running()
     theStartInfo.setRunNumber(fRunNumber);
     SystemController::Start(theStartInfo);
 
-    DetectorDataContainer theStripModuleHitContainer;
-    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>(*fDetectorContainer, theStripModuleHitContainer);
-    DetectorDataContainer thePixelModuleHitContainer;
-    ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>(*fDetectorContainer, thePixelModuleHitContainer);
+    this->setNormalization(true);
+    // this code only makes sense for PS modules
+    SSAChannelGroupHandler theSSAChannelGroupHandler;
+    theSSAChannelGroupHandler.setChannelGroupParameters(15, 1, 1);
+    setChannelGroupHandler(theSSAChannelGroupHandler, FrontEndType::SSA2);
+
+    MPAChannelGroupHandler theMPAChannelGroupHandler;
+    theMPAChannelGroupHandler.setChannelGroupParameters(15, 1, 1);
+    setChannelGroupHandler(theMPAChannelGroupHandler, FrontEndType::MPA2);
 
     fTotalDataSize = 0;
 
@@ -126,6 +129,16 @@ void OTTimeCorrelations::Running()
     {
         // iterate over settings
         LOG(INFO) << BOLDYELLOW << " Starting iteration " << iteration << RESET;
+
+        // create data containers (they should be different for each iteration)
+        DetectorDataContainer theStripModuleHitContainer;
+        ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>(*fDetectorContainer, theStripModuleHitContainer);
+        DetectorDataContainer thePixelModuleHitContainer;
+        ContainerFactory::copyAndInitOpticalGroup<GenericDataArray<uint32_t, MAXCICCHANNELS * 2 + 1>>(*fDetectorContainer, thePixelModuleHitContainer);
+        DetectorDataContainer theOccupancyContainer;
+        ContainerFactory::copyAndInitStructure<Occupancy>(*fDetectorContainer, theOccupancyContainer);
+        fDetectorDataContainer = &theOccupancyContainer;
+
         OTTimeCorrelationStripData::reset();
         OTTimeCorrelationPixelData::reset();
         ChipErrorData::reset();
@@ -209,6 +222,12 @@ void OTTimeCorrelations::Running()
                                     }
                                     cPixelModuleHits += cEventHits;
                                 }
+
+                                // fill occupancy containers
+                                auto channelGroup = getChannelGroup(-1, theBoard->getId(), opticalGroup->getId(), hybrid->getId(), chip->getId());
+                                if(!channelGroup) continue;
+                                auto occupancyChip = theOccupancyContainer.getObject(theBoard->getId())->getObject(opticalGroup->getId())->getObject(hybrid->getId())->getObject(chip->getId());
+                                event->fillChipDataContainer(occupancyChip, channelGroup, hybrid->getId());
                             }
                         }
 
@@ -257,6 +276,14 @@ void OTTimeCorrelations::Running()
                 }
             } // end of data taking while for this setting
         } // end of board loop
+
+        // Normalize occupancy
+        for(auto board: theOccupancyContainer)
+        {
+            board->normalizeAndAverageContainers(fDetectorContainer->getObject(board->getId()), getChannelGroupHandlerContainer()->getObject(board->getId()), collectedEvents);
+        }
+
+        fDQMHistogramOTTimeCorrelation.fillOccupancy(theOccupancyContainer, iterationSettingsName);
         fDQMHistogramOTTimeCorrelation.reportTimingStats();
         fDQMHistogramOTTimeCorrelation.fillModuleHitPlots(theStripModuleHitContainer, true, iterationSettingsName);
         fDQMHistogramOTTimeCorrelation.fillModuleHitPlots(thePixelModuleHitContainer, false, iterationSettingsName);
@@ -346,7 +373,7 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
     boardRegisterVector.push_back({"fc7_daq_cnfg.readout_block.global.data_handshake_enable", 0});
     boardRegisterVector.push_back({"fc7_daq_ctrl.fast_command_block.control.load_config", 0x1});
 
-    SetThresholds(theThresholdSigma.at(iteration));
+    SetThresholds(theSSASigma.at(iteration), theMPASigma.at(iteration));
 
     for(auto theBoard: *fDetectorContainer) { fBeBoardInterface->WriteBoardMultReg(theBoard, boardRegisterVector); }
 
@@ -354,20 +381,28 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
     OTTimeCorrelationConfig::setTriggerPerBurst(theNTriggerPerBurst.at(iteration));
 #endif
 
-    LOG(INFO) << "Configuring OTTimeCorrelations with Nevents: " << fNevents << "  ThresholdSigma: " << theThresholdSigma.at(iteration)
+    LOG(INFO) << "Configuring OTTimeCorrelations with Nevents: " << fNevents << "  MPASigma: " << theMPASigma.at(iteration) << "  SSASigma: " << theSSASigma.at(iteration)
               << "  NTriggerPerBurst: " << int(theNTriggerPerBurst.at(iteration)) << "  DelayBetweenTriggers: " << int(theDelayBetweenTriggers.at(iteration))
               << "  AverageFrequency: " << theAverageFrequency.at(iteration);
 
-    std::ostringstream s_name_stream;
-    s_name_stream << "s" << std::fixed << std::setprecision(1) << theThresholdSigma.at(iteration);
-    std::string s_name = s_name_stream.str();
-    std::replace(s_name.begin(), s_name.end(), '.', 'p');
+    auto formatSigma = [](float sigma)
+    {
+        std::ostringstream sigmaStream;
+        sigmaStream << "s" << std::fixed << std::setprecision(1) << sigma;
+        std::string sigmaName = sigmaStream.str();
+        std::replace(sigmaName.begin(), sigmaName.end(), '.', 'p');
+        return sigmaName;
+    };
+
+    std::string        mpaSigmaName = formatSigma(theMPASigma.at(iteration));
+    std::string        ssaSigmaName = formatSigma(theSSASigma.at(iteration));
     std::ostringstream iteration_name_stream;
-    iteration_name_stream << "_tBurst" << int(theNTriggerPerBurst.at(iteration)) << "_tDel" << int(theDelayBetweenTriggers.at(iteration)) << "_rAvg" << int(theAverageFrequency.at(iteration)) << "_"
-                          << s_name;
+    iteration_name_stream << "_tBurst" << int(theNTriggerPerBurst.at(iteration)) << "_tDel" << int(theDelayBetweenTriggers.at(iteration)) << "_rAvg" << int(theAverageFrequency.at(iteration)) << "_mpa"
+                          << mpaSigmaName << "_ssa" << ssaSigmaName;
     iterationSettingsName = iteration_name_stream.str();
 
 #ifdef __USE_ROOT__
-    fDQMHistogramOTTimeCorrelation.book(fResultFile, *fDetectorContainer, fSettingsMap, iterationSettingsName, theThresholdSigma.at(iteration));
+    fDQMHistogramOTTimeCorrelation.book(fResultFile, *fDetectorContainer, fSettingsMap, iterationSettingsName, theSSASigma.at(iteration), theMPASigma.at(iteration));
+    fDQMHistogramOTTimeCorrelation.bookOccupancyPlots(fResultFile, *fDetectorContainer, iterationSettingsName, fNevents);
 #endif
 }

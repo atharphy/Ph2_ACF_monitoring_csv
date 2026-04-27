@@ -29,14 +29,15 @@ class OTTimeCorrelations : public Tool
 
     static std::string fCalibrationDescription;
 
-    void SetThresholds(float numberOfSigma);
+    void SetThresholds(float stripSigma, float pixelSigma);
     void SetTriggerSource(uint8_t pTriggerSource);
 
     void setIterationSettings(size_t iteration);
 
   private:
     std::vector<float> theDelayBetweenTriggers{0, 1};
-    std::vector<float> theThresholdSigma{3.0, 3.0};
+    std::vector<float> theMPASigma{3.0, 3.0};
+    std::vector<float> theSSASigma{3.0, 3.0};
     std::vector<float> theNTriggerPerBurst{4, 4};
     std::vector<float> theAverageFrequency{400, 400};
 
