@@ -60,7 +60,7 @@ class PowerTrimming : public CalibBase
     uint16_t   MAX_PREAMP;
     uint16_t   MAX_COMP;
     uint16_t   MAX_LDAC;
-    const bool doDebug{true};
+    const bool doDebug{false};
 
     std::vector<PowerTrimmingData> fPowerTrimmingResults;
 
