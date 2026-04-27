@@ -93,6 +93,8 @@ void PowerTrimming::localConfigure(const std::string& histoFileName, int current
 
 void PowerTrimming::run()
 {
+    const uint16_t GDACVal = 900; // Arbitrarely high threhsold @CONST@
+
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
@@ -113,10 +115,9 @@ void PowerTrimming::run()
                     // #######################################################
                     // # Set default global DAC values required for the scan #
                     // #######################################################
-                    uint16_t gdac_value = 900;
-                    fReadoutChipInterface->WriteChipReg(theChip, "DAC_GDAC_L_LIN", gdac_value);
-                    fReadoutChipInterface->WriteChipReg(theChip, "DAC_GDAC_M_LIN", gdac_value);
-                    fReadoutChipInterface->WriteChipReg(theChip, "DAC_GDAC_R_LIN", gdac_value);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DAC_GDAC_L_LIN", GDACVal);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DAC_GDAC_M_LIN", GDACVal);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DAC_GDAC_R_LIN", GDACVal);
 
                     std::vector<const char*> preamp_registers = static_cast<RD53*>(cChip)->getFEtype()->preampRegs;
                     std::vector<const char*> comp_registers   = {"DAC_COMP_LIN"};
@@ -129,18 +130,20 @@ void PowerTrimming::run()
                     // #################################
                     // # Reset COMP and LDAC registers #
                     // #################################
-                    for(const auto& regName: comp_registers) fReadoutChipInterface->WriteChipReg(theChip, regName, 0);
-                    for(const auto& regName: ldac_registers) fReadoutChipInterface->WriteChipReg(theChip, regName, 0);
+                    if(PREAMP_CURRENT_mA != 0)
+                        for(const auto& regName: comp_registers) fReadoutChipInterface->WriteChipReg(cChip, regName, 0);
+                    if((PREAMP_CURRENT_mA != 0) || (COMP_CURRENT_mA != 0))
+                        for(const auto& regName: ldac_registers) fReadoutChipInterface->WriteChipReg(cChip, regName, 0);
 
                     // #####################
                     // # PREAMPLIFIER scan #
                     // #####################
-                    linearScanBottomUp(theChip, preamp_registers, 0, MAX_PREAMP, PREAMP_CURRENT_mA, COMPdefaultVal);
+                    if(PREAMP_CURRENT_mA != 0) linearScanBottomUp(theChip, preamp_registers, 0, MAX_PREAMP, PREAMP_CURRENT_mA, COMPdefaultVal);
 
                     // ###################
                     // # COMPARATOR scan #
                     // ###################
-                    linearScanBottomUp(theChip, comp_registers, 0, MAX_COMP, COMP_CURRENT_mA, COMPdefaultVal);
+                    if(COMP_CURRENT_mA != 0) linearScanBottomUp(theChip, comp_registers, 0, MAX_COMP, COMP_CURRENT_mA, COMPdefaultVal);
 
                     // ############################################
                     // # Set TDAC to a set value before LDAC scan #
@@ -151,12 +154,12 @@ void PowerTrimming::run()
                     // #############
                     // # LDAC scan #
                     // #############
-                    linearScanBottomUp(theChip, ldac_registers, 0, MAX_LDAC, LDAC_CURRENT_mA, COMPdefaultVal);
+                    if(LDAC_CURRENT_mA != 0) linearScanBottomUp(theChip, ldac_registers, 0, MAX_LDAC, LDAC_CURRENT_mA, COMPdefaultVal);
 
                     // #############
                     // # Unmasking #
                     // #############
-                    fReadoutChipInterface->MaskAllChannels(cChip, false);
+                    theChip->copyMaskFromDefault();
                     std::cout << std::endl;
                 }
 
@@ -331,7 +334,8 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
     {
         if(set_value < maxValue)
         {
-            set_value++;
+            set_value += 50;
+            // set_value++; // @TMP@
             LOG(INFO) << BLUE << "\t--> Scanning register value: " << BOLDYELLOW << set_value << RESET;
             std::cout << "\x1b[A";
         }

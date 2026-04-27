@@ -294,7 +294,7 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
 
                     for(const auto& data: dataList)
                     {
-                        const uint16_t binX = step_counter++;
+                        const uint16_t binX = ++step_counter;
 
                         hChipCurr->SetBinContent(binX, data.ChipCurrent);
                         hIAna->SetBinContent(binX, data.ANA_IN_CURR);
