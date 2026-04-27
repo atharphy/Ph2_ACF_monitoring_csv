@@ -19,13 +19,9 @@
 #include "Utils/Visitor.h"
 #include "Utils/easylogging++.h"
 
-#include <cstdio>
-#include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <regex>
 #include <set>
-#include <sstream>
 #include <stdint.h>
 #include <string>
 #include <unordered_map>
