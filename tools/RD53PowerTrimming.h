@@ -18,7 +18,7 @@
 typedef bool PowerTrimmingHistograms;
 struct PowerTrimmingData
 {
-    float    timestamp;
+    double    timestamp;
     uint16_t bit;
     float    ChipCurrent;
     float    ANA_IN_CURR;
@@ -60,7 +60,7 @@ class PowerTrimming : public CalibBase
     uint16_t MAX_PREAMP;
     uint16_t MAX_COMP;
     uint16_t MAX_LDAC;
-    bool     doDebug{false};
+    bool     doDebug{true};
 
     std::vector<PowerTrimmingData> fPowerTrimmingResults;
 
