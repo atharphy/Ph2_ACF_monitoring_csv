@@ -61,16 +61,16 @@ void PowerTrimmingHistograms::book(TFile* theOutputFile, DetectorContainer& theD
     // ########################
     // # Debugging histograms #
     // ########################
-    auto hChipCurrVsTime = CanvasContainer<TH1F>("ChipCurrent", "Total chip current vs Time", maxVal, 0, maxVal);
-    auto hIAnaVsTime     = CanvasContainer<TH1F>("ANA_IN_CURR", "Analog current vs Time", maxVal, 0, maxVal);
-    auto hIDigVsTime     = CanvasContainer<TH1F>("DIG_IN_CURR", "Digital current vs Time", maxVal, 0, maxVal);
-    auto hAnaShuntVsTime = CanvasContainer<TH1F>("ANA_SHUNT_CURR", "Analog Shunt current vs Time", maxVal, 0, maxVal);
-    auto hDigShuntVsTime = CanvasContainer<TH1F>("DIG_SHUNT_CURR", "Digital Shunt current vs Time", maxVal, 0, maxVal);
-    auto hVAnaVsTime     = CanvasContainer<TH1F>("VINA", "VINA vs Time", maxVal, 0, maxVal);
-    auto hVDAnaVsTime    = CanvasContainer<TH1F>("VDDA", "VDDA vs Time", maxVal, 0, maxVal);
-    auto hVDigVsTime     = CanvasContainer<TH1F>("VIND", "VIND vs Time", maxVal, 0, maxVal);
-    auto hVDDigVsTime    = CanvasContainer<TH1F>("VDDD", "VDDD vs Time", maxVal, 0, maxVal);
-    auto hIrfVsTime      = CanvasContainer<TH1F>("Iref", "Iref vs Time", maxVal, 0, maxVal);
+    auto hChipCurrVsTime = CanvasContainer<TH1F>("ChipCurrent", "Total chip current vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hIAnaVsTime     = CanvasContainer<TH1F>("ANA_IN_CURR", "Analog current vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hIDigVsTime     = CanvasContainer<TH1F>("DIG_IN_CURR", "Digital current vs Time", 3 * maxVal, 0, maxVal);
+    auto hAnaShuntVsTime = CanvasContainer<TH1F>("ANA_SHUNT_CURR", "Analog Shunt current vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hDigShuntVsTime = CanvasContainer<TH1F>("DIG_SHUNT_CURR", "Digital Shunt current vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hVAnaVsTime     = CanvasContainer<TH1F>("VINA", "VINA vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hVDAnaVsTime    = CanvasContainer<TH1F>("VDDA", "VDDA vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hVDigVsTime     = CanvasContainer<TH1F>("VIND", "VIND vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hVDDigVsTime    = CanvasContainer<TH1F>("VDDD", "VDDD vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hIrfVsTime      = CanvasContainer<TH1F>("Iref", "Iref vs Time", 3 * maxVal, 0, 3 * maxVal);
 
     bookChipImplementer(theOutputFile, theDetectorStructure, theChipCurrVsTimeContainer, hChipCurrVsTime, "Time (HH:MM:SS)", "Current (mA)");
     bookChipImplementer(theOutputFile, theDetectorStructure, theAnaInVsTimeContainer, hIAnaVsTime, "Time (HH:MM:SS)", "Current (mA)");
@@ -81,7 +81,7 @@ void PowerTrimmingHistograms::book(TFile* theOutputFile, DetectorContainer& theD
     bookChipImplementer(theOutputFile, theDetectorStructure, theVDDAVsTimeContainer, hVDAnaVsTime, "Time (HH:MM:SS)", "Voltage (V)");
     bookChipImplementer(theOutputFile, theDetectorStructure, theVINDVsTimeContainer, hVDigVsTime, "Time (HH:MM:SS)", "Voltage (V)");
     bookChipImplementer(theOutputFile, theDetectorStructure, theVDDDVsTimeContainer, hVDDigVsTime, "Time (HH:MM:SS)", "Voltage (V)");
-    bookChipImplementer(theOutputFile, theDetectorStructure, theIrefVsTimeContainer, hIrfVsTime, "Time (HH:MM:SS)", "Iref");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theIrefVsTimeContainer, hIrfVsTime, "Time (HH:MM:SS)", "Iref (uA)");
 
     AreHistoBooked = true;
 }
@@ -289,12 +289,12 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                     hIrf->SetMarkerStyle(20);
                     hIrf->SetMarkerSize(0.8);
 
-                    double start_time = -1.0;
-                    int step_counter = 0;
+                    double   start_time   = -1.0;
+                    uint16_t step_counter = 0;
 
                     for(const auto& data: dataList)
                     {
-                        const uint16_t binX = step_counter + 1;
+                        const uint16_t binX = step_counter++;
 
                         hChipCurr->SetBinContent(binX, data.ChipCurrent);
                         hIAna->SetBinContent(binX, data.ANA_IN_CURR);
@@ -307,15 +307,16 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                         hVDDig->SetBinContent(binX, data.VDDD);
                         hIrf->SetBinContent(binX, data.Iref);
 
-                        if (start_time < 0) {
-                            start_time = data.timestamp;
-                        }
+                        // ##########################################
+                        // # Convert seconds from epoch to HH:MM:SS #
+                        // ##########################################
+                        if(start_time < 0) start_time = data.timestamp;
 
                         int elapsed_seconds = static_cast<int>(data.timestamp - start_time);
-                        int hours = elapsed_seconds / 3600;
-                        int minutes = (elapsed_seconds % 3600) / 60;
-                        int seconds = elapsed_seconds % 60;
-                        
+                        int hours           = elapsed_seconds / 3600;
+                        int minutes         = (elapsed_seconds % 3600) / 60;
+                        int seconds         = elapsed_seconds % 60;
+
                         char time_buffer[16];
                         snprintf(time_buffer, sizeof(time_buffer), "%02d:%02d:%02d", hours, minutes, seconds);
                         const std::string time_str(time_buffer);
@@ -330,8 +331,6 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                         hVinDig->GetXaxis()->SetBinLabel(binX, time_str.c_str());
                         hVDDig->GetXaxis()->SetBinLabel(binX, time_str.c_str());
                         hIrf->GetXaxis()->SetBinLabel(binX, time_str.c_str());
-
-                        step_counter++;
                     }
 
                     const uint16_t start_bin = 1;

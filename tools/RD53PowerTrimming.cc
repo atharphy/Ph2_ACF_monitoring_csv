@@ -315,8 +315,8 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
     // ############################################
     // # Initial current reading and target setup #
     // ############################################
-    float analog_in_curr = 1.0e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_IN_CURR", true);
-    float shunt_in_curr  = 1.0e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
+    float analog_in_curr = 1e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_IN_CURR", true);
+    float shunt_in_curr  = 1e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
     float monitor        = analog_in_curr - shunt_in_curr;
     float target_value   = monitor + targetDiff;
     float set_diff       = target_value - monitor;
@@ -342,8 +342,8 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
             break;
         }
         WriteChipRegisters(set_value);
-        analog_in_curr = 1.e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_IN_CURR", true);
-        shunt_in_curr  = 1.e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
+        analog_in_curr = 1e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_IN_CURR", true);
+        shunt_in_curr  = 1e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
         monitor        = analog_in_curr - shunt_in_curr;
 
         if(doDebug == true)
@@ -362,14 +362,14 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
             PTData.bit            = set_value;
             PTData.ChipCurrent    = monitor;
             PTData.ANA_IN_CURR    = analog_in_curr;
-            PTData.DIG_IN_CURR    = 1.e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true);
+            PTData.DIG_IN_CURR    = 1e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true);
             PTData.VINA           = 4.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VINA", true);
             PTData.VDDA           = 2.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VDDA", true);
             PTData.VIND           = 4.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VIND", true);
             PTData.VDDD           = 2.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VDDD", true);
             PTData.Iref           = fReadoutChipInterface->ReadChipMonitor(pChip, "Iref", true);
             PTData.ANA_SHUNT_CURR = shunt_in_curr;
-            PTData.DIG_SHUNT_CURR = 1.e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_SHUNT_CURR", true);
+            PTData.DIG_SHUNT_CURR = 1e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_SHUNT_CURR", true);
 
             fPowerTrimmingResults.push_back(PTData);
 
@@ -394,7 +394,7 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
         set_diff  = pre_diff;
         WriteChipRegisters(set_value);
     }
-    float digcurr = 1.e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true);
+    float digcurr = 1e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true);
     std::cout << std::endl;
     LOG(INFO) << BLUE << "\t--> Scan ended" << RESET;
     LOG(INFO) << BOLDMAGENTA << ">>> Found value " << BOLDYELLOW << set_value << BOLDMAGENTA << " with current (ANA_IN_CURR - ANA_SHUNT_CURR) = " << BOLDYELLOW << monitor << BOLDMAGENTA

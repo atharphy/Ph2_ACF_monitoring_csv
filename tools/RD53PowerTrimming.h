@@ -18,7 +18,7 @@
 typedef bool PowerTrimmingHistograms;
 struct PowerTrimmingData
 {
-    double    timestamp;
+    double   timestamp;
     uint16_t bit;
     float    ChipCurrent;
     float    ANA_IN_CURR;
