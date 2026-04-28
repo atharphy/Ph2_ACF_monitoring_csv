@@ -17,6 +17,19 @@ OTMonitor::OTMonitor(const Ph2_System::SystemController* theSystemController, co
     fMQTTBrokerPort = fDetectorMonitorConfig.fMQTTBrokerPort;
     fMQTTTopic      = fDetectorMonitorConfig.fMQTTTopic;
     fMQTTEnabled    = fDetectorMonitorConfig.fMQTTEnabled;
+
+    if(fMQTTEnabled)
+    {
+        // try to query on config topic to check for mqtt broker availability, disable if not available
+        std::string command = "mosquitto_sub -h " + fMQTTBrokerHost + " -p " + std::to_string(fMQTTBrokerPort) + " -t " + fMQTTTopic + "/config -C 1 -W 2 | grep 1 2>&1 > /dev/null";
+        int         result  = system(command.c_str());
+        if(result != 0)
+        {
+            LOG(WARNING) << "MQTT broker not available at " << fMQTTBrokerHost << ":" << fMQTTBrokerPort << ". Disabling MQTT publishing." << RESET;
+            fMQTTEnabled = false;
+        }
+        else { LOG(INFO) << "MQTT broker available at " << fMQTTBrokerHost << ":" << fMQTTBrokerPort << ". MQTT publishing enabled." << RESET; }
+    }
 }
 
 void OTMonitor::runMonitor()
@@ -108,7 +121,7 @@ DetectorDataContainer OTMonitor::getReadoutChipMonitorValues(const std::string& 
 
                         std::string hybridId = std::to_string(chip->getHybridId());
                         std::string chipId   = std::to_string(chip->getId());
-                        json_payload += ",\"" + chipType + "_H" + hybridId + "_C" + chipId + "_temp\":" + std::to_string(theRegisterAndTime.fValue);
+                        json_payload += ",\"" + chipType + "_H" + hybridId + "_C" + chipId + "_" + monitorValueName + "\":" + std::to_string(theRegisterAndTime.fValue);
                     }
                 }
             }
@@ -116,7 +129,6 @@ DetectorDataContainer OTMonitor::getReadoutChipMonitorValues(const std::string& 
             json_payload += "}";
             // publish JSON to MQTT
             publishToMQTT(json_payload);
-            LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Published MQTT payload: " << json_payload << RESET;
         }
     }
     return theReadoutChipMonitorValueContainer;
