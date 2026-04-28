@@ -9,10 +9,6 @@
 
 #include "RD53PowerTrimming.h"
 
-#include <chrono>
-#include <fstream>
-#include <iomanip>
-
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
 
@@ -42,6 +38,7 @@ void PowerTrimming::Running()
     LOG(INFO) << GREEN << "[PowerTrimming::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
     PowerTrimming::run();
+    PowerTrimming::analyze();
     PowerTrimming::draw();
     PowerTrimming::sendData();
 }
@@ -96,17 +93,16 @@ void PowerTrimming::localConfigure(const std::string& histoFileName, int current
 
 void PowerTrimming::run()
 {
-    dataType init;
-
-    ContainerFactory::copyAndInitChip<dataType>(*fDetectorContainer, thePreamplifierCurrentContainer, init);
-    ContainerFactory::copyAndInitChip<dataType>(*fDetectorContainer, theComparatorCurrentContainer, init);
-    ContainerFactory::copyAndInitChip<dataType>(*fDetectorContainer, theLDACCurrentContainer, init);
+    const uint16_t HighGDACVal = 900; // Arbitrarely high threhsold @CONST@
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
+                    LOG(INFO) << BOLDMAGENTA << ">>> Optimizing analog current for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/"
+                              << cHybrid->getId() << "/" << +cChip->getId() << BOLDMAGENTA << "] <<<" << RESET;
+
                     // ###################################
                     // # Chip initialization and masking #
                     // ###################################
@@ -119,10 +115,9 @@ void PowerTrimming::run()
                     // #######################################################
                     // # Set default global DAC values required for the scan #
                     // #######################################################
-                    uint16_t gdac_value = 900;
-                    fReadoutChipInterface->WriteChipReg(theChip, "DAC_GDAC_L_LIN", gdac_value);
-                    fReadoutChipInterface->WriteChipReg(theChip, "DAC_GDAC_M_LIN", gdac_value);
-                    fReadoutChipInterface->WriteChipReg(theChip, "DAC_GDAC_R_LIN", gdac_value);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DAC_GDAC_L_LIN", HighGDACVal);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DAC_GDAC_M_LIN", HighGDACVal);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DAC_GDAC_R_LIN", HighGDACVal);
 
                     std::vector<const char*> preamp_registers = static_cast<RD53*>(cChip)->getFEtype()->preampRegs;
                     std::vector<const char*> comp_registers   = {"DAC_COMP_LIN"};
@@ -135,20 +130,20 @@ void PowerTrimming::run()
                     // #################################
                     // # Reset COMP and LDAC registers #
                     // #################################
-                    for(const auto& regName: comp_registers) fReadoutChipInterface->WriteChipReg(theChip, regName, 0);
-                    for(const auto& regName: ldac_registers) fReadoutChipInterface->WriteChipReg(theChip, regName, 0);
+                    if(PREAMP_CURRENT_mA != 0)
+                        for(const auto& regName: comp_registers) fReadoutChipInterface->WriteChipReg(cChip, regName, 0);
+                    if((PREAMP_CURRENT_mA != 0) || (COMP_CURRENT_mA != 0))
+                        for(const auto& regName: ldac_registers) fReadoutChipInterface->WriteChipReg(cChip, regName, 0);
 
                     // #####################
                     // # PREAMPLIFIER scan #
                     // #####################
-                    thePreamplifierCurrentContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<dataType>() =
-                        linearScanBottomUp(theChip, preamp_registers, 0, MAX_PREAMP, PREAMP_CURRENT_mA, COMPdefaultVal);
+                    if(PREAMP_CURRENT_mA != 0) linearScanBottomUp(theChip, preamp_registers, 0, MAX_PREAMP, PREAMP_CURRENT_mA, COMPdefaultVal);
 
                     // ###################
                     // # COMPARATOR scan #
                     // ###################
-                    theComparatorCurrentContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<dataType>() =
-                        linearScanBottomUp(theChip, comp_registers, 0, MAX_COMP, COMP_CURRENT_mA, COMPdefaultVal);
+                    if(COMP_CURRENT_mA != 0) linearScanBottomUp(theChip, comp_registers, 0, MAX_COMP, COMP_CURRENT_mA, COMPdefaultVal);
 
                     // ############################################
                     // # Set TDAC to a set value before LDAC scan #
@@ -156,17 +151,123 @@ void PowerTrimming::run()
                     theChip->resetTDAC(16);
                     static_cast<RD53Interface*>(fReadoutChipInterface)->WriteRD53Mask(theChip, 0, false);
 
-                    // #################################
-                    // # LDAC scan and final unmasking #
-                    // #################################
-                    theLDACCurrentContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<dataType>() =
-                        linearScanBottomUp(theChip, ldac_registers, 0, MAX_LDAC, LDAC_CURRENT_mA, COMPdefaultVal);
+                    // #############
+                    // # LDAC scan #
+                    // #############
+                    if(LDAC_CURRENT_mA != 0) linearScanBottomUp(theChip, ldac_registers, 0, MAX_LDAC, LDAC_CURRENT_mA, COMPdefaultVal);
 
-                    fReadoutChipInterface->MaskAllChannels(cChip, false);
+                    // #############
+                    // # Unmasking #
+                    // #############
+                    theChip->copyMaskFromDefault();
+                    std::cout << std::endl;
                 }
 
-    std::cout << std::endl;
+    // ###########################
+    // # Fill Current containers #
+    // ###########################
+    ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, thePreamplifierCurrentContainer);
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    for(auto i = 0u; i < static_cast<RD53*>(cChip)->getFEtype()->preampRegs.size(); i++)
+                        thePreamplifierCurrentContainer.getObject(cBoard->getId())
+                            ->getObject(cOpticalGroup->getId())
+                            ->getObject(cHybrid->getId())
+                            ->getObject(cChip->getId())
+                            ->getSummary<std::vector<uint16_t>>()
+                            .push_back(static_cast<RD53*>(cChip)->getReg(static_cast<RD53*>(cChip)->getFEtype()->preampRegs[i]));
+
+                    thePreamplifierCurrentContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(cHybrid->getId())
+                        ->getObject(cChip->getId())
+                        ->getSummary<std::vector<uint16_t>>()
+                        .push_back(static_cast<RD53*>(cChip)->getReg("DAC_FC_LIN"));
+                }
+
+    ContainerFactory::copyAndInitChip<std::vector<uint16_t>>(*fDetectorContainer, theComparatorCurrentContainer);
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    if(COMP_CURRENT_mA == 0)
+                    {
+                        static_cast<RD53Interface*>(fReadoutChipInterface)->CopyRegFromDefault(cChip, "DAC_COMP_LIN");
+                        static_cast<RD53Interface*>(fReadoutChipInterface)->CopyRegFromDefault(cChip, "DAC_COMP_TA_LIN");
+                    }
+
+                    theComparatorCurrentContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(cHybrid->getId())
+                        ->getObject(cChip->getId())
+                        ->getSummary<std::vector<uint16_t>>()
+                        .push_back(static_cast<RD53*>(cChip)->getReg("DAC_COMP_LIN"));
+
+                    theComparatorCurrentContainer.getObject(cBoard->getId())
+                        ->getObject(cOpticalGroup->getId())
+                        ->getObject(cHybrid->getId())
+                        ->getObject(cChip->getId())
+                        ->getSummary<std::vector<uint16_t>>()
+                        .push_back(static_cast<RD53*>(cChip)->getReg("DAC_COMP_TA_LIN"));
+                }
+
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, theLDACCurrentContainer);
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    if(LDAC_CURRENT_mA == 0) static_cast<RD53Interface*>(fReadoutChipInterface)->CopyRegFromDefault(cChip, "DAC_LDAC_LIN");
+
+                    theLDACCurrentContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
+                        static_cast<RD53*>(cChip)->getReg("DAC_LDAC_LIN");
+                }
+
     CalibBase::chipErrorReport();
+}
+
+void PowerTrimming::analyze()
+{
+    for(const auto cBoard: thePreamplifierCurrentContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    LOG(INFO) << BOLDYELLOW << "Preamplifier" << RESET << GREEN << " current settings for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
+                              << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    for(auto i = 0u; i < cChip->getSummary<std::vector<uint16_t>>().size() - 1; i++)
+                        LOG(INFO) << BOLDYELLOW << std::setw(17) << std::left
+                                  << static_cast<RD53*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()))
+                                         ->getFEtype()
+                                         ->preampRegs[i]
+                                  << " = " << std::setw(4) << std::right << cChip->getSummary<std::vector<uint16_t>>().at(i) << RESET;
+                    LOG(INFO) << BOLDYELLOW << std::setw(17) << std::left << "DAC_FC_LIN" << " = " << std::setw(4) << std::right << cChip->getSummary<std::vector<uint16_t>>().back() << RESET;
+                }
+
+    for(const auto cBoard: theComparatorCurrentContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    LOG(INFO) << BOLDYELLOW << "Comparator" << RESET << GREEN << " current settings for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/"
+                              << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    LOG(INFO) << BOLDYELLOW << std::setw(17) << std::left << "DAC_COMP_LIN" << " = " << std::setw(4) << std::right << cChip->getSummary<std::vector<uint16_t>>().at(0) << RESET;
+                    LOG(INFO) << BOLDYELLOW << std::setw(17) << std::left << "DAC_COMP_TA_LIN" << " = " << std::setw(4) << std::right << cChip->getSummary<std::vector<uint16_t>>().at(1) << RESET;
+                }
+
+    for(const auto cBoard: theLDACCurrentContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    LOG(INFO) << BOLDYELLOW << "LDAC" << RESET << GREEN << " current setting for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId()
+                              << "/" << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
+                    LOG(INFO) << BOLDYELLOW << std::setw(17) << std::left << "DAC_LDAC_LIN" << " = " << std::setw(4) << std::right << cChip->getSummary<uint16_t>() << RESET;
+                }
 }
 
 void PowerTrimming::fillHisto()
@@ -196,12 +297,14 @@ void PowerTrimming::draw(bool saveData)
 #endif
 }
 
-dataType
-PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vector<const char*>& regNames, uint16_t startValue, uint16_t maxValue, float& targetDiff, const uint16_t COMPdefaultVal)
+void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
+                                       const std::vector<const char*>& regNames,
+                                       uint16_t                        startValue,
+                                       uint16_t                        maxValue,
+                                       float&                          targetDiff,
+                                       const uint16_t                  COMPdefaultVal)
 {
     std::ofstream outFile;
-    dataType      result;
-    std::cout << std::endl;
 
     auto WriteChipRegisters = [this, pChip, regNames](uint16_t value)
     {
@@ -215,8 +318,8 @@ PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vec
         if(&regName != &regNames.back()) _regNames << " ";
     }
 
-    LOG(INFO) << GREEN << "Chip " << BOLDYELLOW << pChip->geteFuseCode() << RESET << GREEN << ": starting a linear scan from " << BOLDYELLOW << startValue << RESET << GREEN
-              << " to reach target current increase of " << std::setprecision(1) << BOLDYELLOW << targetDiff << RESET << GREEN << " mA for register(s) " << BOLDYELLOW << _regNames.str() << RESET;
+    LOG(INFO) << GREEN << "Starting a linear scan from " << BOLDYELLOW << startValue << RESET << GREEN << " to reach target current increase of " << std::setprecision(1) << BOLDYELLOW << targetDiff
+              << RESET << GREEN << " mA for register(s) " << BOLDYELLOW << _regNames.str() << RESET;
 
     uint16_t set_value = startValue;
     uint16_t pre_value = startValue;
@@ -225,8 +328,8 @@ PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vec
     // ############################################
     // # Initial current reading and target setup #
     // ############################################
-    float analog_in_curr = 1.0e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_IN_CURR", true);
-    float shunt_in_curr  = 1.0e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
+    float analog_in_curr = 1e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_IN_CURR", true);
+    float shunt_in_curr  = 1e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
     float monitor        = analog_in_curr - shunt_in_curr;
     float target_value   = monitor + targetDiff;
     float set_diff       = target_value - monitor;
@@ -252,8 +355,8 @@ PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vec
             break;
         }
         WriteChipRegisters(set_value);
-        analog_in_curr = 1.e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_IN_CURR", true);
-        shunt_in_curr  = 1.e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
+        analog_in_curr = 1e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_IN_CURR", true);
+        shunt_in_curr  = 1e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
         monitor        = analog_in_curr - shunt_in_curr;
 
         if(doDebug == true)
@@ -264,21 +367,22 @@ PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vec
             const auto epoch   = now.time_since_epoch();
             const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(epoch);
 
-            // ##############################################################################
-            // # Read all relevant ADC monitors (Currents and Voltages) at each step of the #
-            // # scan and save them in the result vector and in a txt file for monitoring   #
-            // ##############################################################################
+            // ##################################################################
+            // # Read all relevant ADC monitors (Currents and Voltages) at each #
+            // # step of the scan and save them a txt file for monitoring       #
+            // ##################################################################
             PTData.timestamp      = seconds.count();
             PTData.bit            = set_value;
+            PTData.ChipCurrent    = monitor;
             PTData.ANA_IN_CURR    = analog_in_curr;
-            PTData.DIG_IN_CURR    = 1.e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true);
+            PTData.DIG_IN_CURR    = 1e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true);
             PTData.VINA           = 4.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VINA", true);
             PTData.VDDA           = 2.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VDDA", true);
             PTData.VIND           = 4.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VIND", true);
             PTData.VDDD           = 2.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VDDD", true);
             PTData.Iref           = fReadoutChipInterface->ReadChipMonitor(pChip, "Iref", true);
             PTData.ANA_SHUNT_CURR = shunt_in_curr;
-            PTData.DIG_SHUNT_CURR = 1.e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_SHUNT_CURR", true);
+            PTData.DIG_SHUNT_CURR = 1e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_SHUNT_CURR", true);
 
             fPowerTrimmingResults.push_back(PTData);
 
@@ -293,7 +397,6 @@ PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vec
         pre_diff  = set_diff;
         pre_value = set_value;
         set_diff  = target_value - monitor;
-        result.push_back(std::make_pair(set_value, monitor));
     }
 
     if(outFile.is_open()) outFile.close();
@@ -303,12 +406,12 @@ PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vec
         set_value = pre_value;
         set_diff  = pre_diff;
         WriteChipRegisters(set_value);
-        result.pop_back();
     }
-    float digcurr = 1.e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true);
-    LOG(INFO) << GREEN << "Chip " << BOLDYELLOW << pChip->geteFuseCode() << RESET << GREEN << ": scan ended. Found value " << BOLDYELLOW << result.back().first << RESET << GREEN
-              << " with current (ANA_IN_CURR - ANA_SHUNT_CURR) = " << BOLDYELLOW << result.back().second << RESET << GREEN << " mA (difference from target = " << set_diff
-              << " mA) Digital current value = " << BOLDYELLOW << digcurr << RESET << GREEN << " mA" << RESET;
+    float digcurr = 1e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true);
+    std::cout << std::endl;
+    LOG(INFO) << BLUE << "\t--> Scan ended" << RESET;
+    LOG(INFO) << BOLDMAGENTA << ">>> Found value " << BOLDYELLOW << set_value << BOLDMAGENTA << " with current (ANA_IN_CURR - ANA_SHUNT_CURR) = " << BOLDYELLOW << monitor << BOLDMAGENTA
+              << " mA (difference from target = " << set_diff << " mA) Digital current value = " << BOLDYELLOW << digcurr << BOLDMAGENTA << " mA <<<" << RESET;
 
     // ####################################################################################################
     // # PREAMP requires specific calibration factors depending on the physical area of the matrix region #
@@ -329,13 +432,11 @@ PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vec
         else if(std::strcmp(regName, "DAC_PREAMP_TL_LIN") == 0)
             calib_factor = RD53BConstants::PREAMP_TL;
 
-        uint16_t bit_value   = result.back().first;
+        uint16_t bit_value   = set_value;
         int      calib_value = std::round(bit_value * calib_factor);
 
         if(calib_value > MAX_PREAMP) calib_value = MAX_PREAMP;
 
-        LOG(INFO) << GREEN << "Suggested new register value " << BOLDYELLOW << std::setw(17) << std::left << regName << RESET << GREEN << " = " << BOLDYELLOW << std::setw(4) << std::right
-                  << calib_value << RESET;
         fReadoutChipInterface->WriteChipReg(pChip, regName, calib_value);
     }
 
@@ -344,22 +445,19 @@ PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53* pChip, const std::vec
     // ###################################################################################################
     if(std::strcmp(regNames.front(), "DAC_COMP_LIN") == 0)
     {
-        uint16_t comp_value   = COMPdefaultVal;
-        uint16_t fc_value     = fReadoutChipInterface->ReadChipReg(pChip, "DAC_FC_LIN");
-        uint16_t new_fc_value = std::round(fc_value * static_cast<float>(set_value) / comp_value);
-        if(new_fc_value > RD53Shared::setBits(pChip->getNumberOfBits("DAC_FC_LIN"))) new_fc_value = RD53Shared::setBits(pChip->getNumberOfBits("DAC_FC_LIN"));
-        fReadoutChipInterface->WriteChipReg(pChip, "DAC_FC_LIN", new_fc_value);
+        uint16_t comp_value = COMPdefaultVal;
+
+        if(PREAMP_CURRENT_mA != 0)
+        {
+            uint16_t fc_value     = fReadoutChipInterface->ReadChipReg(pChip, "DAC_FC_LIN");
+            uint16_t new_fc_value = std::round(fc_value * static_cast<float>(set_value) / comp_value);
+            if(new_fc_value > RD53Shared::setBits(pChip->getNumberOfBits("DAC_FC_LIN"))) new_fc_value = RD53Shared::setBits(pChip->getNumberOfBits("DAC_FC_LIN"));
+            fReadoutChipInterface->WriteChipReg(pChip, "DAC_FC_LIN", new_fc_value);
+        }
 
         uint16_t comp_ta_value     = fReadoutChipInterface->ReadChipReg(pChip, "DAC_COMP_TA_LIN");
         uint16_t new_comp_ta_value = std::round(comp_ta_value * static_cast<float>(set_value) / comp_value);
         if(new_comp_ta_value > RD53Shared::setBits(pChip->getNumberOfBits("DAC_COMP_TA_LIN"))) new_comp_ta_value = RD53Shared::setBits(pChip->getNumberOfBits("DAC_COMP_TA_LIN"));
         fReadoutChipInterface->WriteChipReg(pChip, "DAC_COMP_TA_LIN", new_comp_ta_value);
-
-        LOG(INFO) << GREEN << "Suggested rescaled register value " << BOLDYELLOW << std::setw(17) << std::left << "DAC_FC_LIN" << RESET << GREEN << " = " << BOLDYELLOW << std::setw(4) << std::right
-                  << new_fc_value << RESET << GREEN << " Previously was " << fc_value << RESET;
-        LOG(INFO) << GREEN << "Suggested rescaled register value " << BOLDYELLOW << std::setw(17) << std::left << "DAC_COMP_TA_LIN" << RESET << GREEN << " = " << BOLDYELLOW << std::setw(4)
-                  << std::right << new_comp_ta_value << RESET << GREEN << " Previously was " << comp_ta_value << RESET;
     }
-
-    return result;
 }

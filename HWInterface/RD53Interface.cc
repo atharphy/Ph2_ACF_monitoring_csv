@@ -331,6 +331,8 @@ void RD53Interface::ReadPixelMaskFromFW(Chip* pChip, const int lastRow, const in
     }
 }
 
+void RD53Interface::CopyRegFromDefault(Chip* pChip, const std::string& regName) { pChip->setReg(regName, pChip->getRegItem(regName).fDefValue); }
+
 // ###########################
 // # Dedicated to monitoring #
 // ###########################

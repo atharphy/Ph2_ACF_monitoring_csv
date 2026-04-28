@@ -882,8 +882,6 @@ void SystemController::ConfigureHw(bool pReInitialize)
     LOG(INFO) << BOLDMAGENTA << "@@@ Configuring HW parsed from XML file @@@" << RESET;
     for(const auto cBoard: *fDetectorContainer)
     {
-        std::cout << std::endl;
-
         cBoard->printBoardType();
         if(cBoard->getToConfigure()) fBeBoardInterface->ConfigureBoard(cBoard);
     }
