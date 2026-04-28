@@ -1756,6 +1756,18 @@ void FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfi
 
     theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child(MONITORINGSLEEPTIME_NODE_NAME).first_child().value());
 
+    if(theMonitorNode.child("MQTTBrokerHost"))
+    {
+        theDetectorMonitorConfig.fMQTTBrokerHost = theMonitorNode.child("MQTTBrokerHost").first_child().value();
+        theDetectorMonitorConfig.fMQTTBrokerPort = atoi(theMonitorNode.child("MQTTBrokerPort").first_child().value());
+        theDetectorMonitorConfig.fMQTTTopic      = theMonitorNode.child("MQTTTopic").first_child().value();
+        std::string mqttEnableString             = theMonitorNode.child("MQTTEnabled").first_child().value();
+        if(mqttEnableString == "1")
+            theDetectorMonitorConfig.fMQTTEnabled = true;
+        else if(mqttEnableString == "0")
+            theDetectorMonitorConfig.fMQTTEnabled = false;
+    }
+
     for(pugi::xml_node monitorElement = theMonitorNode.child(MONITORINGELEMENT_NODE_NAME); monitorElement; monitorElement = monitorElement.next_sibling())
     {
         const std::string chipName     = monitorElement.attribute(MONITORINGELEMENT_DEVICE_ATTRIBUTE_NAME).value();

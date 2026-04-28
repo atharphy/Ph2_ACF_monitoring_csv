@@ -4,12 +4,20 @@
 #include "Utils/ContainerFactory.h"
 #include "Utils/NTChandler.h"
 #include "Utils/ValueAndTime.h"
+#include <chrono>
+#include <map>
 
 #ifdef __USE_ROOT__
 #include "MonitorDQM/MonitorDQMPlotOT.h"
 #endif
 
-OTMonitor::OTMonitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig) {}
+OTMonitor::OTMonitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig) : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
+{
+    fMQTTBrokerHost = fDetectorMonitorConfig.fMQTTBrokerHost;
+    fMQTTBrokerPort = fDetectorMonitorConfig.fMQTTBrokerPort;
+    fMQTTTopic      = fDetectorMonitorConfig.fMQTTTopic;
+    fMQTTEnabled    = fDetectorMonitorConfig.fMQTTEnabled;
+}
 
 void OTMonitor::runMonitor()
 {
@@ -68,17 +76,47 @@ DetectorDataContainer OTMonitor::getReadoutChipMonitorValues(const std::string& 
     DetectorDataContainer theReadoutChipMonitorValueContainer;
     ContainerFactory::copyAndInitChip<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theReadoutChipMonitorValueContainer);
 
+    std::string chipType = "";
+    if(theFrontEndType == FrontEndType::SSA2) { chipType = "SSA"; }
+    else if(theFrontEndType == FrontEndType::MPA2) { chipType = "MPA"; }
+
     for(const auto& board: *fTheSystemController->fDetectorContainer)
     {
         for(const auto& opticalGroup: *board)
         {
+            std::string json_payload = "{";
+            json_payload += "\"counter\":" + std::to_string(fMQTTcounter) + ",";
+            json_payload += "\"timestamp\":" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
+            // add beboard
+            json_payload += ",\"BeBoardId\":" + std::to_string(board->getId());
+            // add optical group
+            auto theLpGBT = static_cast<Ph2_HwDescription::lpGBT*>(opticalGroup->flpGBT);
+            if(theLpGBT == nullptr) continue;
+            // Read LpGBT fuse ID (cached to avoid repeated register reads)
+            uint32_t ogId = opticalGroup->getId();
+            if(fFuseIdCache.find(ogId) == fFuseIdCache.end()) { fFuseIdCache[ogId] = fTheSystemController->flpGBTInterface->ReadChipFuseID(theLpGBT); }
+            json_payload += ",\"LpGBT_OG" + std::to_string(ogId) + "_fuseId\":" + std::to_string(fFuseIdCache[ogId]);
+
             for(const auto& hybrid: *opticalGroup)
             {
                 for(const auto& chip: *hybrid)
                 {
-                    if(chip->getFrontEndType() == theFrontEndType) { readChipMonitorValue(monitorValueName, chip, theReadoutChipMonitorValueContainer); }
+                    if(chip->getFrontEndType() == theFrontEndType)
+                    {
+                        // get chip temperature and time
+                        ValueAndTime<float> theRegisterAndTime = readChipMonitorValue(monitorValueName, chip, theReadoutChipMonitorValueContainer);
+
+                        std::string hybridId = std::to_string(chip->getHybridId());
+                        std::string chipId   = std::to_string(chip->getId());
+                        json_payload += ",\"" + chipType + "_H" + hybridId + "_C" + chipId + "_temp\":" + std::to_string(theRegisterAndTime.fValue);
+                    }
                 }
             }
+
+            json_payload += "}";
+            // publish JSON to MQTT
+            publishToMQTT(json_payload);
+            LOG(INFO) << BOLDYELLOW << __PRETTY_FUNCTION__ << " Published MQTT payload: " << json_payload << RESET;
         }
     }
     return theReadoutChipMonitorValueContainer;
@@ -113,4 +151,31 @@ float OTMonitor::readLpGBTmonitorValue(Ph2_HwDescription::OpticalGroup* theOptic
     else if(monitorValueName == "2V55") { monitorValue = theLpGBRInterface->AdcGetVin(theLpGBT, "ADC7", "VREF/2", 0) * (161. / 51.); }
 
     return monitorValue;
+}
+
+void OTMonitor::publishToMQTT(const std::string& payload)
+{
+    if(!fMQTTEnabled) { return; }
+
+    // Escape double quotes in payload for shell command
+    std::string escaped_payload = payload;
+    size_t      pos             = 0;
+    while((pos = escaped_payload.find("\"", pos)) != std::string::npos)
+    {
+        escaped_payload.replace(pos, 1, "\\\"");
+        pos += 2;
+    }
+
+    // Construct mosquitto_pub command
+    std::string command = "mosquitto_pub -h " + fMQTTBrokerHost + " -p " + std::to_string(fMQTTBrokerPort) + " -t \"" + fMQTTTopic + "\"" + " -m \"" + escaped_payload + "\"" +
+                          " > /dev/null 2>&1 &"; // Run in background, suppress output
+    // Execute the command
+    int result = system(command.c_str());
+    if(result != 0)
+    {
+        // Only log errors occasionally to avoid spam
+        static int error_count = 0;
+        if(error_count++ % 100 == 0) { LOG(DEBUG) << BOLDYELLOW << __PRETTY_FUNCTION__ << " MQTT publish failed (error count: " << error_count << ")" << RESET; }
+    }
+    fMQTTcounter++;
 }

@@ -27,6 +27,10 @@ struct DetectorMonitorConfig
     std::string fMonitoringType{MONITORING_NODE_TYPE_ATTRIBUTE_NONE_VALUE};
     bool        fEnable{false};
     bool        fSilentRunning{false};
+    std::string fMQTTBrokerHost{"cmslabserver"};
+    int         fMQTTBrokerPort{1883};
+    std::string fMQTTTopic{"/ph2acf/data"};
+    bool        fMQTTEnabled{true};
 
     void addElementToMonitor(const std::string& chipName, const std::string& registerName, const bool enable)
     {
