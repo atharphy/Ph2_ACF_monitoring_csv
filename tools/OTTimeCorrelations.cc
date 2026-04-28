@@ -276,7 +276,7 @@ void OTTimeCorrelations::Running()
                 }
             } // end of data taking while for this setting
         } // end of board loop
-
+        fDQMHistogramOTTimeCorrelation.process();
         // Normalize occupancy
         for(auto board: theOccupancyContainer)
         {
@@ -329,7 +329,7 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
         {
             LOG(INFO) << BOLDYELLOW << "Version: triggers in burst with variable delay" << RESET;
             // compute delay between pullses based on avg freq
-            auto delay = (40000 * theNTriggerPerBurst.at(iteration)) / theAverageFrequency.at(iteration) - theNTriggerPerBurst.at(iteration) * (theDelayBetweenTriggers.at(iteration) + 1); // not sure
+            auto delay = (40000 * theNTriggerPerBurst.at(iteration)) / theAverageFrequency.at(iteration) - theNTriggerPerBurst.at(iteration) * (theDelayBetweenTriggers.at(iteration) + 1);
             LOG(INFO) << "Delay before next pulse: " << delay << " AverageFrequency in BX: " << 40000 / theAverageFrequency.at(iteration);
             boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.delay_before_next_pulse", delay});
             boardRegisterVector.push_back({"fc7_daq_cnfg.fast_command_block.test_pulse.consecutive_delay_between_trigger", theDelayBetweenTriggers.at(iteration)});
@@ -379,6 +379,7 @@ void OTTimeCorrelations::setIterationSettings(size_t iteration)
 
 #ifdef __USE_ROOT__
     OTTimeCorrelationConfig::setTriggerPerBurst(theNTriggerPerBurst.at(iteration));
+    OTTimeCorrelationConfig::setAvgFrequency(theAverageFrequency.at(iteration));
 #endif
 
     LOG(INFO) << "Configuring OTTimeCorrelations with Nevents: " << fNevents << "  MPASigma: " << theMPASigma.at(iteration) << "  SSASigma: " << theSSASigma.at(iteration)

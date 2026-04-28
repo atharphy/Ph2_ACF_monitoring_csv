@@ -57,6 +57,7 @@ class OTTimeCorrelationConfig
     inline static size_t   memoryDepth      = 8;
     inline static int      triggerPerBurst  = 16;
     inline static uint32_t triggerDelay     = 0;
+    inline static uint32_t avgFrequency     = 400;
     inline static size_t   minHitsThreshold = 50;
     inline static int      currentBurstSize = 1;
     inline static bool     isNewBurst       = false;
@@ -118,6 +119,7 @@ class OTTimeCorrelationConfig
         memoryDepth      = 8;
         triggerPerBurst  = 16;
         triggerDelay     = 0;
+        avgFrequency     = 400;
         minHitsThreshold = 50;
         currentBurstSize = 1;
         isNewBurst       = false;
@@ -128,6 +130,7 @@ class OTTimeCorrelationConfig
     static size_t&   getN() { return memoryDepth; }
     static int&      getTriggerPerBurst() { return triggerPerBurst; }
     static uint32_t& getTriggerDelay() { return triggerDelay; }
+    static uint32_t& getAvgFrequency() { return avgFrequency; }
     static size_t&   getMinHits() { return minHitsThreshold; }
 
     static int nSlices() { return (memoryDepth >= 9) ? 9 : (int)memoryDepth; }
@@ -139,6 +142,7 @@ class OTTimeCorrelationConfig
     }
     static void setTriggerPerBurst(int n) { triggerPerBurst = n; }
     static void setTriggerDelay(int trgDel) { triggerDelay = trgDel; }
+    static void setAvgFrequency(int freq) { avgFrequency = freq; }
     static void setMinHits(size_t mh) { minHitsThreshold = mh; }
 };
 
@@ -448,6 +452,12 @@ class DQMHistogramOTTimeCorrelation : public DQMHistogramBase
     }
 
   private:
+    template <typename HistType>
+    void updateHistTitles(std::map<std::string, DetectorDataContainer>& histMap, uint16_t boardId, uint16_t opticalGroupId);
+
+    template <typename HistType>
+    void updateSliceHistTitles(std::map<std::string, std::vector<DetectorDataContainer>>& sliceMap, uint16_t boardId, uint16_t opticalGroupId);
+
     DetectorContainer*      fDetectorContainer;
     TFile*                  fOutputFile;
     Ph2_Parser::SettingsMap fSettingsMap;
