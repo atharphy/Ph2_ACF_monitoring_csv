@@ -93,7 +93,7 @@ void PowerTrimming::localConfigure(const std::string& histoFileName, int current
 
 void PowerTrimming::run()
 {
-    const uint16_t GDACVal = 900; // Arbitrarely high threhsold @CONST@
+    const uint16_t HighGDACVal = 900; // Arbitrarely high threhsold @CONST@
 
     for(const auto cBoard: *fDetectorContainer)
         for(const auto cOpticalGroup: *cBoard)
@@ -115,9 +115,9 @@ void PowerTrimming::run()
                     // #######################################################
                     // # Set default global DAC values required for the scan #
                     // #######################################################
-                    fReadoutChipInterface->WriteChipReg(cChip, "DAC_GDAC_L_LIN", GDACVal);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DAC_GDAC_M_LIN", GDACVal);
-                    fReadoutChipInterface->WriteChipReg(cChip, "DAC_GDAC_R_LIN", GDACVal);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DAC_GDAC_L_LIN", HighGDACVal);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DAC_GDAC_M_LIN", HighGDACVal);
+                    fReadoutChipInterface->WriteChipReg(cChip, "DAC_GDAC_R_LIN", HighGDACVal);
 
                     std::vector<const char*> preamp_registers = static_cast<RD53*>(cChip)->getFEtype()->preampRegs;
                     std::vector<const char*> comp_registers   = {"DAC_COMP_LIN"};
@@ -194,6 +194,12 @@ void PowerTrimming::run()
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
                 {
+                    if(COMP_CURRENT_mA == 0)
+                    {
+                        static_cast<RD53Interface*>(fReadoutChipInterface)->CopyRegFromDefault(cChip, "DAC_COMP_LIN");
+                        static_cast<RD53Interface*>(fReadoutChipInterface)->CopyRegFromDefault(cChip, "DAC_COMP_TA_LIN");
+                    }
+
                     theComparatorCurrentContainer.getObject(cBoard->getId())
                         ->getObject(cOpticalGroup->getId())
                         ->getObject(cHybrid->getId())
@@ -214,8 +220,12 @@ void PowerTrimming::run()
         for(const auto cOpticalGroup: *cBoard)
             for(const auto cHybrid: *cOpticalGroup)
                 for(const auto cChip: *cHybrid)
+                {
+                    if(LDAC_CURRENT_mA == 0) static_cast<RD53Interface*>(fReadoutChipInterface)->CopyRegFromDefault(cChip, "DAC_LDAC_LIN");
+
                     theLDACCurrentContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                         static_cast<RD53*>(cChip)->getReg("DAC_LDAC_LIN");
+                }
 
     CalibBase::chipErrorReport();
 }
@@ -435,11 +445,15 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
     // ###################################################################################################
     if(std::strcmp(regNames.front(), "DAC_COMP_LIN") == 0)
     {
-        uint16_t comp_value   = COMPdefaultVal;
-        uint16_t fc_value     = fReadoutChipInterface->ReadChipReg(pChip, "DAC_FC_LIN");
-        uint16_t new_fc_value = std::round(fc_value * static_cast<float>(set_value) / comp_value);
-        if(new_fc_value > RD53Shared::setBits(pChip->getNumberOfBits("DAC_FC_LIN"))) new_fc_value = RD53Shared::setBits(pChip->getNumberOfBits("DAC_FC_LIN"));
-        fReadoutChipInterface->WriteChipReg(pChip, "DAC_FC_LIN", new_fc_value);
+        uint16_t comp_value = COMPdefaultVal;
+
+        if(PREAMP_CURRENT_mA != 0)
+        {
+            uint16_t fc_value     = fReadoutChipInterface->ReadChipReg(pChip, "DAC_FC_LIN");
+            uint16_t new_fc_value = std::round(fc_value * static_cast<float>(set_value) / comp_value);
+            if(new_fc_value > RD53Shared::setBits(pChip->getNumberOfBits("DAC_FC_LIN"))) new_fc_value = RD53Shared::setBits(pChip->getNumberOfBits("DAC_FC_LIN"));
+            fReadoutChipInterface->WriteChipReg(pChip, "DAC_FC_LIN", new_fc_value);
+        }
 
         uint16_t comp_ta_value     = fReadoutChipInterface->ReadChipReg(pChip, "DAC_COMP_TA_LIN");
         uint16_t new_comp_ta_value = std::round(comp_ta_value * static_cast<float>(set_value) / comp_value);
