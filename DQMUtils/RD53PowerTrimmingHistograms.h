@@ -17,6 +17,11 @@
 
 #include <TH1F.h>
 
+// #############
+// # CONSTANTS #
+// #############
+#define REL_ERROR 0.01 // Relative uncertainty computed by looking at the ground drift (GNDA_REF - GND)
+
 struct PowerTrimmingData
 {
     double   timestamp;

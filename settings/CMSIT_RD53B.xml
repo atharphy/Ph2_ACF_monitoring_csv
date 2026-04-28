@@ -238,7 +238,8 @@
          StopIfCommFails       = 0:  don't exit if some AURORA lanes are down StopIfCommFails       = 1: exit if some AURORA lanes are down
 
          DoNSteps        (threqu):           if != 0 then run threqu with step of 1 for only DoNSteps times
-         TargetCharge    (gainopt):          average charge (electrons) corresponding to ToT point = max value - 1
+         TargetCharge    (gainopt):          average injected charge in electrons (e.g. 6000)
+         TargetToT       (gainopt):          average ToT corresponding to TargetCharge (5.3 for slow discharge and 2 for fast discharge)
          TargetOcc       (thrmin):           average pixel occupancy
          TargetThr       (thradj):           target threshold in electrons
          MaxMaskedPixels (thrmin):           percentage of masked pixels

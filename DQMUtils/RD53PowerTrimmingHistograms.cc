@@ -297,15 +297,25 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                         const uint16_t binX = ++step_counter;
 
                         hChipCurr->SetBinContent(binX, data.ChipCurrent);
+                        hChipCurr->SetBinError(binX, data.ChipCurrent * REL_ERROR);
                         hIAna->SetBinContent(binX, data.ANA_IN_CURR);
+                        hIAna->SetBinError(binX, data.ANA_IN_CURR * REL_ERROR);
                         hIDig->SetBinContent(binX, data.DIG_IN_CURR);
+                        hIDig->SetBinError(binX, data.DIG_IN_CURR * REL_ERROR);
                         hAnaShunt->SetBinContent(binX, data.ANA_SHUNT_CURR);
+                        hAnaShunt->SetBinError(binX, data.ANA_SHUNT_CURR * REL_ERROR);
                         hDigShunt->SetBinContent(binX, data.DIG_SHUNT_CURR);
+                        hDigShunt->SetBinError(binX, data.DIG_SHUNT_CURR * REL_ERROR);
                         hVinAna->SetBinContent(binX, data.VINA);
+                        hVinAna->SetBinError(binX, data.VINA * REL_ERROR);
                         hVDAna->SetBinContent(binX, data.VDDA);
+                        hVDAna->SetBinError(binX, data.VDDA * REL_ERROR);
                         hVinDig->SetBinContent(binX, data.VIND);
+                        hVinDig->SetBinError(binX, data.VIND * REL_ERROR);
                         hVDDig->SetBinContent(binX, data.VDDD);
+                        hVDDig->SetBinError(binX, data.VDDD * REL_ERROR);
                         hIrf->SetBinContent(binX, data.Iref);
+                        hIrf->SetBinError(binX, data.Iref * REL_ERROR);
 
                         // ##########################################
                         // # Convert seconds from epoch to HH:MM:SS #
@@ -355,14 +365,14 @@ void PowerTrimmingHistograms::process()
     for(auto& CompCurr: ComparatorsCurrent) drawChip<TH1F>(*CompCurr);
     drawChip<TH1F>(LDACCurrent);
 
-    drawChip<TH1F>(theChipCurrVsTimeContainer, "P");
-    drawChip<TH1F>(theAnaInVsTimeContainer, "P");
-    drawChip<TH1F>(theDigInVsTimeContainer, "P");
-    drawChip<TH1F>(theAnaShuntVsTimeContainer, "P");
-    drawChip<TH1F>(theDigShuntVsTimeContainer, "P");
-    drawChip<TH1F>(theVINAVsTimeContainer, "P");
-    drawChip<TH1F>(theVDDAVsTimeContainer, "P");
-    drawChip<TH1F>(theVINDVsTimeContainer, "P");
-    drawChip<TH1F>(theVDDDVsTimeContainer, "P");
-    drawChip<TH1F>(theIrefVsTimeContainer, "P");
+    drawChip<TH1F>(theChipCurrVsTimeContainer, "PE1");
+    drawChip<TH1F>(theAnaInVsTimeContainer, "PE1");
+    drawChip<TH1F>(theDigInVsTimeContainer, "PE1");
+    drawChip<TH1F>(theAnaShuntVsTimeContainer, "PE1");
+    drawChip<TH1F>(theDigShuntVsTimeContainer, "PE1");
+    drawChip<TH1F>(theVINAVsTimeContainer, "PE1");
+    drawChip<TH1F>(theVDDAVsTimeContainer, "PE1");
+    drawChip<TH1F>(theVINDVsTimeContainer, "PE1");
+    drawChip<TH1F>(theVDDDVsTimeContainer, "PE1");
+    drawChip<TH1F>(theIrefVsTimeContainer, "PE1");
 }
