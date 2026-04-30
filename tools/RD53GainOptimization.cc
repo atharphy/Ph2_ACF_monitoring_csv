@@ -191,6 +191,25 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
     ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp);
 
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    // ##########################################
+                    // # Find VCAL_HIGH to get target threshold #
+                    // ##########################################
+                    uint16_t vcal_med_setting  = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
+                    uint16_t vcal_high_setting = round(static_cast<RD53*>(cChip)->Charge2VCal(targetCharge)) + vcal_med_setting;
+                    chargeContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = vcal_high_setting;
+
+                    LOG(INFO) << GREEN << "The target charge for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                              << +cChip->getId() << RESET << GREEN "] is " << std::setprecision(1) << BOLDYELLOW << targetCharge << RESET << GREEN << " electrons" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << BOLDBLUE << " = " << BOLDYELLOW << vcal_high_setting << BOLDBLUE << " for "
+                              << BOLDYELLOW << "VCAL_MED" << BOLDBLUE << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
+                }
+    CalibBase::downloadNewDACvalues({&chargeContainer}, {"VCAL_HIGH"});
+
     for(auto i = 0u; i <= numberOfBits; i++)
     {
         // ###########################
@@ -200,20 +219,6 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
-                    {
-                        // ##########################################
-                        // # Find VCAL_HIGH to get target threshold #
-                        // ##########################################
-                        uint16_t vcal_med_setting  = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
-                        uint16_t vcal_high_setting = round(static_cast<RD53*>(cChip)->Charge2VCal(targetCharge)) + vcal_med_setting;
-                        chargeContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
-                            vcal_high_setting;
-
-                        LOG(INFO) << GREEN << "The target charge for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId()
-                                  << "/" << +cChip->getId() << RESET << GREEN "] is " << std::setprecision(1) << BOLDYELLOW << targetCharge << RESET << GREEN << " electrons" << RESET;
-                        LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << BOLDBLUE << " = " << BOLDYELLOW << vcal_high_setting << BOLDBLUE << " for "
-                                  << BOLDYELLOW << "VCAL_MED" << BOLDBLUE << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
-
                         // ########################
                         // # Compute middle value #
                         // ########################
@@ -221,8 +226,6 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
                             (minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
                              maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) /
                             2;
-                    }
-        CalibBase::downloadNewDACvalues({&chargeContainer}, {"VCAL_HIGH"});
         CalibBase::downloadNewDACvalues({&midDACcontainer}, {regName.c_str()});
 
         // ################

@@ -524,7 +524,7 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
     for(auto cOpticalGroup: *pBoard)
         for(auto cHybrid: *cOpticalGroup)
         {
-            LOG(INFO) << GREEN << "Configuring chips of hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+            LOG(INFO) << GREEN << "Configuring chips for [opticalGroup/hybrid = " << BOLDYELLOW << cOpticalGroup->getId() << "/" << cHybrid->getId() << RESET << GREEN << "]" << RESET;
             bool   eFuseCodeCheck = true;
             double eFuseCode;
 
