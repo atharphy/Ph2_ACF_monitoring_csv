@@ -12,8 +12,8 @@ class Monitor2S : public OTMonitor
     void runMonitor() override;
 
   private:
-    void runMonitorCBC(const std::string& monitorValueName);
-    void readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer) override;
+    void                runMonitorCBC(const std::string& monitorValueName);
+    ValueAndTime<float> readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer) override;
 };
 
 #endif

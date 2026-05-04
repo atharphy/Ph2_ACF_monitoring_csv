@@ -1,8 +1,8 @@
 /*!
  * \file DQMHistogramOTTimeCorrelation.h
  * \brief DQM class for OTTimeCorrelations
- * \author [Your Name]
- * \date [Date]
+ * \author Carmen Selicato
+ * \date 01/02/26
  */
 
 #ifndef DQMOTTimeCorrelation_h
@@ -57,6 +57,7 @@ class OTTimeCorrelationConfig
     inline static size_t   memoryDepth      = 8;
     inline static int      triggerPerBurst  = 16;
     inline static uint32_t triggerDelay     = 0;
+    inline static uint32_t avgFrequency     = 400;
     inline static size_t   minHitsThreshold = 50;
     inline static int      currentBurstSize = 1;
     inline static bool     isNewBurst       = false;
@@ -118,6 +119,7 @@ class OTTimeCorrelationConfig
         memoryDepth      = 8;
         triggerPerBurst  = 16;
         triggerDelay     = 0;
+        avgFrequency     = 400;
         minHitsThreshold = 50;
         currentBurstSize = 1;
         isNewBurst       = false;
@@ -128,6 +130,7 @@ class OTTimeCorrelationConfig
     static size_t&   getN() { return memoryDepth; }
     static int&      getTriggerPerBurst() { return triggerPerBurst; }
     static uint32_t& getTriggerDelay() { return triggerDelay; }
+    static uint32_t& getAvgFrequency() { return avgFrequency; }
     static size_t&   getMinHits() { return minHitsThreshold; }
 
     static int nSlices() { return (memoryDepth >= 9) ? 9 : (int)memoryDepth; }
@@ -139,6 +142,7 @@ class OTTimeCorrelationConfig
     }
     static void setTriggerPerBurst(int n) { triggerPerBurst = n; }
     static void setTriggerDelay(int trgDel) { triggerDelay = trgDel; }
+    static void setAvgFrequency(int freq) { avgFrequency = freq; }
     static void setMinHits(size_t mh) { minHitsThreshold = mh; }
 };
 
@@ -421,7 +425,8 @@ class DQMHistogramOTTimeCorrelation : public DQMHistogramBase
     DQMHistogramOTTimeCorrelation();
     ~DQMHistogramOTTimeCorrelation();
     void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap) override;
-    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap, std::string suffix, float sigma);
+    void book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap, std::string suffix, float stripSigma, float pixelSigma);
+    void bookOccupancyPlots(TFile* theOutputFile, DetectorContainer& theDetectorStructure, std::string suffix, uint32_t events);
     void process() override;
     bool fill(std::string& inputStream) override;
     void reset() override;
@@ -434,6 +439,8 @@ class DQMHistogramOTTimeCorrelation : public DQMHistogramBase
     void fill2DhistSlices(const OTTimeCorrelationStripData& sData, const OTTimeCorrelationPixelData& pData, uint32_t trgBurst, uint32_t trgDel, std::string suffix);
 
     void fillModuleHitPlots(DetectorDataContainer& theHitData, bool isStrip, std::string suffix);
+    void fillOccupancy(const DetectorDataContainer& theOccupancyContainer, std::string suffix);
+
     void reportTimingStats();
 
     template <size_t T2>
@@ -445,6 +452,12 @@ class DQMHistogramOTTimeCorrelation : public DQMHistogramBase
     }
 
   private:
+    template <typename HistType>
+    void updateHistTitles(std::map<std::string, DetectorDataContainer>& histMap, uint16_t boardId, uint16_t opticalGroupId);
+
+    template <typename HistType>
+    void updateSliceHistTitles(std::map<std::string, std::vector<DetectorDataContainer>>& sliceMap, uint16_t boardId, uint16_t opticalGroupId);
+
     DetectorContainer*      fDetectorContainer;
     TFile*                  fOutputFile;
     Ph2_Parser::SettingsMap fSettingsMap;
@@ -472,6 +485,9 @@ class DQMHistogramOTTimeCorrelation : public DQMHistogramBase
     std::map<std::string, DetectorDataContainer>              f3DTSBWCorrMPAHistogramsMap;       // time and space corr histograms
     std::map<std::string, std::vector<DetectorDataContainer>> fTSCorrSliceFWMPAMap;              // 2D slice histograms for each z-bin
     std::map<std::string, std::vector<DetectorDataContainer>> fTSCorrSliceBWMPAMap;              // backward 2D slice histograms for each z-bin
+
+    // container for chip occupancy plots
+    std::map<std::string, DetectorDataContainer> fOccupancyHistogramContainer;
 
     // error histograms
     std::map<std::string, DetectorDataContainer> fMPAErrorHistogramsMap; // MPA error histograms

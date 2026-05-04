@@ -61,7 +61,7 @@ void PSMonitor::runMonitorMPA(const std::string& monitorValueName)
 #endif
 }
 
-void PSMonitor::readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer)
+ValueAndTime<float> PSMonitor::readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer)
 {
     auto  thePSInterface = static_cast<PSInterface*>(fTheSystemController->fReadoutChipInterface);
     float monitorValue   = 0;
@@ -70,4 +70,6 @@ void PSMonitor::readChipMonitorValue(const std::string& monitorValueName, Ph2_Hw
 
     ValueAndTime<float> theRegisterAndTime(monitorValue, getTimeStampString());
     theDataContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<ValueAndTime<float>>() = theRegisterAndTime;
+
+    return theRegisterAndTime;
 }

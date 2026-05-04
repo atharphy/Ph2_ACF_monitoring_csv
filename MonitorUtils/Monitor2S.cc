@@ -43,11 +43,12 @@ void Monitor2S::runMonitorCBC(const std::string& monitorValueName)
 #endif
 }
 
-void Monitor2S::readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer)
+ValueAndTime<float> Monitor2S::readChipMonitorValue(const std::string& monitorValueName, Ph2_HwDescription::ReadoutChip* theChip, DetectorDataContainer& theDataContainer)
 {
     uint16_t registerValue = fTheSystemController->fReadoutChipInterface->ReadChipReg(theChip, monitorValueName); // just to read something
     LOG(DEBUG) << BOLDMAGENTA << "board " << theChip->getBeBoardId() << "opticalGroup " << theChip->getOpticalGroupId() << "hybrid " << theChip->getHybridId() << " - chip " << theChip->getId() << " "
                << monitorValueName << " = " << registerValue << RESET;
     ValueAndTime<float> theRegisterAndTime(registerValue, getTimeStampString());
     theDataContainer.getChip(theChip->getBeBoardId(), theChip->getOpticalGroupId(), theChip->getHybridId(), theChip->getId())->getSummary<ValueAndTime<float>>() = theRegisterAndTime;
+    return theRegisterAndTime;
 }
