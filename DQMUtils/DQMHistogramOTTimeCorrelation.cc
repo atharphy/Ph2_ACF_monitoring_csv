@@ -1,11 +1,15 @@
 /*!
  * \file DQMOTTimeCorrelation.cc
  * \brief DQM class for OTTimeCorrelations
- * \author [Your Name]
- * \date [Date]
+ * \author Carmen Selicato
+ * \date 01/02/26
  */
 
 #include "DQMUtils/DQMHistogramOTTimeCorrelation.h"
+#include "HWDescription/ReadoutChip.h"
+#include "Utils/Occupancy.h"
+
+using namespace Ph2_HwDescription;
 
 DQMHistogramOTTimeCorrelation::DQMHistogramOTTimeCorrelation() {}
 
@@ -13,10 +17,15 @@ DQMHistogramOTTimeCorrelation::~DQMHistogramOTTimeCorrelation() {}
 
 void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap)
 {
-    this->book(theOutputFile, theDetectorStructure, pSettingsMap, "", 3.);
+    this->book(theOutputFile, theDetectorStructure, pSettingsMap, "", 3., 3.);
 }
 
-void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer& theDetectorStructure, const Ph2_Parser::SettingsMap& pSettingsMap, std::string suffix, float sigma)
+void DQMHistogramOTTimeCorrelation::book(TFile*                         theOutputFile,
+                                         DetectorContainer&             theDetectorStructure,
+                                         const Ph2_Parser::SettingsMap& pSettingsMap,
+                                         std::string                    suffix,
+                                         float                          stripSigma,
+                                         float                          pixelSigma)
 {
     fDetectorContainer = &theDetectorStructure;
     fOutputFile        = theOutputFile;
@@ -25,20 +34,20 @@ void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer
     LOG(INFO) << "Booking DQMHistogramOTTimeCorrelation histograms with suffix: " << suffix;
 
     // BOOKING SSA HISTOGRAMS
-    HistContainer<TH2F> hSameEvSSA(("SameEvHistSSA" + suffix).c_str(), "SSA Same event correlation", 1920, 0, 1920, 1920, 0, 1920);
+    HistContainer<TH2F> hSameEvSSA(("SameEvHistSSA" + suffix).c_str(), "SSA same event correlation; Strip; Strip", 1920, 0, 1920, 1920, 0, 1920);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fSameEvCorrSSAHistogramsMap[suffix], hSameEvSSA);
 
     auto                depth = OTTimeCorrelationConfig::getN();
-    HistContainer<TH2F> hStripFWTC_SSA(("StripTCFWHistSSA" + suffix).c_str(), "SSA FW same strip time correlation", 1920, 0, 1920, depth, 0, depth);
+    HistContainer<TH2F> hStripFWTC_SSA(("StripTCFWHistSSA" + suffix).c_str(), "SSA FW self time correlation; Strip; Events", 1920, 0, 1920, depth, 0, depth);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fSameStripFWTCorrSSAHistogramsMap[suffix], hStripFWTC_SSA);
 
-    HistContainer<TH2F> hStripBWTC_SSA(("StripTCBWHistSSA" + suffix).c_str(), "SSA BW same strip time correlation", 1920, 0, 1920, depth, 0, depth);
+    HistContainer<TH2F> hStripBWTC_SSA(("StripTCBWHistSSA" + suffix).c_str(), "SSA BW self time correlation; Strip; Events", 1920, 0, 1920, depth, 0, depth);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fSameStripBWTCorrSSAHistogramsMap[suffix], hStripBWTC_SSA);
 
-    HistContainer<TH2F> hMinHitsSSA(("MinHitsFWHistSSA" + suffix).c_str(), "SSA FW MinHits", depth, 0, depth, 10, 0, 4);
+    HistContainer<TH2F> hMinHitsSSA(("MinHitsFWHistSSA" + suffix).c_str(), "SSA FW MinHits; Events;log(# hits)", depth, 0, depth, 10, 0, 4);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fMinHitsFWSSAHistogramsMap[suffix], hMinHitsSSA);
 
-    HistContainer<TH2F> hMinHitsBWSSA(("MinHitsBWHistSSA" + suffix).c_str(), "SSA BW MinHits", depth, 0, depth, 10, 0, 4);
+    HistContainer<TH2F> hMinHitsBWSSA(("MinHitsBWHistSSA" + suffix).c_str(), "SSA BW MinHits; Events;log(# hits)", depth, 0, depth, 10, 0, 4);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fMinHitsBWSSAHistogramsMap[suffix], hMinHitsBWSSA);
 
     HistContainer<TH3F> h3DTSFWCorrSSA(("3DTSFWCorrSSA" + suffix).c_str(), "SSA FW time and space correlation", 1920, 0, 1920, 1920, 0, 1920, 9, 0, 9);
@@ -48,19 +57,19 @@ void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, f3DTSBWCorrSSAHistogramsMap[suffix], h3DTSBWCorrSSA);
 
     // BOOKING MPA HISTOGRAMS
-    HistContainer<TH2F> hSameEvMPA(("SameEvHistMPA" + suffix).c_str(), "MPA Same event correlation", 1920, 0, 1920, 1920, 0, 1920);
+    HistContainer<TH2F> hSameEvMPA(("SameEvHistMPA" + suffix).c_str(), "MPA same event correlation; Column; Column", 1920, 0, 1920, 1920, 0, 1920);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fSameEvCorrMPAHistogramsMap[suffix], hSameEvMPA);
 
-    HistContainer<TH2F> hPixelFWTC_MPA(("PixelTCFWHistMPA" + suffix).c_str(), "MPA FW same pixel time correlation", 1920, 0, 1920, depth, 0, depth);
+    HistContainer<TH2F> hPixelFWTC_MPA(("PixelTCFWHistMPA" + suffix).c_str(), "MPA FW self time correlation; Column; Events", 1920, 0, 1920, depth, 0, depth);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fSamePixelFWTCorrMPAHistogramsMap[suffix], hPixelFWTC_MPA);
 
-    HistContainer<TH2F> hPixelBWTC_MPA(("PixelTCBWHistMPA" + suffix).c_str(), "MPA BW same pixel time correlation", 1920, 0, 1920, depth, 0, depth);
+    HistContainer<TH2F> hPixelBWTC_MPA(("PixelTCBWHistMPA" + suffix).c_str(), "MPA BW self time correlation; Column; Events", 1920, 0, 1920, depth, 0, depth);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fSamePixelBWTCorrMPAHistogramsMap[suffix], hPixelBWTC_MPA);
 
-    HistContainer<TH2F> hMinHitsMPA(("MinHitsFWHistMPA" + suffix).c_str(), "MPA FW MinHits", depth, 0, depth, 10, 0, 4);
+    HistContainer<TH2F> hMinHitsMPA(("MinHitsFWHistMPA" + suffix).c_str(), "MPA FW MinHits; Events;log(# hits)", depth, 0, depth, 10, 0, 4);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fMinHitsFWMPAHistogramsMap[suffix], hMinHitsMPA);
 
-    HistContainer<TH2F> hMinHitsBWMPA(("MinHitsBWHistMPA" + suffix).c_str(), "MPA BW MinHits", depth, 0, depth, 10, 0, 4);
+    HistContainer<TH2F> hMinHitsBWMPA(("MinHitsBWHistMPA" + suffix).c_str(), "MPA BW MinHits; Events;log(# hits)", depth, 0, depth, 10, 0, 4);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fMinHitsBWMPAHistogramsMap[suffix], hMinHitsBWMPA);
 
     HistContainer<TH3F> h3DTSFWCorrMPA(("3DTSFWCorrMPA" + suffix).c_str(), "MPA FW time and space correlation", 1920, 0, 1920, 1920, 0, 1920, 9, 0, 9);
@@ -81,20 +90,20 @@ void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer
     {
         // SSA Slices
         TString             hnameSSA = Form("TSFWCorrSliceSSA_%d_%s", iz, suffix.c_str());
-        HistContainer<TH2F> hTSCorrSliceSSA(hnameSSA, Form("SSA FW correlation ev=%.2d", iz), 1920, 0, 1920, 1920, 0, 1920);
+        HistContainer<TH2F> hTSCorrSliceSSA(hnameSSA, Form("SSA FW correlation ev=%d; Reference strip; Strip", iz), 1920, 0, 1920, 1920, 0, 1920);
         RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fTSCorrSliceFWSSAMap[suffix][iz], hTSCorrSliceSSA);
 
         TString             hnameBWSSA = Form("TSBWCorrSliceSSA_%d_%s", iz, suffix.c_str());
-        HistContainer<TH2F> hTSCorrSliceBWSSA(hnameBWSSA, Form("SSA BW correlation ev=%.2d", iz), 1920, 0, 1920, 1920, 0, 1920);
+        HistContainer<TH2F> hTSCorrSliceBWSSA(hnameBWSSA, Form("SSA BW correlation ev=%d; Reference strip; Strip", iz), 1920, 0, 1920, 1920, 0, 1920);
         RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fTSCorrSliceBWSSAMap[suffix][iz], hTSCorrSliceBWSSA);
 
         // MPA Slices
         TString             hnameMPA = Form("TSFWCorrSliceMPA_%d_%s", iz, suffix.c_str());
-        HistContainer<TH2F> hTSCorrSliceMPA(hnameMPA, Form("MPA FW correlation ev=%.2d", iz), 1920, 0, 1920, 1920, 0, 1920);
+        HistContainer<TH2F> hTSCorrSliceMPA(hnameMPA, Form("MPA FW correlation ev=%d; Reference channel; Channel", iz), 1920, 0, 1920, 1920, 0, 1920);
         RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fTSCorrSliceFWMPAMap[suffix][iz], hTSCorrSliceMPA);
 
         TString             hnameBWMPA = Form("TSBWCorrSliceMPA_%d_%s", iz, suffix.c_str());
-        HistContainer<TH2F> hTSCorrSliceBWMPA(hnameBWMPA, Form("MPA BW correlation ev=%.2d", iz), 1920, 0, 1920, 1920, 0, 1920);
+        HistContainer<TH2F> hTSCorrSliceBWMPA(hnameBWMPA, Form("MPA BW correlation ev=%d; Reference channel; Channel", iz), 1920, 0, 1920, 1920, 0, 1920);
         RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fTSCorrSliceBWMPAMap[suffix][iz], hTSCorrSliceBWMPA);
     }
 
@@ -105,26 +114,22 @@ void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fSSAErrorHistogramsMap[suffix], hSSAError);
 
     // Common noise plots
-    auto getName = [sigma](std::string name)
+    auto getName = [](std::string name, float sigma)
     {
         if(sigma == 0) return Form("%s_OccupancyDriven", name.c_str());
         return Form("%s_SigmaNoise_%.2f", name.c_str(), sigma);
     };
 
-    auto getTitle = [sigma](std::string title)
+    auto getTitle = [](std::string title, float sigma)
     {
-        if(sigma == 0) return Form("%s - Occupancy Driven", title.c_str());
-        return Form("%s - Sigma Noise = %.2f", title.c_str(), sigma);
+        if(sigma == 0) return Form("%s - Occupancy Driven; Number of hits; Number of events", title.c_str());
+        return Form("%s - Sigma Noise = %.2f; Number of hits; Number of events", title.c_str(), sigma);
     };
 
-    HistContainer<TH1F> hStripModuleHits(getName("CommonNoiseHitsStrip"), getTitle("Common noise hits strip"), MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
-    hStripModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits");
-    hStripModuleHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
+    HistContainer<TH1F> hStripModuleHits(getName("CommonNoiseHitsStrip", stripSigma), getTitle("Common noise hits strip", stripSigma), MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fStripModuleHitHistograms[suffix], hStripModuleHits);
 
-    HistContainer<TH1F> hPixelModuleHits(getName("CommonNoiseHitsPixel"), getTitle("Common noise hits pixel"), MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
-    hPixelModuleHits.fTheHistogram->GetXaxis()->SetTitle("Number of hits");
-    hPixelModuleHits.fTheHistogram->GetYaxis()->SetTitle("Number of events");
+    HistContainer<TH1F> hPixelModuleHits(getName("CommonNoiseHitsPixel", pixelSigma), getTitle("Common noise hits pixel", pixelSigma), MAXCICCHANNELS + 2, -0.5, MAXCICCHANNELS + 1 + 0.5);
     RootContainerFactory::bookOpticalGroupHistograms(theOutputFile, theDetectorStructure, fPixelModuleHitHistograms[suffix], hPixelModuleHits);
 
     // Initialize all stopwatches
@@ -142,9 +147,105 @@ void DQMHistogramOTTimeCorrelation::book(TFile* theOutputFile, DetectorContainer
     fStopwatch_MPA_Slices.Reset();
 }
 
+void DQMHistogramOTTimeCorrelation::bookOccupancyPlots(TFile* theOutputFile, DetectorContainer& theDetectorStructure, std::string suffix, uint32_t events)
+{
+    auto        selectSSAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::SSA2); };
+    std::string selectSSAfunctionName = "SelectSSAfunction";
+
+    auto        selectMPAfunction     = [](const ChipContainer* theChip) { return (static_cast<const ReadoutChip*>(theChip)->getFrontEndType() == FrontEndType::MPA2); };
+    std::string selectMPAfunctionName = "SelectMPAfunction";
+
+    // SSA occupancy histograms
+    fDetectorContainer->addReadoutChipQueryFunction(selectSSAfunction, selectSSAfunctionName);
+    HistContainer<TH1F> theSSAoccupancyHistogram(Form("ChannelOccupancy%s", suffix.c_str()), Form("Channel Occupancy%s; Channel; Occupancy", suffix.c_str()), NSSACHANNELS, -0.5, NSSACHANNELS - 0.5);
+    theSSAoccupancyHistogram.fTheHistogram->SetMaximum(1.2);
+    theSSAoccupancyHistogram.fTheHistogram->SetMinimum(0.5 / events); // to allow go into log mode
+    theSSAoccupancyHistogram.fTheHistogram->SetStats(false);
+    RootContainerFactory::bookChipHistograms<HistContainer<TH1F>>(theOutputFile, theDetectorStructure, fOccupancyHistogramContainer[suffix], theSSAoccupancyHistogram);
+    fDetectorContainer->removeReadoutChipQueryFunction(selectSSAfunctionName);
+
+    fDetectorContainer->addReadoutChipQueryFunction(selectMPAfunction, selectMPAfunctionName);
+    HistContainer<TH2F> theMPAoccupancyHistogram(
+        Form("ChannelOccupancy%s", suffix.c_str()), Form("Channel Occupancy%s; Column; Row", suffix.c_str()), NSSACHANNELS, -0.5, NSSACHANNELS - 0.5, NMPAROWS, -0.5, NMPAROWS - 0.5);
+    theMPAoccupancyHistogram.fTheHistogram->SetMaximum(1.);
+    theMPAoccupancyHistogram.fTheHistogram->SetMinimum(0.5 / events); // to allow go into log mode
+    theMPAoccupancyHistogram.fTheHistogram->SetStats(false);
+    RootContainerFactory::bookChipHistograms<HistContainer<TH2F>>(theOutputFile, *fDetectorContainer, fOccupancyHistogramContainer[suffix], theMPAoccupancyHistogram);
+    fDetectorContainer->removeReadoutChipQueryFunction(selectMPAfunctionName);
+}
+
+static std::string appendBoardSuffix(const std::string& currentTitle, int boardId, int opticalGroupId, uint32_t trgBurst, uint32_t trgDel, uint32_t avgFreq)
+{
+    const std::string suffixMark = " Board ";
+    const std::string title      = currentTitle;
+    const auto        suffixPos  = title.find(suffixMark);
+    const std::string baseTitle  = (suffixPos == std::string::npos) ? title : title.substr(0, suffixPos);
+    if(trgBurst != 1) { return Form("%s Board %d OG %d, tBurst %d, tDel %d, avgFreq %d", baseTitle.c_str(), boardId, opticalGroupId, trgBurst, trgDel, avgFreq); }
+    else { return Form("%s Board %d OG %d, trgFreq %d kHz", baseTitle.c_str(), boardId, opticalGroupId, avgFreq); }
+}
+
+template <typename HistType>
+void DQMHistogramOTTimeCorrelation::updateHistTitles(std::map<std::string, DetectorDataContainer>& histMap, uint16_t boardId, uint16_t opticalGroupId)
+{
+    auto trgBurst = OTTimeCorrelationConfig::getTriggerPerBurst();
+    auto trgDel   = OTTimeCorrelationConfig::getTriggerDelay();
+    auto avgFreq  = OTTimeCorrelationConfig::getAvgFrequency();
+
+    for(auto& histContainer: histMap)
+    {
+        auto hist = histContainer.second.getObject(boardId)->getObject(opticalGroupId)->getSummary<HistContainer<HistType>>().fTheHistogram;
+        if(hist) { hist->SetTitle(appendBoardSuffix(hist->GetTitle(), boardId, opticalGroupId, trgBurst, trgDel, avgFreq).c_str()); }
+    }
+}
+
+template <typename HistType>
+void DQMHistogramOTTimeCorrelation::updateSliceHistTitles(std::map<std::string, std::vector<DetectorDataContainer>>& sliceMap, uint16_t boardId, uint16_t opticalGroupId)
+{
+    auto trgBurst = OTTimeCorrelationConfig::getTriggerPerBurst();
+    auto trgDel   = OTTimeCorrelationConfig::getTriggerDelay();
+    auto avgFreq  = OTTimeCorrelationConfig::getAvgFrequency();
+
+    for(auto& sliceVec: sliceMap)
+    {
+        for(auto& slice: sliceVec.second)
+        {
+            auto hist = slice.getObject(boardId)->getObject(opticalGroupId)->getSummary<HistContainer<HistType>>().fTheHistogram;
+            if(hist) { hist->SetTitle(appendBoardSuffix(hist->GetTitle(), boardId, opticalGroupId, trgBurst, trgDel, avgFreq).c_str()); }
+        }
+    }
+}
+
 void DQMHistogramOTTimeCorrelation::process()
 {
+    LOG(INFO) << "Processing DQMHistogramOTTimeCorrelation histograms";
     // Process histograms if needed
+    for(auto board: *fDetectorContainer)
+    {
+        for(auto opticalGroup: *board)
+        {
+            updateHistTitles<TH2F>(fSameEvCorrSSAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH2F>(fSameStripFWTCorrSSAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH2F>(fSameStripBWTCorrSSAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH2F>(fMinHitsFWSSAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH2F>(fMinHitsBWSSAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH2F>(f3DTSFWCorrSSAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH2F>(f3DTSBWCorrSSAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH2F>(fSameEvCorrMPAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH2F>(fSamePixelFWTCorrMPAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH2F>(fSamePixelBWTCorrMPAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH2F>(fMinHitsFWMPAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH2F>(fMinHitsBWMPAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH3F>(f3DTSFWCorrMPAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH3F>(f3DTSBWCorrMPAHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH1F>(fMPAErrorHistogramsMap, board->getId(), opticalGroup->getId());
+            updateHistTitles<TH1F>(fSSAErrorHistogramsMap, board->getId(), opticalGroup->getId());
+
+            updateSliceHistTitles<TH2F>(fTSCorrSliceFWSSAMap, board->getId(), opticalGroup->getId());
+            updateSliceHistTitles<TH2F>(fTSCorrSliceBWSSAMap, board->getId(), opticalGroup->getId());
+            updateSliceHistTitles<TH2F>(fTSCorrSliceFWMPAMap, board->getId(), opticalGroup->getId());
+            updateSliceHistTitles<TH2F>(fTSCorrSliceBWMPAMap, board->getId(), opticalGroup->getId());
+        }
+    }
 }
 
 bool DQMHistogramOTTimeCorrelation::fill(std::string& inputStream)
@@ -153,6 +254,40 @@ bool DQMHistogramOTTimeCorrelation::fill(std::string& inputStream)
     return true;
 }
 
+void DQMHistogramOTTimeCorrelation::fillOccupancy(const DetectorDataContainer& theOccupancyContainer, std::string suffix)
+{
+    for(auto theBoard: theOccupancyContainer)
+    {
+        for(auto theOpticalGroup: *theBoard)
+        {
+            for(auto theHybrid: *theOpticalGroup)
+            {
+                for(auto theChip: *theHybrid)
+                {
+                    if(!theChip->hasChannelContainer()) continue;
+                    ReadoutChip* theReadoutChip = fDetectorContainer->getObject(theBoard->getId())->getObject(theOpticalGroup->getId())->getObject(theHybrid->getId())->getObject(theChip->getId());
+                    const ChipDataContainer* theChipContainer = fOccupancyHistogramContainer.at(suffix).getChip(theBoard->getId(), theOpticalGroup->getId(), theHybrid->getId(), theChip->getId());
+                    // using TH1F and TH2F inheritance from TH1
+                    TH1* theOccupancyHistogram;
+                    if(theReadoutChip->getFrontEndType() == FrontEndType::MPA2)
+                        theOccupancyHistogram = theChipContainer->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                    else
+                        theOccupancyHistogram = theChipContainer->getSummary<HistContainer<TH1F>>().fTheHistogram;
+
+                    for(uint16_t row = 0; row < theChip->getNumberOfRows(); ++row)
+                    {
+                        for(uint16_t col = 0; col < theChip->getNumberOfCols(); ++col)
+                        {
+                            auto theOccupancy = theChip->getChannel<Occupancy>(row, col);
+                            theOccupancyHistogram->SetBinContent(col + 1, row + 1, theOccupancy.fOccupancy);
+                            theOccupancyHistogram->SetBinError(col + 1, row + 1, theOccupancy.fOccupancyError);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 void DQMHistogramOTTimeCorrelation::reset()
 {
     // Reset histograms
@@ -188,8 +323,6 @@ void DQMHistogramOTTimeCorrelation::fillErrorHist(const ChipErrorData& errorData
             for(auto opticalGroup: *board)
             {
                 TH1F* theHistogram = opticalGroup->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("MPA chip errors Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-
                 for(const auto& [chipId, errorCount]: errorData.mpaErrors) { theHistogram->SetBinContent(chipId + 1, errorCount); }
             }
         }
@@ -203,7 +336,6 @@ void DQMHistogramOTTimeCorrelation::fillErrorHist(const ChipErrorData& errorData
             for(auto opticalGroup: *board)
             {
                 TH1F* theHistogram = opticalGroup->getSummary<HistContainer<TH1F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("SSA chip errors Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
                 for(const auto& [chipId, errorCount]: errorData.ssaErrors) { theHistogram->SetBinContent(chipId + 1, errorCount); }
             }
         }
@@ -220,10 +352,8 @@ void DQMHistogramOTTimeCorrelation::fillSSAData(const OTTimeCorrelationStripData
         {
             for(auto opticalGroup: *board)
             {
-                TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("Same event correlations Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-
-                std::vector<int> stripData = sData.stripData;
+                TH2F*            theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                std::vector<int> stripData    = sData.stripData;
 
                 for(size_t i = 0; i < stripData.size(); ++i)
                 {
@@ -243,7 +373,6 @@ void DQMHistogramOTTimeCorrelation::fillSSAData(const OTTimeCorrelationStripData
             for(auto opticalGroup: *board)
             {
                 TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("FW strip time correlations Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
 
                 auto& lastCorr = OTTimeCorrelationStripData::getLastFWCorrelation();
                 for(size_t i = 0; i < lastCorr.channels.size(); ++i) { theHistogram->Fill(lastCorr.channels[i], lastCorr.indexes[i]); }
@@ -261,7 +390,6 @@ void DQMHistogramOTTimeCorrelation::fillSSAData(const OTTimeCorrelationStripData
             for(auto opticalGroup: *board)
             {
                 TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("BW strip time correlations Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
 
                 auto& lastCorr = OTTimeCorrelationStripData::getLastBWCorrelation();
                 for(size_t i = 0; i < lastCorr.channels.size(); ++i) { theHistogram->Fill(lastCorr.channels[i], lastCorr.indexes[i]); }
@@ -283,8 +411,6 @@ void DQMHistogramOTTimeCorrelation::fillSSAData(const OTTimeCorrelationStripData
             for(auto opticalGroup: *board)
             {
                 TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("Min hits Board %d OG %d,  tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-                theHistogram->GetYaxis()->SetTitle("log(# hits)");
 
                 auto& lastHits = OTTimeCorrelationStripData::getLastFWMinHits();
                 for(size_t i = 0; i < lastHits.size(); ++i) { theHistogram->Fill(i, std::log10(lastHits[i])); }
@@ -295,8 +421,6 @@ void DQMHistogramOTTimeCorrelation::fillSSAData(const OTTimeCorrelationStripData
             for(auto opticalGroup: *board)
             {
                 TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("Min hits BW Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-                theHistogram->GetYaxis()->SetTitle("log(# hits)");
 
                 auto& lastHits = OTTimeCorrelationStripData::getLastBWMinHits();
                 for(size_t i = 0; i < lastHits.size(); ++i) { theHistogram->Fill(i, std::log10(lastHits[i])); }
@@ -316,10 +440,8 @@ void DQMHistogramOTTimeCorrelation::fillMPAData(const OTTimeCorrelationPixelData
         {
             for(auto opticalGroup: *board)
             {
-                TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("Same event correlations MPA Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-
-                const std::vector<int>& pixelData = pData.pixelData;
+                TH2F*                   theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
+                const std::vector<int>& pixelData    = pData.pixelData;
 
                 for(size_t i = 0; i < pixelData.size(); ++i)
                 {
@@ -340,7 +462,6 @@ void DQMHistogramOTTimeCorrelation::fillMPAData(const OTTimeCorrelationPixelData
             for(auto opticalGroup: *board)
             {
                 TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("FW pixel time correlations Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
 
                 auto& lastCorr = OTTimeCorrelationPixelData::getLastFWCorrelation();
                 for(size_t i = 0; i < lastCorr.channels.size(); ++i) { theHistogram->Fill(lastCorr.channels[i], lastCorr.indexes[i]); }
@@ -358,7 +479,6 @@ void DQMHistogramOTTimeCorrelation::fillMPAData(const OTTimeCorrelationPixelData
             for(auto opticalGroup: *board)
             {
                 TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("BW pixel time correlations Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
 
                 auto& lastCorr = OTTimeCorrelationPixelData::getLastBWCorrelation();
                 for(size_t i = 0; i < lastCorr.channels.size(); ++i) { theHistogram->Fill(lastCorr.channels[i], lastCorr.indexes[i]); }
@@ -377,8 +497,6 @@ void DQMHistogramOTTimeCorrelation::fillMPAData(const OTTimeCorrelationPixelData
             for(auto opticalGroup: *board)
             {
                 TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("Min hits MPA Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-                theHistogram->GetYaxis()->SetTitle("log(# hits)");
 
                 auto& lastHits = OTTimeCorrelationPixelData::getLastFWMinHits();
                 for(size_t i = 0; i < lastHits.size(); ++i) { theHistogram->Fill(i, std::log10(lastHits[i])); }
@@ -389,8 +507,6 @@ void DQMHistogramOTTimeCorrelation::fillMPAData(const OTTimeCorrelationPixelData
             for(auto opticalGroup: *board)
             {
                 TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("Min hits BW MPA Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-                theHistogram->GetYaxis()->SetTitle("log(# hits)");
 
                 auto& lastHits = OTTimeCorrelationPixelData::getLastBWMinHits();
                 for(size_t i = 0; i < lastHits.size(); ++i) { theHistogram->Fill(i, std::log10(lastHits[i])); }
@@ -423,7 +539,6 @@ void DQMHistogramOTTimeCorrelation::fill2DhistSlices(const OTTimeCorrelationStri
                     TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     if(!theHistogram) continue;
 
-                    theHistogram->SetTitle(Form("FW TS Slice %d Board %d OG %d, tBurst %d, tDel %d", timeIdx, board->getId(), opticalGroup->getId(), trgBurst, trgDel));
                     for(const auto& hit: lastFW3D.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second); }
                 }
             }
@@ -439,7 +554,6 @@ void DQMHistogramOTTimeCorrelation::fill2DhistSlices(const OTTimeCorrelationStri
                     TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     if(!theHistogram) continue;
 
-                    theHistogram->SetTitle(Form("BW TS Slice %d Board %d OG %d, tBurst %d, tDel %d", timeIdx, board->getId(), opticalGroup->getId(), trgBurst, trgDel));
                     for(const auto& hit: lastBW3D.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second); }
                 }
             }
@@ -467,7 +581,6 @@ void DQMHistogramOTTimeCorrelation::fill2DhistSlices(const OTTimeCorrelationStri
                     TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     if(!theHistogram) continue;
 
-                    theHistogram->SetTitle(Form("MPA FW TS Slice %d Board %d OG %d, tBurst %d, tDel %d", timeIdx, board->getId(), opticalGroup->getId(), trgBurst, trgDel));
                     for(const auto& hit: lastFWPixel3D.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second); }
                 }
             }
@@ -483,7 +596,6 @@ void DQMHistogramOTTimeCorrelation::fill2DhistSlices(const OTTimeCorrelationStri
                     TH2F* theHistogram = opticalGroup->getSummary<HistContainer<TH2F>>().fTheHistogram;
                     if(!theHistogram) continue;
 
-                    theHistogram->SetTitle(Form("MPA BW TS Slice %d Board %d OG %d, tBurst %d, tDel %d", timeIdx, board->getId(), opticalGroup->getId(), trgBurst, trgDel));
                     for(const auto& hit: lastBWPixel3D.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second); }
                 }
             }
@@ -506,8 +618,7 @@ void DQMHistogramOTTimeCorrelation::fill3Dhistograms(const OTTimeCorrelationStri
             for(auto opticalGroup: *board)
             {
                 TH3F* theHistogram = opticalGroup->getSummary<HistContainer<TH3F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("FW time and space corr Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-                auto& last3DFW = OTTimeCorrelationStripData::getLastFW3DCorrelation();
+                auto& last3DFW     = OTTimeCorrelationStripData::getLastFW3DCorrelation();
                 for(size_t timeIdx = 0; timeIdx < last3DFW.slices.size(); ++timeIdx)
                 {
                     for(const auto& hit: last3DFW.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second, timeIdx); }
@@ -520,8 +631,7 @@ void DQMHistogramOTTimeCorrelation::fill3Dhistograms(const OTTimeCorrelationStri
             for(auto opticalGroup: *board)
             {
                 TH3F* theHistogram = opticalGroup->getSummary<HistContainer<TH3F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("BW time and space corr Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-                auto& last3DBW = OTTimeCorrelationStripData::getLastBW3DCorrelation();
+                auto& last3DBW     = OTTimeCorrelationStripData::getLastBW3DCorrelation();
                 for(size_t timeIdx = 0; timeIdx < last3DBW.slices.size(); ++timeIdx)
                 {
                     for(const auto& hit: last3DBW.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second, timeIdx); }
@@ -542,8 +652,7 @@ void DQMHistogramOTTimeCorrelation::fill3Dhistograms(const OTTimeCorrelationStri
             for(auto opticalGroup: *board)
             {
                 TH3F* theHistogram = opticalGroup->getSummary<HistContainer<TH3F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("FW pixel TS corr Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-                auto& last3DFW = OTTimeCorrelationPixelData::getLastFW3DCorrelation();
+                auto& last3DFW     = OTTimeCorrelationPixelData::getLastFW3DCorrelation();
                 for(size_t timeIdx = 0; timeIdx < last3DFW.slices.size(); ++timeIdx)
                 {
                     for(const auto& hit: last3DFW.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second, timeIdx); }
@@ -556,8 +665,7 @@ void DQMHistogramOTTimeCorrelation::fill3Dhistograms(const OTTimeCorrelationStri
             for(auto opticalGroup: *board)
             {
                 TH3F* theHistogram = opticalGroup->getSummary<HistContainer<TH3F>>().fTheHistogram;
-                theHistogram->SetTitle(Form("BW pixel TS corr Board %d OG %d, tBurst %d, tDel %d", board->getId(), opticalGroup->getId(), trgBurst, trgDel));
-                auto& last3DBW = OTTimeCorrelationPixelData::getLastBW3DCorrelation();
+                auto& last3DBW     = OTTimeCorrelationPixelData::getLastBW3DCorrelation();
                 for(size_t timeIdx = 0; timeIdx < last3DBW.slices.size(); ++timeIdx)
                 {
                     for(const auto& hit: last3DBW.slices[timeIdx]) { theHistogram->Fill(hit.first, hit.second, timeIdx); }

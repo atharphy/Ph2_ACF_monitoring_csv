@@ -328,7 +328,7 @@ void PixelAlive::run()
     // #########################
     // # Run actual PixelAlive #
     // #########################
-    CalibBase::SilentRunning(doSilentRunning);
+    CalibBase::SilentRunning(doSilentRunning || CalibBase::silentRunning);
     PixelAlive::runPixelAlive();
     CalibBase::SilentRunning(!doSilentRunning);
 }

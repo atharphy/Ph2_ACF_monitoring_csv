@@ -340,6 +340,7 @@
     <Setting name="UpdateChipCfg">         1 </Setting>
     <Setting name="DisableChannelsAtExit"> 1 </Setting>
     <Setting name="StopIfCommFails">       1 </Setting>
+    <Setting name="SilentRunning">         0 </Setting>
 
     <!-- === Expert settings ===
          ShowRunProgress      = 1: show run progress; ShowRunProgress = 0: do not show run progress
