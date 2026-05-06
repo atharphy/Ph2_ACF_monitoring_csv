@@ -156,6 +156,7 @@ class CalibBase : public Tool
     size_t      nEvents;
     size_t      nEvtsBurst;
     bool        splitFile;
+    bool        silentRunning;
     std::string dataOutputDir;
 
     bool showErrorReport;
