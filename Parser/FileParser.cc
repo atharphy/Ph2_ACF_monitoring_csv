@@ -1474,7 +1474,8 @@ void FileParser::parseSettings(const std::string& pFilename, SettingsMap& pSetti
                                                   "OTCICtoLpGBTecv_LpGBTPhase",
                                                   "OTLpGBTEyeOpeningTest_PowerList",
                                                   "OTinjectionOccupancyScan_ListOfInjectedPulses",
-                                                  "OTTimeCorrelations_ListOfThresholdSigma",
+                                                  "OTTimeCorrelations_ListOfMPASigma",
+                                                  "OTTimeCorrelations_ListOfSSASigma",
                                                   "OTTimeCorrelations_ListOfNTriggersPerBurst",
                                                   "OTTimeCorrelations_ListOfDelayBetweenTriggers",
                                                   "OTTimeCorrelations_ListOfAverageFrequency",
@@ -1754,6 +1755,18 @@ void FileParser::parseMonitor(const std::string& pFilename, DetectorMonitorConfi
         throw std::runtime_error("FileParser::parseMonitor: Error - monitor silentRunning flag not recognized");
 
     theDetectorMonitorConfig.fSleepTimeMs = atoi(theMonitorNode.child(MONITORINGSLEEPTIME_NODE_NAME).first_child().value());
+
+    if(theMonitorNode.child("MQTTBrokerHost"))
+    {
+        theDetectorMonitorConfig.fMQTTBrokerHost = theMonitorNode.child("MQTTBrokerHost").first_child().value();
+        theDetectorMonitorConfig.fMQTTBrokerPort = atoi(theMonitorNode.child("MQTTBrokerPort").first_child().value());
+        theDetectorMonitorConfig.fMQTTTopic      = theMonitorNode.child("MQTTTopic").first_child().value();
+        std::string mqttEnableString             = theMonitorNode.child("MQTTEnabled").first_child().value();
+        if(mqttEnableString == "1")
+            theDetectorMonitorConfig.fMQTTEnabled = true;
+        else if(mqttEnableString == "0")
+            theDetectorMonitorConfig.fMQTTEnabled = false;
+    }
 
     for(pugi::xml_node monitorElement = theMonitorNode.child(MONITORINGELEMENT_NODE_NAME); monitorElement; monitorElement = monitorElement.next_sibling())
     {
