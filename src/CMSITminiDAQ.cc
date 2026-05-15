@@ -21,6 +21,7 @@
 #include "tools/RD53LpGBTeyeOpening.h"
 #include "tools/RD53Physics.h"
 #include "tools/RD53PixelAlive.h"
+#include "tools/RD53PowerTrimming.h"
 #include "tools/RD53SCurve.h"
 #include "tools/RD53ThrAdjustment.h"
 #include "tools/RD53ThrEqualization.h"
@@ -122,7 +123,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning gendacdac vtrx eye]",
+                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning gendacdac powertrimming vtrx eye]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -227,7 +228,7 @@ int main(int argc, char** argv)
         else if(dumpRegs == true)
         {
             LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Dumping frontend registers @@@\x1b[0m" << RESET;
-            mySysCntr.DumpRegisters();
+            mySysCntr.DumpRegisters(runNumber);
         }
 
         // ####################
@@ -505,6 +506,21 @@ int main(int argc, char** argv)
         vt.run();
         vt.analyze();
         vt.draw();
+    }
+    else if(whichCalib == "powertrimming")
+    {
+        // ######################
+        // # Run Power Trimming #
+        // ######################
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Power Trimming @@@" << RESET;
+
+        std::string   fileName("Run" + RD53Shared::fromInt2Str(runNumber) + "_PowerTrimming");
+        PowerTrimming pt;
+        pt.Inherit(&mySysCntr);
+        pt.localConfigure(fileName, runNumber);
+        pt.run();
+        pt.analyze();
+        pt.draw();
     }
     else if(whichCalib == "gendacdac")
     {

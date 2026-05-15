@@ -16,7 +16,6 @@
 #include "Utils/ConsoleColor.h"
 #include "Utils/Container.h"
 #include "Utils/RD53Event.h"
-#include "Utils/RD53Shared.h"
 
 // ##################
 // # Default values #
@@ -28,18 +27,21 @@
 // #########################
 namespace RD53Constants
 {
-const uint8_t ACCELERATOR_CLK = 40;   // Accelerator clock frequency [MHz]
-const uint8_t NBIT_MAXREG     = 16;   // Maximum number of bits for a chip register
-const uint8_t NPIX_REGION     = 4;    // Number of pixels in a region (1x4)
-const uint8_t NROW_CORE       = 8;    // Number of rows in a core
-const uint8_t NBIT_ADDR       = 9;    // Number of address bits
-const uint8_t NBIT_TOT        = 4;    // Number of ToT bits
-const uint8_t NSYNC_WORDS_S   = 2;    // Number of Sync words for synchronization (S = small)
-const uint8_t NSYNC_WORDS_L   = 64;   // Number of Sync words for synchronization (L = large)
-const uint8_t NWORDS_TO_SYNC  = 30;   // Number of words beforse send a Sync
-const uint8_t PATTERN_PRBS    = 0xAA; // Start PRBS pattern
-const uint8_t PATTERN_AURORA  = 0x55; // Start AURORA pattern
-const uint8_t PATTERN_CLOCK   = 0x00; // Start clock pattern
+const uint8_t  ACCELERATOR_CLK   = 40;      // Accelerator clock frequency [MHz]
+const uint8_t  NBIT_MAXREG       = 16;      // Maximum number of bits for a chip register
+const uint8_t  NPIX_REGION       = 4;       // Number of pixels in a region (1x4)
+const uint8_t  NROW_CORE         = 8;       // Number of rows in a core
+const uint8_t  NBIT_ADDR         = 9;       // Number of address bits
+const uint8_t  NBIT_TOT          = 4;       // Number of ToT bits
+const uint8_t  NSYNC_WORDS_S     = 2;       // Number of Sync words for synchronization (S = small)
+const uint8_t  NSYNC_WORDS_L     = 64;      // Number of Sync words for synchronization (L = large)
+const uint8_t  NPLLLOCK_WORDS    = 32;      // Number of PLL lock words for synchronization
+const uint8_t  NWORDS_TO_SYNC    = 30;      // Number of words beforse send a Sync
+const uint8_t  PATTERN_PRBS      = 0xAA;    // Start PRBS pattern
+const uint8_t  PATTERN_AURORA    = 0x55;    // Start AURORA pattern
+const uint8_t  PATTERN_CLOCK     = 0x00;    // Start clock pattern
+const uint16_t IN_CURR_FACTOR    = 21e3;    // Conversion factor for the ANA_IN_CURR and DIG_IN_CURR monitors [uA]
+const uint16_t SHUNT_CURR_FACTOR = 21.52e3; // Conversion factor for the ANA_SHUNT_CURR and DIG_SHUNT_CURR monitors [uA]
 } // namespace RD53Constants
 
 // #####################
@@ -69,11 +71,11 @@ namespace Ph2_HwDescription
 struct pixelMask
 {
     pixelMask() = default;
-    pixelMask(size_t size, bool en, bool hb, bool ie, uint8_t tdac) : Enable(size, en), HitBus(size, hb), InjEn(size, ie), TDAC(size, tdac) {}
+    pixelMask(size_t size, bool en, bool ie, bool hb, uint8_t tdac) : Enable(size, en), InjEn(size, ie), HitBus(size, hb), TDAC(size, tdac) {}
 
     std::vector<bool>    Enable;
-    std::vector<bool>    HitBus;
     std::vector<bool>    InjEn;
+    std::vector<bool>    HitBus;
     std::vector<uint8_t> TDAC;
 };
 
@@ -238,6 +240,7 @@ class RD53 : public ReadoutChip
     size_t      getNbMaskedPixels();
     void        enablePixel(unsigned int row, unsigned int col, bool enable);
     void        enableDefaultPixel(unsigned int row, unsigned int col, bool enable);
+    void        setPixelMask(unsigned int row, unsigned int col, uint16_t EnHitInTDAC);
     void        maskCoreDefault(unsigned int row, unsigned int col);
     void        injectPixel(unsigned int row, unsigned int col, bool inject);
     void        setTDAC(unsigned int row, unsigned int col, uint8_t TDAC);

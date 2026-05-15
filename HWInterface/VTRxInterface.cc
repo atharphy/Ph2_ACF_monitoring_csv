@@ -88,7 +88,7 @@ bool VTRxInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pair<st
     return success;
 }
 
-int32_t VTRxInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
+int32_t VTRxInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode, const bool updateReg)
 {
     auto    theLpGBT      = static_cast<VTRx*>(pChip)->fTheLpGBT;
     uint8_t masterId      = pChip->getMasterId();

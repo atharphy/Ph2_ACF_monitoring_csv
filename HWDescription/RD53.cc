@@ -4,7 +4,7 @@
   \author                Mauro DINARDO
   \version               1.0
   \date                  28/06/18
-  Support:               email to mauro.dinard@cern.ch
+  Support:               email to mauro.dinardo@cern.ch
 */
 
 #include "RD53.h"
@@ -299,13 +299,13 @@ std::stringstream RD53::getRegMapStream()
         theStream << reg.first;
         for(auto j = 0u; j < Nspaces; j++) theStream << " ";
         theStream.seekp(-(reg.first.size() < Nspaces ? reg.first.size() : Nspaces - 2), std::ios_base::cur);
-        theStream << "0x" << std::setfill('0') << std::setw(2) << std::hex << std::uppercase << int(reg.second.fAddress);
-        for(auto j = 0u; j < 10 - (reg.first.size() < Nspaces ? 0 : reg.first.size() - Nspaces + 2); j++) theStream << " ";
-        theStream << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(reg.second.fValue); // Copy fValue in fDefValue
+        theStream << "0x" << std::setfill('0') << std::setw(3) << std::hex << std::uppercase << uint16_t(reg.second.fAddress);
+        for(auto j = 0u; j < 9 - (reg.first.size() < Nspaces ? 0 : reg.first.size() - Nspaces + 3); j++) theStream << " ";
+        theStream << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << uint16_t(reg.second.fValue); // Copy fValue in fDefValue
         for(auto j = 0u; j < 18; j++) theStream << " ";
-        theStream << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << int(reg.second.fValue);
+        theStream << "0x" << std::setfill('0') << std::setw(4) << std::hex << std::uppercase << uint16_t(reg.second.fValue);
         for(auto j = 0u; j < 29; j++) theStream << " ";
-        theStream << std::setfill('0') << std::setw(2) << std::dec << std::uppercase << int(reg.second.fBitSize) << std::endl;
+        theStream << std::setfill('0') << std::setw(2) << std::dec << std::uppercase << uint16_t(reg.second.fBitSize) << std::endl;
 
         cLineCounter++;
     }
@@ -431,6 +431,14 @@ void RD53::enableDefaultPixel(unsigned int row, unsigned int col, bool enable)
         fChipOriginalMask->enableChannel(row, col);
     else
         fChipOriginalMask->disableChannel(row, col);
+}
+
+void RD53::setPixelMask(unsigned int row, unsigned int col, uint16_t EnInjHitTDAC)
+{
+    fPixelsMask.Enable[row + this->getNRows() * col] = (EnInjHitTDAC & 0x01) >> 0;
+    fPixelsMask.InjEn[row + this->getNRows() * col]  = (EnInjHitTDAC & 0x02) >> 1;
+    fPixelsMask.HitBus[row + this->getNRows() * col] = (EnInjHitTDAC & 0x04) >> 2;
+    fPixelsMask.TDAC[row + this->getNRows() * col]   = (EnInjHitTDAC & 0xF8) >> 3;
 }
 
 void     RD53::injectPixel(unsigned int row, unsigned int col, bool inject) { fPixelsMask.InjEn[row + this->getNRows() * col] = inject; }

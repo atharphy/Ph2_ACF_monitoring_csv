@@ -68,7 +68,7 @@ bool lpGBTInterface::WriteChipReg(Chip* pChip, const std::string& pDacName, uint
     return cSuccess;
 }
 
-int32_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName)
+int32_t lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pDacName, const bool updateReg)
 {
     this->setBoard(pChip->getBeBoardId());
     const auto cBoardType = fBoardFW->getBoardType();
@@ -155,7 +155,8 @@ uint32_t lpGBTInterface::ReadChipFuseID(Chip* pChip, uint8_t version)
         {
             uint8_t cTemp = 0;
             cTemp         = ((cChipID_0 >> i) & 1) | ((cChipID_1 >> i & 1) << 1) | ((cChipID_2 >> i & 1) << 2) | ((cChipID_3 >> i & 1) << 3) | ((cChipID_4 >> i & 1) << 4);
-            if(__builtin_popcountll(cTemp) > 2) { cChipID = cChipID | (1 << i); }
+            if(__builtin_popcountll(cTemp) > 2)
+                cChipID = cChipID | (1 << i);
             else
                 cChipID = cChipID | (0 << i);
         }
@@ -170,8 +171,8 @@ uint32_t lpGBTInterface::ReadChipFuseID(Chip* pChip, uint8_t version)
         return cChipID;
     }
 
-    LOG(INFO) << GREEN << "No FuseID for version 0 LpGBT OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN << " on Board ID " << BOLDYELLOW << +pChip->getBeBoardId()
-              << RESET;
+    LOG(INFO) << GREEN << "No FuseID for version " << BOLDYELLOW << version << RESET << GREEN << " of LpGBT OpticalGroup ID " << BOLDYELLOW << +pChip->getOpticalGroupId() << RESET << GREEN
+              << " on Board ID " << BOLDYELLOW << +pChip->getBeBoardId() << RESET;
     return 0;
 }
 

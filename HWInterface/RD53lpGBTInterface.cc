@@ -80,7 +80,7 @@ bool RD53lpGBTInterface::WriteChipMultReg(Chip* pChip, const std::vector<std::pa
     return writeGood;
 }
 
-int32_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode)
+int32_t RD53lpGBTInterface::ReadChipReg(Chip* pChip, const std::string& pRegNode, const bool updateReg)
 {
     if(pRegNode.find("_I2CVTRxReg") == std::string::npos)
         return RD53lpGBTInterface::ReadReg(pChip, pChip->getRegItem(pRegNode).fAddress);
@@ -201,8 +201,7 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
 
             if(cRegItem.first.find("PhaseSelect") != std::string::npos)
             {
-                lpGBTInterface::ConfigureRxPhase(
-                    pChip, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(4, 1)))}, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(5, 1)))}, cRegItem.second.fValue);
+                this->ConfigureRxPhase(pChip, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(4, 1)))}, {static_cast<uint8_t>(std::stoi(cRegItem.first.substr(5, 1)))}, cRegItem.second.fValue);
                 static_cast<lpGBT*>(pChip)->setPhaseRxAligned({static_cast<uint8_t>(std::stoi(cRegItem.first.substr(4, 1)))}, true);
             }
             else
@@ -236,11 +235,11 @@ bool RD53lpGBTInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBloc
         LOG(WARNING) << BOLDBLUE << "\t--> Proceeding with the hardcoded path: " << BOLDYELLOW << configFilePathCSV << RESET;
     }
 
-    lpGBTInterface::LoadCalibrationData(static_cast<lpGBT*>(pChip), this->ReadChipFuseID(static_cast<lpGBT*>(pChip), cChipVersion), configFilePathCSV);
+    this->LoadCalibrationData(static_cast<lpGBT*>(pChip), this->ReadChipFuseID(static_cast<lpGBT*>(pChip), cChipVersion), configFilePathCSV);
     LOG(INFO) << YELLOW << "Calibrating LpGBT Vref..." << RESET;
-    lpGBTInterface::EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
-    lpGBTInterface::TuneVrefControlLib(static_cast<lpGBT*>(pChip));
-    lpGBTInterface::AutoTuneVref(static_cast<lpGBT*>(pChip));
+    this->EstimateTemperatureUncalibVref(static_cast<lpGBT*>(pChip));
+    this->TuneVrefControlLib(static_cast<lpGBT*>(pChip));
+    this->AutoTuneVref(static_cast<lpGBT*>(pChip));
     LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
 
     return true;

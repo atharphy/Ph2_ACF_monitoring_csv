@@ -10,7 +10,7 @@
 #ifndef RD53CalibBase_H
 #define RD53CalibBase_H
 
-#include "HWDescription/RD53.h"
+// #include "HWDescription/RD53.h" @TMP@
 #include "MetadataHandlerIT.h"
 #include "MonitorUtils/DetectorMonitor.h"
 #include "Tool.h"
@@ -156,6 +156,7 @@ class CalibBase : public Tool
     size_t      nEvents;
     size_t      nEvtsBurst;
     bool        splitFile;
+    bool        silentRunning;
     std::string dataOutputDir;
 
     bool showErrorReport;

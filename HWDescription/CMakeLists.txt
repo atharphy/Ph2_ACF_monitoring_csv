@@ -7,12 +7,14 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     include_directories(${PROJECT_SOURCE_DIR})
 
-    # Boost also needs to be linked
-    # include_directories(${Boost_INCLUDE_DIRS})
-    # link_directories(${Boost_LIBRARY_DIRS})
-    set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY})
+    #################################
+    # Boost also needs to be linked #
+    #################################
+    set(LIBS ${LIBS} ${Boost_ITERATOR_LIBRARY} Ph2_Utils)
 
-    # Find source files
+    #####################
+    # Find source files #
+    #####################
     file(GLOB SOURCES *.cc)
     add_library(Ph2_Description STATIC ${SOURCES})
 

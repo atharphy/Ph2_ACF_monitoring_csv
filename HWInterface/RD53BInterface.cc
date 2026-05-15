@@ -146,7 +146,7 @@ bool RD53BInterface::ConfigureChip(Chip* pChip, bool pVerify, uint32_t pBlockSiz
     // # Programmig pixel cell registers #
     // ###################################
     pRD53->copyMaskFromDefault();
-    RD53BInterface::WriteRD53Mask(pRD53, false, false);
+    RD53BInterface::WriteRD53Mask(pRD53, 0, false);
 
     return true;
 }
@@ -567,32 +567,88 @@ void RD53BInterface::WriteRD53Mask(RD53* pRD53, int writeMode, bool doDefault, s
     RD53Interface::WriteChipReg(pRD53, "PIX_MODE", pixMode);
 }
 
+void RD53BInterface::ReadRD53Mask(RD53* pRD53, int readMode, size_t theRow, size_t theCol)
+// #################################
+// # readMode = 0 --> all pixels   #
+// # readMode = 1 --> single pixel #
+// #################################
+{
+    this->setBoard(pRD53->getBeBoardId());
+    std::lock_guard<std::recursive_mutex> theGuard(fBoardFW->fMutex);
+
+    std::vector<uint16_t> commandList;
+    const uint16_t        REGION_COL_ADDR = pRD53->getRegItem("REGION_COL").fAddress;
+    const uint16_t        REGION_ROW_ADDR = pRD53->getRegItem("REGION_ROW").fAddress;
+    const uint16_t        PIX_MODE_ADDR   = pRD53->getRegItem("PIX_MODE").fAddress;
+    const uint16_t        PIX_PORTAL_ADDR = pRD53->getRegItem("PIX_PORTAL").fAddress;
+    const uint8_t         chipID          = pRD53->getId();
+
+    // ########################
+    // # Save original status #
+    // ########################
+    auto pixMode = pRD53->getRegMap().find("PIX_MODE")->second.fValue;
+    if(readMode == 0)
+    {
+        // #####################
+        // # Set autoincrement #
+        // #####################
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x1}, commandList);
+
+        for(auto col = 0u; col < RD53B::NCOLS; col += 2)
+        {
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, col / 2}, commandList);
+            RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, 0}, commandList);
+            for(auto row = 0u; row < RD53B::NROWS; row++)
+            {
+                RD53BCmd::serialize(RD53BCmd::RdReg{chipID, PIX_PORTAL_ADDR}, commandList);
+                for(auto i = 0; i < RD53Constants::NSYNC_WORDS_S; i++) RD53BCmd::serialize(RD53BCmd::Sync{}, commandList);
+                for(auto i = 0; i < RD53Constants::NPLLLOCK_WORDS; i++) RD53BCmd::serialize(RD53BCmd::PLLlock{}, commandList);
+                for(auto i = 0; i < RD53Constants::NSYNC_WORDS_S; i++) RD53BCmd::serialize(RD53BCmd::Sync{}, commandList);
+            }
+
+            static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(commandList, pRD53->getHybridId());
+            RD53Interface::ReadPixelMaskFromFW(pRD53, RD53B::NROWS - 1, col, RD53B::NROWS);
+
+            commandList.clear();
+        }
+    }
+    else if(readMode == 1)
+    {
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, PIX_MODE_ADDR, 0x0}, commandList);
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_COL_ADDR, theCol / 2}, commandList);
+        RD53BCmd::serialize(RD53BCmd::WrReg{chipID, REGION_ROW_ADDR, theRow}, commandList);
+        RD53BCmd::serialize(RD53BCmd::RdReg{chipID, PIX_PORTAL_ADDR}, commandList);
+
+        RD53BInterface::SendChipCommandsWithSync(pRD53, commandList);
+        RD53Interface::ReadPixelMaskFromFW(pRD53, theCol, theRow, 1);
+    }
+
+    // ###########################
+    // # Restore original status #
+    // ###########################
+    RD53Interface::WriteChipReg(pRD53, "PIX_MODE", pixMode);
+}
+
 void RD53BInterface::SendChipCommandsWithSync(RD53* pRD53, const std::vector<uint16_t>& cmdStream)
 {
-    // #################################################################################################################################################################
-    // # Compute number of 16-bit words to which we add NSYNC_WORDS sync words every RD53Constants::NWORDS_TO_SYNC:                                                    #
-    // # nWordsPerPacketExclSync + 2 * nWordsPerPacketExclSync / RD53Constants::NWORDS_TO_SYNC = totaNumb16bitWords ( = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO)) #
-    // #################################################################################################################################################################
-    constexpr size_t nWordsPerPacketExclSync = 2 * ((1 << RD53FWconstants::NBIT_SLOWCMD_FIFO) - 1) / (1 + 2. / RD53Constants::NWORDS_TO_SYNC);
-    auto             begin                   = cmdStream.begin();
+    const size_t totaNumb16bitWords = 2 * (1 << RD53FWconstants::NBIT_SLOWCMD_FIFO);
+    const size_t nWordsWithSync     = RD53Constants::NWORDS_TO_SYNC + RD53Constants::NSYNC_WORDS_S;
 
-    while(begin != cmdStream.end())
+    auto start = cmdStream.begin();
+    while(start != cmdStream.end())
     {
-        size_t                nWordsThisPacketExclSync = std::min(nWordsPerPacketExclSync, size_t(cmdStream.end() - begin));
         std::vector<uint16_t> cmdPacket;
-        cmdPacket.reserve(std::ceil(nWordsThisPacketExclSync + 2. * nWordsThisPacketExclSync / RD53Constants::NWORDS_TO_SYNC));
 
-        auto it = begin;
-        while(it != begin + nWordsThisPacketExclSync)
-        {
-            auto next = std::min(cmdStream.end(), std::min(it + RD53Constants::NWORDS_TO_SYNC, begin + nWordsThisPacketExclSync));
-            std::copy(it, next, std::back_inserter(cmdPacket));
-            it = next;
+        do {
+            auto stop = std::min(cmdStream.end(), start + RD53Constants::NWORDS_TO_SYNC);
+            cmdPacket.insert(cmdPacket.end(), start, stop);
+
             for(auto i = 0; i < RD53Constants::NSYNC_WORDS_S; i++) RD53BCmd::serialize(RD53BCmd::Sync{}, cmdPacket);
-        }
+
+            start = stop;
+        } while((start != cmdStream.end()) && (cmdPacket.size() < (totaNumb16bitWords - nWordsWithSync)));
 
         static_cast<RD53FWInterface*>(fBoardFW)->WriteChipCommands(cmdPacket, pRD53->getHybridId());
-        begin = it;
     }
 }
 
@@ -1027,8 +1083,8 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     else if(type.find("INTERNAL_NTC_ABS") != std::string::npos)
     {
         const uint16_t saveADC   = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
-        const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip);
         const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1);
+        const uint16_t maxDACval = RD53BInterface::maxDACatSaturation(pChip);
         const uint16_t nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
         uint16_t       ntcVolt   = 0;
         uint16_t       ntcCurr   = 0;
@@ -1036,7 +1092,7 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // #########################################################################
         // # Scan from 0 to saturation to compute ADC volt independent temperature #
         // #########################################################################
-        const uint16_t       step = maxADCval / nSteps;
+        const uint16_t       step = maxDACval / nSteps;
         std::vector<int32_t> ntcVoltVec;
         std::vector<int32_t> ntcCurrVec;
         std::vector<int32_t> ntcADCVec;
@@ -1094,8 +1150,8 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
     else if(type.find("POLY_ABS") != std::string::npos)
     {
         const uint16_t saveADC   = RD53Interface::ReadChipReg(pChip, "DAC_NTC");
-        const uint16_t maxADCval = RD53BInterface::maxADCatSaturation(pChip, type);
-        const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1);
+        const uint16_t maxVal    = RD53Shared::setBits(pChip->getRegMap().at("MonitorConfig").fBitSize - 1) / 2; // @CONST@
+        const uint16_t maxDACval = maxVal / 6;                                                                   // @CONST@
         const uint16_t nSteps    = pChip->getRegItem("SAMPLE_NTC_SLOPE").fValue;
         uint16_t       ntcVolt   = 0;
         uint16_t       ntcCurr   = 0;
@@ -1103,14 +1159,14 @@ float RD53BInterface::measureTemperature(ReadoutChip* pChip, uint32_t data, cons
         // #########################################################################
         // # Scan from 0 to saturation to compute ADC volt independent temperature #
         // #########################################################################
-        const uint16_t     step = maxADCval / 2 / nSteps;
+        const uint16_t     step = maxDACval / nSteps;
         std::vector<float> ntcCurrVec;
         std::vector<float> polyADCvec;
         for(uint16_t i = 1; i < nSteps; i++)
         {
             RD53BInterface::readNTCvoltCurr(pChip, step * i, ntcVolt, ntcCurr);
             const uint16_t polyADC = RD53BInterface::measureADC(pChip, data);
-            if((polyADC > 0) && (polyADC < maxADCval / 2) && (ntcVolt > 0) && (ntcVolt < maxVal) && (ntcCurr > 0) && (ntcCurr < maxVal))
+            if((polyADC > 0) && (polyADC < maxVal) && (ntcCurr > 0) && (ntcCurr < maxVal))
             {
                 ntcCurrVec.push_back(ntcCurr);
                 bool     isCurrentNotVoltage;
@@ -1187,43 +1243,43 @@ void RD53BInterface::readNTCvoltCurr(ReadoutChip* pChip, uint16_t dacNTC, uint16
     ntcCurr = RD53Interface::ReadChipADC(pChip, "NTC_CURR");
 }
 
-uint16_t RD53BInterface::maxADCatSaturation(ReadoutChip* pChip, const std::string& type)
+uint16_t RD53BInterface::maxDACatSaturation(ReadoutChip* pChip, const std::string& type)
 {
     auto&          pRD53RegMap  = pChip->getRegMap();
-    uint16_t       minADC       = 0;
-    uint16_t       maxADC       = RD53Shared::setBits(pRD53RegMap.at("DAC_NTC").fBitSize);
-    uint16_t       midADC       = (minADC + maxADC) / 2;
-    const uint16_t numberOfBits = floor(log2(maxADC - minADC + 1) + 1);
+    uint16_t       minDAC       = 0;
+    uint16_t       maxDAC       = RD53Shared::setBits(pRD53RegMap.at("DAC_NTC").fBitSize);
+    uint16_t       midDAC       = (minDAC + maxDAC) / 2;
+    const uint16_t numberOfBits = floor(log2(maxDAC - minDAC + 1) + 1);
     const uint16_t maxVal       = RD53Shared::setBits(pRD53RegMap.at("MonitorConfig").fBitSize - 1);
-    uint16_t       maxADCval    = 0;
+    uint16_t       maxDACval    = 0;
     uint16_t       it           = 0;
     uint16_t       ntcVolt      = 0;
     uint16_t       ntcCurr      = 0;
     uint16_t       typeVal      = 0;
 
     // ################################
-    // # Find ADC value at saturation #
+    // # Find DAC value at saturation #
     // ################################
-    RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
+    RD53BInterface::readNTCvoltCurr(pChip, midDAC, ntcVolt, ntcCurr);
     if(type != "") typeVal = RD53Interface::ReadChipADC(pChip, type);
     while(it <= numberOfBits)
     {
         if((ntcVolt < maxVal) && (ntcCurr < maxVal) && (typeVal < maxVal))
         {
-            minADC    = midADC;
-            maxADCval = midADC;
+            minDAC    = midDAC;
+            maxDACval = midDAC;
         }
         else
-            maxADC = midADC;
-        midADC = (minADC + maxADC) / 2;
+            maxDAC = midDAC;
+        midDAC = (minDAC + maxDAC) / 2;
 
-        RD53BInterface::readNTCvoltCurr(pChip, midADC, ntcVolt, ntcCurr);
+        RD53BInterface::readNTCvoltCurr(pChip, midDAC, ntcVolt, ntcCurr);
         if(type != "") typeVal = RD53Interface::ReadChipADC(pChip, type);
 
         it++;
     }
 
-    return maxADCval;
+    return maxDACval;
 }
 
 } // namespace Ph2_HwInterface

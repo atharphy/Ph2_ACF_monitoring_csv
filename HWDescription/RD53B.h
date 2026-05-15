@@ -16,6 +16,18 @@
 #include "Utils/BitMaster/BitVector.h"
 #include "Utils/RD53ChannelGroupHandler.h"
 
+// #########################
+// # Chip useful constants #
+// #########################
+namespace RD53BConstants
+{
+const float PREAMP_L  = 7 / 3; // Conversion factor from DAC_PREAMP_M_LIN
+const float PREAMP_R  = 7 / 3; // Conversion factor from DAC_PREAMP_M_LIN
+const float PREAMP_TL = 7 / 3; // Conversion factor from DAC_PREAMP_M_LIN
+const float PREAMP_TR = 7 / 3; // Conversion factor from DAC_PREAMP_M_LIN
+const float PREAMP_T  = 7 / 3; // Conversion factor from DAC_PREAMP_M_LIN
+} // namespace RD53BConstants
+
 // ############################
 // # Chip event configuration #
 // ############################

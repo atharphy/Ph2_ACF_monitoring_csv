@@ -17,29 +17,31 @@ void GainOptimization::ConfigureCalibration()
     // ##############################
     // # Initialize sub-calibration #
     // ##############################
-    Gain::ConfigureCalibration();
-    Gain::doDisplay    = false;
-    Gain::doUpdateChip = false;
-    RD53RunProgress::total() -= Gain::getNumberIterations();
+    PixelAlive::ConfigureCalibration();
+    PixelAlive::doDisplay    = false;
+    PixelAlive::doUpdateChip = false;
+    RD53RunProgress::total() -= PixelAlive::getNumberIterations();
 
     // #######################
     // # Retrieve parameters #
     // #######################
+    targetCharge  = this->findValueInSettings<double>("TargetCharge");
+    targetToT     = this->findValueInSettings<double>("TargetToT");
     KrumCurrStart = this->findValueInSettings<double>("KrumCurrStart");
     KrumCurrStop  = this->findValueInSettings<double>("KrumCurrStop");
     doDisplay     = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip  = this->findValueInSettings<double>("UpdateChipCfg");
 
-    colStart = std::max(Gain::colStart, frontEnd->colStart);
-    colStop  = std::min(Gain::colStop, frontEnd->colStop);
+    colStart = std::max(PixelAlive::colStart, frontEnd->colStart);
+    colStop  = std::min(PixelAlive::colStop, frontEnd->colStop);
     LOG(INFO) << GREEN << "GainOptimization will run on the " << RESET << BOLDYELLOW << frontEnd->name << RESET << GREEN << " FE, columns [" << RESET << BOLDYELLOW << colStart << ", " << colStop
               << RESET << GREEN << "]" << RESET;
 
     // ########################
     // # Custom channel group #
     // ########################
-    for(auto row = Gain::rowStart; row <= Gain::rowStop; row++)
-        for(auto col = Gain::colStart; col <= Gain::colStop; col++) Gain::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
+    for(auto row = PixelAlive::rowStart; row <= PixelAlive::rowStop; row++)
+        for(auto col = PixelAlive::colStart; col <= PixelAlive::colStop; col++) PixelAlive::theChnGroupHandler->getRegionOfInterest().enableChannel(row, col);
 
     // #######################
     // # Initialize progress #
@@ -52,7 +54,7 @@ void GainOptimization::Running()
     CalibBase::theCurrentRun = this->fRunNumber;
     LOG(INFO) << GREEN << "[GainOptimization::Running] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
 
-    if(Gain::saveBinaryData == true)
+    if(PixelAlive::saveBinaryData == true)
     {
         this->fDirectoryName = dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR;
         this->addFileHandler(std::string(this->fDirectoryName) + "/Run" + RD53Shared::fromInt2Str(CalibBase::theCurrentRun) + "_GainOptimization.raw", 'w');
@@ -63,7 +65,7 @@ void GainOptimization::Running()
     GainOptimization::analyze();
     GainOptimization::draw();
     GainOptimization::sendData();
-    Gain::sendData();
+    PixelAlive::sendData();
 }
 
 void GainOptimization::sendData()
@@ -88,31 +90,31 @@ void GainOptimization::localConfigure(const std::string& histoFileName, int curr
     // ############################
     CalibBase::localConfigure(histoFileName, currentRun);
 
-    histos       = nullptr;
-    Gain::histos = nullptr;
+    histos             = nullptr;
+    PixelAlive::histos = nullptr;
 
     LOG(INFO) << GREEN << "[GainOptimization::localConfigure] Starting run: " << BOLDYELLOW << CalibBase::theCurrentRun << RESET;
-
-    // ###############################
-    // # Initialize output directory #
-    // ###############################
-    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
 
     // ##########################
     // # Initialize calibration #
     // ##########################
     GainOptimization::ConfigureCalibration();
 
+    // ###############################
+    // # Initialize output directory #
+    // ###############################
+    this->CreateResultDirectory(dataOutputDir != "" ? dataOutputDir : RD53Shared::RESULTDIR, false, false);
+
     // #########################################
     // # Initialize histogram and binary files #
     // #########################################
-    CalibBase::initializeFiles(histoFileName, "GainOptimization", histos, currentRun, Gain::saveBinaryData);
-    CalibBase::initializeFiles(histoFileName, "Gain", Gain::histos);
+    CalibBase::initializeFiles(histoFileName, "GainOptimization", histos, currentRun, PixelAlive::saveBinaryData);
+    CalibBase::initializeFiles(histoFileName, "PixelAlive", PixelAlive::histos);
 }
 
 void GainOptimization::run()
 {
-    GainOptimization::bitWiseScanGlobal(frontEnd->gainReg, KrumCurrStart, KrumCurrStop);
+    GainOptimization::bitWiseScanGlobal(frontEnd->gainReg, KrumCurrStart, KrumCurrStop, targetCharge, targetToT);
 
     // #######################################
     // # Fill Krummenacher Current container #
@@ -144,7 +146,7 @@ void GainOptimization::draw(bool saveData)
     GainOptimization::fillHisto();
     histos->process();
 
-    Gain::draw(false);
+    PixelAlive::draw(false);
 
     if(doDisplay == true) myApp->Run(true);
 #endif
@@ -167,7 +169,7 @@ void GainOptimization::fillHisto()
 #endif
 }
 
-void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t startValue, uint16_t stopValue)
+void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t startValue, uint16_t stopValue, float targetCharge, uint16_t targetToT)
 {
     float          tmp = 0;
     uint16_t       init;
@@ -176,6 +178,7 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
     DetectorDataContainer minDACcontainer;
     DetectorDataContainer midDACcontainer;
     DetectorDataContainer maxDACcontainer;
+    DetectorDataContainer chargeContainer;
 
     DetectorDataContainer bestDACcontainer;
     DetectorDataContainer bestContainer;
@@ -183,9 +186,29 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, minDACcontainer, init = startValue);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, midDACcontainer);
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, maxDACcontainer, init = (stopValue + 1));
+    ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, chargeContainer);
 
     ContainerFactory::copyAndInitChip<uint16_t>(*fDetectorContainer, bestDACcontainer, init = 0);
     ContainerFactory::copyAndInitChip<float>(*fDetectorContainer, bestContainer, tmp);
+
+    for(const auto cBoard: *fDetectorContainer)
+        for(const auto cOpticalGroup: *cBoard)
+            for(const auto cHybrid: *cOpticalGroup)
+                for(const auto cChip: *cHybrid)
+                {
+                    // ##########################################
+                    // # Find VCAL_HIGH to get target threshold #
+                    // ##########################################
+                    uint16_t vcal_med_setting  = static_cast<RD53*>(cChip)->getReg("VCAL_MED");
+                    uint16_t vcal_high_setting = round(static_cast<RD53*>(cChip)->Charge2VCal(targetCharge)) + vcal_med_setting;
+                    chargeContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() = vcal_high_setting;
+
+                    LOG(INFO) << GREEN << "The target charge for [board/opticalGroup/hybrid/chip = " << BOLDYELLOW << cBoard->getId() << "/" << cOpticalGroup->getId() << "/" << cHybrid->getId() << "/"
+                              << +cChip->getId() << RESET << GREEN "] is " << std::setprecision(1) << BOLDYELLOW << targetCharge << RESET << GREEN << " electrons" << RESET;
+                    LOG(INFO) << BOLDBLUE << "\t--> Closest charge setting is " << BOLDYELLOW << "VCAL_HIGH" << BOLDBLUE << " = " << BOLDYELLOW << vcal_high_setting << BOLDBLUE << " for "
+                              << BOLDYELLOW << "VCAL_MED" << BOLDBLUE << " = " << BOLDYELLOW << vcal_med_setting << std::setprecision(-1) << RESET;
+                }
+    CalibBase::downloadNewDACvalues({&chargeContainer}, {"VCAL_HIGH"});
 
     for(auto i = 0u; i <= numberOfBits; i++)
     {
@@ -196,6 +219,9 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
             for(const auto cOpticalGroup: *cBoard)
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
+                        // ########################
+                        // # Compute middle value #
+                        // ########################
                         midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                             (minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() +
                              maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>()) /
@@ -205,13 +231,13 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
         // ################
         // # Run analysis #
         // ################
-        Gain::run();
-        auto output = Gain::analyze();
+        PixelAlive::run();
+        auto output = PixelAlive::analyze();
 
         // ##############################################
         // # Send periodic data to monitor the progress #
         // ##############################################
-        Gain::sendData();
+        PixelAlive::sendData();
 
         // #####################
         // # Compute next step #
@@ -221,33 +247,10 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
                 for(const auto cHybrid: *cOpticalGroup)
                     for(const auto cChip: *cHybrid)
                     {
-                        auto pRD53 = static_cast<RD53*>(fDetectorContainer->getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId()));
-
                         // #######################
                         // # Build discriminator #
                         // #######################
-                        float  avg    = 0;
-                        float  stdDev = 0;
-                        size_t cnt    = 0;
-                        for(auto row = 0u; row < RD53Shared::firstChip->getNRows(); row++)
-                            for(auto col = 0u; col < RD53Shared::firstChip->getNCols(); col++)
-                                if(cChip->getChannel<GainFit>(row, col).fChi2 > 0)
-                                {
-                                    auto ToTatTarget = Gain::gainFunction({cChip->getChannel<GainFit>(row, col).fInterceptLowQ,
-                                                                           cChip->getChannel<GainFit>(row, col).fSlopeLowQ,
-                                                                           cChip->getChannel<GainFit>(row, col).fInterceptHighQ,
-                                                                           cChip->getChannel<GainFit>(row, col).fSlopeHighQ},
-                                                                          pRD53->Charge2VCal(this->findValueInSettings<double>("TargetCharge")),
-                                                                          frontEnd);
-                                    avg += ToTatTarget;
-                                    stdDev += ToTatTarget * ToTatTarget;
-                                    cnt++;
-                                }
-                        avg              = cnt != 0 ? avg / cnt : 0;
-                        stdDev           = (cnt != 0 ? stdDev / cnt : 0) - avg * avg;
-                        stdDev           = (stdDev > 0 ? sqrt(stdDev) : 0);
-                        float  newValue  = avg + NSTDEV * stdDev;
-                        size_t targetToT = frontEnd->maxToTvalue;
+                        float newValue = cChip->getSummary<GenericDataVector, OccupancyAndPh>().fPh;
 
                         // ########################
                         // # Save best DAC values #
@@ -261,13 +264,10 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
                                 midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                         }
 
-                        if((newValue < targetToT) && (stdDev != 0))
-
+                        if(newValue < targetToT)
                             maxDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
-
                         else
-
                             minDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>() =
                                 midDACcontainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<uint16_t>();
                     }
@@ -277,11 +277,11 @@ void GainOptimization::bitWiseScanGlobal(const std::string& regName, uint16_t st
     // # Download new DAC values #
     // ###########################
     LOG(INFO) << BOLDMAGENTA << ">>> Best values <<<" << RESET;
-    CalibBase::downloadNewDACvalues({&bestDACcontainer}, {regName.c_str()}, false, true, 0);
+    CalibBase::downloadNewDACvalues({&bestDACcontainer}, {regName.c_str()}, false, true);
 
     // ################
     // # Run analysis #
     // ################
-    Gain::run();
-    Gain::analyze();
+    PixelAlive::run();
+    PixelAlive::analyze();
 }

@@ -27,7 +27,7 @@ namespace Ph2_HwInterface
 MPA2Interface::MPA2Interface(const BeBoardFWMap& pBoardMap) : ReadoutChipInterface(pBoardMap) {}
 MPA2Interface::~MPA2Interface() {}
 
-int32_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode)
+int32_t MPA2Interface::ReadChipReg(Chip* pMPA2, const std::string& pRegNode, const bool updateReg)
 {
     setBoard(pMPA2->getBeBoardId());
     if(pRegNode == "StubMode" || pRegNode == "LayerSwap") // should work with MPA2 address table

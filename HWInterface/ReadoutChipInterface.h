@@ -380,7 +380,10 @@ class ReadoutChipInterface : public ChipInterface
         return cAlignmentPattern;
     }
 
-    virtual void DumpChipRegisters(Ph2_HwDescription::ReadoutChip* pChip) { LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET; }
+    virtual void DumpChipRegisters(Ph2_HwDescription::ReadoutChip* pChip, bool doUpdateChip, unsigned int runNumber, const std::string& directoryName)
+    {
+        LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;
+    }
     virtual void WriteRegsFromCfg(Ph2_HwDescription::Chip* pChip, bool pVerify = true, bool writeAll = false)
     {
         LOG(ERROR) << BOLDRED << __PRETTY_FUNCTION__ << "\tError: implementation of virtual member function is absent" << RESET;

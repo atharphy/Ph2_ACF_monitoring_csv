@@ -459,6 +459,50 @@ std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegisters(Re
     return regReadback;
 }
 
+std::vector<std::pair<uint16_t, uint16_t>> RD53FWInterface::ReadChipRegistersNtimes(ReadoutChip* pChip, const size_t Ntimes)
+{
+    std::vector<std::pair<uint16_t, uint16_t>> regReadback;
+    std::vector<std::string>                   fwRegs;
+    std::vector<uint32_t>                      fwVals;
+
+    // #################################
+    // # Compose chip-lane in readback #
+    // #################################
+    uint32_t chipLane = pChip->getHybridId();
+    if(this->hybridType != 1) chipLane = (this->hybridType == 2 ? RD53FWconstants::NLANE_DUALHYBRID : RD53FWconstants::NLANE_QUADHYBRID) * chipLane + static_cast<RD53*>(pChip)->getChipLane();
+
+    // #########################
+    // # Compose read sequence #
+    // #########################
+    for(size_t i = 0; i < Ntimes; i++)
+    {
+        fwRegs.push_back("user.stat_regs.readout1.register_fifo_empty");
+        fwRegs.push_back("user.stat_regs.Register_Rdback_fifo");
+    }
+    fwRegs.push_back("user.stat_regs.readout1.register_fifo_empty");
+
+    do {
+        fwVals = RegManager::ReadStackReg(fwRegs);
+
+        for(std::vector<uint32_t>::size_type i = 1; i < fwVals.size(); i += 2)
+        {
+            // #############################
+            // # Read FIFO while not empty #
+            // #############################
+            if(fwVals[i - 1] == false)
+            {
+                uint16_t chipAddress, regAddress, regValue;
+                std::tie(chipAddress, regAddress, regValue) = bits::unpack<6, 10, 16>(fwVals[i]);
+
+                if(chipAddress == chipLane) regReadback.emplace_back(regAddress, regValue);
+            }
+        }
+
+    } while((fwVals.empty() == false) && !fwVals.back());
+
+    return regReadback;
+}
+
 bool RD53FWInterface::CheckChipCommunication(const BeBoard* pBoard)
 {
     LOG(INFO) << GREEN << "Checking status communication RD53 --> FW" << RESET;

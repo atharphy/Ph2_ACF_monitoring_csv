@@ -221,6 +221,30 @@ uint32_t RegManager::ReadReg(const std::string& pRegNode)
     return cValRead.value();
 }
 
+std::vector<uint32_t> RegManager::ReadStackReg(const std::vector<std::string>& pVecReg)
+{
+    std::lock_guard<std::recursive_mutex> theGuard(fMutex);
+    if(mode == Mode::Replay) return replayBlockRead(pVecReg.size());
+
+    std::vector<uhal::ValWord<uint32_t>> cStackRead;
+    cStackRead.reserve(pVecReg.size());
+    for(const std::string& reg: pVecReg) cStackRead.push_back(fBoard->getNode(reg).read());
+    fBoard->dispatch();
+
+    std::vector<uint32_t> cVecVal;
+    cVecVal.reserve(pVecReg.size());
+    for(const uhal::ValWord<uint32_t>& item: cStackRead) cVecVal.push_back(item.value());
+
+    if(DEV_FLAG)
+    {
+        for(std::vector<uint32_t>::size_type i = 0; i < cVecVal.size(); ++i) LOG(DEBUG) << "Value in register ID " << pVecReg[i] << " : " << cVecVal[i];
+    }
+
+    if(mode == Mode::Capture) captureBlockRead(cVecVal);
+
+    return cVecVal;
+}
+
 uint32_t RegManager::ReadAtAddress(uint32_t uAddr, uint32_t uMask)
 {
     std::lock_guard<std::recursive_mutex> theGuard(fMutex);
