@@ -71,6 +71,13 @@ void PowerTrimmingHistograms::book(TFile* theOutputFile, DetectorContainer& theD
     auto hVDigVsTime     = CanvasContainer<TH1F>("VIND", "VIND vs Time", 3 * maxVal, 0, 3 * maxVal);
     auto hVDDigVsTime    = CanvasContainer<TH1F>("VDDD", "VDDD vs Time", 3 * maxVal, 0, 3 * maxVal);
     auto hIrfVsTime      = CanvasContainer<TH1F>("Iref", "Iref vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hNTCrelVsTime     = CanvasContainer<TH1F>("INTERNAL_NTC_REL", "INTERNAL_NTC_REL vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hNTCabsVsTime     = CanvasContainer<TH1F>("INTERNAL_NTC_ABS", "INTERNAL_NTC_ABS vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hPolyTopVsTime    = CanvasContainer<TH1F>("POLY_TEMPSENS_TOP", "POLY_TEMPSENS_TOP vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hPolyBottomVsTime = CanvasContainer<TH1F>("POLY_TEMPSENS_BOTTOM", "POLY_TEMPSENS_BOTTOM vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hSLDOAnaVsTime    = CanvasContainer<TH1F>("TEMPSENS_ANA_SLDO", "TEMPSENS_ANA_SLDO vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hSLDODigVsTime    = CanvasContainer<TH1F>("TEMPSENS_DIG_SLDO", "TEMPSENS_DIG_SLDO vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hSLDOCenterVsTime = CanvasContainer<TH1F>("TEMPSENS_CENTER", "TEMPSENS_CENTER vs Time", 3 * maxVal, 0, 3 * maxVal);
 
     bookChipImplementer(theOutputFile, theDetectorStructure, theChipCurrVsTimeContainer, hChipCurrVsTime, "Time (HH:MM:SS)", "Current (mA)");
     bookChipImplementer(theOutputFile, theDetectorStructure, theAnaInVsTimeContainer, hIAnaVsTime, "Time (HH:MM:SS)", "Current (mA)");
@@ -82,6 +89,13 @@ void PowerTrimmingHistograms::book(TFile* theOutputFile, DetectorContainer& theD
     bookChipImplementer(theOutputFile, theDetectorStructure, theVINDVsTimeContainer, hVDigVsTime, "Time (HH:MM:SS)", "Voltage (V)");
     bookChipImplementer(theOutputFile, theDetectorStructure, theVDDDVsTimeContainer, hVDDigVsTime, "Time (HH:MM:SS)", "Voltage (V)");
     bookChipImplementer(theOutputFile, theDetectorStructure, theIrefVsTimeContainer, hIrfVsTime, "Time (HH:MM:SS)", "Iref (uA)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theInternalNTCRelContainer, hNTCrelVsTime, "Time (HH:MM:SS)", "Temperature (C)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theInternalNTCAbsContainer, hNTCabsVsTime, "Time (HH:MM:SS)", "Temperature (C)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, thePolyTempSensTopContainer, hPolyTopVsTime, "Time (HH:MM:SS)", "Temperature (C)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, thePolyTempSensBottomContainer, hPolyBottomVsTime, "Time (HH:MM:SS)", "Temperature (C)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theTempsensAnaSldoContainer, hSLDOAnaVsTime, "Time (HH:MM:SS)", "Temperature (C)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theTempsensDigSldoContainer, hSLDODigVsTime, "Time (HH:MM:SS)", "Temperature (C)");
+    bookChipImplementer(theOutputFile, theDetectorStructure, theTempsensCenterContainer, hSLDOCenterVsTime, "Time (HH:MM:SS)", "Temperature (C)");
 
     AreHistoBooked = true;
 }
@@ -267,6 +281,48 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                                      ->getObject(cChip->getId())
                                      ->getSummary<CanvasContainer<TH1F>>()
                                      .fTheHistogram;
+                    auto* hNTCrel = theInternalNTCRelContainer.getObject(cBoard->getId())
+                                     ->getObject(cOpticalGroup->getId())
+                                     ->getObject(cHybrid->getId())
+                                     ->getObject(cChip->getId())
+                                     ->getSummary<CanvasContainer<TH1F>>()
+                                     .fTheHistogram;
+                    auto* hNTCabs = theInternalNTCAbsContainer.getObject(cBoard->getId())
+                                     ->getObject(cOpticalGroup->getId())
+                                     ->getObject(cHybrid->getId())
+                                     ->getObject(cChip->getId())
+                                     ->getSummary<CanvasContainer<TH1F>>()
+                                     .fTheHistogram;
+                    auto* hPTT = thePolyTempSensTopContainer.getObject(cBoard->getId())
+                                     ->getObject(cOpticalGroup->getId())
+                                     ->getObject(cHybrid->getId())
+                                     ->getObject(cChip->getId())
+                                     ->getSummary<CanvasContainer<TH1F>>()
+                                     .fTheHistogram;
+                    auto* hPTB = thePolyTempSensBottomContainer.getObject(cBoard->getId())
+                                     ->getObject(cOpticalGroup->getId())
+                                     ->getObject(cHybrid->getId())
+                                     ->getObject(cChip->getId())
+                                     ->getSummary<CanvasContainer<TH1F>>()
+                                     .fTheHistogram;
+                    auto* hSLDOAna = theTempsensAnaSldoContainer.getObject(cBoard->getId())
+                                     ->getObject(cOpticalGroup->getId())
+                                     ->getObject(cHybrid->getId())
+                                     ->getObject(cChip->getId())
+                                     ->getSummary<CanvasContainer<TH1F>>()
+                                     .fTheHistogram;
+                    auto* hSLDODig = theTempsensDigSldoContainer.getObject(cBoard->getId())
+                                     ->getObject(cOpticalGroup->getId())
+                                     ->getObject(cHybrid->getId())
+                                     ->getObject(cChip->getId())
+                                     ->getSummary<CanvasContainer<TH1F>>()
+                                     .fTheHistogram;
+                    auto* hSLDOCen = theTempsensCenterContainer.getObject(cBoard->getId())
+                                     ->getObject(cOpticalGroup->getId())
+                                     ->getObject(cHybrid->getId())
+                                     ->getObject(cChip->getId())
+                                     ->getSummary<CanvasContainer<TH1F>>()
+                                     .fTheHistogram;
 
                     hChipCurr->SetMarkerStyle(20);
                     hChipCurr->SetMarkerSize(0.8);
@@ -288,6 +344,20 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                     hVDDig->SetMarkerSize(0.8);
                     hIrf->SetMarkerStyle(20);
                     hIrf->SetMarkerSize(0.8);
+                    hNTCrel->SetMarkerStyle(20);
+                    hNTCrel->SetMarkerSize(0.8);
+                    hNTCabs->SetMarkerStyle(20);
+                    hNTCabs->SetMarkerSize(0.8);
+                    hPTT->SetMarkerStyle(20);
+                    hPTT->SetMarkerSize(0.8);
+                    hPTB->SetMarkerStyle(20);
+                    hPTB->SetMarkerSize(0.8);
+                    hSLDOAna->SetMarkerStyle(20);
+                    hSLDOAna->SetMarkerSize(0.8);
+                    hSLDODig->SetMarkerStyle(20);
+                    hSLDODig->SetMarkerSize(0.8);
+                    hSLDOCen->SetMarkerStyle(20);
+                    hSLDOCen->SetMarkerSize(0.8);
 
                     double   start_time   = -1.0;
                     uint16_t step_counter = 0;
@@ -316,6 +386,20 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                         hVDDig->SetBinError(binX, data.VDDD * REL_ERROR);
                         hIrf->SetBinContent(binX, data.Iref);
                         hIrf->SetBinError(binX, data.Iref * REL_ERROR);
+                        hNTCrel->SetBinContent(binX, data.INTERNAL_NTC_REL);
+                        hNTCrel->SetBinError(binX, data.INTERNAL_NTC_REL * REL_ERROR);
+                        hNTCabs->SetBinContent(binX, data.INTERNAL_NTC_ABS);
+                        hNTCabs->SetBinError(binX, data.INTERNAL_NTC_ABS * REL_ERROR);
+                        hPTT->SetBinContent(binX, data.POLY_TEMPSENS_TOP);
+                        hPTT->SetBinError(binX, data.POLY_TEMPSENS_TOP * REL_ERROR);
+                        hPTB->SetBinContent(binX, data.POLY_TEMPSENS_BOTTOM);
+                        hPTB->SetBinError(binX, data.POLY_TEMPSENS_BOTTOM * REL_ERROR);
+                        hSLDOAna->SetBinContent(binX, data.TEMPSENS_ANA_SLDO);
+                        hSLDOAna->SetBinError(binX, data.TEMPSENS_ANA_SLDO * REL_ERROR);
+                        hSLDODig->SetBinContent(binX, data.TEMPSENS_DIG_SLDO);
+                        hSLDODig->SetBinError(binX, data.TEMPSENS_DIG_SLDO * REL_ERROR);
+                        hSLDOCen->SetBinContent(binX, data.TEMPSENS_CENTER);
+                        hSLDOCen->SetBinError(binX, data.TEMPSENS_CENTER * REL_ERROR);
 
                         // ##########################################
                         // # Convert seconds from epoch to HH:MM:SS #
@@ -341,6 +425,13 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                         hVinDig->GetXaxis()->SetBinLabel(binX, time_str.c_str());
                         hVDDig->GetXaxis()->SetBinLabel(binX, time_str.c_str());
                         hIrf->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hNTCrel->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hNTCabs->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hPTT->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hPTB->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hSLDOAna->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hSLDODig->GetXaxis()->SetBinLabel(binX, time_str.c_str());
+                        hSLDOCen->GetXaxis()->SetBinLabel(binX, time_str.c_str());
                     }
 
                     const uint16_t start_bin = 1;
@@ -356,6 +447,13 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                     hVinDig->GetXaxis()->SetRangeUser(start_bin, end_bin);
                     hVDDig->GetXaxis()->SetRangeUser(start_bin, end_bin);
                     hIrf->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hNTCrel->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hNTCabs->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hPTT->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hPTB->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hSLDOAna->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hSLDODig->GetXaxis()->SetRangeUser(start_bin, end_bin);
+                    hSLDOCen->GetXaxis()->SetRangeUser(start_bin, end_bin);
                 }
 }
 
@@ -375,4 +473,11 @@ void PowerTrimmingHistograms::process()
     drawChip<TH1F>(theVINDVsTimeContainer, "PE1");
     drawChip<TH1F>(theVDDDVsTimeContainer, "PE1");
     drawChip<TH1F>(theIrefVsTimeContainer, "PE1");
+    drawChip<TH1F>(theInternalNTCRelContainer, "PE1");
+    drawChip<TH1F>(theInternalNTCAbsContainer, "PE1");
+    drawChip<TH1F>(thePolyTempSensTopContainer, "PE1");
+    drawChip<TH1F>(thePolyTempSensBottomContainer, "PE1");
+    drawChip<TH1F>(theTempsensAnaSldoContainer, "PE1");
+    drawChip<TH1F>(theTempsensDigSldoContainer, "PE1");
+    drawChip<TH1F>(theTempsensCenterContainer, "PE1");
 }
