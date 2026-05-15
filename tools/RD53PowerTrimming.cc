@@ -341,7 +341,6 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
               << RESET << GREEN << " mA for register(s) " << BOLDYELLOW << _regNames.str() << RESET;
 
     uint16_t set_value = startValue;
-    uint16_t pre_value = startValue;
     WriteChipRegisters(set_value);
 
     bool isPreampScan = false;
@@ -431,9 +430,8 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
         shunt_in_curr  = 1e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
         monitor        = analog_in_curr - shunt_in_curr;
 
-        pre_diff  = set_diff;
-        pre_value = set_value;
-        set_diff  = target_value - monitor;
+        pre_diff = set_diff;
+        set_diff = target_value - monitor;
     }
 
     if(std::abs(set_diff) > std::abs(pre_diff))
