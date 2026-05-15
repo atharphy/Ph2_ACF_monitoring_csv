@@ -18,25 +18,25 @@
 typedef bool PowerTrimmingHistograms;
 struct PowerTrimmingData
 {
-    double   timestamp = 0;
-    uint16_t bit = 0;
-    float    ChipCurrent = 0;
-    float    ANA_IN_CURR = 0;
-    float    DIG_IN_CURR = 0;
-    float    VINA = 0;
-    float    VDDA = 0;
-    float    VIND = 0;
-    float    VDDD = 0;
-    float    Iref = 0;
-    float    ANA_SHUNT_CURR = 0;
-    float    DIG_SHUNT_CURR = 0;
-    float    INTERNAL_NTC_REL = 0;
-    float    INTERNAL_NTC_ABS = 0;
-    float    POLY_TEMPSENS_TOP = 0;
+    double   timestamp            = 0;
+    uint16_t bit                  = 0;
+    float    ChipCurrent          = 0;
+    float    ANA_IN_CURR          = 0;
+    float    DIG_IN_CURR          = 0;
+    float    VINA                 = 0;
+    float    VDDA                 = 0;
+    float    VIND                 = 0;
+    float    VDDD                 = 0;
+    float    Iref                 = 0;
+    float    ANA_SHUNT_CURR       = 0;
+    float    DIG_SHUNT_CURR       = 0;
+    float    INTERNAL_NTC_REL     = 0;
+    float    INTERNAL_NTC_ABS     = 0;
+    float    POLY_TEMPSENS_TOP    = 0;
     float    POLY_TEMPSENS_BOTTOM = 0;
-    float    TEMPSENS_ANA_SLDO = 0;
-    float    TEMPSENS_DIG_SLDO = 0;
-    float    TEMPSENS_CENTER = 0;
+    float    TEMPSENS_ANA_SLDO    = 0;
+    float    TEMPSENS_DIG_SLDO    = 0;
+    float    TEMPSENS_CENTER      = 0;
 };
 #endif
 
@@ -84,7 +84,10 @@ class PowerTrimming : public CalibBase
     float LDAC_CURRENT_mA;
     bool  doDisplay;
     bool  doUpdateChip;
-    // monitor switches
+
+    // ####################
+    // # Monitor switches #
+    // ####################
     float mon_DIG_IN_CURR;
     float mon_DIG_SHUNT_CURR;
     float mon_VINA;

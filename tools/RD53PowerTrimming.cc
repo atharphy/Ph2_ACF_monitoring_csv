@@ -25,20 +25,23 @@ void PowerTrimming::ConfigureCalibration()
     doDisplay         = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip      = this->findValueInSettings<double>("UpdateChipCfg");
 
-    mon_DIG_IN_CURR          = this->findValueInSettings<double>("PwTrimMonitor_DIG_IN_CURR"         , 0.0);
-    mon_DIG_SHUNT_CURR       = this->findValueInSettings<double>("PwTrimMonitor_DIG_SHUNT_CURR"      , 0.0);
-    mon_VINA                 = this->findValueInSettings<double>("PwTrimMonitor_VINA"                , 0.0);
-    mon_VDDA                 = this->findValueInSettings<double>("PwTrimMonitor_VDDA"                , 0.0);
-    mon_VIND                 = this->findValueInSettings<double>("PwTrimMonitor_VIND"                , 0.0);
-    mon_VDDD                 = this->findValueInSettings<double>("PwTrimMonitor_VDDD"                , 0.0);
-    mon_Iref                 = this->findValueInSettings<double>("PwTrimMonitor_Iref"                , 0.0);
-    mon_INTERNAL_NTC_REL     = this->findValueInSettings<double>("PwTrimMonitor_INTERNAL_NTC_REL"    , 0.0);
-    mon_INTERNAL_NTC_ABS     = this->findValueInSettings<double>("PwTrimMonitor_INTERNAL_NTC_ABS"    , 0.0);
-    mon_POLY_TEMPSENS_TOP    = this->findValueInSettings<double>("PwTrimMonitor_POLY_TEMPSENS_TOP"   , 0.0);
+    // ####################
+    // # Monitor switches #
+    // ####################
+    mon_DIG_IN_CURR          = this->findValueInSettings<double>("PwTrimMonitor_DIG_IN_CURR", 0.0);
+    mon_DIG_SHUNT_CURR       = this->findValueInSettings<double>("PwTrimMonitor_DIG_SHUNT_CURR", 0.0);
+    mon_VINA                 = this->findValueInSettings<double>("PwTrimMonitor_VINA", 0.0);
+    mon_VDDA                 = this->findValueInSettings<double>("PwTrimMonitor_VDDA", 0.0);
+    mon_VIND                 = this->findValueInSettings<double>("PwTrimMonitor_VIND", 0.0);
+    mon_VDDD                 = this->findValueInSettings<double>("PwTrimMonitor_VDDD", 0.0);
+    mon_Iref                 = this->findValueInSettings<double>("PwTrimMonitor_Iref", 0.0);
+    mon_INTERNAL_NTC_REL     = this->findValueInSettings<double>("PwTrimMonitor_INTERNAL_NTC_REL", 0.0);
+    mon_INTERNAL_NTC_ABS     = this->findValueInSettings<double>("PwTrimMonitor_INTERNAL_NTC_ABS", 0.0);
+    mon_POLY_TEMPSENS_TOP    = this->findValueInSettings<double>("PwTrimMonitor_POLY_TEMPSENS_TOP", 0.0);
     mon_POLY_TEMPSENS_BOTTOM = this->findValueInSettings<double>("PwTrimMonitor_POLY_TEMPSENS_BOTTOM", 0.0);
-    mon_TEMPSENS_ANA_SLDO    = this->findValueInSettings<double>("PwTrimMonitor_TEMPSENS_ANA_SLDO"   , 0.0);
-    mon_TEMPSENS_DIG_SLDO    = this->findValueInSettings<double>("PwTrimMonitor_TEMPSENS_DIG_SLDO"   , 0.0);
-    mon_TEMPSENS_CENTER      = this->findValueInSettings<double>("PwTrimMonitor_TEMPSENS_CENTER"     , 0.0);
+    mon_TEMPSENS_ANA_SLDO    = this->findValueInSettings<double>("PwTrimMonitor_TEMPSENS_ANA_SLDO", 0.0);
+    mon_TEMPSENS_DIG_SLDO    = this->findValueInSettings<double>("PwTrimMonitor_TEMPSENS_DIG_SLDO", 0.0);
+    mon_TEMPSENS_CENTER      = this->findValueInSettings<double>("PwTrimMonitor_TEMPSENS_CENTER", 0.0);
 
     const auto frontEnd = RD53Shared::firstChip->getFEtype();
     if((frontEnd != &RD53B::RD53Bv1) && (frontEnd != &RD53B::RD53Bv2))
@@ -342,17 +345,11 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
     WriteChipRegisters(set_value);
 
     bool isPreampScan = false;
-    if(std::string(regNames.front()).find("DAC_PREAMP") != std::string::npos) 
-    {
-        isPreampScan = true;
-    }
+    if(std::string(regNames.front()).find("DAC_PREAMP") != std::string::npos) isPreampScan = true;
 
     uint16_t nominal_fc = fReadoutChipInterface->ReadChipReg(pChip, "DAC_FC_LIN");
 
-    if(isPreampScan)
-    {
-        fReadoutChipInterface->WriteChipReg(pChip, "DAC_FC_LIN", 0);
-    }
+    if(isPreampScan == true) fReadoutChipInterface->WriteChipReg(pChip, "DAC_FC_LIN", 0);
 
     // ############################################
     // # Initial current reading and target setup #
@@ -364,40 +361,40 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
     float set_diff       = target_value - monitor;
     float pre_diff       = set_diff;
 
-    if(isPreampScan) 
-    {
-        fReadoutChipInterface->WriteChipReg(pChip, "DAC_FC_LIN", nominal_fc);
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
+    if(isPreampScan == false) fReadoutChipInterface->WriteChipReg(pChip, "DAC_FC_LIN", nominal_fc);
 
     if(doDebug == true) outFile.open("RD53PowerTrimming_CurrentManager.txt", std::ios_base::app);
 
-    auto AppendMonitorData = [&](){
+    auto AppendMonitorData = [&]()
+    {
         PowerTrimmingData PTData;
+
         const auto now     = std::chrono::system_clock::now();
         const auto epoch   = now.time_since_epoch();
         const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(epoch);
+
         PTData.timestamp      = seconds.count();
         PTData.bit            = set_value;
         PTData.ChipCurrent    = monitor;
         PTData.ANA_IN_CURR    = analog_in_curr;
         PTData.ANA_SHUNT_CURR = shunt_in_curr;
-        if (mon_DIG_IN_CURR)          PTData.DIG_IN_CURR          = fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR"         , true) * 1e-3 * RD53Constants::IN_CURR_FACTOR;
-        if (mon_DIG_SHUNT_CURR)       PTData.DIG_SHUNT_CURR       = fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_SHUNT_CURR"      , true) * 1e-3 * RD53Constants::SHUNT_CURR_FACTOR;
-        if (mon_VINA)                 PTData.VINA                 = fReadoutChipInterface->ReadChipMonitor(pChip, "VINA"                , true) * 4.0;
-        if (mon_VDDA)                 PTData.VDDA                 = fReadoutChipInterface->ReadChipMonitor(pChip, "VDDA"                , true) * 2.0;
-        if (mon_VIND)                 PTData.VIND                 = fReadoutChipInterface->ReadChipMonitor(pChip, "VIND"                , true) * 4.0;
-        if (mon_VDDD)                 PTData.VDDD                 = fReadoutChipInterface->ReadChipMonitor(pChip, "VDDD"                , true) * 2.0;
-        if (mon_Iref)                 PTData.Iref                 = fReadoutChipInterface->ReadChipMonitor(pChip, "Iref"                , true);
-        if (mon_INTERNAL_NTC_REL)     PTData.INTERNAL_NTC_REL     = fReadoutChipInterface->ReadChipMonitor(pChip, "INTERNAL_NTC_REL"    , true);
-        if (mon_INTERNAL_NTC_ABS)     PTData.INTERNAL_NTC_ABS     = fReadoutChipInterface->ReadChipMonitor(pChip, "INTERNAL_NTC_ABS"    , true);
-        if (mon_POLY_TEMPSENS_TOP)    PTData.POLY_TEMPSENS_TOP    = fReadoutChipInterface->ReadChipMonitor(pChip, "POLY_TEMPSENS_TOP"   , true);
-        if (mon_POLY_TEMPSENS_BOTTOM) PTData.POLY_TEMPSENS_BOTTOM = fReadoutChipInterface->ReadChipMonitor(pChip, "POLY_TEMPSENS_BOTTOM", true);
-        if (mon_TEMPSENS_ANA_SLDO)    PTData.TEMPSENS_ANA_SLDO    = fReadoutChipInterface->ReadChipMonitor(pChip, "TEMPSENS_ANA_SLDO"   , true);
-        if (mon_TEMPSENS_DIG_SLDO)    PTData.TEMPSENS_DIG_SLDO    = fReadoutChipInterface->ReadChipMonitor(pChip, "TEMPSENS_DIG_SLDO"   , true);
-        if (mon_TEMPSENS_CENTER)      PTData.TEMPSENS_CENTER      = fReadoutChipInterface->ReadChipMonitor(pChip, "TEMPSENS_CENTER"     , true);
+        if(mon_DIG_IN_CURR) PTData.DIG_IN_CURR = fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true) * 1e-3 * RD53Constants::IN_CURR_FACTOR;
+        if(mon_DIG_SHUNT_CURR) PTData.DIG_SHUNT_CURR = fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_SHUNT_CURR", true) * 1e-3 * RD53Constants::SHUNT_CURR_FACTOR;
+        if(mon_VINA) PTData.VINA = fReadoutChipInterface->ReadChipMonitor(pChip, "VINA", true) * 4.0;
+        if(mon_VDDA) PTData.VDDA = fReadoutChipInterface->ReadChipMonitor(pChip, "VDDA", true) * 2.0;
+        if(mon_VIND) PTData.VIND = fReadoutChipInterface->ReadChipMonitor(pChip, "VIND", true) * 4.0;
+        if(mon_VDDD) PTData.VDDD = fReadoutChipInterface->ReadChipMonitor(pChip, "VDDD", true) * 2.0;
+        if(mon_Iref) PTData.Iref = fReadoutChipInterface->ReadChipMonitor(pChip, "Iref", true);
+        if(mon_INTERNAL_NTC_REL) PTData.INTERNAL_NTC_REL = fReadoutChipInterface->ReadChipMonitor(pChip, "INTERNAL_NTC_REL", true);
+        if(mon_INTERNAL_NTC_ABS) PTData.INTERNAL_NTC_ABS = fReadoutChipInterface->ReadChipMonitor(pChip, "INTERNAL_NTC_ABS", true);
+        if(mon_POLY_TEMPSENS_TOP) PTData.POLY_TEMPSENS_TOP = fReadoutChipInterface->ReadChipMonitor(pChip, "POLY_TEMPSENS_TOP", true);
+        if(mon_POLY_TEMPSENS_BOTTOM) PTData.POLY_TEMPSENS_BOTTOM = fReadoutChipInterface->ReadChipMonitor(pChip, "POLY_TEMPSENS_BOTTOM", true);
+        if(mon_TEMPSENS_ANA_SLDO) PTData.TEMPSENS_ANA_SLDO = fReadoutChipInterface->ReadChipMonitor(pChip, "TEMPSENS_ANA_SLDO", true);
+        if(mon_TEMPSENS_DIG_SLDO) PTData.TEMPSENS_DIG_SLDO = fReadoutChipInterface->ReadChipMonitor(pChip, "TEMPSENS_DIG_SLDO", true);
+        if(mon_TEMPSENS_CENTER) PTData.TEMPSENS_CENTER = fReadoutChipInterface->ReadChipMonitor(pChip, "TEMPSENS_CENTER", true);
         fPowerTrimmingResults.push_back(PTData);
-        if (outFile.is_open())
+
+        if(outFile.is_open())
         {
             auto t  = std::time(nullptr);
             auto lt = *std::localtime(&t);
@@ -411,7 +408,9 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
     // ##############################################################################
     while(set_diff > 0.0)
     {
-        // write data, from the step before
+        // ###################################
+        // # Write data from the step before #
+        // ###################################
         AppendMonitorData();
 
         if(set_value < maxValue)
@@ -426,6 +425,7 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
                          << ". Stopping the scan." << RESET;
             break;
         }
+
         WriteChipRegisters(set_value);
         analog_in_curr = 1e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_IN_CURR", true);
         shunt_in_curr  = 1e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
@@ -438,14 +438,11 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
 
     if(std::abs(set_diff) > std::abs(pre_diff))
     {
-        set_value = pre_value;
-        set_diff  = pre_diff;
-        WriteChipRegisters(set_value);
+        set_diff = pre_diff;
+        WriteChipRegisters(--set_value);
     }
-    else 
-    {
+    else
         AppendMonitorData();
-    }
 
     if(outFile.is_open()) outFile.close();
 

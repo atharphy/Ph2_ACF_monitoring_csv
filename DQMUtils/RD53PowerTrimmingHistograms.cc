@@ -61,16 +61,16 @@ void PowerTrimmingHistograms::book(TFile* theOutputFile, DetectorContainer& theD
     // ########################
     // # Debugging histograms #
     // ########################
-    auto hChipCurrVsTime = CanvasContainer<TH1F>("ChipCurrent", "Total chip current vs Time", 3 * maxVal, 0, 3 * maxVal);
-    auto hIAnaVsTime     = CanvasContainer<TH1F>("ANA_IN_CURR", "Analog current vs Time", 3 * maxVal, 0, 3 * maxVal);
-    auto hIDigVsTime     = CanvasContainer<TH1F>("DIG_IN_CURR", "Digital current vs Time", 3 * maxVal, 0, maxVal);
-    auto hAnaShuntVsTime = CanvasContainer<TH1F>("ANA_SHUNT_CURR", "Analog Shunt current vs Time", 3 * maxVal, 0, 3 * maxVal);
-    auto hDigShuntVsTime = CanvasContainer<TH1F>("DIG_SHUNT_CURR", "Digital Shunt current vs Time", 3 * maxVal, 0, 3 * maxVal);
-    auto hVAnaVsTime     = CanvasContainer<TH1F>("VINA", "VINA vs Time", 3 * maxVal, 0, 3 * maxVal);
-    auto hVDAnaVsTime    = CanvasContainer<TH1F>("VDDA", "VDDA vs Time", 3 * maxVal, 0, 3 * maxVal);
-    auto hVDigVsTime     = CanvasContainer<TH1F>("VIND", "VIND vs Time", 3 * maxVal, 0, 3 * maxVal);
-    auto hVDDigVsTime    = CanvasContainer<TH1F>("VDDD", "VDDD vs Time", 3 * maxVal, 0, 3 * maxVal);
-    auto hIrfVsTime      = CanvasContainer<TH1F>("Iref", "Iref vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hChipCurrVsTime   = CanvasContainer<TH1F>("ChipCurrent", "Total chip current vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hIAnaVsTime       = CanvasContainer<TH1F>("ANA_IN_CURR", "Analog current vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hIDigVsTime       = CanvasContainer<TH1F>("DIG_IN_CURR", "Digital current vs Time", 3 * maxVal, 0, maxVal);
+    auto hAnaShuntVsTime   = CanvasContainer<TH1F>("ANA_SHUNT_CURR", "Analog Shunt current vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hDigShuntVsTime   = CanvasContainer<TH1F>("DIG_SHUNT_CURR", "Digital Shunt current vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hVAnaVsTime       = CanvasContainer<TH1F>("VINA", "VINA vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hVDAnaVsTime      = CanvasContainer<TH1F>("VDDA", "VDDA vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hVDigVsTime       = CanvasContainer<TH1F>("VIND", "VIND vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hVDDigVsTime      = CanvasContainer<TH1F>("VDDD", "VDDD vs Time", 3 * maxVal, 0, 3 * maxVal);
+    auto hIrfVsTime        = CanvasContainer<TH1F>("Iref", "Iref vs Time", 3 * maxVal, 0, 3 * maxVal);
     auto hNTCrelVsTime     = CanvasContainer<TH1F>("INTERNAL_NTC_REL", "INTERNAL_NTC_REL vs Time", 3 * maxVal, 0, 3 * maxVal);
     auto hNTCabsVsTime     = CanvasContainer<TH1F>("INTERNAL_NTC_ABS", "INTERNAL_NTC_ABS vs Time", 3 * maxVal, 0, 3 * maxVal);
     auto hPolyTopVsTime    = CanvasContainer<TH1F>("POLY_TEMPSENS_TOP", "POLY_TEMPSENS_TOP vs Time", 3 * maxVal, 0, 3 * maxVal);
@@ -282,17 +282,17 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                                      ->getSummary<CanvasContainer<TH1F>>()
                                      .fTheHistogram;
                     auto* hNTCrel = theInternalNTCRelContainer.getObject(cBoard->getId())
-                                     ->getObject(cOpticalGroup->getId())
-                                     ->getObject(cHybrid->getId())
-                                     ->getObject(cChip->getId())
-                                     ->getSummary<CanvasContainer<TH1F>>()
-                                     .fTheHistogram;
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
+                                        ->getSummary<CanvasContainer<TH1F>>()
+                                        .fTheHistogram;
                     auto* hNTCabs = theInternalNTCAbsContainer.getObject(cBoard->getId())
-                                     ->getObject(cOpticalGroup->getId())
-                                     ->getObject(cHybrid->getId())
-                                     ->getObject(cChip->getId())
-                                     ->getSummary<CanvasContainer<TH1F>>()
-                                     .fTheHistogram;
+                                        ->getObject(cOpticalGroup->getId())
+                                        ->getObject(cHybrid->getId())
+                                        ->getObject(cChip->getId())
+                                        ->getSummary<CanvasContainer<TH1F>>()
+                                        .fTheHistogram;
                     auto* hPTT = thePolyTempSensTopContainer.getObject(cBoard->getId())
                                      ->getObject(cOpticalGroup->getId())
                                      ->getObject(cHybrid->getId())
@@ -306,23 +306,23 @@ void PowerTrimmingHistograms::fillCustomHistos(const std::vector<PowerTrimmingDa
                                      ->getSummary<CanvasContainer<TH1F>>()
                                      .fTheHistogram;
                     auto* hSLDOAna = theTempsensAnaSldoContainer.getObject(cBoard->getId())
-                                     ->getObject(cOpticalGroup->getId())
-                                     ->getObject(cHybrid->getId())
-                                     ->getObject(cChip->getId())
-                                     ->getSummary<CanvasContainer<TH1F>>()
-                                     .fTheHistogram;
+                                         ->getObject(cOpticalGroup->getId())
+                                         ->getObject(cHybrid->getId())
+                                         ->getObject(cChip->getId())
+                                         ->getSummary<CanvasContainer<TH1F>>()
+                                         .fTheHistogram;
                     auto* hSLDODig = theTempsensDigSldoContainer.getObject(cBoard->getId())
-                                     ->getObject(cOpticalGroup->getId())
-                                     ->getObject(cHybrid->getId())
-                                     ->getObject(cChip->getId())
-                                     ->getSummary<CanvasContainer<TH1F>>()
-                                     .fTheHistogram;
+                                         ->getObject(cOpticalGroup->getId())
+                                         ->getObject(cHybrid->getId())
+                                         ->getObject(cChip->getId())
+                                         ->getSummary<CanvasContainer<TH1F>>()
+                                         .fTheHistogram;
                     auto* hSLDOCen = theTempsensCenterContainer.getObject(cBoard->getId())
-                                     ->getObject(cOpticalGroup->getId())
-                                     ->getObject(cHybrid->getId())
-                                     ->getObject(cChip->getId())
-                                     ->getSummary<CanvasContainer<TH1F>>()
-                                     .fTheHistogram;
+                                         ->getObject(cOpticalGroup->getId())
+                                         ->getObject(cHybrid->getId())
+                                         ->getObject(cChip->getId())
+                                         ->getSummary<CanvasContainer<TH1F>>()
+                                         .fTheHistogram;
 
                     hChipCurr->SetMarkerStyle(20);
                     hChipCurr->SetMarkerSize(0.8);

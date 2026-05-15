@@ -21,11 +21,11 @@
 // #########################
 namespace RD53BConstants
 {
-const float PREAMP_L  = 7 / 3;  // Conversion factor for DAC_PREAMP_L_LIN, Area = 87.5 x 100 micro-m^2
-const float PREAMP_R  = 7 / 3;  // Conversion factor for DAC_PREAMP_R_LIN, Area = 87.5 x 100 micro-m^2
-const float PREAMP_TL = 7 / 3; // Conversion factor for DAC_PREAMP_TL_LIN, Area = 87.5 x 225 micro-m^2
-const float PREAMP_TR = 7 / 3; // Conversion factor for DAC_PREAMP_TR_LIN, Area = 87.5 x 225 micro-m^2
-const float PREAMP_T  = 7 / 3;  // Conversion factor for DAC_PREAMP_T_LIN, Area = 25 x 225 micro-m^2
+const float PREAMP_L  = 7 / 3; // Conversion factor from DAC_PREAMP_M_LIN
+const float PREAMP_R  = 7 / 3; // Conversion factor from DAC_PREAMP_M_LIN
+const float PREAMP_TL = 7 / 3; // Conversion factor from DAC_PREAMP_M_LIN
+const float PREAMP_TR = 7 / 3; // Conversion factor from DAC_PREAMP_M_LIN
+const float PREAMP_T  = 7 / 3; // Conversion factor from DAC_PREAMP_M_LIN
 } // namespace RD53BConstants
 
 // ############################
