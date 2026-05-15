@@ -49,11 +49,27 @@ void PedeNoise::clearDataMembers()
 
 void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 {
+    fAllChan = pAllChan;
+
+    fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
+    fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
+    fPlotSCurves                 = findValueInSettings<double>("PlotSCurves", 0);
+    fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
+    fPulseAmplitude              = findValueInSettings<double>("PedeNoise_PulseAmplitude", 0);
+    fPulseAmplitudePix           = findValueInSettings<double>("PedeNoise_PulseAmplitudePix", fPulseAmplitude);
+    LOG(INFO) << BOLDMAGENTA << " Strip injection pulse height = " << +fPulseAmplitude << RESET;
+    if(fWithMPA) LOG(INFO) << BOLDMAGENTA << " Pixel injection pulse height = " << +fPulseAmplitudePix << RESET;
+    fPedeNoiseLimit          = findValueInSettings<double>("PedeNoiseLimit", 10); // NOT IN XML
+    fPedeNoiseMask           = findValueInSettings<double>("PedeNoiseMask", 0);   // NOT IN XML
+    fPedeNoiseMaskUntrimmed  = findValueInSettings<double>("PedeNoise_MaskUntrimmed", 0);
+    fPedeNoiseUntrimmedLimit = findValueInSettings<double>("PedeNoise_UntrimmedLimit", 0.0);
+    fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
+
     fRegisterHelper->takeSnapshot();
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^VCth\\d$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::CBC3, "^MaskChannel-\\d{3}-to-\\d{3}$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ThDAC\\d$");
-    fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ENFLAGS_C\\d+_R\\d+$");
+    if(fPedeNoiseMaskUntrimmed) fRegisterHelper->freeFrontEndRegister(FrontEndType::MPA2, "^ENFLAGS_C\\d+_R\\d+$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^Bias_THDAC$");
     fRegisterHelper->freeFrontEndRegister(FrontEndType::SSA2, "^ENFLAG_S\\d+$");
 
@@ -115,21 +131,6 @@ void PedeNoise::Initialise(bool pAllChan, bool pDisableStubLogic)
 
     initializeRecycleBin();
 
-    fAllChan = pAllChan;
-
-    fSkipMaskedChannels          = findValueInSettings<double>("SkipMaskedChannels", 0);
-    fMaskChannelsFromOtherGroups = findValueInSettings<double>("MaskChannelsFromOtherGroups", 1);
-    fPlotSCurves                 = findValueInSettings<double>("PlotSCurves", 0);
-    fFitSCurves                  = findValueInSettings<double>("FitSCurves", 0);
-    fPulseAmplitude              = findValueInSettings<double>("PedeNoise_PulseAmplitude", 0);
-    fPulseAmplitudePix           = findValueInSettings<double>("PedeNoise_PulseAmplitudePix", fPulseAmplitude);
-    LOG(INFO) << BOLDMAGENTA << " Strip injection pulse height = " << +fPulseAmplitude << RESET;
-    if(fWithMPA) LOG(INFO) << BOLDMAGENTA << " Pixel injection pulse height = " << +fPulseAmplitudePix << RESET;
-    fPedeNoiseLimit          = findValueInSettings<double>("PedeNoiseLimit", 10); // NOT IN XML
-    fPedeNoiseMask           = findValueInSettings<double>("PedeNoiseMask", 0);   // NOT IN XML
-    fPedeNoiseMaskUntrimmed  = findValueInSettings<double>("PedeNoise_MaskUntrimmed", 0);
-    fPedeNoiseUntrimmedLimit = findValueInSettings<double>("PedeNoise_UntrimmedLimit", 0.0);
-    fEventsPerPoint          = findValueInSettings<double>("Nevents", 10);
     if(fWithMPA && fEventsPerPoint > 1000)
     {
         fEventsPerPoint = 1000;
