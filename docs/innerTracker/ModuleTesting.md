@@ -3,7 +3,9 @@
 When dealing with modules you need to configure the `XML` file in a way to map the actual hardware you have.
 In particular you need to set the **hybrid ID** for every module, and **chip ID** with **lane** for every chip.
 
-### Hybrid ID configuration
+### Hybrid ID configuration (electrical setup)
+
+!!! note "This subsection describes the electrical setup using KSU FMCs"
 
 Every FC7 board has two FMC connectors: L8 and L12 (telling the total number of GTX readout lanes the connector has).
 Every FMC card has four mini Display Port (miniDP) connectors to connect the modules.
@@ -39,7 +41,7 @@ playing with the `VOLTAGE_TRIM` register
 
 ### Typical mapping for CROCv2 quad modules
 
-| TBPX	             | TFPX                | TEPX                |
+| TBPX               | TFPX                | TEPX                |
 | ------------------ | ------------------- | ------------------- |
 | chip ID 0 ↔ lane 0 | chip ID 14 ↔ lane 0 | chip ID 15 ↔ lane 0 |
 | chip ID 1 ↔ lane 1 | chip ID 13 ↔ lane 1 | chip ID 14 ↔ lane 1 |
@@ -101,7 +103,7 @@ In any of these cases, a double-DP adapter should be used to connect the module 
 
 ### Typical mapping for RD53A quad modules
 
-| TBPX	             | TEPX               |
+| TBPX               | TEPX               |
 | ------------------ | ------------------ |
 | chip ID 4 ↔ lane 0 | chip ID 0 ↔ lane 0 |
 | chip ID 5 ↔ lane 1 | chip ID 1 ↔ lane 1 |

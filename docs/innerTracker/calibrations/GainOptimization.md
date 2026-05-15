@@ -1,18 +1,23 @@
 # Gain Optimization
 
+!!! warning "This calibration was substantially changed in Ph2_ACF v6-30"
+    If you are using an older Ph2_ACF version, you should refer to the following description [here](https://gitlab.cern.ch/cms_tk_ph2/Ph2_ACF/-/blob/v6-29/docs/innerTracker/calibrations/GainOptimization.md).
+
 ## Purpose
 
-The purpose of the Gain Optimization is optimizing the signal gain for efficient measurement of the target charge. This calibration tunes the Krummenacher current $I_{\text{Krum}}$ that discharges the capacitor in the preamplifier circuit and directly affects the ToT gain slope.
+The purpose of the Gain Optimization is optimizing the signal gain for efficient measurement of the target charge. This calibration tunes the Krummenacher current $I_{\text{Krum}}$ that discharges the capacitor in the preamplifier circuit and directly affects the [ToT](TermExplanations.md#time-over-threshold-tot) vs [$\Delta V_{\text{Cal}}$](TermExplanations.md#calibration-voltage-vcal) slope (gain).
 
 ## Method
 
-Gain Optimization is derived from [Gain Scan](GainScan.md). It works by repeating the Gain Scan many times with different Krummenacher current values, measuring the gain curves of all pixels each time. A [binary search](https://en.wikipedia.org/w/index.php?title=Binary_search&oldid=1250479543) in `DAC_KRUM_CURR_LIN` DAC is performed between `KrumCurrStart` and `KrumCurrStop`, looking for the Krummenacher current that produces the average ToT at `targetCharge` that is 4 standard deviations away from the maximum ToT value (14 for CROC).
+Gain Optimization is derived from [PixelAlive](PixelAlive.md).
+It works by repeating the PixelAlive many times with the same injected charge (set by `targetCharge`), but different Krummenacher current (`DAC_KRUM_CURR_LIN`) values.
+A [binary search](https://en.wikipedia.org/w/index.php?title=Binary_search&oldid=1250479543) in `DAC_KRUM_CURR_LIN` is performed between `KrumCurrStart` and `KrumCurrStop`, looking for the Krummenacher current that produces the average ToT equal to `targetToT`.
 
 **Scan command:** `gainopt`
 
 * Analog injection
 
-!!! warning "You have to update the config manually in the xml file"
+!!! note "You have to update the config manually in the xml file"
     * RD53B: `DAC_KRUM_CURR_LIN`
     * RD53A: `KRUM_CURR_LIN`
 
@@ -20,31 +25,32 @@ Gain Optimization is derived from [Gain Scan](GainScan.md). It works by repeatin
 
 |Name            |Typical Value| Description |
 |----------------|-------------|-------------|
-|`nEvents`       |100          |Number of injections per [$\Delta V_{\text{Cal}}$](TermExplanations.md#calibration-voltage-vcal) step|
+|`nEvents`       |100          |Number of injections per `DAC_KRUM_CURR_LIN` step|
 |`nEvtsBurst`    |=`nEvents`   |Number of events readout from FPGA in one instance|
 |`nTRIGxEvent`   |10           |Number of triggers for each injection|
 |`INJtype`       |1            |Injection type, 1 – analog|
 |`ToT6to4Mapping`|0            |Whether to use the [ToT](TermExplanations.md#time-over-threshold-tot) dual-slope mode (6-to-4 bit compression)|
-|`VCalHStart`    |100          |Starting [`VCAL_HIGH`](TermExplanations.md#calibration-voltage-vcal) register value for the scan|
-|`VCalHStop`     |4000         |Final [`VCAL_HIGH`](TermExplanations.md#calibration-voltage-vcal) register value for the scan (<4096)|
-|`VCalnsteps`    |20           |Number of points to test between VCalHStart and VCalHStop|
 |`KrumCurrStart` |0            |The lowest `DAC_KRUM_CURR_LIN` register value for the scan|
 |`KrumCurrStop`  |127          |The highest `DAC_KRUM_CURR_LIN` register value for the scan|
-|`targetCharge`  |10000        |Charge (in electrons) at which the average [ToT](TermExplanations.md#time-over-threshold-tot) is 4 std. devs. below 14|
+|`targetCharge`  |6000         |Charge (in electrons) used for the scan|
+|`targetToT`     |5.3 or 2     |ToT to be reached at target charge (5.3 for slow discharge, 2 for fast discharge)|
 
 ## Expected Output
 
-Pictures below show the plots produced by the Gain Optimization with a target charge of 20000 electrons for the single-slope mode (left) and double-slope mode (right).
+Pictures below show the plots produced by the Gain Optimization with a target charge of 10000 electrons and target ToT of 3 for the single-slope mode.
 
 ### Suggested Krummenacher current
 
-Pictures below show the suggested `DAC_KRUM_CURR_LIN` values in single and dual-slope modes respectively (127 for single-slope and 24 for dual-slope mode).
+Picture below shows the suggested `DAC_KRUM_CURR_LIN` value in single-slope mode (165).
+ <!-- and dual-slope modes respectively (127 for single-slope and 24 for dual-slope mode). -->
 
-|Single-slope mode|Dual-slope mode (6-to-4 bit conversion)|
+<!-- |Single-slope mode|Dual-slope mode (6-to-4 bit conversion)|
 |-----------------|---------------------------------------|
-|![KrumCurr single-slope](images/gainopt/KrumCurr1.png){width=350}|![KrumCurr dual-slope](images/gainopt/KrumCurr2.png){width=350}|
+|![KrumCurr single-slope](images/gainopt/KrumCurr1.png){width=350}|![KrumCurr dual-slope](images/gainopt/KrumCurr2.png){width=350}| -->
 
-### Gain curves 
+![KrumCurr](images/gainopt/NEW_KrumCurr.png){width=400}
+
+<!-- ### Gain curves 
 
 Pictures below show superimposed gain curves of each pixel in single and dual-slope modes respectively.
 
@@ -136,4 +142,16 @@ Pictures below show 2D maps of fit errors for single and dual-slope modes respec
 
 |Single-slope mode|Dual-slope mode (6-to-4 bit conversion)|
 |-----------------|---------------------------------------|
-|![2D fit errors single-slope](images/gainopt/FitErrors1.png){width=350}|![2D fit errors dual-slope](images/gainopt/FitErrors2.png){width=350}|
+|![2D fit errors single-slope](images/gainopt/FitErrors1.png){width=350}|![2D fit errors dual-slope](images/gainopt/FitErrors2.png){width=350}| -->
+
+### Final ToT distribution
+
+The picture below shows the ToT distribution at the target charge with the optimal Krummenacher current value.
+
+![FinalToT](images/gainopt/NEW_ToT1D.png){width=400}
+
+### Final 2D pixel occupancy
+
+The picture below shows the 2D distribution of all the pixel occupancies at the target charge with the optimal Krummenacher current. As we can see, nearly all the occupancies (apart from a few unresponsive pixels) are equal to one (as the target charge is way above the threshold).
+
+![FinalPixelAlive](images/gainopt/NEW_PixelAlive2D.png){width=400}

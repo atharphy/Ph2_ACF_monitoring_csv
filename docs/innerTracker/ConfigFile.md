@@ -42,32 +42,45 @@ Note that for RD53Bv2 chips, the correct `eFuseCode` must be entered from the [d
 
 For modules, one has to define 2 or 4 chips in the XML file, depending on the module type.
 They are defined exactly the same as written above, only that one has to set a correct `Id` and `Lane` for each chip.
-Typical `Id` and `Lane` mappings can be found [here](ModuleTesting.md#lane-mapping)
 
-#### Data merging
+!!! info "Typical `Id` and `Lane` mappings for modules"
+    Typical `Id` and `Lane` mappings can be found [Lane Mapping](ModuleTesting.md#lane-mapping) section of the [Module Testing](ModuleTesting.md) page.
+
+#### Data merging and multilane readout
 
 ```xml
-<LaneConfig primary="1" 
+<LaneConfig isPrimary="1" 
+            masterLane="0"
             outputLanes="0001"         ⟵ [4th ch, 3rd ch, 2nd ch, 1st ch]
             singleChannelInputs="0000"
             dualChannelInput="0000"
 />
 ```
 
-* primary (1/0): says whether the chip is the master
-* outputLanes (0-4): says which output lanes are enabled and how they are mapped
+* `isPrimary` (1/0): says whether the chip is the master (1) or a slave(0)
+* `masterLane`: if the chip is a slave, this register says which is the lane of the master (the FW
+needs to know where to look for the data of the slave chip)
+* `outputLanes` (0-4): says which output lanes are enabled and how they are mapped
    * For example:  
       `outputLanes="0001"` ➜ only one lane is enabled and it’s mapped to the rst line  
       `outputLanes="4321"` ➜ all four lanes are enabled and they are mapped in the natural way  
       `outputLanes="1234"` ➜ all four lanes are enabled and they are mapped in the reverse way  
-* `singleChannelInputs (1/0)`: says which input channel is enabled as single lane
-* `dualChannelInput (1/0)`: says which input channel is enabled as “double-channel” i.e. bonded
+* `singleChannelInputs` (1/0): says which input channel is enabled as single lane
+* `dualChannelInput` (1/0): says which input channel is enabled as “double-channel” i.e. bonded
    * For example:  
      `dualChannelInput="0101"` ➜ the first and third channels are bonded
+
+!!! info "Merging options for different quad module types"
+    The settings for data merging on TBPX, TFPX, and TEPX quad modules are listed in a dedicated [Data Merging](ModuleTesting.md#data-merging-on-it-quad-modules) section under [Module Testing](ModuleTesting.md).
+
+!!! info "Multilane readout options for different dual module types"
+    The settings for multilane readout on TBPX and TFPX dual modules are listed in a dedicated [Multilane Readout](ModuleTesting.md#multilane-readout-on-it-dual-modules) section under [Module Testing](ModuleTesting.md).
 
 !!! info "Running CROC SCCs in KSU hybrid ports 2 and 3"
     As the Aurora lanes are inverted w.r.t. the RD53A SCC, only CROC lanes 2 and 3 are connected for these connectors.
     Set `outputLanes` to `1234` for this module.
+
+![Data merging options](images/DataMerging.png){width=700}
 
 #### Chip registers
 
@@ -333,6 +346,9 @@ Used in [`eye`](calibrations/LpGBTeye.md) scan
 
 <Setting name="StopIfCommFails"> 1 </Setting> <!-- = 0: don't exit if some AURORA lanes are down
                                                    = 1: exit if some AURORA lanes are down -->
+
+<Setting name="SilentRunning">   0 </Setting> <!-- = 1: remove error messages during calibration
+                                                        (not during initialisation) -->
 ```
 
 #### Expert settings
