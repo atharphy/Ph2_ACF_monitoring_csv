@@ -8,6 +8,7 @@
 */
 
 #include "RD53PowerTrimming.h"
+#include <thread>
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -23,6 +24,24 @@ void PowerTrimming::ConfigureCalibration()
     LDAC_CURRENT_mA   = this->findValueInSettings<double>("PwTrimLDACTarget", 58);
     doDisplay         = this->findValueInSettings<double>("DisplayHisto");
     doUpdateChip      = this->findValueInSettings<double>("UpdateChipCfg");
+
+    // ####################
+    // # Monitor switches #
+    // ####################
+    mon_DIG_IN_CURR          = this->findValueInSettings<double>("PwTrimMonitor_DIG_IN_CURR", 0.0);
+    mon_DIG_SHUNT_CURR       = this->findValueInSettings<double>("PwTrimMonitor_DIG_SHUNT_CURR", 0.0);
+    mon_VINA                 = this->findValueInSettings<double>("PwTrimMonitor_VINA", 0.0);
+    mon_VDDA                 = this->findValueInSettings<double>("PwTrimMonitor_VDDA", 0.0);
+    mon_VIND                 = this->findValueInSettings<double>("PwTrimMonitor_VIND", 0.0);
+    mon_VDDD                 = this->findValueInSettings<double>("PwTrimMonitor_VDDD", 0.0);
+    mon_Iref                 = this->findValueInSettings<double>("PwTrimMonitor_Iref", 0.0);
+    mon_INTERNAL_NTC_REL     = this->findValueInSettings<double>("PwTrimMonitor_INTERNAL_NTC_REL", 0.0);
+    mon_INTERNAL_NTC_ABS     = this->findValueInSettings<double>("PwTrimMonitor_INTERNAL_NTC_ABS", 0.0);
+    mon_POLY_TEMPSENS_TOP    = this->findValueInSettings<double>("PwTrimMonitor_POLY_TEMPSENS_TOP", 0.0);
+    mon_POLY_TEMPSENS_BOTTOM = this->findValueInSettings<double>("PwTrimMonitor_POLY_TEMPSENS_BOTTOM", 0.0);
+    mon_TEMPSENS_ANA_SLDO    = this->findValueInSettings<double>("PwTrimMonitor_TEMPSENS_ANA_SLDO", 0.0);
+    mon_TEMPSENS_DIG_SLDO    = this->findValueInSettings<double>("PwTrimMonitor_TEMPSENS_DIG_SLDO", 0.0);
+    mon_TEMPSENS_CENTER      = this->findValueInSettings<double>("PwTrimMonitor_TEMPSENS_CENTER", 0.0);
 
     const auto frontEnd = RD53Shared::firstChip->getFEtype();
     if((frontEnd != &RD53B::RD53Bv1) && (frontEnd != &RD53B::RD53Bv2))
@@ -276,7 +295,7 @@ void PowerTrimming::fillHisto()
     histos->fillPreamplifierCurrentHisto(thePreamplifierCurrentContainer);
     histos->fillComparatorCurrentHisto(theComparatorCurrentContainer);
     histos->fillLDACCurrentHisto(theLDACCurrentContainer);
-    if(doDebug == true) histos->fillCustomHistos(fPowerTrimmingResults);
+    histos->fillCustomHistos(fPowerTrimmingResults);
 #endif
 }
 
@@ -306,7 +325,7 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
 {
     std::ofstream outFile;
 
-    auto WriteChipRegisters = [this, pChip, regNames](uint16_t value)
+    auto WriteChipRegisters = [this, &pChip, &regNames](uint16_t value)
     {
         for(const auto& regName: regNames) fReadoutChipInterface->WriteChipReg(pChip, regName, value, false);
     };
@@ -322,8 +341,14 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
               << RESET << GREEN << " mA for register(s) " << BOLDYELLOW << _regNames.str() << RESET;
 
     uint16_t set_value = startValue;
-    uint16_t pre_value = startValue;
     WriteChipRegisters(set_value);
+
+    bool isPreampScan = false;
+    if(std::string(regNames.front()).find("DAC_PREAMP") != std::string::npos) isPreampScan = true;
+
+    uint16_t nominal_fc = fReadoutChipInterface->ReadChipReg(pChip, "DAC_FC_LIN");
+
+    if(isPreampScan == true) fReadoutChipInterface->WriteChipReg(pChip, "DAC_FC_LIN", 0);
 
     // ############################################
     // # Initial current reading and target setup #
@@ -335,13 +360,58 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
     float set_diff       = target_value - monitor;
     float pre_diff       = set_diff;
 
+    if(isPreampScan == false) fReadoutChipInterface->WriteChipReg(pChip, "DAC_FC_LIN", nominal_fc);
+
     if(doDebug == true) outFile.open("RD53PowerTrimming_CurrentManager.txt", std::ios_base::app);
+
+    auto AppendMonitorData = [&]()
+    {
+        PowerTrimmingData PTData;
+
+        const auto now     = std::chrono::system_clock::now();
+        const auto epoch   = now.time_since_epoch();
+        const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(epoch);
+
+        PTData.timestamp      = seconds.count();
+        PTData.bit            = set_value;
+        PTData.ChipCurrent    = monitor;
+        PTData.ANA_IN_CURR    = analog_in_curr;
+        PTData.ANA_SHUNT_CURR = shunt_in_curr;
+        if(mon_DIG_IN_CURR) PTData.DIG_IN_CURR = fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true) * 1e-3 * RD53Constants::IN_CURR_FACTOR;
+        if(mon_DIG_SHUNT_CURR) PTData.DIG_SHUNT_CURR = fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_SHUNT_CURR", true) * 1e-3 * RD53Constants::SHUNT_CURR_FACTOR;
+        if(mon_VINA) PTData.VINA = fReadoutChipInterface->ReadChipMonitor(pChip, "VINA", true) * 4.0;
+        if(mon_VDDA) PTData.VDDA = fReadoutChipInterface->ReadChipMonitor(pChip, "VDDA", true) * 2.0;
+        if(mon_VIND) PTData.VIND = fReadoutChipInterface->ReadChipMonitor(pChip, "VIND", true) * 4.0;
+        if(mon_VDDD) PTData.VDDD = fReadoutChipInterface->ReadChipMonitor(pChip, "VDDD", true) * 2.0;
+        if(mon_Iref) PTData.Iref = fReadoutChipInterface->ReadChipMonitor(pChip, "Iref", true);
+        if(mon_INTERNAL_NTC_REL) PTData.INTERNAL_NTC_REL = fReadoutChipInterface->ReadChipMonitor(pChip, "INTERNAL_NTC_REL", true);
+        if(mon_INTERNAL_NTC_ABS) PTData.INTERNAL_NTC_ABS = fReadoutChipInterface->ReadChipMonitor(pChip, "INTERNAL_NTC_ABS", true);
+        if(mon_POLY_TEMPSENS_TOP) PTData.POLY_TEMPSENS_TOP = fReadoutChipInterface->ReadChipMonitor(pChip, "POLY_TEMPSENS_TOP", true);
+        if(mon_POLY_TEMPSENS_BOTTOM) PTData.POLY_TEMPSENS_BOTTOM = fReadoutChipInterface->ReadChipMonitor(pChip, "POLY_TEMPSENS_BOTTOM", true);
+        if(mon_TEMPSENS_ANA_SLDO) PTData.TEMPSENS_ANA_SLDO = fReadoutChipInterface->ReadChipMonitor(pChip, "TEMPSENS_ANA_SLDO", true);
+        if(mon_TEMPSENS_DIG_SLDO) PTData.TEMPSENS_DIG_SLDO = fReadoutChipInterface->ReadChipMonitor(pChip, "TEMPSENS_DIG_SLDO", true);
+        if(mon_TEMPSENS_CENTER) PTData.TEMPSENS_CENTER = fReadoutChipInterface->ReadChipMonitor(pChip, "TEMPSENS_CENTER", true);
+        fPowerTrimmingResults.push_back(PTData);
+
+        if(outFile.is_open())
+        {
+            auto t  = std::time(nullptr);
+            auto lt = *std::localtime(&t);
+            outFile << std::put_time(&lt, "%H:%M:%S") << "\t" << set_value << "\t" << PTData.ANA_IN_CURR << "\t" << PTData.DIG_IN_CURR << "\t" << PTData.VINA << "\t" << PTData.VDDA << "\t"
+                    << PTData.VIND << "\t" << PTData.VDDD << "\t" << PTData.Iref << "\t" << PTData.ANA_SHUNT_CURR << "\t" << PTData.DIG_SHUNT_CURR << "\t" << PTData.INTERNAL_NTC_ABS << "\n";
+        }
+    };
 
     // ##############################################################################
     // # Main Scanning Loop: ramp up the DAC until the current difference is closed #
     // ##############################################################################
     while(set_diff > 0.0)
     {
+        // ###################################
+        // # Write data from the step before #
+        // ###################################
+        AppendMonitorData();
+
         if(set_value < maxValue)
         {
             set_value++;
@@ -354,59 +424,26 @@ void PowerTrimming::linearScanBottomUp(Ph2_HwDescription::RD53*        pChip,
                          << ". Stopping the scan." << RESET;
             break;
         }
+
         WriteChipRegisters(set_value);
         analog_in_curr = 1e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_IN_CURR", true);
         shunt_in_curr  = 1e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "ANA_SHUNT_CURR", true);
         monitor        = analog_in_curr - shunt_in_curr;
 
-        if(doDebug == true)
-        {
-            PowerTrimmingData PTData;
-
-            const auto now     = std::chrono::system_clock::now();
-            const auto epoch   = now.time_since_epoch();
-            const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(epoch);
-
-            // ##################################################################
-            // # Read all relevant ADC monitors (Currents and Voltages) at each #
-            // # step of the scan and save them a txt file for monitoring       #
-            // ##################################################################
-            PTData.timestamp      = seconds.count();
-            PTData.bit            = set_value;
-            PTData.ChipCurrent    = monitor;
-            PTData.ANA_IN_CURR    = analog_in_curr;
-            PTData.DIG_IN_CURR    = 1e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true);
-            PTData.VINA           = 4.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VINA", true);
-            PTData.VDDA           = 2.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VDDA", true);
-            PTData.VIND           = 4.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VIND", true);
-            PTData.VDDD           = 2.0 * fReadoutChipInterface->ReadChipMonitor(pChip, "VDDD", true);
-            PTData.Iref           = fReadoutChipInterface->ReadChipMonitor(pChip, "Iref", true);
-            PTData.ANA_SHUNT_CURR = shunt_in_curr;
-            PTData.DIG_SHUNT_CURR = 1e-3 * RD53Constants::SHUNT_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_SHUNT_CURR", true);
-
-            fPowerTrimmingResults.push_back(PTData);
-
-            auto t  = std::time(nullptr);
-            auto lt = *std::localtime(&t);
-
-            if(outFile.is_open() == true)
-                outFile << std::put_time(&lt, "%H:%M:%S") << "\t" << set_value << "\t" << PTData.ANA_IN_CURR << "\t" << PTData.DIG_IN_CURR << "\t" << PTData.VINA << "\t" << PTData.VDDA << "\t"
-                        << PTData.VIND << "\t" << PTData.VDDD << "\t" << PTData.Iref << "\t" << PTData.ANA_SHUNT_CURR << "\t" << PTData.DIG_SHUNT_CURR << "\n";
-        }
-
-        pre_diff  = set_diff;
-        pre_value = set_value;
-        set_diff  = target_value - monitor;
+        pre_diff = set_diff;
+        set_diff = target_value - monitor;
     }
-
-    if(outFile.is_open()) outFile.close();
 
     if(std::abs(set_diff) > std::abs(pre_diff))
     {
-        set_value = pre_value;
-        set_diff  = pre_diff;
-        WriteChipRegisters(set_value);
+        set_diff = pre_diff;
+        WriteChipRegisters(--set_value);
     }
+    else
+        AppendMonitorData();
+
+    if(outFile.is_open()) outFile.close();
+
     float digcurr = 1e-3 * RD53Constants::IN_CURR_FACTOR * fReadoutChipInterface->ReadChipMonitor(pChip, "DIG_IN_CURR", true);
     std::cout << std::endl;
     LOG(INFO) << BLUE << "\t--> Scan ended" << RESET;
