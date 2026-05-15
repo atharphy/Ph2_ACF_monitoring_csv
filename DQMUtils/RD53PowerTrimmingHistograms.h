@@ -24,18 +24,25 @@
 
 struct PowerTrimmingData
 {
-    double   timestamp;
-    uint16_t bit;
-    float    ChipCurrent;
-    float    ANA_IN_CURR;
-    float    DIG_IN_CURR;
-    float    VINA;
-    float    VDDA;
-    float    VIND;
-    float    VDDD;
-    float    Iref;
-    float    ANA_SHUNT_CURR;
-    float    DIG_SHUNT_CURR;
+    double   timestamp = 0;
+    uint16_t bit = 0;
+    float    ChipCurrent = 0;
+    float    ANA_IN_CURR = 0;
+    float    DIG_IN_CURR = 0;
+    float    VINA = 0;
+    float    VDDA = 0;
+    float    VIND = 0;
+    float    VDDD = 0;
+    float    Iref = 0;
+    float    ANA_SHUNT_CURR = 0;
+    float    DIG_SHUNT_CURR = 0;
+    float    INTERNAL_NTC_REL = 0;
+    float    INTERNAL_NTC_ABS = 0;
+    float    POLY_TEMPSENS_TOP = 0;
+    float    POLY_TEMPSENS_BOTTOM = 0;
+    float    TEMPSENS_ANA_SLDO = 0;
+    float    TEMPSENS_DIG_SLDO = 0;
+    float    TEMPSENS_CENTER = 0;
 };
 
 class PowerTrimmingHistograms : public DQMHistogramBase
@@ -74,6 +81,13 @@ class PowerTrimmingHistograms : public DQMHistogramBase
     DetectorDataContainer theVINDVsTimeContainer;
     DetectorDataContainer theVDDDVsTimeContainer;
     DetectorDataContainer theIrefVsTimeContainer;
+    DetectorDataContainer theInternalNTCRelContainer;
+    DetectorDataContainer theInternalNTCAbsContainer;
+    DetectorDataContainer thePolyTempSensTopContainer;
+    DetectorDataContainer thePolyTempSensBottomContainer;
+    DetectorDataContainer theTempsensAnaSldoContainer;
+    DetectorDataContainer theTempsensDigSldoContainer;
+    DetectorDataContainer theTempsensCenterContainer;
 };
 
 #endif
