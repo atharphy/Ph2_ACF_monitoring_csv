@@ -28,6 +28,8 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/RD53VTRxLightYieldScan.h"
 #include "tools/RD53VoltageTuning.h"
+#include "tools/RealMon.h"
+#include "tools/realtimemonitor.h"
 
 #ifdef __EUDAQ__
 #include "TROOT.h"
@@ -123,7 +125,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay datarbopt physics eudaq bertest voltagetuning gendacdac powertrimming vtrx eye]",
+                     "injdelay clkdelay datarbopt physics realmon realtimemonitor eudaq bertest voltagetuning gendacdac powertrimming vtrx eye]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -151,7 +153,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("replay", "Replay previously captured communication (extension .bin)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption("runtime", "Set running time for physics mode (in seconds)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("runtime", "Set running time for physics, realmon, or realtimemonitor mode (in seconds)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("runtime", "t");
 
     int result = cmd.parse(argc, argv);
@@ -301,7 +303,8 @@ int main(int argc, char** argv)
         // #############################################
         int  evenORodd = 0;
         bool doTwice   = false;
-        do {
+        do
+        {
             if(TESTSUBDETECTOR == true)
             {
                 if(pa.fDetectorContainer->size() != 1)
@@ -525,7 +528,7 @@ int main(int argc, char** argv)
     else if(whichCalib == "gendacdac")
     {
         // ############################
-        // # Run Generic DAC-DAC Scan #
+        // # Run Generic DAC-DAC scan #
         // ############################
         LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing Generic DAC-DAC scan @@@\x1b[0m" << RESET;
 
@@ -540,7 +543,7 @@ int main(int argc, char** argv)
     else if(whichCalib == "vtrx")
     {
         // #############################
-        // # Run VTRx Light Yield Scan #
+        // # Run VTRx Light Yield scan #
         // #############################
         LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing VTRx Light Yield scan @@@\x1b[0m" << RESET;
 
@@ -555,7 +558,7 @@ int main(int argc, char** argv)
     else if(whichCalib == "eye")
     {
         // ##############################
-        // # Run LpGBT Eye Opening Scan #
+        // # Run LpGBT Eye Opening scan #
         // ##############################
         LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing LpGBT Eye Opening scan @@@\x1b[0m" << RESET;
 
@@ -566,6 +569,50 @@ int main(int argc, char** argv)
         es.run();
         es.analyze();
         es.draw();
+    }
+    else if(whichCalib == "realmon")
+    {
+        // ############################
+        // # Run realtime monitoring #
+        // ############################
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing realtime monitoring @@@\x1b[0m" << RESET;
+
+        RealMon rm;
+        rm.Inherit(&mySysCntr);
+        rm.ConfigureCalibration();
+
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(runNumber);
+        rm.Start(theStartInfo);
+        if(runtime == -1)
+        {
+            do { LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop realtime monitoring ..." << RESET; } while(std::cin.get() != '\n');
+        }
+        else
+            std::this_thread::sleep_for(std::chrono::seconds(runtime));
+        rm.Stop();
+    }
+    else if(whichCalib == "realtimemonitor")
+    {
+        // ############################
+        // # Run realtime monitoring #
+        // ############################
+        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing realtime monitoring @@@\x1b[0m" << RESET;
+
+        RealtimeMonitor rtm;
+        rtm.Inherit(&mySysCntr);
+        rtm.ConfigureCalibration();
+
+        StartInfo theStartInfo;
+        theStartInfo.setRunNumber(runNumber);
+        rtm.Start(theStartInfo);
+        if(runtime == -1)
+        {
+            do { LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop realtime monitoring ..." << RESET; } while(std::cin.get() != '\n');
+        }
+        else
+            std::this_thread::sleep_for(std::chrono::seconds(runtime));
+        rtm.Stop();
     }
     else if(whichCalib == "physics")
     {
@@ -586,9 +633,7 @@ int main(int argc, char** argv)
             ph.Start(theStartInfo);
             if(runtime == -1)
             {
-                do {
-                    LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop the run ..." << RESET;
-                } while(std::cin.get() != '\n');
+                do { LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop the run ..." << RESET; } while(std::cin.get() != '\n');
             }
             else
                 std::this_thread::sleep_for(std::chrono::seconds(runtime));

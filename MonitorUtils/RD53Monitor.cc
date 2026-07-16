@@ -8,6 +8,7 @@
 */
 
 #include "MonitorUtils/RD53Monitor.h"
+#include "MonitorUtils/PrometheusExporter.h"
 
 RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig)
     : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
@@ -102,9 +103,20 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
 
                     theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ValueAndTime<float>>() =
                         ValueAndTime<float>(registerValue, getTimeStampString());
+
+                    PrometheusExporter::getInstance().update(
+                        cBoard->getId(),
+                        cOpticalGroup->getId(),
+                        cHybrid->getId(),
+                        cChip->getId(),
+                        registerName,
+                        registerValue,
+                        static_cast<Ph2_HwInterface::RD53Interface*>(
+                            readoutChipInterface));
                 }
 
 #ifdef __USE_ROOT__
+
     fMonitorDQM->fillChipPlots(theRegisterContainer, registerName);
 #endif
 
