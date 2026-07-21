@@ -9,6 +9,7 @@
 #include <string>
 #include <thread>
 #include <tuple>
+#include <vector>
 
 namespace Ph2_HwInterface
 {
@@ -46,11 +47,21 @@ class PrometheusExporter
         std::chrono::system_clock::time_point updateTime;
     };
 
-    using MetricKey = std::tuple<int, int, int, int, std::string, std::string>;
+    struct VirtualRegisterDefinition
+    {
+        std::string name;
+        std::string unit;
+        std::string expression;
+    };
+
+    using MetricKey   = std::tuple<int, int, int, int, std::string, std::string>;
+    using DetectorKey = std::tuple<int, int, int, int>;
 
     void        run();
     void        handleClient(int clientSocket) const;
     std::string renderMetrics() const;
+    void        loadVirtualRegisterDefinitions();
+    void        updateVirtualRegistersLocked(const DetectorKey& detectorKey);
 
     static double      correctionFactor(const std::string& registerName);
     static std::string escapeLabelValue(const std::string& value);
@@ -58,8 +69,10 @@ class PrometheusExporter
     static void        sendResponse(int clientSocket, int statusCode, const std::string& statusText, const std::string& contentType, const std::string& body);
     static void        sendAll(int clientSocket, const std::string& response);
 
-    mutable std::mutex               fMetricMutex;
-    std::map<MetricKey, MetricValue> fMetrics;
+    mutable std::mutex                                        fMetricMutex;
+    std::map<MetricKey, MetricValue>                          fMetrics;
+    std::map<DetectorKey, std::map<std::string, MetricValue>> fLatestRegisterValues;
+    std::vector<VirtualRegisterDefinition>                    fVirtualRegisterDefinitions;
 
     std::atomic<bool> fRunning{false};
     std::atomic<int>  fServerSocket{-1};

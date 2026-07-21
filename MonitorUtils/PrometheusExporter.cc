@@ -1,16 +1,160 @@
 #include "MonitorUtils/PrometheusExporter.h"
 #include "HWInterface/RD53Interface.h"
 
+#include <algorithm>
 #include <arpa/inet.h>
 #include <cerrno>
+#include <cctype>
+#include <cmath>
+#include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <iomanip>
 #include <netinet/in.h>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
+namespace
+{
+std::string trim(const std::string& value)
+{
+    const size_t first = value.find_first_not_of(" \t\r\n");
+    if(first == std::string::npos) return "";
+    const size_t last = value.find_last_not_of(" \t\r\n");
+    return value.substr(first, last - first + 1);
+}
+
+class VirtualExpressionParser
+{
+  public:
+    VirtualExpressionParser(const std::string& expression, const std::map<std::string, double>& values) : fExpression(expression), fValues(values) {}
+
+    bool evaluate(double& result, std::set<std::string>& usedRegisters)
+    {
+        fPosition = 0;
+        fUsedRegisters.clear();
+        if(!parseExpression(result)) return false;
+        skipWhitespace();
+        if(fPosition != fExpression.size() || !std::isfinite(result)) return false;
+        usedRegisters = fUsedRegisters;
+        return true;
+    }
+
+  private:
+    bool parseExpression(double& result)
+    {
+        if(!parseTerm(result)) return false;
+
+        while(true)
+        {
+            skipWhitespace();
+            if(fPosition >= fExpression.size() || (fExpression[fPosition] != '+' && fExpression[fPosition] != '-')) return true;
+
+            const char operation = fExpression[fPosition++];
+            double     right     = 0;
+            if(!parseTerm(right)) return false;
+            result = (operation == '+' ? result + right : result - right);
+        }
+    }
+
+    bool parseTerm(double& result)
+    {
+        if(!parseFactor(result)) return false;
+
+        while(true)
+        {
+            skipWhitespace();
+            if(fPosition >= fExpression.size() || (fExpression[fPosition] != '*' && fExpression[fPosition] != '/')) return true;
+
+            const char operation = fExpression[fPosition++];
+            double     right     = 0;
+            if(!parseFactor(right)) return false;
+            if(operation == '/' && right == 0) return false;
+            result = (operation == '*' ? result * right : result / right);
+        }
+    }
+
+    bool parseFactor(double& result)
+    {
+        skipWhitespace();
+        if(fPosition >= fExpression.size()) return false;
+
+        if(fExpression[fPosition] == '+' || fExpression[fPosition] == '-')
+        {
+            const bool negate = fExpression[fPosition++] == '-';
+            if(!parseFactor(result)) return false;
+            if(negate) result = -result;
+            return true;
+        }
+
+        if(fExpression[fPosition] == '(')
+        {
+            ++fPosition;
+            if(!parseExpression(result)) return false;
+            skipWhitespace();
+            if(fPosition >= fExpression.size() || fExpression[fPosition] != ')') return false;
+            ++fPosition;
+            return true;
+        }
+
+        if(fExpression[fPosition] == '"' || std::isalpha(static_cast<unsigned char>(fExpression[fPosition])) || fExpression[fPosition] == '_')
+            return parseRegister(result);
+
+        return parseNumber(result);
+    }
+
+    bool parseRegister(double& result)
+    {
+        std::string registerName;
+        if(fExpression[fPosition] == '"')
+        {
+            const size_t start = ++fPosition;
+            while(fPosition < fExpression.size() && fExpression[fPosition] != '"') ++fPosition;
+            if(fPosition >= fExpression.size()) return false;
+            registerName = fExpression.substr(start, fPosition - start);
+            ++fPosition;
+        }
+        else
+        {
+            const size_t start = fPosition;
+            while(fPosition < fExpression.size() &&
+                  (std::isalnum(static_cast<unsigned char>(fExpression[fPosition])) || fExpression[fPosition] == '_'))
+                ++fPosition;
+            registerName = fExpression.substr(start, fPosition - start);
+        }
+
+        const auto valueIt = fValues.find(registerName);
+        if(valueIt == fValues.end()) return false;
+        result = valueIt->second;
+        fUsedRegisters.insert(registerName);
+        return true;
+    }
+
+    bool parseNumber(double& result)
+    {
+        const char* start = fExpression.c_str() + fPosition;
+        char*       end   = nullptr;
+        result            = std::strtod(start, &end);
+        if(end == start) return false;
+        fPosition += static_cast<size_t>(end - start);
+        return std::isfinite(result);
+    }
+
+    void skipWhitespace()
+    {
+        while(fPosition < fExpression.size() && std::isspace(static_cast<unsigned char>(fExpression[fPosition]))) ++fPosition;
+    }
+
+    const std::string&              fExpression;
+    const std::map<std::string, double>& fValues;
+    size_t                          fPosition{0};
+    std::set<std::string>           fUsedRegisters;
+};
+}
 
 PrometheusExporter& PrometheusExporter::getInstance()
 {
@@ -23,6 +167,8 @@ PrometheusExporter::~PrometheusExporter() { stop(); }
 void PrometheusExporter::start(uint16_t port)
 {
     if(fRunning) return;
+
+    loadVirtualRegisterDefinitions();
 
     const int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if(serverSocket < 0) throw std::runtime_error("[PrometheusExporter::start] Failed to create socket: " + std::string(std::strerror(errno)));
@@ -63,6 +209,49 @@ void PrometheusExporter::start(uint16_t port)
     fServerThread = std::thread(&PrometheusExporter::run, this);
 }
 
+void PrometheusExporter::loadVirtualRegisterDefinitions()
+{
+    std::string configPath;
+    if(const char* configuredPath = std::getenv("CMSIT_VIRTUAL_REGISTER_CONFIG")) configPath = configuredPath;
+    else if(const char* baseDirectory = std::getenv("PH2ACF_BASE_DIR"))
+        configPath = std::string(baseDirectory) + "/settings/virtual_registers.conf";
+    else
+        return;
+
+    std::ifstream configFile(configPath);
+    if(!configFile.is_open()) return;
+
+    std::vector<VirtualRegisterDefinition> definitions;
+    std::set<std::string>                   names;
+    std::string                             line;
+    size_t                                  lineNumber = 0;
+    while(std::getline(configFile, line))
+    {
+        ++lineNumber;
+        line = trim(line);
+        if(line.empty() || line[0] == '#') continue;
+
+        const size_t firstSeparator  = line.find('|');
+        const size_t secondSeparator = firstSeparator == std::string::npos ? std::string::npos : line.find('|', firstSeparator + 1);
+        if(firstSeparator == std::string::npos || secondSeparator == std::string::npos)
+            throw std::runtime_error("[PrometheusExporter] Invalid virtual-register definition at " + configPath + ":" + std::to_string(lineNumber));
+
+        VirtualRegisterDefinition definition{
+            trim(line.substr(0, firstSeparator)),
+            trim(line.substr(firstSeparator + 1, secondSeparator - firstSeparator - 1)),
+            trim(line.substr(secondSeparator + 1))};
+
+        if(definition.name.empty() || definition.expression.empty())
+            throw std::runtime_error("[PrometheusExporter] Empty virtual-register name or expression at " + configPath + ":" + std::to_string(lineNumber));
+        if(!names.insert(definition.name).second)
+            throw std::runtime_error("[PrometheusExporter] Duplicate virtual-register name '" + definition.name + "' in " + configPath);
+
+        definitions.push_back(definition);
+    }
+
+    fVirtualRegisterDefinitions = definitions;
+}
+
 void PrometheusExporter::stop()
 {
     fRunning = false;
@@ -101,9 +290,37 @@ void PrometheusExporter::update(int                boardId,
     const double factor = correctionFactor(registerName);
     const MetricKey key{boardId, opticalGroupId, hybridId, chipId, registerName, unit};
     const MetricValue metric{value * factor, isADCobservable, (isADCobservable ? value * 0.04 * factor : 0), std::chrono::system_clock::now()};
+    const DetectorKey detectorKey{boardId, opticalGroupId, hybridId, chipId};
 
     std::lock_guard<std::mutex> lock(fMetricMutex);
-    fMetrics[key] = metric;
+    fMetrics[key]                                    = metric;
+    fLatestRegisterValues[detectorKey][registerName] = metric;
+    updateVirtualRegistersLocked(detectorKey);
+}
+
+void PrometheusExporter::updateVirtualRegistersLocked(const DetectorKey& detectorKey)
+{
+    const auto detectorValuesIt = fLatestRegisterValues.find(detectorKey);
+    if(detectorValuesIt == fLatestRegisterValues.end()) return;
+
+    const auto& detectorValues = detectorValuesIt->second;
+    std::map<std::string, double> correctedValues;
+    for(const auto& value: detectorValues) correctedValues[value.first] = value.second.value;
+
+    for(const auto& definition: fVirtualRegisterDefinitions)
+    {
+        double virtualValue = 0;
+        std::set<std::string> usedRegisters;
+        VirtualExpressionParser parser(definition.expression, correctedValues);
+        if(!parser.evaluate(virtualValue, usedRegisters)) continue;
+
+        auto updateTime = std::chrono::system_clock::time_point::min();
+        for(const auto& registerName: usedRegisters) updateTime = std::max(updateTime, detectorValues.at(registerName).updateTime);
+
+        const MetricKey virtualKey{
+            std::get<0>(detectorKey), std::get<1>(detectorKey), std::get<2>(detectorKey), std::get<3>(detectorKey), definition.name, definition.unit};
+        fMetrics[virtualKey] = MetricValue{virtualValue, false, 0, updateTime};
+    }
 }
 
 void PrometheusExporter::run()
