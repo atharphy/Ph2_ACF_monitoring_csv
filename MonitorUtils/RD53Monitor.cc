@@ -112,7 +112,8 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                         registerName,
                         registerValue,
                         static_cast<Ph2_HwInterface::RD53Interface*>(
-                            readoutChipInterface));
+                            readoutChipInterface),
+                        cHybrid->getNChip());
                 }
 
 #ifdef __USE_ROOT__

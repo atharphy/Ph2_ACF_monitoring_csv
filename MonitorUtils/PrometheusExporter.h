@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <mutex>
@@ -30,7 +31,8 @@ class PrometheusExporter
                 int                chipId,
                 const std::string& registerName,
                 double             value,
-                Ph2_HwInterface::RD53Interface* rd53Interface);
+                Ph2_HwInterface::RD53Interface* rd53Interface,
+                std::size_t        moduleChipCount = 0);
 
   private:
     PrometheusExporter() = default;
@@ -49,19 +51,28 @@ class PrometheusExporter
 
     struct VirtualRegisterDefinition
     {
+        enum class Scope
+        {
+            Chip,
+            Module
+        };
+
         std::string name;
         std::string unit;
+        Scope       scope{Scope::Chip};
         std::string expression;
     };
 
     using MetricKey   = std::tuple<int, int, int, int, std::string, std::string>;
     using DetectorKey = std::tuple<int, int, int, int>;
+    using ModuleKey   = std::tuple<int, int, int>;
 
     void        run();
     void        handleClient(int clientSocket) const;
     std::string renderMetrics() const;
     void        loadVirtualRegisterDefinitions();
-    void        updateVirtualRegistersLocked(const DetectorKey& detectorKey);
+    void        updateChipVirtualRegistersLocked(const DetectorKey& detectorKey);
+    void        updateModuleVirtualRegistersLocked(const ModuleKey& moduleKey);
 
     static double      correctionFactor(const std::string& registerName);
     static std::string escapeLabelValue(const std::string& value);
@@ -72,6 +83,7 @@ class PrometheusExporter
     mutable std::mutex                                        fMetricMutex;
     std::map<MetricKey, MetricValue>                          fMetrics;
     std::map<DetectorKey, std::map<std::string, MetricValue>> fLatestRegisterValues;
+    std::map<ModuleKey, std::size_t>                          fModuleChipCounts;
     std::vector<VirtualRegisterDefinition>                    fVirtualRegisterDefinitions;
 
     std::atomic<bool> fRunning{false};
