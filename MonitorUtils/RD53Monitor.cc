@@ -36,9 +36,6 @@ void RD53Monitor::runMonitor()
 
         for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
             if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
-
-        for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("Board"))
-            if(registerName.second) runBoardRegisterMonitor(registerName.first);
     }
 }
 
@@ -72,7 +69,7 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                         // #####################
                         if((registerName.find("_AUTORA") != std::string::npos) || (registerName.find("_AUTORB") != std::string::npos))
                         {
-                            auto FWInterface = static_cast<Ph2_HwInterface::RD53FWInterface*>(fTheSystemController->fBeBoardFWMap.find(cBoard->getId())->second);
+                            auto& theBeBoardFW = fTheSystemController->fBeBoardFWMap.find(cBoard->getId())->second;
 
                             std::string which = "B";
                             if(registerName.find("_AUTORA") != std::string::npos)
@@ -80,11 +77,12 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                             else if(registerName.find("_AUTORB") != std::string::npos)
                                 which = "B";
 
-                            registerValue = FWInterface->ReadAutoreadReg(cHybrid->getId(), static_cast<Ph2_HwDescription::RD53*>(cChip)->getChipLane(), which);
+                            registerValue =
+                                static_cast<Ph2_HwInterface::RD53FWInterface*>(theBeBoardFW)->ReadAutoreadReg(cHybrid->getId(), static_cast<Ph2_HwDescription::RD53*>(cChip)->getChipLane(), which);
 
                             if(fDetectorMonitorConfig.fSilentRunning == false)
-                                LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = " << BOLDYELLOW << std::setprecision(0) << registerValue << BOLDBLUE << " (0x"
-                                          << BOLDYELLOW << std::hex << registerValue << std::dec << BOLDBLUE << ")" << RESET;
+                                LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = 0x" << BOLDYELLOW << std::setprecision(0) << std::hex << registerValue << std::dec
+                                          << RESET;
                         }
                         else
                         {
@@ -92,8 +90,8 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                             {
                                 registerValue = readoutChipInterface->ReadChipReg(cChip, registerName);
                                 if(fDetectorMonitorConfig.fSilentRunning == false)
-                                    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = " << BOLDYELLOW << std::setprecision(0) << registerValue << BOLDBLUE << " (0x"
-                                              << BOLDYELLOW << std::hex << registerValue << std::dec << BOLDBLUE << ")" << RESET;
+                                    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = 0x" << BOLDYELLOW << std::setprecision(0) << std::hex << registerValue
+                                              << std::dec << RESET;
                             }
                             catch(const std::exception& e)
                             {
@@ -106,7 +104,6 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                     theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ValueAndTime<float>>() =
                         ValueAndTime<float>(registerValue, getTimeStampString());
 
-                    // Export the value obtained above without issuing another register read.
                     PrometheusExporter::getInstance().update(
                         cBoard->getId(),
                         cOpticalGroup->getId(),
@@ -114,11 +111,13 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                         cChip->getId(),
                         registerName,
                         registerValue,
-                        static_cast<Ph2_HwInterface::RD53Interface*>(readoutChipInterface),
+                        static_cast<Ph2_HwInterface::RD53Interface*>(
+                            readoutChipInterface),
                         cHybrid->getNChip());
                 }
 
 #ifdef __USE_ROOT__
+
     fMonitorDQM->fillChipPlots(theRegisterContainer, registerName);
 #endif
 
@@ -150,17 +149,6 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
                 // # Monitor environment #
                 // #######################
                 registerValue = lpGBTInterface->ReadChipMonitor(cOpticalGroup, registerName, fDetectorMonitorConfig.fSilentRunning);
-            else if(registerName == "SFP")
-            {
-                // ###############
-                // # Monitor SFP #
-                // ###############
-                auto FWInterface = static_cast<Ph2_HwInterface::RD53FWInterface*>(fTheSystemController->fBeBoardFWMap.find(cBoard->getId())->second);
-                registerValue    = FWInterface->GetSFPParameter(cOpticalGroup, "RX", lpGBTInterface->GetSFPchannel(cOpticalGroup));
-                if(fDetectorMonitorConfig.fSilentRunning == false)
-                    LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = " << BOLDYELLOW << std::setprecision(0) << registerValue << BOLDBLUE << " (0x" << BOLDYELLOW
-                              << std::hex << registerValue << std::dec << BOLDBLUE << ")" << RESET;
-            }
             else
             {
                 // #####################
@@ -170,8 +158,7 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
                 {
                     registerValue = lpGBTInterface->ReadChipReg(cOpticalGroup->flpGBT, registerName);
                     if(fDetectorMonitorConfig.fSilentRunning == false)
-                        LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = " << BOLDYELLOW << std::setprecision(0) << registerValue << BOLDBLUE << " (0x" << BOLDYELLOW
-                                  << std::hex << registerValue << std::dec << BOLDBLUE << ")" << RESET;
+                        LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = 0x" << BOLDYELLOW << std::setprecision(0) << std::hex << registerValue << std::dec << RESET;
                 }
                 catch(const std::exception& e)
                 {
@@ -190,43 +177,6 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
     RD53Monitor::sendData(theRegisterContainer, registerName, "opto");
 }
 
-void RD53Monitor::runBoardRegisterMonitor(const std::string& registerName)
-{
-    DetectorDataContainer theRegisterContainer;
-    ContainerFactory::copyAndInitBoard<ValueAndTime<float>>(*fTheSystemController->fDetectorContainer, theRegisterContainer);
-
-    for(const auto cBoard: *fTheSystemController->fDetectorContainer)
-    {
-        float registerValue;
-        if(fDetectorMonitorConfig.fSilentRunning == false) LOG(INFO) << GREEN << "Reading monitored data for [board = " << BOLDYELLOW << cBoard->getId() << RESET << GREEN << "]" << RESET;
-        auto FWInterface = fTheSystemController->fBeBoardInterface;
-
-        // #####################
-        // # Monitor registers #
-        // #####################
-        try
-        {
-            registerValue = FWInterface->ReadBoardReg(cBoard, registerName);
-            if(fDetectorMonitorConfig.fSilentRunning == false)
-                LOG(INFO) << BOLDBLUE << "\t--> " << BOLDYELLOW << registerName << BOLDBLUE << " = " << BOLDYELLOW << std::setprecision(0) << registerValue << BOLDBLUE << " (0x" << BOLDYELLOW
-                          << std::hex << registerValue << std::dec << BOLDBLUE << ")" << RESET;
-        }
-        catch(const std::exception& e)
-        {
-            LOG(ERROR) << BOLDRED << e.what() << RESET;
-            registerValue = -1;
-        }
-
-        theRegisterContainer.getObject(cBoard->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStampString());
-    }
-
-#ifdef __USE_ROOT__
-    fMonitorDQM->fillBoardPlots(theRegisterContainer, registerName);
-#endif
-
-    RD53Monitor::sendData(theRegisterContainer, registerName, "board");
-}
-
 void RD53Monitor::sendData(DetectorDataContainer& DataContainer, const std::string& registerName, const std::string& type)
 {
     if(fTheSystemController->fMonitorDQMStreamerEnabled)
@@ -239,11 +189,6 @@ void RD53Monitor::sendData(DetectorDataContainer& DataContainer, const std::stri
         else if(type == "opto")
         {
             ContainerSerialization theContainerSerialization("ITMonitorOptoRegister");
-            theContainerSerialization.streamByOpticalGroupContainer(fTheSystemController->fMonitorDQMStreamer, DataContainer, registerName);
-        }
-        else if(type == "board")
-        {
-            ContainerSerialization theContainerSerialization("ITMonitorBoardRegister");
             theContainerSerialization.streamByOpticalGroupContainer(fTheSystemController->fMonitorDQMStreamer, DataContainer, registerName);
         }
     }

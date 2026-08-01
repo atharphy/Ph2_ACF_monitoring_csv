@@ -108,10 +108,7 @@ void SystemController::StopMonitoring()
 std::string SystemController::GetMonitorFileName()
 {
     if(fDetectorMonitor != nullptr) { return fDetectorMonitor->getMonitorFileName(); }
-    else
-    {
-        return "";
-    }
+    else { return ""; }
 }
 
 void SystemController::Destroy()
@@ -127,9 +124,7 @@ void SystemController::Destroy()
         fDetectorMonitor->stopRunning();
         fDetectorMonitor->waitForMonitorToStop();
     }
-
     PrometheusExporter::getInstance().stop();
-
     delete fDetectorMonitor;
     fDetectorMonitor = nullptr;
 
@@ -263,10 +258,7 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
             delete fPowerSupplyClient;
             fPowerSupplyClient = nullptr;
         }
-        else
-        {
-            LOG(INFO) << GREEN << "Connected to the Power Supply Server!" << RESET;
-        }
+        else { LOG(INFO) << GREEN << "Connected to the Power Supply Server!" << RESET; }
     }
 
     LOG(INFO) << BOLDBLUE << "\t--> Operation completed" << RESET;
@@ -445,13 +437,6 @@ void SystemController::ConfigureIT(BeBoard* pBoard)
     const size_t colStart    = SystemController::findValueInSettings<double>("COLstart", 0);
     static_cast<RD53FWInterface*>(theBeBoardFW)->ConfigureFastCommands(pBoard, nTRIGxEvent, injType, injLatency, nClkDelays, RD53Shared::firstChip->getFEtype(colStart, colStart) == &RD53A::SYNC);
 
-    // ############################
-    // # Configure silent running #
-    // ############################
-    const bool silentRunning                                          = SystemController::findValueInSettings<double>("SilentRunning", 0);
-    static_cast<RD53FWInterface*>(theBeBoardFW)->silentRunning        = silentRunning;
-    static_cast<RD53Interface*>(fReadoutChipInterface)->silentRunning = silentRunning;
-
     // ###############
     // # Program FSM #
     // ###############
@@ -537,68 +522,64 @@ void SystemController::ConfigureFrontendIT(BeBoard* pBoard)
     // ############################
     // # Configuration parameters #
     // ############################
-    const bool resetMask    = SystemController::findValueInSettings<double>("ResetMask", 0);
-    const int  resetTDAC    = SystemController::findValueInSettings<double>("ResetTDAC", -1);
-    const bool skipInitRD53 = SystemController::findValueInSettings<double>("SkipInitRD53", 0);
+    bool resetMask = SystemController::findValueInSettings<double>("ResetMask");
+    int  resetTDAC = SystemController::findValueInSettings<double>("ResetTDAC");
 
     // ############################
     // # Configure frontend chips #
     // ############################
-    if(skipInitRD53 == false)
-    {
-        LOG(INFO) << CYAN << "===== Configuring frontend chip registers =====" << RESET;
-        for(auto cOpticalGroup: *pBoard)
-            for(auto cHybrid: *cOpticalGroup)
+    LOG(INFO) << CYAN << "===== Configuring frontend chip registers =====" << RESET;
+    for(auto cOpticalGroup: *pBoard)
+        for(auto cHybrid: *cOpticalGroup)
+        {
+            LOG(INFO) << GREEN << "Configuring chips for [opticalGroup/hybrid = " << BOLDYELLOW << cOpticalGroup->getId() << "/" << cHybrid->getId() << RESET << GREEN << "]" << RESET;
+            bool   eFuseCodeCheck = true;
+            double eFuseCode;
+
+            for(const auto cChip: *cHybrid)
             {
-                LOG(INFO) << GREEN << "Configuring chips for [opticalGroup/hybrid = " << BOLDYELLOW << cOpticalGroup->getId() << "/" << cHybrid->getId() << RESET << GREEN << "]" << RESET;
-                bool   eFuseCodeCheck = true;
-                double eFuseCode;
+                LOG(INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
 
-                for(const auto cChip: *cHybrid)
+                if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
+                if(resetTDAC >= 0) static_cast<RD53*>(cChip)->resetTDAC(resetTDAC);
+                static_cast<RD53*>(cChip)->copyMaskToDefault();
+                static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
+
+                try
                 {
-                    LOG(INFO) << GREEN << "Configuring RD53: " << BOLDYELLOW << +cChip->getId() << RESET;
-
-                    if(resetMask == true) static_cast<RD53*>(cChip)->enableAllPixels();
-                    if(resetTDAC >= 0) static_cast<RD53*>(cChip)->resetTDAC(resetTDAC);
-                    static_cast<RD53*>(cChip)->copyMaskToDefault();
-                    static_cast<RD53Interface*>(fReadoutChipInterface)->ConfigureChip(cChip);
-
-                    try
-                    {
-                        eFuseCode = fReadoutChipInterface->ReadChipFuseID(cChip);
-                    }
-                    catch(const std::system_error& err)
-                    {
-                        LOG(WARNING) << RED << err.what() << RESET;
-                        eFuseCode      = -1;
-                        eFuseCodeCheck = false;
-                    }
-                    catch(const std::runtime_error& err)
-                    {
-                        LOG(WARNING) << RED << err.what() << RESET;
-                        eFuseCode      = -1;
-                        eFuseCodeCheck = false;
-                    }
-                    catch(const std::out_of_range& err)
-                    {
-                        LOG(DEBUG) << GREEN << "Chip e-fuse code: " << BOLDYELLOW << err.what() << RESET;
-                        eFuseCode = atoi(err.what());
-                    }
-
-                    LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
-                    if(eFuseCode >= 0) LOG(INFO) << GREEN << "e-fuse code: " << BOLDYELLOW << static_cast<uint32_t>(eFuseCode) << RESET;
-                    LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
+                    eFuseCode = fReadoutChipInterface->ReadChipFuseID(cChip);
+                }
+                catch(const std::system_error& err)
+                {
+                    LOG(WARNING) << RED << err.what() << RESET;
+                    eFuseCode      = -1;
+                    eFuseCodeCheck = false;
+                }
+                catch(const std::runtime_error& err)
+                {
+                    LOG(WARNING) << RED << err.what() << RESET;
+                    eFuseCode      = -1;
+                    eFuseCodeCheck = false;
+                }
+                catch(const std::out_of_range& err)
+                {
+                    LOG(DEBUG) << GREEN << "Chip e-fuse code: " << BOLDYELLOW << err.what() << RESET;
+                    eFuseCode = atoi(err.what());
                 }
 
-                if(eFuseCodeCheck == false) throw std::runtime_error("Please set the proper e-fuse code(s) in the xml file");
-
-                LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases (if any and if needed) for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
-                static_cast<RD53Interface*>(fReadoutChipInterface)->TAP0slaveOptimization(pBoard, cHybrid);
                 LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+                if(eFuseCode >= 0) LOG(INFO) << GREEN << "e-fuse code: " << BOLDYELLOW << static_cast<uint32_t>(eFuseCode) << RESET;
+                LOG(INFO) << GREEN << "Number of masked pixels: " << BOLDYELLOW << static_cast<RD53*>(cChip)->getNbMaskedPixels() << RESET;
             }
 
-        LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
-    }
+            if(eFuseCodeCheck == false) throw std::runtime_error("Please set the proper e-fuse code(s) in the xml file");
+
+            LOG(INFO) << GREEN << "Optimizing up-link slave-chip phases (if any and if needed) for hybrid: " << BOLDYELLOW << +cHybrid->getId() << RESET;
+            static_cast<RD53Interface*>(fReadoutChipInterface)->TAP0slaveOptimization(pBoard, cHybrid);
+            LOG(INFO) << BOLDBLUE << "\t--> Done" << RESET;
+        }
+
+    LOG(INFO) << CYAN << "==================== Done =====================" << RESET;
 }
 
 // ######################################
@@ -1184,8 +1165,7 @@ void SystemController::DecodeData(const BeBoard* pBoard, const std::vector<uint3
 
             size_t cEventIndex    = 0;
             auto   cEventIterator = pData.begin();
-            do
-            {
+            do {
                 uint32_t cHeader = (0xFFFF0000 & (*cEventIterator)) >> 16;
                 if(cHeader != 0xFFFF)
                 {
