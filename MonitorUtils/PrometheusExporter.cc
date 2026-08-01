@@ -28,6 +28,35 @@ std::string trim(const std::string& value)
     return value.substr(first, last - first + 1);
 }
 
+std::string toLower(std::string value)
+{
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char character) { return static_cast<char>(std::tolower(character)); });
+    return value;
+}
+
+bool parseBoolean(const std::string& value, const std::string& key, const std::string& configPath, size_t lineNumber)
+{
+    const std::string normalized = toLower(trim(value));
+    if(normalized == "true" || normalized == "1" || normalized == "yes" || normalized == "on") return true;
+    if(normalized == "false" || normalized == "0" || normalized == "no" || normalized == "off") return false;
+    throw std::runtime_error("[PrometheusExporter] Invalid boolean for '" + key + "' at " + configPath + ":" + std::to_string(lineNumber));
+}
+
+std::vector<std::string> splitCommaSeparated(const std::string& value)
+{
+    std::vector<std::string> entries;
+    size_t                   start = 0;
+    while(start <= value.size())
+    {
+        const size_t separator = value.find(',', start);
+        const auto   entry     = trim(value.substr(start, separator == std::string::npos ? std::string::npos : separator - start));
+        if(!entry.empty()) entries.push_back(entry);
+        if(separator == std::string::npos) break;
+        start = separator + 1;
+    }
+    return entries;
+}
+
 class VirtualExpressionParser
 {
   public:
@@ -241,10 +270,116 @@ PrometheusExporter& PrometheusExporter::getInstance()
 
 PrometheusExporter::~PrometheusExporter() { stop(); }
 
-void PrometheusExporter::start(uint16_t port)
+PrometheusExporter::Configuration PrometheusExporter::loadConfiguration()
+{
+    Configuration configuration;
+
+    std::string configPath;
+    bool        explicitlyConfigured = false;
+    if(const char* configuredPath = std::getenv("CMSIT_PROMETHEUS_CONFIG"))
+    {
+        configPath            = configuredPath;
+        explicitlyConfigured = true;
+    }
+    else if(const char* baseDirectory = std::getenv("PH2ACF_BASE_DIR"))
+        configPath = std::string(baseDirectory) + "/settings/monitoring_settings.conf";
+    else
+        return configuration;
+
+    std::ifstream configFile(configPath);
+    if(!configFile.is_open())
+    {
+        if(explicitlyConfigured) throw std::runtime_error("[PrometheusExporter] Cannot open configuration file " + configPath);
+        return configuration;
+    }
+
+    std::string line;
+    size_t      lineNumber = 0;
+    while(std::getline(configFile, line))
+    {
+        ++lineNumber;
+        const auto comment = line.find('#');
+        if(comment != std::string::npos) line.erase(comment);
+        line = trim(line);
+        if(line.empty()) continue;
+
+        const auto separator = line.find('=');
+        if(separator == std::string::npos)
+            throw std::runtime_error("[PrometheusExporter] Expected KEY = VALUE at " + configPath + ":" + std::to_string(lineNumber));
+
+        const std::string key   = toLower(trim(line.substr(0, separator)));
+        const std::string value = trim(line.substr(separator + 1));
+        if(key.empty() || value.empty()) throw std::runtime_error("[PrometheusExporter] Empty key or value at " + configPath + ":" + std::to_string(lineNumber));
+
+        if(key == "enabled")
+            configuration.enabled = parseBoolean(value, key, configPath, lineNumber);
+        else if(key == "listen_address")
+            configuration.listenAddress = (toLower(value) == "localhost" ? "127.0.0.1" : value);
+        else if(key == "port")
+        {
+            size_t        parsedCharacters = 0;
+            unsigned long port             = 0;
+            try
+            {
+                port = std::stoul(value, &parsedCharacters);
+            }
+            catch(const std::exception&)
+            {
+                throw std::runtime_error("[PrometheusExporter] Invalid port at " + configPath + ":" + std::to_string(lineNumber));
+            }
+            if(parsedCharacters != value.size() || port < 1 || port > 65535)
+                throw std::runtime_error("[PrometheusExporter] Port must be between 1 and 65535 at " + configPath + ":" + std::to_string(lineNumber));
+            configuration.port = static_cast<uint16_t>(port);
+        }
+        else if(key == "metrics_path")
+            configuration.metricsPath = value;
+        else if(key == "metric_families")
+        {
+            configuration.exportValue      = false;
+            configuration.exportError      = false;
+            configuration.exportLastUpdate = false;
+            for(const auto& family: splitCommaSeparated(toLower(value)))
+            {
+                if(family == "value")
+                    configuration.exportValue = true;
+                else if(family == "error")
+                    configuration.exportError = true;
+                else if(family == "last_update")
+                    configuration.exportLastUpdate = true;
+                else
+                    throw std::runtime_error("[PrometheusExporter] Unknown metric family '" + family + "' at " + configPath + ":" + std::to_string(lineNumber));
+            }
+            if(!configuration.exportValue && !configuration.exportError && !configuration.exportLastUpdate)
+                throw std::runtime_error("[PrometheusExporter] metric_families cannot be empty at " + configPath + ":" + std::to_string(lineNumber));
+        }
+        else if(key == "register_allowlist")
+        {
+            configuration.registerAllowlist.clear();
+            if(value != "*")
+                for(const auto& registerName: splitCommaSeparated(value)) configuration.registerAllowlist.insert(registerName);
+            if(value != "*" && configuration.registerAllowlist.empty())
+                throw std::runtime_error("[PrometheusExporter] register_allowlist cannot be empty at " + configPath + ":" + std::to_string(lineNumber));
+        }
+        else if(key == "realtimemonitor_silent")
+            configuration.realtimeMonitorSilent = parseBoolean(value, key, configPath, lineNumber);
+        else
+            throw std::runtime_error("[PrometheusExporter] Unknown setting '" + key + "' at " + configPath + ":" + std::to_string(lineNumber));
+    }
+
+    in_addr parsedAddress{};
+    if(inet_pton(AF_INET, configuration.listenAddress.c_str(), &parsedAddress) != 1)
+        throw std::runtime_error("[PrometheusExporter] listen_address must be localhost or a numeric IPv4 address in " + configPath);
+    if(configuration.metricsPath.empty() || configuration.metricsPath.front() != '/' || configuration.metricsPath.find_first_of(" \t?#") != std::string::npos)
+        throw std::runtime_error("[PrometheusExporter] metrics_path must start with '/' and contain no spaces, query, or fragment in " + configPath);
+
+    return configuration;
+}
+
+void PrometheusExporter::start(const Configuration& configuration)
 {
     if(fRunning) return;
 
+    fConfiguration = configuration;
     loadVirtualRegisterDefinitions();
 
     const int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -264,14 +399,15 @@ void PrometheusExporter::start(uint16_t port)
 
     sockaddr_in address{};
     address.sin_family      = AF_INET;
-    address.sin_port        = htons(port);
-    address.sin_addr.s_addr = htonl(INADDR_ANY);
+    address.sin_port        = htons(fConfiguration.port);
+    inet_pton(AF_INET, fConfiguration.listenAddress.c_str(), &address.sin_addr);
 
     if(bind(serverSocket, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != 0)
     {
         const std::string error = std::strerror(errno);
         close(serverSocket);
-        throw std::runtime_error("[PrometheusExporter::start] Failed to bind port " + std::to_string(port) + ": " + error);
+        throw std::runtime_error(
+            "[PrometheusExporter::start] Failed to bind " + fConfiguration.listenAddress + ":" + std::to_string(fConfiguration.port) + ": " + error);
     }
 
     if(listen(serverSocket, 8) != 0)
@@ -522,13 +658,13 @@ void PrometheusExporter::handleClient(int clientSocket) const
         return;
     }
 
-    if(target == "/metrics")
+    if(target == fConfiguration.metricsPath)
     {
         sendResponse(clientSocket, 200, "OK", "text/plain; version=0.0.4; charset=utf-8", renderMetrics());
         return;
     }
 
-    sendResponse(clientSocket, 404, "Not Found", "text/plain; charset=utf-8", "Metrics are available at /metrics.\n");
+    sendResponse(clientSocket, 404, "Not Found", "text/plain; charset=utf-8", "Metrics are available at " + fConfiguration.metricsPath + ".\n");
 }
 
 std::string PrometheusExporter::renderMetrics() const
@@ -541,21 +677,37 @@ std::string PrometheusExporter::renderMetrics() const
 
     std::ostringstream output;
     output << std::setprecision(12);
-    output << "# HELP cmsit_monitor_value CMSITminiDAQ live monitoring corrected value.\n";
-    output << "# TYPE cmsit_monitor_value gauge\n";
-    for(const auto& metric: snapshot) output << "cmsit_monitor_value" << renderLabels(metric.first) << " " << metric.second.value << "\n";
+    const auto isExportedRegister = [this](const MetricKey& key) {
+        return fConfiguration.registerAllowlist.empty() || fConfiguration.registerAllowlist.count(std::get<4>(key)) != 0;
+    };
 
-    output << "# HELP cmsit_monitor_error CMSITminiDAQ live monitoring corrected uncertainty.\n";
-    output << "# TYPE cmsit_monitor_error gauge\n";
-    for(const auto& metric: snapshot)
-        if(metric.second.hasError) output << "cmsit_monitor_error" << renderLabels(metric.first) << " " << metric.second.error << "\n";
-
-    output << "# HELP cmsit_monitor_last_update_seconds Unix timestamp of last CMSITminiDAQ monitoring update.\n";
-    output << "# TYPE cmsit_monitor_last_update_seconds gauge\n";
-    for(const auto& metric: snapshot)
+    if(fConfiguration.exportValue)
     {
-        const auto timestamp = std::chrono::duration_cast<std::chrono::seconds>(metric.second.updateTime.time_since_epoch()).count();
-        output << "cmsit_monitor_last_update_seconds" << renderLabels(metric.first) << " " << timestamp << "\n";
+        output << "# HELP cmsit_monitor_value CMSITminiDAQ live monitoring corrected value.\n";
+        output << "# TYPE cmsit_monitor_value gauge\n";
+        for(const auto& metric: snapshot)
+            if(isExportedRegister(metric.first)) output << "cmsit_monitor_value" << renderLabels(metric.first) << " " << metric.second.value << "\n";
+    }
+
+    if(fConfiguration.exportError)
+    {
+        output << "# HELP cmsit_monitor_error CMSITminiDAQ live monitoring corrected uncertainty.\n";
+        output << "# TYPE cmsit_monitor_error gauge\n";
+        for(const auto& metric: snapshot)
+            if(isExportedRegister(metric.first) && metric.second.hasError)
+                output << "cmsit_monitor_error" << renderLabels(metric.first) << " " << metric.second.error << "\n";
+    }
+
+    if(fConfiguration.exportLastUpdate)
+    {
+        output << "# HELP cmsit_monitor_last_update_seconds Unix timestamp of last CMSITminiDAQ monitoring update.\n";
+        output << "# TYPE cmsit_monitor_last_update_seconds gauge\n";
+        for(const auto& metric: snapshot)
+        {
+            if(!isExportedRegister(metric.first)) continue;
+            const auto timestamp = std::chrono::duration_cast<std::chrono::seconds>(metric.second.updateTime.time_since_epoch()).count();
+            output << "cmsit_monitor_last_update_seconds" << renderLabels(metric.first) << " " << timestamp << "\n";
+        }
     }
 
     return output.str();

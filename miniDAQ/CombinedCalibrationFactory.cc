@@ -64,7 +64,6 @@
 #include "tools/TestPSEvents.h"
 #include "tools/Tool.h"
 #include "tools/TuneLpGBTVref.h"
-#include "tools/RealMon.h"
 #include "tools/realtimemonitor.h"
 
 using namespace MessageUtils;
@@ -481,7 +480,6 @@ CombinedCalibrationFactory::CombinedCalibrationFactory()
     Register<InjectionDelay>("Inner Tracker", "injdelay");
     Register<ClockDelay>("Inner Tracker", "clockdelay");
     Register<Physics>("Inner Tracker", "physics");
-    Register<RealMon>("Inner Tracker", "realmon");
     Register<RealtimeMonitor>("Inner Tracker", "realtimemonitor");
 }
 

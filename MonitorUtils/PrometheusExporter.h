@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <map>
 #include <mutex>
+#include <set>
 #include <string>
 #include <thread>
 #include <tuple>
@@ -20,9 +21,23 @@ class RD53Interface;
 class PrometheusExporter
 {
   public:
-    static PrometheusExporter& getInstance();
+    struct Configuration
+    {
+        bool                  enabled{true};
+        std::string           listenAddress{"127.0.0.1"};
+        uint16_t              port{9101};
+        std::string           metricsPath{"/metrics"};
+        bool                  exportValue{true};
+        bool                  exportError{true};
+        bool                  exportLastUpdate{true};
+        bool                  realtimeMonitorSilent{true};
+        std::set<std::string> registerAllowlist;
+    };
 
-    void start(uint16_t port = 9101);
+    static PrometheusExporter& getInstance();
+    static Configuration       loadConfiguration();
+
+    void start(const Configuration& configuration);
     void stop();
 
     void update(int                boardId,
@@ -85,6 +100,7 @@ class PrometheusExporter
     std::map<DetectorKey, std::map<std::string, MetricValue>> fLatestRegisterValues;
     std::map<ModuleKey, std::size_t>                          fModuleChipCounts;
     std::vector<VirtualRegisterDefinition>                    fVirtualRegisterDefinitions;
+    Configuration                                             fConfiguration;
 
     std::atomic<bool> fRunning{false};
     std::atomic<int>  fServerSocket{-1};

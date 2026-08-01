@@ -1,16 +1,15 @@
-#ifndef __REALTIME_MONITOR__
-#define __REALTIME_MONITOR__
+#ifndef REALTIME_MONITOR_H
+#define REALTIME_MONITOR_H
 
 #include "tools/Tool.h"
 
-#include <cstdint>
 #include <string>
 
 class RealtimeMonitor : public Tool
 {
   public:
-    RealtimeMonitor();
-    ~RealtimeMonitor();
+    RealtimeMonitor() = default;
+    ~RealtimeMonitor() = default;
 
     void ConfigureCalibration() override;
     void Running() override;
@@ -20,8 +19,6 @@ class RealtimeMonitor : public Tool
 
   private:
     bool hasEnabledMonitorElement() const;
-
-    uint16_t fPrometheusPort{9101};
 };
 
 #endif

@@ -28,7 +28,6 @@
 #include "tools/RD53ThrMinimization.h"
 #include "tools/RD53VTRxLightYieldScan.h"
 #include "tools/RD53VoltageTuning.h"
-#include "tools/RealMon.h"
 #include "tools/realtimemonitor.h"
 
 #ifdef __EUDAQ__
@@ -125,7 +124,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("calib",
                      "Which calibration to run [latency pixelalive noise scurve gain threqu gainopt thrmin thradj "
-                     "injdelay clkdelay datarbopt physics realmon realtimemonitor eudaq bertest voltagetuning gendacdac powertrimming vtrx eye]",
+                     "injdelay clkdelay datarbopt physics realtimemonitor eudaq bertest voltagetuning gendacdac powertrimming vtrx eye]",
                      CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("calib", "c");
 
@@ -153,7 +152,7 @@ int main(int argc, char** argv)
 
     cmd.defineOption("replay", "Replay previously captured communication (extension .bin)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
 
-    cmd.defineOption("runtime", "Set running time for physics, realmon, or realtimemonitor mode (in seconds)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
+    cmd.defineOption("runtime", "Set running time for physics or realtimemonitor mode (in seconds)", CommandLineProcessing::ArgvParser::OptionRequiresValue);
     cmd.defineOptionAlternative("runtime", "t");
 
     int result = cmd.parse(argc, argv);
@@ -570,28 +569,6 @@ int main(int argc, char** argv)
         es.analyze();
         es.draw();
     }
-    else if(whichCalib == "realmon")
-    {
-        // ############################
-        // # Run realtime monitoring #
-        // ############################
-        LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing realtime monitoring @@@\x1b[0m" << RESET;
-
-        RealMon rm;
-        rm.Inherit(&mySysCntr);
-        rm.ConfigureCalibration();
-
-        StartInfo theStartInfo;
-        theStartInfo.setRunNumber(runNumber);
-        rm.Start(theStartInfo);
-        if(runtime == -1)
-        {
-            do { LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop realtime monitoring ..." << RESET; } while(std::cin.get() != '\n');
-        }
-        else
-            std::this_thread::sleep_for(std::chrono::seconds(runtime));
-        rm.Stop();
-    }
     else if(whichCalib == "realtimemonitor")
     {
         // ############################
@@ -599,20 +576,21 @@ int main(int argc, char** argv)
         // ############################
         LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing realtime monitoring @@@\x1b[0m" << RESET;
 
-        RealtimeMonitor rtm;
-        rtm.Inherit(&mySysCntr);
-        rtm.ConfigureCalibration();
+        RealtimeMonitor realtimeMonitor;
+        realtimeMonitor.Inherit(&mySysCntr);
+        realtimeMonitor.ConfigureCalibration();
 
-        StartInfo theStartInfo;
-        theStartInfo.setRunNumber(runNumber);
-        rtm.Start(theStartInfo);
+        StartInfo startInfo;
+        startInfo.setRunNumber(runNumber);
+        realtimeMonitor.Start(startInfo);
         if(runtime == -1)
         {
-            do { LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop realtime monitoring ..." << RESET; } while(std::cin.get() != '\n');
+            LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop realtime monitoring ..." << RESET;
+            while(std::cin.good() && std::cin.get() != '\n') {}
         }
         else
             std::this_thread::sleep_for(std::chrono::seconds(runtime));
-        rtm.Stop();
+        realtimeMonitor.Stop();
     }
     else if(whichCalib == "physics")
     {
