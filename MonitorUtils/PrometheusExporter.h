@@ -30,7 +30,6 @@ class PrometheusExporter
         bool                  exportValue{true};
         bool                  exportError{true};
         bool                  exportLastUpdate{true};
-        bool                  realtimeMonitorSilent{true};
         std::set<std::string> registerAllowlist;
     };
 

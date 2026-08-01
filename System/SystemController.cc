@@ -351,12 +351,6 @@ void SystemController::InitializeHw(const std::string& pFilename, std::ostream& 
     fDetectorMonitorConfig = new DetectorMonitorConfig();
     fParser.parseMonitor(pFilename, *fDetectorMonitorConfig, os);
 
-    if(fCalibrationName == "realtimemonitor")
-    {
-        const auto prometheusConfiguration = PrometheusExporter::loadConfiguration();
-        if(prometheusConfiguration.realtimeMonitorSilent) fDetectorMonitorConfig->fSilentRunning = true;
-    }
-
     if(fDetectorMonitorConfig->fEnable == true)
     {
         if(fDetectorMonitorConfig->fMonitoringType == MONITORING_NODE_TYPE_ATTRIBUTE_2S_VALUE)

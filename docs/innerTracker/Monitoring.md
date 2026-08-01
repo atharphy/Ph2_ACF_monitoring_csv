@@ -65,7 +65,7 @@ scrape_configs:
       - targets: ["daq-host.example.org:9101"]
 ```
 
-The settings file controls the listener, metric families, register allowlist, and `realtimemonitor` logging behavior. Set `CMSIT_PROMETHEUS_CONFIG` to select a site-specific settings file. Changes are loaded when CMSITminiDAQ starts and do not require rebuilding Ph2_ACF.
+The settings file controls the listener, metric families, and register allowlist. Monitoring output follows the XML `silentRunning` attribute. Set `CMSIT_PROMETHEUS_CONFIG` to select a site-specific settings file. Changes are loaded when CMSITminiDAQ starts and do not require rebuilding Ph2_ACF.
 
 ## Output plots
 

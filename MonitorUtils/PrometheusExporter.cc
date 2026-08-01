@@ -360,8 +360,6 @@ PrometheusExporter::Configuration PrometheusExporter::loadConfiguration()
             if(value != "*" && configuration.registerAllowlist.empty())
                 throw std::runtime_error("[PrometheusExporter] register_allowlist cannot be empty at " + configPath + ":" + std::to_string(lineNumber));
         }
-        else if(key == "realtimemonitor_silent")
-            configuration.realtimeMonitorSilent = parseBoolean(value, key, configPath, lineNumber);
         else
             throw std::runtime_error("[PrometheusExporter] Unknown setting '" + key + "' at " + configPath + ":" + std::to_string(lineNumber));
     }
