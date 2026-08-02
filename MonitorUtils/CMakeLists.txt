@@ -1,3 +1,9 @@
+find_package(CURL QUIET)
+if(CURL_FOUND)
+    include_directories(${CURL_INCLUDE_DIRS})
+    add_definitions(-DPH2_HAVE_CURL)
+endif()
+
 if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
 
     MESSAGE(STATUS " ")
@@ -78,7 +84,7 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         endif()
     endif()
 
-    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils)
+    set(LIBS ${LIBS} Ph2_Description Ph2_Interface Ph2_Utils ${CURL_LIBRARIES})
     if(NoDataShipping)
         set(LIBS ${LIBS} Ph2_MonitorDQM)
     endif()
@@ -125,6 +131,7 @@ else()
              LIBRARIES
              pthread
              ${Boost_SYSTEM_LIBRARY}
+             ${CURL_LIBRARIES}
     )
 
     install_headers()

@@ -36,25 +36,44 @@ To avoid printout on the screen, you can set <code>silentRunning=<t style="color
 
 ## Realtime monitor-only run
 
-To read enabled monitoring values without running physics data-taking or another calibration loop:
+To read the enabled monitoring values directly from the configured devices without running physics data-taking or another calibration loop, use the `realtimemonitor` calibration:
 
 ```bash
 CMSITminiDAQ -f your_hw_description_file.xml -c realtimemonitor -t 60
 ```
 
-Without `-t`, monitoring runs until Enter is pressed.
+The `realtimemonitor` calibration uses the enabled `<MonitoringElement>` entries in the XML. If `-t` is provided, monitoring runs for that many seconds. If `-t` is omitted, monitoring runs until the user presses Enter:
+
+```bash
+CMSITminiDAQ -f your_hw_description_file.xml -c realtimemonitor
+```
 
 ## Prometheus HTTP export
 
-For RD53 systems, enabled XML monitoring is also exported through the integrated Prometheus endpoint. Deployment settings are read from:
+For RD53 systems, enabling XML monitoring also enables the integrated Prometheus exporter. Its deployment-specific options are kept outside the hardware XML in:
 
 ```text
 $PH2ACF_BASE_DIR/settings/monitoring_settings.conf
 ```
 
-The default endpoint is `http://localhost:9101/metrics`. The exporter uses the Prometheus pull model, so Prometheus may run locally or on another host that can reach the configured listener.
+The default configuration is:
 
-A remote Prometheus server can scrape the DAQ host with:
+```ini
+enabled = true
+listen_address = localhost
+port = 9101
+metrics_path = /metrics
+metric_families = value,error,last_update
+register_allowlist = *
+cabling_db_input = false
+cabling_db_endpoint = http://localhost:8080/api/cabling
+cabling_db_token_env = CMSIT_CABLING_DB_TOKEN
+cabling_db_timeout_seconds = 5
+```
+
+`listen_address` is a local interface on the DAQ computer. `0.0.0.0` permits scraping through any local network interface, `127.0.0.1` permits only local scraping, and a specific local IPv4 address restricts the listener to that interface. The configuration accepts `localhost` as an alias for `127.0.0.1`.
+
+Prometheus uses a pull model: this file does not contain the address of a remote Prometheus server. A Prometheus server running on another host must instead contain a scrape target for the reachable DAQ hostname or IP address:
 
 ```yaml
 scrape_configs:
@@ -65,7 +84,34 @@ scrape_configs:
       - targets: ["daq-host.example.org:9101"]
 ```
 
-The settings file controls the listener, metric families, and register allowlist. Monitoring output follows the XML `silentRunning` attribute. Set `CMSIT_PROMETHEUS_CONFIG` to select a site-specific settings file. Changes are loaded when CMSITminiDAQ starts and do not require rebuilding Ph2_ACF.
+The firewall between the Prometheus server and DAQ host must permit the configured TCP port. If `metrics_path` is changed in the exporter file, the same path must be configured in `prometheus.yml`.
+
+`metric_families` selects which of `cmsit_monitor_value`, `cmsit_monitor_error`, and `cmsit_monitor_last_update_seconds` are exposed. `register_allowlist` accepts `*` or a comma-separated list of physical and virtual register names. It filters HTTP output only; the enabled `<MonitoringElement>` entries in the hardware XML still determine which values are read from the detector.
+
+Monitoring output for `realtimemonitor` and other calibrations follows the XML `silentRunning` attribute.
+
+Set `CMSIT_PROMETHEUS_CONFIG` to use another file without modifying the installation:
+
+```bash
+export CMSIT_PROMETHEUS_CONFIG=/path/to/site-prometheus-exporter.conf
+```
+
+Changes are loaded when CMSITminiDAQ starts and do not require rebuilding Ph2_ACF.
+
+The exporter does not require a Prometheus installation on the DAQ computer. Prometheus is an external client that periodically scrapes the HTTP endpoint. Disabling the exporter does not disable the existing detector-monitor worker or its configured output.
+
+### Cabling database labels
+
+Set `cabling_db_input = true` to enrich every exported metric with detector geometry from a REST endpoint. With the option disabled, the original Prometheus label set remains unchanged. With it enabled, the exporter adds:
+
+```text
+subdetector, section_type, section_index, element_type, element_index,
+module_type, module_index, chip_type, chip_index, side
+```
+
+The endpoint is read once when the exporter starts. It may return either a JSON array or an object containing a `chips` array. Every entry must provide `board`, `optical_group`, `hybrid`, `chip` (or `hardware_chip`) and all geometry fields listed above. Numeric geometry indices may be JSON numbers or strings.
+
+If authentication is required, set the environment variable named by `cabling_db_token_env`; its value is sent as a bearer token. Database, authentication, or mapping failures do not stop the calibration. Metrics continue to be exported with `unknown` geometry values. Module-scope virtual registers use `chip_type="module"` and `chip_index="all"` when all chips agree on the module geometry.
 
 ## Output plots
 

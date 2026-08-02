@@ -1,5 +1,6 @@
 #include "MonitorUtils/PrometheusExporter.h"
 #include "HWInterface/RD53Interface.h"
+#include "Utils/easylogging++.h"
 
 #include <algorithm>
 #include <arpa/inet.h>
@@ -10,6 +11,7 @@
 #include <cstring>
 #include <fstream>
 #include <iomanip>
+#include <limits>
 #include <netinet/in.h>
 #include <set>
 #include <sstream>
@@ -40,6 +42,24 @@ bool parseBoolean(const std::string& value, const std::string& key, const std::s
     if(normalized == "true" || normalized == "1" || normalized == "yes" || normalized == "on") return true;
     if(normalized == "false" || normalized == "0" || normalized == "no" || normalized == "off") return false;
     throw std::runtime_error("[PrometheusExporter] Invalid boolean for '" + key + "' at " + configPath + ":" + std::to_string(lineNumber));
+}
+
+unsigned int parsePositiveInteger(const std::string& value, const std::string& key, const std::string& configPath, size_t lineNumber)
+{
+    size_t        parsedCharacters = 0;
+    unsigned long parsedValue      = 0;
+    try
+    {
+        parsedValue = std::stoul(value, &parsedCharacters);
+    }
+    catch(const std::exception&)
+    {
+        throw std::runtime_error("[PrometheusExporter] Invalid positive integer for '" + key + "' at " + configPath + ":" + std::to_string(lineNumber));
+    }
+
+    if(parsedCharacters != value.size() || parsedValue == 0 || parsedValue > std::numeric_limits<unsigned int>::max())
+        throw std::runtime_error("[PrometheusExporter] Invalid positive integer for '" + key + "' at " + configPath + ":" + std::to_string(lineNumber));
+    return static_cast<unsigned int>(parsedValue);
 }
 
 std::vector<std::string> splitCommaSeparated(const std::string& value)
@@ -360,6 +380,14 @@ PrometheusExporter::Configuration PrometheusExporter::loadConfiguration()
             if(value != "*" && configuration.registerAllowlist.empty())
                 throw std::runtime_error("[PrometheusExporter] register_allowlist cannot be empty at " + configPath + ":" + std::to_string(lineNumber));
         }
+        else if(key == "cabling_db_input")
+            configuration.cablingDatabaseInput = parseBoolean(value, key, configPath, lineNumber);
+        else if(key == "cabling_db_endpoint")
+            configuration.cablingDatabaseEndpoint = value;
+        else if(key == "cabling_db_token_env")
+            configuration.cablingDatabaseTokenEnvironment = value;
+        else if(key == "cabling_db_timeout_seconds")
+            configuration.cablingDatabaseTimeoutSeconds = parsePositiveInteger(value, key, configPath, lineNumber);
         else
             throw std::runtime_error("[PrometheusExporter] Unknown setting '" + key + "' at " + configPath + ":" + std::to_string(lineNumber));
     }
@@ -379,6 +407,7 @@ void PrometheusExporter::start(const Configuration& configuration)
 
     fConfiguration = configuration;
     loadVirtualRegisterDefinitions();
+    loadCablingDatabase();
 
     const int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if(serverSocket < 0) throw std::runtime_error("[PrometheusExporter::start] Failed to create socket: " + std::string(std::strerror(errno)));
@@ -418,6 +447,30 @@ void PrometheusExporter::start(const Configuration& configuration)
     fServerSocket = serverSocket;
     fRunning      = true;
     fServerThread = std::thread(&PrometheusExporter::run, this);
+}
+
+void PrometheusExporter::loadCablingDatabase()
+{
+    fCablingEntries.clear();
+    if(!fConfiguration.cablingDatabaseInput) return;
+
+    std::string bearerToken;
+    if(!fConfiguration.cablingDatabaseTokenEnvironment.empty())
+    {
+        const char* environmentValue = std::getenv(fConfiguration.cablingDatabaseTokenEnvironment.c_str());
+        if(environmentValue != nullptr) bearerToken = environmentValue;
+    }
+
+    try
+    {
+        CablingDatabaseReader reader;
+        fCablingEntries = reader.read(fConfiguration.cablingDatabaseEndpoint, bearerToken, fConfiguration.cablingDatabaseTimeoutSeconds);
+        LOG(INFO) << "Loaded " << fCablingEntries.size() << " entries from the cabling database";
+    }
+    catch(const std::exception& exception)
+    {
+        LOG(WARNING) << "Cabling database enrichment is unavailable: " << exception.what() << ". Geometry labels will be set to 'unknown'.";
+    }
 }
 
 void PrometheusExporter::loadVirtualRegisterDefinitions()
@@ -738,12 +791,67 @@ std::string PrometheusExporter::escapeLabelValue(const std::string& value)
     return escaped;
 }
 
-std::string PrometheusExporter::renderLabels(const MetricKey& key)
+const CablingEntry* PrometheusExporter::findCablingEntry(const MetricKey& key) const
+{
+    const int board        = std::get<0>(key);
+    const int opticalGroup = std::get<1>(key);
+    const int hybrid       = std::get<2>(key);
+    const int chip         = std::get<3>(key);
+    const int maximumId    = std::numeric_limits<uint16_t>::max();
+    if(board < 0 || board > maximumId || opticalGroup < 0 || opticalGroup > maximumId || hybrid < 0 || hybrid > maximumId || chip > maximumId) return nullptr;
+
+    if(chip >= 0)
+    {
+        const auto entry = fCablingEntries.find(
+            {static_cast<uint16_t>(board), static_cast<uint16_t>(opticalGroup), static_cast<uint16_t>(hybrid), static_cast<uint16_t>(chip)});
+        return entry == fCablingEntries.end() ? nullptr : &entry->second;
+    }
+
+    const CablingEntry* moduleEntry = nullptr;
+    for(const auto& entry: fCablingEntries)
+    {
+        const auto& candidate = entry.second;
+        if(candidate.board != static_cast<uint16_t>(board) || candidate.opticalGroup != static_cast<uint16_t>(opticalGroup) || candidate.hybrid != static_cast<uint16_t>(hybrid)) continue;
+
+        if(moduleEntry == nullptr)
+        {
+            moduleEntry = &candidate;
+            continue;
+        }
+
+        if(candidate.subdetector != moduleEntry->subdetector || candidate.sectionType != moduleEntry->sectionType || candidate.sectionIndex != moduleEntry->sectionIndex ||
+           candidate.elementType != moduleEntry->elementType || candidate.elementIndex != moduleEntry->elementIndex || candidate.moduleType != moduleEntry->moduleType ||
+           candidate.moduleIndex != moduleEntry->moduleIndex || candidate.side != moduleEntry->side)
+            return nullptr;
+    }
+    return moduleEntry;
+}
+
+std::string PrometheusExporter::renderLabels(const MetricKey& key) const
 {
     std::ostringstream labels;
     labels << "{board=\"" << std::get<0>(key) << "\",optical_group=\"" << std::get<1>(key) << "\",hybrid=\"" << std::get<2>(key) << "\"";
     if(std::get<3>(key) >= 0) labels << ",chip=\"" << std::get<3>(key) << "\"";
-    labels << ",register=\"" << escapeLabelValue(std::get<4>(key)) << "\",unit=\"" << escapeLabelValue(std::get<5>(key)) << "\"}";
+    labels << ",register=\"" << escapeLabelValue(std::get<4>(key)) << "\",unit=\"" << escapeLabelValue(std::get<5>(key)) << "\"";
+
+    if(fConfiguration.cablingDatabaseInput)
+    {
+        const CablingEntry* entry        = findCablingEntry(key);
+        const std::string   unknown      = "unknown";
+        const bool          moduleMetric = std::get<3>(key) < 0;
+        labels << ",subdetector=\"" << escapeLabelValue(entry == nullptr ? unknown : entry->subdetector) << "\""
+               << ",section_type=\"" << escapeLabelValue(entry == nullptr ? unknown : entry->sectionType) << "\""
+               << ",section_index=\"" << escapeLabelValue(entry == nullptr ? unknown : entry->sectionIndex) << "\""
+               << ",element_type=\"" << escapeLabelValue(entry == nullptr ? unknown : entry->elementType) << "\""
+               << ",element_index=\"" << escapeLabelValue(entry == nullptr ? unknown : entry->elementIndex) << "\""
+               << ",module_type=\"" << escapeLabelValue(entry == nullptr ? unknown : entry->moduleType) << "\""
+               << ",module_index=\"" << escapeLabelValue(entry == nullptr ? unknown : entry->moduleIndex) << "\""
+               << ",chip_type=\"" << escapeLabelValue(moduleMetric ? "module" : (entry == nullptr ? unknown : entry->chipType)) << "\""
+               << ",chip_index=\"" << escapeLabelValue(moduleMetric ? "all" : (entry == nullptr ? unknown : entry->chipIndex)) << "\""
+               << ",side=\"" << escapeLabelValue(entry == nullptr ? unknown : entry->side) << "\"";
+    }
+
+    labels << "}";
     return labels.str();
 }
 

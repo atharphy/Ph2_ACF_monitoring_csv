@@ -1,6 +1,8 @@
 #ifndef PROMETHEUS_EXPORTER_H
 #define PROMETHEUS_EXPORTER_H
 
+#include "MonitorUtils/CablingDatabaseReader.h"
+
 #include <atomic>
 #include <chrono>
 #include <cstddef>
@@ -31,6 +33,10 @@ class PrometheusExporter
         bool                  exportError{true};
         bool                  exportLastUpdate{true};
         std::set<std::string> registerAllowlist;
+        bool                  cablingDatabaseInput{false};
+        std::string           cablingDatabaseEndpoint;
+        std::string           cablingDatabaseTokenEnvironment{"CMSIT_CABLING_DB_TOKEN"};
+        unsigned int          cablingDatabaseTimeoutSeconds{5};
     };
 
     static PrometheusExporter& getInstance();
@@ -85,12 +91,14 @@ class PrometheusExporter
     void        handleClient(int clientSocket) const;
     std::string renderMetrics() const;
     void        loadVirtualRegisterDefinitions();
+    void        loadCablingDatabase();
     void        updateChipVirtualRegistersLocked(const DetectorKey& detectorKey);
     void        updateModuleVirtualRegistersLocked(const ModuleKey& moduleKey);
 
     static double      correctionFactor(const std::string& registerName);
     static std::string escapeLabelValue(const std::string& value);
-    static std::string renderLabels(const MetricKey& key);
+    std::string        renderLabels(const MetricKey& key) const;
+    const CablingEntry* findCablingEntry(const MetricKey& key) const;
     static void        sendResponse(int clientSocket, int statusCode, const std::string& statusText, const std::string& contentType, const std::string& body);
     static void        sendAll(int clientSocket, const std::string& response);
 
@@ -99,6 +107,7 @@ class PrometheusExporter
     std::map<DetectorKey, std::map<std::string, MetricValue>> fLatestRegisterValues;
     std::map<ModuleKey, std::size_t>                          fModuleChipCounts;
     std::vector<VirtualRegisterDefinition>                    fVirtualRegisterDefinitions;
+    CablingDatabaseReader::CablingMap                         fCablingEntries;
     Configuration                                             fConfiguration;
 
     std::atomic<bool> fRunning{false};
