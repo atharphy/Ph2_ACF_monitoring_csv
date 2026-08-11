@@ -14,6 +14,7 @@ Results/
 Results/**
 ResultsGUI/*
 MonitorResults/**
+monitoring_csv/
 RunNumbers.dat
 GoodRunNumbers.dat
 *.log

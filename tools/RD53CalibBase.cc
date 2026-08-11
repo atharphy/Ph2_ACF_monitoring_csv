@@ -8,6 +8,7 @@
 */
 
 #include "RD53CalibBase.h"
+#include "MonitorUtils/MonitoringCsvWriter.h"
 
 using namespace Ph2_HwDescription;
 using namespace Ph2_HwInterface;
@@ -364,6 +365,7 @@ size_t CalibBase::TotalFEchips()
 void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)
 {
     theCurrentRun = currentRun;
+    MonitoringCsvWriter::getInstance().setRunMetadata(getCalibrationName(), currentRun);
     for(const auto cBoard: *fDetectorContainer)
     {
         static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->resetNcorruptedNevents();

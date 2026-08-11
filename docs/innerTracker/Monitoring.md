@@ -32,7 +32,7 @@ To enable the periodic readout of quantities like voltages, currents and tempera
   </MonitoringSettings>
 ```
 Here, <code style="color:CornflowerBlue;">MonitoringSleepTime</code> sets the monitoring period in μs.
-To avoid printout on the screen, you can set <code>silentRunning=<t style="color: MediumSeaGreen;">"0"</t></code>.
+To avoid monitoring printout on the screen, set <code>silentRunning=<t style="color: MediumSeaGreen;">"1"</t></code>.
 
 ## Realtime monitor-only run
 
@@ -48,32 +48,58 @@ The `realtimemonitor` calibration uses the enabled `<MonitoringElement>` entries
 CMSITminiDAQ -f your_hw_description_file.xml -c realtimemonitor
 ```
 
-## Prometheus HTTP export
+## CSV monitoring and Prometheus export
 
-For RD53 systems, enabling XML monitoring also enables the integrated Prometheus exporter. Its deployment-specific options are kept outside the hardware XML in:
+For RD53 systems, enabling XML monitoring writes corrected physical and virtual register values to durable CSV files. Ph2_ACF does not open an HTTP port. Its deployment-specific options are kept outside the hardware XML in:
 
 ```text
 $PH2ACF_BASE_DIR/settings/monitoring_settings.conf
 ```
 
-The default configuration is:
+Important settings include:
 
 ```ini
 enabled = true
-listen_address = localhost
-port = 9101
-metrics_path = /metrics
-metric_families = value,error,last_update
-register_allowlist = *
-cabling_db_input = false
-cabling_db_endpoint = http://localhost:8080/api/cabling
-cabling_db_token_env = CMSIT_CABLING_DB_TOKEN
-cabling_db_timeout_seconds = 5
+csv_output_directory = monitoring_csv
+csv_rotate_size_mb = 100
+csv_rotate_minutes = 60
+csv_include_errors = true
+csv_register_allowlist = *
+virtual_register_config = settings/virtual_registers.conf
 ```
 
-`listen_address` is a local interface on the DAQ computer. `0.0.0.0` permits scraping through any local network interface, `127.0.0.1` permits only local scraping, and a specific local IPv4 address restricts the listener to that interface. The configuration accepts `localhost` as an alias for `127.0.0.1`.
+Files are placed below `$PH2ACF_BASE_DIR/monitoring_csv` by default and use the form:
 
-Prometheus uses a pull model: this file does not contain the address of a remote Prometheus server. A Prometheus server running on another host must instead contain a scrape target for the reachable DAQ hostname or IP address:
+```text
+calibration[_run]_YYYYMMDD_HHMMSS.csv
+```
+
+The run component is omitted when no run number is assigned. Rotated files receive a `_partNNN` suffix. Every row identifies the board, optical group, hybrid, chip, eFuse, module, date, and time. Physical and virtual registers are columns. Module-scope virtual values are repeated on the chip rows belonging to that module.
+
+### DCA lookup
+
+Set `dca_lookup_enabled = true` to run the configured eFuse-to-module lookup before monitoring starts. The lookup uses the eFuse values from the hardware XML and writes the configured mapping CSV. With `dca_auth = login`, the first run may request CERN credentials and OTP. `dca_refresh` accepts `always`, `if_missing`, or `never`; `dca_failure_policy` accepts `warn` or `abort`.
+
+The hardware XML must contain the eFuse values obtained for the actual connected chips. Default or copied eFuse values do not provide a reliable detector identity.
+
+### Monitoring windows
+
+`monitor_schedule` accepts:
+
+- `always`: monitor for the complete calibration.
+- `percent`: monitor inside `monitor_percent_windows`, for example `0-10,45-55,90-100`, using native RD53 scan progress.
+
+Per-calibration entries use the form `calibration.NAME.monitor_schedule` and `calibration.NAME.monitor_percent_windows`. Percentage mode is intended for scans that populate `RD53RunProgress`; open-ended modes such as `physics` and `realtimemonitor` use `always`. Outside configured windows, the RD53 monitoring cycle is skipped, reducing hardware traffic as well as CSV output.
+
+### External exporter
+
+Start the standalone service from the sibling `prometheus_exporter` directory:
+
+```bash
+./run_exporter.sh "$PH2ACF_BASE_DIR/settings/monitoring_settings.conf"
+```
+
+It incrementally tails current and rotated CSV files and exposes `cmsit_monitor_value`, `cmsit_monitor_error`, and `cmsit_monitor_last_update_seconds`. Configure Prometheus to scrape it:
 
 ```yaml
 scrape_configs:
@@ -81,37 +107,16 @@ scrape_configs:
     scrape_interval: 1s
     metrics_path: /metrics
     static_configs:
-      - targets: ["daq-host.example.org:9101"]
+      - targets: ["localhost:9101"]
 ```
 
-The firewall between the Prometheus server and DAQ host must permit the configured TCP port. If `metrics_path` is changed in the exporter file, the same path must be configured in `prometheus.yml`.
-
-`metric_families` selects which of `cmsit_monitor_value`, `cmsit_monitor_error`, and `cmsit_monitor_last_update_seconds` are exposed. `register_allowlist` accepts `*` or a comma-separated list of physical and virtual register names. It filters HTTP output only; the enabled `<MonitoringElement>` entries in the hardware XML still determine which values are read from the detector.
-
-Monitoring output for `realtimemonitor` and other calibrations follows the XML `silentRunning` attribute.
-
-Set `CMSIT_PROMETHEUS_CONFIG` to use another file without modifying the installation:
+The exporter reads `exporter_listen_address`, `exporter_port`, `exporter_metrics_path`, and `exporter_scan_interval_seconds` from the same configuration file. Set `CMSIT_MONITORING_CONFIG` to select another file for Ph2_ACF:
 
 ```bash
-export CMSIT_PROMETHEUS_CONFIG=/path/to/site-prometheus-exporter.conf
+export CMSIT_MONITORING_CONFIG=/path/to/monitoring_settings.conf
 ```
 
-Changes are loaded when CMSITminiDAQ starts and do not require rebuilding Ph2_ACF.
-
-The exporter does not require a Prometheus installation on the DAQ computer. Prometheus is an external client that periodically scrapes the HTTP endpoint. Disabling the exporter does not disable the existing detector-monitor worker or its configured output.
-
-### Cabling database labels
-
-Set `cabling_db_input = true` to enrich every exported metric with detector geometry from a REST endpoint. With the option disabled, the original Prometheus label set remains unchanged. With it enabled, the exporter adds:
-
-```text
-subdetector, section_type, section_index, element_type, element_index,
-module_type, module_index, chip_type, chip_index, side
-```
-
-The endpoint is read once when the exporter starts. It may return either a JSON array or an object containing a `chips` array. Every entry must provide `board`, `optical_group`, `hybrid`, `chip` (or `hardware_chip`) and all geometry fields listed above. Numeric geometry indices may be JSON numbers or strings.
-
-If authentication is required, set the environment variable named by `cabling_db_token_env`; its value is sent as a bearer token. Database, authentication, or mapping failures do not stop the calibration. Metrics continue to be exported with `unknown` geometry values. Module-scope virtual registers use `chip_type="module"` and `chip_index="all"` when all chips agree on the module geometry.
+`silentRunning` in the XML controls monitoring log messages only. CSV collection remains active whenever XML monitoring and CSV monitoring are enabled.
 
 ## Output plots
 

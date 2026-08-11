@@ -8,7 +8,7 @@
 */
 
 #include "MonitorUtils/RD53Monitor.h"
-#include "MonitorUtils/PrometheusExporter.h"
+#include "MonitorUtils/MonitoringCsvWriter.h"
 
 RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController, const DetectorMonitorConfig& theDetectorMonitorConfig)
     : DetectorMonitor(theSystemController, theDetectorMonitorConfig)
@@ -23,6 +23,9 @@ RD53Monitor::RD53Monitor(const Ph2_System::SystemController* theSystemController
 void RD53Monitor::runMonitor()
 {
     if(fDetectorMonitorConfig.getNumberOfMonitoredRegisters() == 0) return;
+    auto& csvWriter = MonitoringCsvWriter::getInstance();
+    if(!csvWriter.shouldMonitorNow()) return;
+    csvWriter.beginCycle();
 
     for(const auto cBoard: *fTheSystemController->fDetectorContainer)
     {
@@ -37,6 +40,7 @@ void RD53Monitor::runMonitor()
         for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("LpGBT"))
             if(registerName.second) runLpGBTRegisterMonitor(registerName.first);
     }
+    csvWriter.endCycle();
 }
 
 void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
@@ -55,8 +59,10 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                                   << cHybrid->getId() << "/" << +cChip->getId() << RESET << GREEN << "]" << RESET;
                     auto* readoutChipInterface = fTheSystemController->fReadoutChipInterface;
 
-                    bool tmp;
-                    if(static_cast<Ph2_HwInterface::RD53Interface*>(readoutChipInterface)->getADCobservable(registerName, tmp, fDetectorMonitorConfig.fSilentRunning) != -1)
+                    bool       isCurrentNotVoltage = false;
+                    const bool isAdcObservable =
+                        static_cast<Ph2_HwInterface::RD53Interface*>(readoutChipInterface)->getADCobservable(registerName, isCurrentNotVoltage, fDetectorMonitorConfig.fSilentRunning) != -1;
+                    if(isAdcObservable)
                         // #######################
                         // # Monitor environment #
                         // #######################
@@ -104,20 +110,20 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                     theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ValueAndTime<float>>() =
                         ValueAndTime<float>(registerValue, getTimeStampString());
 
-                    PrometheusExporter::getInstance().update(
+                    MonitoringCsvWriter::getInstance().update(
                         cBoard->getId(),
                         cOpticalGroup->getId(),
                         cHybrid->getId(),
                         cChip->getId(),
+                        static_cast<Ph2_HwDescription::RD53*>(cChip)->geteFuseCode(),
                         registerName,
                         registerValue,
-                        static_cast<Ph2_HwInterface::RD53Interface*>(
-                            readoutChipInterface),
+                        isAdcObservable,
+                        isCurrentNotVoltage,
                         cHybrid->getNChip());
                 }
 
 #ifdef __USE_ROOT__
-
     fMonitorDQM->fillChipPlots(theRegisterContainer, registerName);
 #endif
 

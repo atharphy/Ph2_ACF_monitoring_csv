@@ -1,4 +1,5 @@
 #include "tools/Tool.h"
+#include "MonitorUtils/MonitoringCsvWriter.h"
 #include <future>
 #include <numeric>
 
@@ -179,6 +180,7 @@ void Tool::Start(const StartInfo& theStartInfo)
     // doExit             = false; // @Mauro@
     Tool::fKeepRunning = true;
     fRunNumber         = theStartInfo.getRunNumber();
+    MonitoringCsvWriter::getInstance().setRunMetadata(getCalibrationName(), fRunNumber);
     fRunningFuture     = std::async(std::launch::async, &Tool::Running, this); // @Fabio@
     // @Mauro@
     // std::promise<int> thePromise;
@@ -1607,7 +1609,10 @@ void Tool::fullScanBeBoard(uint16_t boardId, const std::string& dacName, uint32_
 
         if(localDAC)
             setAllLocalDacBeBoard(boardId, dacName, *currentDacList);
-        else { setAllGlobalDacBeBoard(boardId, dacName, *currentDacList); }
+        else
+        {
+            setAllGlobalDacBeBoard(boardId, dacName, *currentDacList);
+        }
         Occupancy noOccupancy;
         ContainerFactory::reinitializeContainer(*currentStepOccupancyContainer, noOccupancy);
         fDetectorDataContainer = currentStepOccupancyContainer;
@@ -2341,9 +2346,15 @@ void Tool::setSameGlobalDacBeBoard(BeBoard* pBoard, const std::string& dacName, 
                 {
                     for(auto cChip: *cHybrid) { fReadoutChipInterface->WriteChipReg(static_cast<ReadoutChip*>(cChip), dacName, dacValue); }
                 }
-                else { fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue); }
+                else
+                {
+                    fReadoutChipInterface->WriteHybridBroadcastChipReg(static_cast<Hybrid*>(cHybrid), dacName, dacValue);
+                }
     }
-    else { fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue); }
+    else
+    {
+        fReadoutChipInterface->WriteBoardBroadcastChipReg(pBoard, dacName, dacValue);
+    }
 }
 
 // Set same local dac for all BeBoard
@@ -2394,7 +2405,10 @@ void Tool::setSameDacBeBoard(BeBoard* pBoard, const std::string& dacName, const 
     }
     if(!isChipFound) return;
     if(isLocalDac) { setSameLocalDacBeBoard(pBoard, dacName, dacValue); }
-    else { setSameGlobalDacBeBoard(pBoard, dacName, dacValue); }
+    else
+    {
+        setSameGlobalDacBeBoard(pBoard, dacName, dacValue);
+    }
 }
 
 void Tool::setSameDac(const std::string& dacName, const uint16_t dacValue)

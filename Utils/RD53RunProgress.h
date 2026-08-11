@@ -12,19 +12,29 @@
 
 #include "easylogging++.h"
 
+#include <atomic>
+
 class RD53RunProgress
 {
   public:
-    static size_t& total()
+    static std::atomic<size_t>& total()
     {
-        static size_t value = 0;
+        static std::atomic<size_t> value{0};
         return value;
     }
 
-    static size_t& current()
+    static std::atomic<size_t>& current()
     {
-        static size_t value = 0;
+        static std::atomic<size_t> value{0};
         return value;
+    }
+
+    static double fraction()
+    {
+        const size_t totalValue = RD53RunProgress::total().load();
+        if(totalValue == 0) return -1;
+        const double value = static_cast<double>(RD53RunProgress::current().load()) / totalValue;
+        return value > 1 ? 1 : value;
     }
 
     static void reset()
@@ -90,7 +100,7 @@ class RD53RunProgress
 
             if(display == true)
             {
-                float fraction = 1. * RD53RunProgress::current() / RD53RunProgress::total();
+                const double fraction = RD53RunProgress::fraction();
 
                 LOG(INFO) << CYAN << "******* " << GREEN << "Reading data" << CYAN << " *******" << RESET;
                 LOG(INFO) << GREEN << "n. 32-bit words: " << BOLDYELLOW << std::setw(11) << std::fixed << dataSize << RESET;

@@ -571,25 +571,23 @@ int main(int argc, char** argv)
     }
     else if(whichCalib == "realtimemonitor")
     {
-        // ############################
-        // # Run realtime monitoring #
-        // ############################
         LOG(INFO) << BOLDMAGENTA << "\x1b[5m@@@ Performing realtime monitoring @@@\x1b[0m" << RESET;
 
-        RealtimeMonitor rtm;
-        rtm.Inherit(&mySysCntr);
-        rtm.ConfigureCalibration();
+        RealtimeMonitor realtimeMonitor;
+        realtimeMonitor.Inherit(&mySysCntr);
+        realtimeMonitor.ConfigureCalibration();
 
-        StartInfo theStartInfo;
-        theStartInfo.setRunNumber(runNumber);
-        rtm.Start(theStartInfo);
+        StartInfo startInfo;
+        startInfo.setRunNumber(runNumber);
+        realtimeMonitor.Start(startInfo);
         if(runtime == -1)
         {
-            do { LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop realtime monitoring ..." << RESET; } while(std::cin.get() != '\n');
+            LOG(INFO) << BOLDBLUE << "\t--> Press '" << BOLDYELLOW << "Enter" << BOLDBLUE << "' key to stop realtime monitoring ..." << RESET;
+            while(std::cin.good() && std::cin.get() != '\n') {}
         }
         else
             std::this_thread::sleep_for(std::chrono::seconds(runtime));
-        rtm.Stop();
+        realtimeMonitor.Stop();
     }
     else if(whichCalib == "physics")
     {
