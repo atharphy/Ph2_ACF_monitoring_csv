@@ -1,4 +1,5 @@
 #include "tools/Tool.h"
+#include "MonitorUtils/LpGBTMonitoringCsvWriter.h"
 #include "MonitorUtils/MonitoringCsvWriter.h"
 #include <future>
 #include <numeric>
@@ -181,6 +182,7 @@ void Tool::Start(const StartInfo& theStartInfo)
     Tool::fKeepRunning = true;
     fRunNumber         = theStartInfo.getRunNumber();
     MonitoringCsvWriter::getInstance().setRunMetadata(getCalibrationName(), fRunNumber);
+    LpGBTMonitoringCsvWriter::getInstance().setRunMetadata(getCalibrationName(), fRunNumber);
     fRunningFuture     = std::async(std::launch::async, &Tool::Running, this); // @Fabio@
     // @Mauro@
     // std::promise<int> thePromise;

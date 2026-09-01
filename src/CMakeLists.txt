@@ -156,6 +156,13 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         endif()
     endforeach(sourcefile ${BINARIES})
 
+    if(NOT CompileForShep AND NOT CompileForHerd)
+        add_executable(RD53efuseReader ${PROJECT_SOURCE_DIR}/DCA_query_hardware/RD53efuseReader.cc)
+        target_link_libraries(RD53efuseReader ${LIBS})
+        add_executable(LpGBTefuseReader ${PROJECT_SOURCE_DIR}/LpGBT_query/LpGBTefuseReader.cc)
+        target_link_libraries(LpGBTefuseReader ${LIBS})
+    endif()
+
     message("--     ${BoldCyan}#### End ####${Reset}")
 
     MESSAGE(STATUS " ")

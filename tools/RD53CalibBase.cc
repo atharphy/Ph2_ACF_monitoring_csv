@@ -8,6 +8,7 @@
 */
 
 #include "RD53CalibBase.h"
+#include "MonitorUtils/LpGBTMonitoringCsvWriter.h"
 #include "MonitorUtils/MonitoringCsvWriter.h"
 
 using namespace Ph2_HwDescription;
@@ -366,6 +367,7 @@ void CalibBase::localConfigure(const std::string& histoFileName, int currentRun)
 {
     theCurrentRun = currentRun;
     MonitoringCsvWriter::getInstance().setRunMetadata(getCalibrationName(), currentRun);
+    LpGBTMonitoringCsvWriter::getInstance().setRunMetadata(getCalibrationName(), currentRun);
     for(const auto cBoard: *fDetectorContainer)
     {
         static_cast<RD53FWInterface*>(this->fBeBoardFWMap[cBoard->getId()])->resetNcorruptedNevents();

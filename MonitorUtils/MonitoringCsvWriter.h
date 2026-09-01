@@ -32,43 +32,25 @@ class MonitoringCsvWriter
         std::set<std::string> registerAllowlist;
         std::string           virtualRegisterConfig;
 
-        bool        dcaLookupEnabled{false};
-        std::string dcaPython{"python3"};
-        std::string dcaLookupScript;
-        std::string dcaRepository;
-        std::string dcaUrl{"https://cmsdca.cern.ch/trk_rhapi"};
-        std::string dcaDatabase{"trker_cmsr"};
-        std::string dcaAuth{"login"};
         std::string dcaMappingFile;
-        std::string dcaRefresh{"if_missing"};
-        std::string dcaFailurePolicy{"warn"};
+        std::string dcaMappingFailurePolicy{"warn"};
 
         std::string                            scheduleMode{"always"};
         std::vector<std::pair<double, double>> scheduleWindows;
         std::map<std::string, Schedule>         calibrationSchedules;
-
     };
 
     static MonitoringCsvWriter& getInstance();
-    static Configuration        loadConfiguration();
 
-    void start(const Configuration& configuration, const std::string& calibrationName, const std::string& hardwareXml);
+    void start(const std::string& calibrationName, const std::string& hardwareXml);
     void setRunMetadata(const std::string& calibrationName, int runNumber);
     void stop();
 
     bool shouldMonitorNow() const;
     void beginCycle();
     void endCycle();
-    void update(int                                      boardId,
-                int                                      opticalGroupId,
-                int                                      hybridId,
-                int                                      chipId,
-                int64_t                                  efuseCode,
-                const std::string&                       registerName,
-                double                                   value,
-                bool                                     isAdcObservable,
-                bool                                     isCurrent,
-                std::size_t                              moduleChipCount = 0);
+    void update(int boardId, int opticalGroupId, int hybridId, int chipId, int64_t efuseCode, const std::string& registerName,
+                double value, bool isAdcObservable, bool isCurrent, std::size_t moduleChipCount = 0);
 
   private:
     MonitoringCsvWriter() = default;
@@ -76,6 +58,8 @@ class MonitoringCsvWriter
 
     MonitoringCsvWriter(const MonitoringCsvWriter&)            = delete;
     MonitoringCsvWriter& operator=(const MonitoringCsvWriter&) = delete;
+
+    static Configuration loadConfiguration();
 
     struct MetricValue
     {
@@ -109,7 +93,6 @@ class MonitoringCsvWriter
     using ModuleKey   = std::tuple<int, int, int>;
 
     void loadVirtualRegisterDefinitions();
-    void runDcaLookup();
     void loadDcaMapping();
     void updateChipVirtualRegistersLocked(const DetectorKey& detectorKey);
     void updateModuleVirtualRegistersLocked(const ModuleKey& moduleKey);
@@ -135,7 +118,6 @@ class MonitoringCsvWriter
     bool                                      fRunning{false};
     bool                                      fCycleActive{false};
     bool                                      fMetadataReady{false};
-    bool                                      fDcaLookupFailed{false};
     std::string                               fCalibrationName;
     std::string                               fHardwareXml;
     int                                       fRunNumber{-1};

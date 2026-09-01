@@ -8,9 +8,6 @@
 class RealtimeMonitor : public Tool
 {
   public:
-    RealtimeMonitor() = default;
-    ~RealtimeMonitor() = default;
-
     void ConfigureCalibration() override;
     void Running() override;
     void Stop() override;

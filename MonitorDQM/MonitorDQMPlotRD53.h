@@ -29,6 +29,7 @@ class MonitorDQMPlotRD53 : public MonitorDQMPlotBase
 
     void fillChipPlots(DetectorDataContainer& DataContainer, const std::string& registerName);
     void fillOptoPlots(DetectorDataContainer& DataContainer, const std::string& registerName);
+    void fillBoardPlots(DetectorDataContainer& DataContainer, const std::string& registerName);
 
   private:
     const DetectorContainer*                     fDetectorContainer;

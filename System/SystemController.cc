@@ -19,6 +19,7 @@
 #include "HWInterface/VTRxInterface.h"
 #include "MonitorUtils/DetectorMonitor.h"
 #include "MonitorUtils/Monitor2S.h"
+#include "MonitorUtils/LpGBTMonitoringCsvWriter.h"
 #include "MonitorUtils/MonitoringCsvWriter.h"
 #include "MonitorUtils/PSMonitor.h"
 #include "MonitorUtils/RD53Monitor.h"
@@ -129,6 +130,7 @@ void SystemController::Destroy()
     }
 
     MonitoringCsvWriter::getInstance().stop();
+    LpGBTMonitoringCsvWriter::getInstance().stop();
 
     delete fDetectorMonitor;
     fDetectorMonitor = nullptr;
@@ -960,11 +962,8 @@ void SystemController::ConfigureHw(bool pReInitialize)
     {
         if(fBoardType == BoardType::RD53)
         {
-            const auto monitoringConfiguration = MonitoringCsvWriter::loadConfiguration();
-            if(monitoringConfiguration.enabled)
-            {
-                MonitoringCsvWriter::getInstance().start(monitoringConfiguration, fCalibrationName, fConfigurationFileName);
-            }
+            MonitoringCsvWriter::getInstance().start(fCalibrationName, fConfigurationFileName);
+            LpGBTMonitoringCsvWriter::getInstance().start(fCalibrationName, fConfigurationFileName);
         }
 
         LOG(INFO) << GREEN << "Starting " << BOLDYELLOW << "monitoring" << RESET << GREEN << " thread" << RESET;

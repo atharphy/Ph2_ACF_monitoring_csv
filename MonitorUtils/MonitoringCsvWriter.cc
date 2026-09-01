@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
@@ -17,7 +18,6 @@
 #include <stdexcept>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 namespace
@@ -78,15 +78,15 @@ double parseNonNegativeDouble(const std::string& value, const std::string& key, 
     return parsedValue;
 }
 
-std::vector<std::string> splitCommaSeparated(const std::string& value)
+std::vector<std::string> split(const std::string& value, char delimiter, bool keepEmpty = true)
 {
     std::vector<std::string> entries;
-    size_t                   start = 0;
+    size_t start = 0;
     while(start <= value.size())
     {
-        const size_t separator = value.find(',', start);
-        const auto   entry     = trim(value.substr(start, separator == std::string::npos ? std::string::npos : separator - start));
-        if(!entry.empty()) entries.push_back(entry);
+        const size_t separator = value.find(delimiter, start);
+        const std::string entry = trim(value.substr(start, separator == std::string::npos ? std::string::npos : separator - start));
+        if(keepEmpty || !entry.empty()) entries.push_back(entry);
         if(separator == std::string::npos) break;
         start = separator + 1;
     }
@@ -96,7 +96,7 @@ std::vector<std::string> splitCommaSeparated(const std::string& value)
 std::vector<std::pair<double, double>> parseWindows(const std::string& value, const std::string& key, const std::string& configPath, size_t lineNumber)
 {
     std::vector<std::pair<double, double>> windows;
-    for(const auto& entry: splitCommaSeparated(value))
+    for(const auto& entry: split(value, ',', false))
     {
         const auto separator = entry.find('-');
         if(separator == std::string::npos)
@@ -119,6 +119,40 @@ std::string absolutePath(const std::string& value)
 {
     if(value.empty() || value.front() == '/') return value;
     return baseDirectory() + "/" + value;
+}
+
+std::string workingDirectory()
+{
+    char path[4096];
+    if(getcwd(path, sizeof(path)) == nullptr) throw std::runtime_error("[MonitoringCsvWriter] Cannot determine the working directory");
+    return path;
+}
+
+std::string absoluteInputPath(const std::string& value)
+{
+    if(value.empty() || value.front() == '/') return value;
+    return workingDirectory() + "/" + value;
+}
+
+std::string parentDirectory(const std::string& path)
+{
+    const size_t separator = path.find_last_of('/');
+    if(separator == std::string::npos) return ".";
+    return separator == 0 ? "/" : path.substr(0, separator);
+}
+
+std::string fileStem(const std::string& path)
+{
+    const size_t separator = path.find_last_of('/');
+    const size_t start = separator == std::string::npos ? 0 : separator + 1;
+    const size_t extension = path.find_last_of('.');
+    return path.substr(start, extension == std::string::npos || extension < start ? std::string::npos : extension - start);
+}
+
+std::string outputPath(const std::string& value, const std::string& xmlDirectory)
+{
+    if(value.empty() || value.front() == '/') return value;
+    return xmlDirectory + "/" + value;
 }
 
 bool fileExists(const std::string& path)
@@ -165,15 +199,12 @@ class VirtualExpressionParser
     {
     }
 
-    bool evaluate(double& result, std::set<std::string>& usedRegisters)
+    bool evaluate(double& result)
     {
         fPosition = 0;
-        fUsedRegisters.clear();
         if(!parseExpression(result)) return false;
         skipWhitespace();
-        if(fPosition != fExpression.size() || !std::isfinite(result)) return false;
-        usedRegisters = fUsedRegisters;
-        return true;
+        return fPosition == fExpression.size() && std::isfinite(result);
     }
 
   private:
@@ -265,7 +296,6 @@ class VirtualExpressionParser
         const auto valueIt = fValues.find(registerName);
         if(valueIt == fValues.end()) return false;
         result = valueIt->second;
-        fUsedRegisters.insert(registerName);
         return true;
     }
 
@@ -319,7 +349,6 @@ class VirtualExpressionParser
                 if(value.first.size() <= prefix.size() || value.first.compare(0, prefix.size(), prefix) != 0 || value.first.back() != ']') continue;
                 valueSum += value.second;
                 ++registerValueCount;
-                fUsedRegisters.insert(value.first);
             }
             if(registerValueCount == 0 || (fExpectedWildcardValues != 0 && registerValueCount != fExpectedWildcardValues)) return false;
             valueCount += registerValueCount;
@@ -354,10 +383,9 @@ class VirtualExpressionParser
         while(fPosition < fExpression.size() && std::isspace(static_cast<unsigned char>(fExpression[fPosition]))) ++fPosition;
     }
 
-    const std::string&              fExpression;
+    const std::string&                   fExpression;
     const std::map<std::string, double>& fValues;
     size_t                          fPosition{0};
-    std::set<std::string>           fUsedRegisters;
     size_t                          fExpectedWildcardValues{0};
 };
 }
@@ -420,22 +448,14 @@ MonitoringCsvWriter::Configuration MonitoringCsvWriter::loadConfiguration()
         else if(key == "csv_register_allowlist")
         {
             configuration.registerAllowlist.clear();
-            if(value != "*") for(const auto& name: splitCommaSeparated(value)) configuration.registerAllowlist.insert(name);
+            if(value != "*") for(const auto& name: split(value, ',', false)) configuration.registerAllowlist.insert(name);
         }
         else if(key == "virtual_register_config") configuration.virtualRegisterConfig = value;
-        else if(key == "dca_lookup_enabled") configuration.dcaLookupEnabled = parseBoolean(value, key, configPath, lineNumber);
-        else if(key == "dca_python") configuration.dcaPython = value;
-        else if(key == "dca_lookup_script") configuration.dcaLookupScript = value;
-        else if(key == "dca_repository") configuration.dcaRepository = value;
-        else if(key == "dca_url") configuration.dcaUrl = value;
-        else if(key == "dca_database") configuration.dcaDatabase = value;
-        else if(key == "dca_auth") configuration.dcaAuth = toLower(value);
         else if(key == "dca_mapping_file") configuration.dcaMappingFile = value;
-        else if(key == "dca_refresh") configuration.dcaRefresh = toLower(value);
-        else if(key == "dca_failure_policy") configuration.dcaFailurePolicy = toLower(value);
+        else if(key == "dca_mapping_failure_policy") configuration.dcaMappingFailurePolicy = toLower(value);
         else if(key == "monitor_schedule") configuration.scheduleMode = toLower(value);
         else if(key == "monitor_percent_windows") percentWindows = parseWindows(value, key, configPath, lineNumber);
-        else if(key.compare(0, 9, "exporter_") == 0) continue;
+        else if(key.compare(0, 9, "exporter_") == 0 || key.compare(0, 6, "lpgbt_") == 0) continue;
         else throw std::runtime_error("[MonitoringCsvWriter] Unknown setting '" + key + "' at " + configPath + ":" + std::to_string(lineNumber));
     }
 
@@ -461,16 +481,16 @@ MonitoringCsvWriter::Configuration MonitoringCsvWriter::loadConfiguration()
             for(const auto& window: schedule.windows)
                 if(window.second > 100) throw std::runtime_error("[MonitoringCsvWriter] Calibration percent windows must be within 0-100");
     }
-    if(configuration.dcaAuth != "login" && configuration.dcaAuth != "krb") throw std::runtime_error("[MonitoringCsvWriter] dca_auth must be login or krb");
-    if(configuration.dcaRefresh != "always" && configuration.dcaRefresh != "if_missing" && configuration.dcaRefresh != "never")
-        throw std::runtime_error("[MonitoringCsvWriter] dca_refresh must be always, if_missing, or never");
-    if(configuration.dcaFailurePolicy != "warn" && configuration.dcaFailurePolicy != "abort")
-        throw std::runtime_error("[MonitoringCsvWriter] dca_failure_policy must be warn or abort");
+    if(configuration.dcaMappingFailurePolicy != "warn" && configuration.dcaMappingFailurePolicy != "abort")
+        throw std::runtime_error("[MonitoringCsvWriter] dca_mapping_failure_policy must be warn or abort");
     return configuration;
 }
 
-void MonitoringCsvWriter::start(const Configuration& configuration, const std::string& calibrationName, const std::string& hardwareXml)
+void MonitoringCsvWriter::start(const std::string& calibrationName, const std::string& hardwareXml)
 {
+    const Configuration configuration = loadConfiguration();
+    if(!configuration.enabled) return;
+
     std::lock_guard<std::mutex> lock(fMutex);
     if(fRunning) return;
     fConfiguration = configuration;
@@ -480,17 +500,18 @@ void MonitoringCsvWriter::start(const Configuration& configuration, const std::s
         fConfiguration.scheduleMode = schedule->second.mode;
         fConfiguration.scheduleWindows = schedule->second.windows;
     }
-    fConfiguration.outputDirectory = absolutePath(fConfiguration.outputDirectory);
+    fHardwareXml = absoluteInputPath(hardwareXml);
+    const std::string xmlDirectory = parentDirectory(fHardwareXml);
+    fConfiguration.outputDirectory = outputPath(fConfiguration.outputDirectory, xmlDirectory);
     fConfiguration.virtualRegisterConfig = absolutePath(fConfiguration.virtualRegisterConfig);
-    fConfiguration.dcaLookupScript = absolutePath(fConfiguration.dcaLookupScript);
-    fConfiguration.dcaRepository = absolutePath(fConfiguration.dcaRepository);
-    fConfiguration.dcaMappingFile = absolutePath(fConfiguration.dcaMappingFile);
+    if(fConfiguration.dcaMappingFile.empty() || toLower(fConfiguration.dcaMappingFile) == "auto")
+        fConfiguration.dcaMappingFile = xmlDirectory + "/" + fileStem(fHardwareXml) + ".csv";
+    else
+        fConfiguration.dcaMappingFile = outputPath(fConfiguration.dcaMappingFile, xmlDirectory);
     fCalibrationName = calibrationName;
-    fHardwareXml = hardwareXml;
     fRunNumber = -1;
     fRunStart = std::chrono::steady_clock::now();
     fMetadataReady = false;
-    fDcaLookupFailed = false;
     fValues.clear();
     fModuleValues.clear();
     fIdentities.clear();
@@ -499,8 +520,7 @@ void MonitoringCsvWriter::start(const Configuration& configuration, const std::s
     fWrittenColumns.clear();
     ensureDirectory(fConfiguration.outputDirectory);
     loadVirtualRegisterDefinitions();
-    runDcaLookup();
-    if(!fDcaLookupFailed) loadDcaMapping();
+    loadDcaMapping();
     fRunning = true;
 }
 
@@ -530,7 +550,6 @@ void MonitoringCsvWriter::stop()
     fRunning = false;
     fCycleActive = false;
     fMetadataReady = false;
-    fDcaLookupFailed = false;
 }
 
 bool MonitoringCsvWriter::shouldMonitorNow() const
@@ -621,15 +640,7 @@ void MonitoringCsvWriter::loadVirtualRegisterDefinitions()
         ++lineNumber;
         line = trim(line);
         if(line.empty() || line.front() == '#') continue;
-        std::vector<std::string> fields;
-        size_t start = 0;
-        while(true)
-        {
-            const auto separator = line.find('|', start);
-            fields.push_back(trim(line.substr(start, separator == std::string::npos ? std::string::npos : separator - start)));
-            if(separator == std::string::npos) break;
-            start = separator + 1;
-        }
+        const std::vector<std::string> fields = split(line, '|');
         if(fields.size() != 3 && fields.size() != 4)
             throw std::runtime_error("[MonitoringCsvWriter] Invalid virtual register at " + fConfiguration.virtualRegisterConfig + ":" + std::to_string(lineNumber));
         VirtualRegisterDefinition definition;
@@ -647,64 +658,22 @@ void MonitoringCsvWriter::loadVirtualRegisterDefinitions()
     }
 }
 
-void MonitoringCsvWriter::runDcaLookup()
-{
-    if(!fConfiguration.dcaLookupEnabled || fConfiguration.dcaRefresh == "never") return;
-    if(fConfiguration.dcaRefresh == "if_missing" && fileExists(fConfiguration.dcaMappingFile)) return;
-    if(fConfiguration.dcaLookupScript.empty() || fConfiguration.dcaMappingFile.empty())
-        throw std::runtime_error("[MonitoringCsvWriter] DCA lookup requires dca_lookup_script and dca_mapping_file");
-
-    std::vector<std::string> arguments{fConfiguration.dcaPython,
-                                       fConfiguration.dcaLookupScript,
-                                       fHardwareXml,
-                                       "--output",
-                                       fConfiguration.dcaMappingFile,
-                                       "--repository",
-                                       fConfiguration.dcaRepository,
-                                       "--url",
-                                       fConfiguration.dcaUrl,
-                                       "--database",
-                                       fConfiguration.dcaDatabase,
-                                       "--auth",
-                                       fConfiguration.dcaAuth};
-    std::vector<char*> argv;
-    for(auto& argument: arguments) argv.push_back(&argument[0]);
-    argv.push_back(nullptr);
-    const pid_t process = fork();
-    if(process == 0)
-    {
-        execvp(argv[0], argv.data());
-        _exit(127);
-    }
-    int status = 0;
-    const bool failed = process < 0 || waitpid(process, &status, 0) < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0;
-    if(failed)
-    {
-        fDcaLookupFailed = true;
-        const std::string message = "[MonitoringCsvWriter] DCA lookup failed; CSV rows will retain eFuse identity and may have an empty module";
-        if(fConfiguration.dcaFailurePolicy == "abort") throw std::runtime_error(message);
-        LOG(WARNING) << message;
-    }
-}
-
 void MonitoringCsvWriter::loadDcaMapping()
 {
     if(fConfiguration.dcaMappingFile.empty()) return;
     std::ifstream input(fConfiguration.dcaMappingFile);
-    if(!input.is_open()) return;
+    if(!input.is_open())
+    {
+        const std::string message = "[MonitoringCsvWriter] Cannot open DCA mapping " + fConfiguration.dcaMappingFile + "; run the standalone DCA lookup before CMSITminiDAQ";
+        if(fConfiguration.dcaMappingFailurePolicy == "abort") throw std::runtime_error(message);
+        LOG(WARNING) << message;
+        return;
+    }
     std::string line;
     std::getline(input, line);
     while(std::getline(input, line))
     {
-        std::vector<std::string> fields;
-        size_t start = 0;
-        while(true)
-        {
-            const auto separator = line.find(',', start);
-            fields.push_back(trim(line.substr(start, separator == std::string::npos ? std::string::npos : separator - start)));
-            if(separator == std::string::npos) break;
-            start = separator + 1;
-        }
+        const std::vector<std::string> fields = split(line, ',');
         if(fields.size() < 6) continue;
         try
         {
@@ -724,9 +693,8 @@ void MonitoringCsvWriter::updateChipVirtualRegistersLocked(const DetectorKey& de
     {
         if(definition.scope != VirtualRegisterDefinition::Scope::Chip) continue;
         double result = 0;
-        std::set<std::string> used;
         VirtualExpressionParser parser(definition.expression, corrected);
-        if(!parser.evaluate(result, used)) continue;
+        if(!parser.evaluate(result)) continue;
         values[definition.name] = MetricValue{result, false, 0, definition.unit};
         fColumns.insert(definition.name);
     }
@@ -747,9 +715,8 @@ void MonitoringCsvWriter::updateModuleVirtualRegistersLocked(const ModuleKey& mo
     {
         if(definition.scope != VirtualRegisterDefinition::Scope::Module) continue;
         double result = 0;
-        std::set<std::string> used;
         VirtualExpressionParser parser(definition.expression, corrected, expected);
-        if(!parser.evaluate(result, used)) continue;
+        if(!parser.evaluate(result)) continue;
         moduleValues[definition.name] = MetricValue{result, false, 0, definition.unit};
         fColumns.insert(definition.name);
     }
@@ -766,7 +733,7 @@ void MonitoringCsvWriter::openOutputFileLocked()
     std::ostringstream name;
     name << fConfiguration.outputDirectory << "/" << fFileStem;
     if(fFilePart > 1) name << "_part" << std::setw(3) << std::setfill('0') << fFilePart;
-    name << ".csv";
+    name << ".active.csv";
     fCurrentFilePath = name.str();
     fOutput.open(fCurrentFilePath, std::ios::out | std::ios::app);
     if(!fOutput.is_open()) throw std::runtime_error("[MonitoringCsvWriter] Cannot open " + fCurrentFilePath);
@@ -844,7 +811,12 @@ void MonitoringCsvWriter::writeRowsLocked()
 
 void MonitoringCsvWriter::closeOutputFileLocked()
 {
-    if(fOutput.is_open()) fOutput.close();
+    if(fOutput.is_open())
+    {
+        fOutput.close();
+        const std::string readyPath = fCurrentFilePath.substr(0, fCurrentFilePath.size() - 11) + ".ready.csv";
+        if(std::rename(fCurrentFilePath.c_str(), readyPath.c_str()) != 0) LOG(ERROR) << "[MonitoringCsvWriter] Cannot finalize " << fCurrentFilePath;
+    }
     fWrittenColumns.clear();
 }
 
