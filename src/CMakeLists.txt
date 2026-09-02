@@ -161,6 +161,8 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
         target_link_libraries(RD53efuseReader ${LIBS})
         add_executable(LpGBTefuseReader ${PROJECT_SOURCE_DIR}/LpGBT_query/LpGBTefuseReader.cc)
         target_link_libraries(LpGBTefuseReader ${LIBS})
+        add_executable(CombinedEfuseReader ${PROJECT_SOURCE_DIR}/DCA_query_hardware_combined/CombinedEfuseReader.cc)
+        target_link_libraries(CombinedEfuseReader ${LIBS})
     endif()
 
     message("--     ${BoldCyan}#### End ####${Reset}")
