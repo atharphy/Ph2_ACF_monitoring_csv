@@ -13,11 +13,27 @@ DCA_URL = "https://cmsdca.cern.ch/trk_rhapi"
 DCA_DATABASE = "trker_cmsr"
 
 
+def normalize_efuse(value):
+    value = str(value).strip()
+    if value.lower().startswith("0x"):
+        number = int(value, 16)
+    elif any(character in "abcdefABCDEF" for character in value):
+        number = int(value, 16)
+    else:
+        number = int(value, 10)
+    return f"0x{number:08X}"
+
+
 def make_query(efuses):
-    values = ", ".join("'" + value.replace("'", "''") + "'" for value in sorted(set(efuses)))
+    candidates = set()
+    for value in efuses:
+        canonical = normalize_efuse(value)
+        number = int(canonical, 16)
+        candidates.update((canonical, canonical[2:], str(number)))
+    values = ", ".join("'" + value.replace("'", "''") + "'" for value in sorted(candidates))
     return f"""
 SELECT DISTINCT lpgbt.serial_number AS lpgbt_efuse,
-       relation.parent_serial_number AS portcard_efuse
+       relation.parent_serial_number AS portcard_id
 FROM {DCA_DATABASE}.parts lpgbt
 JOIN {DCA_DATABASE}.trkr_relationships_v relation
   ON relation.child_name_label = lpgbt.name_label
@@ -41,7 +57,7 @@ def lookup(efuses):
     result = {}
     for row in rows:
         row = {str(key).lower(): value for key, value in row.items()}
-        efuse, portcard = str(row.get("lpgbt_efuse", "")), row.get("portcard_efuse")
+        efuse, portcard = normalize_efuse(row.get("lpgbt_efuse", "")), row.get("portcard_id")
         if efuse and portcard not in (None, ""):
             if efuse in result and result[efuse] != str(portcard):
                 raise RuntimeError(f"multiple portcards found for lpGBT eFuse {efuse}")
@@ -55,10 +71,12 @@ def main():
     source, output = map(Path, sys.argv[1:])
     with source.open(newline="", encoding="utf-8") as stream:
         entries = list(csv.DictReader(stream))
-    required = {"board", "optical", "lpgbt", "lpgbt_efuse", "portcard_efuse"}
+    required = {"board", "optical", "lpgbt_efuse", "portcard_id"}
     if not entries or not required.issubset(entries[0]):
-        raise RuntimeError("input must contain board,optical,lpgbt,lpgbt_efuse,portcard_efuse")
+        raise RuntimeError("input must contain board,optical,lpgbt_efuse,portcard_id")
     entries = [{key: value.strip() for key, value in entry.items()} for entry in entries]
+    for entry in entries:
+        entry["lpgbt_efuse"] = normalize_efuse(entry["lpgbt_efuse"])
     lookup_error = None
     try:
         portcards = lookup([entry["lpgbt_efuse"] for entry in entries])
@@ -67,16 +85,16 @@ def main():
         lookup_error = error
 
     with output.open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.DictWriter(stream, fieldnames=["board", "optical", "lpgbt", "lpgbt_efuse", "portcard_efuse"])
+        writer = csv.DictWriter(stream, fieldnames=["board", "optical", "lpgbt_efuse", "portcard_id"])
         writer.writeheader()
         for entry in entries:
-            entry["portcard_efuse"] = portcards.get(entry["lpgbt_efuse"], "")
+            entry["portcard_id"] = portcards.get(entry["lpgbt_efuse"], "")
             writer.writerow(entry)
 
     missing = sorted({entry["lpgbt_efuse"] for entry in entries if entry["lpgbt_efuse"] not in portcards})
     print(f"Wrote {len(entries)} lpGBT mapping(s) to {output}")
     if lookup_error is not None:
-        print(f"Warning: DCA lookup failed; portcard_efuse was left empty: {lookup_error}", file=sys.stderr)
+        print(f"Warning: DCA lookup failed; portcard_id was left empty: {lookup_error}", file=sys.stderr)
         return 0
     if missing:
         print("Missing DCA portcard for lpGBT eFuse: " + ", ".join(missing))

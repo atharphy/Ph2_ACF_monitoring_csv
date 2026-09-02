@@ -37,6 +37,7 @@ class LpGBTMonitoringCsvWriter
     };
 
     using LpGBTKey = std::tuple<int, int, int>;
+    using OpticalKey = std::pair<int, int>;
 
     LpGBTMonitoringCsvWriter() = default;
     ~LpGBTMonitoringCsvWriter();
@@ -55,7 +56,7 @@ class LpGBTMonitoringCsvWriter
     Configuration                                       fConfiguration;
     std::map<LpGBTKey, std::map<std::string, double>>   fValues;
     std::map<LpGBTKey, uint32_t>                        fEfuses;
-    std::map<LpGBTKey, std::string>                     fPortcards;
+    std::map<OpticalKey, std::string>                   fPortcards;
     std::set<std::string>                               fColumns;
     std::set<std::string>                               fWrittenColumns;
     bool                                                fRunning{false};

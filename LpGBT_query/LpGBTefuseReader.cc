@@ -3,6 +3,7 @@
 #include "System/SystemController.h"
 
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <stdexcept>
 
@@ -27,7 +28,7 @@ int main(int argc, char** argv)
         controller.InitializeSettings(argv[1], parsed);
         std::ofstream output(argv[2]);
         if(!output) throw std::runtime_error("cannot open output CSV");
-        output << "board,optical,lpgbt,lpgbt_efuse,portcard_efuse\n";
+        output << "board,optical,lpgbt_efuse,portcard_id\n";
 
         for(auto* board: *controller.fDetectorContainer)
         {
@@ -39,7 +40,7 @@ int main(int argc, char** argv)
                 auto* lpgbt = optical->flpGBT;
                 if(lpgbt == nullptr) continue;
                 uint32_t efuse = controller.flpGBTInterface->ReadChipFuseID(lpgbt, lpgbt->getVersion());
-                output << board->getId() << ',' << optical->getId() << ',' << lpgbt->getId() << ',' << efuse << ",\n";
+                output << board->getId() << ',' << optical->getId() << ",0x" << std::uppercase << std::hex << std::setw(8) << std::setfill('0') << efuse << std::dec << ",\n";
             }
         }
         controller.Destroy();

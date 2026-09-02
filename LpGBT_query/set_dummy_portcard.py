@@ -16,13 +16,13 @@ def main():
     with path.open(newline="", encoding="utf-8") as stream:
         reader = csv.DictReader(stream)
         rows, fields = list(reader), reader.fieldnames
-    if not fields or "portcard_efuse" not in fields:
-        raise RuntimeError("CSV does not contain portcard_efuse")
+    if not fields or "portcard_id" not in fields:
+        raise RuntimeError("CSV does not contain portcard_id")
 
     updated = 0
     for row in rows:
-        if not row["portcard_efuse"].strip():
-            row["portcard_efuse"] = portcard
+        if not row["portcard_id"].strip():
+            row["portcard_id"] = portcard
             updated += 1
 
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -31,7 +31,7 @@ def main():
         writer.writeheader()
         writer.writerows(rows)
     temporary.replace(path)
-    print(f"Set portcard_efuse={portcard} for {updated} row(s) in {path}")
+    print(f"Set portcard_id={portcard} for {updated} row(s) in {path}")
     return 0
 
 

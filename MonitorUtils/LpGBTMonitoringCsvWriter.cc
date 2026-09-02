@@ -125,6 +125,13 @@ std::string csvEscape(const std::string& value)
     for(char character: value) escaped += character == '"' ? "\"\"" : std::string(1, character);
     return escaped + "\"";
 }
+
+std::string hexValue(uint32_t value)
+{
+    std::ostringstream output;
+    output << "0x" << std::uppercase << std::hex << std::setw(8) << std::setfill('0') << value;
+    return output.str();
+}
 }
 
 LpGBTMonitoringCsvWriter& LpGBTMonitoringCsvWriter::getInstance()
@@ -301,8 +308,8 @@ void LpGBTMonitoringCsvWriter::loadMappingLocked()
     while(std::getline(input, line))
     {
         const std::vector<std::string> fields = split(line, ',');
-        if(fields.size() < 5) continue;
-        try { fPortcards[{std::stoi(fields[0]), std::stoi(fields[1]), std::stoi(fields[2])}] = fields[4]; }
+        if(fields.size() < 4) continue;
+        try { fPortcards[{std::stoi(fields[0]), std::stoi(fields[1])}] = fields[3]; }
         catch(const std::exception&) { LOG(WARNING) << "[LpGBTMonitoringCsvWriter] Ignoring malformed mapping row: " << line; }
     }
 }
@@ -323,7 +330,7 @@ void LpGBTMonitoringCsvWriter::openOutputFileLocked()
     fOutput.open(fCurrentFilePath, std::ios::out | std::ios::app);
     if(!fOutput.is_open()) throw std::runtime_error("[LpGBTMonitoringCsvWriter] Cannot open " + fCurrentFilePath);
     fWrittenColumns = fColumns;
-    fOutput << "board,optical,lpgbt,lpgbt_efuse,portcard_efuse,date,time";
+    fOutput << "board,optical,lpgbt_efuse,portcard_id,date,time";
     for(const std::string& column: fWrittenColumns) fOutput << ',' << csvEscape(column);
     fOutput << '\n';
     fOutput.flush();
@@ -355,8 +362,8 @@ void LpGBTMonitoringCsvWriter::writeRowsLocked()
     {
         const LpGBTKey& key = entry.first;
         const auto efuse = fEfuses.find(key);
-        const auto portcard = fPortcards.find(key);
-        fOutput << std::get<0>(key) << ',' << std::get<1>(key) << ',' << std::get<2>(key) << ',' << (efuse == fEfuses.end() ? 0 : efuse->second) << ',';
+        const auto portcard = fPortcards.find({std::get<0>(key), std::get<1>(key)});
+        fOutput << std::get<0>(key) << ',' << std::get<1>(key) << ',' << (efuse == fEfuses.end() ? "" : hexValue(efuse->second)) << ',';
         if(portcard != fPortcards.end()) fOutput << csvEscape(portcard->second);
         fOutput << ',' << date << ',' << time;
         for(const std::string& column: fWrittenColumns)
