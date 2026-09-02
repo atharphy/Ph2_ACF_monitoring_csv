@@ -7,6 +7,7 @@ if [[ $# -ne 1 ]]; then
     exit 1
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 XML="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
-READER="${PH2ACF_BASE_DIR:?Source setup.sh first}/bin/LpGBTefuseReader"
-"${READER}" "${XML}" "${XML%.*}_lpgbt_portcards.csv"
+READER="${SCRIPT_DIR}/../bin/LpGBTefuseReader"
+(cd "$(dirname "${XML}")" && "${READER}" "${XML}" "${XML%.*}_lpgbt_portcards.csv")

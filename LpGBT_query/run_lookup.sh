@@ -9,11 +9,11 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 XML="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
-READER="${PH2ACF_BASE_DIR:?Source setup.sh first}/bin/LpGBTefuseReader"
+READER="${SCRIPT_DIR}/../bin/LpGBTefuseReader"
 OUTPUT="${XML%.*}_lpgbt_portcards.csv"
 RAW="$(mktemp "${TMPDIR:-/tmp}/lpgbt-efuse.XXXXXX.csv")"
 trap 'rm -f "${RAW}"' EXIT
 
-"${READER}" "${XML}" "${RAW}"
+(cd "$(dirname "${XML}")" && "${READER}" "${XML}" "${RAW}")
 cp "${RAW}" "${OUTPUT}"
 python3 "${SCRIPT_DIR}/lookup_lpgbt_portcards.py" "${RAW}" "${OUTPUT}"
