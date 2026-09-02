@@ -455,7 +455,9 @@ MonitoringCsvWriter::Configuration MonitoringCsvWriter::loadConfiguration()
         else if(key == "dca_mapping_failure_policy") configuration.dcaMappingFailurePolicy = toLower(value);
         else if(key == "monitor_schedule") configuration.scheduleMode = toLower(value);
         else if(key == "monitor_percent_windows") percentWindows = parseWindows(value, key, configPath, lineNumber);
-        else if(key.compare(0, 9, "exporter_") == 0 || key.compare(0, 6, "lpgbt_") == 0) continue;
+        else if(key.compare(0, 9, "exporter_") == 0 || key.compare(0, 6, "lpgbt_") == 0 || key == "csv_cleanup_mode" || key == "csv_archive_directory" || key == "csv_retention_hours" ||
+                key == "csv_acknowledgement" || key == "prometheus_server_url" || key == "csv_min_confirmed_scrapes" || key == "csv_exporter_source")
+            continue;
         else throw std::runtime_error("[MonitoringCsvWriter] Unknown setting '" + key + "' at " + configPath + ":" + std::to_string(lineNumber));
     }
 
