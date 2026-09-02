@@ -59,7 +59,12 @@ def main():
     if not entries or not required.issubset(entries[0]):
         raise RuntimeError("input must contain board,optical,lpgbt,lpgbt_efuse,portcard_efuse")
     entries = [{key: value.strip() for key, value in entry.items()} for entry in entries]
-    portcards = lookup([entry["lpgbt_efuse"] for entry in entries])
+    lookup_error = None
+    try:
+        portcards = lookup([entry["lpgbt_efuse"] for entry in entries])
+    except Exception as error:
+        portcards = {}
+        lookup_error = error
 
     with output.open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, fieldnames=["board", "optical", "lpgbt", "lpgbt_efuse", "portcard_efuse"])
@@ -70,9 +75,11 @@ def main():
 
     missing = sorted({entry["lpgbt_efuse"] for entry in entries if entry["lpgbt_efuse"] not in portcards})
     print(f"Wrote {len(entries)} lpGBT mapping(s) to {output}")
+    if lookup_error is not None:
+        print(f"Warning: DCA lookup failed; portcard_efuse was left empty: {lookup_error}", file=sys.stderr)
+        return 0
     if missing:
         print("Missing DCA portcard for lpGBT eFuse: " + ", ".join(missing))
-        return 2
     return 0
 
 

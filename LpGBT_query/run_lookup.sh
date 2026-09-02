@@ -15,4 +15,5 @@ RAW="$(mktemp "${TMPDIR:-/tmp}/lpgbt-efuse.XXXXXX.csv")"
 trap 'rm -f "${RAW}"' EXIT
 
 "${READER}" "${XML}" "${RAW}"
+cp "${RAW}" "${OUTPUT}"
 python3 "${SCRIPT_DIR}/lookup_lpgbt_portcards.py" "${RAW}" "${OUTPUT}"
