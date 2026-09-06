@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage()
+{
+    cat <<'EOF'
+Usage: DCA_query -f HARDWARE.xml [options]
+
+Read RD53 and lpGBT eFuses from hardware, resolve module and portcard IDs in
+DCA, and write one combined CSV beside the hardware XML. Missing identifiers
+are requested interactively; enter -1 to leave a field empty.
+
+Required:
+  -f, --file FILE             Ph2_ACF hardware XML file
+
+Options:
+  -o, --output FILE           Output CSV (default: same name as XML with .csv)
+      --dummy-module-id ID    Use ID when a module is not available in DCA
+      --dummy-portcard-id ID  Use ID when a portcard is not available in DCA
+      --no-dca                Skip DCA and use empty/dummy identifiers
+  -h, --help                  Show this help message
+
+Examples:
+  DCA_query -f CMSIT.xml
+  DCA_query -f CMSIT.xml --dummy-module-id MODULE_TEST
+  DCA_query -f CMSIT.xml --dummy-portcard-id PORTCARD_TEST
+  DCA_query -f CMSIT.xml --no-dca --dummy-module-id MODULE_TEST \
+      --dummy-portcard-id PORTCARD_TEST
+EOF
+}
+
+XML=""
+OUTPUT=""
+ARGS=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -f|--file) XML="${2:-}"; shift 2 ;;
+        -o|--output) OUTPUT="${2:-}"; shift 2 ;;
+        --dummy-module-id|--dummy-portcard-id) ARGS+=("$1" "${2:-}"); shift 2 ;;
+        --no-dca) ARGS+=("$1"); shift ;;
+        -h|--help) usage; exit 0 ;;
+        *) echo "DCA_query: unknown option: $1" >&2; usage >&2; exit 2 ;;
+    esac
+done
+
+[[ -n "${XML}" ]] || { echo "DCA_query: -f/--file is required" >&2; usage >&2; exit 2; }
+[[ -f "${XML}" ]] || { echo "DCA_query: XML file not found: ${XML}" >&2; exit 1; }
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE="${PH2ACF_BASE_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
+XML="$(cd "$(dirname "${XML}")" && pwd)/$(basename "${XML}")"
+OUTPUT="${OUTPUT:-${XML%.*}.csv}"
+RAW="$(mktemp "${TMPDIR:-/tmp}/combined-efuse.XXXXXX.csv")"
+trap 'rm -f "${RAW}"' EXIT
+
+(cd "$(dirname "${XML}")" && "${BASE}/bin/CombinedEfuseReader" "${XML}" "${RAW}")
+python3 "${BASE}/DCA_query_hardware_combined/lookup.py" "${RAW}" "${OUTPUT}" "${ARGS[@]}"
