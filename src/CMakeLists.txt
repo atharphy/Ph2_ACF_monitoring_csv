@@ -157,9 +157,9 @@ if(NOT DEFINED ENV{OTSDAQ_CMSTRACKER_DIR})
     endforeach(sourcefile ${BINARIES})
 
     if(NOT CompileForShep AND NOT CompileForHerd)
-        add_executable(CombinedEfuseReader ${PROJECT_SOURCE_DIR}/DCA_query_hardware_combined/CombinedEfuseReader.cc)
+        add_executable(CombinedEfuseReader ${PROJECT_SOURCE_DIR}/DCA_query/CombinedEfuseReader.cc)
         target_link_libraries(CombinedEfuseReader ${LIBS})
-        configure_file(${PROJECT_SOURCE_DIR}/DCA_query_hardware_combined/DCA_query ${PROJECT_SOURCE_DIR}/bin/DCA_query COPYONLY)
+        configure_file(${PROJECT_SOURCE_DIR}/DCA_query/DCA_query ${PROJECT_SOURCE_DIR}/bin/DCA_query COPYONLY)
     endif()
 
     message("--     ${BoldCyan}#### End ####${Reset}")

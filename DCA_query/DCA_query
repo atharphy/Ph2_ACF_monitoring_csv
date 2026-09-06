@@ -55,4 +55,4 @@ RAW="$(mktemp "${TMPDIR:-/tmp}/combined-efuse.XXXXXX.csv")"
 trap 'rm -f "${RAW}"' EXIT
 
 (cd "$(dirname "${XML}")" && "${BASE}/bin/CombinedEfuseReader" "${XML}" "${RAW}")
-python3 "${BASE}/DCA_query_hardware_combined/lookup.py" "${RAW}" "${OUTPUT}" "${ARGS[@]}"
+python3 "${BASE}/DCA_query/lookup.py" "${RAW}" "${OUTPUT}" "${ARGS[@]}"
