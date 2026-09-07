@@ -30,45 +30,31 @@ class MonitoringCsvWriter
         unsigned int          rotateMinutes{60};
         bool                  includeErrors{true};
         std::set<std::string> registerAllowlist;
+        bool                  lpGBTEnabled{true};
+        std::set<std::string> lpGBTRegisterAllowlist;
         std::string           virtualRegisterConfig;
 
-        bool        dcaLookupEnabled{false};
-        std::string dcaPython{"python3"};
-        std::string dcaLookupScript;
-        std::string dcaRepository;
-        std::string dcaUrl{"https://cmsdca.cern.ch/trk_rhapi"};
-        std::string dcaDatabase{"trker_cmsr"};
-        std::string dcaAuth{"login"};
         std::string dcaMappingFile;
-        std::string dcaRefresh{"if_missing"};
-        std::string dcaFailurePolicy{"warn"};
+        std::string dcaMappingFailurePolicy{"warn"};
 
         std::string                            scheduleMode{"always"};
         std::vector<std::pair<double, double>> scheduleWindows;
         std::map<std::string, Schedule>         calibrationSchedules;
-
     };
 
     static MonitoringCsvWriter& getInstance();
-    static Configuration        loadConfiguration();
 
-    void start(const Configuration& configuration, const std::string& calibrationName, const std::string& hardwareXml);
+    void start(const std::string& calibrationName, const std::string& hardwareXml);
     void setRunMetadata(const std::string& calibrationName, int runNumber);
     void stop();
 
     bool shouldMonitorNow() const;
+    bool isRunning() const;
     void beginCycle();
     void endCycle();
-    void update(int                                      boardId,
-                int                                      opticalGroupId,
-                int                                      hybridId,
-                int                                      chipId,
-                int64_t                                  efuseCode,
-                const std::string&                       registerName,
-                double                                   value,
-                bool                                     isAdcObservable,
-                bool                                     isCurrent,
-                std::size_t                              moduleChipCount = 0);
+    void update(int boardId, int opticalGroupId, int hybridId, int chipId, int64_t efuseCode, const std::string& registerName,
+                double value, bool isAdcObservable, std::size_t moduleChipCount = 0);
+    void updateLpGBT(int boardId, int opticalGroupId, uint32_t efuseCode, const std::string& registerName, double value);
 
   private:
     MonitoringCsvWriter() = default;
@@ -77,12 +63,13 @@ class MonitoringCsvWriter
     MonitoringCsvWriter(const MonitoringCsvWriter&)            = delete;
     MonitoringCsvWriter& operator=(const MonitoringCsvWriter&) = delete;
 
+    static Configuration loadConfiguration();
+
     struct MetricValue
     {
         double value{0};
         bool   hasError{false};
         double error{0};
-        std::string unit;
     };
 
     struct VirtualRegisterDefinition
@@ -90,11 +77,12 @@ class MonitoringCsvWriter
         enum class Scope
         {
             Chip,
-            Module
+            Module,
+            LpGBT,
+            Portcard
         };
 
         std::string name;
-        std::string unit;
         Scope       scope{Scope::Chip};
         std::string expression;
     };
@@ -105,14 +93,23 @@ class MonitoringCsvWriter
         std::string module;
     };
 
+    struct PortcardIdentity
+    {
+        std::string efuse{"-1"};
+        std::string portcard{"-1"};
+    };
+
     using DetectorKey = std::tuple<int, int, int, int>;
     using ModuleKey   = std::tuple<int, int, int>;
+    using OpticalKey  = std::pair<int, int>;
 
     void loadVirtualRegisterDefinitions();
-    void runDcaLookup();
     void loadDcaMapping();
+    void updateVirtualRegistersLocked(VirtualRegisterDefinition::Scope scope, const std::map<std::string, double>& inputs,
+                                      std::map<std::string, MetricValue>& values, std::size_t expectedInputs = 0);
     void updateChipVirtualRegistersLocked(const DetectorKey& detectorKey);
     void updateModuleVirtualRegistersLocked(const ModuleKey& moduleKey);
+    void updateLpGBTVirtualRegistersLocked(const OpticalKey& opticalKey);
     void openOutputFileLocked();
     void rotateIfNeededLocked();
     void writeHeaderLocked();
@@ -126,7 +123,9 @@ class MonitoringCsvWriter
     Configuration                                             fConfiguration;
     std::map<DetectorKey, std::map<std::string, MetricValue>> fValues;
     std::map<ModuleKey, std::map<std::string, MetricValue>>   fModuleValues;
+    std::map<OpticalKey, std::map<std::string, MetricValue>>  fPortcardValues;
     std::map<DetectorKey, Identity>                           fIdentities;
+    std::map<OpticalKey, PortcardIdentity>                    fPortcardIdentities;
     std::map<ModuleKey, std::size_t>                          fModuleChipCounts;
     std::vector<VirtualRegisterDefinition>                    fVirtualRegisterDefinitions;
     std::set<std::string>                                     fColumns;
@@ -135,9 +134,7 @@ class MonitoringCsvWriter
     bool                                      fRunning{false};
     bool                                      fCycleActive{false};
     bool                                      fMetadataReady{false};
-    bool                                      fDcaLookupFailed{false};
     std::string                               fCalibrationName;
-    std::string                               fHardwareXml;
     int                                       fRunNumber{-1};
     unsigned int                              fFilePart{1};
     std::string                               fFileStem;

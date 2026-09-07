@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
@@ -17,7 +18,6 @@
 #include <stdexcept>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 namespace
@@ -78,15 +78,15 @@ double parseNonNegativeDouble(const std::string& value, const std::string& key, 
     return parsedValue;
 }
 
-std::vector<std::string> splitCommaSeparated(const std::string& value)
+std::vector<std::string> split(const std::string& value, char delimiter, bool keepEmpty = true)
 {
     std::vector<std::string> entries;
-    size_t                   start = 0;
+    size_t start = 0;
     while(start <= value.size())
     {
-        const size_t separator = value.find(',', start);
-        const auto   entry     = trim(value.substr(start, separator == std::string::npos ? std::string::npos : separator - start));
-        if(!entry.empty()) entries.push_back(entry);
+        const size_t separator = value.find(delimiter, start);
+        const std::string entry = trim(value.substr(start, separator == std::string::npos ? std::string::npos : separator - start));
+        if(keepEmpty || !entry.empty()) entries.push_back(entry);
         if(separator == std::string::npos) break;
         start = separator + 1;
     }
@@ -96,7 +96,7 @@ std::vector<std::string> splitCommaSeparated(const std::string& value)
 std::vector<std::pair<double, double>> parseWindows(const std::string& value, const std::string& key, const std::string& configPath, size_t lineNumber)
 {
     std::vector<std::pair<double, double>> windows;
-    for(const auto& entry: splitCommaSeparated(value))
+    for(const auto& entry: split(value, ',', false))
     {
         const auto separator = entry.find('-');
         if(separator == std::string::npos)
@@ -119,6 +119,40 @@ std::string absolutePath(const std::string& value)
 {
     if(value.empty() || value.front() == '/') return value;
     return baseDirectory() + "/" + value;
+}
+
+std::string workingDirectory()
+{
+    char path[4096];
+    if(getcwd(path, sizeof(path)) == nullptr) throw std::runtime_error("[MonitoringCsvWriter] Cannot determine the working directory");
+    return path;
+}
+
+std::string absoluteInputPath(const std::string& value)
+{
+    if(value.empty() || value.front() == '/') return value;
+    return workingDirectory() + "/" + value;
+}
+
+std::string parentDirectory(const std::string& path)
+{
+    const size_t separator = path.find_last_of('/');
+    if(separator == std::string::npos) return ".";
+    return separator == 0 ? "/" : path.substr(0, separator);
+}
+
+std::string fileStem(const std::string& path)
+{
+    const size_t separator = path.find_last_of('/');
+    const size_t start = separator == std::string::npos ? 0 : separator + 1;
+    const size_t extension = path.find_last_of('.');
+    return path.substr(start, extension == std::string::npos || extension < start ? std::string::npos : extension - start);
+}
+
+std::string outputPath(const std::string& value, const std::string& xmlDirectory)
+{
+    if(value.empty() || value.front() == '/') return value;
+    return xmlDirectory + "/" + value;
 }
 
 bool fileExists(const std::string& path)
@@ -157,6 +191,13 @@ std::string dateTimeStamp(const char* format)
     return output.str();
 }
 
+std::string hexValue(uint32_t value)
+{
+    std::ostringstream output;
+    output << "0x" << std::uppercase << std::hex << std::setw(8) << std::setfill('0') << value;
+    return output.str();
+}
+
 class VirtualExpressionParser
 {
   public:
@@ -165,15 +206,12 @@ class VirtualExpressionParser
     {
     }
 
-    bool evaluate(double& result, std::set<std::string>& usedRegisters)
+    bool evaluate(double& result)
     {
         fPosition = 0;
-        fUsedRegisters.clear();
         if(!parseExpression(result)) return false;
         skipWhitespace();
-        if(fPosition != fExpression.size() || !std::isfinite(result)) return false;
-        usedRegisters = fUsedRegisters;
-        return true;
+        return fPosition == fExpression.size() && std::isfinite(result);
     }
 
   private:
@@ -265,7 +303,6 @@ class VirtualExpressionParser
         const auto valueIt = fValues.find(registerName);
         if(valueIt == fValues.end()) return false;
         result = valueIt->second;
-        fUsedRegisters.insert(registerName);
         return true;
     }
 
@@ -319,7 +356,6 @@ class VirtualExpressionParser
                 if(value.first.size() <= prefix.size() || value.first.compare(0, prefix.size(), prefix) != 0 || value.first.back() != ']') continue;
                 valueSum += value.second;
                 ++registerValueCount;
-                fUsedRegisters.insert(value.first);
             }
             if(registerValueCount == 0 || (fExpectedWildcardValues != 0 && registerValueCount != fExpectedWildcardValues)) return false;
             valueCount += registerValueCount;
@@ -354,10 +390,9 @@ class VirtualExpressionParser
         while(fPosition < fExpression.size() && std::isspace(static_cast<unsigned char>(fExpression[fPosition]))) ++fPosition;
     }
 
-    const std::string&              fExpression;
+    const std::string&                   fExpression;
     const std::map<std::string, double>& fValues;
     size_t                          fPosition{0};
-    std::set<std::string>           fUsedRegisters;
     size_t                          fExpectedWildcardValues{0};
 };
 }
@@ -420,22 +455,22 @@ MonitoringCsvWriter::Configuration MonitoringCsvWriter::loadConfiguration()
         else if(key == "csv_register_allowlist")
         {
             configuration.registerAllowlist.clear();
-            if(value != "*") for(const auto& name: splitCommaSeparated(value)) configuration.registerAllowlist.insert(name);
+            if(value != "*") for(const auto& name: split(value, ',', false)) configuration.registerAllowlist.insert(name);
+        }
+        else if(key == "lpgbt_csv_enabled") configuration.lpGBTEnabled = parseBoolean(value, key, configPath, lineNumber);
+        else if(key == "lpgbt_csv_register_allowlist")
+        {
+            configuration.lpGBTRegisterAllowlist.clear();
+            if(value != "*") for(const auto& name: split(value, ',', false)) configuration.lpGBTRegisterAllowlist.insert(name);
         }
         else if(key == "virtual_register_config") configuration.virtualRegisterConfig = value;
-        else if(key == "dca_lookup_enabled") configuration.dcaLookupEnabled = parseBoolean(value, key, configPath, lineNumber);
-        else if(key == "dca_python") configuration.dcaPython = value;
-        else if(key == "dca_lookup_script") configuration.dcaLookupScript = value;
-        else if(key == "dca_repository") configuration.dcaRepository = value;
-        else if(key == "dca_url") configuration.dcaUrl = value;
-        else if(key == "dca_database") configuration.dcaDatabase = value;
-        else if(key == "dca_auth") configuration.dcaAuth = toLower(value);
         else if(key == "dca_mapping_file") configuration.dcaMappingFile = value;
-        else if(key == "dca_refresh") configuration.dcaRefresh = toLower(value);
-        else if(key == "dca_failure_policy") configuration.dcaFailurePolicy = toLower(value);
+        else if(key == "dca_mapping_failure_policy") configuration.dcaMappingFailurePolicy = toLower(value);
         else if(key == "monitor_schedule") configuration.scheduleMode = toLower(value);
         else if(key == "monitor_percent_windows") percentWindows = parseWindows(value, key, configPath, lineNumber);
-        else if(key.compare(0, 9, "exporter_") == 0) continue;
+        else if(key.compare(0, 9, "exporter_") == 0 || key.compare(0, 6, "lpgbt_") == 0 || key == "csv_cleanup_mode" || key == "csv_archive_directory" || key == "csv_retention_hours" ||
+                key == "csv_acknowledgement" || key == "prometheus_server_url" || key == "csv_min_confirmed_scrapes" || key == "csv_exporter_source")
+            continue;
         else throw std::runtime_error("[MonitoringCsvWriter] Unknown setting '" + key + "' at " + configPath + ":" + std::to_string(lineNumber));
     }
 
@@ -461,16 +496,16 @@ MonitoringCsvWriter::Configuration MonitoringCsvWriter::loadConfiguration()
             for(const auto& window: schedule.windows)
                 if(window.second > 100) throw std::runtime_error("[MonitoringCsvWriter] Calibration percent windows must be within 0-100");
     }
-    if(configuration.dcaAuth != "login" && configuration.dcaAuth != "krb") throw std::runtime_error("[MonitoringCsvWriter] dca_auth must be login or krb");
-    if(configuration.dcaRefresh != "always" && configuration.dcaRefresh != "if_missing" && configuration.dcaRefresh != "never")
-        throw std::runtime_error("[MonitoringCsvWriter] dca_refresh must be always, if_missing, or never");
-    if(configuration.dcaFailurePolicy != "warn" && configuration.dcaFailurePolicy != "abort")
-        throw std::runtime_error("[MonitoringCsvWriter] dca_failure_policy must be warn or abort");
+    if(configuration.dcaMappingFailurePolicy != "warn" && configuration.dcaMappingFailurePolicy != "abort")
+        throw std::runtime_error("[MonitoringCsvWriter] dca_mapping_failure_policy must be warn or abort");
     return configuration;
 }
 
-void MonitoringCsvWriter::start(const Configuration& configuration, const std::string& calibrationName, const std::string& hardwareXml)
+void MonitoringCsvWriter::start(const std::string& calibrationName, const std::string& hardwareXml)
 {
+    const Configuration configuration = loadConfiguration();
+    if(!configuration.enabled) return;
+
     std::lock_guard<std::mutex> lock(fMutex);
     if(fRunning) return;
     fConfiguration = configuration;
@@ -480,27 +515,29 @@ void MonitoringCsvWriter::start(const Configuration& configuration, const std::s
         fConfiguration.scheduleMode = schedule->second.mode;
         fConfiguration.scheduleWindows = schedule->second.windows;
     }
-    fConfiguration.outputDirectory = absolutePath(fConfiguration.outputDirectory);
+    const std::string hardwareXmlPath = absoluteInputPath(hardwareXml);
+    const std::string xmlDirectory = parentDirectory(hardwareXmlPath);
+    fConfiguration.outputDirectory = outputPath(fConfiguration.outputDirectory, xmlDirectory);
     fConfiguration.virtualRegisterConfig = absolutePath(fConfiguration.virtualRegisterConfig);
-    fConfiguration.dcaLookupScript = absolutePath(fConfiguration.dcaLookupScript);
-    fConfiguration.dcaRepository = absolutePath(fConfiguration.dcaRepository);
-    fConfiguration.dcaMappingFile = absolutePath(fConfiguration.dcaMappingFile);
+    if(fConfiguration.dcaMappingFile.empty() || toLower(fConfiguration.dcaMappingFile) == "auto")
+        fConfiguration.dcaMappingFile = xmlDirectory + "/" + fileStem(hardwareXmlPath) + ".csv";
+    else
+        fConfiguration.dcaMappingFile = outputPath(fConfiguration.dcaMappingFile, xmlDirectory);
     fCalibrationName = calibrationName;
-    fHardwareXml = hardwareXml;
     fRunNumber = -1;
     fRunStart = std::chrono::steady_clock::now();
     fMetadataReady = false;
-    fDcaLookupFailed = false;
     fValues.clear();
     fModuleValues.clear();
+    fPortcardValues.clear();
     fIdentities.clear();
+    fPortcardIdentities.clear();
     fModuleChipCounts.clear();
     fColumns.clear();
     fWrittenColumns.clear();
     ensureDirectory(fConfiguration.outputDirectory);
     loadVirtualRegisterDefinitions();
-    runDcaLookup();
-    if(!fDcaLookupFailed) loadDcaMapping();
+    loadDcaMapping();
     fRunning = true;
 }
 
@@ -524,13 +561,14 @@ void MonitoringCsvWriter::stop()
     closeOutputFileLocked();
     fValues.clear();
     fModuleValues.clear();
+    fPortcardValues.clear();
     fIdentities.clear();
+    fPortcardIdentities.clear();
     fModuleChipCounts.clear();
     fColumns.clear();
     fRunning = false;
     fCycleActive = false;
     fMetadataReady = false;
-    fDcaLookupFailed = false;
 }
 
 bool MonitoringCsvWriter::shouldMonitorNow() const
@@ -545,12 +583,19 @@ bool MonitoringCsvWriter::shouldMonitorNow() const
     return false;
 }
 
+bool MonitoringCsvWriter::isRunning() const
+{
+    std::lock_guard<std::mutex> lock(fMutex);
+    return fRunning;
+}
+
 void MonitoringCsvWriter::beginCycle()
 {
     std::lock_guard<std::mutex> lock(fMutex);
     if(!fRunning) return;
     fValues.clear();
     fModuleValues.clear();
+    fPortcardValues.clear();
     fColumns.clear();
     fCycleActive = true;
 }
@@ -560,7 +605,7 @@ void MonitoringCsvWriter::endCycle()
     std::lock_guard<std::mutex> lock(fMutex);
     if(!fRunning || !fCycleActive) return;
     fCycleActive = false;
-    if(!fMetadataReady || fValues.empty()) return;
+    if(!fMetadataReady || (fValues.empty() && fPortcardValues.empty())) return;
     if(!fWrittenColumns.empty() && fColumns != fWrittenColumns)
     {
         closeOutputFileLocked();
@@ -579,32 +624,35 @@ void MonitoringCsvWriter::update(int boardId,
                                  const std::string& registerName,
                                  double value,
                                  bool isAdcObservable,
-                                 bool isCurrent,
                                  std::size_t moduleChipCount)
 {
     std::lock_guard<std::mutex> lock(fMutex);
     if(!fRunning || !fCycleActive) return;
     if(!fConfiguration.registerAllowlist.empty() && fConfiguration.registerAllowlist.count(registerName) == 0) return;
 
-    std::string unit;
-    if(isAdcObservable)
-    {
-        if(registerName.find("TEMPSENS") != std::string::npos || registerName.find("RADSENS") != std::string::npos || registerName.find("INTERNAL_NTC") != std::string::npos)
-            unit = "C";
-        else
-            unit = isCurrent ? "uA" : "V";
-    }
     const double factor = correctionFactor(registerName);
     const DetectorKey detectorKey{boardId, opticalGroupId, hybridId, chipId};
     const ModuleKey moduleKey{boardId, opticalGroupId, hybridId};
-    MetricValue metric{value * factor, isAdcObservable, isAdcObservable ? value * 0.04 * factor : 0, unit};
+    MetricValue metric{value * factor, isAdcObservable, isAdcObservable ? value * 0.04 * factor : 0};
     fValues[detectorKey][registerName] = metric;
     fColumns.insert(registerName);
-    if(fConfiguration.includeErrors && metric.hasError) fColumns.insert(registerName + "__error");
     fIdentities[detectorKey].efuse = efuseCode;
     if(moduleChipCount != 0) fModuleChipCounts[moduleKey] = moduleChipCount;
     updateChipVirtualRegistersLocked(detectorKey);
     updateModuleVirtualRegistersLocked(moduleKey);
+}
+
+void MonitoringCsvWriter::updateLpGBT(int boardId, int opticalGroupId, uint32_t efuseCode, const std::string& registerName, double value)
+{
+    std::lock_guard<std::mutex> lock(fMutex);
+    if(!fRunning || !fCycleActive || !fConfiguration.lpGBTEnabled) return;
+    const std::string name = "LPGBT_" + registerName;
+    if(!fConfiguration.lpGBTRegisterAllowlist.empty() && fConfiguration.lpGBTRegisterAllowlist.count(registerName) == 0) return;
+    const OpticalKey key{boardId, opticalGroupId};
+    fPortcardValues[key][name] = MetricValue{value, false, 0};
+    fPortcardIdentities[key].efuse = hexValue(efuseCode);
+    fColumns.insert(name);
+    updateLpGBTVirtualRegistersLocked(key);
 }
 
 void MonitoringCsvWriter::loadVirtualRegisterDefinitions()
@@ -621,25 +669,18 @@ void MonitoringCsvWriter::loadVirtualRegisterDefinitions()
         ++lineNumber;
         line = trim(line);
         if(line.empty() || line.front() == '#') continue;
-        std::vector<std::string> fields;
-        size_t start = 0;
-        while(true)
-        {
-            const auto separator = line.find('|', start);
-            fields.push_back(trim(line.substr(start, separator == std::string::npos ? std::string::npos : separator - start)));
-            if(separator == std::string::npos) break;
-            start = separator + 1;
-        }
+        const std::vector<std::string> fields = split(line, '|');
         if(fields.size() != 3 && fields.size() != 4)
             throw std::runtime_error("[MonitoringCsvWriter] Invalid virtual register at " + fConfiguration.virtualRegisterConfig + ":" + std::to_string(lineNumber));
         VirtualRegisterDefinition definition;
         definition.name = fields[0];
-        definition.unit = fields[1];
         definition.expression = fields.back();
         if(fields.size() == 4)
         {
             if(fields[2] == "module") definition.scope = VirtualRegisterDefinition::Scope::Module;
-            else if(fields[2] != "chip") throw std::runtime_error("[MonitoringCsvWriter] Virtual scope must be chip or module");
+            else if(fields[2] == "lpgbt") definition.scope = VirtualRegisterDefinition::Scope::LpGBT;
+            else if(fields[2] == "portcard") definition.scope = VirtualRegisterDefinition::Scope::Portcard;
+            else if(fields[2] != "chip") throw std::runtime_error("[MonitoringCsvWriter] Virtual scope must be chip, module, lpgbt, or portcard");
         }
         if(definition.name.empty() || definition.expression.empty() || !names.insert(definition.name).second)
             throw std::runtime_error("[MonitoringCsvWriter] Invalid or duplicate virtual register at line " + std::to_string(lineNumber));
@@ -647,69 +688,32 @@ void MonitoringCsvWriter::loadVirtualRegisterDefinitions()
     }
 }
 
-void MonitoringCsvWriter::runDcaLookup()
-{
-    if(!fConfiguration.dcaLookupEnabled || fConfiguration.dcaRefresh == "never") return;
-    if(fConfiguration.dcaRefresh == "if_missing" && fileExists(fConfiguration.dcaMappingFile)) return;
-    if(fConfiguration.dcaLookupScript.empty() || fConfiguration.dcaMappingFile.empty())
-        throw std::runtime_error("[MonitoringCsvWriter] DCA lookup requires dca_lookup_script and dca_mapping_file");
-
-    std::vector<std::string> arguments{fConfiguration.dcaPython,
-                                       fConfiguration.dcaLookupScript,
-                                       fHardwareXml,
-                                       "--output",
-                                       fConfiguration.dcaMappingFile,
-                                       "--repository",
-                                       fConfiguration.dcaRepository,
-                                       "--url",
-                                       fConfiguration.dcaUrl,
-                                       "--database",
-                                       fConfiguration.dcaDatabase,
-                                       "--auth",
-                                       fConfiguration.dcaAuth};
-    std::vector<char*> argv;
-    for(auto& argument: arguments) argv.push_back(&argument[0]);
-    argv.push_back(nullptr);
-    const pid_t process = fork();
-    if(process == 0)
-    {
-        execvp(argv[0], argv.data());
-        _exit(127);
-    }
-    int status = 0;
-    const bool failed = process < 0 || waitpid(process, &status, 0) < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0;
-    if(failed)
-    {
-        fDcaLookupFailed = true;
-        const std::string message = "[MonitoringCsvWriter] DCA lookup failed; CSV rows will retain eFuse identity and may have an empty module";
-        if(fConfiguration.dcaFailurePolicy == "abort") throw std::runtime_error(message);
-        LOG(WARNING) << message;
-    }
-}
-
 void MonitoringCsvWriter::loadDcaMapping()
 {
     if(fConfiguration.dcaMappingFile.empty()) return;
     std::ifstream input(fConfiguration.dcaMappingFile);
-    if(!input.is_open()) return;
+    if(!input.is_open())
+    {
+        const std::string message = "[MonitoringCsvWriter] Cannot open DCA mapping " + fConfiguration.dcaMappingFile + "; run the standalone DCA lookup before CMSITminiDAQ";
+        if(fConfiguration.dcaMappingFailurePolicy == "abort") throw std::runtime_error(message);
+        LOG(WARNING) << message;
+        return;
+    }
     std::string line;
     std::getline(input, line);
     while(std::getline(input, line))
     {
-        std::vector<std::string> fields;
-        size_t start = 0;
-        while(true)
-        {
-            const auto separator = line.find(',', start);
-            fields.push_back(trim(line.substr(start, separator == std::string::npos ? std::string::npos : separator - start)));
-            if(separator == std::string::npos) break;
-            start = separator + 1;
-        }
-        if(fields.size() < 6) continue;
+        const std::vector<std::string> fields = split(line, ',');
+        if(fields.size() < 8) continue;
         try
         {
-            const DetectorKey key{std::stoi(fields[0]), std::stoi(fields[1]), std::stoi(fields[2]), std::stoi(fields[3])};
-            fIdentities[key] = Identity{std::stoll(fields[4]), fields[5]};
+            const int board = std::stoi(fields[0]);
+            const int optical = std::stoi(fields[1]);
+            const DetectorKey key{board, optical, std::stoi(fields[4]), std::stoi(fields[5])};
+            fIdentities[key] = Identity{fields[7].empty() ? 0 : std::stoll(fields[7]), fields[6]};
+            auto& portcard = fPortcardIdentities[{board, optical}];
+            portcard.portcard = fields[2].empty() ? "-1" : fields[2];
+            portcard.efuse = fields[3].empty() ? "-1" : fields[3];
         }
         catch(const std::exception&) { LOG(WARNING) << "[MonitoringCsvWriter] Ignoring malformed DCA mapping row: " << line; }
     }
@@ -720,16 +724,7 @@ void MonitoringCsvWriter::updateChipVirtualRegistersLocked(const DetectorKey& de
     auto& values = fValues[detectorKey];
     std::map<std::string, double> corrected;
     for(const auto& entry: values) corrected[entry.first] = entry.second.value;
-    for(const auto& definition: fVirtualRegisterDefinitions)
-    {
-        if(definition.scope != VirtualRegisterDefinition::Scope::Chip) continue;
-        double result = 0;
-        std::set<std::string> used;
-        VirtualExpressionParser parser(definition.expression, corrected);
-        if(!parser.evaluate(result, used)) continue;
-        values[definition.name] = MetricValue{result, false, 0, definition.unit};
-        fColumns.insert(definition.name);
-    }
+    updateVirtualRegistersLocked(VirtualRegisterDefinition::Scope::Chip, corrected, values);
 }
 
 void MonitoringCsvWriter::updateModuleVirtualRegistersLocked(const ModuleKey& moduleKey)
@@ -743,14 +738,30 @@ void MonitoringCsvWriter::updateModuleVirtualRegistersLocked(const ModuleKey& mo
     auto& moduleValues = fModuleValues[moduleKey];
     const auto count = fModuleChipCounts.find(moduleKey);
     const size_t expected = count == fModuleChipCounts.end() ? 0 : count->second;
+    updateVirtualRegistersLocked(VirtualRegisterDefinition::Scope::Module, corrected, moduleValues, expected);
+}
+
+void MonitoringCsvWriter::updateLpGBTVirtualRegistersLocked(const OpticalKey& opticalKey)
+{
+    auto& values = fPortcardValues[opticalKey];
+    std::map<std::string, double> corrected;
+    for(const auto& entry: values) corrected[entry.first] = entry.second.value;
+    updateVirtualRegistersLocked(VirtualRegisterDefinition::Scope::LpGBT, corrected, values);
+    corrected.clear();
+    for(const auto& entry: values) corrected[entry.first] = entry.second.value;
+    updateVirtualRegistersLocked(VirtualRegisterDefinition::Scope::Portcard, corrected, values);
+}
+
+void MonitoringCsvWriter::updateVirtualRegistersLocked(VirtualRegisterDefinition::Scope scope, const std::map<std::string, double>& inputs,
+                                                        std::map<std::string, MetricValue>& values, std::size_t expectedInputs)
+{
     for(const auto& definition: fVirtualRegisterDefinitions)
     {
-        if(definition.scope != VirtualRegisterDefinition::Scope::Module) continue;
+        if(definition.scope != scope) continue;
         double result = 0;
-        std::set<std::string> used;
-        VirtualExpressionParser parser(definition.expression, corrected, expected);
-        if(!parser.evaluate(result, used)) continue;
-        moduleValues[definition.name] = MetricValue{result, false, 0, definition.unit};
+        VirtualExpressionParser parser(definition.expression, inputs, expectedInputs);
+        if(!parser.evaluate(result)) continue;
+        values[definition.name] = MetricValue{result, false, 0};
         fColumns.insert(definition.name);
     }
 }
@@ -766,7 +777,7 @@ void MonitoringCsvWriter::openOutputFileLocked()
     std::ostringstream name;
     name << fConfiguration.outputDirectory << "/" << fFileStem;
     if(fFilePart > 1) name << "_part" << std::setw(3) << std::setfill('0') << fFilePart;
-    name << ".csv";
+    name << ".active.csv";
     fCurrentFilePath = name.str();
     fOutput.open(fCurrentFilePath, std::ios::out | std::ios::app);
     if(!fOutput.is_open()) throw std::runtime_error("[MonitoringCsvWriter] Cannot open " + fCurrentFilePath);
@@ -797,8 +808,12 @@ void MonitoringCsvWriter::rotateIfNeededLocked()
 void MonitoringCsvWriter::writeHeaderLocked()
 {
     fWrittenColumns = fColumns;
-    fOutput << "board,optical,hybrid,chip,efuse,module,date,time";
-    for(const auto& column: fWrittenColumns) fOutput << ',' << csvEscape(column);
+    fOutput << "board,optical,portcard_id,lpgbt_efuse,hybrid,chip,module_id,chip_efuse,date,time";
+    for(const auto& column: fWrittenColumns)
+    {
+        fOutput << ',' << csvEscape(column + "_value");
+        if(fConfiguration.includeErrors) fOutput << ',' << csvEscape(column + "__error");
+    }
     fOutput << '\n';
     fOutput.flush();
 }
@@ -807,35 +822,49 @@ void MonitoringCsvWriter::writeRowsLocked()
 {
     const std::string date = dateTimeStamp("%Y-%m-%d");
     const std::string time = dateTimeStamp("%H:%M:%S");
-    for(const auto& detector: fValues)
+    std::set<DetectorKey> detectorKeys;
+    for(const auto& entry: fValues) detectorKeys.insert(entry.first);
+    for(const auto& entry: fIdentities) detectorKeys.insert(entry.first);
+    for(const auto& key: detectorKeys)
     {
-        const DetectorKey& key = detector.first;
         const auto identity = fIdentities.find(key);
-        const int64_t efuse = identity == fIdentities.end() ? 0 : identity->second.efuse;
+        const std::string efuse = identity == fIdentities.end() || identity->second.efuse == 0 ? "" : std::to_string(identity->second.efuse);
         const std::string module = identity == fIdentities.end() ? "" : identity->second.module;
-        fOutput << std::get<0>(key) << ',' << std::get<1>(key) << ',' << std::get<2>(key) << ',' << std::get<3>(key) << ',' << efuse << ',' << csvEscape(module) << ',' << date << ',' << time;
+        const OpticalKey opticalKey{std::get<0>(key), std::get<1>(key)};
+        const auto portcardIdentity = fPortcardIdentities.find(opticalKey);
+        const std::string portcard = portcardIdentity == fPortcardIdentities.end() ? "-1" : portcardIdentity->second.portcard;
+        const std::string lpgbtEfuse = portcardIdentity == fPortcardIdentities.end() ? "-1" : portcardIdentity->second.efuse;
+        fOutput << std::get<0>(key) << ',' << std::get<1>(key) << ',' << csvEscape(portcard) << ',' << lpgbtEfuse << ',' << std::get<2>(key) << ',' << std::get<3>(key) << ','
+                << csvEscape(module) << ',' << efuse << ',' << date << ',' << time;
+        const auto detector = fValues.find(key);
         const ModuleKey moduleKey{std::get<0>(key), std::get<1>(key), std::get<2>(key)};
         const auto moduleValues = fModuleValues.find(moduleKey);
+        const auto portcardValues = fPortcardValues.find(opticalKey);
         for(const auto& column: fWrittenColumns)
         {
-            const bool errorColumn = column.size() > 7 && column.compare(column.size() - 7, 7, "__error") == 0;
-            const std::string name = errorColumn ? column.substr(0, column.size() - 7) : column;
             const MetricValue* value = nullptr;
-            const auto chipValue = detector.second.find(name);
-            if(chipValue != detector.second.end()) value = &chipValue->second;
+            if(detector != fValues.end())
+            {
+                const auto chipValue = detector->second.find(column);
+                if(chipValue != detector->second.end()) value = &chipValue->second;
+            }
             if(value == nullptr && moduleValues != fModuleValues.end())
             {
-                const auto moduleValue = moduleValues->second.find(name);
+                const auto moduleValue = moduleValues->second.find(column);
                 if(moduleValue != moduleValues->second.end()) value = &moduleValue->second;
             }
-            fOutput << ',';
-            if(value == nullptr) continue;
-            if(errorColumn)
+            if(value == nullptr && portcardValues != fPortcardValues.end())
             {
-                if(value->hasError) fOutput << std::setprecision(12) << value->error;
+                const auto portcardValue = portcardValues->second.find(column);
+                if(portcardValue != portcardValues->second.end()) value = &portcardValue->second;
             }
-            else
-                fOutput << std::setprecision(12) << value->value;
+            fOutput << ',';
+            if(value != nullptr) fOutput << std::setprecision(12) << value->value;
+            if(fConfiguration.includeErrors)
+            {
+                fOutput << ',';
+                if(value != nullptr && value->hasError) fOutput << std::setprecision(12) << value->error;
+            }
         }
         fOutput << '\n';
     }
@@ -844,7 +873,12 @@ void MonitoringCsvWriter::writeRowsLocked()
 
 void MonitoringCsvWriter::closeOutputFileLocked()
 {
-    if(fOutput.is_open()) fOutput.close();
+    if(fOutput.is_open())
+    {
+        fOutput.close();
+        const std::string readyPath = fCurrentFilePath.substr(0, fCurrentFilePath.size() - 11) + ".ready.csv";
+        if(std::rename(fCurrentFilePath.c_str(), readyPath.c_str()) != 0) LOG(ERROR) << "[MonitoringCsvWriter] Cannot finalize " << fCurrentFilePath;
+    }
     fWrittenColumns.clear();
 }
 

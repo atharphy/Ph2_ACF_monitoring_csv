@@ -15,6 +15,10 @@ Results/**
 ResultsGUI/*
 MonitorResults/**
 monitoring_csv/
+._*
+.DS_Store
+__pycache__/
+*.py[cod]
 RunNumbers.dat
 GoodRunNumbers.dat
 *.log

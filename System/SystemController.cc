@@ -960,11 +960,7 @@ void SystemController::ConfigureHw(bool pReInitialize)
     {
         if(fBoardType == BoardType::RD53)
         {
-            const auto monitoringConfiguration = MonitoringCsvWriter::loadConfiguration();
-            if(monitoringConfiguration.enabled)
-            {
-                MonitoringCsvWriter::getInstance().start(monitoringConfiguration, fCalibrationName, fConfigurationFileName);
-            }
+            MonitoringCsvWriter::getInstance().start(fCalibrationName, fConfigurationFileName);
         }
 
         LOG(INFO) << GREEN << "Starting " << BOLDYELLOW << "monitoring" << RESET << GREEN << " thread" << RESET;

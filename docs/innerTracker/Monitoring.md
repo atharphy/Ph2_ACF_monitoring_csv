@@ -68,7 +68,7 @@ csv_register_allowlist = *
 virtual_register_config = settings/virtual_registers.conf
 ```
 
-Files are placed below `$PH2ACF_BASE_DIR/monitoring_csv` by default and use the form:
+Files are placed in a `monitoring_csv` directory beside the hardware XML by default and use the form:
 
 ```text
 calibration[_run]_YYYYMMDD_HHMMSS.csv
@@ -78,7 +78,7 @@ The run component is omitted when no run number is assigned. Rotated files recei
 
 ### DCA lookup
 
-Set `dca_lookup_enabled = true` to run the configured eFuse-to-module lookup before monitoring starts. The lookup uses the eFuse values from the hardware XML and writes the configured mapping CSV. With `dca_auth = login`, the first run may request CERN credentials and OTP. `dca_refresh` accepts `always`, `if_missing`, or `never`; `dca_failure_policy` accepts `warn` or `abort`.
+Run the standalone DCA lookup before starting CMSITminiDAQ. Ph2_ACF does not connect to or authenticate with DCA; it only reads the generated eFuse-to-module CSV. With `dca_mapping_file = auto`, the expected file is `<xml-basename>.csv` beside the hardware XML. `dca_mapping_failure_policy` accepts `warn` or `abort`.
 
 The hardware XML must contain the eFuse values obtained for the actual connected chips. Default or copied eFuse values do not provide a reliable detector identity.
 
