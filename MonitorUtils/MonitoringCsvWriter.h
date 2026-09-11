@@ -52,9 +52,9 @@ class MonitoringCsvWriter
     bool isRunning() const;
     void beginCycle();
     void endCycle();
-    void update(int boardId, int opticalGroupId, int hybridId, int chipId, int64_t efuseCode, const std::string& registerName,
-                double value, bool isAdcObservable, std::size_t moduleChipCount = 0);
-    void updateLpGBT(int boardId, int opticalGroupId, uint32_t efuseCode, const std::string& registerName, double value);
+    void update(int boardId, int opticalGroupId, int hybridId, int chipId, const std::string& registerName, double value,
+                bool isAdcObservable, std::size_t moduleChipCount = 0);
+    void updateLpGBT(int boardId, int opticalGroupId, const std::string& registerName, double value);
 
   private:
     MonitoringCsvWriter() = default;

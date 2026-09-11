@@ -26,8 +26,6 @@
 #include "HWInterface/lpGBTInterface.h"
 
 #include <array>
-#include <map>
-
 #ifdef __USE_ROOT__
 #include "MonitorDQM/MonitorDQMPlotRD53.h"
 #endif
@@ -44,8 +42,6 @@ class RD53Monitor : public DetectorMonitor
     void runLpGBTRegisterMonitor(const std::string& registerName);
     void runBoardRegisterMonitor(const std::string& registerName);
     void sendData(DetectorDataContainer& theRegisterContainer, const std::string& registerName, const std::string& type);
-
-    std::map<std::pair<uint16_t, uint16_t>, uint32_t> fLpGBTFuseIds;
 
 #ifdef __USE_ROOT__
     MonitorDQMPlotRD53* fMonitorDQM{nullptr};

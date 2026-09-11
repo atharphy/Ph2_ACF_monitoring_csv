@@ -184,17 +184,10 @@ std::string dateTimeStamp(const char* format)
 {
     const auto now = std::chrono::system_clock::now();
     const std::time_t time = std::chrono::system_clock::to_time_t(now);
-    std::tm localTime{};
-    localtime_r(&time, &localTime);
+    std::tm utcTime{};
+    gmtime_r(&time, &utcTime);
     std::ostringstream output;
-    output << std::put_time(&localTime, format);
-    return output.str();
-}
-
-std::string hexValue(uint32_t value)
-{
-    std::ostringstream output;
-    output << "0x" << std::uppercase << std::hex << std::setw(8) << std::setfill('0') << value;
+    output << std::put_time(&utcTime, format);
     return output.str();
 }
 
@@ -620,7 +613,6 @@ void MonitoringCsvWriter::update(int boardId,
                                  int opticalGroupId,
                                  int hybridId,
                                  int chipId,
-                                 int64_t efuseCode,
                                  const std::string& registerName,
                                  double value,
                                  bool isAdcObservable,
@@ -636,13 +628,12 @@ void MonitoringCsvWriter::update(int boardId,
     MetricValue metric{value * factor, isAdcObservable, isAdcObservable ? value * 0.04 * factor : 0};
     fValues[detectorKey][registerName] = metric;
     fColumns.insert(registerName);
-    fIdentities[detectorKey].efuse = efuseCode;
     if(moduleChipCount != 0) fModuleChipCounts[moduleKey] = moduleChipCount;
     updateChipVirtualRegistersLocked(detectorKey);
     updateModuleVirtualRegistersLocked(moduleKey);
 }
 
-void MonitoringCsvWriter::updateLpGBT(int boardId, int opticalGroupId, uint32_t efuseCode, const std::string& registerName, double value)
+void MonitoringCsvWriter::updateLpGBT(int boardId, int opticalGroupId, const std::string& registerName, double value)
 {
     std::lock_guard<std::mutex> lock(fMutex);
     if(!fRunning || !fCycleActive || !fConfiguration.lpGBTEnabled) return;
@@ -650,7 +641,6 @@ void MonitoringCsvWriter::updateLpGBT(int boardId, int opticalGroupId, uint32_t 
     if(!fConfiguration.lpGBTRegisterAllowlist.empty() && fConfiguration.lpGBTRegisterAllowlist.count(registerName) == 0) return;
     const OpticalKey key{boardId, opticalGroupId};
     fPortcardValues[key][name] = MetricValue{value, false, 0};
-    fPortcardIdentities[key].efuse = hexValue(efuseCode);
     fColumns.insert(name);
     updateLpGBTVirtualRegistersLocked(key);
 }
@@ -825,11 +815,18 @@ void MonitoringCsvWriter::writeRowsLocked()
     std::set<DetectorKey> detectorKeys;
     for(const auto& entry: fValues) detectorKeys.insert(entry.first);
     for(const auto& entry: fIdentities) detectorKeys.insert(entry.first);
+    for(const auto& entry: fPortcardValues)
+    {
+        const bool hasDetector = std::any_of(detectorKeys.begin(), detectorKeys.end(), [&entry](const DetectorKey& key) {
+            return std::get<0>(key) == entry.first.first && std::get<1>(key) == entry.first.second;
+        });
+        if(!hasDetector) detectorKeys.insert({entry.first.first, entry.first.second, -1, -1});
+    }
     for(const auto& key: detectorKeys)
     {
         const auto identity = fIdentities.find(key);
-        const std::string efuse = identity == fIdentities.end() || identity->second.efuse == 0 ? "" : std::to_string(identity->second.efuse);
-        const std::string module = identity == fIdentities.end() ? "" : identity->second.module;
+        const std::string efuse = identity == fIdentities.end() || identity->second.efuse == 0 ? "-1" : std::to_string(identity->second.efuse);
+        const std::string module = identity == fIdentities.end() || identity->second.module.empty() ? "-1" : identity->second.module;
         const OpticalKey opticalKey{std::get<0>(key), std::get<1>(key)};
         const auto portcardIdentity = fPortcardIdentities.find(opticalKey);
         const std::string portcard = portcardIdentity == fPortcardIdentities.end() ? "-1" : portcardIdentity->second.portcard;

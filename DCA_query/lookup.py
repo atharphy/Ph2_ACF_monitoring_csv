@@ -19,39 +19,56 @@ def run_query(chip_efuses, lpgbt_efuses):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from rhapi import RhApi
 
-    queries = []
     chip_efuses = {value for value in chip_efuses if value not in ("", "-1")}
     lpgbt_efuses = {value for value in lpgbt_efuses if value not in ("", "-1")}
     candidates = set()
     for value in lpgbt_efuses:
         number = int(value, 16)
-        candidates.update((value, value[2:], str(number)))
-    if chip_efuses:
-        queries.append(f"""
-SELECT 'module' AS mapping_type, chip.serial_number AS efuse, assembled.parent_serial_number AS value
+        candidates.update((value.upper(), value[2:].upper(), str(number)))
+
+    module_query = f"""
+SELECT DISTINCT
+       'module' AS mapping_type,
+       chip.serial_number AS efuse,
+       module.name_label AS value
 FROM {DB}.parts chip
-JOIN {DB}.trkr_relationships_v bare ON bare.child_name_label = chip.name_label AND bare.child_component = 'CROC Chip'
-JOIN {DB}.trkr_relationships_v assembled ON assembled.child_name_label = bare.parent_name_label AND assembled.child_component = bare.parent_component
-WHERE chip.serial_number IN ({sql_values(chip_efuses)}) AND assembled.parent_serial_number IS NOT NULL
-""")
-    if candidates:
-        queries.append(f"""
-SELECT 'portcard' AS mapping_type, chip.serial_number AS efuse, relation.parent_serial_number AS value
+JOIN {DB}.trkr_relationships_v chip_to_bare
+  ON chip_to_bare.child_id = chip.id
+JOIN {DB}.parts bare
+  ON bare.id = chip_to_bare.parent_id
+JOIN {DB}.trkr_relationships_v bare_to_module
+  ON bare_to_module.child_id = bare.id
+JOIN {DB}.parts module
+  ON module.id = bare_to_module.parent_id
+WHERE TRIM(chip.serial_number) IN ({sql_values(chip_efuses)})
+  AND LOWER(module.kind_of_part) LIKE '%module%'
+  AND module.name_label IS NOT NULL
+"""
+
+    portcard_query = f"""
+SELECT DISTINCT 'portcard' AS mapping_type, chip.serial_number AS efuse, portcard.serial_number AS value
 FROM {DB}.parts chip
-JOIN {DB}.trkr_relationships_v relation ON relation.child_name_label = chip.name_label
-WHERE chip.serial_number IN ({sql_values(candidates)})
-  AND LOWER(relation.child_component) LIKE '%lpgbt%'
-  AND LOWER(relation.parent_component) LIKE '%portcard%'
-  AND relation.parent_serial_number IS NOT NULL
-""")
-    if not queries:
-        return []
-    query = "\nUNION ALL\n".join(queries)
+JOIN {DB}.trkr_relationships_v relation ON relation.child_id = chip.id
+JOIN {DB}.parts portcard ON portcard.id = relation.parent_id
+WHERE UPPER(TRIM(chip.serial_number)) IN ({sql_values(candidates)})
+  AND LOWER(chip.kind_of_part) LIKE '%lpgbt%'
+  AND LOWER(portcard.kind_of_part) LIKE '%portcard%'
+  AND portcard.serial_number IS NOT NULL
+"""
     current = Path.cwd()
     try:
         with tempfile.TemporaryDirectory(prefix="dca-combined-", dir="/tmp") as directory:
             os.chdir(directory)
-            return RhApi(URL, sso="login", save_password=False).json2(query).get("data", [])
+            api = RhApi(URL, sso="login", save_password=False)
+            rows = []
+            for name, values, query in (("module", chip_efuses, module_query), ("portcard", candidates, portcard_query)):
+                if not values:
+                    continue
+                try:
+                    rows.extend(api.json2(query).get("data", []))
+                except Exception as error:
+                    print(f"Warning: DCA {name} lookup failed: {error}", file=sys.stderr)
+            return rows
     finally:
         os.chdir(current)
 
@@ -59,11 +76,11 @@ WHERE chip.serial_number IN ({sql_values(candidates)})
 def split_rows(rows):
     modules, portcards = {}, {}
     for row in rows:
-        row = {str(key).lower(): value for key, value in row.items()}
+        row = {str(key).replace("_", "").lower(): value for key, value in row.items()}
         if row.get("efuse") in (None, "") or row.get("value") in (None, ""):
             continue
         efuse, value = str(row["efuse"]), str(row["value"])
-        if str(row.get("mapping_type", "")).lower() == "module":
+        if str(row.get("mappingtype", "")).lower() == "module":
             modules[efuse] = value
         else:
             base = 0 if efuse.lower().startswith("0x") else 16 if any(c in "abcdefABCDEF" for c in efuse) else 10

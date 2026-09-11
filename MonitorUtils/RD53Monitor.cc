@@ -112,9 +112,8 @@ void RD53Monitor::runRD53RegisterMonitor(const std::string& registerName)
                     theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getObject(cHybrid->getId())->getObject(cChip->getId())->getSummary<ValueAndTime<float>>() =
                         ValueAndTime<float>(registerValue, getTimeStampString());
 
-                    MonitoringCsvWriter::getInstance().update(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId(),
-                                                              static_cast<Ph2_HwDescription::RD53*>(cChip)->geteFuseCode(), registerName, registerValue,
-                                                              isAdcObservable, cHybrid->getNChip());
+                    MonitoringCsvWriter::getInstance().update(cBoard->getId(), cOpticalGroup->getId(), cHybrid->getId(), cChip->getId(), registerName,
+                                                              registerValue, isAdcObservable, cHybrid->getNChip());
                 }
 
 #ifdef __USE_ROOT__
@@ -180,13 +179,7 @@ void RD53Monitor::runLpGBTRegisterMonitor(const std::string& registerName)
             }
 
             theRegisterContainer.getObject(cBoard->getId())->getObject(cOpticalGroup->getId())->getSummary<ValueAndTime<float>>() = ValueAndTime<float>(registerValue, getTimeStampString());
-            auto& csvWriter = MonitoringCsvWriter::getInstance();
-            if(csvWriter.isRunning())
-            {
-                const std::pair<uint16_t, uint16_t> key{cBoard->getId(), cOpticalGroup->getId()};
-                if(fLpGBTFuseIds.count(key) == 0) fLpGBTFuseIds[key] = lpGBTInterface->ReadChipFuseID(cOpticalGroup->flpGBT, cOpticalGroup->flpGBT->getVersion());
-                csvWriter.updateLpGBT(cBoard->getId(), cOpticalGroup->getId(), fLpGBTFuseIds[key], registerName, registerValue);
-            }
+            MonitoringCsvWriter::getInstance().updateLpGBT(cBoard->getId(), cOpticalGroup->getId(), registerName, registerValue);
         }
 
 #ifdef __USE_ROOT__
