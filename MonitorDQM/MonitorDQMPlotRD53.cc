@@ -28,12 +28,20 @@ void MonitorDQMPlotRD53::book(TFile* theOutputFile, DetectorContainer& theDetect
             auto graphContainer = GraphContainer<TGraph>(0);
             bookImplementer(theOutputFile, theDetectorStructure, fRegisterMonitorPlotMap[registerName.first], graphContainer, "opto", "Time", registerName.first.c_str());
         }
+
+    for(const auto& registerName: fDetectorMonitorConfig.fMonitorElementList.at("Board"))
+        if(registerName.second)
+        {
+            auto graphContainer = GraphContainer<TGraph>(0);
+            bookImplementer(theOutputFile, theDetectorStructure, fRegisterMonitorPlotMap[registerName.first], graphContainer, "board", "Time", registerName.first.c_str());
+        }
 }
 
 bool MonitorDQMPlotRD53::fill(std::string& inputStream)
 {
     ContainerSerialization theChipContainerSerialization("ITMonitorChipRegister");
     ContainerSerialization theOptoContainerSerialization("ITMonitorOptoRegister");
+    ContainerSerialization theBoardContainerSerialization("ITMonitorBoardRegister");
 
     if(theChipContainerSerialization.attachDeserializer(inputStream))
     {
@@ -50,6 +58,15 @@ bool MonitorDQMPlotRD53::fill(std::string& inputStream)
         DetectorDataContainer fDetectorData =
             theOptoContainerSerialization.deserializeOpticalGroupContainer<EmptyContainer, EmptyContainer, EmptyContainer, ValueAndTime<float>>(fDetectorContainer, registerName);
         MonitorDQMPlotRD53::fillOptoPlots(fDetectorData, registerName);
+        return true;
+    }
+    if(theBoardContainerSerialization.attachDeserializer(inputStream))
+    {
+        LOG(INFO) << GREEN << "Matched IT board register" << RESET;
+        std::string           registerName;
+        DetectorDataContainer fDetectorData =
+            theBoardContainerSerialization.deserializeBoardContainer<ValueAndTime<float>, EmptyContainer, EmptyContainer, EmptyContainer, EmptyContainer>(fDetectorContainer, registerName);
+        MonitorDQMPlotRD53::fillBoardPlots(fDetectorData, registerName);
         return true;
     }
 
@@ -100,4 +117,22 @@ void MonitorDQMPlotRD53::fillOptoPlots(DetectorDataContainer& DataContainer, con
             if(cOpticalGroup->hasSummary() == false) continue;
             optoDQMPlot->SetPoint(optoDQMPlot->GetN(), this->getTimeStampForRoot(cOpticalGroup->getSummary<ValueAndTime<float>>().fTime), cOpticalGroup->getSummary<ValueAndTime<float>>().fValue);
         }
+}
+
+void MonitorDQMPlotRD53::fillBoardPlots(DetectorDataContainer& DataContainer, const std::string& registerName)
+{
+    if(fRegisterMonitorPlotMap.find(registerName) == fRegisterMonitorPlotMap.end())
+    {
+        std::string errorMessage = "No booked plots for IT register: ";
+        LOG(ERROR) << BOLDRED << errorMessage << BOLDYELLOW << registerName << RESET;
+        throw std::runtime_error(errorMessage + registerName);
+    }
+
+    for(const auto cBoard: DataContainer)
+    {
+        TGraph* boardDQMPlot = fRegisterMonitorPlotMap[registerName].getObject(cBoard->getId())->getSummary<GraphContainer<TGraph>>().fTheGraph;
+
+        if(cBoard->hasSummary() == false) continue;
+        boardDQMPlot->SetPoint(boardDQMPlot->GetN(), this->getTimeStampForRoot(cBoard->getSummary<ValueAndTime<float>>().fTime), cBoard->getSummary<ValueAndTime<float>>().fValue);
+    }
 }
